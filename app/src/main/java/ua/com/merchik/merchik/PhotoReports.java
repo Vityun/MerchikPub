@@ -125,7 +125,11 @@ public class PhotoReports {
         } else {
             switch (type) {
                 case MULTIPLE:
-                    Toast.makeText(mContext, "Нет фото для ыгрузки", Toast.LENGTH_SHORT).show();
+                    DialogData dialogData = new DialogData(mContext);
+                    dialogData.setTitle(mContext.getText(R.string.not_photo_title).toString());
+                    dialogData.setText(mContext.getText(R.string.not_photo).toString());
+                    dialogData.show();
+//                    Toast.makeText(mContext, "Нет фото для ыгрузки", Toast.LENGTH_SHORT).show();
                     break;
             }
         }

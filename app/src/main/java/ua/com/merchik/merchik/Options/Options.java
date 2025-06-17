@@ -1388,13 +1388,21 @@ public class Options {
 //                                    dialogData.setTitle("Команда на проведення звіту. ");
                                     try {
 //                                        Spanned spanned = Html.fromHtml((String) data);
+                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
 
                                         new MessageDialogBuilder(unwrap(context))
                                                 .setTitle("Команда на проведення звіту.")
 //                                                .setStatus(DialogStatus.ERROR)
                                                 .setSubTitle("## Ответ от сервера")
                                                 .setMessage((String) data)
-                                                .setOnConfirmAction(() -> Unit.INSTANCE)
+                                                .setOnConfirmAction(() -> {
+                                                    if (((String) data).contains("#134583")) {
+                                                        DialogData dialogData = new DialogData(context);
+                                                        dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
+                                                        dialogData.show();
+                                                    }
+                                                    return Unit.INSTANCE;
+                                                })
                                                 .show();
 //                                    String regex = "- ?[Oo]пц[иi]я";
 //                                    // Компилируем регулярное выражение
@@ -2688,6 +2696,7 @@ public class Options {
      * Проверка на Начало работы ( 138519 )
      */
     private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "++");
         boolean res;
         long dad2, startWork, endWork;
         if (dataDB instanceof WpDataDB) {
@@ -2703,7 +2712,7 @@ public class Options {
         }
 
 
-        Log.e("checkStartWork", "ENTER THIS");
+        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "startWork: " + startWork);
         if (startWork > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -2723,6 +2732,8 @@ public class Options {
             unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
+
+        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "mode: " + mode.name());
 
         // Обработка режима который вернулся
         switch (mode) {
@@ -3418,8 +3429,26 @@ public class Options {
      * Опция нажатие на номер версии приложения 139577
      */
     public <T> void optionControlVersion_139577(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        Long currentVer = Long.valueOf(BuildConfig.VERSION_NAME);
+        long currentVer = Long.parseLong(BuildConfig.VERSION_NAME);
         Long minimalVer = VersionApp.VERSION_APP;
+
+        if (optionsDB != null && optionsDB.getAmountMin() != null && !optionsDB.getAmountMin().isEmpty()) {
+            try {
+                // Пробуем преобразовать строку в число
+                long amountMinValue = Long.parseLong(optionsDB.getAmountMin());
+
+                // Если число положительное, формируем minimalVer
+                if (amountMinValue > 0) {
+                    minimalVer = Long.parseLong("202" + amountMinValue + "00");
+                    Globals.writeToMLOG("INFO", "optionControlVersion_139577.checkMinimalVersion",
+                            "minimalVer: " + minimalVer);
+                }
+            } catch (NumberFormatException e) {
+                // Логируем ошибку, если строка не является числом
+                Globals.writeToMLOG("ERROR", "optionControlVersion_139577.checkMinimalVersion",
+                        "Invalid amountMin format: " + optionsDB.getAmountMin());
+            }
+        }
 
         try {
             if (currentVer >= minimalVer) {

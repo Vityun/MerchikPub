@@ -9,7 +9,7 @@
         android:title="Сервер" />
     <item
         android:id="@+id/exchange_photo_action"
-        android:title="Выгрузка фото" />
+        android:title="@string/export_photo" />
     <item android:id="@+id/exchange_db_action"
-        android:title="Синхронизация" />
+        android:title="@string/main_exchange" />
 </menu>

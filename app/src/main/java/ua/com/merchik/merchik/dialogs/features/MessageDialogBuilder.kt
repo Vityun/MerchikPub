@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.dialogs.features
 
 import android.app.Activity
+import android.content.Context
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
@@ -21,6 +22,8 @@ class MessageDialogBuilder(private val context: Activity) {
     private var onConfirmAction: (() -> Unit)? = null
     private var cancelButtonName: String = "Отмена"
     private var onCancelAction: (() -> Unit?)? = null
+    private var showCheckbox: Boolean = false
+    private var checkboxPrefKey: String = "not_show_again"
 
     private val isDialogVisible = mutableStateOf(false)
 
@@ -50,9 +53,20 @@ class MessageDialogBuilder(private val context: Activity) {
             this.onCancelAction = action
         }
 
+    fun setShowCheckbox(show: Boolean, prefKey: String = "not_show_again") = apply {
+        showCheckbox = show
+        checkboxPrefKey = prefKey
+    }
+
     fun show() {
 
-        Log.e("MessageDialogBuilder", "onCancelAction: $onCancelAction")
+        val sharedPref = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
+        // Если чекбокс включён и галочка была поставлена ранее – сразу выполняем действие
+        if (showCheckbox && sharedPref.getBoolean(checkboxPrefKey, false)) {
+            onConfirmAction?.invoke()
+            return
+        }
+
 
         isDialogVisible.value = true
         val composeView = ComposeView(context).apply {
@@ -81,7 +95,11 @@ class MessageDialogBuilder(private val context: Activity) {
                                     onCancelAction?.invoke()
                                 }
                             },
-                            status = status
+                            status = status,
+                            showCheckbox = showCheckbox,
+                            onCheckboxChanged = { checked ->
+                                sharedPref.edit().putBoolean(checkboxPrefKey, checked).apply()
+                            }
                         )
                     }
                 }

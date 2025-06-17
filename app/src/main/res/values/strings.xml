@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">061301</string>
+    <string name="ver" translatable="false">061701</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-06-13</string>
+    <string name="debug_date" translatable="false">2025-06-17</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -233,10 +233,11 @@
     <string name="ui_setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
     <string name="ui_column_name">Назва стовпця</string>
     <string name="ui_visibility">Видимість</string>
-    <string name="ui_cancel">Скасувати</string>
-    <string name="ui_apply">Застосувати</string>
+    <string name="ui_cancel">Отказаться</string>
+    <string name="ui_apply">Применить</string>
     <string name="ui_clear">Очистити</string>
     <string name="ui_choice">Вибрати</string>
+    <string name="ui_synhronize">Синхронизация</string>
 
     <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
     <string name="ui_font_size">Розмір шрифтів</string>
@@ -259,6 +260,13 @@
 
     <string name="end_work">Окончание работы</string>
     <string name="your_click">Вы нажали</string>
+    <string name="test_ping">Тест скорости связи с сервером</string>
+    <string name="connection_time">Время подключения к серверу заняло: %.3f секунды</string>
+    <string name="export_photo">Экспорт всех фото</string>
+    <string name="main_exchange">Синхронизация данных с сервером</string>
+    <string name="not_photo_title">Все фото переданы на сервер</string>
+    <string name="not_photo">Нет фото для экспорта на сервер</string>
+    <string name="not_show_again">Больше не показывать это уведомление</string>
 
 </resources>
 

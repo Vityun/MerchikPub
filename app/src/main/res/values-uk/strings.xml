@@ -210,6 +210,7 @@
     <string name="ui_clear">Очистити</string>
     <string name="ui_choice">Вибрати</string>
 
+    <string name="ui_synhronize">Синхронізація</string>
     <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
     <string name="ui_font_size">Розмір шрифту</string>
     <string name="ui_text_add">Додати...</string>
@@ -247,5 +248,12 @@
     <string name="hamburger_menu_language">Мова</string>
     <string name="end_work">"Закінчення роботи "</string>
     <string name="your_click">Ви натиснули</string>
+    <string name="test_ping">Тест швидкості зв\'язку із сервером</string>
+    <string name="connection_time">Час підключення до сервера зайняв: %.3f секунди</string>
+    <string name="export_photo">Експорт уciх фото</string>
+    <string name="main_exchange">Синхронізація даних з сервером</string>
+    <string name="not_photo_title">Усі фото передані на сервер</string>
+    <string name="not_photo">Немає фото для експорту на сервер</string>
+    <string name="not_show_again">Більше не показувати це сповіщення</string>
 
 </resources>

@@ -756,8 +756,116 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Синхронизовать Таблици
                 if (i.getItemId() == R.id.exchange_db_action) {
-                    Toast.makeText(toolbar_menus.this, "Синхронізація таблиць", Toast.LENGTH_SHORT).show();
 
+                    ProgressViewModel progress = new ProgressViewModel(1);
+                    LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progress);
+
+                    new MessageDialogBuilder(this)
+                            .setTitle("Cинхронізація даних з сервером!")
+                            .setStatus(DialogStatus.ALERT)
+                            .setSubTitle("Імпорт/Експорт фото, довідників, і інших даних з боку серверу на бік додатку і навпаки, з боку додатку на сервер")
+                            .setMessage("1. Обмін даними, в залежності від якості і-нета, може займати декілька хвилин." +
+                                    "<br>" +
+                                    "2. Після вивантаження даних з боку додатку на сервер, останній може перевіряти їх на протязі декількох хвилин. Поки це відбувається, Ви не зможете провести свій звіт. Треба буде почекати.")
+                            .setShowCheckbox(true, "dont_show_warning_again")
+                            .setOnCancelAction(getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
+                            .setOnConfirmAction(getText(R.string.ui_synhronize).toString(), () -> {
+                                try {
+                                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                                    if (exchange == null) {
+                                        exchange = new Exchange();
+                                    }
+                                    exchange.context = this;
+                                    Exchange.exchangeTime = 0;
+                                    if (exchange.getViewModel() == null)
+                                        exchange.setViewModel(cronchikViewModel);
+                                    exchange.startExchange();
+                                    new TablesLoadingUnloading().downloadAllTables(this);
+
+                                    loadingStart();
+                                    loadingDialog.show();
+                                    progress.onNextEvent("Виконую Синхронізацію з сервером", 18_700);
+//                        exchange.uploadTARComments(null);
+                                } catch (Exception e) {
+                                    Log.d("test", "test" + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                /**MERCHIK_1
+                                 * Походу сюди комтилями треба прикрутити ЗАВАНТАЖЕННЯ фоток образцов*/
+
+                                // 08.11.23. Загрузка принудительная ФОТОГРАФИЙ Витрин. (Идентификаторов Витрин)
+                                try {
+                                    /**MERCHIK_1
+                                     * Зверни увагу на примусове завантаження цих типів фото
+                                     * А може сюди*/
+                                    // #### TODO
+                                    SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                                    List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
+                                    if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
+                                        Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
+//                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
+//                            progress.show();
+                                        samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
+                                            @Override
+                                            public void onSuccess(String data) {
+                                                Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
+//                                    progress.dismiss();
+                                                loadingFinish();
+                                                progress.onCompleted();
+                                                Toast.makeText(getApplicationContext(), "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
+                                            }
+
+                                            @Override
+                                            public void onFailure(String error) {
+                                                Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
+                                                loadingFinish();
+                                                progress.onCompleted();
+
+//                                    progress.dismiss();
+//                                    Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    } else {
+                                        Toast.makeText(this, "Всі ідентифікатори вітрин вже завантажені!", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                // 08.11.23. Загрузка принудительная Образцов фото.
+                                try {
+                                    /**MERCHIK_1
+                                     * Зверни увагу на примусове завантаження і цих типів фото
+                                     * Мені прям дуже кажется що сюди треба дивитись в першу чергу*/
+                                    ShowcaseExchange showcaseExchange = new ShowcaseExchange();
+                                    List<ShowcaseSDB> list = showcaseExchange.getSamplePhotosToDownload();
+                                    if (list != null && list.size() > 0) {
+                                        Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "list: " + list.size());
+                                        showcaseExchange.downloadShowcasePhoto(list);
+                                    } else {
+                                        Toast.makeText(this, "Всі вітрини вже завантажені!", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                try {
+                                    /**MERCHIK_1
+                                     * А це наче завантажуються фото за минулі роботи які виконував мерчандайзер,
+                                     * але перевстановив додаток та загубив ці фото*/
+//                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
+//                        photoMerchikExchange.getPhotoFromSite();
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+                                return Unit.INSTANCE;
+                            })
+                            .show();
 //                    if (!TablesLoadingUnloading.sync) {
 //                        Exchange.sendWpData2();
 //                        Exchange.chatExchange();
@@ -767,102 +875,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                    } else {
 //                        globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
 //                    }
-                    ProgressViewModel progress = new ProgressViewModel(1);
-                    LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progress);
 
-                    try {
-                        // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                        if (exchange == null) {
-                            exchange = new Exchange();
-                        }
-                        exchange.context = this;
-                        Exchange.exchangeTime = 0;
-                        if (exchange.getViewModel() == null)
-                            exchange.setViewModel(cronchikViewModel);
-                        exchange.startExchange();
-                        new TablesLoadingUnloading().downloadAllTables(this);
 
-                        loadingStart();
-                        loadingDialog.show();
-                        progress.onNextEvent("Виконую Синхронізацію з сервером", 18_700);
-//                        exchange.uploadTARComments(null);
-                    } catch (Exception e) {
-                        Log.d("test", "test" + e);
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + e);
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
-                    }
 
-                    /**MERCHIK_1
-                     * Походу сюди комтилями треба прикрутити ЗАВАНТАЖЕННЯ фоток образцов*/
-
-                    // 08.11.23. Загрузка принудительная ФОТОГРАФИЙ Витрин. (Идентификаторов Витрин)
-                    try {
-                        /**MERCHIK_1
-                         * Зверни увагу на примусове завантаження цих типів фото
-                         * А може сюди*/
-                        // #### TODO
-                        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-                        List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
-                        if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
-                            Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
-//                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
-//                            progress.show();
-                            samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
-                                @Override
-                                public void onSuccess(String data) {
-                                    Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
-//                                    progress.dismiss();
-                                    loadingFinish();
-                                    progress.onCompleted();
-                                    Toast.makeText(getApplicationContext(), "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-                                    Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
-                                    loadingFinish();
-                                    progress.onCompleted();
-
-//                                    progress.dismiss();
-//                                    Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        } else {
-                            Toast.makeText(this, "Всі ідентифікатори вітрин вже завантажені!", Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + e);
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
-                    }
-
-                    // 08.11.23. Загрузка принудительная Образцов фото.
-                    try {
-                        /**MERCHIK_1
-                         * Зверни увагу на примусове завантаження і цих типів фото
-                         * Мені прям дуже кажется що сюди треба дивитись в першу чергу*/
-                        ShowcaseExchange showcaseExchange = new ShowcaseExchange();
-                        List<ShowcaseSDB> list = showcaseExchange.getSamplePhotosToDownload();
-                        if (list != null && list.size() > 0) {
-                            Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "list: " + list.size());
-                            showcaseExchange.downloadShowcasePhoto(list);
-                        } else {
-                            Toast.makeText(this, "Всі вітрини вже завантажені!", Toast.LENGTH_SHORT).show();
-                        }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
-                    }
-
-                    try {
-                        /**MERCHIK_1
-                         * А це наче завантажуються фото за минулі роботи які виконував мерчандайзер,
-                         * але перевстановив додаток та загубив ці фото*/
-//                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
-//                        photoMerchikExchange.getPhotoFromSite();
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
-                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
-                    }
                 }
                 return true;
             });
@@ -1189,12 +1204,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
 
     private void photoUpload() {
-        globals.writeToMLOG( "TOOLBAR.photoUpload.: " + "ENTER" + "\n");
+        globals.writeToMLOG("TOOLBAR.photoUpload.: " + "ENTER" + "\n");
 
         Log.e("ОБМЕН", "(Кнопка)Выгрузка фото");
 
         try {
-            globals.writeToMLOG( "TOOLBAR.photoUpload.: " + "TRY" + "\n");
+            globals.writeToMLOG("TOOLBAR.photoUpload.: " + "TRY" + "\n");
             int countPhoto = RealmManager.stackPhotoNotUploadedPhotosCount();
             if (countPhoto > 0) {
                 String msg = "Сейчас будет выгружено " + countPhoto + " фото на сервер. Дождитесь сообщения об окончании работы.";
@@ -1209,7 +1224,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Toast.makeText(toolbar_menus.this, "Нет фото для выгрузки.", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            globals.writeToMLOG( "TOOLBAR.photoUpload.catch: " + e + "\n");
+            globals.writeToMLOG("TOOLBAR.photoUpload.catch: " + e + "\n");
         }
     }
 
@@ -1253,7 +1268,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-                globals.writeToMLOG( " CRON.internetStatus: " + internetStatus + "\n");
+                globals.writeToMLOG(" CRON.internetStatus: " + internetStatus + "\n");
 
                 cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
@@ -1357,7 +1372,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
                 // Пишет статус логина. Или режим работы приложения
-                toolbarMwnuItemServer = "Тест";
+                toolbarMwnuItemServer = getText(R.string.test_ping).toString();
 //                if (Globals.onlineStatus) {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
 //                } else {
@@ -1564,22 +1579,22 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 try {
                     if (current != null) {
                         finalId = current.getId();
-                        globals.writeToMLOG( "TOOLBAR.startUploading. current: " + "not null" + "\n");
+                        globals.writeToMLOG("TOOLBAR.startUploading. current: " + "not null" + "\n");
                     } else {
-                        globals.writeToMLOG( "TOOLBAR.startUploading. current: " + "NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + "\n");
+                        globals.writeToMLOG("TOOLBAR.startUploading. current: " + "NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + "\n");
                     }
                 } catch (Exception e) {
-                    globals.writeToMLOG( "TOOLBAR.startUploading.current.exception: " + e + "\n");
+                    globals.writeToMLOG("TOOLBAR.startUploading.current.exception: " + e + "\n");
                 }
 
 
-                globals.writeToMLOG( "TOOLBAR.перед самим вызовом выгрузки. id фото выгрузки: " + finalId + "\n");
+                globals.writeToMLOG("TOOLBAR.перед самим вызовом выгрузки. id фото выгрузки: " + finalId + "\n");
                 int finalId1 = finalId;
                 photoUploadToServer(mod, current, new UploadCallback() {
                     @Override
                     public void onSuccess() {
                         try {
-                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onSuccess. id фото выгрузки: " + finalId1 + "\n");
+                            globals.writeToMLOG("TOOLBAR.UploadCallback.onSuccess. id фото выгрузки: " + finalId1 + "\n");
 
                             Log.e("startUploading", "onSuccess");
                             Toast.makeText(toolbar_menus.this, "Фото номер: " + finalId1 + " успешно выгружено", Toast.LENGTH_LONG).show();
@@ -1590,14 +1605,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
-                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onSuccess.catch.e: " + e + "\n");
+                            globals.writeToMLOG("TOOLBAR.UploadCallback.onSuccess.catch.e: " + e + "\n");
                         }
                     }
 
                     @Override
                     public void onFailure(String s) {
                         try {
-                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onFailure. id фото выгрузки: " + finalId1 + " ОШИБКА: " + s + "\n");
+                            globals.writeToMLOG("TOOLBAR.UploadCallback.onFailure. id фото выгрузки: " + finalId1 + " ОШИБКА: " + s + "\n");
 
                             Log.e("startUploading", "onFailure " + s + ".");
 //                            Toast.makeText(toolbar_menus.this, "При выгрузке фото: " + current.getPhoto_num() + " возникла ошибка: " + s, Toast.LENGTH_LONG).show();
@@ -1610,7 +1625,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
-                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onFailure.catch.e: " + e + "\n");
+                            globals.writeToMLOG("TOOLBAR.UploadCallback.onFailure.catch.e: " + e + "\n");
                         }
                     }
                 });
@@ -1625,7 +1640,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 uploadPermission = true;
             }
         } catch (Exception e) {
-            globals.writeToMLOG( "TOOLBAR.startUploading.Ошибка: " + e + "\n");
+            globals.writeToMLOG("TOOLBAR.startUploading.Ошибка: " + e + "\n");
         }
 
     }
@@ -1646,7 +1661,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         realmResults.add(photo);
                 }
             }
-            globals.writeToMLOG( "TOOLBAR.выгрузка.сбор данных перед выгрузкой. количество фоток к выгрузке на текущий момент: " + realmResults.size() + "\n");
+            globals.writeToMLOG("TOOLBAR.выгрузка.сбор данных перед выгрузкой. количество фоток к выгрузке на текущий момент: " + realmResults.size() + "\n");
             startUploading(mod);
         } else {
             // ВЫ УЖЕ НАЧАЛИ ВЫГРУЗКУ
@@ -1859,7 +1874,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
         String info = " UPLOAD.PHOTO.TOOLBAR.PHOTODATA: photoId: " + photoId;
-        globals.writeToMLOG( info + " " + data + "\n");
+        globals.writeToMLOG(info + " " + data + "\n");
 
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
@@ -1874,7 +1889,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 call.enqueue(new retrofit2.Callback<JsonObject>() {
                     @Override
                     public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                        globals.writeToMLOG( "TOOLBAR.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
+                        globals.writeToMLOG("TOOLBAR.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
 
 
                         Log.e("TAG_REALM_LOG", "SUCCESS: " + response.body());
@@ -1920,15 +1935,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                 String error = jsonR.get("error").getAsString();
 
 
-                                                globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.error: " + error + "\n");
+                                                globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.state-false.error: " + error + "\n");
 
                                                 // Такое фото уже было загружено ранее: JPG_20210216_091646_-1173842094.jpg
                                                 String crutch = error.substring(0, 35);
 
-                                                globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.crutch: " + error + "\n");
+                                                globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.state-false.crutch: " + error + "\n");
 
                                                 if (crutch.equals("Такое фото уже было загружено ранее:")) {
-                                                    globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
+                                                    globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
 
                                                     try {
                                                         RealmManager.INSTANCE.executeTransaction(transaction);
@@ -1937,7 +1952,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     }
 
                                                 } else {
-                                                    globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.SECOND.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
+                                                    globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.SECOND.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
                                                     try {
                                                         RealmManager.INSTANCE.executeTransaction(transaction);
                                                         RealmManager.stackPhotoSavePhoto(photoDB);
@@ -1972,7 +1987,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     @Override
                     public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
 
-                        globals.writeToMLOG( "TOOLBAR.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
+                        globals.writeToMLOG("TOOLBAR.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
 
 
                         Log.e("TAG_REALM_LOG", "ОШИБКА ПРИ ВЫГРУЗКЕ ФОТО с ID: " + photoDB.getId());
@@ -2434,7 +2449,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 Log.e("PING_SERVER", "StartTime: " + response.body().getT() + " CurrentTime: " + currentTime + " difference: " + difference);
 
                                 if (mode == 2) {
-                                    Toast.makeText(toolbar_menus.this, "Задержка составляет: " + difference + "млс.", Toast.LENGTH_LONG).show();
+//                                    Toast.makeText(toolbar_menus.this, "Задержка составляет: " + difference + "млс.", Toast.LENGTH_LONG).show();
+                                    double seconds = difference / 1000.0;
+                                    DialogData dialogData = new DialogData(toolbar_menus.this);
+                                    String message = getString(R.string.connection_time, seconds);
+                                    dialogData.setTitle(getText(R.string.test_ping).toString());
+                                    dialogData.setText(message);
+                                    dialogData.show();
                                 }
 
                                 if (background instanceof ShapeDrawable) {

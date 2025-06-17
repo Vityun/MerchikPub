@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,8 +64,6 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolde
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import java.time.LocalDate
 
-
-@SuppressLint("SuspiciousIndentation")
 @Composable
 fun MessageDialog(
     title: String? = "",
@@ -72,43 +71,31 @@ fun MessageDialog(
     message: String = "",
     onDismiss: () -> Unit,
     okButtonName: String = "Ok",
-    onConfirmAction: (() -> Unit)? = null, // Опциональный параметр для действия на кнопке "OK"
+    onConfirmAction: (() -> Unit)? = null,
     cancelButtonName: String = "Отмена",
-    onCancelAction: (() -> Unit)? = null, // Опциональный параметр для действия на кнопке "Oтмена"
-    status: DialogStatus? = DialogStatus.NORMAL
+    onCancelAction: (() -> Unit)? = null,
+    status: DialogStatus? = DialogStatus.NORMAL,
+    showCheckbox: Boolean = false,
+    onCheckboxChanged: ((Boolean) -> Unit)? = null,
 ) {
-    // Для управления состоянием подтверждающего диалога
-//    val isCompleted by remember { derivedStateOf { viewModel.isCompleted } }
-
     val scrollState = rememberScrollState()
-    val styledAnnotatedString = AnnotatedString.fromHtml(htmlString = message)
+    val styledAnnotatedString = AnnotatedString.fromHtml(message)
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-
+    var isChecked by remember { mutableStateOf(false) }
 
     val composition by rememberLottieComposition(
-        when (status){
+        when (status) {
             DialogStatus.ERROR -> LottieCompositionSpec.RawRes(R.raw.error)
             DialogStatus.ALERT -> LottieCompositionSpec.RawRes(R.raw.alert)
             else -> LottieCompositionSpec.RawRes(R.raw.status_ok)
         }
-
-//        if (status == DialogStatus.ERROR) LottieCompositionSpec.RawRes(
-//            R.raw.error
-//        ) else LottieCompositionSpec.RawRes(R.raw.alert)
     )
-    val progress by animateLottieCompositionAsState(
-        composition,
-        iterations = LottieConstants.IterateForever,
-        isPlaying = true
-    )
+    val progress by animateLottieCompositionAsState(composition, iterations = LottieConstants.IterateForever)
 
     var isCompleted by remember { mutableStateOf(false) }
 
-    // Закрываем диалог, если задача завершена
     LaunchedEffect(isCompleted) {
-        if (isCompleted) {
-            onDismiss()
-        }
+        if (isCompleted) onDismiss()
     }
 
     Dialog(onDismissRequest = {}) {
@@ -116,47 +103,36 @@ fun MessageDialog(
             modifier = Modifier
                 .wrapContentHeight()
                 .width(screenWidth * 0.9f)
-//                .fillMaxWidth(0.9f)
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {
-
+            // Заголовок и кнопка "X"
             Row(
                 modifier = Modifier
                     .wrapContentWidth()
                     .padding(start = 15.dp, bottom = 15.dp),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically // Для выравнивания текста и кнопки по вертикали
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f)
-                )
-
+                Spacer(modifier = Modifier.weight(1f))
                 ImageButton(
                     id = R.drawable.ic_letter_x,
                     shape = CircleShape,
-                    colorImage = ColorFilter.tint(color = Color.Gray),
+                    colorImage = ColorFilter.tint(Color.Gray),
                     sizeButton = 40.dp,
                     sizeImage = 25.dp,
-                    modifier = Modifier
-                        .padding(end = 10.dp),
-//                    .padding(start = 15.dp, bottom = 10.dp)
-//                    .align(alignment = Alignment.End),
-                    onClick = {
-                        isCompleted = true
-                    }
+                    modifier = Modifier.padding(end = 10.dp),
+                    onClick = { isCompleted = true }
                 )
             }
+
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
                     .verticalScroll(scrollState)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(color = Color.White)
-//                    .background(color = colorResource(id = R.color.main_form))
-            )
-            {
+                    .background(Color.White)
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
@@ -164,9 +140,9 @@ fun MessageDialog(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    if (!title.isNullOrEmpty())
+                    title?.takeIf { it.isNotEmpty() }?.let {
                         Text(
-                            text = title,
+                            text = it,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -174,90 +150,99 @@ fun MessageDialog(
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
                         )
+                    }
 
-                    if (status != DialogStatus.EMPTY)
+                    if (status != DialogStatus.EMPTY) {
                         LottieAnimation(
-                            modifier = Modifier
-                                .size(68.dp)
-                                .padding(bottom = 4.dp),
+                            modifier = Modifier.size(68.dp).padding(bottom = 4.dp),
                             composition = composition,
                             progress = { progress },
-                            )
-                    if (!subTitle.isNullOrEmpty())
+                        )
+                    }
+
+                    subTitle?.takeIf { it.isNotEmpty() }?.let {
                         Text(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .scale(1.1f),
-                            text = subTitle,
+                            text = it,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.Gray,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Text(
+                            textAlign = TextAlign.Center,
                             modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .padding(bottom = 2.dp),
-                            text = styledAnnotatedString,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xCC1E201D),
-                            textAlign = TextAlign.Center
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .scale(1.1f)
                         )
+                    }
 
-                    // Если есть действие, показываем кнопку "OK"
+                    Text(
+                        text = styledAnnotatedString,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xCC1E201D),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .padding(bottom = 2.dp)
+                    )
+
+                    // ✅ Чекбокс "Не показывать больше"
+                    if (showCheckbox) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp, start = 8.dp)
+                        ) {
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = {
+                                    isChecked = it
+                                    onCheckboxChanged?.invoke(it)
+                                }
+                            )
+                            Text(
+                                text = stringResource(id = R.string.not_show_again), // строка из ресурсов
+                                modifier = Modifier.padding(start = 4.dp),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+
+                    // Кнопки
                     if (onConfirmAction != null || onCancelAction != null) {
                         Spacer(modifier = Modifier.padding(4.dp))
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Bottom,
                             horizontalArrangement = Arrangement.End
                         ) {
-                            if (onCancelAction != null) {
+                            onCancelAction?.let {
                                 Button(
                                     onClick = {
-                                        onCancelAction()
+                                        it()
                                         isCompleted = true
                                     },
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(
-                                            id = R.color.blue
-                                        )
-                                    ),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
                                     modifier = Modifier
                                         .padding(horizontal = 2.dp)
-                                        .weight(1f),
+                                        .weight(1f)
                                 ) {
                                     Text(cancelButtonName)
                                 }
-//                                Spacer(modifier = Modifier.padding(10.dp))
-                            } else {
-                                Spacer(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(16.dp)
-                                )
-                            }
+                            } ?: Spacer(modifier = Modifier.weight(1f).padding(16.dp))
 
-                            if (onConfirmAction != null)
+                            onConfirmAction?.let {
                                 Button(
                                     onClick = {
-                                        onConfirmAction()
+                                        it()
                                         isCompleted = true
                                     },
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(
-                                            id = R.color.orange
-                                        )
-                                    ),
+                                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
                                     modifier = Modifier
                                         .padding(horizontal = 2.dp)
                                         .weight(1f)
                                 ) {
                                     Text(okButtonName)
                                 }
+                            }
                         }
                     }
                 }
