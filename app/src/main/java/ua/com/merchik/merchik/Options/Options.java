@@ -47,6 +47,7 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
@@ -1249,7 +1250,12 @@ public class Options {
 
             OptionMassageType type = new OptionMassageType();
             type.type = STRING;
+            Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
+                    "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
 
+            Log.e("!","ConductMode: " + mode.name() +
+                    "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
+                    "List<OptionsDB> size: " + options.size());
             for (OptionsDB item : options) {
                 Log.e("conduct", "------------------------------START----------------------------------");
                 Log.e("conduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
@@ -1268,6 +1274,8 @@ public class Options {
                     @Override
                     public void onUnlockCodeFailure() {
                         controlResult[0] = 1;
+                        Globals.writeToMLOG("INFO", "Options.conduct.onUnlockCodeFailure",
+                                "options: " + new Gson().fromJson(new Gson().toJson(item), JsonObject.class));
                     }
                 });
 
@@ -1304,8 +1312,9 @@ public class Options {
                 Log.e("conduct", "-----------------------------END-----------------------------------");
             }
 
-            Log.e("conduct", "optionNotConduct: " + optionNotConduct);
-
+            Log.e("conduct", "optionNotConduct: " + new Gson().fromJson(new Gson().toJson(optionNotConduct), JsonArray.class));
+            Globals.writeToMLOG("INFO", "Options.conduct.block",
+                    "optionNotConduct: " + new Gson().fromJson(new Gson().toJson(optionNotConduct), JsonArray.class));
 
             switch (mode) {
                 case SALARY_CUT:
@@ -1356,7 +1365,9 @@ public class Options {
 //                        DialogData dialogData = new DialogData(context);
 //                        dialogData.setClose(dialogData::dismiss);
 
-                        Exchange exchange = new Exchange();
+                        Globals.writeToMLOG("INFO", "Options.conduct",
+                                "optionNotConduct: optionNotConduct.isEmpty()");
+
 
                         List<StackPhotoDB> res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
                         if (!res.isEmpty()) {
@@ -1373,7 +1384,7 @@ public class Options {
                                     .setOnConfirmAction("Cинхронизация", () -> {
                                                 new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
                                                 new TablesLoadingUnloading().uploadReportPrepareToServer();
-                                                exchange.startExchange();
+                                                new Exchange().startExchange();
                                                 return Unit.INSTANCE;
                                             }
                                     )
@@ -1381,7 +1392,6 @@ public class Options {
                         } else {
 //                            new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
                             new TablesLoadingUnloading().uploadReportPrepareToServer();
-                            exchange.startExchange();
                             Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
                                 @Override
                                 public <T> void onSuccess(T data) {
@@ -1447,6 +1457,8 @@ public class Options {
                                     });
                                 }
                             });
+                            new Exchange().startExchange();
+
                         }
                     }
                     break;
@@ -3049,6 +3061,8 @@ public class Options {
 
         } catch (Exception e) {
             Log.e("optionEndWork_138520", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "Exception: " + e.getMessage());
+
         }
         return result;
     }
@@ -3467,11 +3481,24 @@ public class Options {
                     }
                 });
 
-                DialogData dialog = new DialogData(context);
-                dialog.setTitle("Версія додатку");
-                dialog.setText("У вас СТАРА версія додатку(" + currentVer + "), Вам потрібно оновитися до: " + minimalVer + "!");
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                new MessageDialogBuilder(unwrap(context))
+                        .setTitle("Версія додатку")
+                        .setStatus(DialogStatus.ERROR)
+                        .setMessage("У вас СТАРА версія додатку(" + currentVer + "), Вам потрібно оновитися до: " + minimalVer + "!")
+                        .setOnConfirmAction("Оновити", () -> {
+                            try {
+                                // Пытаемся открыть через Google Play App
+                                unwrap(context).startActivity(new Intent(Intent.ACTION_VIEW,
+                                        Uri.parse("market://details?id=" + context.getPackageName())));
+                            } catch (android.content.ActivityNotFoundException e) {
+                                // Если приложения Google Play нет, открываем в браузере
+                                unwrap(context).startActivity(new Intent(Intent.ACTION_VIEW,
+                                        Uri.parse("https://play.google.com/store/apps/details?id=" + context.getPackageName())));
+                            }
+                            unwrap(context).finishAffinity();
+                            return Unit.INSTANCE;
+                        })
+                        .show();
 
                 unlockCodeResultListener.onUnlockCodeFailure();
             }

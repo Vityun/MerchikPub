@@ -1,17 +1,11 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
-import android.annotation.SuppressLint
-import android.text.Html
-import android.text.Spanned
-import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,25 +23,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
@@ -58,11 +47,9 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
-import java.time.LocalDate
 
 @Composable
 fun MessageDialog(
@@ -90,7 +77,10 @@ fun MessageDialog(
             else -> LottieCompositionSpec.RawRes(R.raw.status_ok)
         }
     )
-    val progress by animateLottieCompositionAsState(composition, iterations = LottieConstants.IterateForever)
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever
+    )
 
     var isCompleted by remember { mutableStateOf(false) }
 
@@ -152,9 +142,25 @@ fun MessageDialog(
                         )
                     }
 
-                    if (status != DialogStatus.EMPTY) {
+                    if (status == DialogStatus.LOADING) {
+                        Box(
+                            modifier = Modifier
+                                .size(68.dp)
+                                .padding(bottom = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LineSpinFadeLoaderIndicator(
+                                penThickness = 10f,
+                                radius = 22f,
+                                elementHeight = 15f,
+                                color = Color.Green
+                            )
+                        }
+                    } else if (status != DialogStatus.EMPTY) {
                         LottieAnimation(
-                            modifier = Modifier.size(68.dp).padding(bottom = 4.dp),
+                            modifier = Modifier
+                                .size(68.dp)
+                                .padding(bottom = 4.dp),
                             composition = composition,
                             progress = { progress },
                         )
@@ -163,7 +169,7 @@ fun MessageDialog(
                     subTitle?.takeIf { it.isNotEmpty() }?.let {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             color = Color.Gray,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -219,14 +225,22 @@ fun MessageDialog(
                                         isCompleted = true
                                     },
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(
+                                            id = R.color.blue
+                                        )
+                                    ),
                                     modifier = Modifier
                                         .padding(horizontal = 2.dp)
                                         .weight(1f)
                                 ) {
                                     Text(cancelButtonName)
                                 }
-                            } ?: Spacer(modifier = Modifier.weight(1f).padding(16.dp))
+                            } ?: Spacer(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(16.dp)
+                            )
 
                             onConfirmAction?.let {
                                 Button(
@@ -235,7 +249,11 @@ fun MessageDialog(
                                         isCompleted = true
                                     },
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(
+                                            id = R.color.orange
+                                        )
+                                    ),
                                     modifier = Modifier
                                         .padding(horizontal = 2.dp)
                                         .weight(1f)
@@ -245,6 +263,7 @@ fun MessageDialog(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.padding(2.dp))
                 }
             }
         }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.realm.Realm;
+import kotlin.Unit;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -125,10 +126,13 @@ public class PhotoReports {
         } else {
             switch (type) {
                 case MULTIPLE:
-                    DialogData dialogData = new DialogData(mContext);
-                    dialogData.setTitle(mContext.getText(R.string.not_photo_title).toString());
-                    dialogData.setText(mContext.getText(R.string.not_photo).toString());
-                    dialogData.show();
+                    new MessageDialogBuilder((Activity) mContext)
+                            .setStatus(DialogStatus.NORMAL)
+                            .setTitle(mContext.getText(R.string.not_photo_title).toString())
+                            .setMessage(mContext.getText(R.string.not_photo).toString())
+                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                            .show();
+
 //                    Toast.makeText(mContext, "Нет фото для ыгрузки", Toast.LENGTH_SHORT).show();
                     break;
             }

@@ -207,6 +207,7 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
+                signal = true;
                 if (tovarGroupSDB != null) {
                     for (TovarGroupSDB item : tovarGroupSDB) {
                         ids.add(item.id);
@@ -252,7 +253,7 @@ public class OptionControlEKL<T> extends OptionControl {
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
                 if (addressSDB.tpId == 383) {   // АШАН
-                    if (wpDataDB.getDot_user_id() != 0 && wpDataDB.getFot_user_id() != 0) {
+                    if (wpDataDB.getDot_user_id() != 0 || wpDataDB.getFot_user_id() != 0) {
                         signal = false;
                         optionMsg.append("но для Ашанов по которым работаем с ДОТ или ФОТ ЭКЛ не проверяем.");
                     }
@@ -450,7 +451,6 @@ public class OptionControlEKL<T> extends OptionControl {
         }
         valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
         valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
-
 
         // 07.03.25 добавил штрафы/премии в экл
         spannableStringBuilder

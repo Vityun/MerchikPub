@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.ServerExchange;
 
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
+import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.readyTypeGrp;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
@@ -3261,33 +3262,40 @@ public class Exchange {
         call.enqueue(new Callback<ConductWpDataResponse>() {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
-                Log.e("conductingOnServer", "response: " + response);
-                String text = response.body().notice;
-                Log.e("conductingOnServer", "response: " + text);
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        if (response.body().state) {
-                            // Пока пусть будет, я не знаю что им там в голову бахнет
-                            if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
-                                click.onSuccess(response.body().notice);
-                            } else {
-                                click.onSuccess(response.body().notice);
+              try {
+                  Log.e("conductingOnServer", "response: " + response);
+                  String text = response.body().notice;
+                  Log.e("conductingOnServer", "response: " + text);
+                  if (response.isSuccessful()) {
+                      if (response.body() != null) {
+                          Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "resul: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
+                          if (response.body().state) {
+                              // Пока пусть будет, я не знаю что им там в голову бахнет
+                              if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
+                                  click.onSuccess(response.body().notice);
+                              } else {
+                                  click.onSuccess(response.body().notice);
 //                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
-                            }
-                        } else {
-                            click.onFailure("Не можу обробити документ, причина: " + response.body().error);
-                        }
-                    } else {
-                        click.onFailure("Нема даних для обробки.");
-                    }
-                } else {
-                    click.onFailure("Код запиту до сервера: " + response.code());
-                }
+                              }
+                          } else {
+                              click.onFailure("Не можу обробити документ, причина: " + response.body().error);
+                          }
+                      } else {
+                          click.onFailure("Нема даних для обробки.");
+                      }
+                  } else {
+                      click.onFailure("Код запиту до сервера: " + response.code());
+                  }
+              } catch (Exception e) {
+                  Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception: " + e.getMessage());
+
+              }
             }
 
             @Override
             public void onFailure(Call<ConductWpDataResponse> call, Throwable t) {
                 Log.e("conductingOnServer", "Throwable t: " + t);
+                Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onFailure", "Exception: " + t.getMessage());
                 click.onFailure("Нема зв'язку. Помилка: " + t);
             }
         });

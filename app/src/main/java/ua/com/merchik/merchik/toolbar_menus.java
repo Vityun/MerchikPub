@@ -126,6 +126,7 @@ import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
@@ -762,11 +763,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     new MessageDialogBuilder(this)
                             .setTitle("Cинхронізація даних з сервером!")
-                            .setStatus(DialogStatus.ALERT)
+                            .setStatus(DialogStatus.LOADING)
                             .setSubTitle("Імпорт/Експорт фото, довідників, і інших даних з боку серверу на бік додатку і навпаки, з боку додатку на сервер")
                             .setMessage("1. Обмін даними, в залежності від якості і-нета, може займати декілька хвилин." +
                                     "<br>" +
-                                    "2. Після вивантаження даних з боку додатку на сервер, останній може перевіряти їх на протязі декількох хвилин. Поки це відбувається, Ви не зможете провести свій звіт. Треба буде почекати.")
+                                    "2. Після вивантаження даних з боку додатку на сервер, останній може перевіряти їх на протязі декількох хвилин. Поки це відбувається, Ви не зможете провести свій звіт. Треба буде почекати." +
+                                    "<br>" +
+                                    "3. Після завершення завантаження Ви вже можете користуватися програмою, але обмін ще повністю не виконаний і частина даних, у тому числі фотографій можуть бути не доступні. Статус обміну показує індикатор завантаження у верхній частині екрана")
                             .setShowCheckbox(true, "dont_show_warning_again")
                             .setOnCancelAction(getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
                             .setOnConfirmAction(getText(R.string.ui_synhronize).toString(), () -> {
@@ -875,7 +878,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                    } else {
 //                        globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
 //                    }
-
 
 
                 }
@@ -1340,6 +1342,26 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                        exchange.downloadAchievements();
                         exchange.uploadAchievemnts();
                     }
+
+                    // выгрузка окончания работы
+                    try {
+                        exchange.sendWpDataToServer(new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                String msg = (String) data;
+                                Globals.writeToMLOG("INFO", "startExchange.sendWpDataToServer.onSuccess", "msg: " + msg);
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                if (!error.equals("Нет даных"))
+                                    Globals.writeToMLOG("INFO", "startExchange.sendWpDataToServer.onFailure", "error: " + error);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "startExchange/sendWpDataToServer/", "Exception e: " + e);
+                    }
+
 //                    tablesLoadingUnloading.updateWpData();
                     // Загрузка Задач и Рекламаций
                     try {
@@ -2451,11 +2473,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 if (mode == 2) {
 //                                    Toast.makeText(toolbar_menus.this, "Задержка составляет: " + difference + "млс.", Toast.LENGTH_LONG).show();
                                     double seconds = difference / 1000.0;
-                                    DialogData dialogData = new DialogData(toolbar_menus.this);
                                     String message = getString(R.string.connection_time, seconds);
-                                    dialogData.setTitle(getText(R.string.test_ping).toString());
-                                    dialogData.setText(message);
-                                    dialogData.show();
+
+                                    new MessageDialogBuilder(toolbar_menus.this)
+                                            .setTitle(getText(R.string.test_ping).toString())
+                                            .setStatus(DialogStatus.NORMAL)
+                                            .setMessage(message)
+                                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                                            .show();
                                 }
 
                                 if (background instanceof ShapeDrawable) {
@@ -2674,19 +2699,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             ib.setVisibility(View.GONE);
             loadingIndicator.show();
         }
-        boolean isFirstLoading = prefs.getBoolean(KEY_IS_FIRST_LOADING, true);
-
-        if (isFirstLoading) {
-            new MessageDialogBuilder(this)
-                    .setStatus(DialogStatus.NORMAL)
-                    .setTitle("Завантаження фотографій")
-                    .setSubTitle("Відбувається обмін із сервером")
-                    .setMessage("Ви вже можете користуватися програмою, але обмін ще повністю не виконаний і частина даних, у тому числі фотографій можуть бути не доступні. Статус обміну показує індикатор завантаження у верхній частині екрана")
-                    .setOnConfirmAction(() -> Unit.INSTANCE)
-                    .show();
-            // Записываем в SharedPreferences, что первый показ уже был
-            prefs.edit().putBoolean(KEY_IS_FIRST_LOADING, false).apply();
-        }
+//        boolean isFirstLoading = prefs.getBoolean(KEY_IS_FIRST_LOADING, true);
+//
+//        if (isFirstLoading) {
+//            new MessageDialogBuilder(this)
+//                    .setStatus(DialogStatus.NORMAL)
+//                    .setTitle("Завантаження фотографій")
+//                    .setSubTitle("Відбувається обмін із сервером")
+//                    .setMessage("Ви вже можете користуватися програмою, але обмін ще повністю не виконаний і частина даних, у тому числі фотографій можуть бути не доступні. Статус обміну показує індикатор завантаження у верхній частині екрана")
+//                    .setOnConfirmAction(() -> Unit.INSTANCE)
+//                    .show();
+//            // Записываем в SharedPreferences, что первый показ уже был
+//            prefs.edit().putBoolean(KEY_IS_FIRST_LOADING, false).apply();
+//        }
 
     }
 

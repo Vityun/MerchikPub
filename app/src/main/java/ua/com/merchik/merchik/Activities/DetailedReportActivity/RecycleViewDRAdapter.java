@@ -43,6 +43,7 @@ import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -79,6 +80,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -89,6 +91,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
@@ -97,6 +100,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 
@@ -314,7 +318,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (salary == 0)
                                 salary = 15700;
 
-                            SpannableString text = new SpannableString("+" + salary / 10 + ".0 грн.");
+                            SpannableString text = CustomString.underlineString("+" + salary / 10 + ".0 грн.", optionsButtons);
                             text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                             textInteger2.setText(text);
@@ -336,7 +340,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         textInteger2.setVisibility(View.VISIBLE);
                         List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, (long) optionId);
                         Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
-                        SpannableString text = new SpannableString("+" + bonus.getSecond() + " грн.");
+
+                        SpannableString text = CustomString.underlineString("+" + bonus.getSecond() + " грн.", optionsButtons);
                         text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger2.setText(text);
                         textInteger2.setOnClickListener(new View.OnClickListener() {
@@ -423,6 +428,32 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                            textInteger.setText("");
 //                            break;
 
+                        case 138773:
+                            List<LogMPDB> logMPList = new ArrayList<>();
+                            int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
+                            long startT = (wp.getVisit_start_dt() > 0)
+                                    ? wp.getVisit_start_dt() - validTime
+                                    : (System.currentTimeMillis() / 1000) - validTime;
+                            long endT = wp.getVisit_end_dt() > 0 ? wp.getVisit_end_dt() : System.currentTimeMillis() / 1000;
+                            logMPList = LogMPRealm.getLogMPTime(startT*1000, endT*1000);
+                            int loMPonPoint = 0;
+                            for (LogMPDB log : logMPList) {
+                                if (log.distance != 0 && log.distance < 1000) {
+                                    loMPonPoint++;
+                                }
+                            }
+                            textInteger.setText(CustomString.underlineString( logMPList.size() + "/" + loMPonPoint, optionsButtons));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
+                                bundle.putString("dataJson", new Gson().toJson(wp));
+                                bundle.putString("title", "Історія місцеположення");
+                                intent.putExtras(bundle);
+                                mContext.startActivity(intent);
+                            });
+                        break;
+
                         case 135159:
                             int achievementSum = 0;
                             List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getByDad2(dad2);
@@ -442,8 +473,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }*/
                             startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-//                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
-                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
+                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
+//                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                             break;
                         case (138520):
                             long endTime;
@@ -453,7 +484,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }*/
                             endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
+                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons));
+//                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                             break;
 
                         case (158309):  // Фото витрины Приближённое
@@ -840,7 +872,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case 137797:    // Остатки
                             String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
-                            textInteger.setText(msg);
+                            textInteger.setText(CustomString.coloredString("" + msg, optionsButtons));
+//                            textInteger.setText(msg);
                             break;
 
                         case 141910:    // "Получение заказа в ТТ"
@@ -1006,7 +1039,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Log.e("NNK", "test2: " + test2);
                                 Log.e("NNK", "test3: " + test3);
 
-                                if (dataDB instanceof WpDataDB) {
+                                if (dataDB instanceof WpDataDB && getBindingAdapterPosition() != -1) {
                                     detailedReportButtons.buttonClick(
                                             mContext,
                                             (WpDataDB) dataDB,

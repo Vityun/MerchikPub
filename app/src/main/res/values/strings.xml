@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">061701</string>
+    <string name="ver" translatable="false">061901</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-06-17</string>
+    <string name="debug_date" translatable="false">2025-06-19</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -261,7 +261,7 @@
     <string name="end_work">Окончание работы</string>
     <string name="your_click">Вы нажали</string>
     <string name="test_ping">Тест скорости связи с сервером</string>
-    <string name="connection_time">Время подключения к серверу заняло: %.3f секунды</string>
+    <string name="connection_time">Время подключения к серверу заняло: %.3f секунды, что является отличным показателем</string>
     <string name="export_photo">Экспорт всех фото</string>
     <string name="main_exchange">Синхронизация данных с сервером</string>
     <string name="not_photo_title">Все фото переданы на сервер</string>
