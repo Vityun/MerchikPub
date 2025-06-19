@@ -1243,7 +1243,7 @@ public class Options {
         try {
             int register = 0;
 
-            DialogData dialog = new DialogData(context);
+//            DialogData dialog = new DialogData(context);
 
             SpannableStringBuilder optionsSum = new SpannableStringBuilder();
             double optionSumRes = 0;
@@ -1329,6 +1329,7 @@ public class Options {
 
                     dialog.setText(salaryCutText, () -> {
                     });
+                    dialog.show();
 
                     break;
 
@@ -1356,6 +1357,7 @@ public class Options {
 
                         dialog.setText(resStr, () -> {
                         });
+                        dialog.show();
 
                     } else {
 //                        dialog.setTitle("Блокирующие опции не обнаружены.");
@@ -1467,8 +1469,8 @@ public class Options {
                     break;
             }
 
-            dialog.setClose(dialog::dismiss);
-            dialog.show();
+//            dialog.setClose(dialog::dismiss);
+//            dialog.show();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "Options/conduct/catch", "Exception e: " + e);

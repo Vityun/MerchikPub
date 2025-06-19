@@ -2430,7 +2430,7 @@ public class Exchange {
 
             for (WpDataDB item : wp) {
                 for (WpDataUpdateResponseList itm : data) {
-                    if (itm.elementId.equals(item.getId())) {
+                    if (itm.elementId.equals(item.getId()) && itm.data != null) {
                         if (itm.data.visitStartDt || itm.data.visitEndDt || itm.data.clientStartDt || itm.data.clientEndDt
                                 || itm.data.userComment || itm.data.user_opinion_id) {
                             item.startUpdate = false;
