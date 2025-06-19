@@ -1243,7 +1243,7 @@ public class Options {
         try {
             int register = 0;
 
-//            DialogData dialog = new DialogData(context);
+            DialogData dialog = new DialogData(context);
 
             SpannableStringBuilder optionsSum = new SpannableStringBuilder();
             double optionSumRes = 0;
