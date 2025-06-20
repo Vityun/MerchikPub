@@ -2530,18 +2530,18 @@ public class Exchange {
                         }
                         AdditionalRequirementsMarkRealm.setDataToDBWithOutDel(list);
                     }
-                    isARMarkUploading = true;
+                    isARMarkUploading = false;
 
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(set to DB) e: " + e);
-                    isARMarkUploading = true;
+                    isARMarkUploading = false;
                 }
 
             }
 
             @Override
             public void onFailure(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
-                isARMarkUploading = true;
+                isARMarkUploading = false;
                 Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
             }
         });
@@ -3269,6 +3269,7 @@ public class Exchange {
                   if (response.isSuccessful()) {
                       if (response.body() != null) {
                           Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "resul: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
+                          Log.e("conductingOnServer", "response: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
                           if (response.body().state) {
                               // Пока пусть будет, я не знаю что им там в голову бахнет
                               if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
@@ -3378,17 +3379,21 @@ public class Exchange {
                             }
 
                             try {
+                                isAchievementsUploading = false;
                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.code(): " + response.code());
                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.body(): " + new Gson().toJson(response.body()));
                             } catch (Exception e) {
                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "Exception e: " + e);
+                                isAchievementsUploading = false;
                             }
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                            isAchievementsUploading = false;
                         }
                     } finally {
                         isAchievementsUploading = false;
                     }
+                    isAchievementsUploading = false;
                 }
 
                 @Override

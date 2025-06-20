@@ -71,6 +71,13 @@ public class AdditionalRequirementsRealm {
 
         try {
             // --------------------
+            if (optionId != null && optionId != 0) {
+                res = res.where()
+                        .equalTo("optionId", String.valueOf(optionId))
+                        .findAll();
+            }
+
+            // --------------------
             res = res.where()
                     .beginGroup()
                     .equalTo("grpId", "0")
@@ -154,12 +161,6 @@ public class AdditionalRequirementsRealm {
                         .findAll();
             }
 
-            // --------------------
-            if (optionId != null && optionId != 0) {
-                res = res.where()
-                        .equalTo("optionId", String.valueOf(optionId))
-                        .findAll();
-            }
         } catch (Exception e) {
             Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
         }

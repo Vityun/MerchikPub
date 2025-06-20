@@ -1253,7 +1253,7 @@ public class Options {
             Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
                     "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
 
-            Log.e("!","ConductMode: " + mode.name() +
+            Log.e("!", "ConductMode: " + mode.name() +
                     "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
                     "List<OptionsDB> size: " + options.size());
             for (OptionsDB item : options) {
@@ -1400,22 +1400,32 @@ public class Options {
 //                                    dialogData.setTitle("Команда на проведення звіту. ");
                                     try {
 //                                        Spanned spanned = Html.fromHtml((String) data);
-                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
+                                        Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
 
-                                        new MessageDialogBuilder(unwrap(context))
-                                                .setTitle("Команда на проведення звіту.")
-//                                                .setStatus(DialogStatus.ERROR)
-                                                .setSubTitle("## Ответ от сервера")
-                                                .setMessage((String) data)
-                                                .setOnConfirmAction(() -> {
-                                                    if (((String) data).contains("#134583")) {
-                                                        DialogData dialogData = new DialogData(context);
-                                                        dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
-                                                        dialogData.show();
-                                                    }
-                                                    return Unit.INSTANCE;
-                                                })
-                                                .show();
+                                        if (data instanceof String)
+                                            new MessageDialogBuilder(unwrap(context))
+                                                    .setTitle("Команда на проведення звіту.")
+                                                    .setSubTitle("## Ответ от сервера")
+                                                    .setMessage((String) data)
+                                                    .setOnConfirmAction(() -> {
+                                                        if (((String) data).contains("#134583")) {
+                                                            DialogData dialogData = new DialogData(context);
+                                                            dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
+                                                            dialogData.show();
+                                                        }
+                                                        return Unit.INSTANCE;
+                                                    })
+                                                    .show();
+                                        else
+                                            new MessageDialogBuilder(unwrap(context))
+                                                    .setTitle("Команда на проведення звіту.")
+                                                    .setStatus(DialogStatus.NORMAL)
+                                                    .setSubTitle("Надіслано на сервер")
+                                                    .setMessage("Запит на проведення звіту успішно прийнятий сервером та буде автоматично проведений")
+                                                    .setOnConfirmAction(() -> {
+                                                        return Unit.INSTANCE;
+                                                    })
+                                                    .show();
 //                                    String regex = "- ?[Oo]пц[иi]я";
 //                                    // Компилируем регулярное выражение
 //                                    Pattern pattern = Pattern.compile(regex);
@@ -2903,18 +2913,36 @@ public class Options {
 
         boolean res;
 
-        long dad2, startWork, endWork;
+        if (dataDB != null)
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521",
+                    "dataDB: " + new Gson().fromJson(new Gson().toJson(dataDB), JsonObject.class));
+        else
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521",
+                    "dataDB: is NULL");
+
+
+        long dad2, startWork, endWork = 0L;
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
             endWork = ((WpDataDB) dataDB).getVisit_end_dt();
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "dataDB instanceof WpDataDB, endWork: " + endWork);
+
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
             endWork = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "dataDB instanceof TasksAndReclamationsSDB, endWork: " + endWork);
         } else {
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "unlockCodeResultListener.onUnlockCodeFailure(), endWork: " + endWork);
             unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
+        }
+        if (endWork == 0 && dad2 != 0) {
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "endWork == 0 and RealmManager.getWorkPlanRowByCodeDad2 by dad2: " + dad2);
+            WpDataDB dataBaseWP = RealmManager.getWorkPlanRowByCodeDad2(dad2);
+            if (dataBaseWP != null)
+                endWork = dataBaseWP.getVisit_end_dt();
         }
 
         if (endWork > 0) {
@@ -2924,6 +2952,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "unlockCodeResultListener.onUnlockCodeSuccess(), endWork: " + endWork);
             unlockCodeResultListener.onUnlockCodeSuccess();
             res = true;
         } else {
@@ -2933,23 +2962,24 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "unlockCodeResultListener.onUnlockCodeFailure(), endWork: " + endWork);
             unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
 
         // Обработка режима который вернулся
-        switch (mode) {
-            case CHECK:
-                if (!res && optionsDB.getBlockPns().equals("1")) {
-//                if (!res) {
-//                    optionNotConduct.add(optionsDB);
-                }
-                break;
-
-            case NULL:
-                // Ничего делать не буду
-                break;
-        }
+//        switch (mode) {
+//            case CHECK:
+//                if (!res && optionsDB.getBlockPns().equals("1")) {
+////                if (!res) {
+////                    optionNotConduct.add(optionsDB);
+//                }
+//                break;
+//
+//            case NULL:
+//                // Ничего делать не буду
+//                break;
+//        }
 
         return res;
     }
