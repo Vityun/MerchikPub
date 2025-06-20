@@ -286,6 +286,7 @@ public class OptionControlEKL<T> extends OptionControl {
                         .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
                         .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                         .append(", ").append(usersSDBPTT.tel2);
+                signal = false;
 
                 TovarGroupSDB tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);
 
