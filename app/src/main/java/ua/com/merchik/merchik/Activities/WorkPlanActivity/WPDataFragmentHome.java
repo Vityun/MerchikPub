@@ -188,7 +188,7 @@ public class WPDataFragmentHome extends Fragment {
                                     .setSubTitle("Під час завантаження плану робіт")
                                     .setMessage("Не вдалося отримати план із сервера. Можливо, на даний момент сервер працює не стабільно або у вас проблеми з інтернет з'єднанням. Знайдіть місце з найкращим прийомом і повторіть спробу")
                                     .setOnConfirmAction(() -> {
-//                                        new TablesLoadingUnloading().downloadAllTables(requireActivity());
+                                        new TablesLoadingUnloading().downloadAllTables(requireActivity());
                                         return Unit.INSTANCE;
                                     })
                                     .show();

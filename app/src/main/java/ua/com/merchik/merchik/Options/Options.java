@@ -1405,7 +1405,7 @@ public class Options {
                                         if (data instanceof String)
                                             new MessageDialogBuilder(unwrap(context))
                                                     .setTitle("Команда на проведення звіту.")
-                                                    .setSubTitle("## Ответ от сервера")
+                                                    .setSubTitle("Відповідь від сервера")
                                                     .setMessage((String) data)
                                                     .setOnConfirmAction(() -> {
                                                         if (((String) data).contains("#134583")) {
@@ -1451,7 +1451,8 @@ public class Options {
                                     new MessageDialogBuilder(unwrap(context))
                                             .setTitle("Проведення звіту...")
                                             .setStatus(DialogStatus.ERROR)
-                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.")
+                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними." +
+                                                    "<br> Ответ от сервера: " +  error)
                                             .setOnConfirmAction(() -> Unit.INSTANCE)
                                             .show();
 
@@ -2118,6 +2119,7 @@ public class Options {
             case 138520:
                 OptionsDB finalOption = option;
                 long timeInMillis = System.currentTimeMillis();
+                Globals.writeToMLOG("INFO", "Options.clicked:138520", "currentTimeMillis: " + timeInMillis);
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
                 String currentTime = sdf.format(new Date(timeInMillis));
                 new MessageDialogBuilder(unwrap(context))
@@ -3003,15 +3005,16 @@ public class Options {
                     try {
                         // Сохраняю время
                         long endTime = System.currentTimeMillis() / 1000;
+
+                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
+                        wpDataDB.setVisit_end_dt(endTime);
+                        wpDataDB.setClient_end_dt(endTime);
+                        wpDataDB.startUpdate = true;
+                        wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
+
                         RealmManager.INSTANCE.executeTransaction(realm -> {
-                            wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                            wpDataDB.setVisit_end_dt(endTime);
-                            wpDataDB.setClient_end_dt(endTime);
-                            wpDataDB.startUpdate = true;
-                            wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
                             realm.insertOrUpdate(wpDataDB);
                         });
-
                         // Это жосткие костыли
                         // При нажатии на "Конец работы" - начинаю выгружать данные палана работ,
                         // что б мерчик не ждал следующего автоматического обмена

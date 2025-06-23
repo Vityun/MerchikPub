@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.getTovarListFromReportPrepareByDad2;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -122,13 +121,17 @@ public class OptionControlAchievements<T> extends OptionControl {
             }
 
 
-
 //            if (optionDB.getOptionId().equals("590") || optionDB.getOptionControlId().equals("590")) {
             // Получение Доп. Требований с дополнительными фильтрами.
-            Long dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
+            long dateChangeTo;
+            if (wpDataDB.getUser_id() == 143565)
+                dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -3) / 1000;
+            else
+                dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
 
-            Log.e("document","client: " + wpDataDB.getClient_id());
-            Log.e("document","control: " + optionDB.getOptionControlId());
+
+            Log.e("document", "client: " + wpDataDB.getClient_id());
+            Log.e("document", "control: " + optionDB.getOptionControlId());
 
             int controlId = Integer.parseInt(optionDB.getOptionControlId());
             if (wpDataDB.getClient_id().equals("9382") && controlId == 138520)
@@ -153,7 +156,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             List<String> spisTMOSV = new ArrayList<>();
             List<TovarDB> tovarFromReportPrepare = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2())));
             Log.e("Tovar", "size: " + tovarFromReportPrepare.size());
-            for (TovarDB tovarDB: tovarFromReportPrepare) {
+            for (TovarDB tovarDB : tovarFromReportPrepare) {
                 Log.e("!!!DBOSV!!!", "tovar name: " + tovarDB.getNm() + " | id: " + tovarDB.getiD());
             }
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, null, null, null, null, null, dateChangeTo);
@@ -211,59 +214,57 @@ public class OptionControlAchievements<T> extends OptionControl {
                                 .append(" (").append("595").append("-").append(theme595Txt)
                                 .append(")");
                         continue;
-                    } else
+                    } else if (item.tovar_id == null)
+                        item.tovar_id = 0;
+                    if (item.manufacturer == null)
+                        item.manufacturer = 0;
+                    //09.09.2024 якщо по даному клієнту є товари (або ТМ) по котрим встановлени признак ОсобливаУвага (ОСВ) то перевіряємо виготовлення Досягнень конкретно по ДАНИМ Товарам/ТМ
+                    if ((!spisTovOSV.isEmpty() || !spisTMOSV.isEmpty()) &&
+                            (!spisTovOSV.contains(item.tovar_id.toString())) &&
+                            (!spisTMOSV.contains(item.manufacturer.toString()))) {
+                        List<TovarDB> spisTovarDBOSV = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()])));
 
-                        if (item.tovar_id == null)
-                            item.tovar_id = 0;
-                        if (item.manufacturer == null)
-                            item.manufacturer = 0;
-                        //09.09.2024 якщо по даному клієнту є товари (або ТМ) по котрим встановлени признак ОсобливаУвага (ОСВ) то перевіряємо виготовлення Досягнень конкретно по ДАНИМ Товарам/ТМ
-                        if ((!spisTovOSV.isEmpty() || !spisTMOSV.isEmpty()) &&
-                                (!spisTovOSV.contains(item.tovar_id.toString())) &&
-                                (!spisTMOSV.contains(item.manufacturer.toString()))) {
-                            List<TovarDB> spisTovarDBOSV = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()])));
+                        String spisTovarName = "";
+                        for (TovarDB tovar : spisTovarDBOSV) {
+                            spisTovarName = spisTovarName + tovar.getNm() + ",";
+                            Log.e("!!!DBOSV!!!", "tovar name: " + tovar.getNm() + " | id: " + tovar.getiD());
+                        }
 
-                            String spisTovarName = "";
-                            for (TovarDB tovar : spisTovarDBOSV) {
-                                spisTovarName = spisTovarName + tovar.getNm() + ",";
-                                Log.e("!!!DBOSV!!!", "tovar name: " + tovar.getNm() + " | id: " + tovar.getiD());
-                            }
+                        List<TradeMarkDB> spisTradeMarkDBOSV = TradeMarkRealm.getTradeMarkByIds(spisTMOSV.toArray(new String[spisTMOSV.size()]));
 
-                            List<TradeMarkDB> spisTradeMarkDBOSV = TradeMarkRealm.getTradeMarkByIds(spisTMOSV.toArray(new String[spisTMOSV.size()]));
+                        String spisTMName = "";
+                        for (TradeMarkDB tm : spisTradeMarkDBOSV) {
+                            spisTMName = spisTMName + tm.getNm() + ",";
+                            Log.e("!!!DBOSV!!!", "tovar name: " + tm.getNm() + " | id: " + tm.getID());
+                        }
 
-                            String spisTMName = "";
-                            for (TradeMarkDB tm : spisTradeMarkDBOSV) {
-                                spisTMName = spisTMName + tm.getNm() + ",";
-                                Log.e("!!!DBOSV!!!", "tovar name: " + tm.getNm() + " | id: " + tm.getID());
-                            }
-
-                            item.error = 1;
-                            item.note = new StringBuilder()
-                                    .append("")
-                                    .append("Клієнт вимагає створення Досягнення по")
-                                    .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
-                                    .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
-                        } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
-                            item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
-                            continue;
-                        } else if (item.dvi == 1) { // значение достижения не утверждено супервайзером
-                            item.error = 1;
-                            item.note = new StringBuilder().append("у достижения ").append(item.serverId).append(" установлен признак ДВИ=1");
-                            SPIS.append(item.note).append(", ");
+                        item.error = 1;
+                        item.note = new StringBuilder()
+                                .append("")
+                                .append("Клієнт вимагає створення Досягнення по")
+                                .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
+                                .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
+                    } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
+                        item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
+                        continue;
+                    } else if (item.dvi == 1) { // значение достижения не утверждено супервайзером
+                        item.error = 1;
+                        item.note = new StringBuilder().append("у достижения ").append(item.serverId).append(" установлен признак ДВИ=1");
+                        SPIS.append(item.note).append(", ");
 //                    } else if (item.confirmState != 1) {
 //                        item.error = 1;
 //                        item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ утверждено Супервайзером");
 //                        SPIS.append(item.note).append(", ");
-                        } else if (item.score.equals("-") || item.score.equals("0")) {
-                            item.error = 1;
-                            item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ оценено Территориалом");
-                            SPIS.append(item.note).append(", ");
-                        } else if (item.dt_ut >= (Clock.getDatePeriodLong(dateDocument * 1000, -1) / 1000)
-                                && item.dt_ut <= (Clock.getDatePeriodLong(dateDocument * 1000, +1) / 1000)) {
-                            item.currentVisit = 1;
-                        } else {
-                            item.note = new StringBuilder().append("есть утвержденное достижение ");
-                        }
+                    } else if (item.score.equals("-") || item.score.equals("0")) {
+                        item.error = 1;
+                        item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ оценено Территориалом");
+                        SPIS.append(item.note).append(", ");
+                    } else if (item.dt_ut >= (Clock.getDatePeriodLong(dateDocument * 1000, -1) / 1000)
+                            && item.dt_ut <= (Clock.getDatePeriodLong(dateDocument * 1000, +1) / 1000)) {
+                        item.currentVisit = 1;
+                    } else {
+                        item.note = new StringBuilder().append("есть утвержденное достижение ");
+                    }
 
                     if (item.error == null || item.error == 0) {
                         for (VoteSDB voteItem : voteSDBList) {
@@ -319,14 +320,14 @@ public class OptionControlAchievements<T> extends OptionControl {
                 signal = false;
 
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()) {
-                Log.e("!","_");
+                Log.e("!", "_");
                 period.append(" є ").append(achievementsSDBList.size()).append(" досягнень, але: ");
                 stringBuilderMsg.append(period)
                         .append(resultAchievements.stream()
-                        .filter(item -> item.error == 1)
-                        .map(item -> item.note)
-                        .findFirst()
-                        .orElse(null));
+                                .filter(item -> item.error == 1)
+                                .map(item -> item.note)
+                                .findFirst()
+                                .orElse(null));
                 signal = true;
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
