@@ -1452,7 +1452,7 @@ public class Options {
                                             .setTitle("Проведення звіту...")
                                             .setStatus(DialogStatus.ERROR)
                                             .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними." +
-                                                    "<br> Ответ от сервера: " +  error)
+                                                    "<br> Ответ от сервера: " + error)
                                             .setOnConfirmAction(() -> Unit.INSTANCE)
                                             .show();
 
@@ -2117,26 +2117,36 @@ public class Options {
                 return optionControlStartWork_138519(context, dataDB, option, type, mode, unlockCodeResultListener) ? 0 : 1;
 
             case 138520:
-                OptionsDB finalOption = option;
-                long timeInMillis = System.currentTimeMillis();
-                Globals.writeToMLOG("INFO", "Options.clicked:138520", "currentTimeMillis: " + timeInMillis);
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                String currentTime = sdf.format(new Date(timeInMillis));
-                new MessageDialogBuilder(unwrap(context))
-                        .setTitle(context.getString(R.string.your_click))
-                        .setSubTitle(context.getString(R.string.end_work))
-                        .setStatus(DialogStatus.ALERT)
-                        .setMessage("Зареєструвати закінчення робіт у " + currentTime)
-                        .setOnConfirmAction("TAK", () -> {
-                            if (dataDB instanceof WpDataDB) {
-                                optionEndWork_138520(context, (WpDataDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
-                            } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                                optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
-                            }
-                            return Unit.INSTANCE;
-                        })
-                        .setOnCancelAction("Hi", () -> Unit.INSTANCE)
-                        .show();
+                if (dataDB instanceof WpDataDB && ((WpDataDB) dataDB).getVisit_end_dt() > 0)
+                    new MessageDialogBuilder(unwrap(context))
+                            .setTitle(context.getString(R.string.your_click))
+                            .setSubTitle(context.getString(R.string.end_work))
+                            .setStatus(DialogStatus.ALERT)
+                            .setMessage("Работа вже завершена")
+                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                            .show();
+                else {
+                    OptionsDB finalOption = option;
+                    long timeInMillis = System.currentTimeMillis();
+                    Globals.writeToMLOG("INFO", "Options.clicked:138520", "currentTimeMillis: " + timeInMillis);
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                    String currentTime = sdf.format(new Date(timeInMillis));
+                    new MessageDialogBuilder(unwrap(context))
+                            .setTitle(context.getString(R.string.your_click))
+                            .setSubTitle(context.getString(R.string.end_work))
+                            .setStatus(DialogStatus.ALERT)
+                            .setMessage("Зареєструвати закінчення робіт у " + currentTime)
+                            .setOnConfirmAction("TAK", () -> {
+                                if (dataDB instanceof WpDataDB) {
+                                    optionEndWork_138520(context, (WpDataDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
+                                } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
+                                }
+                                return Unit.INSTANCE;
+                            })
+                            .setOnCancelAction("Hi", () -> Unit.INSTANCE)
+                            .show();
+                }
                 break;
 
             case 138521:

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.data.Database.Room;
 
+import android.text.SpannableStringBuilder;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -210,7 +212,7 @@ public class AchievementsSDB {
     public Integer error;
 
     @Ignore
-    public StringBuilder note;
+    public SpannableStringBuilder note;
 
     @Ignore
     public Integer currentVisit;

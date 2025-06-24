@@ -4,17 +4,28 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -36,6 +47,8 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 
 public class OptionControlAchievements<T> extends OptionControl {
     public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; //
@@ -46,7 +59,7 @@ public class OptionControlAchievements<T> extends OptionControl {
     private int minScore = 6;
     private int traineeSignal = 0;
 
-    private StringBuilder optionMsg = new StringBuilder();
+    private SpannableStringBuilder optionMsg = new SpannableStringBuilder();
     private StringBuilder achievementsMsgList = new StringBuilder();
 
     private List<AchievementsSDB> resultAchievements = new ArrayList<>();
@@ -181,10 +194,10 @@ public class OptionControlAchievements<T> extends OptionControl {
             String trainee = ""; // практикант
             if (usersSDBDocument.reportDate20 == null || dateDocument < usersSDBDocument.reportDate20.getTime() / 1000) {
                 traineeSignal = 1;
-                trainee = "Исполнитель ещё НЕ провёл своего 20-го отчёта. Наличие Достижений не проверяем!";
+                trainee = ", але виконавець ще не провів свого 20-го звіту. Наявність Досягнень не перевіряємо!";
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
                 traineeSignal = 1;
-                trainee = "Исполнитель ещё НЕ провёл своего 40-го отчёта. Наличие Достижений не проверяем!";
+                trainee = ", але виконавець ще не провів свого 40-го звіту. Наявність Досягнень не перевіряємо!";
             }
 
             // 3.4. (3.5) Расчт результата
@@ -207,12 +220,15 @@ public class OptionControlAchievements<T> extends OptionControl {
                         if (theme595 != null) theme595Txt = theme595.getNm();
 
                         item.error = 1;
-                        item.note = new StringBuilder().append("тема досягнення №")
-                                .append(item.serverId)
-                                .append(" (").append(item.themeId).append("-").append(themeTxt)
-                                .append(") не влаштовує! Повинна бути тема: ")
-                                .append(" (").append("595").append("-").append(theme595Txt)
-                                .append(")");
+                        item.note = new SpannableStringBuilder()
+                                .append("\n")
+                                .append(createLinkedString("Досягнення #" + item.serverId,item))
+                                .append(" тема досягнення ")
+                                .append(String.valueOf(item.themeId)).append(" - ").append(themeTxt)
+                                .append(" не влаштовує! Повинна бути тема: ")
+                                .append("595").append(" - ").append(theme595Txt)
+                                .append("");
+                        resultAchievements.add(item);
                         continue;
                     } else if (item.tovar_id == null)
                         item.tovar_id = 0;
@@ -239,17 +255,17 @@ public class OptionControlAchievements<T> extends OptionControl {
                         }
 
                         item.error = 1;
-                        item.note = new StringBuilder()
+                        item.note = new SpannableStringBuilder()
                                 .append("")
                                 .append("Клієнт вимагає створення Досягнення по")
                                 .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
                                 .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
                     } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
-                        item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
+                        item.note = new SpannableStringBuilder().append("для опції перевіряем лише наявність досягнень");
                         continue;
                     } else if (item.dvi == 1) { // значение достижения не утверждено супервайзером
                         item.error = 1;
-                        item.note = new StringBuilder().append("у достижения ").append(item.serverId).append(" установлен признак ДВИ=1");
+                        item.note = new SpannableStringBuilder().append("у достижения ").append(String.valueOf(item.serverId)).append(" установлен признак ДВИ=1");
                         SPIS.append(item.note).append(", ");
 //                    } else if (item.confirmState != 1) {
 //                        item.error = 1;
@@ -257,13 +273,13 @@ public class OptionControlAchievements<T> extends OptionControl {
 //                        SPIS.append(item.note).append(", ");
                     } else if (item.score.equals("-") || item.score.equals("0")) {
                         item.error = 1;
-                        item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ оценено Территориалом");
+                        item.note = new SpannableStringBuilder().append("достижение ").append(String.valueOf(item.serverId)).append(" НЕ оценено Территориалом");
                         SPIS.append(item.note).append(", ");
                     } else if (item.dt_ut >= (Clock.getDatePeriodLong(dateDocument * 1000, -1) / 1000)
                             && item.dt_ut <= (Clock.getDatePeriodLong(dateDocument * 1000, +1) / 1000)) {
                         item.currentVisit = 1;
                     } else {
-                        item.note = new StringBuilder().append("есть утвержденное достижение ");
+                        item.note = new SpannableStringBuilder().append("есть утвержденное достижение ");
                     }
 
                     if (item.error == null || item.error == 0) {
@@ -271,13 +287,13 @@ public class OptionControlAchievements<T> extends OptionControl {
                             if (!item.serverId.equals(voteItem.serverId)) continue;
 
                             item.score = String.valueOf(voteItem.score);
-                            item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" утверждено и получило оценку ")
-                                    .append(voteItem.score).append(" от ").append(voteItem.merchik);
+                            item.note = new SpannableStringBuilder().append("достижение ").append(String.valueOf(item.serverId)).append(" утверждено и получило оценку ")
+                                    .append(String.valueOf(voteItem.score)).append(" от ").append(String.valueOf(voteItem.merchik));
 
                             if (voteItem.score < minScore) {
                                 item.error = 1;
-                                item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" утверждено но получило низкую оценку ")
-                                        .append(voteItem.score).append(" за: (").append(voteItem.comments).append(") от ").append(voteItem.voterId);    // TODO Вопрос к текстовке Петрова
+                                item.note = new SpannableStringBuilder().append("достижение ").append(String.valueOf(item.serverId)).append(" утверждено но получило низкую оценку ")
+                                        .append(String.valueOf(voteItem.score)).append(" за: (").append(voteItem.comments).append(") от ").append(String.valueOf(voteItem.voterId));    // TODO Вопрос к текстовке Петрова
                                 SPIS.append(item.note).append(", ");
 
                                 break;
@@ -307,7 +323,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo - 86400L)); // добавил вычитание 1 дня, что бы привести к 1С потому, что функция работает до НАЧАЛА дня, а не до конца
             //4.0. готовим сообщение и сигнал
             if (sumOptionError == 0 && traineeSignal == 0) {
-                stringBuilderMsg.append(period).append(" Є досягнення (з оцінкою ").append(minScore).append(" чи більш) ")
+                spannableStringBuilder.append(period).append(" Є досягнення (з оцінкою ").append(String.valueOf(minScore)).append(" чи більш) ")
                         .append(wpDataDB.getAddr_txt()).append(" по ").append(customerSDBDocument.nm).append(". Та передані кліенту для нарахування премії.");
 
 //            stringBuilderMsg.append(" ЕСТЬ утвержденные достижения (с оценкой ")
@@ -316,33 +332,43 @@ public class OptionControlAchievements<T> extends OptionControl {
                 signal = false;
 
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0 && traineeSignal > 0) {
-                stringBuilderMsg.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
+                spannableStringBuilder.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
                 signal = false;
 
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()) {
                 Log.e("!", "_");
-                period.append(" є ").append(achievementsSDBList.size()).append(" досягнень, але: ");
-                stringBuilderMsg.append(period)
-                        .append(resultAchievements.stream()
-                                .filter(item -> item.error == 1)
-                                .map(item -> item.note)
-                                .findFirst()
-                                .orElse(null));
+                period.append(" є ").append(achievementsSDBList.size())
+                        .append(" досягнення");
+                spannableStringBuilder.append(period);
+                if (!resultAchievements.isEmpty())
+                    spannableStringBuilder.append(", але: ")
+                            .append(resultAchievements.stream()
+                                    .filter(item -> item.error == 1)
+                                    .map(item -> item.note)
+                                    .findFirst()
+                                    .orElse(new SpannableStringBuilder()));
                 signal = true;
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
-                stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
+                spannableStringBuilder.append(period).append(" нема жодного досягнення. ");
                 signal = true;
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0) {
-                stringBuilderMsg.append(period).append(" створено ").append(achievementsSDBList.size()).append(" досягнень.");
+                spannableStringBuilder.append(period).append(" створено ").append((char) achievementsSDBList.size()).append(" досягнень.");
                 signal = false;
-            } else if (traineeSignal > 0) {
-                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
-                signal = false;
-            } else {
-                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
+            }
+//            else if (traineeSignal > 0) {
+//                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
+//                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
+//                signal = false;
+//            }
+            else {
+                spannableStringBuilder.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
+                        .append((char) minScore).append(" чи більш) по ").append(SPIS).append(".");
                 signal = true;
+            }
+
+            if (traineeSignal > 0) {
+                spannableStringBuilder.append(trainee);
+                signal = false;
             }
 
             // Сохранение
@@ -361,9 +387,9 @@ public class OptionControlAchievements<T> extends OptionControl {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
 //                    showUnlockCodeDialogInMainThread(wpDataDB, signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                    spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
 
@@ -372,5 +398,49 @@ public class OptionControlAchievements<T> extends OptionControl {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAchievements/executeOption", "Exception e: " + e);
         }
+    }
+
+    private SpannableString createLinkedString(String msg, AchievementsSDB data) {
+
+
+        SpannableString res = new SpannableString(msg);
+
+        try {
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View textView) {
+                    DialogAchievement dialogAchievement = new DialogAchievement(context);
+                    dialogAchievement.setClose(dialogAchievement::dismiss);
+                    dialogAchievement.setAchievement(data);
+                    dialogAchievement.setOk("Створити ДІНДОС", ()->{
+                        try {
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(context);
+                            dialogCreateAchievement.setData(data);
+                            dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
+                            dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");
+                            dialogCreateAchievement.buttonPhotoTo();
+                            dialogCreateAchievement.buttonPhotoAfter();
+                            dialogCreateAchievement.show();
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
+                        }
+                    });
+                    dialogAchievement.show();
+                }
+
+                @Override
+                public void updateDrawState(TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setColor(Color.GREEN);
+                    ds.setUnderlineText(true);
+                }
+            };
+            int count = msg.length();
+            res.setSpan(clickableSpan, 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/createLinkedString/Exception", "Exception e: " + e);
+        }
+        return res;
     }
 }

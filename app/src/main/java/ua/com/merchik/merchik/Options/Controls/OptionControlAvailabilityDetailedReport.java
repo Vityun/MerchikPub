@@ -235,7 +235,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 spannableStringBuilder.append("\n\nДокумент проведен не будет!");
             } else {
                 spannableStringBuilder.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если ОФС не будет превышать ")
-                        .append(Character.highSurrogate(Integer.parseInt(optionDB.getAmountMax()))).append("%");
+                        .append(String.valueOf(Integer.parseInt(optionDB.getAmountMax()))).append("%");
             }
         } else {
             spannableStringBuilder.append("\n\nЗамечаний нет.");
