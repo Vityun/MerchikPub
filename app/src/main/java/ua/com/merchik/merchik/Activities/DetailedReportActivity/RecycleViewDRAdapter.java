@@ -39,6 +39,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.json.JSONObject;
 
@@ -59,6 +60,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
@@ -101,6 +103,7 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 
@@ -624,17 +627,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case (158606):
-//                            textInteger.setText(
-//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
-//                                    TextView.BufferType.SPANNABLE
-//                            );
-//
-//                            textInteger.setOnClickListener(view -> {
-//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-//                                intent.putExtra("report_prepare", true);
-//                                intent.putExtra("dad2", dad2);
-//                                view.getContext().startActivity(intent);
-//                            });
                             SpannableString spannableString158606 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36));
                             spannableString158606.setSpan(new UnderlineSpan(), 0, spannableString158606.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -652,6 +644,39 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
+
+                        case (160567):
+
+
+                            OptionMassageType type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlPhotoShowcase<?> optionControlPhotoShowcase = new OptionControlPhotoShowcase<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
+
+
+//                            SpannableString spannableString160567 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36));
+                            SpannableString spannableString160567 = CustomString.coloredString(optionControlPhotoShowcase.getCounter(), optionsButtons);
+                            spannableString160567.setSpan(new UnderlineSpan(), 0, spannableString160567.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString160567);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", ShowcaseDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SHOWCASE_COMPLETED_CHECK.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                JsonObject dataJson = new JsonObject();
+//                                dataJson.addProperty("tradeMarkDBId", tradeMarkId);
+                                dataJson.addProperty("wpDataDBId", String.valueOf(dad2));
+//                                dataJson.addProperty("optionDBId", optionId);
+                                bundle.putString("dataJson", new Gson().toJson(dataJson));
+//                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Зразок вітрини");
+                                bundle.putString("subTitle", "Представленi усі вітрини на цій торговій точці, зеленим кольором відзначені вітрини за якими виготовлені фотографії, червоним – за якими немає");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+                            break;
+
 
                         case (157354):
 //                            textInteger.setText(
@@ -909,7 +934,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case 135328:    // Рекламация
-                            OptionMassageType type = new OptionMassageType();
+                            type = new OptionMassageType();
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 

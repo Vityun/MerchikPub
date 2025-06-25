@@ -195,6 +195,7 @@ enum class ContextUI {
     USERS_SDB_FROM_EKL,
     PLANOGRAMM_VIZIT_SHOWCASE,
     SHOWCASE,
+    SHOWCASE_COMPLETED_CHECK,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +

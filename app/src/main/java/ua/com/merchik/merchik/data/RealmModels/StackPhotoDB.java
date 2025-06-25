@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.sql.Wrapper;
 import java.util.List;
 
 import io.realm.RealmObject;
@@ -13,6 +14,7 @@ import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.StackPhotoDBOverride;
 
 public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
@@ -584,7 +586,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
         return "addr_id, approve, code_dad2, create_time, dvi, dviUpload, errorTime," +
                 "get_on_server, id, markUpload, object_id, photoServerId, photo_hash, photo_num, photo_type, " +
                 "premiyaUpload, specialCol, status, upload_status, upload_time, upload_to_server, vpi, " +
-                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id";
+                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt";
     }
 
     @Nullable
@@ -614,7 +616,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return StackPhotoDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable

@@ -2734,7 +2734,7 @@ public class Options {
     private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "++");
         boolean res;
-        long dad2, startWork, endWork;
+        long dad2, startWork;
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
@@ -2745,6 +2745,13 @@ public class Options {
         } else {
             unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
+        }
+
+        if (startWork == 0 && dad2 != 0) {
+            Globals.writeToMLOG("INFO", "optionControlEndWork_138521", "endWork == 0 and RealmManager.getWorkPlanRowByCodeDad2 by dad2: " + dad2);
+            WpDataDB dataBaseWP = RealmManager.getWorkPlanRowByCodeDad2(dad2);
+            if (dataBaseWP != null)
+                startWork = dataBaseWP.getVisit_start_dt();
         }
 
 

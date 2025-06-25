@@ -8,7 +8,6 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -54,6 +53,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private List<ShowcaseSDB> showcaseSDBList;
     private List<StackPhotoDB> stackPhotoDBSList;
     private List<AdditionalRequirementsDB> additionalRequirementsDBS;
+    private final List<StackPhotoDB> list = new ArrayList<>();
 
     public OptionControlPhotoShowcase(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -116,7 +116,6 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private void executeOption() {
         try {
             //3.2. отметим фото для которых витрина определена (для цього використовую СпецКол, щоб не створювати окремоъ колонки)
-            List<StackPhotoDB> list = new ArrayList<>();
             // Создаем счетчик для подсчета заполненных showcase_id
             int filledShowcaseIdsCount = 0;
             Set<String> uniqueExampleIds = new HashSet<>(); // Для уникальности example_id
@@ -196,9 +195,9 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 stringBuilderMsg.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
-                stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
+                stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише ")
                         .append(list.size())
-                        .append(" фото з ")
+                        .append(" вітрин з ")
                         .append(showcaseSDBList.size()).append(" присутніх на ТТ (")
                         .append(percentValue).append("%), що МЕНШЕ плану в ").append(colMin).append("%")
 //                        .append(" Загальна кількість вітрин на ТТ: ")
@@ -225,9 +224,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 stringBuilderMsg.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. " +
                         "Але роботи у ТТ вже виконувались раніше і Вітрини вже повинні були бути створені");
                 signal = true;
-            }
-
-            else {
+            } else {
                 stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини у ")
                         .append(list.size())
                         .append(" з ")
@@ -257,7 +254,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         dataNR = dataWP;
                     }
                     if (dataNR > dataWP - (14 * 86400)) { // 86400 - 1 день в сек.
-                        stringBuilderMsg.append(" але, робоnи з цим ІЗА почали ");
+                        stringBuilderMsg.append(" але, роботи з цим ІЗА почали ");
                         stringBuilderMsg.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR * 1000)));
                         stringBuilderMsg.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
                         signal = false;
@@ -298,6 +295,10 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption", "Exception e: " + e);
         }
+    }
+
+    public String getCounter() {
+        return list.size() + "/" + showcaseSDBList.size();
     }
 
 }

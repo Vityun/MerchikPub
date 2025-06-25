@@ -2131,10 +2131,14 @@ public class TablesLoadingUnloading {
 
     public void uploadRP(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
+            List<ReportPrepareServ> prepareDBList = RealmManager.getReportPrepareToUpload();
+            if (prepareDBList.isEmpty())
+                return;
+
             StandartData data = new StandartData();
             data.mod = "report_prepare";
             data.act = "set_report_data";
-            data.data = RealmManager.getReportPrepareToUpload();
+            data.data = prepareDBList;
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2178,7 +2182,7 @@ public class TablesLoadingUnloading {
         List<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
         Log.e("UPLOAD_DATA", "REPORT_PREPARE. (" + data.size() + ")");
 
-        if (data != null && data.size() > 0) {
+        if (!data.isEmpty()) {
             StandartData standartData = new StandartData();
             standartData.mod = "report_prepare";
             standartData.act = "set_report_data";

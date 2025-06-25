@@ -299,6 +299,7 @@ object SamplePhotoSDBOverride {
             maxLine = 50
         )
     }
+
     fun getHidedFieldsOnUI(): String =
         "photoServerId, example_id, commentUpload, doc_id"
 }
@@ -469,7 +470,10 @@ object PlanogrammVizitShowcaseSDBOverride {
 //            }
 
             // Обновляем значение comments в JSONObject
-            jsonObject.put("comments", "Фото ще не завантажилися. Зачекайте кілька хвилин і спробуйте ще раз. Або зробіть примусову синхронізацію")
+            jsonObject.put(
+                "comments",
+                "Фото ще не завантажилися. Зачекайте кілька хвилин і спробуйте ще раз. Або зробіть примусову синхронізацію"
+            )
 
             // Возвращаем модификатор в зависимости от условия
             if (score == "0") {
@@ -482,6 +486,7 @@ object PlanogrammVizitShowcaseSDBOverride {
                 MerchModifier()
             }
         }
+
         else -> null
     }
 
@@ -494,5 +499,23 @@ object PlanogrammVizitShowcaseSDBOverride {
                 null
             }
         return MerchModifier(background = color)
+    }
+}
+
+object StackPhotoDBOverride {
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        try {
+            val specialCol = jsonObject.optInt("specialCol", 0)
+            if (specialCol == 2)
+                return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
+            if (specialCol == 1)
+                return MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77")))
+
+
+        } catch (_: Exception) {
+
+        }
+        return MerchModifier()
     }
 }
