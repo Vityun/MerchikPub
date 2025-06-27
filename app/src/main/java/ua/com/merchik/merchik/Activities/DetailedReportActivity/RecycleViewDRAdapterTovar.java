@@ -796,7 +796,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 // Отображаем инфу по особенному Товару.
                                 String tovId = list.getiD(); // Идентификатор Товара
                                 Optional<AdditionalRequirementsDB> result = null;
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && adList != null) {
                                     result = adList.stream()
                                             .filter(obj -> obj.getTovarId().equals(tovId) && obj.getOptionId().isEmpty())
                                             .findFirst();
@@ -825,7 +825,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                                 Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
 
-                                if (tovOptTplList.size() > 0) {
+                                if (tovOptTplList.size() > 0 && optionsList2 != null) {
                                     // В Цикле открываем Н количество инфы
                                     for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                                         if (tovOptTplList.get(i).getOptionControlName() != AKCIYA) {

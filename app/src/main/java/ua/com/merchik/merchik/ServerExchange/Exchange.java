@@ -1397,46 +1397,21 @@ public class Exchange {
             new LanguagesExchange().downloadLanguages(new ExchangeInterface.Languages() {
                 @Override
                 public void onSuccess(List<LanguagesSDB> data) {
-
                     // Сохранение данных в БД
                     SQL_DB.langListDao().insertAll(data);
 
-                    // Скрытие текущего прогресса
-//                    if (progressDialog != null) {
-//                        if (progressDialog.isShowing())
-//                            progressDialog.dismiss();
-//                    }
-
-
-                    // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
-//                    DialogData dialog = new DialogData(context);
-//                    dialog.setTitle("Таблица Языков");
-//                    dialog.setText("Синхронизовало " + data.size() + " Языков");
-//                    dialog.setClose(dialog::dismiss);
-//                    dialog.show();
                 }
 
                 @Override
                 public void onFailure(String error) {
 
-                    // Скрытие текущего прогресса
-//                    if (progressDialog != null) {
-//                        if (progressDialog.isShowing())
-//                            progressDialog.dismiss();
-//                    }
+                    Globals.writeToMLOG("ERROR", "updateLanguages.LanguagesExchange.downloadLanguages", "onFailure e: " + error);
 
-                    // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
-                    DialogData dialog = new DialogData(context);
-                    dialog.setTitle("Таблица Языков");
-                    dialog.setText(error);
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
                 }
             });
 
         } catch (Exception e) {
-            // todo ADD M_LOG
-            Log.e("updateLanguages", "ERR: " + e);
+            Globals.writeToMLOG("ERROR", "updateLanguages.LanguagesExchange", "Exception e: " + e.getMessage());
         }
     }
 
