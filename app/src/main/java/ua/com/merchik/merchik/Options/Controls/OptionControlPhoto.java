@@ -261,12 +261,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                     .append(String.valueOf(stackPhotoDB.size()))
                     .append(" - доробiть фотографії.");
             signal = true;
-//            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
             spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
                     .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
             signal = false;
-//            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         // Исключения
@@ -498,7 +496,6 @@ public class OptionControlPhoto<T> extends OptionControl {
                 public void updateDrawState(TextPaint ds) {
                     super.updateDrawState(ds);
                     ds.setUnderlineText(false);
-//                    ds.setColor(Color.GREEN);
                 }
             };
             int count = msg.length();

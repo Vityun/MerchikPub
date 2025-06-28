@@ -134,12 +134,6 @@ public class OptionControlMP<T> extends OptionControl {
             if (context == null)
                 context = MyApplication.getAppContext();
 
-//            if (optionDB == null || optionDB.getOptionId().equals("132968"))
-//                click.onSuccess("");
-
-//            if (wpDataDB.getTheme_id() != 998)
-//                click.onSuccess("");
-
             DialogData dialog = new DialogData(context);
             StringBuilder title = new StringBuilder();
 
@@ -178,7 +172,6 @@ public class OptionControlMP<T> extends OptionControl {
 
                             stringBuilder
                                     .append("За визначенням системи, ")
-//                                    .append("ви знаходитесь задалеко від торгівельної точки (ТТ)!").append("\n\n")
                                     .append("станом на ").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime/1000, "HH:mm")).append("").append(", ви знаходились на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
                                     .append(", що більше допустимих ").append(distanceMin).append(" метрів. ")
                                     .append("Це може бути помилковим визначенням.")

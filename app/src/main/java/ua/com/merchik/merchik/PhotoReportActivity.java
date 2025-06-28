@@ -1443,16 +1443,6 @@ public class PhotoReportActivity extends toolbar_menus {
             int width = 0;
             int height = 0;
 
-            // Информация о дисплее для отправки
-//            try {
-//                Display display = getWindowManager().getDefaultDisplay();
-//                Point size = new Point();
-//                display.getSize(size);
-//                width = size.x;
-//                height = size.y;
-//            }catch (Exception e){
-//
-//            }
 
             Map<String, Object> DataMap = new HashMap<String, Object>();                                // Общая hashmap. Второе значение Obj, потому что вторым параметром может быть hashmap.
             Map<String, Object> battery = new HashMap<String, Object>();
