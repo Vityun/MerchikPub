@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -47,9 +51,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import java.util.regex.Pattern
 
 @Composable
 fun MessageDialog(
@@ -66,7 +73,19 @@ fun MessageDialog(
     onCheckboxChanged: ((Boolean) -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
-    val styledAnnotatedString = AnnotatedString.fromHtml(message)
+
+    val pattern = Pattern.compile("\\{([^}]*)\\}")
+    val matcher = pattern.matcher(message)
+
+    val styledAnnotatedString =
+        if (matcher.find())
+            parseAndReplaceVisitText(message) { codeDad2 ->
+                RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
+            }
+        else
+            AnnotatedString.fromHtml(message)
+
+
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var isChecked by remember { mutableStateOf(false) }
 
@@ -184,8 +203,17 @@ fun MessageDialog(
                         color = Color(0xCC1E201D),
                         textAlign = TextAlign.Center,
                         modifier = Modifier
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onPress = {
+//                                        val intent =
+//                                            Intent(context, DetailedReportActivity::class.java)
+//                                        intent.putExtra("WpDataDB_ID", 3916440481)
+//                                        context.startActivity(intent)
+                                    })
+                            }
                             .padding(vertical = 4.dp)
-                            .padding(bottom = 2.dp)
+                            .padding(bottom = 2.dp),
                     )
 
                     // ✅ Чекбокс "Не показывать больше"

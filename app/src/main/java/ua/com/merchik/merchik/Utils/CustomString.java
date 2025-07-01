@@ -3,12 +3,23 @@ package ua.com.merchik.merchik.Utils;
 import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
+import android.view.View;
+
+import androidx.annotation.NonNull;
 
 import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class CustomString {
 
@@ -61,4 +72,5 @@ public class CustomString {
         else
             return String.format("%d:%d", hours, minutes);
     }
+
 }

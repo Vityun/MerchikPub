@@ -184,7 +184,7 @@ class DownloadImagesWorker(
                 val path = Globals.saveImage1(bitmap, "TOVAR_${photo.tovarId}_SID${photo.id}")
 
                 // Сохраняем информацию о фото в базу данных
-                realm.executeTransactionAsync { bgRealm ->
+                realm.executeTransaction { bgRealm ->
                     try {
                         // Генерация нового ID
                         val lastId = bgRealm.where(StackPhotoDB::class.java)

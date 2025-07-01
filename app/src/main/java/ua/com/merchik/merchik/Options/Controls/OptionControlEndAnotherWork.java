@@ -111,6 +111,7 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
         for (WpDataDB item : wpDataDB) {
             if (item.getVisit_start_dt() > 0 && item.getVisit_end_dt() == 0) {
                 result.add(item);
+                Globals.writeToMLOG("INFO", "OptionControlEndAnotherWork/executeOption", "WpDataDB dad2: " + item.getCode_dad2());
 
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
                 String formattedDate = formatter.format(item.getDt());

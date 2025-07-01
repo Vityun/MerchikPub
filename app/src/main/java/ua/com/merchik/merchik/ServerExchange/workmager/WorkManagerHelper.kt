@@ -57,7 +57,7 @@ object WorkManagerHelper {
     }
 
     fun startSyncWorker(context: Context) {
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+        val syncRequest = OneTimeWorkRequestBuilder<DownloadImagesWorker>()
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)

@@ -37,10 +37,21 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 public class PlanogrammTableExchange {
 
     public void planogramDownload(Clicks.clickObjectAndStatus click) {
+
+        Set<Integer> uniquePlanogrammId = new HashSet<>();
+
+        List<PlanogrammSDB> planogrammList = SQL_DB.planogrammDao().getAll();
+        if (!planogrammList.isEmpty())
+            for (PlanogrammSDB p : planogrammList) {
+                uniquePlanogrammId.add(p.id);
+            }
+
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "list";
         data.nolimit = "1";
+        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
+
 
         Gson gson = new Gson();
         String json = gson.toJson(data);

@@ -1356,6 +1356,9 @@ public class Globals {
                     log.vpi = System.currentTimeMillis() / 1000;
 
                     RealmManager.setLogMpRow(log);
+                    Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
+                            ", GPS_time: " + log.CoordTime
+                            + ", systemTime: " + System.currentTimeMillis());
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;
                     return log;

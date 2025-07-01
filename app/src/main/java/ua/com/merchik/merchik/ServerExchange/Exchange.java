@@ -18,17 +18,23 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
@@ -240,6 +246,7 @@ public class Exchange {
 
 //                    sendWpData2();
 
+                    realTimeValidator();
                     updateLanguages();  // Обновление языков
                     updateSiteObj();    // Обновление Обьектов Сайта
                     updateTranslates();  // Обновление Переводов
@@ -492,7 +499,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                                 Log.e("AddressExchange", "END1: " + e);
                                             }
                                         });
@@ -522,7 +529,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                                 Log.e("CustomerExchange", "Throwable e: " + e);
                                             }
                                         });
@@ -551,7 +558,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                             }
                                         });
                             } catch (Exception e) {
@@ -578,7 +585,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                             }
                                         });
                             } catch (Exception e) {
@@ -604,7 +611,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                             }
                                         });
                             } catch (Exception e) {
@@ -637,7 +644,7 @@ public class Exchange {
                                             }
 
                                             @Override
-                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            public void onError(@NonNull Throwable e) {
                                                 Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable/onSuccess/onError", "Throwable e: " + e);
                                             }
                                         });
@@ -673,7 +680,7 @@ public class Exchange {
                                         }
 
                                         @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        public void onError(@NonNull Throwable e) {
                                             Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onError", "Ошибка при сохранении в БД: " + e);
                                         }
                                     });
@@ -699,7 +706,7 @@ public class Exchange {
                                         }
 
                                         @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        public void onError(@NonNull Throwable e) {
                                             Globals.writeToMLOG("INFO", "Exchange.downloadContentTable.onError", "Ошибка при сохранении в БД: " + e);
                                         }
                                     });
@@ -1111,7 +1118,7 @@ public class Exchange {
                                         }
 
                                         @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        public void onError(@NonNull Throwable e) {
                                             Log.e("ShowcaseExchange", "Throwable e: " + e);
                                         }
                                     });
@@ -1356,10 +1363,10 @@ public class Exchange {
 
 
         if (!tarList.isEmpty()) {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
+            Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<JsonObject>() {
                 @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     try {
                         isTARUploading = false;
                         globals.writeToMLOG("_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
@@ -1371,7 +1378,7 @@ public class Exchange {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                public void onFailure(Call<JsonObject> call, Throwable t) {
                     isTARUploading = false;
                     globals.writeToMLOG("_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
                 }
@@ -1536,10 +1543,10 @@ public class Exchange {
 
                 Globals.writeToMLOG("INFO", "sendPhotoInformation", "json: " + json);
 
-                retrofit2.Call<PhotoInfoResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_INFO(RetrofitBuilder.contentType, convertedObject);
-                call.enqueue(new retrofit2.Callback<PhotoInfoResponse>() {
+                Call<PhotoInfoResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_INFO(RetrofitBuilder.contentType, convertedObject);
+                call.enqueue(new Callback<PhotoInfoResponse>() {
                     @Override
-                    public void onResponse(retrofit2.Call<PhotoInfoResponse> call, retrofit2.Response<PhotoInfoResponse> response) {
+                    public void onResponse(Call<PhotoInfoResponse> call, Response<PhotoInfoResponse> response) {
                         if (response.isSuccessful()) {
                             Log.e("sendPhotoInformation", "response: " + response);
                             Log.e("sendPhotoInformation", "response.body(): " + response.body());
@@ -1557,7 +1564,7 @@ public class Exchange {
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<PhotoInfoResponse> call, Throwable t) {
+                    public void onFailure(Call<PhotoInfoResponse> call, Throwable t) {
                         Log.e("sendPhotoInformation", "t:" + t);
                         Globals.writeToMLOG("INFO", "sendPhotoInformation.onFailure", "Throwable t: " + t);
                     }
@@ -1729,7 +1736,7 @@ public class Exchange {
         requestJson.addProperty("act", "spissotr_dosie");
         requestJson.addProperty("dt_change_from", dt_change_from);
 
-        retrofit2.Call<DossierSotrResponse> call = RetrofitBuilder.getRetrofitInterface().dossierSotr(RetrofitBuilder.contentType, requestJson);
+        Call<DossierSotrResponse> call = RetrofitBuilder.getRetrofitInterface().dossierSotr(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<DossierSotrResponse>() {
             @Override
             public void onResponse(Call<DossierSotrResponse> call, Response<DossierSotrResponse> response) {
@@ -1761,7 +1768,7 @@ public class Exchange {
         requestJson.addProperty("act", "list");
         requestJson.addProperty("dt_change_from", dt_change_from);
 
-        retrofit2.Call<VacancyResponse> call = RetrofitBuilder.getRetrofitInterface().vacancy(RetrofitBuilder.contentType, requestJson);
+        Call<VacancyResponse> call = RetrofitBuilder.getRetrofitInterface().vacancy(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<VacancyResponse>() {
             @Override
             public void onResponse(Call<VacancyResponse> call, Response<VacancyResponse> response) {
@@ -1793,7 +1800,7 @@ public class Exchange {
         requestJson.addProperty("act", "bonus");
         requestJson.addProperty("dt_change_from", dt_change_from);
 
-        retrofit2.Call<BonusResponse> call = RetrofitBuilder.getRetrofitInterface().bonus(RetrofitBuilder.contentType, requestJson);
+        Call<BonusResponse> call = RetrofitBuilder.getRetrofitInterface().bonus(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<BonusResponse>() {
             @Override
             public void onResponse(Call<BonusResponse> call, Response<BonusResponse> response) {
@@ -1825,7 +1832,7 @@ public class Exchange {
         requestJson.addProperty("act", "list");
         requestJson.addProperty("dt_change_from", dt_change_from);
 
-        retrofit2.Call<SiteURLResponse> call = RetrofitBuilder.getRetrofitInterface().siteUrl(RetrofitBuilder.contentType, requestJson);
+        Call<SiteURLResponse> call = RetrofitBuilder.getRetrofitInterface().siteUrl(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<SiteURLResponse>() {
             @Override
             public void onResponse(Call<SiteURLResponse> call, Response<SiteURLResponse> response) {
@@ -1856,7 +1863,7 @@ public class Exchange {
         requestJson.addProperty("act", "list");
         requestJson.addProperty("dt_change_from", dt_change_from);
 
-        retrofit2.Call<SiteAccountResponse> call = RetrofitBuilder.getRetrofitInterface().siteAccount(RetrofitBuilder.contentType, requestJson);
+        Call<SiteAccountResponse> call = RetrofitBuilder.getRetrofitInterface().siteAccount(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<SiteAccountResponse>() {
             @Override
             public void onResponse(Call<SiteAccountResponse> call, Response<SiteAccountResponse> response) {
@@ -1882,7 +1889,7 @@ public class Exchange {
         requestJson.addProperty("mod", "data_list");
         requestJson.addProperty("act", "get_avg_salary");
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, requestJson);
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -1955,11 +1962,11 @@ public class Exchange {
 
         Globals.writeToMLOG("INFO", "getTovarImg", sb.toString());
 
-        retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO(mod, act, tovarOnly, nolimit, imageType, listId);
+        Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO(mod, act, tovarOnly, nolimit, imageType, listId);
         String finalImageType = imageType;
-        call.enqueue(new retrofit2.Callback<TovarImgResponse>() {
+        call.enqueue(new Callback<TovarImgResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarImgResponse> call, retrofit2.Response<TovarImgResponse> response) {
+            public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         List<TovarImgList> list = response.body().getList();
@@ -1976,7 +1983,7 @@ public class Exchange {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarImgResponse> call, Throwable t) {
+            public void onFailure(Call<TovarImgResponse> call, Throwable t) {
 //                Log.e("TAG_TABLE", "PHOTO_TOVAR_ERROR: " + t);
                 operationResult.onFailure("" + t);
             }
@@ -2005,11 +2012,11 @@ public class Exchange {
             Log.e("downloadTovarImg", "TP: " + tp);
 
             if (tp == 18) {
-                retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(list.get(i).getPhotoUrl());
+                Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(list.get(i).getPhotoUrl());
                 int finalI = i;
-                call.enqueue(new retrofit2.Callback<ResponseBody>() {
+                call.enqueue(new Callback<ResponseBody>() {
                     @Override
-                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_res: " + response.body().byteStream());
                             Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
@@ -2076,7 +2083,7 @@ public class Exchange {
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
                         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL: " + t);
 
                         operationResult.onFailure(t.toString());
@@ -2160,11 +2167,11 @@ public class Exchange {
 //                }
 //            });
 
-            retrofit2.Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
+            Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
             List<TARCommentsDB> finalList = list;
-            call.enqueue(new retrofit2.Callback<TARCommentsServerData>() {
+            call.enqueue(new Callback<TARCommentsServerData>() {
                 @Override
-                public void onResponse(retrofit2.Call<TARCommentsServerData> call, retrofit2.Response<TARCommentsServerData> response) {
+                public void onResponse(Call<TARCommentsServerData> call, Response<TARCommentsServerData> response) {
                     try {
                         List<TARCommentsDB> saveToDb = new ArrayList<>();
                         List<TARCommentsDB> deleteFromDb = new ArrayList<>();
@@ -2234,7 +2241,7 @@ public class Exchange {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<TARCommentsServerData> call, Throwable t) {
+                public void onFailure(Call<TARCommentsServerData> call, Throwable t) {
                     Log.e("uploadTARComments", "t:" + t);
                     Globals.writeToMLOG("ERROR", "uploadTARComments/onFailure", "Throwable t: " + t);
                     Globals.writeToMLOG("INFO", "uploadTARComments/onFailure", "End uploadTARComments");
@@ -2275,7 +2282,7 @@ public class Exchange {
             Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
             Log.e("updateTAR", "convertedObject:" + convertedObject);
 
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -2328,10 +2335,10 @@ public class Exchange {
         Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer", "convertedObject: " + convertedObject);
 
         if (data != null && data.data.size() > 0) {
-            retrofit2.Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<WpDataUpdateResponse>() {
+            Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<WpDataUpdateResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<WpDataUpdateResponse> call, retrofit2.Response<WpDataUpdateResponse> response) {
+                public void onResponse(Call<WpDataUpdateResponse> call, Response<WpDataUpdateResponse> response) {
                     try {
                         Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer.onResponse", "response" + response);
                         if (response.isSuccessful()) {
@@ -2373,7 +2380,7 @@ public class Exchange {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<WpDataUpdateResponse> call, Throwable t) {
+                public void onFailure(Call<WpDataUpdateResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
                     isdownloadWPData = false;
                     result.onFailure("Возникла ошибка связи. Проверьте состояние интернета и повторите попытку позже. \nОшибка: " + t);
@@ -2486,10 +2493,10 @@ public class Exchange {
 //            }
 //        });
 
-        retrofit2.Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<AdditionalRequirementsSendMarksServerData>() {
+        Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<AdditionalRequirementsSendMarksServerData>() {
             @Override
-            public void onResponse(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, retrofit2.Response<AdditionalRequirementsSendMarksServerData> response) {
+            public void onResponse(Call<AdditionalRequirementsSendMarksServerData> call, Response<AdditionalRequirementsSendMarksServerData> response) {
                 try {
                     if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
                         List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
@@ -2515,7 +2522,7 @@ public class Exchange {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
+            public void onFailure(Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
                 isARMarkUploading = false;
                 Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
             }
@@ -2537,7 +2544,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<ChatResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_CHAT(RetrofitBuilder.contentType, convertedObject);
+        Call<ChatResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_CHAT(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
@@ -2552,7 +2559,7 @@ public class Exchange {
                             }
 
                             @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            public void onError(@NonNull Throwable e) {
                                 Log.e("chatExchange", "Throwable e: " + e);
                             }
                         });
@@ -2580,7 +2587,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<ChatGrpResponse> call = RetrofitBuilder.getRetrofitInterface().CHAT_GRP_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<ChatGrpResponse> call = RetrofitBuilder.getRetrofitInterface().CHAT_GRP_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ChatGrpResponse>() {
             @Override
             public void onResponse(Call<ChatGrpResponse> call, Response<ChatGrpResponse> response) {
@@ -2594,7 +2601,7 @@ public class Exchange {
                             }
 
                             @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            public void onError(@NonNull Throwable e) {
                                 Log.e("chatExchange", "Throwable e: " + e);
                             }
                         });
@@ -2625,7 +2632,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -2675,7 +2682,7 @@ public class Exchange {
 
         Log.e("planogram", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<ImagesViewListImageResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PHOTOS(RetrofitBuilder.contentType, convertedObject);
+        Call<ImagesViewListImageResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PHOTOS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ImagesViewListImageResponse>() {
             @Override
             public void onResponse(Call<ImagesViewListImageResponse> call, Response<ImagesViewListImageResponse> response) {
@@ -2737,7 +2744,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -2774,7 +2781,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<AdditionalMaterialsAddressResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL_ADDRESS(RetrofitBuilder.contentType, convertedObject);
+        Call<AdditionalMaterialsAddressResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL_ADDRESS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AdditionalMaterialsAddressResponse>() {
             @Override
             public void onResponse(Call<AdditionalMaterialsAddressResponse> call, Response<AdditionalMaterialsAddressResponse> response) {
@@ -2819,7 +2826,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<AdditionalMaterialsGroupsResponse> call = RetrofitBuilder.getRetrofitInterface().AdditionalMaterialsGroupsResponse_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<AdditionalMaterialsGroupsResponse> call = RetrofitBuilder.getRetrofitInterface().AdditionalMaterialsGroupsResponse_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AdditionalMaterialsGroupsResponse>() {
             @Override
             public void onResponse(Call<AdditionalMaterialsGroupsResponse> call, Response<AdditionalMaterialsGroupsResponse> response) {
@@ -2862,7 +2869,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<AdditionalMaterialsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL(RetrofitBuilder.contentType, convertedObject);
+        Call<AdditionalMaterialsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AdditionalMaterialsResponse>() {
             @Override
             public void onResponse(Call<AdditionalMaterialsResponse> call, Response<AdditionalMaterialsResponse> response) {
@@ -2907,7 +2914,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<AdditionalMaterialsLinksResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL_LINK(RetrofitBuilder.contentType, convertedObject);
+        Call<AdditionalMaterialsLinksResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL_LINK(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AdditionalMaterialsLinksResponse>() {
             @Override
             public void onResponse(Call<AdditionalMaterialsLinksResponse> call, Response<AdditionalMaterialsLinksResponse> response) {
@@ -2955,7 +2962,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -2982,7 +2989,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -3018,7 +3025,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<AchievementsResponse> call = RetrofitBuilder.getRetrofitInterface().ACHIEVEMENTS_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<AchievementsResponse> call = RetrofitBuilder.getRetrofitInterface().ACHIEVEMENTS_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AchievementsResponse>() {
             @Override
             public void onResponse(Call<AchievementsResponse> call, Response<AchievementsResponse> response) {
@@ -3044,7 +3051,7 @@ public class Exchange {
                                         }
 
                                         @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        public void onError(@NonNull Throwable e) {
                                             Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse/onError", "Throwable e: " + e);
                                         }
                                     });
@@ -3079,7 +3086,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<VoteResponse> call = RetrofitBuilder.getRetrofitInterface().VOTES_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<VoteResponse> call = RetrofitBuilder.getRetrofitInterface().VOTES_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<VoteResponse>() {
             @Override
             public void onResponse(Call<VoteResponse> call, Response<VoteResponse> response) {
@@ -3103,7 +3110,7 @@ public class Exchange {
                                 }
 
                                 @Override
-                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                public void onError(@NonNull Throwable e) {
                                     Globals.writeToMLOG("ERROR", "downloadVoteTable/onResponse/onError", "Throwable e: " + e);
                                 }
                             });
@@ -3152,7 +3159,7 @@ public class Exchange {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -3181,7 +3188,7 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<ArticleResponse> call = RetrofitBuilder.getRetrofitInterface().ARTICLE_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        Call<ArticleResponse> call = RetrofitBuilder.getRetrofitInterface().ARTICLE_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ArticleResponse>() {
             @Override
             public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
@@ -3198,7 +3205,7 @@ public class Exchange {
                                 }
 
                                 @Override
-                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                public void onError(@NonNull Throwable e) {
                                     Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse/onError", "Throwable e: " + e);
                                 }
                             });
@@ -3233,7 +3240,7 @@ public class Exchange {
 
         Globals.writeToMLOG("INFO", "conductingOnServerWpData", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<ConductWpDataResponse> call = RetrofitBuilder.getRetrofitInterface().CONDUCT_WP_DATA(RetrofitBuilder.contentType, convertedObject);
+        Call<ConductWpDataResponse> call = RetrofitBuilder.getRetrofitInterface().CONDUCT_WP_DATA(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ConductWpDataResponse>() {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
@@ -3328,7 +3335,7 @@ public class Exchange {
 
             Globals.writeToMLOG("INFO", "uploadAchievemnts", "convertedObject: " + convertedObject);
 
-            retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
+            Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<AchievementsUploadResponse>() {
                 @Override
                 public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
@@ -3384,7 +3391,38 @@ public class Exchange {
         }
     }
 
-    public ExecutorService getExecutor() {
-        return executor;
+    public void realTimeValidator() {
+
+        RetrofitBuilder.getRetrofitInterface().getGoogleTime("https://www.google.com")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(response -> {
+                    String dateHeader = response.headers().get("Date");
+                    if (dateHeader != null) {
+                        Log.d("TIME", "Raw server date: " + dateHeader);
+
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+                            sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+                            Date serverDate = sdf.parse(dateHeader);
+                            Date localDate = new Date(System.currentTimeMillis());
+                            String formattedLocalTime = sdf.format(localDate);
+
+                            if (serverDate != null) {
+                                long unixSeconds = serverDate.getTime() / 1000L;
+                                Log.d("TIME", "Unix time (sec): " + unixSeconds);
+                                Log.d("TIME", "Parsed server time: " + serverDate);
+                                Globals.writeToMLOG("INFO", "Exchange.startExchange.realTimeValidator", "Unix Google time: " + unixSeconds + "Unix Local time: " + System.currentTimeMillis()/1000);
+                                Globals.writeToMLOG("INFO", "Exchange.startExchange.realTimeValidator", "Google time: " + serverDate + "Local time: " + formattedLocalTime);
+                            }
+                        } catch (ParseException e) {
+                            Globals.writeToMLOG("ERROR", "Exchange.startExchange.realTimeValidator", "ParseException: " + e.getMessage());
+                        }
+                    } else {
+                        Log.e("TIME", "Date header not found");
+                    }
+                }, throwable -> {
+                    Globals.writeToMLOG("ERROR", "Exchange.startExchange.realTimeValidator", "ParseException: " + throwable.getMessage());
+                });
     }
 }
