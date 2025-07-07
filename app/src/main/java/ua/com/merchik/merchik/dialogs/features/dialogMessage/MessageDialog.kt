@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement

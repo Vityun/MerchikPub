@@ -155,9 +155,9 @@ public class PhotoReports {
                 @Override
                 public void onSuccess(StackPhotoDB photoDB, String s) {
                     Toast.makeText(mContext, "Фото номер: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
+                    photoDB.setError(null);
+                    photoDB.setUpload_to_server(System.currentTimeMillis());
                     realm.executeTransaction(realm -> {
-                        photoDB.setError(null);
-                        photoDB.setUpload_to_server(System.currentTimeMillis());
                         realm.insertOrUpdate(photoDB);
                         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess/realm.executeTransaction", "onSuccess. Фото выгружено. Отмечено в Realm");
                     });
@@ -478,7 +478,6 @@ public class PhotoReports {
         MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), requestBody);
 
 //        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
-        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "photo: " + photo.body());
 
         // Создание вызова выгрузка фото
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()

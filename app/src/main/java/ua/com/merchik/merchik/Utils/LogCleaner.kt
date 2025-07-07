@@ -2,9 +2,10 @@ package ua.com.merchik.merchik.Utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.*
+import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 object LogCleaner {
 
@@ -22,26 +23,34 @@ object LogCleaner {
         val daysAgo = Date(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000) // 2 дня назад
 //        val daysAgo = Date(System.currentTimeMillis() - 2L * 60 * 60 * 1000) // тест 2 часа
 
-        val tempFile = File(cacheDir, "TEMP_LOG.txt") // Временный файл для записи актуальных логов
+        val tempFile = File(cacheDir, "TEMP_LOG.txt")
+
+        var foundFirstLog = false
 
         logFile.bufferedReader().use { reader ->
             tempFile.bufferedWriter().use { writer ->
                 reader.lineSequence().forEach { line ->
                     val timestamp = extractTimestamp(line)
-                    if (timestamp != null) {
-                        val logDate = try {
-                            dateFormat.parse(timestamp)
-                        } catch (e: Exception) {
-                            null
-                        }
 
-                        // Оставляем записи с датой >= чем 2 дня назад или записи без даты
-                        if (logDate == null || logDate.after(daysAgo)) {
-                            writer.write(line)
-                            writer.newLine()
+                    if (!foundFirstLog) {
+                        if (timestamp != null) {
+                            val logDate = try {
+                                dateFormat.parse(timestamp)
+                            } catch (e: Exception) {
+                                null
+                            }
+
+                            if (logDate == null || logDate.after(daysAgo)) {
+                                // Первая подходящая строка — с неё начинаем писать
+                                foundFirstLog = true
+                                writer.write(line)
+                                writer.newLine()
+                            }
                         }
+                        // До первой подходящей строки — пропускаем
+                        return@forEach
                     } else {
-                        // Запись без времени — оставляем
+                        // После первой логовой строки — пишем как раньше
                         writer.write(line)
                         writer.newLine()
                     }
@@ -49,11 +58,53 @@ object LogCleaner {
             }
         }
 
-        // Заменяем исходный файл временным
+        // Заменяем оригинальный файл новым
         if (logFile.delete()) {
             tempFile.renameTo(logFile)
         }
     }
+
+
+//    suspend fun cleanOldLogs(cacheDir: File) = withContext(Dispatchers.IO) {
+//        val logFile = File(cacheDir, LOG_FILE_NAME)
+//        if (!logFile.exists()) return@withContext
+//
+//        val dateFormat = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault())
+//        val daysAgo = Date(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000) // 2 дня назад
+//        val daysAgo = Date(System.currentTimeMillis() - 2L * 60 * 60 * 1000) // тест 2 часа
+
+//        val tempFile = File(cacheDir, "TEMP_LOG.txt") // Временный файл для записи актуальных логов
+//
+//        logFile.bufferedReader().use { reader ->
+//            tempFile.bufferedWriter().use { writer ->
+//                reader.lineSequence().forEach { line ->
+//                    val timestamp = extractTimestamp(line)
+//                    if (timestamp != null) {
+//                        val logDate = try {
+//                            dateFormat.parse(timestamp)
+//                        } catch (e: Exception) {
+//                            null
+//                        }
+//
+//                        // Оставляем записи с датой >= чем 2 дня назад или записи без даты
+//                        if (logDate == null || logDate.after(daysAgo)) {
+//                            writer.write(line)
+//                            writer.newLine()
+//                        }
+//                    } else {
+//                        // Запись без времени — оставляем
+//                        writer.write(line)
+//                        writer.newLine()
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Заменяем исходный файл временным
+//        if (logFile.delete()) {
+//            tempFile.renameTo(logFile)
+//        }
+//    }
 
     /**
      * Извлечение временной метки из строки

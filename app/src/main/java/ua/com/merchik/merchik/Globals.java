@@ -7,6 +7,7 @@ import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
+import static ua.com.merchik.merchik.trecker.isMockGPS;
 import static ua.com.merchik.merchik.trecker.locationListener;
 import static ua.com.merchik.merchik.trecker.locationManager;
 import static ua.com.merchik.merchik.trecker.locationUniqueStringGPS;
@@ -62,6 +63,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +81,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -148,6 +151,8 @@ public class Globals {
     public static int numberOfReports;
     public static long serverGetTime;
 
+    public static String chiter_time = "";
+    public static long chiter_time_unix = 0L;
     // Данные для прилы TODO (ментор) Нужна помощь в переводах. Так правильно делать?
     public static List<TranslatesSDB> translatesList;
 
@@ -1359,6 +1364,37 @@ public class Globals {
                     Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
                             ", GPS_time: " + log.CoordTime
                             + ", systemTime: " + System.currentTimeMillis());
+                    String mock;
+                    if (isMockGPS)
+                        mock = "ФИКТИВНОЕ МП ВКЛЮЧЕННО!";
+                    else
+                        mock = "";
+
+                    if (!chiter_time.isEmpty())
+                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                                log.vpi,
+                                "Время устройства: " + Clock.getHumanTime2(log.vpi) + ", Время сервера: " + Clock.getHumanTime2(log.vpi + chiter_time_unix) + ", Расхождение с сервером: " + chiter_time + ". Координаты " + mock + " источник: GPS," + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " TimeGPS: " + CoordTime,
+                                1347,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                Globals.session,
+                                null)));
+//                    else if (isMockGPS)
+//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+//                                System.currentTimeMillis() / 1000,
+//                                "Координаты " + mock + " res: GPS," + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " TimeGPS: " + CoordTime +
+//                                ", Высота: " + imHereGPS.getAltitude() + ", Скорость: " + imHereGPS.getSpeed() + ", Точость: " + imHereGPS.getAccuracy(),
+//                                1347,
+//                                null,
+//                                null,
+//                                null,
+//                                null,
+//                                null,
+//                                Globals.session,
+//                                null)));
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;
                     return log;

@@ -1761,12 +1761,11 @@ public class TablesLoadingUnloading {
         String act = "save";
         ArrayList<LogUploadToServ> data = RealmManager.getLogToSend();
 
-
         Log.e("UPLOAD_DATA", "LOG. (" + data.size() + ")");
 
         Log.e("LOG_SEND", "call: " + data.size());
 
-        if (data.size() > 0) {
+        if (!data.isEmpty()) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().LOG(mod, act, data);
             Log.e("LOG_SEND", "call: " + call);
             call.enqueue(new retrofit2.Callback<JsonObject>() {
@@ -2201,7 +2200,7 @@ public class TablesLoadingUnloading {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
                                 if (response.body().state) {
-                                    if (response.body().data != null && response.body().data.size() > 0) {
+                                    if (response.body().data != null && !response.body().data.isEmpty()) {
                                         for (ReportPrepareUploadList item : response.body().data) {
                                             ReportPrepareDB reportPrepareDB = INSTANCE.copyFromRealm(RealmManager.getReportPrepareRowById(item.elementId));
                                             RealmManager.INSTANCE.executeTransaction(realm -> {

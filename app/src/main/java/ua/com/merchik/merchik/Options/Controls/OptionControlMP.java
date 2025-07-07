@@ -30,6 +30,8 @@ import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 
+
+// 8299
 public class OptionControlMP<T> extends OptionControl {
 
     private List<LogMPDB> logMPList = new ArrayList<>();
@@ -79,7 +81,9 @@ public class OptionControlMP<T> extends OptionControl {
                             coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
                             coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                         }
-                    }catch (Exception e){}
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "OptionControlMP/executeOption", "Exception: " + e.getMessage());
+                    }
                 }
             }
 

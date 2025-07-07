@@ -10,6 +10,7 @@ import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -269,7 +270,7 @@ public class Exchange {
                     samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
                         @Override
                         public void onSuccess(Object data) {
-                            Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                            Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "+");
 
 //                            List<SamplePhotoSDB> listPhotosToDownload = (List<SamplePhotoSDB>) data;
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
@@ -3390,9 +3391,7 @@ public class Exchange {
             return;
         }
     }
-
     public void realTimeValidator() {
-
         RetrofitBuilder.getRetrofitInterface().getGoogleTime("https://www.google.com")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -3406,23 +3405,44 @@ public class Exchange {
                             sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
                             Date serverDate = sdf.parse(dateHeader);
                             Date localDate = new Date(System.currentTimeMillis());
-                            String formattedLocalTime = sdf.format(localDate);
 
                             if (serverDate != null) {
-                                long unixSeconds = serverDate.getTime() / 1000L;
-                                Log.d("TIME", "Unix time (sec): " + unixSeconds);
-                                Log.d("TIME", "Parsed server time: " + serverDate);
-                                Globals.writeToMLOG("INFO", "Exchange.startExchange.realTimeValidator", "Unix Google time: " + unixSeconds + "Unix Local time: " + System.currentTimeMillis()/1000);
-                                Globals.writeToMLOG("INFO", "Exchange.startExchange.realTimeValidator", "Google time: " + serverDate + "Local time: " + formattedLocalTime);
+                                long diffMillis = Math.abs(serverDate.getTime() - localDate.getTime());
+
+                                Globals.chiter_time_unix = (serverDate.getTime() - localDate.getTime()) / 1000;
+
+                                if (diffMillis > 5 * 60 * 1000) { // больше 5 минут
+                                    long diffSeconds = diffMillis / 1000;
+                                    long hours = diffSeconds / 3600;
+                                    long minutes = (diffSeconds % 3600) / 60;
+                                    long seconds = diffSeconds % 60;
+
+                                    String diffFormatted = hours + " ч " + minutes + " мин " + seconds + " сек";
+                                    Globals.writeToMLOG("WARNING", "realTimeValidator", "Разница между сервером и телефоном: " + diffFormatted);
+                                    Globals.chiter_time = diffFormatted;
+
+                                    // ⏱️ Сохраняем в SharedPreferences
+                                    if (context != null) {
+                                        SharedPreferences prefs = context.getSharedPreferences("time_check", Context.MODE_PRIVATE);
+                                        prefs.edit().putString("time_difference", diffFormatted).apply();
+                                    }
+
+                                } else {
+                                    // Если всё ок, очищаем значение
+                                    if (context != null) {
+                                        SharedPreferences prefs = context.getSharedPreferences("time_check", Context.MODE_PRIVATE);
+                                        prefs.edit().remove("time_difference").apply();
+                                    }
+                                }
                             }
                         } catch (ParseException e) {
-                            Globals.writeToMLOG("ERROR", "Exchange.startExchange.realTimeValidator", "ParseException: " + e.getMessage());
+                            Globals.writeToMLOG("ERROR", "realTimeValidator", "ParseException: " + e.getMessage());
                         }
                     } else {
                         Log.e("TIME", "Date header not found");
                     }
                 }, throwable -> {
-                    Globals.writeToMLOG("ERROR", "Exchange.startExchange.realTimeValidator", "ParseException: " + throwable.getMessage());
+                    Globals.writeToMLOG("ERROR", "realTimeValidator", "Throwable: " + throwable.getMessage());
                 });
     }
 }

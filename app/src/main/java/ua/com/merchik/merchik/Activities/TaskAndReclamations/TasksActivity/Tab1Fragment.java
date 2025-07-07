@@ -237,16 +237,25 @@ public class Tab1Fragment extends Fragment {
             money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
 //            }
 
-
             CharSequence penalty = Html.fromHtml(title + money + "<br>");
             stringData.append(penalty);
 
             if (data.zamenaUserId != null && data.zamenaUserId != 0) {
-                String titlePr = "<b>Сумма премии: </b>";
-                String moneyPr = "+" + data.sumPenalty + " (замене)";
 
-                CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
-                stringData.append(premiya);
+                if (data.themeId != 1019) {
+                    String titlePr = "<b>Сумма премии: </b>";
+                    String moneyPr = "+" + data.sumPenalty + " (замене)";
+
+                    CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
+                    stringData.append(premiya);
+                } else {
+                    String titlePr = "<b>Сумма штрафа: </b>";
+                    String moneyPr = "<font color='red'> -" + Integer.parseInt(data.sumPenalty)/2 + " (замене)</font>";
+
+                    CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
+                    stringData.append(premiya);
+                }
+
             }
         } catch (Exception e) {
             Log.d("test", "test" + e);

@@ -38,6 +38,7 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.ByteArrayOutputStream;
@@ -113,7 +114,8 @@ public class PhotoReportActivity extends toolbar_menus {
         dataFromPreferenceManager();
         setActivityContent();
 
-        setFab(this, findViewById(R.id.fab), ()->{});
+        setFab(this, findViewById(R.id.fab), () -> {
+        });
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView;
@@ -727,10 +729,10 @@ public class PhotoReportActivity extends toolbar_menus {
 //                }
                 try {
                     contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", image);
-                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(image);
-                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
@@ -1281,12 +1283,32 @@ public class PhotoReportActivity extends toolbar_menus {
             Globals.writeToMLOG("INFO", "savePhoto", "wp 2: " + new Gson().toJson(wp));
             LogMPDB log = Globals.fixMP(wp, null);
 
+            Gson gson = new Gson();
 
-            Globals.writeToMLOG("INFO", "savePhoto", "log 1: " + log);
-            Globals.writeToMLOG("INFO", "savePhoto", "log 2: " + new Gson().toJson(log));
+            try {
+                // Преобразуем log в JsonObject
+                JsonElement jsonElement = gson.toJsonTree(log);
+                if (jsonElement.isJsonObject()) {
+                    JsonObject jsonObject = jsonElement.getAsJsonObject();
+                    // Удаляем поле "gp", если есть
+                    jsonObject.remove("gp");
+                    // Преобразуем обратно в JSON-строку
+                    String json = gson.toJson(jsonObject);
+                    Log.d("JSON", json);
+                    Globals.writeToMLOG("INFO", "savePhoto", "log 2: " + json);
+
+                } else {
+                    // Если log — не объект, просто сериализуем
+                    String json = gson.toJson(log);
+                    Log.d("JSON", json);
+                    Globals.writeToMLOG("INFO", "savePhoto", "log 2: " + json);
+                }
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "savePhoto", "log 2 Exception: " + e.getMessage());
+
+            }
+
             String GP = log != null ? log.gp : "";
-
-            Globals.writeToMLOG("INFO", "savePhoto", "GP: " + GP);
 
 //            String GP = Objects.requireNonNull(Globals.fixMP(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2))).gp;
 

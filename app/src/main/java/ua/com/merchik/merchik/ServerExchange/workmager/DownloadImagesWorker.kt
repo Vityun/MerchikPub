@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Response
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Utils.PrimaryKeyGenerator
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList
@@ -89,16 +90,6 @@ class DownloadImagesWorker(
             val sevenDaysAgo = System.currentTimeMillis() / 1000 - 7 * 24 * 60 * 60
             try {
 
-//                // Получаем RealmResults
-//                val results = realm.where(StackPhotoDB::class.java)
-//                    .isNotNull("photoServerURL")
-//                    .isNull("photo_num")
-//                    .greaterThanOrEqualTo("dt", sevenDaysAgo)
-//                    .findAll()
-//
-//                // Копируем данные из Realm в "отсоединенный" список
-//                realm.copyFromRealm(results)
-
                 // 1. Получаем данные Realm
                 val realmPhotos = realm.copyFromRealm(
                     realm.where(StackPhotoDB::class.java)
@@ -125,7 +116,7 @@ class DownloadImagesWorker(
 
                 // 4. Объединяем и удаляем дубликаты
                 (realmPhotos + achievementPhotos)
-                    .distinctBy { it.getPhotoServerId() } // или другой уникальный идентификатор
+                    .distinctBy { it.getPhoto_hash() } // или другой уникальный идентификатор
                     .sortedByDescending { it.dt }
 
             } catch (e: Exception) {
@@ -184,14 +175,15 @@ class DownloadImagesWorker(
                 val path = Globals.saveImage1(bitmap, "TOVAR_${photo.tovarId}_SID${photo.id}")
 
                 // Сохраняем информацию о фото в базу данных
-                realm.executeTransaction { bgRealm ->
+                realm.executeTransaction  { bgRealm ->
                     try {
                         // Генерация нового ID
-                        val lastId = bgRealm.where(StackPhotoDB::class.java)
-                            .sort("id", Sort.DESCENDING)
-                            .findFirst()
-                            ?.id ?: 0
-                        val newId = lastId + 1
+                        val newId = PrimaryKeyGenerator.nextId(bgRealm, StackPhotoDB::class.java)
+//                        val lastId = bgRealm.where(StackPhotoDB::class.java)
+//                            .sort("id", Sort.DESCENDING)
+//                            .findFirst()
+//                            ?.id ?: 0
+//                        val newId = lastId + 1
 
                         // Создание объекта StackPhotoDB
                         val stackPhotoDB = StackPhotoDB().apply {
@@ -306,7 +298,6 @@ class DownloadImagesWorker(
 
                 val path = Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
 //                    .saveImage1(bitmap, "THUMB_${stackPhoto.photoServerId}")
-
 
                 // Получаем ID из объекта stackPhoto
 //                val photoId = stackPhoto.photoServerId ?: run {

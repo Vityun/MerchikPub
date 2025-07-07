@@ -119,11 +119,11 @@ public class OptionButtonStartWork<T> extends OptionControl {
         } else {
             try {
                 long startTime = System.currentTimeMillis() / 1000;
+                wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
+                wpDataDB.setVisit_start_dt(startTime);
+                wpDataDB.setClient_start_dt(startTime);
+                wpDataDB.startUpdate = true;
                 RealmManager.INSTANCE.executeTransaction(realm -> {
-                    wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                    wpDataDB.setVisit_start_dt(startTime);
-                    wpDataDB.setClient_start_dt(startTime);
-                    wpDataDB.startUpdate = true;
                     realm.insertOrUpdate(wpDataDB);
                 });
 

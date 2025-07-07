@@ -155,7 +155,7 @@ public class MenuMainActivity extends toolbar_menus {
 //                .show();
 
 
-//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
+        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
         new Exchange().realTimeValidator();
 
