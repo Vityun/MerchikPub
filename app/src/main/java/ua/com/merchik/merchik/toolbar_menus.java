@@ -2053,8 +2053,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
     public void cronCheckUploadsPhotoOnServer() {
         try {
-            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
-//            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
+//            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
+            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
 
             Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
 
@@ -2099,17 +2099,51 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                 if (hashSite.equals(hashApp)) {
                                                     Log.e("CHECK_HASH", "Данные найдены. HashS: " + hashSite + " \tHashS: " + hashApp);
                                                     try {
-                                                        Log.e("CHECK_HASH", "Запись в БД");
-                                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                            itemApp.setGet_on_server(System.currentTimeMillis());
-                                                            itemApp.setPhotoServerId(itemSite.getID());
-                                                        });
+                                                        // Обновление itemApp из itemSite
+                                                        String dtUpload = itemSite.getDtUpload();
+                                                        long serverTime = System.currentTimeMillis();  // значение по умолчанию
+
+                                                        if (dtUpload != null) {
+                                                            try {
+                                                                serverTime = Long.parseLong(dtUpload);
+                                                            } catch (NumberFormatException e) {
+                                                                Log.e("ConversionError", "Cannot convert dtUpload to long: " + dtUpload, e);
+                                                            }
+                                                        }
+
+                                                        itemApp.setGet_on_server(serverTime);
+                                                        itemApp.setPhotoServerId(itemSite.getID());
+
+                                                        String photoUrl = itemSite.getPhotoUrl();
+                                                        if (photoUrl != null && !photoUrl.isEmpty()) {
+                                                            itemApp.setPhotoServerURL(photoUrl);
+                                                        }
+
+                                                        // Сохраняем обновлённый объект
                                                         RealmManager.stackPhotoSavePhoto(itemApp);
+
+//                                                        Log.e("CHECK_HASH", "Запись в БД");
+//                                                        RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                                            itemApp.setGet_on_server(System.currentTimeMillis());
+//                                                            if (itemSite.getPhotoUrl() != null)
+//                                                                itemApp.setPhotoServerURL(itemSite.getPhotoUrl());
+//                                                            itemApp.setPhotoServerId(itemSite.getID());
+//                                                            String dtUpload = itemSite.getDtUpload();
+//                                                            if (dtUpload != null) {
+//                                                                try {
+//                                                                    long dtUploadLong = Long.parseLong(dtUpload);
+//                                                                    itemApp.setGet_on_server(dtUploadLong);
+//                                                                } catch (NumberFormatException e) {
+//                                                                    Log.e("ConversionError", "Cannot convert dtUpload to long: " + dtUpload);
+//                                                                }
+//                                                            }
+//                                                        });
+//                                                        RealmManager.stackPhotoSavePhoto(itemApp);
                                                     } catch (Exception e) {
-                                                        Log.e("CHECK_HASH", "Exception e: " + e);
+                                                        Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
                                                     }
                                                 } else {
-                                                    Log.e("CHECK_HASH", "Данные НЕ найдены. HashS: " + hashSite + " \tHashS: " + hashApp);
+                                                    Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: else" );
                                                 }
 
                                             }
@@ -2123,7 +2157,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 }
                             }
                         } catch (Exception e) {
-                            Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "GLOBAL Exception e: " + e);
                         }
 
                     }

@@ -523,6 +523,11 @@ public class PhotoReports {
                                         callback.onSuccess(photoDB, data.error);
                                     } else if (data.errorType.equals("missing_geo_coord")) {
                                         Globals.fixMP(null, null);
+                                        new MessageDialogBuilder((Activity) mContext)
+                                                .setStatus(DialogStatus.ALERT)
+                                                .setTitle("Сервер не прийняв фото")
+                                                .setMessage(data.error)
+                                                .show();
                                         new TablesLoadingUnloading().uploadLodMp(new ExchangeInterface.ExchangeRes() {
                                             @Override
                                             public void onSuccess(String ok) {

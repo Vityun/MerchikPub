@@ -45,10 +45,7 @@ public class  CustomerExchange <T>{
                         if (response.body() != null){
                             CustomerResponse cus = (CustomerResponse) response.body();
 
-                            Log.e("downloadCustomerTable", "response.body(): " + response.body());
-                            Log.e("downloadCustomerTable", "cus: " + cus.list);
-
-                            Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body(): " + cus.list);
+                            Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body() size: " + ((CustomerResponse) response.body()).list.size());
 
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);

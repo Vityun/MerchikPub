@@ -1261,8 +1261,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         this.mContext = context;
         this.allReportOption = allReportOption;
 
-        if (dataDB instanceof WpDataDB) {
-            WpDataDB wp = (WpDataDB) dataDB;
+        if (dataDB instanceof WpDataDB wp) {
             dad2 = wp.getCode_dad2();
             startDt = wp.getVisit_start_dt();
             endDt = wp.getVisit_end_dt();
@@ -1620,7 +1619,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         Log.e("setPhotoCountsMakeAndM", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
         Log.e("setPhotoCountsMakeAndM", "isSignal: " + option.getIsSignal());
-        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
+        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId()
+                + " | code_dad2: " + option.getCodeDad2());
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
         String min = option.getAmountMin();
         if (min.equals("0")) {

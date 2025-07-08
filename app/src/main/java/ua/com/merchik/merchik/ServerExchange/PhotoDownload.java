@@ -1024,41 +1024,34 @@ public class PhotoDownload {
             // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
             if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                if (StackPhotoRealm.stackPhotoDBGetPhotoByHASH(item.getHash()) == null) {
-                    stackPhotoDB.setId(id);
+                stackPhotoDB.setId(id);
 
-                    stackPhotoDB.setDt(item.getDt());
+                stackPhotoDB.setDt(item.getDt());
 
-                    stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                    stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                    stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
 
-                    stackPhotoDB.setPhotoServerId(item.getID());
-                    stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
+                stackPhotoDB.setPhotoServerId(item.getID());
+                stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
 
-                    stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                    stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
+                stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
 
-                    stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                    stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
+                stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
 
-                    stackPhotoDB.setClient_id(item.getClientId());
-                    stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
+                stackPhotoDB.setClient_id(item.getClientId());
+                stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
 
-                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                    stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
+                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
 
-                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+                stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
 
-                    stackList.add(stackPhotoDB);
+                stackList.add(stackPhotoDB);
 
-                    id++;
-                } else {
-                    stackPhotoDB.setPhotoServerId(item.getID());
-                    stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
-                    stackPhotoDB.setGet_on_server(System.currentTimeMillis());
-                }
+                id++;
             }
         }
         RealmManager.stackPhotoSavePhoto(stackList);
@@ -1077,64 +1070,54 @@ public class PhotoDownload {
 
             if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                if (StackPhotoRealm.stackPhotoDBGetPhotoByHASH(item.getHash()) == null) {
-                    try {
-                        stackPhotoDB.setId(id);
+                try {
+                    stackPhotoDB.setId(id);
 
-                        stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
+                    stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
-                        stackPhotoDB.code_dad2 = Long.parseLong(Objects.requireNonNullElse(item.codeDad2, "0"));
+                    stackPhotoDB.code_dad2 = Long.parseLong(Objects.requireNonNullElse(item.codeDad2, "0"));
 
-                        stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
+                    stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
 
-                        stackPhotoDB.photo_hash = Objects.requireNonNullElse(item.imgHash, "");
-                        stackPhotoDB.tovar_id = Objects.requireNonNullElse(item.getTovarId(), "");
+                    stackPhotoDB.photo_hash = Objects.requireNonNullElse(item.imgHash, "");
+                    stackPhotoDB.tovar_id = Objects.requireNonNullElse(item.getTovarId(), "");
 
-                        stackPhotoDB.showcase_id = item.showcase_id;
-                        stackPhotoDB.setCode_iza(item.codeIZA);
+                    stackPhotoDB.showcase_id = item.showcase_id;
+                    stackPhotoDB.setCode_iza(item.codeIZA);
+                    stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
-                        stackPhotoDB.setDt(item.getDt());
 
-                        stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                        stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                        stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setDt(item.getDt());
 
-                        stackPhotoDB.setPhotoServerId(item.getID());
-                        stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-
-                        stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                        stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
-
-                        stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                        stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
-                        stackPhotoDB.setClient_id(item.getClientId());
-                        stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
-
-                        stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                        stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
-
-                        stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
-
-                        stackPhotoDB.setCode_iza(item.codeIZA);
-
-                        stackPhotoDB.setExample_id(Objects.requireNonNullElse(item.getExample_id(), "0"));
-                        stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(), "0"));
-                        stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(), "0"));
-                        stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(), "0"));
-
-                    } catch (Exception e) {
-                        Log.e("Exception", "e: " + e.getMessage());
-                        Globals.writeToMLOG("ERROR", "PhotoDownload.savePhotoInfoToDB", "Exception e: " + e);
-
-                    }
-                } else {
+                    stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
 
                     stackPhotoDB.setPhotoServerId(item.getID());
                     stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
-                    stackPhotoDB.setGet_on_server(System.currentTimeMillis());
-//                    Globals.writeToMLOG("INFO", "PhotoDownload.savePhotoInfoToDB", "Exception e: " + e);
 
+                    stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                    stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
+
+                    stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                    stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
+                    stackPhotoDB.setClient_id(item.getClientId());
+                    stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
+
+                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                    stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
+
+                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+
+                    stackPhotoDB.setCode_iza(item.codeIZA);
+
+                    stackPhotoDB.setExample_id(Objects.requireNonNullElse(item.getExample_id(), "0"));
+                    stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(), "0"));
+                    stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(), "0"));
+                    stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(), "0"));
+
+                } catch (Exception e) {
+                    Log.e("Exception", "e: " + e.getMessage());
                 }
                 stackList.add(stackPhotoDB);
 

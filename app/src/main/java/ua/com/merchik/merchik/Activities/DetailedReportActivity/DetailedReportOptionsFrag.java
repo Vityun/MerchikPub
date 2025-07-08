@@ -509,6 +509,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 }
             } catch (Exception e) {
                 Log.e("test", "Exception e: " + e);
+                Globals.writeToMLOG("ERROR", "Вибрати з галереї", "requestReadExternalStoragePermission: " + e.getMessage());
             }
         }
 

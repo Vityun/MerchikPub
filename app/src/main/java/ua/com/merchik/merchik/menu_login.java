@@ -63,7 +63,6 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.ServerExchange.feature.DataSyncRepository;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -87,7 +86,6 @@ import ua.com.merchik.merchik.dialogs.DialogSupport;
 import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
-import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -443,11 +441,17 @@ public class menu_login extends AppCompatActivity {
         int result3 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int result4 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
 
-        return result == PackageManager.PERMISSION_GRANTED &&
-                result1 == PackageManager.PERMISSION_GRANTED &&
-                result2 == PackageManager.PERMISSION_GRANTED &&
-                result3 == PackageManager.PERMISSION_GRANTED &&
-                result4 == PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            return result == PackageManager.PERMISSION_GRANTED &&
+                    result1 == PackageManager.PERMISSION_GRANTED &&
+                    result3 == PackageManager.PERMISSION_GRANTED &&
+                    result4 == PackageManager.PERMISSION_GRANTED;
+        else
+            return result == PackageManager.PERMISSION_GRANTED &&
+                    result1 == PackageManager.PERMISSION_GRANTED &&
+                    result2 == PackageManager.PERMISSION_GRANTED &&
+                    result3 == PackageManager.PERMISSION_GRANTED &&
+                    result4 == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestPermission() {
@@ -489,24 +493,41 @@ public class menu_login extends AppCompatActivity {
                             }
 
                         } else {
-                            if (Build.VERSION.SDK_INT >= 23) {
+                            if (Build.VERSION.SDK_INT >= 33) {
                                 if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) &&
                                         shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
-                                        shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) &&
-                                        shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
                                         shouldShowRequestPermissionRationale(Manifest.permission.CALL_PHONE)
                                 ) {
                                     requestPermissions(new String[]{
                                             Manifest.permission.ACCESS_FINE_LOCATION,
                                             Manifest.permission.CAMERA,
-                                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
                                             Manifest.permission.CALL_PHONE
                                     }, PERMISSION_REQUEST_CODE);
                                     if (trecker.switchedOff) {
                                         trecker.SetUpLocationListener(this);
                                     }
                                     return;
+                                }
+                            } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                                            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
+                                            shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) &&
+                                            shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
+                                            shouldShowRequestPermissionRationale(Manifest.permission.CALL_PHONE)
+                                    ) {
+                                        requestPermissions(new String[]{
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.CAMERA,
+                                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                                Manifest.permission.CALL_PHONE
+                                        }, PERMISSION_REQUEST_CODE);
+                                        if (trecker.switchedOff) {
+                                            trecker.SetUpLocationListener(this);
+                                        }
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -1743,9 +1764,9 @@ public class menu_login extends AppCompatActivity {
                             .setSubTitle("Время ответа от сервера может быть больше чем обычно")
                             .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
                                     "Вы можете продолжить работать с приложением в офлайе режиме")
-                            .setOnConfirmAction(() ->{
+                            .setOnConfirmAction(() -> {
                                 withoutLogin();
-                            return Unit.INSTANCE;
+                                return Unit.INSTANCE;
                             })
                             .show();
                     isStatusShow = false;
