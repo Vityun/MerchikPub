@@ -101,7 +101,7 @@ public class RetrofitBuilder {
 //        });
 
         httpClientBuilder.cookieJar(cookie)
-                .connectTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(40, TimeUnit.SECONDS)
                 .writeTimeout(40, TimeUnit.SECONDS);
 

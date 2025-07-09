@@ -31,6 +31,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -250,7 +251,8 @@ public class Tab1Fragment extends Fragment {
                     stringData.append(premiya);
                 } else {
                     String titlePr = "<b>Сумма штрафа: </b>";
-                    String moneyPr = "<font color='red'> -" + Integer.parseInt(data.sumPenalty)/2 + " (замене)</font>";
+                    double result = Double.parseDouble(data.sumPenalty)/2;
+                    String moneyPr = "<font color='red'> -" + String.format(Locale.US,"%.2f", result) + " (замене)</font>";
 
                     CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
                     stringData.append(premiya);

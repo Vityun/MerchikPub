@@ -1261,7 +1261,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         this.mContext = context;
         this.allReportOption = allReportOption;
 
-        if (dataDB instanceof WpDataDB wp) {
+        if (dataDB instanceof WpDataDB) {
+            WpDataDB wp = (WpDataDB) dataDB;
             dad2 = wp.getCode_dad2();
             startDt = wp.getVisit_start_dt();
             endDt = wp.getVisit_end_dt();

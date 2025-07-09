@@ -921,6 +921,13 @@ public class RealmManager {
     }
 
     public static int stackPhotoGetLastId() {
+//        #######################
+//        StackPhotoDB lastItem = bgRealm.where(StackPhotoDB.class)
+//    .sort("id", Sort.DESCENDING)
+//    .findFirst();
+//
+//int lastId = (lastItem != null && lastItem.getId() != null) ? lastItem.getId() : 0;
+
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).findAll();
 
         try {
@@ -951,62 +958,17 @@ public class RealmManager {
 
     //    "SELECT count(*) FROM stack_photo WHERE upload_to_server = '' AND get_on_server = '';"
     public static int stackPhotoNotUploadedPhotosCount() {
-//        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
-////                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-//                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").findAll();
-//        // Логируем ID всех найденных фотографий
-//        StringBuilder ids = new StringBuilder("Photo IDs: ");
-//        for (StackPhotoDB photo : realmResults) {
-//            ids.append(photo.getPhotoServerId()).append(", ");
-//        }
-//        if (!realmResults.isEmpty()) {
-//            ids.setLength(ids.length() - 2);
-//            Globals.writeToMLOG("DEBUG", "RealmManager.stackPhotoNotUploadedPhotosCount", "StackPhotoDB all PhotoServerId: "+ ids);
-//        } else {
-//            Globals.writeToMLOG("DEBUG", "RealmManager.stackPhotoNotUploadedPhotosCount", "No photos found");
-//        }
-        long count = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
-                .isNotNull("photo_hash")
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
-                .isNotNull("time_event")
-                .count();
-        Globals.writeToMLOG("INFO", "RealmManager.stackPhotoNotUploadedPhotosCount", "realmResults size: " + count);
-        int countInt;
-        try {
-            countInt = Math.toIntExact(count);
-        } catch (Exception e) {
-            countInt = 0;
-        }
-        return countInt;
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
+//                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
+                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").findAll();
+        return realmResults.size();
     }
 
     // Количество фото витрины
     // Зачем так криво? Надо будет отказаться от просто получения числа
     public static int stackPhotoShowcasePhotoCount(long codeDad2, int photoType) {
-        RealmResults<StackPhotoDB> realmResult = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).findAll();
-        StringBuilder ids = new StringBuilder("Photo IDs: ");
-        List<StackPhotoDB> realmResults = INSTANCE.copyFromRealm(realmResult);
-        for (StackPhotoDB photo : realmResults) {
-            ids.append(photo.getPhotoServerId()).append(", ");
-        }
-        if (!realmResults.isEmpty()) {
-            ids.setLength(ids.length() - 2);
-            Globals.writeToMLOG("DEBUG", "RealmManager.stackPhotoShowcasePhotoCount", "StackPhotoDB all PhotoServerId: " + ids);
-        } else {
-            Globals.writeToMLOG("DEBUG", "RealmManager.stackPhotoShowcasePhotoCount", "No photos found");
-        }
-        long count = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", codeDad2)
-                .equalTo("photo_type", photoType)
-                .count();
-        int countInt;
-        try {
-            countInt = Math.toIntExact(count);
-        } catch (Exception e) {
-            countInt = 0;
-        }
-        return countInt;
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).findAll();
+        return realmResults.size();
     }
 
     public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
