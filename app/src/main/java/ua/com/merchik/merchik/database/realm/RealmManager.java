@@ -922,21 +922,29 @@ public class RealmManager {
 
     public static int stackPhotoGetLastId() {
 //        #######################
-//        StackPhotoDB lastItem = bgRealm.where(StackPhotoDB.class)
-//    .sort("id", Sort.DESCENDING)
-//    .findFirst();
-//
-//int lastId = (lastItem != null && lastItem.getId() != null) ? lastItem.getId() : 0;
-
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).findAll();
-
         try {
-            if (realmResults.isEmpty()) {
-                return 0; // Возвращаем 0, если список пуст
-            } else {
-                StackPhotoDB stackPhotoDB = INSTANCE.copyFromRealm(realmResults.last());
-                return stackPhotoDB.getId();
+
+            StackPhotoDB lastItem = INSTANCE.where(StackPhotoDB.class)
+                    .sort("id", Sort.DESCENDING)
+                    .findFirst();
+
+            int lastId = 0;
+
+            if (lastItem != null) {
+                StackPhotoDB unmanaged = INSTANCE.copyFromRealm(lastItem); // !!! копируем
+                lastId = unmanaged.getId(); // теперь точно работает
             }
+
+            return lastId;
+
+//            RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).findAll();
+
+//            if (realmResults.isEmpty()) {
+//                return 0; // Возвращаем 0, если список пуст
+//            } else {
+//                StackPhotoDB stackPhotoDB = INSTANCE.copyFromRealm(realmResults.last());
+//                return stackPhotoDB.getId();
+//            }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "RealmManager/stackPhotoGetLastId", "Exception e: " + e);
             return 0;
@@ -958,17 +966,24 @@ public class RealmManager {
 
     //    "SELECT count(*) FROM stack_photo WHERE upload_to_server = '' AND get_on_server = '';"
     public static int stackPhotoNotUploadedPhotosCount() {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
+        long count = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").findAll();
-        return realmResults.size();
+                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").count();
+        if (count > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE; // или кинь исключение, или логируй
+        }
+        return (int) count;
     }
 
     // Количество фото витрины
     // Зачем так криво? Надо будет отказаться от просто получения числа
     public static int stackPhotoShowcasePhotoCount(long codeDad2, int photoType) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).findAll();
-        return realmResults.size();
+        long count =  INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).count();
+//        return realmResults.size();
+        if (count > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE; // или кинь исключение, или логируй
+        }
+        return (int) count;
     }
 
     public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
@@ -976,7 +991,7 @@ public class RealmManager {
                 .equalTo("code_dad2", codeDad2)
                 .equalTo("photo_type", photoType)
                 .isNotNull("photo_hash").findAll();
-        if (realmResults != null && realmResults.size() > 0) {
+        if (realmResults != null && !realmResults.isEmpty()) {
             return INSTANCE.copyFromRealm(realmResults);
         } else {
             return null;

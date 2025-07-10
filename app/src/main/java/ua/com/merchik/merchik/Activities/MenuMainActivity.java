@@ -56,7 +56,6 @@ public class MenuMainActivity extends toolbar_menus {
         cronchikViewModel = new ViewModelProvider(this).get(CronchikViewModel.class);
 
         try {
-
             findViewById(R.id.fab).setOnClickListener(v -> {
                 try {
                     Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();

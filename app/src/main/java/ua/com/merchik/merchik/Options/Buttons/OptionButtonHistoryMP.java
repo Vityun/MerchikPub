@@ -1,36 +1,28 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
-import android.app.Activity;
-import android.app.Dialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
 
-import androidx.compose.ui.platform.ComposeView;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 
 import java.util.List;
 
+import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
-import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Adapters.RecyclerAndPhotoAdapter;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
-import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.features.main.DBViewModels.LogDBViewModel;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 
 // 138773
@@ -54,12 +46,12 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP", "Exception e: " + e);
         }
     }
 
-    private void getDocumentVar(){
+    private void getDocumentVar() {
         try {
             wpDataDB = (WpDataDB) document;
             startTime = (wpDataDB.getVisit_start_dt() > 0)
@@ -68,21 +60,32 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
             endTime = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
-            logMPDBList = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
-        }catch (Exception e){
+            logMPDBList = LogMPRealm.getLogMPTime(startTime * 1000, endTime * 1000);
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/getDocumentVar", "Exception e: " + e);
         }
     }
 
-    private void executeOption(){
-        Intent intent = new Intent(context, FeaturesActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
-        bundle.putString("dataJson", new Gson().toJson(wpDataDB));
-        bundle.putString("title", "Історія місцеположення");
-        intent.putExtras(bundle);
-        context.startActivity(intent);
+    private void executeOption() {
+//        Intent intent = new Intent(context, FeaturesActivity.class);
+//        Bundle bundle = new Bundle();
+//        bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
+//        bundle.putString("dataJson", new Gson().toJson(wpDataDB));
+//        bundle.putString("title", "Історія місцерозташування");
+//        intent.putExtras(bundle);
+//        context.startActivity(intent);
 
+        new MessageDialogBuilder(Globals.unwrap(context))
+                .setTitle("Історія місцерозташування")
+                .setSubTitle("Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці")
+                .setMessage("Визначити та додати поточне розташування пристрою до бази даних?")
+                .setStatus(DialogStatus.NORMAL)
+                .setOnConfirmAction(() -> {
+                    Globals.fixMP(wpDataDB, context);
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction(() -> Unit.INSTANCE)
+                .show();
 //        try {
 //            Globals.fixMP(wpDataDB, context);
 //            DialogData dialog = new DialogData(context);
@@ -109,8 +112,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 //        LogMPAdapter adapter = new LogMPAdapter(context, logMPDBList);
 //        return adapter;
 //    }
-
-    private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList, int addr){
+    private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList, int addr) {
         RecyclerAndPhotoAdapter adapter = new RecyclerAndPhotoAdapter(context, logMPDBList, addr);
         return adapter;
     }

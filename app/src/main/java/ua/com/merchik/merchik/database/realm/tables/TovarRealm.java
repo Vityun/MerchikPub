@@ -106,7 +106,7 @@ public class TovarRealm {
 
     // Перегруженный метод с дефолтным значением batchSize
     public static List<Integer> getTovarIdsInBatches() {
-        return getTovarIdsInBatches(100);
+        return getTovarIdsInBatches(1000);
     }
     // Перегруженный метод с дефолтным значением batchSize
 }

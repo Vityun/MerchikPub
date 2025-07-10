@@ -40,7 +40,7 @@ public class StackPhotoRealm {
             return null;
         }
 
-        StackPhotoDB stackPhotoDB =  INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_hash", hash)
                 .findFirst();
         if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
@@ -285,6 +285,7 @@ public class StackPhotoRealm {
 //
 //        return result;
 //    }
+
     /**
      * 12.02.2025
      *
@@ -297,10 +298,13 @@ public class StackPhotoRealm {
         // Получаем все StackPhotoDB с object_id из списка ids
         Realm realm = Realm.getDefaultInstance();
         try {
-            RealmResults<StackPhotoDB> stackPhotos = realm.where(StackPhotoDB.class)
+            RealmResults<StackPhotoDB> realmResults = realm.where(StackPhotoDB.class)
                     .in("object_id", ids.toArray(new Integer[0]))
                     .findAll();
 
+            if (realmResults == null || realmResults.isEmpty()) return result;
+
+            List<StackPhotoDB> stackPhotos = realm.copyFromRealm(realmResults);
             // Создаем множество object_id, которые уже есть в базе
             Set<Integer> existingIds = new HashSet<>();
             for (StackPhotoDB stackPhoto : stackPhotos) {
@@ -315,8 +319,8 @@ public class StackPhotoRealm {
                     result.add(tovarId);
                 }
             }
-        } catch (Exception e){
-            Log.e("!","e: " + e.getMessage());
+        } catch (Exception e) {
+            Log.e("!", "e: " + e.getMessage());
         } finally {
             realm.close();
         }
@@ -463,15 +467,15 @@ public class StackPhotoRealm {
     /**
      * 10.04.24
      * */
-    public static List<StackPhotoDB> getPhotoByTypeAndTovar(Integer photoType, String tovarId){
+    public static List<StackPhotoDB> getPhotoByTypeAndTovar(Integer photoType, String tovarId) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("tovar_id", tovarId)
                 .equalTo("photo_type", photoType)
                 .findAll();
 
-        if (res != null){
+        if (res != null) {
             return INSTANCE.copyFromRealm(res);
-        }else {
+        } else {
             return null;
         }
 

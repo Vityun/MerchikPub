@@ -174,16 +174,19 @@ class DownloadImagesWorker(
                 // Сохраняем изображение на устройство
                 val path = Globals.saveImage1(bitmap, "TOVAR_${photo.tovarId}_SID${photo.id}")
 
+                val newId = realm.where(StackPhotoDB::class.java)
+                    .max("id")?.toInt()?.plus(1) ?: 1
+
                 // Сохраняем информацию о фото в базу данных
-                realm.executeTransactionAsync { bgRealm ->
+                realm.executeTransactionAsync  { bgRealm ->
                     try {
                         // Генерация нового ID
 //                        val newId = PrimaryKeyGenerator.nextId(bgRealm, StackPhotoDB::class.java)
-                        val lastId = bgRealm.where(StackPhotoDB::class.java)
-                            .sort("id", Sort.DESCENDING)
-                            .findFirst()
-                            ?.id ?: 0
-                        val newId = lastId + 1
+//                        val lastId = bgRealm.where(StackPhotoDB::class.java)
+//                            .sort("id", Sort.DESCENDING)
+//                            .findFirst()
+//                            ?.id ?: 0
+//                        val newId = lastId + 1
 
                         // Создание объекта StackPhotoDB
                         val stackPhotoDB = StackPhotoDB().apply {

@@ -192,7 +192,7 @@ fun MessageDialog(
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .scale(1.1f)
+//                                .scale(1.1f)
                         )
                     }
 
@@ -212,6 +212,7 @@ fun MessageDialog(
                                     })
                             }
                             .padding(vertical = 4.dp)
+                            .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp )
                             .padding(bottom = 2.dp),
                     )
 
