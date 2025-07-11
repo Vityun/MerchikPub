@@ -227,8 +227,21 @@ public class DetailedReportHomeFrag extends Fragment {
                     recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
                     recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-                    spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
-                    spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
+                    try {
+                        spotLat = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                    } catch (Exception e) {
+                        spotLat = 0f;
+                    }
+
+                    try {
+                        spotLon = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                    } catch (Exception e) {
+                        spotLon = 0f;
+                    }
+
+
+//                    spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
+//                    spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
 
                     Log.e("DetailedReportHomeFrag", "onCreateView.spotLat: " + spotLat);
                     Log.e("DetailedReportHomeFrag", "onCreateView.spotLon: " + spotLon);

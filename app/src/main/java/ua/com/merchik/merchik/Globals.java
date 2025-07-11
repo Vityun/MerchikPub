@@ -1240,6 +1240,7 @@ public class Globals {
         geo_debug.put("app_id", logMP.id);
         DataMap.put("geo_debug", geo_debug);
         DataMap.put("code_dad2", logMP.codeDad2);
+        DataMap.put("addr_id", logMP.address);
 
         DataMap.put("timestamp", System.currentTimeMillis()); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
 
@@ -1335,10 +1336,10 @@ public class Globals {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                         log.mocking = imHereGPS.isFromMockProvider();
                     }
-                    log.gp = POST_10(log);
 
                     if (wpDataDB != null) {
                         log.codeDad2 = wpDataDB.getCode_dad2();
+                        log.address = wpDataDB.getAddr_id();
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                         float coordAddrX = 0, coordAddrY = 0;
@@ -1357,8 +1358,9 @@ public class Globals {
                         double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
                         log.distance = (int) distance;
                     }
-
                     log.vpi = System.currentTimeMillis() / 1000;
+
+                    log.gp = POST_10(log);
 
                     RealmManager.setLogMpRow(log);
                     Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
@@ -1423,9 +1425,9 @@ public class Globals {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                         logNET.mocking = imHereNET.isFromMockProvider();
                     }
-                    logNET.gp = POST_10(logNET);
                     if (wpDataDB != null) {
                         logNET.codeDad2 = wpDataDB.getCode_dad2();
+                        logNET.address = wpDataDB.getAddr_id();
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                         float coordAddrX = 0, coordAddrY = 0;
@@ -1446,6 +1448,8 @@ public class Globals {
                     }
                     logNET.vpi = System.currentTimeMillis() / 1000;
                     logNET.locationUniqueString = locationUniqueStringNETThis;
+                    logNET.gp = POST_10(logNET);
+
                     RealmManager.setLogMpRow(logNET);
                     locationUniqueStringGSM = locationUniqueStringNETThis;
                     return logNET;

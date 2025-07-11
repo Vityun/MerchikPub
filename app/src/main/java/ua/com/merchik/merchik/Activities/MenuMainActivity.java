@@ -29,6 +29,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.AudioExchange;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
@@ -154,9 +155,11 @@ public class MenuMainActivity extends toolbar_menus {
 //                .show();
 
 
-        WorkManagerHelper.INSTANCE.startSyncWorker(this);
+        new AudioExchange().export_test(this);
 
-        new Exchange().realTimeValidator();
+//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
+
+//        new Exchange().realTimeValidator();
 
 //        Exchange.exchangeTime = 0;
 

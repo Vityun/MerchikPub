@@ -11,7 +11,6 @@ import java.util.List;
 import io.reactivex.rxjava3.core.Single;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -635,9 +634,31 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     @POST("mobile_app.php?")
+    Single<JsonObject> TEST_JSON_UPLOAD_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
     Call<String> TEST_STRING_UPLOAD(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<String> TEST_STRING_UPLOAD_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+
+    @Multipart
+    @POST("mobile_app.php?")
+    Single<JsonObject> TEST_AUDIO_UPLOAD_RX(
+            @Header("ContentType") String content,
+//            @Query("mod") String mod,
+//            @Query("act") String act,
+//            @Body JsonObject json,
+//            @PartMap Map<String, RequestBody> data,
+//            @Part List<MultipartBody.Part> audio);
+            @Part List<MultipartBody.Part> parts);
 
     // -------------------------------------------------------
 

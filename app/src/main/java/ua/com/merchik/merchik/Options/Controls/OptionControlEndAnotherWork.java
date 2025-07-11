@@ -115,13 +115,16 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
 
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
                 String formattedDate = formatter.format(item.getDt());
+                String address = item.getAddr_txt();
+                if (address == null || address.isEmpty())
+                    address = "адреса не визначена";
                 // Dialog massage
                 spannableStringBuilder
                         .append("Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩЕЙ работы!")
                         .append("\n")
                         .append(createLinkedString(
                                 "Перейдіть до цього візиту:\n" +
-                                        formattedDate + ", " + item.getAddr_txt() + ", " + item.getClient_txt() +
+                                        formattedDate + ", " + address + ", " + item.getClient_txt() +
                                 " та натисніть копку 'Закінчення роботи' або введіть код розблокування", item))
                         .append("\n");
             }
