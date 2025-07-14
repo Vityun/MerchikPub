@@ -601,7 +601,7 @@ public class TablesLoadingUnloading {
 //        String date_from = Clock.getDatePeriod(-14);
 
 //        #### TODO dt_change_from
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("options_list"));
+//        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("options_list"));
 //        standartData.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
@@ -623,10 +623,10 @@ public class TablesLoadingUnloading {
                         if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                             globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+//                            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
+//                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+//                            });
                         }
 
                     }

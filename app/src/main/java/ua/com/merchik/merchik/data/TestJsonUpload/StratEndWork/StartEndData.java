@@ -10,6 +10,7 @@ package ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork;
  * 18.02.2025 добавил комментарий и мнение
  * */
 public class StartEndData {
+    public int temp_id;
     public String element_id;
     public String code_dad2;       //
     public String user_id;         //

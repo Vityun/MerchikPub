@@ -1235,6 +1235,7 @@ public class Globals {
         coords.put("trusted_location", logMP.mocking ? 0 : 1);           // 1 - хорошая, если не 1 - плохая
 //        coords.put("trusted_location", logMP.mocking);           // 1 - хорошая, если не 1 - плохая
         coords.put("source_id", logMP.provider);
+        coords.put("offline_data", internetStatus);
         DataMap.put("coords", coords);                                                              // географические координаты
 
         geo_debug.put("app_id", logMP.id);

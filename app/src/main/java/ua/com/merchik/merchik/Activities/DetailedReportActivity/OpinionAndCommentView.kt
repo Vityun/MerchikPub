@@ -241,14 +241,16 @@ fun OpinionAndCommentView(
                     viewModel.setSave(false)
 
                     val startTime = System.currentTimeMillis() / 1000
+                    wpDataDB.dt_update = startTime
+                    wpDataDB.user_comment = comment
+                    wpDataDB.user_comment_author_id = wpDataDB.user_id
+                    wpDataDB.user_comment_dt_update = startTime
+                    wpDataDB.startUpdate = true
                     RealmManager.INSTANCE.executeTransaction { realm: Realm ->
-                        wpDataDB.dt_update = startTime
-                        wpDataDB.user_comment = comment
-                        wpDataDB.user_comment_author_id = wpDataDB.user_id
-                        wpDataDB.user_comment_dt_update = startTime
-                        wpDataDB.startUpdate = true
                         realm.insertOrUpdate(wpDataDB)
                     }
+
+                    viewModel.setWpDataDB(wpDataDB)
 
 
                     // Это жосткие костыли

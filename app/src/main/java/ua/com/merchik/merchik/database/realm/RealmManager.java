@@ -1390,11 +1390,13 @@ public class RealmManager {
         List<WpDataDB> list = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataToUpdate());
         List<StartEndData> res = new ArrayList<>();
 
+        int id = 0;
         if (list != null && !list.isEmpty()) {
             for (WpDataDB l : list) {
                 if (l.startUpdate || l.getSetStatus() > 0) {
+                    id++;
                     StartEndData item = new StartEndData();
-
+                    item.temp_id = id;
                     item.element_id = String.valueOf(l.getId());
                     item.code_dad2 = String.valueOf(l.getCode_dad2());
                     item.user_id = String.valueOf(l.getUser_id());

@@ -165,7 +165,7 @@ public class OptionControlMP<T> extends OptionControl {
                         if (distance < distanceMin) {
                             stringBuilder.append("Ви визначені на торговій точці. Зауважень немає.");
                             okMP = true;
-                            click.onSuccess("");
+                            click.onSuccess(stringBuilder.toString());
                             signal = false;
                         } else {
                             String distanceType = " м ";

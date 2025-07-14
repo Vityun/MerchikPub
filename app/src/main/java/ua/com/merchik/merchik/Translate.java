@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
+import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Translation.AddTranslation;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -267,9 +268,13 @@ public class Translate {
     создал метод для перевода
      */
     public static String translationText(int id, String defaultText) {
-        return Objects.requireNonNullElse(
-                SQL_DB.siteObjectsDao().getObjectsByRealId(id).comments, defaultText);
-        }
+        SiteObjectsSDB obj = SQL_DB.siteObjectsDao().getObjectsByRealId(id);
+        return obj != null && obj.comments != null ? obj.comments : defaultText;
+    }
+//    public static String translationText(int id, String defaultText) {
+//        return Objects.requireNonNullElse(
+//                SQL_DB.siteObjectsDao().getObjectsByRealId(id).comments, defaultText);
+//        }
 
 
         /**
@@ -312,12 +317,30 @@ public class Translate {
         // Для создания достижения выберите...
         res.add(new AddTranslation(
                 "1",
-                "message_dialog_end_work_message",
-                "Ви намагаєтесь завершити роботу. Работа буде завершена у ",
+                "message_dialog_mp_title",
+                "Історія місцерозташування",
                 "app",
                 "all",
                 ""
         ));
+        res.add(new AddTranslation(
+                "2",
+                "message_dialog_mp_sub_title",
+                "Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці\"",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "3",
+                "message_dialog_mp_message",
+                "Визначити та додати поточне розташування пристрою до бази даних?",
+                "app",
+                "all",
+                ""
+        ));
+
+
 //        res.add(new AddTranslation(
 //                "2",
 //                "detailed_report_home_frag_report_status",

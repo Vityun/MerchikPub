@@ -239,7 +239,6 @@ public class DetailedReportHomeFrag extends Fragment {
                         spotLon = 0f;
                     }
 
-
 //                    spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
 //                    spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
 
