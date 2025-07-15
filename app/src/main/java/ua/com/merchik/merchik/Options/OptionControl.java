@@ -80,6 +80,8 @@ public class OptionControl<T> {
                             dialog.setText(msg + stringBuilderMsg);
                             if (block) {
                                 dialog.setDialogIco();
+                            } else {
+                                dialog.setDialogNormalIco();
                             }
                             dialog.setClose(dialog::dismiss);
                             dialog.show();

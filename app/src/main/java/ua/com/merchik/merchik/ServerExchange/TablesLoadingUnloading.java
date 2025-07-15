@@ -10,6 +10,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -21,12 +22,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -2338,6 +2342,31 @@ public class TablesLoadingUnloading {
         }
     }
 
+    public static Map<String, Object> decodeBase64ToMap(String base64) {
+        try {
+            // Декодируем из base64
+            byte[] decodedBytes = Base64.decode(base64, 0);
+            String decodedUrl = new String(decodedBytes, "UTF-8");
+
+            // Декодируем URL-encoded строку
+            String urlQuery = URLDecoder.decode(decodedUrl, "UTF-8");
+
+            // Парсим query string обратно в Map
+            Map<String, Object> resultMap = new HashMap<>();
+            String[] pairs = urlQuery.split("&");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=");
+                if (keyValue.length == 2) {
+                    resultMap.put(keyValue[0], keyValue[1]);
+                }
+            }
+
+            return resultMap;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     // =============== D_O_W_N_L_O_A_D ===============
 
     /**

@@ -109,6 +109,7 @@
             android:layout_marginTop="9dp"
             android:background="@drawable/selector_rounded_button"
             app:layout_constraintEnd_toEndOf="parent"
+            android:scaleType="fitXY"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/title"
             app:srcCompat="@drawable/ic_caution" />

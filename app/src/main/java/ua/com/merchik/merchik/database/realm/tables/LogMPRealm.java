@@ -24,6 +24,11 @@ public class LogMPRealm {
                 .findAll());
     }
 
+    public static long getLogMPCount() {
+        return INSTANCE.where(LogMPDB.class)
+                .count();
+    }
+
     public static List<LogMPDB> getLogMPByDad2(long codeDad2) {
         return INSTANCE.copyFromRealm(INSTANCE.where(LogMPDB.class)
                 .equalTo("codeDad2", codeDad2)

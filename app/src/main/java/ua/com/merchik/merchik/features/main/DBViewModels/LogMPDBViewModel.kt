@@ -2,14 +2,16 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP
+import ua.com.merchik.merchik.Options.Options
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
@@ -32,6 +34,13 @@ class LogMPDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class
 
+    override fun onClickAdditionalContent() {
+        super.onClickAdditionalContent()
+        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+        if (context != null && wpDataDB != null){
+            OptionButtonHistoryMP(context!!, wpDataDB, null, null, Options.NNKMode.MAKE, null, ::updateContent)
+        }
+    }
     override fun getItems(): List<DataItemUI> {
         var startTime = System.currentTimeMillis()
         var endTime = System.currentTimeMillis()
@@ -41,15 +50,17 @@ class LogMPDBViewModel @Inject constructor(
 
             val validTime = 1800
 
-            startTime = if ((wpDataDB.getVisit_start_dt() > 0))
-                wpDataDB.getVisit_start_dt() - validTime
+            startTime = if ((wpDataDB.visit_start_dt > 0) && wpDataDB.visit_end_dt > 0)
+                wpDataDB.visit_start_dt - validTime
             else
                 (System.currentTimeMillis() / 1000) - validTime
 
             endTime =
-                if (wpDataDB.getVisit_end_dt() > 0) wpDataDB.getVisit_end_dt() else System.currentTimeMillis() / 1000
+                if (wpDataDB.visit_end_dt > 0) wpDataDB.visit_end_dt else System.currentTimeMillis() / 1000
 
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            Log.e("!!!!!!","+")
+        }
 
         val logMPDBUI = repository
             .getByRangeDateRealmDataObjectUI(LogMPDB::class, "CoordTime", startTime*1000, endTime*1000, contextUI, null)

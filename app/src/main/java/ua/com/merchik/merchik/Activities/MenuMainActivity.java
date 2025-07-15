@@ -154,7 +154,7 @@ public class MenuMainActivity extends toolbar_menus {
 //                })
 //                .show();
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
 //        new AudioExchange().export_test(this);
 

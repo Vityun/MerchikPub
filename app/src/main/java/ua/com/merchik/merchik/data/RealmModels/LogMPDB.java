@@ -10,6 +10,7 @@ import java.util.List;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.features.main.LogMPDBDBOverride;
 import ua.com.merchik.merchik.features.main.LogMPDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
@@ -99,7 +100,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return LogMPDBDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable

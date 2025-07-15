@@ -317,28 +317,28 @@ public class Translate {
         // Для создания достижения выберите...
         res.add(new AddTranslation(
                 "1",
-                "message_dialog_mp_title",
-                "Історія місцерозташування",
+                "option_control_mp_message_1",
+                "Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ",
                 "app",
                 "all",
                 ""
         ));
-        res.add(new AddTranslation(
-                "2",
-                "message_dialog_mp_sub_title",
-                "Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці\"",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "3",
-                "message_dialog_mp_message",
-                "Визначити та додати поточне розташування пристрою до бази даних?",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "2",
+//                "message_dialog_mp_sub_title",
+//                "Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці\"",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "3",
+//                "message_dialog_mp_message",
+//                "Визначити та додати поточне розташування пристрою до бази даних?",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 
 //        res.add(new AddTranslation(

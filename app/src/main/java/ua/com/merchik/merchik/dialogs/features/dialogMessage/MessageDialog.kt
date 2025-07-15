@@ -82,7 +82,7 @@ fun MessageDialog(
                 RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
             }
         else
-            AnnotatedString.fromHtml(message)
+            AnnotatedString.fromHtml(message.replace("\n", "<br>"))
 
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -200,7 +200,7 @@ fun MessageDialog(
                         text = styledAnnotatedString,
                         style = MaterialTheme.typography.titleSmall,
                         color = Color(0xCC1E201D),
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Justify,
                         modifier = Modifier
                             .pointerInput(Unit) {
                                 detectTapGestures(

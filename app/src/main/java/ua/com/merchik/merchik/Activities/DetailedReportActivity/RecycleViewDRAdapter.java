@@ -435,17 +435,19 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case 138773:
                             List<LogMPDB> logMPList = new ArrayList<>();
                             int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
-                            long startT = (wp.getVisit_start_dt() > 0)
-                                    ? wp.getVisit_start_dt() - validTime
-                                    : (System.currentTimeMillis() / 1000) - validTime;
+                            long startT =
+                                    (wp != null &&
+                                            wp.getVisit_start_dt() > 0 && wp.getVisit_end_dt() > 0) ? wp.getVisit_start_dt() - validTime :
+                                            (System.currentTimeMillis() / 1000) - validTime;
                             long endT = wp.getVisit_end_dt() > 0 ? wp.getVisit_end_dt() : System.currentTimeMillis() / 1000;
                             logMPList = LogMPRealm.getLogMPTime(startT*1000, endT*1000);
                             int loMPonPoint = 0;
                             for (LogMPDB log : logMPList) {
-                                if (log.distance != 0 && log.distance < 1000) {
+                                if (log.distance != 0 && log.distance < Globals.distanceMin) {
                                     loMPonPoint++;
                                 }
                             }
+
                             textInteger.setText(CustomString.underlineString( logMPList.size() + "/" + loMPonPoint, optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
@@ -453,6 +455,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
                                 bundle.putString("dataJson", new Gson().toJson(wp));
                                 bundle.putString("title", "Історія місцеположення");
+                                bundle.putString("subTitle", "Данные местоположения по ТТ" + ": " + wp.getAddr_txt() +
+                                        " за период с " + Clock.getHumanTime2(startT) + " по " + Clock.getHumanTime2(endT)) ;
                                 intent.putExtras(bundle);
                                 mContext.startActivity(intent);
                             });

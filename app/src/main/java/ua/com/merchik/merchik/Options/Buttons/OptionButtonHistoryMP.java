@@ -4,9 +4,12 @@ import android.content.Context;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import ua.com.merchik.merchik.Adapters.RecyclerAndPhotoAdapter;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -39,6 +42,11 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
     private String workStatusSub = "";
     private String workStatusMessage = "";
 
+    private String id = "";
+    private String time = "";
+
+    private Function0<Unit> updateContent;
+
     public OptionButtonHistoryMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
@@ -47,6 +55,22 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
             this.msgType = msgType;
             this.nnkMode = nnkMode;
             this.unlockCodeResultListener = unlockCodeResultListener;
+            getDocumentVar();
+            executeOption();
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP", "Exception e: " + e);
+        }
+    }
+
+    public OptionButtonHistoryMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener, @NotNull Function0<Unit> updateContent) {
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
+            this.updateContent = updateContent;
             getDocumentVar();
             executeOption();
         } catch (Exception e) {
@@ -90,28 +114,39 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                 .setMessage(Translate.translationText(8578, "Визначити та додати поточне розташування пристрою до бази даних?"))
                 .setStatus(DialogStatus.NORMAL)
                 .setOnConfirmAction(() -> {
-//                    LogMPDB logMPDB = Globals.fixMP(wpDataDB, context);
-                    OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, nnkMode, unlockCodeResultListener);
+                    LogMPDB logMPDB = Globals.fixMP(wpDataDB, context);
+                    if (logMPDB != null) {
+                        id = String.valueOf(logMPDB.id);
+                        time = Clock.getHumanTime2(logMPDB.vpi);
+                    } else {
+                        id = String.valueOf(LogMPRealm.getLogMPCount() + 1);
+                        time = Clock.getHumanTime2(System.currentTimeMillis() / 1000);
+                    }
+                    OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, Options.NNKMode.MAKE, unlockCodeResultListener);
                     optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
                         @Override
                         public void onSuccess(String data) {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())
                                 new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
-                                        .setSubTitle("Запис до бази даних з поточними координатами додано")
+                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+                                        .setSubTitle(String.format("Запис %s додано до бази даних з поточними координатами %s", id, time))
                                         .setMessage(data)
                                         .setStatus(DialogStatus.NORMAL)
                                         .setOnConfirmAction(() -> {
+                                            if (updateContent != null)
+                                                updateContent.invoke();
                                             return Unit.INSTANCE;
                                         })
                                         .show();
                             else
                                 new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
+                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
                                         .setSubTitle(workStatusSub)
                                         .setMessage(workStatusMessage)
                                         .setStatus(DialogStatus.ALERT)
                                         .setOnConfirmAction(() -> {
+                                            if (updateContent != null)
+                                                updateContent.invoke();
                                             return Unit.INSTANCE;
                                         })
                                         .show();
@@ -122,21 +157,25 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                         public void onFailure(String error) {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())
                                 new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
-                                        .setSubTitle("Запис до бази даних з поточними координатами додано")
+                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+                                        .setSubTitle(String.format("Запис %s додано до бази даних з поточними координатами %s", id, time))
                                         .setMessage(error)
                                         .setStatus(DialogStatus.ERROR)
                                         .setOnConfirmAction(() -> {
+                                            if (updateContent != null)
+                                                updateContent.invoke();
                                             return Unit.INSTANCE;
                                         })
                                         .show();
                             else
                                 new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
+                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
                                         .setSubTitle(workStatusSub)
                                         .setMessage(workStatusMessage)
                                         .setStatus(DialogStatus.NORMAL)
                                         .setOnConfirmAction(() -> {
+                                            if (updateContent != null)
+                                                updateContent.invoke();
                                             return Unit.INSTANCE;
                                         })
                                         .show();

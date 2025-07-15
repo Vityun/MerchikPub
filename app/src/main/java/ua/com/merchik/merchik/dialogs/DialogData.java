@@ -562,6 +562,15 @@ public class DialogData {
 //        }
     }
 
+    public void setDialogNormalIco() {
+        merchikIco.setVisibility(View.VISIBLE);
+        merchikIco.setImageDrawable(dialog.getContext().getResources().getDrawable(R.drawable.ic_normal));
+//        Drawable drawable = merchikIco.getBackground();
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            drawable.setTint(dialog.getContext().getResources().getColor(R.color.colotSelectedTab));
+//        }
+    }
+
     public void setImage(boolean visualise, File file) {
         photo = dialog.findViewById(R.id.img);
         if (visualise) infoLayout.setVisibility(View.VISIBLE);

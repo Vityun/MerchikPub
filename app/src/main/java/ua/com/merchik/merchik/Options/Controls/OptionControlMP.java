@@ -4,7 +4,6 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
-import android.app.Application;
 import android.content.Context;
 
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 
 
 // 8299
@@ -48,6 +46,7 @@ public class OptionControlMP<T> extends OptionControl {
     private String period = "";
 
     private boolean signal = true;
+    private LogMPDB latestVpiLog;
 
     public OptionControlMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
@@ -68,35 +67,37 @@ public class OptionControlMP<T> extends OptionControl {
                 addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
 
                 AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
-                if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")){
+                if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")) {
                     distanceMin = 1800;
                 }
 
-                if (addressSDB != null){
+                if (addressSDB != null) {
                     coordAddrX = addressSDB.locationXd;
                     coordAddrY = addressSDB.locationYd;
-                }else {
+                } else {
                     try {
-                        if (wpDataDB != null){
+                        if (wpDataDB != null) {
                             coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
                             coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "OptionControlMP/executeOption", "Exception: " + e.getMessage());
                     }
                 }
             }
 
-            long startTime = (wpDataDB.getVisit_start_dt() > 0)
-                    ? wpDataDB.getVisit_start_dt() - validTime
-                    : (System.currentTimeMillis() / 1000) - validTime;
+//            15.07 .2025 изменил по указанию Петрова теперь сигнал расчитывается ИСКЛЮЧИТЕЛЬНО за последние 30 минут если работа не окончена!
+            long startTime =
+                    (wpDataDB != null &&
+                            wpDataDB.getVisit_start_dt() > 0 && wpDataDB.getVisit_end_dt() > 0) ? wpDataDB.getVisit_start_dt() - validTime :
+                            (System.currentTimeMillis() / 1000) - validTime;
 
-            long endTime = System.currentTimeMillis() / 1000;
+            long endTime = (wpDataDB.getVisit_end_dt() > 0) ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
-            logMPList = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
+            logMPList = LogMPRealm.getLogMPTime(startTime * 1000, endTime * 1000);
 
-            if (logMPList != null && logMPList.size() > 0){
-                for (LogMPDB item : logMPList){
+            if (logMPList != null && logMPList.size() > 0) {
+                for (LogMPDB item : logMPList) {
                     double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);
                     item.distance = (int) distance;
                 }
@@ -117,7 +118,12 @@ public class OptionControlMP<T> extends OptionControl {
             String dateTo = Clock.getHumanTimeSecPattern(endTime, "HH:mm");
 
 //            stringBuilder.append("За період з ").append(dateFrom).append(" по ").append(dateTo).append(" ").append("\n\n");
-            stringBuilder.append("").append(date).append(" з ").append(dateFrom).append(" по ").append(dateTo).append(" ").append("\n\n");
+            stringBuilder.append("").append(date).append(" за период с ").append(dateFrom).append(" по ").append(dateTo).append("\n");
+            if (addressSDB != null)
+                stringBuilder
+                        .append("Адрес ТТ: ")
+                        .append(addressSDB.nm)
+                        .append("\n");
 
 
         } catch (Exception e) {
@@ -153,18 +159,48 @@ public class OptionControlMP<T> extends OptionControl {
 //                        double distance = coordinatesDistanse(addressSDB.locationXd, addressSDB.locationYd, logMPDB.CoordX, logMPDB.CoordY);
 
                         // Найти первый элемент с ненулевым значением distance
-                        LogMPDB logMPDB = null;
+//                        LogMPDB logMPDB = null;
+//                        for (LogMPDB log : logMPList) {
+//                            if (log.distance != 0) {
+//                                logMPDB = log;
+//
+//                                break;
+//                            }
+//                        }
+                        LogMPDB minDistanceLog = null;
+                        int validDistanceCount = 0;
                         for (LogMPDB log : logMPList) {
                             if (log.distance != 0) {
-                                logMPDB = log;
-                                break;
+                                if (log.distance < distanceMin) {
+                                    validDistanceCount++;
+                                }
+                                if (minDistanceLog == null || log.distance < minDistanceLog.distance) {
+                                    minDistanceLog = log;
+                                }
+                                if (latestVpiLog == null || log.vpi > latestVpiLog.vpi) {
+                                    latestVpiLog = log;
+                                }
                             }
                         }
 
-                        double distance = logMPDB.distance;
+                        double distance = minDistanceLog != null ? minDistanceLog.distance : 0;
                         if (distance < distanceMin) {
+                            stringBuilder.append(String.format("Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ.", logMPList.size(), validDistanceCount))
+                                    .append("\n");
                             stringBuilder.append("Ви визначені на торговій точці. Зауважень немає.");
                             okMP = true;
+                            if (nnkMode == Options.NNKMode.MAKE) {
+                                stringBuilder.setLength(0);
+                                stringBuilder
+                                        .append("Адрес ТТ: ")
+                                        .append(addressSDB.nm)
+                                        .append("\n");
+                                stringBuilder.append("Поточне розташування присторою станом на ")
+                                        .append(Clock.getHumanTime2(latestVpiLog.vpi))
+                                        .append(" визначено на вiдстанi ")
+                                        .append(distance)
+                                        .append(" метрiв вiд ТТ");
+                            }
                             click.onSuccess(stringBuilder.toString());
                             signal = false;
                         } else {
@@ -174,20 +210,44 @@ public class OptionControlMP<T> extends OptionControl {
                                 distanceType = " км ";
                             }
 
-                            stringBuilder
-                                    .append("За визначенням системи, ")
-                                    .append("станом на ").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime/1000, "HH:mm")).append("").append(", ви знаходились на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
-                                    .append(", що більше допустимих ").append(distanceMin).append(" метрів. ")
-                                    .append("Це може бути помилковим визначенням.")
-                                    .append("\n\n")
-                                    .append("Якщо ви в дійсності знаходитесь на ТТ").append("\n")
-                                    .append("- вийдіть на подвір'я, відкрийте форму відвідування, та натисніть кнопку \"Запит МП\" чи \"Історія МП\".").append("\n")
-                                    .append("- якщо це не допомогло зверніться до свого керівника або в службу підтримки merchik.").append("\n");
+                            if (nnkMode == Options.NNKMode.MAKE && latestVpiLog != null) {
+                                distance = latestVpiLog.distance;
+                                if (distance > 1000) {
+                                    distance = distance / 1000;
+                                    distanceType = " км ";
+                                }
+                                stringBuilder.setLength(0);
+                                stringBuilder
+                                        .append("Адрес ТТ: ")
+                                        .append(addressSDB.nm)
+                                        .append("\n");
+                                stringBuilder
+                                        .append("За визначенням системи, ")
+                                        .append("станом на ")
+                                        .append(Clock.getHumanTime2(latestVpiLog.vpi))
+                                        .append(" поточне розташування присторою знаходится на вiдстанi ")
+                                        .append((int) distance).append("").append(distanceType)
+                                        .append(" вiд ТТ. ")
+                                        .append("<font color=red>Местоположение в ТТ не подтверждено<font>");
+                            } else {
+                                stringBuilder.append(String.format("Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ.", logMPList.size(), validDistanceCount))
+                                        .append("\n");
+                                stringBuilder
+                                        .append("За визначенням системи, ")
+                                        .append("найближче до ТТ ви знаходились у ").append(Clock.getHumanTimeSecPattern((minDistanceLog != null ? minDistanceLog.CoordTime : System.currentTimeMillis()) / 1000, "HH:mm"))
+                                        .append("").append(" на відстані ").append((int) distance).append("").append(distanceType).append("від ТТ ")
+                                        .append(", що більше допустимих ").append(distanceMin).append(" метрів. ")
+                                        .append("Це може бути помилковим визначенням.")
+                                        .append("\n\n")
+                                        .append("Якщо ви в дійсності знаходитесь на ТТ").append("\n")
+                                        .append("- вийдіть на подвір'я, відкрийте форму відвідування, та натисніть кнопку \"Запит МП\" чи \"Історія МП\".").append("\n")
+                                        .append("- якщо це не допомогло зверніться до свого керівника або в службу підтримки merchik.").append("\n");
 //                                    .append("Ваше поточне розташування не відповідає адресі, для якої призначено фото. Визначте місце розташування повторно.");
+                            }
                             click.onFailure(stringBuilder.toString());
                         }
                     }
-                }else {
+                } else {
                     stringBuilder.append("У магазині в якому Ви працюєте не встановлені координати!").append("\n").append("Зверніться до Вашого керівника для виправлення цієї проблеми.");
                     click.onFailure(stringBuilder.toString());
                 }
@@ -210,9 +270,9 @@ public class OptionControlMP<T> extends OptionControl {
 
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
-                    if (signal){
+                    if (signal) {
                         optionDB.setIsSignal("1");
-                    }else {
+                    } else {
                         optionDB.setIsSignal("2");
                     }
                     realm.insertOrUpdate(optionDB);

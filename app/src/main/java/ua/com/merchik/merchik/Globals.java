@@ -153,8 +153,6 @@ public class Globals {
 
     public static String chiter_time = "";
     public static long chiter_time_unix = 0L;
-    // Данные для прилы TODO (ментор) Нужна помощь в переводах. Так правильно делать?
-    public static List<TranslatesSDB> translatesList;
 
     //----------------------------------------------------------------------------------------------
 

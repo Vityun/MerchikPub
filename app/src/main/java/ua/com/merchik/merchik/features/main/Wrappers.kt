@@ -519,3 +519,24 @@ object StackPhotoDBOverride {
         return MerchModifier()
     }
 }
+
+
+object LogMPDBDBOverride {
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        try {
+            val distance = jsonObject.optInt("distance", 0)
+            if (distance == 0)
+                return MerchModifier()
+            return if (distance > 1000)
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4"))) //error
+            else
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77"))) //good
+
+
+        } catch (_: Exception) {
+
+        }
+        return MerchModifier()
+    }
+}
