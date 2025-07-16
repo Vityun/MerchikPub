@@ -1262,6 +1262,8 @@ public class Globals {
      *
      * @return
      */
+    public static long delayGPSTime = 0;
+    private static long retryTime = 1200000; // 20 мин
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
@@ -1320,7 +1322,7 @@ public class Globals {
 
 
                 String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
-                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis)) {
+                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis) || (delayGPSTime + retryTime < System.currentTimeMillis())) {
                     int id = RealmManager.logMPGetLastId() + 1;
                     Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
                     LogMPDB log = new LogMPDB();
@@ -1361,6 +1363,7 @@ public class Globals {
 
                     log.gp = POST_10(log);
 
+                    delayGPSTime = System.currentTimeMillis();
                     RealmManager.setLogMpRow(log);
                     Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
                             ", GPS_time: " + log.CoordTime
@@ -1401,6 +1404,7 @@ public class Globals {
                     return log;
                 } else {
                     Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis: " + locationUniqueStringGPSThis + " locationUniqueStringGPS: " + locationUniqueStringGPS);
+
                 }
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);

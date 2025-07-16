@@ -96,7 +96,7 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
         currentMessage.value = "Виконано"
         viewModelScope.launch {
             progress.floatValue = 1f
-            delay(500)
+            delay(1000)
             isCompleted = true
         }
     }

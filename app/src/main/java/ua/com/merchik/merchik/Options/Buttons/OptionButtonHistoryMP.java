@@ -114,6 +114,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                 .setMessage(Translate.translationText(8578, "Визначити та додати поточне розташування пристрою до бази даних?"))
                 .setStatus(DialogStatus.NORMAL)
                 .setOnConfirmAction(() -> {
+                    Globals.delayGPSTime = 0;
                     LogMPDB logMPDB = Globals.fixMP(wpDataDB, context);
                     if (logMPDB != null) {
                         id = String.valueOf(logMPDB.id);
@@ -158,7 +159,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())
                                 new MessageDialogBuilder(Globals.unwrap(context))
                                         .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                        .setSubTitle(String.format("Запис %s додано до бази даних з поточними координатами %s", id, time))
+                                        .setSubTitle("Запис до бази даних з поточними координатами НЕ ДОДАНО")
                                         .setMessage(error)
                                         .setStatus(DialogStatus.ERROR)
                                         .setOnConfirmAction(() -> {

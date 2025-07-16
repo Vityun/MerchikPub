@@ -816,6 +816,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                 Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
 //                                    progress.dismiss();
                                                 loadingFinish();
+                                                progress.onNextEvent("");
                                                 progress.onCompleted();
                                                 Toast.makeText(getApplicationContext(), "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
                                             }
@@ -824,10 +825,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             public void onFailure(String error) {
                                                 Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
                                                 loadingFinish();
+                                                progress.onNextEvent("");
                                                 progress.onCompleted();
-
-//                                    progress.dismiss();
-//                                    Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
                                             }
                                         });
                                     } else {
@@ -1359,6 +1358,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             }
                         });
                     } catch (Exception e) {
+                        Log.e("ERORR", "E: " + e.getMessage());
                         Globals.writeToMLOG("ERROR", "startExchange/sendWpDataToServer/", "Exception e: " + e);
                     }
 
@@ -2143,7 +2143,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                         Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
                                                     }
                                                 } else {
-                                                    Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: else" );
+                                                    Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: else");
                                                 }
 
                                             }
