@@ -221,7 +221,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             @Override
             public void onClick(View textView) {
                 try {
-                    showDialogs(textView.getContext(), tov);
+                    showDialogs(context, tov);
                 }catch (Exception e){
                     Log.e("createLinkedString", "Exception e: " + e);
                 }

@@ -688,7 +688,9 @@ public class TablesLoadingUnloading {
         data.date_from = date_from;
         data.date_to = date_to;
         if (lastUpdate != 0) data.vpo = lastUpdate;
-        if (addressIds != null && addressIds.size() > 0) data.addr_id = addressIds;
+        if (addressIds != null && addressIds.size() > 0)
+            data.addr_id = addressIds;
+
         data.dt_change_to = String.valueOf(realmResults.getVpi_app());
 
         Gson gson = new Gson();
@@ -2135,8 +2137,10 @@ public class TablesLoadingUnloading {
     public void uploadRP(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
             List<ReportPrepareServ> prepareDBList = RealmManager.getReportPrepareToUpload();
-            if (prepareDBList.isEmpty())
+            if (prepareDBList.isEmpty()) {
+                exchange.onFailure("uploadRP: Данных на выгрузку нет");
                 return;
+            }
 
             StandartData data = new StandartData();
             data.mod = "report_prepare";

@@ -41,7 +41,7 @@ public class trecker implements LocationListener {
 
     public static LocationManager locationManager;
 
-    static void SetUpLocationListener(Context context) {
+    public static void SetUpLocationListener(Context context) {
 
         try {
             Log.e("GPS_LISTENER", "HERE");
@@ -51,6 +51,10 @@ public class trecker implements LocationListener {
                     ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
+            }
+
+            if (locationManager != null && locationListener != null) {
+                locationManager.removeUpdates(locationListener);
             }
 
             // Создание гео-менеджера

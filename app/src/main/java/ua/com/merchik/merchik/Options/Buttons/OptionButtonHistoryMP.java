@@ -25,6 +25,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
+import ua.com.merchik.merchik.trecker;
 
 // 138773
 public class OptionButtonHistoryMP<T> extends OptionControl {
@@ -107,6 +108,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
             workStatusSub = "Роботи з поточного відвідування закінчені у " + Clock.getHumanTime2(wpDataDB.getClient_end_dt() * 1000);
             workStatusMessage = "Запис до бази даних з поточними координатами не додано";
         }
+        Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "init");
 
         new MessageDialogBuilder(Globals.unwrap(context))
                 .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
@@ -114,6 +116,8 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                 .setMessage(Translate.translationText(8578, "Визначити та додати поточне розташування пристрою до бази даних?"))
                 .setStatus(DialogStatus.NORMAL)
                 .setOnConfirmAction(() -> {
+                    trecker.SetUpLocationListener(context);
+
                     Globals.delayGPSTime = 0;
                     LogMPDB logMPDB = Globals.fixMP(wpDataDB, context);
                     if (logMPDB != null) {
@@ -123,6 +127,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                         id = String.valueOf(LogMPRealm.getLogMPCount() + 1);
                         time = Clock.getHumanTime2(System.currentTimeMillis() / 1000);
                     }
+                    Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "clicked, logMPDB " + logMPDB);
                     OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, Options.NNKMode.MAKE, unlockCodeResultListener);
                     optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
                         @Override

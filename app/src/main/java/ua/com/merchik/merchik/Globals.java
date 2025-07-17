@@ -1263,7 +1263,7 @@ public class Globals {
      * @return
      */
     public static long delayGPSTime = 0;
-    private static long retryTime = 1200000; // 20 мин
+    private static final long retryTime = 1200000; // 20 мин
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
@@ -1271,7 +1271,7 @@ public class Globals {
                 if (Build.VERSION.SDK_INT >= 23 && context != null &&
                         ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "permission not granted");
+                    Globals.writeToMLOG("ERROR", "fixMP/imHereGPS", "permission not granted");
                     return null;
                 }
                 Criteria criteria = new Criteria();
@@ -1322,7 +1322,9 @@ public class Globals {
 
 
                 String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
-                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis) || (delayGPSTime + retryTime < System.currentTimeMillis())) {
+                Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis equals: " + !locationUniqueStringGPS.equals(locationUniqueStringGPSThis)
+                        + ", delayGPSTime: " + delayGPSTime + " isTime: " + (delayGPSTime + retryTime < System.currentTimeMillis()));
+                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis) || delayGPSTime + retryTime < System.currentTimeMillis()) {
                     int id = RealmManager.logMPGetLastId() + 1;
                     Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
                     LogMPDB log = new LogMPDB();

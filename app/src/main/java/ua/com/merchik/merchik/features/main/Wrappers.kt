@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
@@ -528,7 +529,7 @@ object LogMPDBDBOverride {
             val distance = jsonObject.optInt("distance", 0)
             if (distance == 0)
                 return MerchModifier()
-            return if (distance > 1000)
+            return if (distance > Globals.distanceMin)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4"))) //error
             else
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77"))) //good

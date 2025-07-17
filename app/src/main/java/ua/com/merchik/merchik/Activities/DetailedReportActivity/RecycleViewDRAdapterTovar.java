@@ -142,6 +142,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     // 08.04.24.
     boolean openNext = true;
 
+
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
         Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER");
@@ -159,6 +160,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         tplType = DRAdapterTovarTPLTypeView.GONE;
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
+
 
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB, OpenType openType) {
         Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER2");
@@ -242,8 +244,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
 
+    public void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
+        if (mContext != null) {
+            // создаём временный ViewHolder только чтобы показать диалог
+//            ViewHolder tempVH = new ViewHolder(new View(mContext));
+            this.tovOptTplList = Collections.singletonList(tpl);
+            View tempView = LayoutInflater.from(mContext).inflate(R.layout.dr_tovar_item_tovar, null);
+            ViewHolder vh = new ViewHolder(tempView);
+            // предположим, ты сам добавишь метод во ViewHolder:
+
+            vh.showDialog(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType, pos);
+        }
+    }
+
     /*Определяем ViewHolder*/
-    class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         Globals globals = new Globals();
         Options options = new Options();
@@ -1196,8 +1211,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * @param pos true - простой add
          *            false - добавляем на 0 позицию
          */
+        public void test(){}
 //        @RequiresApi(api = Build.VERSION_CODES.N)
-        private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
+        public void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
             try {
                 final int adapterPosition = getAdapterPosition();
 

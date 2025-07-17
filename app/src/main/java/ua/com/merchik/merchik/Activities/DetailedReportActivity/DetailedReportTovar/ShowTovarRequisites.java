@@ -15,8 +15,13 @@ import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,22 +31,31 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.realm.RealmResults;
+import retrofit2.Call;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecyclerViewOptionControlHint;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.RecentItem;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHint;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowTovarRequisites {
 
@@ -73,6 +87,10 @@ public class ShowTovarRequisites {
         List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
         tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
+//        RecycleViewDRAdapterTovar adapter;
+//        adapter = new RecycleViewDRAdapterTovar(context, Collections.singletonList(tovarDB), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG) {
+//        };
+
         if (tovOptTplList.size() > 0) {
             // В Цикле открываем Н количество инфы
             for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
@@ -81,7 +99,10 @@ public class ShowTovarRequisites {
                         // втыкаю
                         showDialog(tovarDB, tovOptTplList.get(i), reportPrepareTovar, tovarDB.getiD(), String.valueOf(wpDataDB.getCode_dad2()), wpDataDB.getClient_id(), "", "", true);
                     } else {
+//                        adapter.showDialog(tovarDB, tovOptTplList.get(i), reportPrepareTovar, tovarDB.getiD(),String.valueOf(wpDataDB.getCode_dad2()), wpDataDB.getClient_id(), "", "", true, true);
+
                         showDialog(tovarDB, tovOptTplList.get(i), reportPrepareTovar, tovarDB.getiD(), String.valueOf(wpDataDB.getCode_dad2()), wpDataDB.getClient_id(), "", "", true);
+//                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true, true);
                     }
                 }
             }
@@ -119,6 +140,26 @@ public class ShowTovarRequisites {
         }
 
         dialogList.get(0).show();
+    }
+
+
+    private RecyclerView.Adapter setAdapter(TovarOptions tpl, List<ReportHintList> reportHintLists, RecyclerViewOptionControlHint.HintListener listener) {
+        List<RecentItem> recentItems = null;
+        for (ReportHintList o : reportHintLists) {   // Пробегаемся по всему ответу в поиске подходящего поля
+            if (o.getField().equals(tpl.getOrderField())) {   // Если нужное поле найдено - получаем и отображаем данные подсказок
+                recentItems = o.getRecentItems();
+            }
+        }
+
+        List<RecentItem> finalRecentItems = recentItems;
+        if (finalRecentItems.size() == 0) {
+            return null;
+        }
+        return new RecyclerViewOptionControlHint(finalRecentItems, listener);
+    }
+
+    private RecyclerView.LayoutManager setLayout() {
+        return new GridLayoutManager(context, 3, GridLayoutManager.VERTICAL, false);
     }
 
 
@@ -242,6 +283,41 @@ public class ShowTovarRequisites {
                 dialog.dismiss();
                 dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
             }));
+            if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
+                String mod = "report_prepare";
+                String act = "get_param_stats";
+                retrofit2.Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, cd2, clientId);
+                call.enqueue(new retrofit2.Callback<ReportHint>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<ReportHint> call, retrofit2.Response<ReportHint> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            ReportHint reportHint = response.body();
+                            if (reportHint.getState()) {
+                                for (ReportHintList item : reportHint.getList()) {
+                                    if (tpl.getOrderField().equals(item.getField())) {
+
+                                        dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
+                                            operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
+                                            Toast.makeText(context, "Внесено: " + value, Toast.LENGTH_LONG).show();
+//                                            refreshElement(cd2, list.getiD());
+//                                            notifyItemChanged(adapterPosition);
+                                            dialog.dismiss();
+//                                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                                        }), setLayout()
+                                        );
+                                    }
+                                }
+//                            dialog.show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ReportHint> call, Throwable t) {
+//                    dialog.show();
+                    }
+                });
+            }
 
             dialogList.add(dialog);
 
@@ -250,6 +326,16 @@ public class ShowTovarRequisites {
         }
     }
 
+    private List<String> getStringsTetaMarket() {
+        List<String> comments = new ArrayList<>();
+        comments.add("Всі товари в наявності, більше 5 шт на кожне місце викладки.");
+        comments.add("Деякі товари відсутні на складі.");
+        comments.add("Всі товари в наявності, але менше 5 шт на кожне місце викладки. Персонал магазину не дозволив виставити по 5 шт. Номер розпорядження офісу керуючому магазину повідомив (ла) - товар зі складу все одно не винесли.");
+        comments.add("На початок візиту на полиці менше 5шт на кожному місці викладки стартових пакетів, після звернення до персоналу товар зі складу винесли.");
+        comments.add("Інша інформація щодо наявності товару, кількості місць викладки, тощо. Заповнити самостійно в довільній формі.");
+
+        return comments;
+    }
 
     /**
      * 30.03.23.
