@@ -88,7 +88,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         List<ReportPrepareDB> result = new ArrayList<>();
         SpannableStringBuilder resultMsg = new SpannableStringBuilder();
 
-        resultMsg.append("Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ПРИЧИНУ его отсутствия.").append("\n\n");
+//        resultMsg.append("Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ПРИЧИНУ его отсутствия.").append("\n\n");
 
         // Получение Репорт Препэйра
         List<ReportPrepareDB> detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
@@ -114,6 +114,10 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 continue;
             }
 
+            if (item.errorId != null && !item.errorId.isEmpty() && !item.errorId.equals("0")) {
+                continue;
+            }
+
             if (osvSize == 0) {
                 Log.e("OCReturnOfGoods", "item.iD: " + item.iD);
                 Log.e("OCReturnOfGoods", "item.expireLeft: " + item.expireLeft);
@@ -130,7 +134,8 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 
                 if ((optionDB.getOptionControlId().equals("165275") || optionDB.getOptionId().equals("165275"))
 //                if ((optionDB.getOptionControlId().equals("135591") || optionDB.getOptionId().equals("135591"))
-                        && (item.dtExpire != null && !item.dtExpire.equals("") && !item.dtExpire.equals("0000-00-00"))
+                        && (item.dtExpire != null && !item.dtExpire.equals("")
+                        && !item.dtExpire.equals("0000-00-00"))
                         && item.expireLeft != null && item.expireLeft.equals("0")
                         && test <= datRes) {
                     errCnt++;
@@ -169,6 +174,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 
 
         // Подготовка Сообщения
+        // 6.0
         if (detailedReportRPList.size() == 0) {
             signal = true;
             resultMsg.append("Товарів, по котрим треба перевірити необхідність повернення, не знайдено.").append("\n\n");

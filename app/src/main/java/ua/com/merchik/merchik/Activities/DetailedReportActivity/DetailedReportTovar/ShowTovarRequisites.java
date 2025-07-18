@@ -15,12 +15,10 @@ import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 
 import android.content.Context;
 import android.os.Build;
-import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -32,15 +30,12 @@ import java.util.Optional;
 
 import io.realm.RealmResults;
 import retrofit2.Call;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecyclerViewOptionControlHint;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
@@ -109,6 +104,7 @@ public class ShowTovarRequisites {
 
 
             Collections.reverse(dialogList);
+
 
             boolean optionExists = false;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -281,7 +277,9 @@ public class ShowTovarRequisites {
 
             dialog.setCancel("Пропустить", () -> closeDialogRule(dialog, () -> {
                 dialog.dismiss();
-                dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                dialogShowRule(true);
+                dialogShowRuleFix(true);
+//                dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
             }));
             if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
                 String mod = "report_prepare";
@@ -297,13 +295,13 @@ public class ShowTovarRequisites {
                                     if (tpl.getOrderField().equals(item.getField())) {
 
                                         dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
-                                            operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
-                                            Toast.makeText(context, "Внесено: " + value, Toast.LENGTH_LONG).show();
+                                                    operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
+                                                    Toast.makeText(context, "Внесено: " + value, Toast.LENGTH_LONG).show();
 //                                            refreshElement(cd2, list.getiD());
 //                                            notifyItemChanged(adapterPosition);
-                                            dialog.dismiss();
+                                                    dialog.dismiss();
 //                                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-                                        }), setLayout()
+                                                }), setLayout()
                                         );
                                     }
                                 }
@@ -420,8 +418,16 @@ public class ShowTovarRequisites {
         }
     }
 
+    private void dialogShowRuleFix(boolean clickType) {
+        for (DialogData dialogData : dialogList) {
+            TovarOptions o = dialogData.tovarOptions;
+            Log.e("W", "d " + o);
+        }
+        ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
+    }
+
     private void dialogShowRule2(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
-        Log.e("dialogShowRule", "clickType: " + clickType);
+        Log.e("dialogShowRule2", "clickType: " + clickType);
         ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
         dialogList.remove(0);
 

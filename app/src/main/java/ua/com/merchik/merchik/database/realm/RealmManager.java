@@ -1780,7 +1780,7 @@ public class RealmManager {
 
         ArrayList<ReportPrepareServ> reportPrepareServ = new ArrayList<>();
 
-        if (rp != null) {
+        if (rp != null && !rp.isEmpty()) {
 
             for (int i = 0; i < rp.size(); i++) {
                 Log.e("REPORT_PREPARE_SEND", "DATABASE + ");
