@@ -39,13 +39,13 @@ public class OptionControlMP<T> extends OptionControl {
 
     public int distanceMin = Globals.distanceMin;
 
-    private int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
+    private final int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
     private float coordAddrX, coordAddrY;
 
     private StringBuilder stringBuilder = new StringBuilder();
     private String period = "";
 
-    private boolean signal = true;
+    public boolean signal = true;
     private LogMPDB latestVpiLog;
 
     public OptionControlMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
@@ -145,6 +145,8 @@ public class OptionControlMP<T> extends OptionControl {
                 context = MyApplication.getAppContext();
 
             DialogData dialog = new DialogData(context);
+//            unlockCode();
+
             StringBuilder title = new StringBuilder();
 
             boolean okMP = false;

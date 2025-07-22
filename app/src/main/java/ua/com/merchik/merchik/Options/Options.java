@@ -2168,7 +2168,7 @@ public class Options {
             case 8299:
 //                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
                 OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, option, type, mode, unlockCodeResultListener);
-                optionControlMP.showMassage(true, new Clicks.clickStatusMsg() {
+                optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
                     @Override
                     public void onSuccess(String data) {
 
@@ -2179,6 +2179,8 @@ public class Options {
 
                     }
                 });
+                optionControlMP.showOptionMassage("");
+
                 return optionControlMP.isBlockOption2() ? 1 : 0;
 
 

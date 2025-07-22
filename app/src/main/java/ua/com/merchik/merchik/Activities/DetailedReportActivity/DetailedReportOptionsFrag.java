@@ -28,7 +28,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -42,6 +41,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import kotlin.Unit;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
@@ -59,9 +59,10 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
 @SuppressLint("ValidFragment")
@@ -343,11 +344,47 @@ public class DetailedReportOptionsFrag extends Fragment {
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
             if (optionsButtons.isEmpty()) {
-                Globals.alertDialogMsg(requireActivity(),
-                        DialogStatus.ALERT,
-                        "Відсутні дані щодо цього відвідування"
-                        , "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером. Якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
-                                "\nЯкщо це не допомогло, звернiться до керiвника");
+                ProgressViewModel progress = new ProgressViewModel(1);
+                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(),progress);
+                loadingDialog.show();
+                progress.onNextEvent("Завантажую опції до цього відвідування",2000);
+
+                TablesLoadingUnloading tlu = new TablesLoadingUnloading();
+                tlu.downloadOptionsByDAD2(wpDataDB.getCode_dad2(), new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        progress.onCompleted();
+                        if (data instanceof List<?>) {
+                            List<?> list = (List<?>) data;
+                            if (!list.isEmpty() && list.get(0) instanceof OptionsDB) {
+                                // Теперь безопасно приводим к List<OptionsDB>
+                                List<OptionsDB> optionsList = (List<OptionsDB>) list;
+                                for (OptionsDB item : optionsList) {
+                                    options.optionControl(requireContext(), wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+                                        @Override
+                                        public void onUnlockCodeSuccess() {
+
+                                        }
+
+                                        @Override
+                                        public void onUnlockCodeFailure() {
+
+                                        }
+                                    });
+                                }
+
+                                if (recycleViewDRAdapter != null) {
+                                    setupRecyclerView(optionsList);
+                                    recycleViewDRAdapter.setDataButtons(optionsList);
+//                                    recycleViewDRAdapter.notifyDataSetChanged();
+                                }
+                            } else {
+                                errorMessage(String.valueOf(data));
+                            }
+                        } else errorMessage(String.valueOf(data));
+                    }
+                });
+
 //                AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
 //                        "",
 //                        "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
@@ -400,6 +437,19 @@ public class DetailedReportOptionsFrag extends Fragment {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
             e.printStackTrace();
         }
+    }
+
+    private void errorMessage(String subTitle) {
+
+        new MessageDialogBuilder(requireActivity())
+                .setTitle("Відсутні дані щодо цього відвідування")
+                .setStatus(DialogStatus.ERROR)
+                .setSubTitle(subTitle)
+                .setMessage("На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером. Якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+                        "\nЯкщо це не допомогло, звернiться до керiвника")
+                .setOnConfirmAction(() -> Unit.INSTANCE)
+                .show();
+
     }
 
     @Override

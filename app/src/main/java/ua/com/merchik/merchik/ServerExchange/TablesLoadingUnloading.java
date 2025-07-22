@@ -559,7 +559,7 @@ public class TablesLoadingUnloading {
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState() && response.body().getList() != null && !response.body().getList().isEmpty()) {
                             RealmManager.setOptions2(response.body().getList());
-                            click.click("Данные успешно загружены и сохранены. (" + response.body().getList().size() + ")шт. Опций.");
+                            click.click(response.body().getList());
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
                         }
