@@ -218,7 +218,11 @@ public class TablesLoadingUnloading {
                     downloadReportPrepare(0);
                 }
             });
-//            downloadTovarTable(context, null);
+            RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
+            if (wpDataDBS != null && !wpDataDBS.isEmpty()){
+                List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
+                downloadTovarTable(null, wpDataDBList);
+            }
             globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
             globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
