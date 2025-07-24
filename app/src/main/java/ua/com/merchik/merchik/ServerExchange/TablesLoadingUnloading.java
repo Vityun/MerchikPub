@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmList;
@@ -98,15 +96,12 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponseList;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarksServerData;
-import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.TestJsonUpload.TasksAndReclamationsRequest;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
-import ua.com.merchik.merchik.data.synchronization.DownloadStatus;
-import ua.com.merchik.merchik.data.synchronization.TableName;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -224,9 +219,9 @@ public class TablesLoadingUnloading {
                 }
             });
 //            downloadTovarTable(context, null);
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
         }
 
 
@@ -241,9 +236,9 @@ public class TablesLoadingUnloading {
             downloadErrorTable();
             downloadAkciyTable();
             downloadTradeMarksTable();
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Не обязательные таблици." + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Не обязательные таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Не обязательные таблици: " + e + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Не обязательные таблици: " + e + "\n");
         }
 
 
@@ -334,9 +329,9 @@ public class TablesLoadingUnloading {
 //            downloadSiteHints("2");
 //            downloadVideoLessons();
 
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Новые таблици." + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Новые таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Новые таблици: " + e + "\n");
+            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Новые таблици: " + e + "\n");
         }
 
 
@@ -344,6 +339,7 @@ public class TablesLoadingUnloading {
     }
 
     private static boolean isdownloadWPData = false;
+
     public void downloadWPData() {
         if (isdownloadWPData) return;
         isdownloadWPData = true;
@@ -393,7 +389,7 @@ public class TablesLoadingUnloading {
                         }
                         isdownloadWPData = false;
                         readyWPData = true;
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         isdownloadWPData = false;
                         readyWPData = true;
                     }
@@ -588,7 +584,7 @@ public class TablesLoadingUnloading {
         if (isDownloadOptions) return;
         isDownloadOptions = true;
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
-        globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.ENTER\n");
+        globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
 //        StandartData standartData = new StandartData();
 //        standartData.mod = "report_prepare";
@@ -619,13 +615,13 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
                 try {
-                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
+                    globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
-                        globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
+                        globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
 
                         if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                            globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
+                            globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
 //                            RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
@@ -642,7 +638,7 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<OptionsServer> call, Throwable t) {
-                globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
+                globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1093,11 +1089,22 @@ public class TablesLoadingUnloading {
 
         // Используем Set для автоматического удаления дубликатов
         Set<String> uniqueClientIds = new HashSet<>();
+        Set<Long> uniqueDad2 = new HashSet<>();
+        Set<String> uniqueTovarRemove = new HashSet<>();
+
+        RealmResults<TovarDB> results = INSTANCE.where(TovarDB.class).findAll();
+        if (results != null && !results.isEmpty()) {
+            List<TovarDB> tovarDBList = INSTANCE.copyFromRealm(results);
+            for (TovarDB tovar : tovarDBList) {
+                uniqueTovarRemove.add(tovar.getiD());
+            }
+        }
 
         // Проходим по каждому элементу списка wpDataDBList
         for (WpDataDB wpDataDB : wpDataDBList) {
             // Добавляем client_id в Set (дубликаты игнорируются)
             uniqueClientIds.add(wpDataDB.getClient_id());
+            uniqueDad2.add(wpDataDB.getCode_dad2());
         }
 
 
@@ -1106,8 +1113,23 @@ public class TablesLoadingUnloading {
         data.act = "tovar_list";
         data.date_from = date_from;
         data.date_to = date_to;
-        data.client_id = new ArrayList<>(uniqueClientIds);
+//        data.client_id = new ArrayList<>(uniqueClientIds);
+        data.code_dad2 = new ArrayList<>(uniqueDad2);
+//        if (!uniqueTovarRemove.isEmpty())
+//            data.exclude_id = new ArrayList<>(uniqueTovarRemove);
+
 //                Arrays.asList("38283","9382"); //9382
+
+        /*
+        фильтры:
+id - число или массив кодов товаров
+client_id - массив клиентов
+dt - ВПИ
+deleted - признак удаления (0 - только неудалённые (по умолчанию если не передано, то значение фильтра считает нулём), 1 - только удалённые, 2 - любые)
+code_dad2 - число или массив чисел
+фильтр id_exclude с массивом кодов товаров для исключения
+id_exclude - иди товаров которые есть в приложении
+         */
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -1134,12 +1156,12 @@ public class TablesLoadingUnloading {
 
                             try {
                                 try {
-                                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
                                 } catch (Exception e) {
-                                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
                                 }
                             } catch (Exception e) {
-                                globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
+                                globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
                             }
 
                             if (list != null) {
@@ -1211,6 +1233,109 @@ public class TablesLoadingUnloading {
             }
         });
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.END");
+
+    }
+
+
+    public void downloadTovarTableWhithResult(List<WpDataDB> wpDataDBList, Click click) {
+
+        String date_from = Clock.getDatePeriod(-30);
+        String date_to = Clock.getDatePeriod(1);
+
+
+        // Используем Set для автоматического удаления дубликатов
+        Set<String> uniqueClientIds = new HashSet<>();
+        Set<String> uniqueTovarRemove = new HashSet<>();
+
+        for (WpDataDB dataDB : wpDataDBList) {
+            RealmResults<TovarDB> results = RealmManager.getTovarListFromReportPrepareByDad2(dataDB.getCode_dad2());
+            if (results != null && !results.isEmpty()) {
+                List<TovarDB> tovarDBList = INSTANCE.copyFromRealm(results);
+                for (TovarDB tovar : tovarDBList) {
+                    uniqueTovarRemove.add(tovar.getiD());
+                }
+            }
+        }
+
+
+        // Проходим по каждому элементу списка wpDataDBList
+        for (WpDataDB wpDataDB : wpDataDBList) {
+            // Добавляем client_id в Set (дубликаты игнорируются)
+            uniqueClientIds.add(wpDataDB.getClient_id());
+        }
+
+
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "tovar_list";
+        data.date_from = date_from;
+        data.date_to = date_to;
+        data.client_id = new ArrayList<>(uniqueClientIds);
+        data.id_exclude = new ArrayList<>(uniqueTovarRemove);
+
+        /*
+        фильтры:
+id - число или массив кодов товаров
+client_id - массив клиентов
+dt - ВПИ
+deleted - признак удаления (0 - только неудалённые (по умолчанию если не передано, то значение фильтра считает нулём), 1 - только удалённые, 2 - любые)
+code_dad2 - число или массив чисел
+фильтр id_exclude с массивом кодов товаров для исключения
+id_exclude - иди товаров которые есть в приложении
+         */
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<TovarTableResponse> call;
+        call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_TABLE(RetrofitBuilder.contentType, convertedObject);
+
+
+        call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        if (response.body().getState()) {
+                            List<TovarDB> list = response.body().getList();
+                            try {
+                                try {
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                } catch (Exception e) {
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                }
+                            } catch (Exception e) {
+                                globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
+                            }
+
+                            click.onSuccess(list);
+
+                        } else {
+                            click.onFailure("На сервере нет товаров которые можно добавить");
+                        }
+                    } else {
+
+                        click.onFailure("На сервере нет товаров которые можно добавить");
+
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "downloadTovarTable/onResponse/Exception", "Exception: " + e);
+
+                    click.onFailure("Ошибка при получении списка товара, передайте скриншот этой ошибки руководителю: " + e.getMessage());
+
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<TovarTableResponse> call, Throwable t) {
+
+                click.onFailure("Ошибка при получении списка товара, передайте скриншот этой ошибки руководителю: " + t.getMessage());
+
+                Log.e("TAG_TABLE", "FAILURETovarTable: " + t);
+            }
+        });
 
     }
 
@@ -2453,7 +2578,8 @@ public class TablesLoadingUnloading {
 //        Log.e("parseJsonMenu", "===========END============");
         return data;
     }
-//  ##MenuItemFromWebDB
+
+    //  ##MenuItemFromWebDB
     private void saveMenuDB(ArrayList<MenuItemFromWebDB> data) {
         INSTANCE.beginTransaction();
         INSTANCE.copyToRealmOrUpdate(data);
@@ -2775,6 +2901,7 @@ public class TablesLoadingUnloading {
      * Скачивание Дополнительных Требований
      */
     private static boolean isDownloadAdditionalRequirements = false;
+
     public void downloadAdditionalRequirements() {
         if (isDownloadAdditionalRequirements) return;
         isDownloadAdditionalRequirements = true;
@@ -2895,20 +3022,20 @@ public class TablesLoadingUnloading {
                             }
                         }
                     } catch (Exception e) {
-                        globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onResponse.catch. ошибка в данных что вернулись: " + e + "\n");
+                        globals.writeToMLOG("_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onResponse.catch. ошибка в данных что вернулись: " + e + "\n");
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<AdditionalRequirementsMarksServerData> call, Throwable t) {
                     Log.e("downloadAddReqMarks", "Throwable: " + t);
-                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onFailure. ошибка в выполнении запроса: " + t + "\n");
+                    globals.writeToMLOG("_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onFailure. ошибка в выполнении запроса: " + t + "\n");
                 }
             });
 
         } catch (Exception e) {
             Log.e("downloadAddReqMarks", "Exception: " + e);
-            globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.catch ошибка всего метода: " + e + "\n");
+            globals.writeToMLOG("_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.catch ошибка всего метода: " + e + "\n");
         }
     }
 

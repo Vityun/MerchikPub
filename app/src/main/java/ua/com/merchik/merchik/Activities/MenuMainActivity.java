@@ -154,6 +154,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+        List<WpDataDB> wpData = INSTANCE.copyFromRealm(RealmManager.getAllWorkPlan());
+
+        new TablesLoadingUnloading().downloadTovarTable(null, wpData);
+
         /*
         SHA-1
         try {

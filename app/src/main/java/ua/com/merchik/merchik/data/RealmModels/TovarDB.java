@@ -87,6 +87,8 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     @Ignore
     public String article;    // Артикул
 
+    @Ignore
+    public String timeColor;    // Временный цвет
 
     public TovarDB() {
     }

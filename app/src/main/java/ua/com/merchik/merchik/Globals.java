@@ -113,7 +113,7 @@ public class Globals {
 
     // Связь
     static boolean autoSend = true;                 // Автообмен Выкл/Вкл
-    static boolean onlineStatus = false;
+    public static boolean onlineStatus = false;
 
 
     public static boolean isViewClicked = false;    // Нажималась ли кнопка?

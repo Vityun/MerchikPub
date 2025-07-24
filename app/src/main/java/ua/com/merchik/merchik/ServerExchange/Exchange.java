@@ -3421,7 +3421,6 @@ public class Exchange {
                                     Globals.writeToMLOG("WARNING", "realTimeValidator", "Разница между сервером и телефоном: " + diffFormatted);
                                     Globals.chiter_time = diffFormatted;
 
-                                    // ⏱️ Сохраняем в SharedPreferences
                                     if (context != null) {
                                         SharedPreferences prefs = context.getSharedPreferences("time_check", Context.MODE_PRIVATE);
                                         prefs.edit().putString("time_difference", diffFormatted).apply();

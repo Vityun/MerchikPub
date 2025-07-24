@@ -39,12 +39,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -64,7 +66,12 @@ import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 @SuppressLint("ValidFragment")
@@ -89,9 +96,13 @@ public class DetailedReportTovarsFrag extends Fragment {
     private FloatingActionButton fab;
     private TextView badgeTextView;
 
+    private CustomerSDB customerSDB;
+
     RecycleViewDRAdapterTovar adapter;
 
     private boolean flag = true;
+
+    private List<TovarDB> tovarDBListFromServer = new ArrayList<>();
 
     public DetailedReportTovarsFrag() {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/1", "create");
@@ -391,7 +402,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.inflate(R.menu.popup_dr_tovar_list);
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            CustomerSDB customerSDB = null;
+            customerSDB = null;
             try {
                 customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
             } catch (Exception e) {
@@ -442,17 +453,96 @@ public class DetailedReportTovarsFrag extends Fragment {
                     return true;
 
                 case "додати усі товари замовника":
-                    tovarDBList = getTovListNew(TovarDisplayType.ALL);
-
-                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
-                        dialogData.setCancel("Ні", () -> {
-                            openAllTov(tovarDBList);
-                            dialogData.dismiss();
-                        });
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.show();
+                    if (!Globals.onlineStatus) {
+                        new MessageDialogBuilder(requireActivity())
+                                .setTitle("Відсутнє інтернет з'єднання")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage("Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу." +
+                                        "\nНові товари не можуть бути додані без інтернету.")
+                                .setOnCancelAction(() -> Unit.INSTANCE)
+                                .show();
                     } else {
-                        openAllTov(tovarDBList);
+                        ProgressViewModel progress = new ProgressViewModel(1);
+                        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
+                        loadingDialog.show();
+                        progress.onNextEvent("Завантажую усі товари цього клієнта", 3000);
+
+
+                        tovarDBList = getTovListNew(TovarDisplayType.ALL);
+                        List<WpDataDB> dataList = new ArrayList<>();
+                        dataList.add(wpDataDB);
+                        new TablesLoadingUnloading().downloadTovarTableWhithResult(dataList, new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                progress.onCompleted();
+                                if (tovarDBListFromServer != null && !tovarDBListFromServer.isEmpty()
+                                        && tovarDBListFromServer.size() == ((List<TovarDB>) data).size()) {
+                                    new MessageDialogBuilder(requireActivity())
+                                            .setTitle("Додати усі товари замовника")
+                                            .setStatus(DialogStatus.NORMAL)
+                                            .setMessage("Усі доступні товари відображені, на сервері немає нових товарів")
+                                            .setOnCancelAction(() -> Unit.INSTANCE)
+                                            .show();
+                                } else {
+                                    tovarDBListFromServer = (List<TovarDB>) data;
+                                    for (TovarDB tovarDB : tovarDBListFromServer) {
+                                        tovarDB.timeColor = "FAF7BB";
+                                    }
+                                    new MessageDialogBuilder(requireActivity())
+                                            .setTitle("Додати усі товари замовника")
+                                            .setStatus(DialogStatus.NORMAL)
+                                            .setMessage("Загрузить " + tovarDBListFromServer.size() + " товаров с сервера и добавить в текущий отчет?")
+                                            .setOnConfirmAction(() -> {
+                                                if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
+                                                    dialogData.setCancel("Ні", () -> {
+                                                        tovarDBList.addAll(tovarDBListFromServer);
+                                                        openAllTov(tovarDBList);
+                                                        dialogData.dismiss();
+                                                    });
+                                                    dialogData.setClose(dialogData::dismiss);
+                                                    dialogData.show();
+                                                } else {
+                                                    new MessageDialogBuilder(requireActivity())
+                                                            .setTitle("Увага")
+                                                            .setStatus(DialogStatus.NORMAL)
+                                                            .setMessage(tovarDBListFromServer.size() + " товаров загружены с сервера и добавлены в отчет." +
+                                                                    "\nДобавленные товары отмечены светло-желтым цветом." +
+                                                                    "\n" +
+                                                                    "\nОбратите внимание, что ФОТО этих товаров могут быть загружены на протяжении нескольких минут." +
+                                                                    "\nУчтите, что в отчете будут реальо СОХРАНЕНЫ только те товары, по которым вы внесете изменения в любой из реквизитов.")
+                                                            .setOnConfirmAction(() -> {
+                                                                tovarDBList.addAll(tovarDBListFromServer);
+                                                                openAllTov(tovarDBList);
+                                                                return Unit.INSTANCE;
+                                                            })
+                                                            .show();
+                                                }
+
+                                                return Unit.INSTANCE;
+                                            })
+                                            .setOnCancelAction(() -> {
+                                                tovarDBListFromServer.clear();
+                                                return Unit.INSTANCE;
+                                            })
+                                            .show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                progress.onCanceled();
+
+                                new MessageDialogBuilder(requireActivity())
+                                        .setTitle("Сталася помилка")
+                                        .setStatus(DialogStatus.ERROR)
+                                        .setMessage(error)
+                                        .setOnCancelAction(() -> Unit.INSTANCE)
+                                        .show();
+                            }
+                        });
+//                        tovarDBList = getTovListNew(TovarDisplayType.ALL);
+
+
                     }
                     return true;
 

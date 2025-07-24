@@ -415,6 +415,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     int id = Integer.parseInt(list.getiD());
                     Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
 
+                    if (list.timeColor != null && !list.timeColor.isEmpty()){
+                        int color = Color.parseColor("#" + list.timeColor);
+                        Drawable coloredBackground = new ColorDrawable(color);
+                        constraintLayout.setBackground(coloredBackground);
+                    }
 
                     if (tovIdList.contains(id)) {
                         Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());

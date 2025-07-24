@@ -26,7 +26,7 @@ public class StandartData<T> {
     public String sotr_id;      // Фильтр для получения &&&&&&&&&&&&&????????????)))))))))))))))
     public String user_id;
     public String lang_id;      // ID языка
-    public String code_dad2;     // Код ДАД2
+    public T code_dad2;     // Код ДАД2
     public String tel_type;     // Номер телефона, если не определена будут использоваться оба номера сотрудника tel1, tel2
     public String photo_type;   // Типо фото
 //    public String hash_list;    // - по хэшу фоток
