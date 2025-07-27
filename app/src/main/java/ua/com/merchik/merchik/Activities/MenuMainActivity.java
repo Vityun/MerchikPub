@@ -23,24 +23,18 @@ import java.util.Set;
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
-import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.AudioExchange;
-import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
-import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -138,90 +132,7 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        new Translate().uploadNewTranslate();
-        String da = "За документом 1300625028270000256 (візит: {посещение_фильтр|code_dad2:1300625028270000256|1300625028270000256})<br />\r\n30.06.2025, Комарницька Галина Іванівна ФОП, Київ, Тичини Павла, 1в (Сільпо)<br />\r\n<b>Не виконано 1 вимог (є опції із сигналами).<br />\r\nВи можете отримати більш преміальні, якщо виправте наведені нижче зауваження.</b><br />\r\n<br />\r\n<span class='check_single_option' data-option_id='138773' data-option_control_id='8299' data-code_dad2='1300625028270000256'>- Опция #8299, Контроль местоположения исполнителя (МП) <span style='color:#FF0000'>(~ 0 грн.)</span></span><br />\r\n<br />\r\n<br>Виправте вказані вище зауваження, вивантажте дані на сервер і перепроведіть документ по-новому";
-//        new MessageDialogBuilder(this)
-//                .setTitle("Команда на проведення звіту.")
-//                .setSubTitle("Відповідь від сервера")
-//                .setMessage((String) da)
-//                .setOnConfirmAction(() -> {
-//                    if (((String) da).contains("#134583")) {
-//                        DialogData dialogData = new DialogData(this);
-//                        dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
-//                        dialogData.show();
-//                    }
-//                    return Unit.INSTANCE;
-//                })
-//                .show();
-
-        new Translate().uploadNewTranslate();
-
-//        new AudioExchange().export_test(this);
-
-//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
-
-//        new Exchange().realTimeValidator();
-
-//        Exchange.exchangeTime = 0;
-
-
-//        realm.close();
-
-//        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-//        planogrammTableExchange.planogrammVisitShowcaseUploadData();
-
-//        String clientId = "9295";
-//        Integer addressId = 31987;
-//        String ttId = "32";
-//
-//
-//        Intent intent = new Intent(this, FeaturesActivity.class);
-//        Bundle bundle = new Bundle();
-//        bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
-//        bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
-//        bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//        JsonObject dataJson = new JsonObject();
-//        dataJson.addProperty("clientId", String.valueOf(clientId));
-//        dataJson.addProperty("addressId", addressId);
-//        dataJson.addProperty("ttId", String.valueOf(ttId));
-//        bundle.putString("dataJson", new Gson().toJson(dataJson));
-//
-//        bundle.putString("title", "##Панограмма посещения");
-//        bundle.putString(
-//                "subTitle",
-//                "##subTitle"
-//        );
-//        intent.putExtras(bundle);
-//
-//        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
-
-
-
-//        new TablesLoadingUnloading().downloadWPData(this);
-
-
-
-//        Exchange exchange = new Exchange();
-//        exchange.updateAverageSalary();
-//        exchange.updateSiteObjкрон);
-
-        // Обучение
-//        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;
-//        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(6941).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
-
-//        Log.e("!!!!!!!!",">>> " + subtitle);
-//
-//        new SiteObjectsExchange().downloadSiteObjects(new Exchange.ExchangeInt() {
-//            @Override
-//            public void onSuccess(String msg) {
-//
-//            }
-//
-//            @Override
-//            public void onFailure(String error) {
-//
-//            }
-//        });
+        new TablesLoadingUnloading().downloadMenu();
     }
 
 /*
