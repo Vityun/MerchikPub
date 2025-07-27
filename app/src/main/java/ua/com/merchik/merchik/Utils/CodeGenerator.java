@@ -29,7 +29,7 @@ public class CodeGenerator {
         return digits + text;
     }
 
-    private static String sha256(String base) {
+    public static String sha256(String base) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(base.getBytes());
