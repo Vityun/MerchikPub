@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.userId;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.realm.RealmResults;
 import kotlin.Pair;
@@ -1107,10 +1109,30 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 OptionsDB test = optionsButtons;
                 optionButton.setOnLongClickListener(view -> {
                     if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
+
+                        String pass = CodeGenerator.getCode();
+                        String longClickDialogText = "Для продолжения внесите пароль: ";
+
+                        try {
+                            UsersSDB currentUser = SQL_DB.usersDao().getUserById(Globals.userId);
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            String currentDate = dateFormat.format(new Date());
+                            long userDate = currentUser.reportDate01 != null ? currentUser.reportDate01.getTime() : 0L;
+                            if (userDate > 1754006400000L){
+                                longClickDialogText = "Для Вас цей функціонал - недоступний.";
+                                pass = CodeGenerator.sha256(currentDate);
+                                pass = pass.substring(pass.length() - 5);
+                            }
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "longClickDialog", "Exception e: " + e);
+                        }
+
+                        final String unlockCode = pass;
+
                         optionDetailPhotos(test, view.getContext());
                         DialogData dialog = new DialogData(itemView.getContext());
                         dialog.setTitle("Внесите пароль!");
-                        dialog.setText("Для продолжения внесите пароль: ");
+                        dialog.setText(longClickDialogText);
                         dialog.setClose(dialog::dismiss);
                         dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
                         });
@@ -1136,9 +1158,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                            double passwordD = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
 //
 //                            int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
-                            String pass = CodeGenerator.getCode();
 
-                            if (res.equals(pass)) {
+                            if (res.equals(unlockCode)) {
                                 longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
                             } else {
                                 Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();

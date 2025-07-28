@@ -1,17 +1,9 @@
 package ua.com.merchik.merchik.Activities;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,13 +15,9 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import io.realm.DynamicRealm;
@@ -40,18 +28,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.AudioExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
-import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -153,157 +135,7 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-
-        List<WpDataDB> wpData = INSTANCE.copyFromRealm(RealmManager.getAllWorkPlan());
-
-        new TablesLoadingUnloading().downloadTovarTable(null, wpData);
-
-        /*
-        SHA-1
-        try {
-            PackageInfo info = getPackageManager().getPackageInfo(
-                    getPackageName(),
-                    PackageManager.GET_SIGNING_CERTIFICATES // Используйте GET_SIGNATURES для API < 28
-            );
-
-            Signature[] signatures;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                signatures = info.signingInfo.getApkContentsSigners();
-            } else {
-                signatures = info.signatures;
-            }
-
-            for (Signature signature : signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA-1");
-                md.update(signature.toByteArray());
-                byte[] digest = md.digest();
-
-                // Преобразуем байты в строку HEX
-                StringBuilder hexString = new StringBuilder();
-                for (byte b : digest) {
-                    String hex = Integer.toHexString(0xFF & b).toUpperCase();
-                    if (hex.length() == 1) hexString.append('0');
-                    hexString.append(hex).append(':');
-                }
-
-                // Удалим последний ":"
-                if (hexString.length() > 0) {
-                    hexString.setLength(hexString.length() - 1);
-                }
-
-                Log.d("CODE_007", hexString.toString());
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("", hexString.toString());
-                clipboard.setPrimaryClip(clip);
-            }
-        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
- */
-
-
-//        String da = "За документом 1300625028270000256 (візит: {посещение_фильтр|code_dad2:1300625028270000256|1300625028270000256})<br />\r\n30.06.2025, Комарницька Галина Іванівна ФОП, Київ, Тичини Павла, 1в (Сільпо)<br />\r\n<b>Не виконано 1 вимог (є опції із сигналами).<br />\r\nВи можете отримати більш преміальні, якщо виправте наведені нижче зауваження.</b><br />\r\n<br />\r\n<span class='check_single_option' data-option_id='138773' data-option_control_id='8299' data-code_dad2='1300625028270000256'>- Опция #8299, Контроль местоположения исполнителя (МП) <span style='color:#FF0000'>(~ 0 грн.)</span></span><br />\r\n<br />\r\n<br>Виправте вказані вище зауваження, вивантажте дані на сервер і перепроведіть документ по-новому";
-//        new MessageDialogBuilder(this)
-//                .setTitle("Команда на проведення звіту.")
-//                .setSubTitle("Відповідь від сервера")
-//                .setMessage((String) da)
-//                .setOnConfirmAction(() -> {
-//                    if (((String) da).contains("#134583")) {
-//                        DialogData dialogData = new DialogData(this);
-//                        dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
-//                        dialogData.show();
-//                    }
-//                    return Unit.INSTANCE;
-//                })
-//                .show();
-
-
-//        new AudioExchange().export_test(this);
-
-//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
-
-
-//        List<TovarDB> allTovars = INSTANCE.copyFromRealm(INSTANCE.where(TovarDB.class).findAll());
-//
-//        Map<String, Integer> countMap = new HashMap<>();
-//
-//        for (TovarDB tovar : allTovars) {
-//            String clientId = tovar.getClientId(); // убедись что getClientId() возвращает String или int
-//            if (clientId != null) {
-//                countMap.put(clientId, countMap.getOrDefault(clientId, 0) + 1);
-//            }
-//        }
-//        List<Map.Entry<String, Integer>> sortedList = new ArrayList<>(countMap.entrySet());
-//
-//        sortedList.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
-//
-//        for (Map.Entry<String, Integer> entry : sortedList) {
-//            System.out.println("ClientId: " + entry.getKey() + " — Count: " + entry.getValue());
-//        }
-//
-//        Log.e("!","+");
-//        new Exchange().realTimeValidator();
-
-//        Exchange.exchangeTime = 0;
-
-
-//        realm.close();
-
-//        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-//        planogrammTableExchange.planogrammVisitShowcaseUploadData();
-
-//        String clientId = "9295";
-//        Integer addressId = 31987;
-//        String ttId = "32";
-//
-//
-//        Intent intent = new Intent(this, FeaturesActivity.class);
-//        Bundle bundle = new Bundle();
-//        bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
-//        bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
-//        bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//        JsonObject dataJson = new JsonObject();
-//        dataJson.addProperty("clientId", String.valueOf(clientId));
-//        dataJson.addProperty("addressId", addressId);
-//        dataJson.addProperty("ttId", String.valueOf(ttId));
-//        bundle.putString("dataJson", new Gson().toJson(dataJson));
-//
-//        bundle.putString("title", "##Панограмма посещения");
-//        bundle.putString(
-//                "subTitle",
-//                "##subTitle"
-//        );
-//        intent.putExtras(bundle);
-//
-//        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
-
-
-
-//        new TablesLoadingUnloading().downloadWPData(this);
-
-
-
-//        Exchange exchange = new Exchange();
-//        exchange.updateAverageSalary();
-//        exchange.updateSiteObjкрон);
-
-        // Обучение
-//        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;
-//        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(6941).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
-
-//        Log.e("!!!!!!!!",">>> " + subtitle);
-//
-//        new SiteObjectsExchange().downloadSiteObjects(new Exchange.ExchangeInt() {
-//            @Override
-//            public void onSuccess(String msg) {
-//
-//            }
-//
-//            @Override
-//            public void onFailure(String error) {
-//
-//            }
-//        });
+        new TablesLoadingUnloading().downloadMenu();
     }
 
 /*
