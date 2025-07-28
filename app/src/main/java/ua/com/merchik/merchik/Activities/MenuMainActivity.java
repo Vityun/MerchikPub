@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Activities;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -27,6 +28,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
@@ -38,6 +40,8 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -136,6 +140,16 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         new TablesLoadingUnloading().downloadMenu();
+
+        Intent intent = new Intent(this, FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", WpDataDBViewModel.class.getCanonicalName());
+        bundle.putString("typeWindow", "full_not_closable");
+        bundle.putString("title", "Test test");
+        bundle.putString("subTitle", "12345678qwety");
+        intent.putExtras(bundle);
+        startActivity(intent);
+
     }
 
 /*

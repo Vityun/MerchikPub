@@ -118,7 +118,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             .background(color = Color.Transparent)
     ) {
 
-        if (!(viewModel.typeWindow ?: "").equals("full", true)) {
+        if (!(viewModel.typeWindow ?: "").contains("full", true) ) {
             TopButton(
                 modifier = Modifier.align(alignment = Alignment.End),
                 onSettings = { showSettingsDialog = true },
@@ -130,22 +130,22 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(if (!(viewModel.typeWindow ?: "").equals("full_not_closable", true)) RoundedCornerShape(8.dp) else RoundedCornerShape(0.dp))
                 .background(color = colorResource(id = R.color.main_form))
         ) {
             Column {
 
-                if ((viewModel.typeWindow ?: "").equals("full", true)) {
-                    TopButton(
-                        modifier = Modifier
-                            .align(alignment = Alignment.End)
-                            .padding(top = 10.dp, end = 10.dp),
-                        onSettings = { showSettingsDialog = true },
-                        onRefresh = { viewModel.updateContent() },
-                        onClose = { (context as? Activity)?.finish() }
-                    )
-
-                    HorizontalDivider()
+                if ((viewModel.typeWindow ?: "").contains("full", true)) {
+//                    TopButton(
+//                        modifier = Modifier
+//                            .align(alignment = Alignment.End)
+//                            .padding(top = 10.dp, end = 10.dp),
+//                        onSettings = { showSettingsDialog = true },
+//                        onRefresh = { viewModel.updateContent() },
+//                        onClose = { (context as? Activity)?.finish() }
+//                    )
+//                    HorizontalDivider()
+                    Spacer(modifier = Modifier.padding(4.dp))
                 }
 
                 val searchStrList = uiState.filters?.searchText?.split(" ")

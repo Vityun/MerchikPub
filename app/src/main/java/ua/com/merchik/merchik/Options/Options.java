@@ -2179,7 +2179,7 @@ public class Options {
 
                     }
                 });
-                optionControlMP.showOptionMassage("");
+//                optionControlMP.showOptionMassage("");
 
                 return optionControlMP.isBlockOption2() ? 1 : 0;
 

@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2025072700
-        versionName "2025072700"
+        versionCode  2025072801
+        versionName "2025072801"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -185,6 +185,7 @@ dependencies {
     implementation 'androidx.activity:activity-ktx:1.4.0'
 
     // Dagger - Hilt
+    implementation "androidx.hilt:hilt-navigation-compose:1.1.0"
     implementation "com.google.dagger:hilt-android:2.50"
     kapt "com.google.dagger:hilt-compiler:2.50"
 //    implementation "com.google.dagger:hilt-android:2.44"

@@ -184,6 +184,17 @@ app:layout_constraintBottom_toTopOf="@+id/search2"
 
     </com.google.android.material.tabs.TabLayout>
 
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_wpdata_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"
+        />
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="0dp"

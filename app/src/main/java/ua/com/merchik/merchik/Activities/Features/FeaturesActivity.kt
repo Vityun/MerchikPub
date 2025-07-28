@@ -41,6 +41,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
+import ua.com.merchik.merchik.toolbar_menus
 import java.io.File
 
 @AndroidEntryPoint
@@ -96,14 +97,15 @@ class FeaturesActivity: AppCompatActivity() {
                                     viewModel.context = LocalContext.current
                                     viewModel.updateContent()
                                     MainUI(
-                                        modifier = Modifier
-                                            .then(if ((bundle.getString("typeWindow") ?: "").equals("full", true))
-                                                Modifier
-                                            else
-                                                Modifier
+                                        modifier = Modifier.then(
+                                            when (bundle.getString("typeWindow")?.lowercase()) {
+                                                "full" -> Modifier
+                                                "full_not_closable" -> Modifier
+                                                else -> Modifier
                                                     .padding(20.dp)
                                                     .clip(RoundedCornerShape(8.dp))
-                                            ),
+                                            }
+                                        ),
                                         viewModel = viewModel,
                                         LocalContext.current
                                     )

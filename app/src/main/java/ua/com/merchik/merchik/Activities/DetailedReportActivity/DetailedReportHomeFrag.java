@@ -21,7 +21,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -41,9 +40,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-import dagger.hilt.android.AndroidEntryPoint;
-import kotlin.Unit;
-import kotlin.jvm.internal.Intrinsics;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
@@ -258,7 +254,7 @@ public class DetailedReportHomeFrag extends Fragment {
                         });
                     }
                     setTransleted();
-                    ComposeFunctions.setContent(composeView, wpDataDB, viewModel);
+                    ComposeFunctions.setContentOpinion(composeView, wpDataDB, viewModel);
 
                     fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
                     fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
