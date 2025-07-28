@@ -38,6 +38,7 @@ import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -70,7 +71,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
     public static int TARType;
 
-    public static FloatingActionButton fab;
+    public static FloatingActionButton fab,fabViber;
 
     public DialogCreateTAR dialog;
 
@@ -98,11 +99,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
 
-
         setTabs();
 
         try {
             fab = findViewById(R.id.fab);
+            fabViber = findViewById(R.id.fab_viber_tar);
 
             Log.e("SET_TAR_FAB", "CLICK");
             if (TARType == 1) {
@@ -118,6 +119,12 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 setFab(this, fab, ()->{});
                 Log.e("SET_TAR_FAB", "ACTIVITY report");
             }
+
+            fabViber.setOnClickListener(v -> {
+                String format = CustomString.viberLink();
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                this.startActivity(intent);
+            });
 
 
             findViewById(R.id.fabAdd).setVisibility(View.GONE);

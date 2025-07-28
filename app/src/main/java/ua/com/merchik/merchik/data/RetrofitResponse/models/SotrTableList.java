@@ -44,7 +44,9 @@ public class SotrTableList {
     @SerializedName("report_date_40")
     @Expose
     private String reportDate40;
-
+    @SerializedName("work_start_date")
+    @Expose
+    private String work_start_date;
 
     public Integer getUser_id() {
         return user_id;
@@ -148,5 +150,14 @@ public class SotrTableList {
 
     public void setReportDate40(String reportDate40) {
         this.reportDate40 = reportDate40;
+    }
+
+
+    public String getWork_start_date() {
+        return work_start_date;
+    }
+
+    public void setWork_start_date(String work_start_date) {
+        this.work_start_date = work_start_date;
     }
 }

@@ -1,13 +1,18 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
+import static ua.com.merchik.merchik.Globals.userId;
+
 import android.annotation.SuppressLint;
+import android.content.ContentUris;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -31,8 +36,11 @@ import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
@@ -45,7 +53,7 @@ public class WPDataActivity extends toolbar_menus {
     private RealmResults<WpDataDB> workPlan;
 
     private FabYoutube fabYoutube = new FabYoutube();
-    private FloatingActionButton fabYouTube;
+    private FloatingActionButton fabYouTube, fabViber;
     private TextView badgeTextView;
     public static final Integer[]  WPDataActivity_VIDEO_LESSONS = new Integer[]{817};
 
@@ -77,6 +85,7 @@ public class WPDataActivity extends toolbar_menus {
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
         fabYouTube = findViewById(R.id.fab3);
+        fabViber = findViewById(R.id.fab_viber);
         badgeTextView = findViewById(R.id.badge_text_view_tar);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
@@ -89,6 +98,14 @@ public class WPDataActivity extends toolbar_menus {
         setFab(this, findViewById(R.id.fab), ()->{});
         fabYoutube.setFabVideo(fabYouTube, WPDataActivity_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, WPDataActivity_VIDEO_LESSONS));
         fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, WPDataActivity_VIDEO_LESSONS);
+
+        fabViber.setOnClickListener(v ->
+        {
+            String format = CustomString.viberLink();
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+            this.startActivity(intent);
+//            ################
+        });
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView = findViewById(R.id.nav_view);

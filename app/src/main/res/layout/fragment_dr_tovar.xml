@@ -123,7 +123,7 @@
                 app:backgroundTint="#FFFFFF"
                 app:elevation="5dp"
                 android:translationZ="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/fab2"
+                app:layout_constraintBottom_toTopOf="@+id/fab5"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:maxImageSize="57dp"
                 app:srcCompat="@drawable/ic_play_circle_solid" />
@@ -149,7 +149,23 @@
             />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab2"
+                android:id="@+id/fab5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="center"
+                android:visibility="invisible"
+                app:backgroundTint="#FFFFFF"
+                app:elevation="20dp"
+                app:layout_constraintBottom_toTopOf="@+id/fab_viber"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:maxImageSize="57dp"
+                app:srcCompat="@drawable/ic_play_circle_solid" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_viber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"

@@ -39,6 +39,7 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -81,6 +82,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -123,7 +125,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private File image;
 
-    public static FloatingActionButton fab;
+    public static FloatingActionButton fab, fabViber;
     public static List<TasksAndReclamationsSDB> tarList;
     private List<TasksAndReclamationsSDB> tasksAndReclamationsSDBList;
     public static boolean additionalRequirementsFilter = true;  // true - по наличию в RP. false - отображаем ВСЁ
@@ -272,6 +274,7 @@ public class DetailedReportActivity extends toolbar_menus {
             try {
                 globals.writeToMLOG( "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
                 fab = findViewById(R.id.fab);
+                fabViber = findViewById(R.id.fab_viber1);
 
                 toolbar_menus.textLesson = 818;
 //            toolbar_menus.videoLesson = 819;
@@ -283,6 +286,12 @@ public class DetailedReportActivity extends toolbar_menus {
                 checkVideo(new Integer[videoLesson]);
 
                 Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportActivity");
+
+                fabViber.setOnClickListener(v -> {
+                    String format = CustomString.viberLink();
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                    this.startActivity(intent);
+                });
 
                 initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
                 NavigationView navigationView;

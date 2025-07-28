@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Utils;
 
+import static ua.com.merchik.merchik.Globals.userId;
+
 import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -17,9 +19,12 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 
 public class CustomString {
 
@@ -73,4 +78,14 @@ public class CustomString {
             return String.format("%d:%d", hours, minutes);
     }
 
+
+    public static String viberLink() {
+        String base = "mobile.php/mobile.php?mod=messenger_connect&type=viber";
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+        hash = Globals.getSha1Hex(hash);
+        base = base.replace("&", "**");
+        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, base);
+
+    }
 }

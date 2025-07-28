@@ -219,7 +219,7 @@ public class TablesLoadingUnloading {
                 }
             });
             RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
-            if (wpDataDBS != null && !wpDataDBS.isEmpty()){
+            if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
                 List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
                 downloadTovarTable(null, wpDataDBList);
             }
@@ -627,6 +627,7 @@ public class TablesLoadingUnloading {
                         if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                             globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
+//                            RealmManager.setOptions2(response.body().getList());
 //                            RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
 //                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
@@ -660,7 +661,7 @@ public class TablesLoadingUnloading {
     /**
      * ЗАГРУЗКА ТАБЛИЦИ report_prepare С СЕРВЕРА
      *
-     * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
+     //     * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
      * @param mode    -- Режим работы. Если 0 - всё затераем, 1 - "умная" загрузка(обновление)
      */
     public void downloadReportPrepare(int mode) {
@@ -691,7 +692,7 @@ public class TablesLoadingUnloading {
         if (addressIds != null && addressIds.size() > 0)
             data.addr_id = addressIds;
 
-        data.dt_change_to = String.valueOf(realmResults.getVpi_app());
+        data.dt_change_from = String.valueOf(realmResults.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -936,6 +937,12 @@ public class TablesLoadingUnloading {
                             List<SotrTableList> responseList = response.body().getList();
 
                             for (int i = 0; i < responseList.size(); i++) {
+                                if (responseList.get(i).getFio().contains("Примак")) {
+                                    SotrTableList sotr = responseList.get(i);
+                                    Log.e("!!!!!!!!!!!", "sotr: " + sotr.getFio());
+                                }
+                                if (responseList.get(i).getWork_start_date() != null && !responseList.get(i).getWork_start_date().isEmpty())
+                                    Log.e("!!!!!!!!!!", "sotr_list: " + responseList.get(i).getWork_start_date());
                                 list.add(i, new UsersDB(
                                         responseList.get(i).getUser_id(),
                                         responseList.get(i).getFio(),
@@ -1086,7 +1093,9 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_list";
 
-
+//##################################
+//        тут некорректный фильтр по дате, нужно убрать date_from / date_to
+//нужно добавить dt - unixtime (аналог dt_change_from)
         String date_from = Clock.getDatePeriod(-30);
         String date_to = Clock.getDatePeriod(1);
 
@@ -1111,12 +1120,20 @@ public class TablesLoadingUnloading {
             uniqueDad2.add(wpDataDB.getCode_dad2());
         }
 
+        long vpi;
+        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("tovar_list");
+        if (realmResults != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + realmResults);
+            vpi = realmResults.getVpi_app();
+        } else
+            vpi = 0;
 
         StandartData data = new StandartData();
         data.mod = "data_list";
         data.act = "tovar_list";
-        data.date_from = date_from;
-        data.date_to = date_to;
+        data.dt = String.valueOf(vpi);
+//        data.date_from = date_from;
+//        data.date_to = date_to;
 //        data.client_id = new ArrayList<>(uniqueClientIds);
         data.code_dad2 = new ArrayList<>(uniqueDad2);
 //        if (!uniqueTovarRemove.isEmpty())
@@ -1183,6 +1200,10 @@ id_exclude - иди товаров которые есть в приложени
 
                             RealmManager.setTovarAsync(list);
 
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                                realm.copyToRealmOrUpdate(realmResults);
+                            });
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
 //                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
 //                                    @Override
@@ -1242,6 +1263,10 @@ id_exclude - иди товаров которые есть в приложени
 
 
     public void downloadTovarTableWhithResult(List<WpDataDB> wpDataDBList, Click click) {
+
+        //##################################
+//        тут некорректный фильтр по дате, нужно убрать date_from / date_to
+//нужно добавить dt - unixtime (аналог dt_change_from)
 
         String date_from = Clock.getDatePeriod(-30);
         String date_to = Clock.getDatePeriod(1);
@@ -2108,7 +2133,7 @@ id_exclude - иди товаров которые есть в приложени
 
 
         if (l < currentTime) {
-            downloadSiteHints("2");
+//            downloadSiteHints("2");
             downloadVideoLessons();
             downloadOborotVed();
 
@@ -2915,8 +2940,8 @@ id_exclude - иди товаров которые есть в приложени
             data.mod = "additional_requirements";
             data.act = "list";
 //            data.client_id = Можно передать список клиентов с которыми работает пользователь
-//            data.date_from = Clock.getDatePeriod(-180);
-//            data.date_to = Clock.today;
+            data.date_from = Clock.getDatePeriod(-120);
+            data.date_to = Clock.tomorrow7;
 
 //            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
 //            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
@@ -3107,7 +3132,9 @@ id_exclude - иди товаров которые есть в приложени
         StandartData data = new StandartData();
         data.mod = "data_list";
         data.act = "oborotved_data";
-
+//        ########################
+        data.dt_change_from = String.valueOf(Clock.getDateLong(-30).getTime() / 1000);
+        data.dt_change_to = String.valueOf(Clock.getDateLong(7).getTime() / 1000);
 //        data.
 
         Gson gson = new Gson();

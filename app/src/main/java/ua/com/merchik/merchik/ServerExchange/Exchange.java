@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.ServerExchange;
 
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
-import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.readyTypeGrp;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
@@ -147,7 +146,6 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
@@ -2538,8 +2536,9 @@ public class Exchange {
         StandartData data = new StandartData();
         data.mod = "chat";
         data.act = "list_message";
-        data.dt_change_from = Clock.today;
-        data.dt_change_to = Clock.tomorrow;
+//        ##########################
+        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-1));
+        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1));
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -3245,35 +3244,35 @@ public class Exchange {
         call.enqueue(new Callback<ConductWpDataResponse>() {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
-              try {
-                  Log.e("conductingOnServer", "response: " + response);
-                  String text = response.body().notice;
-                  Log.e("conductingOnServer", "response: " + text);
-                  if (response.isSuccessful()) {
-                      if (response.body() != null) {
-                          Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "resul: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
-                          Log.e("conductingOnServer", "response: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
-                          if (response.body().state) {
-                              // Пока пусть будет, я не знаю что им там в голову бахнет
-                              if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
-                                  click.onSuccess(response.body().notice);
-                              } else {
-                                  click.onSuccess(response.body().notice);
+                try {
+                    Log.e("conductingOnServer", "response: " + response);
+                    String text = response.body().notice;
+                    Log.e("conductingOnServer", "response: " + text);
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "resul: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
+                            Log.e("conductingOnServer", "response: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
+                            if (response.body().state) {
+                                // Пока пусть будет, я не знаю что им там в голову бахнет
+                                if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
+                                    click.onSuccess(response.body().notice);
+                                } else {
+                                    click.onSuccess(response.body().notice);
 //                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
-                              }
-                          } else {
-                              click.onFailure("Не можу обробити документ, причина: " + response.body().error);
-                          }
-                      } else {
-                          click.onFailure("Нема даних для обробки.");
-                      }
-                  } else {
-                      click.onFailure("Код запиту до сервера: " + response.code());
-                  }
-              } catch (Exception e) {
-                  Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception: " + e.getMessage());
+                                }
+                            } else {
+                                click.onFailure("Не можу обробити документ, причина: " + response.body().error);
+                            }
+                        } else {
+                            click.onFailure("Нема даних для обробки.");
+                        }
+                    } else {
+                        click.onFailure("Код запиту до сервера: " + response.code());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception: " + e.getMessage());
 
-              }
+                }
             }
 
             @Override
@@ -3391,6 +3390,7 @@ public class Exchange {
             return;
         }
     }
+
     public void realTimeValidator() {
         RetrofitBuilder.getRetrofitInterface().getGoogleTime("https://www.google.com")
                 .subscribeOn(Schedulers.io())
