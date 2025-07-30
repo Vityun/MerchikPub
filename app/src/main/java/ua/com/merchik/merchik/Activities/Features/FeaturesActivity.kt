@@ -100,7 +100,7 @@ class FeaturesActivity: AppCompatActivity() {
                                         modifier = Modifier.then(
                                             when (bundle.getString("typeWindow")?.lowercase()) {
                                                 "full" -> Modifier
-                                                "full_not_closable" -> Modifier
+                                                "container" -> Modifier
                                                 else -> Modifier
                                                     .padding(20.dp)
                                                     .clip(RoundedCornerShape(8.dp))

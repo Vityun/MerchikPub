@@ -1204,6 +1204,8 @@ id_exclude - иди товаров которые есть в приложени
                                 realmResults.setVpi_app(System.currentTimeMillis() / 1000);
                                 realm.copyToRealmOrUpdate(realmResults);
                             });
+
+//                            getTovarImg(list, "small");
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
 //                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
 //                                    @Override
@@ -1649,7 +1651,7 @@ id_exclude - иди товаров которые есть в приложени
         String tovarOnly = "1";
         String nolimit = "1";
 
-        if (imageType.equals("") && imageType == null) {
+        if (imageType == null || imageType.isEmpty()) {
             imageType = "small";
         }
 
@@ -1674,7 +1676,8 @@ id_exclude - иди товаров которые есть в приложени
         call.enqueue(new retrofit2.Callback<TovarImgResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarImgResponse> call, retrofit2.Response<TovarImgResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null && response.body().getList() != null
+                        && !response.body().getList().isEmpty()) {
                     try {
                         Log.e("TAG_TABLE", "PHOTO_TOVAR_RESPONSE: " + response);
                         Log.e("TAG_TABLE", "PHOTO_TOVAR_RESPONSE_BODY: " + response.body().getState());
@@ -1690,7 +1693,8 @@ id_exclude - иди товаров которые есть в приложени
 
                         if (list != null) {
                             Log.e("TAG_TABLE", "PHOTO_TOVAR_LIST_SIZE: " + list.size());
-                            downloadTovarImg(list, finalImageType);
+
+//                            downloadTovarImg(list, finalImageType);
                         }
                     } catch (Exception e) {
                         Log.e("LOG", "SAVE_TO_LOG");

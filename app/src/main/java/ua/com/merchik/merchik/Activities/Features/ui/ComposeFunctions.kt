@@ -41,13 +41,13 @@ fun setContentWpData(
     composeView.setContent {
         val viewModel: WpDataDBViewModel = hiltViewModel() // ✅ получаем через Hilt
         viewModel.contextUI =
-                ContextUI.DEFAULT
+            ContextUI.WP_DATA_IN_CONTAINER
 
         viewModel.modeUI =
                 ModeUI.DEFAULT
 
 //        viewModel.title = "title"
-        viewModel.typeWindow = "full_not_closable"
+        viewModel.typeWindow = "container"
         viewModel.subTitle = "subTitle"
         viewModel.context = LocalContext.current
 

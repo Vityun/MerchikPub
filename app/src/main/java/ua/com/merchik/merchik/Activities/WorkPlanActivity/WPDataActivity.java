@@ -112,7 +112,7 @@ public class WPDataActivity extends toolbar_menus {
 
         wpDataInfo();   // Сообщение какие-то.
 //        setComposeView();
-    }//------------------------------- /ON CREATE --------------------------------------------------
+    }//------------------------------ /ON CREATE --------------------------------------------------
 
 
     private void setComposeView() {

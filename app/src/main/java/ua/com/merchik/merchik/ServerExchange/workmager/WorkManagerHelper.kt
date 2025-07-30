@@ -35,6 +35,30 @@ object WorkManagerHelper {
         )
     }
 
+    fun schedulePhotoDownloadTaskSecond(context: Context) {
+        // Ограничения для задачи (например, только при подключении к интернету)
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED) // Требуется интернет
+            .build()
+
+        // Создание периодической задачи
+        val photoDownloadWork = PeriodicWorkRequest.Builder(
+            DownloadImagesWorker::class.java,
+            15, // Интервал повторения (в минутах)
+            TimeUnit.MINUTES
+        )
+            .setInitialDelay(   9, TimeUnit.MINUTES) // Задержка перед первым запуском
+            .setConstraints(constraints)
+            .build()
+
+        // Запуск задачи
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "PhotoDownloadWork", // Уникальное имя задачи
+            ExistingPeriodicWorkPolicy.UPDATE, // Заменить существующую задачу
+            photoDownloadWork
+        )
+    }
+
     fun scheduleWpDataSync(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

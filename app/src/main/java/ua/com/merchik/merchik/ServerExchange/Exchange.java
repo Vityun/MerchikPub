@@ -1917,7 +1917,6 @@ public class Exchange {
      * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение.
      */
     public void getTovarImg(List<TovarDB> list, String imageType, Globals.OperationResult operationResult) {
-
         Log.e("getTovarImg", "list: " + list.get(0).getiD());
         Log.e("getTovarImg", "list.size: " + list.size());
         Log.e("getTovarImg", "imageType: " + imageType);
@@ -2537,8 +2536,8 @@ public class Exchange {
         data.mod = "chat";
         data.act = "list_message";
 //        ##########################
-        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-1));
-        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1));
+//        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-1));
+//        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1));
 
         Gson gson = new Gson();
         String json = gson.toJson(data);

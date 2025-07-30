@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
@@ -120,6 +121,11 @@ fun DataObjectUI.toItemUI(
     }
 
     fun updateFields(key: String) {
+        if (key == "dt") {
+            val shoeto = ("${hideUserFields}, ${this.getHidedFieldsOnUI()}")
+            val bool = shoeto.contains(key)
+            Log.e("!", "+")
+        }
         rawFields.add(
             FieldValue(
                 key,
@@ -135,7 +141,12 @@ fun DataObjectUI.toItemUI(
                 )
             )
         )
-        if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
+
+        val hiddenList = ((hideUserFields?.split(", ") ?: emptyList()) + this.getHidedFieldsOnUI().split(", "))
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        if (key !in hiddenList) {
             fields.add(
                 FieldValue(
                     key,
@@ -196,6 +207,7 @@ enum class ContextUI {
     PLANOGRAMM_VIZIT_SHOWCASE,
     SHOWCASE,
     SHOWCASE_COMPLETED_CHECK,
+    WP_DATA_IN_CONTAINER,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +

@@ -118,7 +118,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             .background(color = Color.Transparent)
     ) {
 
-        if (!(viewModel.typeWindow ?: "").contains("full", true) ) {
+        if (!(viewModel.typeWindow ?: "").equals("full", true) &&
+            !(viewModel.typeWindow ?: "").equals("container", true)
+        ) {
             TopButton(
                 modifier = Modifier.align(alignment = Alignment.End),
                 onSettings = { showSettingsDialog = true },
@@ -130,21 +132,28 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(if (!(viewModel.typeWindow ?: "").equals("full_not_closable", true)) RoundedCornerShape(8.dp) else RoundedCornerShape(0.dp))
+                .clip(
+                    if (!(viewModel.typeWindow ?: "").equals(
+                            "container",
+                            true
+                        )
+                    ) RoundedCornerShape(8.dp) else RoundedCornerShape(0.dp)
+                )
                 .background(color = colorResource(id = R.color.main_form))
         ) {
             Column {
 
-                if ((viewModel.typeWindow ?: "").contains("full", true)) {
-//                    TopButton(
-//                        modifier = Modifier
-//                            .align(alignment = Alignment.End)
-//                            .padding(top = 10.dp, end = 10.dp),
-//                        onSettings = { showSettingsDialog = true },
-//                        onRefresh = { viewModel.updateContent() },
-//                        onClose = { (context as? Activity)?.finish() }
-//                    )
-//                    HorizontalDivider()
+                if ((viewModel.typeWindow ?: "").equals("full", true)) {
+                    TopButton(
+                        modifier = Modifier
+                            .align(alignment = Alignment.End)
+                            .padding(top = 10.dp, end = 10.dp),
+                        onSettings = { showSettingsDialog = true },
+                        onRefresh = { viewModel.updateContent() },
+                        onClose = { (context as? Activity)?.finish() }
+                    )
+                    HorizontalDivider()
+                } else if ((viewModel.typeWindow ?: "").equals("container", true)) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
@@ -269,6 +278,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             text = it,
                             maxLines = maxLinesSubTitle,
                             overflow = TextOverflow.Ellipsis,
+                            color = if ((viewModel.typeWindow ?: "").equals(
+                                    "container",
+                                    true
+                                )
+                            ) Color.DarkGray else Color.Black,
                             textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
                             modifier = Modifier
                                 .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
@@ -300,6 +314,29 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                     )
 
+                    if ((viewModel.typeWindow ?: "").equals("container", true)) {
+                        ImageButton(
+                            id = R.drawable.ic_settings_empt,
+                            shape = RoundedCornerShape(2.dp),
+//                            colorImage = ColorFilter.tint(color = Color.Gray),
+                            sizeButton = 40.dp,
+                            sizeImage = 24.dp,
+                            modifier = Modifier
+                                .padding(start = 7.dp),
+                            onClick = { showSettingsDialog = true }
+                        )
+
+                        ImageButton(
+                            id = R.drawable.ic_refresh,
+                            shape = RoundedCornerShape(2.dp),
+//                            colorImage = ColorFilter.tint(color = Color.Gray),
+                            sizeButton = 40.dp,
+                            sizeImage = 24.dp,
+                            modifier = Modifier
+                                .padding(start = 7.dp),
+                            onClick = { viewModel.updateContent() }
+                        )
+                    }
                     ImageButton(
                         id = R.drawable.ic_plus,
                         sizeButton = 40.dp,
@@ -482,10 +519,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors =
-                            if (selectedItems.isNotEmpty())
-                                ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
-                            else
-                                ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                                if (selectedItems.isNotEmpty())
+                                    ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
+                                else
+                                    ButtonDefaults.buttonColors(containerColor = Color.Gray),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
@@ -520,7 +557,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showFilteringDialog) {
-        FilteringDialog(viewModel,
+        FilteringDialog(
+            viewModel,
             onDismiss = { showFilteringDialog = false },
             onChanged = {
                 viewModel.updateFilters(it)
@@ -654,9 +692,9 @@ fun ItemUI(
                                                     circleColor = Color.Gray,
                                                     textColor = Color.Gray,
                                                     aroundColor =
-                                                    if (item.selected) colorResource(id = R.color.selected_item)
-                                                    else item.modifierContainer?.background
-                                                        ?: Color.White.copy(alpha = 0.5f),
+                                                        if (item.selected) colorResource(id = R.color.selected_item)
+                                                        else item.modifierContainer?.background
+                                                            ?: Color.White.copy(alpha = 0.5f),
                                                     circleSize = 30.dp,
                                                     textSize = 20f.toPx(),
                                                 )
@@ -760,8 +798,8 @@ fun ItemUI(
                     ),
                     checked = item.selected,
                     aroundColor =
-                    if (item.selected) colorResource(id = R.color.selected_item)
-                    else item.modifierContainer?.background ?: Color.White,
+                        if (item.selected) colorResource(id = R.color.selected_item)
+                        else item.modifierContainer?.background ?: Color.White,
                     onCheckedChange = { onCheckItem(it, item) }
                 )
             }
@@ -779,8 +817,8 @@ fun ItemUI(
                         circleColor = if (text == "0") Color.Red else Color.Gray,
                         textColor = if (text == "0") Color.Red else Color.Gray,
                         aroundColor =
-                        if (item.selected) colorResource(id = R.color.selected_item)
-                        else item.modifierContainer?.background ?: Color.White,
+                            if (item.selected) colorResource(id = R.color.selected_item)
+                            else item.modifierContainer?.background ?: Color.White,
                         circleSize = 30.dp,
                         textSize = 20f.toPx(),
                     )

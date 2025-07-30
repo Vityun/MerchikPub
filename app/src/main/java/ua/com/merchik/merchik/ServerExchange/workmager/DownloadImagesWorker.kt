@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.CoroutineWorker
-import androidx.work.WorkInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.gson.Gson
@@ -19,9 +18,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Response
 import ua.com.merchik.merchik.Globals
-import ua.com.merchik.merchik.Utils.PrimaryKeyGenerator
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
-import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
@@ -41,7 +38,10 @@ class DownloadImagesWorker(
             // 1. Дозагрузка отсутствующих фотографий
             val thumbnailsToDownload = getMissingThumbnails()
             setProgress(workDataOf("status" to "start"))
-            Log.d("DownloadImagesWorker", "Starting thumbnail download: ${thumbnailsToDownload.size} items")
+            Log.d(
+                "DownloadImagesWorker",
+                "Starting thumbnail download: ${thumbnailsToDownload.size} items"
+            )
 
             var successfulThumbnails = 0
             thumbnailsToDownload.forEach { stackPhoto ->
@@ -129,7 +129,6 @@ class DownloadImagesWorker(
     }
 
 
-
     private val downloadSemaphore = Semaphore(10) // Ограничиваем до 10 одновременных запросов
 
     private suspend fun downloadPhoto(photo: TovarImgList): Boolean {
@@ -178,7 +177,7 @@ class DownloadImagesWorker(
 //                    .max("id")?.toInt()?.plus(1) ?: 1
 
                 // Сохраняем информацию о фото в базу данных
-                realm.executeTransaction  { bgRealm ->
+                realm.executeTransaction { bgRealm ->
                     try {
                         // Генерация нового ID
 //                        val newId = PrimaryKeyGenerator.nextId(bgRealm, StackPhotoDB::class.java)
@@ -270,7 +269,8 @@ class DownloadImagesWorker(
         return withContext(Dispatchers.IO) {
             downloadSemaphore.acquire()
             try {
-                val originalUrl = stackPhoto.photoServerURL?.replace("thumb_", "") ?: return@withContext false
+                val originalUrl =
+                    stackPhoto.photoServerURL?.replace("thumb_", "") ?: return@withContext false
 
                 val response = RetrofitBuilder.getRetrofitInterface()
                     .DOWNLOAD_PHOTO_BY_URL(originalUrl)
@@ -292,14 +292,18 @@ class DownloadImagesWorker(
     }
 
     // Сохранение thumbnail'а
-    private suspend fun saveThumbnailToDatabase(stackPhoto: StackPhotoDB, responseBody: ResponseBody) {
+    private suspend fun saveThumbnailToDatabase(
+        stackPhoto: StackPhotoDB,
+        responseBody: ResponseBody
+    ) {
         withContext(Dispatchers.IO) {
             val realm = Realm.getDefaultInstance()
             var bitmap: Bitmap? = null
             try {
                 bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
 
-                val path = Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
+                val path =
+                    Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
 //                    .saveImage1(bitmap, "THUMB_${stackPhoto.photoServerId}")
 
                 // Получаем ID из объекта stackPhoto
@@ -307,7 +311,6 @@ class DownloadImagesWorker(
 //                    Log.e("DownloadImagesWorker", "PhotoServerId is null")
 //                    return@withContext
 //                }
-
 
 
                 realm.executeTransaction { r ->

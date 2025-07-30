@@ -1,12 +1,14 @@
 package ua.com.merchik.merchik.features.main
 
 import android.util.Log
+import androidx.compose.runtime.CompositionLocal
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
@@ -15,6 +17,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 object LogDBOverride {
     fun getHidedFieldsOnUI(): String =
@@ -539,5 +542,26 @@ object LogMPDBDBOverride {
 
         }
         return MerchModifier()
+    }
+}
+
+
+object WPDataBDOverride {
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt_update", "dt_start", "dt", "dt_action" -> {
+            val input = value.toString()
+            val parser = SimpleDateFormat("MMM d, yyyy hh:mm:ss a", Locale.US)
+            val date = try {
+                parser.parse(input)
+            } catch (e: Exception) {
+                null
+            }
+
+            date?.let {
+                val formatter = SimpleDateFormat("dd MMMM HH:mm", Locale.getDefault())
+                formatter.format(it)
+            } ?: input // если не получилось распарсить — вернем как есть
+        }
+        else -> value.toString()
     }
 }

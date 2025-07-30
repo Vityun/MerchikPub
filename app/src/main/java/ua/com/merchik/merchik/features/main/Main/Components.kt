@@ -42,7 +42,8 @@ fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
         if (visibilityField == View.VISIBLE) {
             ItemTextField(it.field, Modifier.weight(1f))
         }
-        ItemTextField(it.value, Modifier.weight(1f))
+//        ###########################
+        ItemTextField(it.value, Modifier.weight(2f))
     }
 }
 

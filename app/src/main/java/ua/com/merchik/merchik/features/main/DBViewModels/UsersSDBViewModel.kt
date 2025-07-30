@@ -72,49 +72,52 @@ class UsersSDBViewModel @Inject constructor(
 //            }
 //        }
 
-        Log.e("!!!!!!!!!", "updateFilters")
-        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-        Log.e("!!!!!!!!!", "updateFilters ${dataJsonObject.get("wpDataDBId")}")
+        try {
 
-        Log.e("!!!!!!!!!", "updateFilters1")
 
-        Log.e("!!!!!!!!!", "updateFilters2")
+            Log.e("!!!!!!!!!", "updateFilters")
+            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+            Log.e("!!!!!!!!!", "updateFilters ${dataJsonObject.get("wpDataDBId")}")
 
-        val addrId = dataJsonObject.get("addr_id")?.asInt
-            ?: EKLDataHolder.instance().usersPTTWorkAddressId
+            Log.e("!!!!!!!!!", "updateFilters1")
 
-        val wpClientId = dataJsonObject.get("wpDataClientId")?.asString
-            ?: EKLDataHolder.instance().usersPTTWPClientId
+            Log.e("!!!!!!!!!", "updateFilters2")
 
-        val wpPttUserId = dataJsonObject.get("wpDataPttUserId")?.asInt
-            ?: EKLDataHolder.instance().usersPTTWPPttUserId
+            val addrId = dataJsonObject.get("addr_id")?.asInt
+                ?: EKLDataHolder.instance().usersPTTWorkAddressId
 
-        val wpDataUserId = dataJsonObject.get("wpDataUserId")?.asInt
-            ?: EKLDataHolder.instance().usersPTTWPDataUserId
+            val wpClientId = dataJsonObject.get("wpDataClientId")?.asString
+                ?: EKLDataHolder.instance().usersPTTWPClientId
 
-        val wpDataTime = dataJsonObject.get("wpDataTime")?.asLong
-            ?: EKLDataHolder.instance().usersPTTWPDataTime
+            val wpPttUserId = dataJsonObject.get("wpDataPttUserId")?.asInt
+                ?: EKLDataHolder.instance().usersPTTWPPttUserId
 
-        if (addrId != null && wpClientId != null && wpPttUserId != null
-            && wpDataTime != null && wpDataUserId != null
-        ) {
+            val wpDataUserId = dataJsonObject.get("wpDataUserId")?.asInt
+                ?: EKLDataHolder.instance().usersPTTWPDataUserId
+
+            val wpDataTime = dataJsonObject.get("wpDataTime")?.asLong
+                ?: EKLDataHolder.instance().usersPTTWPDataTime
+
+            if (addrId != null && wpClientId != null && wpPttUserId != null
+                && wpDataTime != null && wpDataUserId != null
+            ) {
 
 //            val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
 //            val tovar = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
 //            val uniqueGroupIds: List<String> = tovar.map { it.groupId }.distinct()
 
-            if (EKLDataHolder.instance().usersPTTWorkAddressId == null)
-                EKLDataHolder.instance().usersPTTWorkAddressId = addrId
-            if (EKLDataHolder.instance().usersPTTWPClientId == null)
-                EKLDataHolder.instance().usersPTTWPClientId = wpClientId
-            if (EKLDataHolder.instance().usersPTTWPPttUserId == null)
-                EKLDataHolder.instance().usersPTTWPPttUserId = wpPttUserId
-            if (EKLDataHolder.instance().usersPTTWPDataUserId == null)
-                EKLDataHolder.instance().usersPTTWPDataUserId = wpDataUserId
-            if (EKLDataHolder.instance().usersPTTWPDataTime == null)
-                EKLDataHolder.instance().usersPTTWPDataTime = wpDataTime
+                if (EKLDataHolder.instance().usersPTTWorkAddressId == null)
+                    EKLDataHolder.instance().usersPTTWorkAddressId = addrId
+                if (EKLDataHolder.instance().usersPTTWPClientId == null)
+                    EKLDataHolder.instance().usersPTTWPClientId = wpClientId
+                if (EKLDataHolder.instance().usersPTTWPPttUserId == null)
+                    EKLDataHolder.instance().usersPTTWPPttUserId = wpPttUserId
+                if (EKLDataHolder.instance().usersPTTWPDataUserId == null)
+                    EKLDataHolder.instance().usersPTTWPDataUserId = wpDataUserId
+                if (EKLDataHolder.instance().usersPTTWPDataTime == null)
+                    EKLDataHolder.instance().usersPTTWPDataTime = wpDataTime
 
-            val address = RoomManager.SQL_DB.addressDao().getById(addrId)
+                val address = RoomManager.SQL_DB.addressDao().getById(addrId)
 
 //            val tovarGroupClientSDB = RoomManager.SQL_DB.tovarGroupClientDao()
 //                .getAllBy(wpClientId, address.tpId)
@@ -124,77 +127,80 @@ class UsersSDBViewModel @Inject constructor(
 //
 //             = ids
 
-            Log.e("updateFilters", "addrId: $addrId")
+                Log.e("updateFilters", "addrId: $addrId")
 
-            val addressSDB = ItemFilter(
-                "Адреса місця роботи",
-                AddressSDB::class,
-                AddressSDBViewModel::class,
-                ModeUI.ONE_SELECT,
-                "Address",
-                "subTitle",
-                "work_addr_id",
-                "id",
-                mutableListOf(address?.id.toString()),
-                mutableListOf(address?.nm ?: ""),
-                false
-            )
+                val addressSDB = ItemFilter(
+                    "Адреса місця роботи",
+                    AddressSDB::class,
+                    AddressSDBViewModel::class,
+                    ModeUI.ONE_SELECT,
+                    "Address",
+                    "subTitle",
+                    "work_addr_id",
+                    "id",
+                    mutableListOf(address?.id.toString()),
+                    mutableListOf(address?.nm ?: ""),
+                    false
+                )
 
 
 //            Validator2EKL.bla(wpId)
 
-            val control = ValidatorEKL.controlEKL()
-            Log.e("ValidatorEKL", ">>> ${control.message} + ${control.result}")
+                val control = ValidatorEKL.controlEKL()
+                Log.e("ValidatorEKL", ">>> ${control.message} + ${control.result}")
 
 
-            val data = RoomManager.SQL_DB.usersDao().getPTT(addrId)
+                val data = RoomManager.SQL_DB.usersDao().getPTT(addrId)
 
-            if (data.isNullOrEmpty()) {
-                val header = AdditionalRequirementsDB::class.java.newInstance()
-                header.notes =
-                    "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать  электронно-контрольный лист (экл). \n" +
-                            "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку обновить \n" +
-                            "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителей торговой точки"
-                _uiItemsHeader.value = repository.toItemUIList(
-                    AdditionalRequirementsDB::class,
-                    listOf(header),
-                    contextUI,
-                    null
+                if (data.isNullOrEmpty()) {
+                    val header = AdditionalRequirementsDB::class.java.newInstance()
+                    header.notes =
+                        "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать  электронно-контрольный лист (экл). \n" +
+                                "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку обновить \n" +
+                                "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителей торговой точки"
+                    _uiItemsHeader.value = repository.toItemUIList(
+                        AdditionalRequirementsDB::class,
+                        listOf(header),
+                        contextUI,
+                        null
+                    )
+                        .map {
+                            val selected =
+                                (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
+                            it.copy(selected = selected)
+                        }
+
+                }
+
+                val filterUsersSDB = ItemFilter(
+                    "Доп. фильтр",
+                    UsersSDB::class,
+                    UsersSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Спiвробiтник",
+                    "subTitle",
+                    "fio",
+                    "fio",
+                    data.map { it.fio.toString() },
+                    data.map { it.fio },
+                    true
                 )
-                    .map {
-                        val selected =
-                            (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
-                        it.copy(selected = selected)
-                    }
 
+                filters = Filters(
+                    rangeDataByKey = null,
+                    searchText = "",
+                    items = mutableListOf(
+                        filterUsersSDB,
+                        addressSDB,
+                    )
+                )
+                if (filters?.items?.firstOrNull { it.clazz == table }?.rightValuesRaw == null)
+                    Log.e("updateFilters", "!!!!!!!! isNull !!!!!!!!!")
+            } else {
+                Log.e("updateFilters", "!!!!!!!! isEmpty !!!!!!!!!")
             }
-
-            val filterUsersSDB = ItemFilter(
-                "Доп. фильтр",
-                UsersSDB::class,
-                UsersSDBViewModel::class,
-                ModeUI.MULTI_SELECT,
-                "Спiвробiтник",
-                "subTitle",
-                "fio",
-                "fio",
-                data.map { it.fio.toString() },
-                data.map { it.fio },
-                true
-            )
-
-            filters = Filters(
-                rangeDataByKey = null,
-                searchText = "",
-                items = mutableListOf(
-                    filterUsersSDB,
-                    addressSDB,
-                )
-            )
-            if (filters?.items?.firstOrNull { it.clazz == table }?.rightValuesRaw == null)
-                Log.e("updateFilters", "!!!!!!!! isNull !!!!!!!!!")
-        } else {
-            Log.e("updateFilters", "!!!!!!!! isEmpty !!!!!!!!!")
+        } catch (e: Exception) {
+            super.updateFilters()
         }
     }
 

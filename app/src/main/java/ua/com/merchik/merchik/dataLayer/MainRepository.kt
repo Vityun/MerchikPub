@@ -95,6 +95,8 @@ class MainRepository(
                 }
 //                .filter { !hidedFieldsOnUI.contains(it) }
                 .map {
+                    val cont = hideUserFields?.contains(it) != true
+                    val cont2 = hidedFieldsOnUI.contains(it)
                     SettingsItemUI(
                         it,
                         when (it) {

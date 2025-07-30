@@ -15,6 +15,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.WPDataBDOverride;
 
 public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
@@ -1338,9 +1339,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "ID, isp, isp_fact, tech_sup_active, addr_id, dt_start, dt_stop, action, action_type, stajirovka_stage, " +
+        return "ID, isp, isp_fact, tech_sup_active, addr_id, dt_start, client_id, dt_stop, action, action_type, stajirovka_stage, " +
                 "one_time_work, theme_grp, theme_id, code_dda, code_ddas, codedad, code_dad2, smeta, smeta_1c, doc_num, " +
-                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, doc_num_otchet, signal_cnt, doc_num_otchet_id, " +
+                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, doc_num_otchet, signal_cnt, doc_num_otchet_id, user_id, " +
                 "smeta_active, super_id, territorial_id, regional_id, nop_id, starsh_tt_id, contacter_id, fot_user_id, " +
                 "dot_user_id, visit_start_dt, visit_start_dt_receive, visit_start_geo_distance, visit_start_geo_accuracy, " +
                 "visit_start_geo_id, visit_end_dt, visit_end_dt_receive, visit_end_geo_distance, visit_end_geo_accuracy, " +
@@ -1369,7 +1370,8 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return WPDataBDOverride.INSTANCE.getValueUI(key, value);
+//        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
     }
 
     @Nullable

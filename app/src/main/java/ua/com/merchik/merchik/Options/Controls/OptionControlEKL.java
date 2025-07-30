@@ -381,47 +381,93 @@ public class OptionControlEKL<T> extends OptionControl {
 //        }
 
         if (signal) {
-            Calendar dateThreshold1 = Calendar.getInstance();
-            dateThreshold1.set(2025, Calendar.MARCH, 1);
-            if (documentUser.reportCount >= 2000 && wpDataDB.getDt().before(dateThreshold1.getTime())) {
-                signal = false;
-                optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025");
-            } else {
-                Calendar dateThreshold2 = Calendar.getInstance();
-                dateThreshold2.set(2025, Calendar.MARCH, 31);
-                if (documentUser.reportCount >= 3000 && !wpDataDB.getDt().after(dateThreshold2.getTime())) {
-                    signal = false;
-                    optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025");
+            int[] reportThresholds = {2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
+            int[][] dateThresholds = {
+                    {2025, Calendar.MARCH, 1},
+                    {2025, Calendar.APRIL, 1},
+                    {2025, Calendar.MAY, 1},
+                    {2025, Calendar.JUNE, 1},
+                    {2025, Calendar.JULY, 1},
+                    {2025, Calendar.AUGUST, 1},
+                    {2025, Calendar.SEPTEMBER, 1},
+                    {2025, Calendar.OCTOBER, 1},
+                    {2026, Calendar.JANUARY, 1}  // до нового года включительно
+            };
+
+            for (int i = 0; i < reportThresholds.length; i++) {
+                int threshold = reportThresholds[i];
+                int year = dateThresholds[i][0];
+                int month = dateThresholds[i][1];
+                int day = dateThresholds[i][2];
+
+                Calendar thresholdDate = Calendar.getInstance();
+                thresholdDate.set(year, month, day);
+                thresholdDate.set(Calendar.HOUR_OF_DAY, 0);
+                thresholdDate.set(Calendar.MINUTE, 0);
+                thresholdDate.set(Calendar.SECOND, 0);
+                thresholdDate.set(Calendar.MILLISECOND, 0);
+
+                boolean allowByDate;
+
+                if (i == 0) {
+                    // Первое условие: строго ДО 01.03.2025
+                    allowByDate = wpDataDB.getDt().before(thresholdDate.getTime());
                 } else {
-                    Calendar dateThreshold3 = Calendar.getInstance();
-                    dateThreshold3.set(2025, Calendar.APRIL, 30);
-                    if (documentUser.reportCount >= 4000 && !wpDataDB.getDt().after(dateThreshold3.getTime())) {
-                        signal = false;
-                        optionMsg.append(", но сотрудник провел более 4000 отчетов и эту блокировку пропускаем до 01.05.2025");
-                    } else {
-                        Calendar dateThreshold4 = Calendar.getInstance();
-                        dateThreshold4.set(2025, Calendar.MAY, 31);
-                        if (documentUser.reportCount >= 5000 && !wpDataDB.getDt().after(dateThreshold4.getTime())) {
-                            signal = false;
-                            optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025");
-                        } else {
-                            Calendar dateThreshold5 = Calendar.getInstance();
-                            dateThreshold5.set(2025, Calendar.JUNE, 30);
-                            if (documentUser.reportCount >= 6000 && !wpDataDB.getDt().after(dateThreshold5.getTime())) {
-                                signal = false;
-                                optionMsg.append(", но сотрудник провел более 6000 отчетов и эту блокировку пропускаем до 01.07.2025");
-                            } else {
-                                Calendar dateThreshold6 = Calendar.getInstance();
-                                dateThreshold6.set(2025, Calendar.JULY, 31);
-                                if (documentUser.reportCount >= 7000 && !wpDataDB.getDt().after(dateThreshold6.getTime())) {
-                                    signal = false;
-                                    optionMsg.append(", но сотрудник провел более 7000 отчетов и эту блокировку пропускаем до 01.08.2025");
-                                }
-                            }
-                        }
-                    }
+                    // Остальные условия: до и ВКЛЮЧИТЕЛЬНО даты
+                    allowByDate = !wpDataDB.getDt().after(thresholdDate.getTime());
+                }
+
+                if (documentUser.reportCount >= threshold && allowByDate) {
+                    signal = false;
+                    optionMsg.append(", но сотрудник провел более ")
+                            .append(threshold)
+                            .append(" отчетов и эту блокировку пропускаем до ")
+                            .append(String.format("%02d.%02d.%04d", day, month + 1, year));
+                    break;
                 }
             }
+
+//            Calendar dateThreshold1 = Calendar.getInstance();
+//            dateThreshold1.set(2025, Calendar.MARCH, 1);
+//            if (documentUser.reportCount >= 2000 && wpDataDB.getDt().before(dateThreshold1.getTime())) {
+//                signal = false;
+//                optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025");
+//            } else {
+//                Calendar dateThreshold2 = Calendar.getInstance();
+//                dateThreshold2.set(2025, Calendar.MARCH, 31);
+//                if (documentUser.reportCount >= 3000 && !wpDataDB.getDt().after(dateThreshold2.getTime())) {
+//                    signal = false;
+//                    optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025");
+//                } else {
+//                    Calendar dateThreshold3 = Calendar.getInstance();
+//                    dateThreshold3.set(2025, Calendar.APRIL, 30);
+//                    if (documentUser.reportCount >= 4000 && !wpDataDB.getDt().after(dateThreshold3.getTime())) {
+//                        signal = false;
+//                        optionMsg.append(", но сотрудник провел более 4000 отчетов и эту блокировку пропускаем до 01.05.2025");
+//                    } else {
+//                        Calendar dateThreshold4 = Calendar.getInstance();
+//                        dateThreshold4.set(2025, Calendar.MAY, 31);
+//                        if (documentUser.reportCount >= 5000 && !wpDataDB.getDt().after(dateThreshold4.getTime())) {
+//                            signal = false;
+//                            optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025");
+//                        } else {
+//                            Calendar dateThreshold5 = Calendar.getInstance();
+//                            dateThreshold5.set(2025, Calendar.JUNE, 30);
+//                            if (documentUser.reportCount >= 6000 && !wpDataDB.getDt().after(dateThreshold5.getTime())) {
+//                                signal = false;
+//                                optionMsg.append(", но сотрудник провел более 6000 отчетов и эту блокировку пропускаем до 01.07.2025");
+//                            } else {
+//                                Calendar dateThreshold6 = Calendar.getInstance();
+//                                dateThreshold6.set(2025, Calendar.JULY, 31);
+//                                if (documentUser.reportCount >= 7000 && !wpDataDB.getDt().after(dateThreshold6.getTime())) {
+//                                    signal = false;
+//                                    optionMsg.append(", но сотрудник провел более 7000 отчетов и эту блокировку пропускаем до 01.08.2025");
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
 
 

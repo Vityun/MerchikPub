@@ -1233,11 +1233,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     //----------------------------------------------------------------------------------------------
     //service -- жосткий аналог крона
     // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
+    private int callCounter = 0;
     private Runnable runnableCron10 = new Runnable() {
         public void run() {
 //            if (false)
             try {
                 Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
+                callCounter++;
 
                 synchronizationSignal("SIGNAL", null);
 
@@ -1256,7 +1258,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Log.e("КРОНЧИК", "login: " + login);
                 Log.e("КРОНЧИК", "password: " + password);
 
-                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                if (callCounter % 2 == 0)
+                    server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
                 internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня

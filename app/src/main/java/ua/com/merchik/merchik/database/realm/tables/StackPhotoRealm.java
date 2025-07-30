@@ -302,7 +302,7 @@ public class StackPhotoRealm {
                     .in("object_id", ids.toArray(new Integer[0]))
                     .findAll();
 
-            if (realmResults == null || realmResults.isEmpty()) return result;
+            if (realmResults == null || realmResults.isEmpty()) return ids;
 
             List<StackPhotoDB> stackPhotos = realm.copyFromRealm(realmResults);
             // Создаем множество object_id, которые уже есть в базе
