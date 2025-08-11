@@ -2,9 +2,11 @@ package ua.com.merchik.merchik.features.main.Main
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -35,6 +37,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,12 +66,16 @@ import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuDialog
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
@@ -76,8 +83,11 @@ import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import java.io.File
+import java.text.SimpleDateFormat
 import java.time.LocalTime
 import java.time.ZoneId
+import java.util.Date
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
@@ -101,6 +111,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val listState = rememberLazyListState()
 
+    var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
+
 
     // Лаунчер на результат
     val launcher = rememberLauncherForActivityResult(
@@ -111,6 +123,77 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
     viewModel.launcher = launcher
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is MainEvent.ShowContextMenu -> {
+                    selectedItem = event.menuState
+                }
+            }
+        }
+    }
+
+
+
+    ContextMenuDialog(
+        visible = selectedItem != null,
+        item = selectedItem?.item,
+        actions = selectedItem?.actions.orEmpty(),
+        onDismiss = { selectedItem = null },
+        onActionClick = { result ->
+            when (result.action) {
+                is ContextMenuAction.AcceptOrder -> {
+                    selectedItem = ContextMenuState(
+                        item = selectedItem!!.item, // точно не null, так как visible = true
+                        actions = listOf(
+                            ContextMenuAction.ConfirmAcceptOneTime,
+                            ContextMenuAction.ConfirmAcceptInfinite,
+                            ContextMenuAction.Close
+                        )
+                    )
+                }
+
+                is ContextMenuAction.ConfirmAcceptOneTime -> {
+                    Toast.makeText(
+                        context,
+                        "Сохранен code_dad2: ${result.codeDad2}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.ConfirmAcceptInfinite -> {
+                    Toast.makeText(
+                        context,
+                        "Сохранены адресс: ${result.addrTxt}, клиент: ${result.clientTxt}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.OpenVisit,
+                ContextMenuAction.OpenOrder -> {
+                    result.id?.let {
+                        val intent = Intent(context, DetailedReportActivity::class.java)
+                        intent.putExtra("WpDataDB_ID", it)
+                        context.startActivity(intent)
+                    }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.Close -> selectedItem = null
+                else -> {
+                    Toast.makeText(
+                        context,
+                        "Меню: ${result.action.title} находится в разработке",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    selectedItem = null
+                }
+            }
+        }
+    )
 
     Column(
         modifier = modifier
@@ -184,19 +267,57 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     uiState.items.filter { dataItemUI ->
                         uiState.filters?.let { filters ->
                             filters.rangeDataByKey?.let { rangeDataByKey ->
+                                val star = viewModel.rangeDataStart.value
+                                val end = viewModel.rangeDataEnd.value
                                 dataItemUI.fields.forEach { fieldValue ->
                                     if (fieldValue.key.equals(rangeDataByKey.key, true)) {
-                                        if (((fieldValue.value.rawValue as? Long)
-                                                ?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
-                                                ?.toInstant()?.toEpochMilli() ?: 0)
-                                            || ((fieldValue.value.rawValue as? Long)
-                                                ?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
-                                                ?.atZone(ZoneId.systemDefault())?.toInstant()
-                                                ?.toEpochMilli() ?: 0)
-                                        ) {
+                                        val rawValue = fieldValue.value.rawValue
+                                        val timestamp = when (rawValue) {
+                                            is Long -> rawValue
+                                            is Date -> rawValue.time
+                                            is String -> {
+                                                try {
+                                                    val formatter = SimpleDateFormat(
+                                                        "MMM d, yyyy hh:mm:ss a",
+                                                        Locale.US
+                                                    )
+                                                    val parsedDate = formatter.parse(rawValue)
+                                                    parsedDate?.time ?: return@filter false
+                                                } catch (e: Exception) {
+                                                    return@filter false // строка не распарсилась — фильтруем
+                                                }
+                                            }
+
+                                            else -> return@filter false // если ни Long, ни Date — исключаем
+                                        }
+
+// Получаем границы диапазона в миллисекундах
+                                        val startMillis = star
+                                            ?.atStartOfDay(ZoneId.systemDefault())
+                                            ?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
+
+                                        val endMillis = end
+                                            ?.atTime(LocalTime.MAX)
+                                            ?.atZone(ZoneId.systemDefault())
+                                            ?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
+
+// Фильтрация по диапазону
+                                        if (timestamp < startMillis || timestamp > endMillis) {
                                             _isActiveFiltered = true
                                             return@filter false
                                         }
+
+//                                        if (((fieldValue.value.rawValue as? Long)
+//                                                ?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
+//                                                ?.toInstant()?.toEpochMilli() ?: 0)
+//                                            || ((fieldValue.value.rawValue as? Long)
+//                                                ?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
+//                                                ?.atZone(ZoneId.systemDefault())?.toInstant()
+//                                                ?.toEpochMilli() ?: 0)
+//                                        ) {
+//                                            _isActiveFiltered = true
+//                                            return@filter false
+//                                        }
                                     }
                                 }
                             }
@@ -273,7 +394,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
 
                 uiState.subTitle?.let {
-                    Box(modifier = Modifier.animateContentSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                    ) {
                         Text(
                             text = it,
                             maxLines = maxLinesSubTitle,

@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Utils;
 import static ua.com.merchik.merchik.Globals.userId;
 
 import android.graphics.Color;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -19,6 +20,9 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataFragmentHome;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -27,6 +31,9 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 
 public class CustomString {
+
+    public enum TitleMode {SHORT, FULL}
+
 
     public static SpannableString underlineString(String text) {
         SpannableString spannableSt = new SpannableString(text);
@@ -87,5 +94,43 @@ public class CustomString {
         base = base.replace("&", "**");
         return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, base);
 
+    }
+
+    public static SpannableStringBuilder createTitleMsg(RealmResults<WpDataDB> wp, TitleMode mode) {
+        SpannableStringBuilder res = new SpannableStringBuilder();
+
+        try {
+            if (wp != null && wp.size() > 0) {
+                // Запланированные работы
+                int wpSum = wp.sum("cash_ispolnitel").intValue();
+
+                // Выполненные работы
+                RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
+                int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
+                int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
+                int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
+
+                // Не Віполненные
+                RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
+                int wpStatus0Size = wpStatus0.size();
+                int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
+                int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
+
+                if (mode.equals(TitleMode.FULL)) {
+                    res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n\n");
+                    res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n\n");
+                    res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append("" + wpStatus1Size).append(" (").append("" + percentWpStatus1).append("%), на суму ").append("" + wpStatus1Sum).append(" грн.").append("\n\n");
+                    res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");
+                } else if (mode.equals(TitleMode.SHORT)) {
+                    res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)");
+                }
+            } else {
+                res.append("План робіт пустий.");
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "WPDataFragmentHome/createTitleMsg", "Exception e: " + e);
+            res.append("");
+        }
+        return res;
     }
 }

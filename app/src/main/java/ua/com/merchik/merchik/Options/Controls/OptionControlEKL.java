@@ -319,7 +319,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     Log.e("test", "test: " + test);
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
-                        if (documentUser.reportDate20 != null && documentUser.reportDate20.getTime() >= wpDataDB.getDt().getTime()) {
+                        if (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
@@ -330,7 +330,7 @@ public class OptionControlEKL<T> extends OptionControl {
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
-                        if (documentUser.reportDate40 != null && documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
+                        if (documentUser.reportDate40 == null || documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)");

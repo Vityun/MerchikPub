@@ -2179,7 +2179,8 @@ public class Options {
 
                     }
                 });
-//                optionControlMP.showOptionMassage("");
+                if (optionControlMP.isBlockOption2())
+                    optionControlMP.showOptionMassage("");
 
                 return optionControlMP.isBlockOption2() ? 1 : 0;
 

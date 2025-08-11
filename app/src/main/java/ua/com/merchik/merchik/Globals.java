@@ -38,6 +38,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -113,6 +114,7 @@ public class Globals {
 
     // Связь
     static boolean autoSend = true;                 // Автообмен Выкл/Вкл
+    static boolean autoSendManualMode = false;                 // Автообмен Выкл/Вкл
     public static boolean onlineStatus = false;
 
 
@@ -1150,21 +1152,24 @@ public class Globals {
             String msg;
 
             if (internetStatus == 1) {
-                msg = "При выполнении Синхронизации возникла ошибка связи с сервером. Проверьте интернет " +
-                        "соединение или повторите попытку позже.\n\nВнимание! Если отсутствует связь с " +
-                        "сервером НЕ переустанавливайте приложение потому, что при переустановке приложения " +
-                        "будут удалены все внесённые вами данные (фото, дет. отчёт, доступы, справочники " +
-                        "и тп..) которые, на текущий момент, не выгружены на сервер.\n\nПри необходимости " +
-                        "установки НОВОЙ ВЕРСИИ приложения из Плэй Маркета, используйте кнопку 'Обновить'.";
+                if (!Globals.autoSend)
+                    Toast.makeText(context, "Приложение перешло в оффлайн режим", Toast.LENGTH_SHORT).show();
+//                msg = "При выполнении Синхронизации возникла ошибка связи с сервером. Проверьте интернет " +
+//                        "соединение или повторите попытку позже.\n\nВнимание! Если отсутствует связь с " +
+//                        "сервером НЕ переустанавливайте приложение потому, что при переустановке приложения " +
+//                        "будут удалены все внесённые вами данные (фото, дет. отчёт, доступы, справочники " +
+//                        "и тп..) которые, на текущий момент, не выгружены на сервер.\n\nПри необходимости " +
+//                        "установки НОВОЙ ВЕРСИИ приложения из Плэй Маркета, используйте кнопку 'Обновить'.";
             } else {
                 msg = "Проверьте состояние Вашего интернета. Подключитесь к Wifi или выйдите с помещения," +
                         " для лучшей связи и повторите попытку";
+                alertDialogMsg(context,
+                        DialogStatus.ALERT,
+                        "Внимание!",
+                        msg);
             }
 
-            alertDialogMsg(context,
-                    DialogStatus.ALERT,
-                    "Внимание!",
-                    msg);
+
 
 //            DialogData dialog = new DialogData(context);
 //            dialog.setTitle("Внимание!");

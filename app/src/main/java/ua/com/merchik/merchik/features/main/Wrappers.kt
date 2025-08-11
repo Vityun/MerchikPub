@@ -1,18 +1,17 @@
 package ua.com.merchik.merchik.features.main
 
 import android.util.Log
-import androidx.compose.runtime.CompositionLocal
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
-import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import java.text.SimpleDateFormat
@@ -548,7 +547,7 @@ object LogMPDBDBOverride {
 
 object WPDataBDOverride {
     fun getValueUI(key: String, value: Any): String = when (key) {
-        "dt_update", "dt_start", "dt", "dt_action" -> {
+        "dt" -> {
             val input = value.toString()
             val parser = SimpleDateFormat("MMM d, yyyy hh:mm:ss a", Locale.US)
             val date = try {
@@ -556,12 +555,40 @@ object WPDataBDOverride {
             } catch (e: Exception) {
                 null
             }
-
             date?.let {
-                val formatter = SimpleDateFormat("dd MMMM HH:mm", Locale.getDefault())
+                val formatter = SimpleDateFormat("dd MMMM", Locale.getDefault())
                 formatter.format(it)
+//                it.time.toString()
             } ?: input // если не получилось распарсить — вернем как есть
         }
+
+        "theme_id" -> try {
+            val tt = ThemeRealm.getThemeById(value.toString()).nm
+            tt
+        } catch (e: Exception) {
+            "Тема не виявлена"
+        }
+
         else -> value.toString()
+    }
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "dt" -> 1100
+        "user_txt" -> 1103
+        "addr_txt" -> 1101
+        "client_txt" -> 1102
+        "theme_id" -> 8021
+//        "main_option_id" ->
+
+        //группа 2340
+        //статус 3167
+
+
+        "dt_update" -> 5926
+        "nomer_tt" -> 5930
+        "obl_id" -> 5924
+        "tp_id" -> 5923
+        "tt_id" -> 5925
+        else -> null
     }
 }

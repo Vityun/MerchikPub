@@ -27,6 +27,7 @@ import retrofit2.http.Url;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.EKLExchange;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.PhotoData;
+import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
@@ -35,6 +36,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAd
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalWorksCountResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusResponse;
@@ -73,6 +75,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ViewListResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.WPDataAdditionalResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
@@ -648,6 +651,16 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+
+    @POST("mobile_app.php?")
+    Single<WPDataAdditionalResponse> GET_WP_DATA_ADDITIONAL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<AdditionalWorksCountResponse> GET_ADDITIONAL_WORK_COUNT(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     @Multipart
     @POST("mobile_app.php?")

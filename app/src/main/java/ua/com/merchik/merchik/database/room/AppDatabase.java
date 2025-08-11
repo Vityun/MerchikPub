@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
+import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.synchronization.ConverterSynchronizationTimetable;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
@@ -103,6 +104,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VacancyDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VideoViewDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
 
 @SuppressLint("RestrictedApi")
 @Database(
@@ -154,9 +156,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 BonusSDB.class,
                 SiteUrlSDB.class,
                 SiteAccountSDB.class,
-                SynchronizationTimeTable.class
+                SynchronizationTimeTable.class,
+                WPDataAdditional.class      // дополнительный заработок
         },
-        version = 66
+        version = 67
 )
 
 
@@ -256,6 +259,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SiteAccountDao siteAccountDao();
 
     public abstract SynchronizationTimetableDao synchronizationTimetableDao();
+
+    public abstract WPDataAdditionalDao wpDataAdditionalDao();
 
     public class MyAutoMigration {
     }

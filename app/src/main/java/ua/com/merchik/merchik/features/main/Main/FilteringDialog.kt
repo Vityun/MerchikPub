@@ -60,8 +60,11 @@ fun FilteringDialog(viewModel: MainViewModel,
                     onDismiss: () -> Unit,
                     onChanged: (Filters) -> Unit) {
 
-    val selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
-    val selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now()) }
+//    val selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
+//    val selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now().plusDays(7)) }
+    val selectedFilterDateStart by viewModel.rangeDataStart.collectAsState()
+    val selectedFilterDateEnd by viewModel.rangeDataEnd.collectAsState()
+
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -124,10 +127,15 @@ fun FilteringDialog(viewModel: MainViewModel,
 
                     uiState.filters?.rangeDataByKey?.let {
                         if (it.enabled)
-                            ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
+                            ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd,
+
+                                onStartDateChanged = { date -> viewModel.setStartDate(date) },
+                                onEndDateChanged = { date -> viewModel.setEndDate(date) })
                         else
                             Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit), 5998)) {
-                                ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
+                                ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd,
+                                    onStartDateChanged = { date -> viewModel.setStartDate(date) },
+                                    onEndDateChanged = { date -> viewModel.setEndDate(date) })
                             }
                     }
 
@@ -227,25 +235,47 @@ fun FilteringDialog(viewModel: MainViewModel,
     }
 }
 
+//@Composable
+//private fun ItemDateFilterUI(
+//    it: RangeDate,
+//    selectedFilterDateStart: LocalDate?,
+//    selectedFilterDateEnd: LocalDate?
+//) {
+//    var selectedFilterDateStart1 = selectedFilterDateStart
+//    var selectedFilterDateEnd1 = selectedFilterDateEnd
+//    Row {
+//        DatePicker(
+//            "Дата з",
+//            it.enabled,
+//            selectedFilterDateStart1
+//        ) { selectedFilterDateStart1 = it }
+//        DatePicker(
+//            "Дата по",
+//            it.enabled,
+//            selectedFilterDateEnd1
+//        ) { selectedFilterDateEnd1 = it }
+//    }
+//}
 @Composable
 private fun ItemDateFilterUI(
     it: RangeDate,
     selectedFilterDateStart: LocalDate?,
-    selectedFilterDateEnd: LocalDate?
+    selectedFilterDateEnd: LocalDate?,
+    onStartDateChanged: (LocalDate) -> Unit,
+    onEndDateChanged: (LocalDate) -> Unit
 ) {
-    var selectedFilterDateStart1 = selectedFilterDateStart
-    var selectedFilterDateEnd1 = selectedFilterDateEnd
     Row {
         DatePicker(
-            "Дата з",
-            it.enabled,
-            selectedFilterDateStart1
-        ) { selectedFilterDateStart1 = it }
+            title = "Дата з",
+            enabled = it.enabled,
+            date = selectedFilterDateStart
+        ) { newDate -> onStartDateChanged(newDate) }
+
         DatePicker(
-            "Дата по",
-            it.enabled,
-            selectedFilterDateEnd1
-        ) { selectedFilterDateEnd1 = it }
+            title = "Дата по",
+            enabled = it.enabled,
+            date = selectedFilterDateEnd
+        ) { newDate -> onEndDateChanged(newDate) }
     }
 }
 

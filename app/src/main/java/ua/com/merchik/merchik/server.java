@@ -4,15 +4,16 @@ package ua.com.merchik.merchik;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+
 import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
-public class server{
-
-
+public class server {
 
 
     /**
@@ -145,7 +146,8 @@ public class server{
 
 
     public static boolean test;
-    public static boolean serverIsOn(){
+
+    public static boolean serverIsOn() {
         String mod = "ping";
         long unixTimeToServer = System.currentTimeMillis();
 
@@ -154,7 +156,11 @@ public class server{
             @Override
             public void onResponse(retrofit2.Call<ServerConnection> call, retrofit2.Response<ServerConnection> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    if(response.body().getState()){
+                    if (response.body().getState()) {
+                        if (Globals.autoSendManualMode) {
+                            Globals.autoSend = true;
+                            Globals.autoSendManualMode = false;
+                        }
                         test = response.body().getState();
                         RetrofitBuilder.setServerStatusUI(response.body().getState());
                         RetrofitBuilder.setServerTime(response.body().getServer_time());
@@ -168,14 +174,24 @@ public class server{
                 test = false;
                 RetrofitBuilder.setServerStatusUI(false);
                 RetrofitBuilder.setServerTime(0);
+                // Явная проверка на таймаут
+                if (t instanceof SocketTimeoutException) {
+                    System.out.println("Ошибка: Таймаут соединения с сервером");
+                    if (Globals.autoSend) {
+                        Globals.autoSend = false;
+                        Globals.autoSendManualMode = true;
+                    }
+                } else if (t instanceof IOException) {
+                    System.out.println("Ошибка: Проблема с сетью (не таймаут)");
+                } else {
+                    System.out.println("Ошибка: Другая причина - " + t.getMessage());
+                }
             }
         });
 
         System.out.println("RETROFIT_RESP_RES: " + test);
         return test;
     }
-
-
 
 
     /**
@@ -186,25 +202,20 @@ public class server{
      * (3)Красный - Нет интернета
      *
      * */
-    public static int internetStatus(){
-        if (serverIsOn()){
+    public static int internetStatus() {
+        if (serverIsOn()) {
             return 1;
-        }else{
+        } else {
             return 2;
         }
     }
 
 
-
     //==============================================================================================
 
 
-
-
-
-
     // На снос. Переписать.
-    public boolean loginToOnline(String l, String p){
+    public boolean loginToOnline(String l, String p) {
 /*        String inputStram;
         // Попытка залогиниться
         RequestBody fB = new FormBody.Builder()
@@ -230,14 +241,12 @@ public class server{
     }
 
 
-
-
     /**
      * 15.07.2020
      * Проверка "протухлости" сессии и логин. если сессия протухла
      *
      * */
-    public static void sessionCheckAndLogin(Context context, String login, String password){
+    public static void sessionCheckAndLogin(Context context, String login, String password) {
         String modAuth = "auth";
 
         Log.e("sessionCheckAndLogin", "Проверка онлайн я или нет." + login + password);
@@ -252,20 +261,20 @@ public class server{
                     SessionCheck resp = response.body();
                     Log.e("sessionCheckAndLogin", "AUTH: " + resp.getAuth());
 
-                    if (resp.getState()){
-                        if (!resp.getAuth()){   // Если сессия протухла - логинимся
+                    if (resp.getState()) {
+                        if (!resp.getAuth()) {   // Если сессия протухла - логинимся
                             Log.e("sessionCheckAndLogin", "Сессия протухла - я пробую выполнить вход.");
                             Globals.onlineStatus = false;
                             loginOnServer(context, login, password);
-                        }else {
+                        } else {
                             Globals.onlineStatus = true;
                             Log.e("sessionCheckAndLogin", "Сессия нормальная - работаем дальше" + " /Кто залогинен, если все ок:" + resp.getUserInfo().getFio());
                         }
-                    }else {
+                    } else {
                         Globals.onlineStatus = false;
                         Log.e("sessionCheckAndLogin", "State = false");
                     }
-                }else {
+                } else {
                     Globals.onlineStatus = false;
                 }
             }
@@ -287,7 +296,7 @@ public class server{
      *
      * Передаю логин и пароль для этого.
      * */
-    public static void loginOnServer(Context context, String login, String password){
+    public static void loginOnServer(Context context, String login, String password) {
         String mod = "auth";
         String act = "sotr_auth";
 
@@ -302,12 +311,12 @@ public class server{
 
                     // Разбираем ответ на логин
                     Log.e("loginOnServer", "LOGIN STATE: " + resp.getState());
-                    if (resp.getState()){
+                    if (resp.getState()) {
                         Globals.onlineStatus = true;
-                    }else {
+                    } else {
                         Globals.onlineStatus = false;
                     }
-                }else {
+                } else {
                     Globals.onlineStatus = false;
                 }
             }
@@ -320,9 +329,6 @@ public class server{
         });
 
     }
-
-
-
 
 
 }//END CLASS..

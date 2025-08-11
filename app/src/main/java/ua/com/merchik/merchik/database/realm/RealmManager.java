@@ -760,7 +760,16 @@ public class RealmManager {
      * Получение Всего плана работ
      */
     public static RealmResults<WpDataDB> getAllWorkPlan() {
-        return INSTANCE.where(WpDataDB.class).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
+        return INSTANCE.where(WpDataDB.class)
+                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
+                .findAll();
+    }
+
+    public static RealmResults<WpDataDB> getAllWorkPlanForRNO() {
+        return INSTANCE.where(WpDataDB.class)
+                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
+                .equalTo("user_id",14041)
+                .findAll();
     }
 
     public static RealmResults<WpDataDB> getAllWorkPlanMAP() {

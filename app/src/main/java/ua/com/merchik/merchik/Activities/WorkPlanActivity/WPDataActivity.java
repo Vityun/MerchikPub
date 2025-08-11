@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.compose.runtime.Composer;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
@@ -27,7 +28,10 @@ import com.google.android.material.tabs.TabLayout;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function2;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreenKt;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -58,7 +62,6 @@ public class WPDataActivity extends toolbar_menus {
     private WPDataFragmentHome homeFrag;
     private WPDataFragmentMap mapFrag;
     private ComposeView composeView;
-    private WpDataDBViewModel viewModel;
 
     Globals globals = new Globals();
 
@@ -76,8 +79,6 @@ public class WPDataActivity extends toolbar_menus {
         setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        viewModel = new ViewModelProvider(this).get(WpDataDBViewModel.class);
-
         filter = findViewById(R.id.filter);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
@@ -87,8 +88,10 @@ public class WPDataActivity extends toolbar_menus {
         composeView = findViewById(R.id.compose_wpdata_container);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
-        // Установка закладок
+//         Установка закладок
         setTabs(getIntent().getBooleanExtra("initialOpent", false));
+//        setComposeView();
+
 
         textLesson = 816;
         videoLesson = 817;
@@ -111,13 +114,14 @@ public class WPDataActivity extends toolbar_menus {
         navigationView.setCheckedItem(129);
 
         wpDataInfo();   // Сообщение какие-то.
-//        setComposeView();
     }//------------------------------ /ON CREATE --------------------------------------------------
 
 
     private void setComposeView() {
 
-        ComposeFunctions.setContentWpData(this, composeView);
+        ComposeFunctions.setContentTabs(composeView);
+
+//        ComposeFunctions.setContentWpData(this, composeView);
 
     }
 

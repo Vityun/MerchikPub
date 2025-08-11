@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.Activities;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.Nullable;
+import androidx.compose.runtime.snapshots.SnapshotStateList;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -12,7 +14,6 @@ import androidx.work.WorkManager;
 import java.util.List;
 
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
-import ua.com.merchik.merchik.Utils.TimerCallback;
 
 public class CronchikViewModel extends ViewModel {
 
@@ -20,7 +21,7 @@ public class CronchikViewModel extends ViewModel {
     private final WorkManager workManager;
     private final LiveData<List<WorkInfo>> workInfoLiveData;
 
-//    private TimerCallback callback;
+    //    private TimerCallback callback;
     private final Handler handler = new Handler(Looper.getMainLooper()); // Handler для UI-потока
 //    private static final long DELAY_MS = 10_000; // 10 секунд в миллисекундах
 //    private final Runnable runnable = new Runnable() {
@@ -34,6 +35,9 @@ public class CronchikViewModel extends ViewModel {
 //    };
 
     public CronchikViewModel() {
+        badgeCounts.add(null); // Для первой вкладки
+        badgeCounts.add(null); // Для второй вкладки
+
         workManager = WorkManager.getInstance(MyApplication.getAppContext());
         workInfoLiveData = workManager.getWorkInfosForUniqueWorkLiveData("PhotoDownloadWork");
     }
@@ -59,26 +63,20 @@ public class CronchikViewModel extends ViewModel {
         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(MyApplication.getAppContext());
     }
 
-//    // Устанавливаем колбэк (вызывается из Activity)
-//    public void setTimerCallback(TimerCallback callback) {
-//        this.callback = callback;
-//    }
-//
-//    // Запускаем таймер
-//    public void startTimer() {
-//        handler.postDelayed(runnable, 10_000);
-//    }
-//
-//    // Останавливаем таймер
-//    public void stopTimer() {
-//        handler.removeCallbacks(runnable);
-//    }
-//
-//    @Override
-//    protected void onCleared() {
-//        super.onCleared();
-//        stopTimer(); // Важно: очищаем при уничтожении ViewModel
-//        callback = null; // Убираем ссылку на Activity
-//    }
+    private final SnapshotStateList<Integer> badgeCounts = new SnapshotStateList<>();
+
+    public SnapshotStateList<Integer> getBadgeCounts() {
+        return badgeCounts;
+    }
+
+    public void updateBadge(int index, @Nullable Integer count) {
+        if (index >= 0 && index < badgeCounts.size()) {
+            badgeCounts.set(index, count);
+        }
+    }
+
+    public void clearBadge(int index) {
+        updateBadge(index, null);
+    }
 
 }

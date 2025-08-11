@@ -6,16 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.JsonObject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,7 +24,6 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
-import ua.com.merchik.merchik.Translate
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -35,11 +34,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
-import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
-import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
-import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
-import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -76,6 +71,7 @@ data class ItemFilter(
     val rightValuesRaw: List<String?>,
     val rightValuesUI: List<String?>,
     val enabled: Boolean,
+    val excludeMode: Boolean = false
 ) {
     fun onSelect(activity: Activity) {
         val intent = Intent(activity, FeaturesActivity::class.java)
@@ -112,6 +108,10 @@ data class SettingsUI(
     val sortFields: List<SortingField>? = null,
     val sizeFonts: Int? = null
 )
+
+sealed class MainEvent {
+    data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent()
+}
 
 abstract class MainViewModel(
     application: Application,
@@ -248,6 +248,54 @@ abstract class MainViewModel(
     val uiState
             : StateFlow<StateUI>
         get() = _uiState.asStateFlow()
+
+
+    private val _rangeDataStart = MutableStateFlow<LocalDate?>(LocalDate.now())
+    val rangeDataStart
+            : StateFlow<LocalDate?>
+        get() = _rangeDataStart.asStateFlow()
+
+
+    private val _rangeDataEnd = MutableStateFlow<LocalDate?>(LocalDate.now().plusDays(7))
+    val rangeDataEnd
+            : StateFlow<LocalDate?>
+        get() = _rangeDataEnd.asStateFlow()
+
+    private val _showMenuDialog = MutableStateFlow(false)
+    val showMenuDialog
+            : StateFlow<Boolean>
+        get() = _showMenuDialog.asStateFlow()
+
+
+    protected val _events = MutableSharedFlow<MainEvent>()
+    val events = _events.asSharedFlow()
+
+
+    fun setStartDate(date: LocalDate) {
+        _rangeDataStart.value = date
+
+        // обнови filters, если используешь копию
+        val current = _uiState.value.filters
+        if (current != null) {
+            val updated = current.copy(
+                rangeDataByKey = current.rangeDataByKey?.copy(start = date)
+            )
+            _uiState.value = _uiState.value.copy(filters = updated)
+        }
+    }
+
+    fun setEndDate(date: LocalDate) {
+        _rangeDataEnd.value = date
+
+        val current = _uiState.value.filters
+        if (current != null) {
+            val updated = current.copy(
+                rangeDataByKey = current.rangeDataByKey?.copy(end = date)
+            )
+            _uiState.value = _uiState.value.copy(filters = updated)
+        }
+    }
+
 
     init {
         loadPreferences()

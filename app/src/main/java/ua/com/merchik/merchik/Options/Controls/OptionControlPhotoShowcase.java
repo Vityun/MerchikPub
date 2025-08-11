@@ -45,7 +45,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private Date dateTo;
     private long dad2;
     private int percentValue;
-//    private int perShowcase;
+    private int perShowcase;
 
     private WpDataDB wpDataDB;
     private UsersSDB usersSDB;
@@ -145,18 +145,18 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
             try {
-                percentValue = 100 * list.size() / showcaseSDBList.size();
+                percentValue = Math.round((float) (100 * list.size()) / stackPhotoDBSList.size());
             } catch (Exception e) {
                 percentValue = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);
             }
 
-//            try {
-//                perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
-//            } catch (Exception e) {
-//                perShowcase = 0;
-//                Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
-//            }
+            try {
+                perShowcase = (int) 100 * filledShowcaseIdsCount / showcaseSDBList.size();
+            } catch (Exception e) {
+                perShowcase = 0;
+                Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
+            }
 
 
             //3.4
@@ -169,6 +169,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             }
 
 
+//            4.0
             if (stackPhotoDBSList.size() == 0) {
                 stringBuilderMsg.append("Не можу знайти світлини стосовні до поточного відвідування.");
                 signal = true;
@@ -195,15 +196,16 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 stringBuilderMsg.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
-                stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише ")
+                stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
                         .append(list.size())
-                        .append(" вітрин з ")
-                        .append(showcaseSDBList.size()).append(" присутніх на ТТ (")
+                        .append(" фото з ")
+                        .append(stackPhotoDBSList.size())
+                        .append(" (")
                         .append(percentValue).append("%), що МЕНШЕ плану в ").append(colMin).append("%")
-//                        .append(" Загальна кількість вітрин на ТТ: ")
-//                        .append(showcaseSDBList.size())
-                        .append(", а усього фото зроблено ").append(stackPhotoDBSList.size());
-//                        .append("(").append(perShowcase).append("%)");
+                        .append(" Загальна кількість вітрин на ТТ: ")
+                        .append(showcaseSDBList.size())
+                        .append(", з них фото зроблено ").append(list.size())
+                        .append("(").append(perShowcase).append("%)");
                 signal = true;
             } else if (showcaseSDBList.size() > 0 && list.size() < showcaseSDBList.size() * colMin / 100) {
                 stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише у ")
@@ -234,10 +236,10 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append("%), що БІЛЬШЕ плану в ").append(colMin).append("%.")
 //                        .append(stackPhotoDBSList.size())
 //                        .append(" СВІТЛИН ")
-//                        .append(" Загальна кількість вітрин на ТТ: ")
-//                        .append(showcaseSDBList.size())
-                        .append(" Усього зроблено фото ").append(stackPhotoDBSList.size())
-//                        .append("(").append(perShowcase).append("%)")
+                        .append(" Загальна кількість вітрин на ТТ: ")
+                        .append(showcaseSDBList.size())
+                        .append(" Усього зроблено фото ").append(list.size())
+                        .append("(").append(perShowcase).append("%)")
                         .append(". Зауважень немає.");
                 signal = false;
             }

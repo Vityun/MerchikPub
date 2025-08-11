@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.dataLayer
 
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
+import io.realm.Realm
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -37,6 +39,12 @@ fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callback
     addChangeListener(listener)
     awaitClose { removeChangeListener(listener) }
 }
+
+
+inline fun <reified T : RealmObject> Realm.hasData(): Boolean {
+    return where(T::class.java).findFirst() != null
+}
+
 
 class MainRepository(
 //    private val databaseRoom: AppDatabase,
@@ -125,6 +133,7 @@ class MainRepository(
     }
 
     fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        Log.e("!!!!!!TEST!!!!!!","getAllRealm: start")
         return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI, typePhoto)
     }
 
@@ -154,6 +163,7 @@ class MainRepository(
 
 
     fun <T: RealmObject> getAllRealmDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
+        Log.e("!!!!!!TEST!!!!!!","getAllRealmDataObjectUI: start")
         return RealmManager.INSTANCE
             .copyFromRealm(RealmManager.INSTANCE
                 .where(kClass.java)

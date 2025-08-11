@@ -14,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.CommentViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionAndCommentView
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreen
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -58,5 +59,14 @@ fun setContentWpData(
                 viewModel = viewModel)
         }
         viewModel.updateContent()
+    }
+}
+
+fun setContentTabs(
+    composeView: ComposeView
+    ) {
+    composeView.setContent {
+        WpDataTabsScreen()
+
     }
 }

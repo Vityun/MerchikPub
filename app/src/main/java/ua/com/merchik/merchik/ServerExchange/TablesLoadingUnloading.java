@@ -14,6 +14,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmList;
@@ -42,6 +44,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
@@ -154,20 +157,29 @@ public class TablesLoadingUnloading {
 
     public static boolean readySamplePhotos = false;
 
+    private CronchikViewModel cronchikViewModel;
+
 
     /**
      * 18.08.2020
      * <p>
      * Загрузка старым методом всех таблиц
      */
+    public void downloadAllTables(Context context, CronchikViewModel viewModel) {
+        this.cronchikViewModel = viewModel;
+        downloadAllTables(context);
+    }
     public void downloadAllTables(Context context) {
         sync = true;
+
 
         try {
 //            Exchange.sendWpData2();
 //            updateWpData();
 
             downloadWPData();
+            downloadWPDataWithCords();
+            donwloadPlanBudgetRNO();
 //            downloadWPDataRx().subscribe();
 
             downloadOptions();
@@ -418,6 +430,171 @@ public class TablesLoadingUnloading {
 
     }
 
+    public void downloadWPDataWithCords() {
+
+        StandartData data = new StandartData();
+
+        data.mod = "plan";
+        data.act = "list";
+        data.date_from = Clock.getDatePeriod(-1);
+        data.date_to = Clock.getDatePeriod(1);
+
+        long vpi;
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
+            vpi = 0;
+
+//        data.dt_change_from = String.valueOf(vpi);
+
+
+        try {
+
+            data.additional_works_location_x = String.valueOf(Globals.CoordX);
+            data.additional_works_location_y = String.valueOf(Globals.CoordY);
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
+
+            retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new retrofit2.Callback<WpDataServer>() {
+                @Override
+                public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+
+                            if (response.body().getState() && response.body().getList() != null
+                                    && !response.body().getList().isEmpty()) {
+                                List<WpDataDB> wpDataDBList = response.body().getList();
+                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
+                                for (WpDataDB wpDataDB : wpDataDBList) {
+                                    if (wpDataDB.getUser_id() == 14041)
+                                        wpDataDBListRNO.add(wpDataDB);
+                                }
+                                int size = wpDataDBListRNO.size();
+                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
+//                            RealmManager.setWpDataAuto2(wpDataDBList);
+//                            RealmManager.setWpData(wpDataDBList);
+                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
+                                downloadTovarTable(null, wpDataDBList);
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    if (sTable != null) {
+                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+                                        realm.copyToRealmOrUpdate(sTable);
+                                    }
+                                });
+
+                            }
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+
+                @Override
+                public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
+
+                }
+            });
+        } catch (Exception e) {
+        }
+
+        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
+
+    }
+
+    //    04.08.2025 новый метод для получения таблицы доп заработков
+    public void donwloadPlanBudget() {
+
+        StandartData data = new StandartData();
+
+        data.mod = "plan_budget";
+        data.act = "wp_data_request_list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//        RetrofitBuilder.getRetrofitInterface()
+//                .TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(result -> {
+//
+////                    if (result != null && result.state == true
+////                            && result.list != null && !result.list.isEmpty()) {
+//                        Log.e("!!!!!!!!!!!!!", "result: " + result);
+//
+//
+////                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+//
+//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
+////                    } else
+////                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+//
+//                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+
+                    if (result != null && result.state == true
+                            && result.list != null && !result.list.isEmpty()) {
+                        Log.e("!!!!!!!!!!!!!", "result: " + result);
+
+
+                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + result.list.size());
+                    } else
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+
+                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+
+    }
+
+    //    04.08.2025 новый метод для для получения количества доп работ по РНО
+    public void donwloadPlanBudgetRNO() {
+
+        StandartData data = new StandartData();
+
+        data.mod = "plan_budget";
+        data.act = "additional_works_count";
+        data.location_x = String.valueOf(Globals.CoordX);
+        data.location_y = String.valueOf(Globals.CoordY);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_ADDITIONAL_WORK_COUNT(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+
+                    if (result != null && result.state
+                            && result.count != null && cronchikViewModel != null) {
+                    Log.e("!!!!!!!!!!!!!", "result: " + result);
+
+                    cronchikViewModel.updateBadge(1,result.count);
+
+//                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+                    Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
+                    } else
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+
+                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+
+
+    }
 
     public void downloadImagesTp() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadImagesTp_START");

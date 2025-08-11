@@ -420,7 +420,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                 bundle.putString("typeWindow", "full");
                 bundle.putString("title", "Образцы фото отчетов");
-                bundle.putString("subTitle", "Комментарий");
+                bundle.putString("subTitle", "Комментарий \n Комментарий \n Комментарий \n Комментарий \n Комментарий \nКомментарий \n Комментарий \n Комментарий \n Комментарий \n");
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
@@ -783,7 +783,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     if (exchange.getViewModel() == null)
                                         exchange.setViewModel(cronchikViewModel);
                                     exchange.startExchange();
-                                    new TablesLoadingUnloading().downloadAllTables(this);
+                                    new TablesLoadingUnloading().downloadAllTables(this, cronchikViewModel);
 
                                     loadingStart();
                                     loadingDialog.show();
@@ -1698,26 +1698,27 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     }
 
-    private void getPhotoAndUpload(int mod) {
-        if (internetStatus == 1) {// inet+
-            RealmResults<StackPhotoDB> results = RealmManager.getStackPhotoPhotoToUpload();
-
-            Log.e("TIME_TO_UPLOAD", "results.size(): " + results.size());
-            for (int i = 0; i < results.size(); i++) {
-                Log.e("TIME_TO_UPLOAD", "i: " + i);
-                if (results.get(i) != null) {
-                    Log.e("TIME_TO_UPLOAD", "photoUploaded: " + photoUploaded);
-                }
-            }
-
-        } else if (internetStatus == 2) {// inet-
-            if (!Globals.autoSend)
-                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: нет данных о сервере. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
-        } else {
-            if (!Globals.autoSend)
-                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: проверьте состояние интернета. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
-        }
-    }
+//    private void getPhotoAndUpload(int mod) {
+//        if (internetStatus == 1) {// inet+
+//            RealmResults<StackPhotoDB> results = RealmManager.getStackPhotoPhotoToUpload();
+//
+//            Log.e("TIME_TO_UPLOAD", "results.size(): " + results.size());
+//            for (int i = 0; i < results.size(); i++) {
+//                Log.e("TIME_TO_UPLOAD", "i: " + i);
+//                if (results.get(i) != null) {
+//                    Log.e("TIME_TO_UPLOAD", "photoUploaded: " + photoUploaded);
+//                }
+//            }
+//
+////        } else if (internetStatus == 2) {// inet-
+////            if (!Globals.autoSend)
+////                Toast.makeText(this, "Приложение ").show();
+//////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: нет данных о сервере. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
+////        } else {
+////            if (!Globals.autoSend)
+//////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: проверьте состояние интернета. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
+//        }
+//    }
 
 
     // Флажок для выгрузки

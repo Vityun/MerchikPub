@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -48,6 +50,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
     public int OPTION_CONTROL_PLANOGRAMM_VIZIT = 168439;
 
     private WpDataDB wpDataDB;
+    private UsersSDB documentUser;
 
     private int optionAmountMin;
 
@@ -73,6 +76,8 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
             }
 
             optionAmountMin = Integer.parseInt(optionDB.getAmountMin());
+            documentUser = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPlanorammVizit/getDocumentVar", "Exception e: " + e);
         }
@@ -179,6 +184,10 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
 
             //6.0. исключения
             //6.1. исключение на период отладки
+            if (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
+                signal = false;
+                spannableStringBuilder.append("\n\nАле виконавець не провів свій 20-й звіт і робимо виняток");
+            }
 //            LocalDate debugUntilDate = LocalDate.of(2025, 5, 1);
 //            if (LocalDate.now().isBefore(debugUntilDate.plusDays(1))) {
 //                signal = false;

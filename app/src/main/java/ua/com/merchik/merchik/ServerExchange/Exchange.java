@@ -1733,8 +1733,8 @@ public class Exchange {
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "data_list");
         requestJson.addProperty("act", "spissotr_dosie");
-        requestJson.addProperty("dt_change_from", dt_change_from);
-
+        requestJson.addProperty("dt_change_from", dt_change_from - 900); // вычел 15 минут, закусываение такое...
+//        ########################
         Call<DossierSotrResponse> call = RetrofitBuilder.getRetrofitInterface().dossierSotr(RetrofitBuilder.contentType, requestJson);
         call.enqueue(new Callback<DossierSotrResponse>() {
             @Override

@@ -1,11 +1,16 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
-import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -14,10 +19,15 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
+import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.RangeDate
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -31,20 +41,87 @@ class WpDataDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = WpDataDB::class
+// РНО 14041
 
+    override fun onClickItem(itemUI: DataItemUI, context: Context) {
+        super.onClickItem(itemUI, context)
+        when (contextUI) {
+            ContextUI.WP_DATA_IN_CONTAINER -> {
+                viewModelScope.launch {
+                    _events.emit(
+                        MainEvent.ShowContextMenu(
+                            menuState = ContextMenuState(
+                                item = itemUI,
+                                actions = listOf(
+                                    ContextMenuAction.OpenVisit,
+                                    ContextMenuAction.Close
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
+                viewModelScope.launch {
+                    _events.emit(
+                        MainEvent.ShowContextMenu(
+                            menuState = ContextMenuState(
+                                item = itemUI,
+                                actions = listOf(
+                                    ContextMenuAction.AcceptOrder,
+                                    ContextMenuAction.AcceptAllAtAddress,
+                                    ContextMenuAction.RejectOrder,
+                                    ContextMenuAction.RejectAddress,
+                                    ContextMenuAction.RejectClient,
+                                    ContextMenuAction.RejectByType,
+                                    ContextMenuAction.OpenOrder,
+                                    ContextMenuAction.AskMoreMoney,
+                                    ContextMenuAction.Feedback,
+                                    ContextMenuAction.Close
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+
+            else -> {}
+        }
+
+    }
 
     override fun updateFilters() {
         when (contextUI) {
-            ContextUI.WP_DATA_IN_CONTAINER -> {
+            ContextUI.WP_DATA_IN_CONTAINER,
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                -> {
 
-                val data = RealmManager.getAllWorkPlan()?.takeIf { it.isNotEmpty() }
-                    ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
+
+                val rawData =
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RealmManager.getAllWorkPlan()
+                    else RealmManager.getAllWorkPlanForRNO()
+
+                val data: List<WpDataDB> = if (rawData.isNullOrEmpty()) {
+                    emptyList()
+                } else {
+                    subTitle = CustomString.createTitleMsg(rawData, CustomString.TitleMode.SHORT)
+                        .toString()
+                    RealmManager.INSTANCE.copyFromRealm(rawData)
+                }
 
                 val dataUniqUser = data.distinctBy { it.user_id }
+                    .let { list ->
+                        if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                            list.filterNot { it.user_id == 14041 }
+                        } else {
+                            list
+                        }
+                    }
                 val dataUniqAdress = data.distinctBy { it.addr_id }
-
+                val client = CustomerRealm.getAll()
                 val filterUsersSDB = ItemFilter(
-                    "Доп. фильтр",
+                    "Виконавець",
                     UsersSDB::class,
                     UsersSDBViewModel::class,
                     ModeUI.MULTI_SELECT,
@@ -54,11 +131,12 @@ class WpDataDBViewModel @Inject constructor(
                     "user_txt",
                     dataUniqUser.map { it.user_txt },
                     dataUniqUser.map { it.user_txt },
-                    true
+                    contextUI == ContextUI.WP_DATA_IN_CONTAINER
                 )
 
+
                 val filterAddressSDB = ItemFilter(
-                    "Доп. фильтр",
+                    "Адреса",
                     AddressSDB::class,
                     AddressSDBViewModel::class,
                     ModeUI.MULTI_SELECT,
@@ -68,15 +146,37 @@ class WpDataDBViewModel @Inject constructor(
                     "addr_txt",
                     dataUniqAdress.map { it.addr_txt },
                     dataUniqAdress.map { it.addr_txt },
-                    true
+                    enabled = true
                 )
+
+                val filterClientSDB = ItemFilter(
+                    "Клиент",
+                    CustomerSDB::class,
+                    CustomerSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## ADRESS",
+                    "## sub title",
+                    "client_id",
+                    "client_txt",
+                    client.map { it.id.toString() },
+                    client.map { it.nm },
+                    enabled = true
+                )
+
 
                 filters = Filters(
                     searchText = "",
-                    items = mutableListOf(
-                        filterUsersSDB,
-                        filterAddressSDB
-
+                    items =
+                        mutableListOf(
+                            filterUsersSDB,
+                            filterAddressSDB,
+                            filterClientSDB
+                        ),
+                    rangeDataByKey = RangeDate(
+                        key = "dt",
+                        start = rangeDataStart.value,
+                        end = rangeDataEnd.value,
+                        enabled = true
                     )
                 )
             }
@@ -88,24 +188,57 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun getItems(): List<DataItemUI> {
-        val wpDataDBUI = repository.getAllRealm(WpDataDB::class, contextUI, null)
-            .map {
-                val selected = FilteringDialogDataHolder.instance()
-                    .filters
-                    ?.items
-                    ?.firstOrNull { it.clazz == table }
-                    ?.rightValuesRaw
-                    ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-                it.copy(selected = selected == true)
+        launcher
+        return try {
+            when (contextUI) {
+                ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                    -> {
+                    val data = RealmManager.getAllWorkPlanForRNO()?.takeIf { it.isNotEmpty() }
+                        ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
+                    val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
+                        .map {
+                            val selected = FilteringDialogDataHolder.instance()
+                                .filters
+                                ?.items
+                                ?.firstOrNull { it.clazz == table }
+                                ?.rightValuesRaw
+                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+                            it.copy(selected = selected == true)
+                        }
+                    Log.e("!!!!!!TEST!!!!!!", "getItems: end")
+                    res
+
+                }
+
+                else -> {
+                    val res = repository.getAllRealm(WpDataDB::class, contextUI, null)
+//                        .map {
+//                            val selected = FilteringDialogDataHolder.instance()
+//                                .filters
+//                                ?.items
+//                                ?.firstOrNull { it.clazz == table }
+//                                ?.rightValuesRaw
+//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+//                            it.copy(selected = selected == true)
+//                        }
+                    Log.e("!!!!!!TEST!!!!!!", "getItems: end")
+                    res
+                }
+
             }
 
-//        val themeDBUI = repository.getAllRealm(ThemeDB::class, contextUI, null)
-//        val addressSDBUI = repository.getAllRoom(AddressSDB::class, contextUI, null)
-//        return wpDataDBUI
-//            .join(themeDBUI, "theme_id = id: nm, comment")
-//            .join(addressSDBUI, "addr_id = addr_id: nm")
-
-        return wpDataDBUI
+        } catch (e: Exception) {
+            repository.getAllRealm(WpDataDB::class, contextUI, null)
+                .map {
+                    val selected = FilteringDialogDataHolder.instance()
+                        .filters
+                        ?.items
+                        ?.firstOrNull { it.clazz == table }
+                        ?.rightValuesRaw
+                        ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+                    it.copy(selected = selected == true)
+                }
+        }
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {

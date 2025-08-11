@@ -82,6 +82,13 @@ public class StandartData<T> {
     public List<Integer> id_exclude_old;
     // ------------------------------------
 
+//    если передать координаты, то вместе с обычными работами вернутся и работы на РНО рядом с координатами, которые были переданы
+    public String additional_works_location_x;
+    public String additional_works_location_y;
+
+    public String location_x;
+    public String location_y;
+
     public static class Filter {
         public String date_from;
         public String date_to;

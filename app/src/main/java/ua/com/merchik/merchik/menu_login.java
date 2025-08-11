@@ -13,8 +13,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -37,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -58,6 +57,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
@@ -78,7 +78,6 @@ import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.Translation.SiteTranslationsList;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogLoginHelp;
 import ua.com.merchik.merchik.dialogs.DialogRetingOperatorSuppr;
@@ -86,6 +85,7 @@ import ua.com.merchik.merchik.dialogs.DialogSupport;
 import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -102,7 +102,7 @@ public class menu_login extends AppCompatActivity {
     private TextView badgeTextView;
     public static final Integer[] menu_login_VIDEO_LESSONS = new Integer[]{813};
 
-    private BlockingProgressDialog progress;
+    //    private BlockingProgressDialog progress;
     private static final int PERMISSION_FINE_LOCATION = 0;
     private static final int PERMISSION_CAMERA = 1;
     private static final int PERMISSION_REQUEST_CODE = 200;
@@ -116,6 +116,7 @@ public class menu_login extends AppCompatActivity {
     private String obj894 = "";
     private String obj895 = "";
 
+    protected CronchikViewModel cronchikViewModel;
 
     //    private ImageButton flag;
     private ImageView flag;
@@ -149,12 +150,16 @@ public class menu_login extends AppCompatActivity {
     Button but1;
     Button but2;
 
-    private ProgressViewModel progressDialog;
+
+    private ProgressViewModel progress;
+    private LoadingDialogWithPercent loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu_login);
+
+        cronchikViewModel = new ViewModelProvider(this).get(CronchikViewModel.class);
 
         flag = findViewById(R.id.flag);
         text1 = findViewById(R.id.text_login);
@@ -178,6 +183,15 @@ public class menu_login extends AppCompatActivity {
 
 //        MenuMainActivity.test();
 
+        user_id = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("user_id", null);
+
+        login = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("login", null);
+
+        password = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("password", null);
+
         try {
             fabYouTube = findViewById(R.id.fab3);
             badgeTextView = findViewById(R.id.badge_text_view_tar);
@@ -188,7 +202,7 @@ public class menu_login extends AppCompatActivity {
             intent = new Intent(menu_login.this, WPDataActivity.class);
             intent.putExtra("initialOpent", true);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
+//            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
 
 
             Log.e("ПОСЛЕДОВАТЕЛЬНОСТЬ", "3_obj893: " + obj893);
@@ -1356,45 +1370,59 @@ public class menu_login extends AppCompatActivity {
             if (sess_id != null) {
                 sessId = sess_id;
             }
-            MessageDialogBuilder dialogBuilder = new MessageDialogBuilder(this);
-            Handler handler = new Handler(Looper.getMainLooper());
-            Runnable timeoutRunnable = () ->
-//                Toast.makeText(this, "Сервер сейчас занят, ожидание может быть дольше", Toast.LENGTH_LONG).show();
-                    dialogBuilder
-                            .setStatus(DialogStatus.ALERT)
-                            .setTitle("Сервер сейчас занят")
-                            .setSubTitle("Время ответа от сервера может быть больше чем обычно")
-                            .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер")
-                            .setOnConfirmAction(() -> Unit.INSTANCE)
-                            .show();
 
-// Запускаем таймер на 5 секунд
-            handler.postDelayed(timeoutRunnable, 10000);
+//            MessageDialogBuilder dialogBuilder = new MessageDialogBuilder(this);
+
+            if ((login == null && password == null) || (login.isEmpty() && password.isEmpty()))
+                return;
+
+            progress = new ProgressViewModel(1);
+            loadingDialog = new LoadingDialogWithPercent(this, progress);
+            loadingDialog.show();
+            progress.onNextEvent("Авторизація", 39_500);
+
+//            Handler handler = new Handler(Looper.getMainLooper());
+//            Runnable timeoutRunnable = () ->
+////                Toast.makeText(this, "Сервер сейчас занят, ожидание может быть дольше", Toast.LENGTH_LONG).show();
+//                    dialogBuilder
+//                            .setStatus(DialogStatus.ALERT)
+//                            .setTitle("Сервер сейчас занят")
+//                            .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+//                            .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер")
+//                            .setOnConfirmAction(() -> {
+//                                return Unit.INSTANCE;
+//                            })
+//                            .show();
+//// Запускаем таймер на 5 секунд
+//            handler.postDelayed(timeoutRunnable, 10000);
 //            long startTime = System.currentTimeMillis();
             retrofit2.Call<Login> call = RetrofitBuilder.getRetrofitInterface().loginInfo(mod, sessId);
             call.enqueue(new retrofit2.Callback<Login>() {
                 @Override
                 public void onResponse(retrofit2.Call<Login> call, retrofit2.Response<Login> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        handler.removeCallbacks(timeoutRunnable);
+//                        handler.removeCallbacks(timeoutRunnable);
 //                        dialogBuilder.dismiss();
                         if (response.code() == 200) {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
                             appLogin();
-                            dialogBuilder.dismiss();
+                            progress.onCompleted();
+//                            dialogBuilder.dismiss();
                         } else {
                             withoutLogin();
-                            dialogBuilder.dismiss();
+                            progress.onCanceled();
+//                            dialogBuilder.dismiss();
                         }
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<Login> call, Throwable t) {
-                    handler.removeCallbacks(timeoutRunnable);
+//                    handler.removeCallbacks(timeoutRunnable);
                     withoutLogin();
-                    dialogBuilder.dismiss();
+                    progress.onCanceled();
+//                    dialogBuilder.dismiss();
                 }
             });
         } catch (Exception e) {
@@ -1419,8 +1447,14 @@ public class menu_login extends AppCompatActivity {
 
             Log.e("APP_LOGIN", "LOGIN(0): " + login + " pass: " + password);
 
-            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
-            progress.show();
+//            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
+//            progress.show();
+
+            progress = new ProgressViewModel(1);
+            loadingDialog = new LoadingDialogWithPercent(this, progress);
+            loadingDialog.show();
+            progress.onNextEvent("Авторизація", 39_500);
+
 
             // Проверка - есть ли сессия на сервере(залогинились ли мы)
             retrofit2.Call<SessionCheck> call = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(this));
@@ -1464,14 +1498,8 @@ public class menu_login extends AppCompatActivity {
                                         Log.e("PreferenceManager", "BLOC_1" + PreferenceManager.getDefaultSharedPreferences(menu_login.this)
                                                 .getString("login", ""));
 
-                                        // Запись в лог инфы
-                                        try {
-//                                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. Сессия активна.", 1084, null, null, null, null, null, null, null)));
-                                        } catch (Exception e) {
-                                        }
-
                                         // ------------
-                                        progress.dismiss();
+                                        progress.onCompleted();
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
@@ -1499,7 +1527,7 @@ public class menu_login extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         globals.alertDialogMsg(menu_login.this, "Ошибка во время логина(1). Обратитесь к Вашему руководителю. Ошибка: " + e);
-                        progress.dismiss();
+                        progress.onCanceled();
                     }
                 }
 
@@ -1565,7 +1593,7 @@ public class menu_login extends AppCompatActivity {
                                 }
                             } else {
                                 globals.alertDialogMsg(menu_login.this, response.body().getError());
-                                progress.dismiss();
+                                progress.onCanceled();
                             }
                         }
                     }
@@ -1579,7 +1607,7 @@ public class menu_login extends AppCompatActivity {
 
             } else {
                 Toast.makeText(getApplicationContext(), "Проверьте внесённые данные.", Toast.LENGTH_SHORT).show();
-                progress.dismiss();
+                progress.onCompleted();
             }
 
         } catch (Exception e) {
@@ -1637,7 +1665,8 @@ public class menu_login extends AppCompatActivity {
 
                         // ------------
 //                        WorkManagerHelper.INSTANCE.startSyncWorker(menu_login.this);
-                        tablesLoadingUnloading.downloadAllTables(menu_login.this);
+//                        tablesLoadingUnloading.downloadAllTables(menu_login.this);
+                        tablesLoadingUnloading.downloadAllTables(menu_login.this, cronchikViewModel);
                         new TablesLoadingUnloading().downloadMenu();
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
@@ -1645,7 +1674,7 @@ public class menu_login extends AppCompatActivity {
                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
                         // ------------
 
-                        progress.dismiss();
+                        progress.onCompleted();
                         startActivity(intent);  //++
                     } else {
                         appLogin();
@@ -1683,29 +1712,14 @@ public class menu_login extends AppCompatActivity {
                     Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
                 }
 
-                progress.dismiss();
-                if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
-                    DialogData dialog = new DialogData(menu_login.this);
-                    dialog.setTitle("ВАЖЛИВО!");
-                    dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
-                    dialog.setClose(() -> {
-                        dialog.setDialogColorDefault();
-                        dialog.dismiss();
-                    });
-                    dialog.setDialogIco();
-                    dialog.setDialogColorRed();
-                    dialog.setOk("Зрозуміло", () -> {
-                        intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
-                        startActivity(intent); // ++
-                    });
-                    dialog.show();
-                } else {
-                    intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE"); // тут
-                    startActivity(intent); // ++
-                }
+                progress.onCompleted();
+
+                intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE"); // тут
+                startActivity(intent); // ++
+
             } else {
                 // Не получилось залогиниться БЕЗ инета или при ошибке. БД пустая.
-                progress.dismiss();
+                progress.onCanceled();
                 globals.alertDialogMsg(menu_login.this, "Не удалось войти. \n\nПроверьте состояние интернета и повторите попытку входа.");
             }
 
@@ -2458,28 +2472,4 @@ public class menu_login extends AppCompatActivity {
         regCompany(click);
     }
 
-
-//    private void doLoginAndSync() {
-//        // login logic...
-//        DataSyncRepository repo = new DataSyncRepository(); // передай нужные зависимости
-//
-//        progressDialog = new ProgressViewModel(5);
-//        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progressDialog);
-//        loadingDialog.show();
-//
-//        KotlinBridge.startSyncAfterLogin(
-//                this,
-//                repo,
-//                progressDialog,
-//                () -> {
-//                    startActivity(new Intent(this, toolbar_menus.class));
-//                    finish();
-//                    return null;
-//                },
-//                () -> {
-//                    Toast.makeText(this, "Ошибка при синхронизации", Toast.LENGTH_SHORT).show();
-//                    return null;
-//                }
-//        );
-//    }
 }// END CLASS..380677777777/777718353
