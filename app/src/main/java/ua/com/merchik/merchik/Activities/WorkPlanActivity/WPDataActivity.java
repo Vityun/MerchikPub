@@ -85,7 +85,7 @@ public class WPDataActivity extends toolbar_menus {
         fabYouTube = findViewById(R.id.fab3);
         fabViber = findViewById(R.id.fab_viber);
         badgeTextView = findViewById(R.id.badge_text_view_tar);
-        composeView = findViewById(R.id.compose_wpdata_container);
+//        composeView = findViewById(R.id.compose_wpdata_container);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
 //         Установка закладок

@@ -109,4 +109,21 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
             isCompleted = true
         }
     }
+
+    fun onCompletedNoAnim() {
+        if (isCompleted) return
+        currentMessage.value = "Виконано"
+        viewModelScope.launch {
+            progress.floatValue = 1f
+            isCompleted = true
+        }
+    }
+
+    fun onCanceledNoAnim() {
+        if (isCompleted) return
+        currentMessage.value = "Вiдмiнено"
+        viewModelScope.launch {
+            isCompleted = true
+        }
+    }
 }

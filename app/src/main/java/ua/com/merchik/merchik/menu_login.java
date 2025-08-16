@@ -1407,11 +1407,11 @@ public class menu_login extends AppCompatActivity {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
                             appLogin();
-                            progress.onCompleted();
+                            progress.onCompletedNoAnim();
 //                            dialogBuilder.dismiss();
                         } else {
                             withoutLogin();
-                            progress.onCanceled();
+                            progress.onCanceledNoAnim();
 //                            dialogBuilder.dismiss();
                         }
                     }
@@ -1421,7 +1421,7 @@ public class menu_login extends AppCompatActivity {
                 public void onFailure(retrofit2.Call<Login> call, Throwable t) {
 //                    handler.removeCallbacks(timeoutRunnable);
                     withoutLogin();
-                    progress.onCanceled();
+                    progress.onCanceledNoAnim();
 //                    dialogBuilder.dismiss();
                 }
             });
