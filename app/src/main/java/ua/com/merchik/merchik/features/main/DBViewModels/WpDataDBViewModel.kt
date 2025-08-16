@@ -2,9 +2,9 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Utils.CustomString
@@ -45,13 +45,20 @@ class WpDataDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
+        val wp = try {
+            val raw = itemUI.rawObj.firstOrNull()
+            Gson().fromJson(Gson().toJson(raw), WpDataDB::class.java)
+        } catch (e: Exception) {
+            null
+        } ?: return
+
         when (contextUI) {
             ContextUI.WP_DATA_IN_CONTAINER -> {
                 viewModelScope.launch {
                     _events.emit(
                         MainEvent.ShowContextMenu(
                             menuState = ContextMenuState(
-                                item = itemUI,
+                                wpDataDB = wp,
                                 actions = listOf(
                                     ContextMenuAction.OpenVisit,
                                     ContextMenuAction.Close
@@ -67,7 +74,7 @@ class WpDataDBViewModel @Inject constructor(
                     _events.emit(
                         MainEvent.ShowContextMenu(
                             menuState = ContextMenuState(
-                                item = itemUI,
+                                wpDataDB = wp,
                                 actions = listOf(
                                     ContextMenuAction.AcceptOrder,
                                     ContextMenuAction.AcceptAllAtAddress,
@@ -105,8 +112,10 @@ class WpDataDBViewModel @Inject constructor(
                 val data: List<WpDataDB> = if (rawData.isNullOrEmpty()) {
                     emptyList()
                 } else {
-                    subTitle = CustomString.createTitleMsg(rawData, CustomString.TitleMode.SHORT)
-                        .toString()
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+                        subTitle =
+                            CustomString.createTitleMsg(rawData, CustomString.TitleMode.SHORT)
+                                .toString()
                     RealmManager.INSTANCE.copyFromRealm(rawData)
                 }
 
@@ -196,16 +205,15 @@ class WpDataDBViewModel @Inject constructor(
                     val data = RealmManager.getAllWorkPlanForRNO()?.takeIf { it.isNotEmpty() }
                         ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
                     val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
-                        .map {
-                            val selected = FilteringDialogDataHolder.instance()
-                                .filters
-                                ?.items
-                                ?.firstOrNull { it.clazz == table }
-                                ?.rightValuesRaw
-                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-                            it.copy(selected = selected == true)
-                        }
-                    Log.e("!!!!!!TEST!!!!!!", "getItems: end")
+//                        .map {
+//                            val selected = FilteringDialogDataHolder.instance()
+//                                .filters
+//                                ?.items
+//                                ?.firstOrNull { it.clazz == table }
+//                                ?.rightValuesRaw
+//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+//                            it.copy(selected = selected == true)
+//                        }
                     res
 
                 }
@@ -221,7 +229,19 @@ class WpDataDBViewModel @Inject constructor(
 //                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
 //                            it.copy(selected = selected == true)
 //                        }
-                    Log.e("!!!!!!TEST!!!!!!", "getItems: end")
+//                    res
+//                    val data = RealmManager.getAllWorkPlanWithOutRNO()?.takeIf { it.isNotEmpty() }
+//                        ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
+//                    val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
+//                        .map {
+//                            val selected = FilteringDialogDataHolder.instance()
+//                                .filters
+//                                ?.items
+//                                ?.firstOrNull { it.clazz == table }
+//                                ?.rightValuesRaw
+//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+//                            it.copy(selected = selected == true)
+//                        }
                     res
                 }
 

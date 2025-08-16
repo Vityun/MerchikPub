@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature
 
-import android.app.Activity
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import ua.com.merchik.merchik.Activities.CronchikViewModel
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.MapComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.R
@@ -43,7 +41,8 @@ fun WpDataTabsScreen() {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
-    val cronchikViewModel = ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
+    val cronchikViewModel =
+        ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
 
     val selectedColor = Color(ContextCompat.getColor(context, R.color.main_form))
     val tabBarBackground = Color(0xFFB1B1B1)
@@ -53,9 +52,10 @@ fun WpDataTabsScreen() {
     val tabTitles = listOf(
         stringResource(R.string.title_0),
         "Доп.Заработок",
-        stringResource(R.string.title_1)
+//        stringResource(R.string.title_1)
     )
 
+    cronchikViewModel.updateBadge(1, 11)
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
@@ -66,7 +66,8 @@ fun WpDataTabsScreen() {
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier.fillMaxWidth(),
             containerColor = tabBarBackground,
-            indicator = {} // отключаем дефолтный индикатор
+            indicator = {}, // отключаем дефолтный индикатор
+            divider = {}             // <-- отключаем линию
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -94,17 +95,17 @@ fun WpDataTabsScreen() {
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .offset(x = 12.dp, y = (-6).dp)
-                                        .background(Color.Transparent, CircleShape)
+                                        .background(Color.Red, CircleShape)
                                         .border(
                                             width = 1.dp,
-                                            color = Color.Red,
+                                            color = Color.White,
                                             shape = CircleShape
                                         )
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
                                     Text(
                                         text = if (count > 9) "9+" else count.toString(),
-                                        color = Color.Red,
+                                        color = Color.White,
                                         fontSize = 10.sp
                                     )
                                 }
@@ -118,7 +119,7 @@ fun WpDataTabsScreen() {
         when (selectedTabIndex) {
             0 -> WpDataContentTab()
             1 -> OtherComposeTab()
-            2 -> MapComposeTab()
+//            2 -> MapComposeTab()
         }
     }
 }

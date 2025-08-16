@@ -1376,9 +1376,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "client_start_anybody, client_end_dt, client_end_dt_receive, client_end_geo_distance, " +
                 "client_end_geo_accuracy, client_end_geo_id, client_end_anybody, client_report_starsh, " +
                 "client_work_duration, priority, import_type, dt_update, code_aadd, work_stop_reason, simple_report, " +
-                "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, cash_ispolnitel, visit_per_week, sku, " +
+                "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, visit_per_week, sku, " +
                 "duration, mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
-                "addr_location_xd, addr_location_yd, action_short_txt, status, " +
+                "addr_location_xd, addr_location_yd, action_short_txt, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
                 "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id";
@@ -1409,7 +1409,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return WPDataBDOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
@@ -1433,7 +1433,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Nullable
     @Override
     public List<String> getFieldsForOrderOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+        return WPDataBDOverride.INSTANCE.getFieldsForOrderOnUI();
     }
 
 }

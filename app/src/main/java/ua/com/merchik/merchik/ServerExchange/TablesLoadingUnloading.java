@@ -14,7 +14,6 @@ import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -32,10 +31,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmList;
@@ -51,6 +53,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExch
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
+import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
@@ -104,6 +107,9 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.TestJsonUpload.TasksAndReclamationsRequest;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
+import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
+import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalMapper;
+import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
@@ -112,6 +118,8 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -169,6 +177,7 @@ public class TablesLoadingUnloading {
         this.cronchikViewModel = viewModel;
         downloadAllTables(context);
     }
+
     public void downloadAllTables(Context context) {
         sync = true;
 
@@ -178,8 +187,9 @@ public class TablesLoadingUnloading {
 //            updateWpData();
 
             downloadWPData();
-            downloadWPDataWithCords();
+//            downloadWPDataWithCords();
             donwloadPlanBudgetRNO();
+            donwloadPlanBudget();
 //            downloadWPDataRx().subscribe();
 
             downloadOptions();
@@ -519,44 +529,131 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//        RetrofitBuilder.getRetrofitInterface()
-//                .TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(result -> {
-//
-////                    if (result != null && result.state == true
-////                            && result.list != null && !result.list.isEmpty()) {
-//                        Log.e("!!!!!!!!!!!!!", "result: " + result);
-//
-//
-////                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
-//
-//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
-////                    } else
-////                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
-//
-//                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
-
 
         RetrofitBuilder.getRetrofitInterface()
                 .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
+                .flatMap(result -> {
+                    boolean ok = result != null
+                            && Boolean.TRUE.equals(result.state)
+                            && result.list != null
+                            && !result.list.isEmpty();
+
+                    if (!ok) {
+                        return Single.error(new NoSuchElementException("Empty/invalid data"));
+                    }
+
+                    return Completable
+                            .fromAction(() -> SQL_DB.wpDataAdditionalDao().insertAll(result.list))
+                            .andThen(Single.just(result.list.size()));
+                })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
+                .subscribe(
+                        size -> {
+                            Log.e("!!!!!!!!!!!!!", "inserted size: " + size);
+                            Globals.writeToMLOG("INFO",
+                                    "PlanogrammTableExchange.donwloadPlanBudget",
+                                    "Data inserted successfully. Size: " + size);
+                        },
+                        throwable -> {
+                            Globals.writeToMLOG("ERROR",
+                                    "PlanogrammTableExchange.donwloadPlanBudget",
+                                    "exception: " + throwable.getMessage());
+                        }
+                );
 
-                    if (result != null && result.state == true
-                            && result.list != null && !result.list.isEmpty()) {
-                        Log.e("!!!!!!!!!!!!!", "result: " + result);
+
+//        RetrofitBuilder.getRetrofitInterface()
+//                .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(result -> {
+//
+//                    if (result != null && result.state == true
+//                            && result.list != null && !result.list.isEmpty()) {
+//                        Log.e("!!!!!!!!!!!!!", "result: " + result);
+//
+//                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+//
+//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + result.list.size());
+//                    } else
+//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+//
+//                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+
+    }
+
+    public void uploadPlanBudget() {
+//###############
+
+        List<WPDataAdditional> wpDataAdditionals = SQL_DB.wpDataAdditionalDao().getUploadToServer();
+        if (wpDataAdditionals.isEmpty())
+            return;
+
+        List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
+
+        Log.e("!!!!!!","SIZE: " +wpDataAdditionals.size());
+        StandartData data = new StandartData();
+
+        data.mod = "plan_budget";
+        data.act = "wp_data_request_add";
+        data.data = servs;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
 
-                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+//        RetrofitBuilder.getRetrofitInterface()
+//                .TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                        size -> {
+//                            Log.e("!!!!!!!!!!!!!", "inserted size: " + size);
+//                            Globals.writeToMLOG("INFO",
+//                                    "PlanogrammTableExchange.donwloadPlanBudget",
+//                                    "Data inserted successfully. Size: " + size);
+//                        },
+//                        throwable -> {
+//                            Globals.writeToMLOG("ERROR",
+//                                    "PlanogrammTableExchange.donwloadPlanBudget",
+//                                    "exception: " + throwable.getMessage());
+//                        }
+//                );
 
-                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + result.list.size());
-                    } else
-                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+        WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
 
-                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+        RetrofitBuilder.getRetrofitInterface()
+                .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject) // Single<UploadResponse>
+                .map(resp -> { // вытаскиваем IDs из ответа
+                    List<Long> ids = new ArrayList<>();
+                    if (resp != null && resp.data != null) {
+                        for (UploadResponse.Item it : resp.data) {
+                            if (it != null && it.state && it.elementId != null) {
+                                try { ids.add(Long.parseLong(it.elementId)); } catch (NumberFormatException ignore) {}
+                            }
+                        }
+                    }
+                    return ids; // список element_id
+                })
+                .flatMap(ids -> { // апдейт в БД и вернуть кол-во обновлённых
+                    if (ids.isEmpty()) return Single.just(0);
+                    return dao.markUploadedByIds(ids).andThen(Single.just(ids.size()));
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        updatedCount -> {
+                            Log.e("UPLOAD", "uploadStatus=0 проставлен для: " + updatedCount);
+                            Globals.writeToMLOG("INFO","PlanogrammTableExchange.upload",
+                                    "Updated: " + updatedCount);
+                        },
+                        throwable -> {
+                            Globals.writeToMLOG("ERROR","PlanogrammTableExchange.upload",
+                                    "exception: " + throwable.getMessage());
+                        }
+                );
 
     }
 
@@ -582,19 +679,19 @@ public class TablesLoadingUnloading {
 
                     if (result != null && result.state
                             && result.count != null && cronchikViewModel != null) {
-                    Log.e("!!!!!!!!!!!!!", "result: " + result);
+                        Log.e("!!!!!!!!!!!!!", "result: " + result);
 
-                    cronchikViewModel.updateBadge(1,result.count);
+                        if (cronchikViewModel != null)
+                            cronchikViewModel.updateBadge(1, result.count);
 
 //                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
-                    Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
                     } else
                         Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
 
                 }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
-
-
     }
+
 
     public void downloadImagesTp() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadImagesTp_START");
@@ -1131,13 +1228,6 @@ public class TablesLoadingUnloading {
                                         responseList.get(i).getClientId()
                                 ));
 //                                Log.e("TAG_TABLE", "ListUSERS: " + list.get(i));
-                            }
-
-
-                            if (list != null) {
-                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.SotrTable.SIZE: " + list.size());
-                            } else {
-                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.SotrTable.SIZE: NuLL");
                             }
 
 

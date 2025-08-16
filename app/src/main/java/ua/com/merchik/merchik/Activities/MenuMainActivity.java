@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -141,10 +142,13 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-//        new TablesLoadingUnloading().donwloadPlanBudget();
+//        new Translate().uploadNewTranslate();
+
+
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
         tablesLoadingUnloading.donwloadPlanBudgetRNO();
         tablesLoadingUnloading.downloadWPDataWithCords();
+        tablesLoadingUnloading.uploadPlanBudget();
 
 //        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 

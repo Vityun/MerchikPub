@@ -1266,8 +1266,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 lightStatus();                                  // Обновление статуса Светофоров
                 setupBadge(realmResults.size()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
-                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
-
                 globals.testMSG(toolbar_menus.this);
 
                 Log.e("КРОНЧИК", "internetStatus: " + internetStatus);

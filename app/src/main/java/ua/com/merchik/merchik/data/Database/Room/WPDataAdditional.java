@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -26,7 +27,7 @@ public class WPDataAdditional {
     @SerializedName("client_id")
     @Expose
     @ColumnInfo(name = "client_id")
-    public long clientId;
+    public int clientId;
 
     @SerializedName("isp")
     @Expose
@@ -36,7 +37,7 @@ public class WPDataAdditional {
     @SerializedName("addr_id")
     @Expose
     @ColumnInfo(name = "addr_id")
-    public long addrId;
+    public int addrId;
 
     @SerializedName("code_dad2")
     @Expose
@@ -46,7 +47,7 @@ public class WPDataAdditional {
     @SerializedName("theme_id")
     @Expose
     @ColumnInfo(name = "theme_id")
-    public long themeId;
+    public int themeId;
 
     @SerializedName("user_decision")
     @Expose
@@ -77,4 +78,7 @@ public class WPDataAdditional {
     @Expose
     @ColumnInfo(name = "kps")
     public int kps;
+
+    @ColumnInfo(name = "uploadStatus")
+    public int uploadStatus;
 }

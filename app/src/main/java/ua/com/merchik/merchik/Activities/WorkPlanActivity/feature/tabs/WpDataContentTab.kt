@@ -65,7 +65,7 @@ fun WpDataContentTab() {
             })
 
             dialog.show()
-            progressModel.onNextEvent("Отримання даних із сервера", 16_500)
+            progressModel.onNextEvent("Отримання даних вiд сервера", 16_500)
         }
     }
 

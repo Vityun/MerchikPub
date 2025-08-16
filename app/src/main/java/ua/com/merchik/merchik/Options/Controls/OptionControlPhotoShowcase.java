@@ -145,7 +145,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
             try {
-                percentValue = Math.round((float) (100 * list.size()) / stackPhotoDBSList.size());
+                percentValue = Math.round((float) (100 * list.size()) / showcaseSDBList.size());
             } catch (Exception e) {
                 percentValue = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);
@@ -236,11 +236,11 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append("%), що БІЛЬШЕ плану в ").append(colMin).append("%.")
 //                        .append(stackPhotoDBSList.size())
 //                        .append(" СВІТЛИН ")
-                        .append(" Загальна кількість вітрин на ТТ: ")
-                        .append(showcaseSDBList.size())
-                        .append(" Усього зроблено фото ").append(list.size())
-                        .append("(").append(perShowcase).append("%)")
-                        .append(". Зауважень немає.");
+//                        .append(" Загальна кількість вітрин на ТТ: ")
+//                        .append(showcaseSDBList.size())
+//                        .append(" Усього зроблено фото ").append(list.size())
+//                        .append("(").append(perShowcase).append("%)")
+                        .append(" Зауважень немає.");
                 signal = false;
             }
 

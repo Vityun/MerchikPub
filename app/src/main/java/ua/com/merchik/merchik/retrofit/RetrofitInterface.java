@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -126,6 +127,7 @@ import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
+import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
@@ -648,6 +650,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Single<String> TEST_STRING_UPLOAD_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<UploadResponse> UPLOAD_WP_DATA_ADDITIONAL(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

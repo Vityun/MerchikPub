@@ -39,6 +39,7 @@ public class RetrofitBuilder {
     private static final String BASE_URL = "https://merchik.net/";  // android 8+
     private static final String BASE_URL_OLD = "http://merchik.net/";   // old android
 
+    private static final String TEST_URL = "https://mer.astraliens.dev";
     // test
 //    private static final String BASE_URL_OLD = "http://merchik.net/";
 //    private static final String BASE_URL = "https://merchik.com.ua/";

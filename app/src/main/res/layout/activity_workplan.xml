@@ -162,16 +162,16 @@ app:layout_constraintBottom_toTopOf="@+id/search2"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_question_1" />
 
-    <androidx.compose.ui.platform.ComposeView
-        android:id="@+id/compose_wpdata_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@color/main_form"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
+<!--    <androidx.compose.ui.platform.ComposeView-->
+<!--        android:id="@+id/compose_wpdata_container"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:background="@color/main_form"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/include"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        />-->
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +25,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,6 +35,76 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+
+
+@Composable
+fun TextFieldInputRounded(
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onFocusChangedParent: (Boolean) -> Unit // уведомляем родителя
+) {
+    val focusManager = LocalFocusManager.current
+    var isFocusedSearchView by remember { mutableStateOf(false) }
+
+    Box(
+        contentAlignment = Alignment.CenterStart,
+        modifier = modifier
+//            .shadow(4.dp, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White)
+            // плавная подстройка размера внутреннего контента
+            .animateContentSize(animationSpec = tween(220))
+            .onFocusChanged {
+                val focused = it.isFocused
+                isFocusedSearchView = focused
+                onFocusChangedParent(focused)
+            }
+    ) {
+        if (!isFocusedSearchView && value.isEmpty()) {
+            Text(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 7.dp),
+                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find), 6002),
+                fontSize = 16.sp,
+                color = colorResource(id = R.color.hintColorDefault),
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                textStyle = TextStyle.Default.copy(color = Color.Black, fontSize = 16.sp),
+                maxLines = 1,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus(force = true)
+                    }
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 7.dp)
+                    .weight(1f)
+            )
+
+            // Иконку поиска можно оставить — при фокусе она будет справа, поле всё равно на весь ряд
+            Image(
+                modifier = Modifier
+                    .padding(end = 7.dp, start = 7.dp)
+                    .size(30.dp),
+                painter = painterResource(id = R.drawable.ic_search),
+                contentDescription = "",
+                colorFilter = ColorFilter.tint(Color.Black)
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun TextFieldInputRounded(

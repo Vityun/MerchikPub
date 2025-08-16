@@ -53,6 +53,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import java.util.regex.Pattern
@@ -101,6 +102,8 @@ fun MessageDialog(
     )
 
     var isCompleted by remember { mutableStateOf(false) }
+    var dialog by remember { mutableStateOf<DialogData?>(null) }
+
 
     LaunchedEffect(isCompleted) {
         if (isCompleted) onDismiss()

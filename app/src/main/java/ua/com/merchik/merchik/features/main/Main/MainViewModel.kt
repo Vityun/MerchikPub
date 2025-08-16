@@ -12,6 +12,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,9 +27,12 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -33,8 +41,12 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
+import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -109,9 +121,11 @@ data class SettingsUI(
     val sizeFonts: Int? = null
 )
 
-sealed class MainEvent {
-    data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent()
+sealed interface MainEvent {
+    data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent
+    data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
 }
+
 
 abstract class MainViewModel(
     application: Application,
@@ -119,6 +133,8 @@ abstract class MainViewModel(
     val nameUIRepository: NameUIRepository,
     protected val savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
+
+    private val disposables = CompositeDisposable()
 
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
@@ -128,6 +144,17 @@ abstract class MainViewModel(
 
     private val _valueForCustomResult = MutableStateFlow(HashMap<String, Any?>())
     val valueForCustomResult: StateFlow<HashMap<String, Any?>> = _valueForCustomResult
+
+    // внутреннее «ожидаемое действие» после подтверждения диалога
+    private sealed interface PendingOp {
+        data class AcceptOneTime(val wp: WpDataDB) : PendingOp
+        data class AcceptInfinite(val wp: WpDataDB) : PendingOp
+        data class AcceptAllClientOneAddressInfinite(val wp: WpDataDB) : PendingOp
+        data class AcceptAllClientOneAddressOneTime(val wp: WpDataDB) : PendingOp
+    }
+
+    private var pending: PendingOp? = null
+
 
     var context: Context? = null
     var dataJson: String? = null
@@ -225,7 +252,8 @@ abstract class MainViewModel(
             }
 
             if (selectedIndex > -1) {
-                dialog?.setPhotos(selectedIndex, photoLogData,
+                dialog?.setPhotos(
+                    selectedIndex, photoLogData,
                     { _, photoDB ->
                         onClickFullImage(photoDB, photoDBWithComments[photoDB])
                         dialog?.dismiss()
@@ -267,7 +295,11 @@ abstract class MainViewModel(
         get() = _showMenuDialog.asStateFlow()
 
 
-    protected val _events = MutableSharedFlow<MainEvent>()
+    protected val _events = MutableSharedFlow<MainEvent>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     val events = _events.asSharedFlow()
 
 
@@ -400,27 +432,334 @@ abstract class MainViewModel(
                     itemsHeader = it.itemsHeader.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     items = it.items.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     itemsFooter = it.itemsFooter.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                 )
             }
         }
+    }
+
+    /** Пользователь выбрал "Принять заказ (разово)" -> показать подтверждение */
+    fun requestAcceptOneTime(wp: WpDataDB) {
+        pending = PendingOp.AcceptOneTime(wp)
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        message = "Выполнить текущую работу\n" +
+                                "<font color='gray'>Посещение от</font> ${
+                                    Clock.getHumanTime_dd_MMMM(
+                                        wp.dt.time
+                                    )
+                                }" +
+                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
+                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        status = DialogStatus.NORMAL
+                    )
+                )
+            )
+        }
+    }
+
+    /** Пользователь выбрал "Принять заказ (постоянно)" -> показать подтверждение */
+    fun requestAcceptInfinite(wp: WpDataDB) {
+        pending = PendingOp.AcceptInfinite(wp)
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        message = "Выполнять все всегда работы этого клиента по этому адресу\n" +
+                                "<font color='gray'>Посещение от</font> ${
+                                    Clock.getHumanTime_dd_MMMM(
+                                        wp.dt.time
+                                    )
+                                }" +
+                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
+                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        status = DialogStatus.NORMAL
+                    )
+                )
+            )
+        }
+    }
+
+    /** Пользователь выбрал "Принять заказ всех клиентов (разово)" -> показать подтверждение */
+    fun requestAcceptAllWorkOneTime(wp: WpDataDB) {
+        pending = PendingOp.AcceptAllClientOneAddressOneTime(wp)
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        message = "Выполнить текущие работы за сегодня\n" +
+                                "<font color='gray'>Посещение от</font> ${
+                                    Clock.getHumanTime_dd_MMMM(
+                                        wp.dt.time
+                                    )
+                                }" +
+                                "\n<font color='gray'>Клиенты:</font> ${WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(wp.addr_id, wp.dt).toString().removeSurrounding("[", "]")}" +
+                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        status = DialogStatus.NORMAL
+                    )
+                )
+            )
+        }
+    }
+
+    /** Пользователь выбрал "Принять заказ всех клиентов (постоянно)" -> показать подтверждение */
+    fun requestAcceptAllWorkInfinite(wp: WpDataDB) {
+        pending = PendingOp.AcceptAllClientOneAddressInfinite(wp)
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        message = "Выполнять все всегда работы доступные по этому адресу\n" +
+                                "<font color='gray'>Посещение от</font> ${
+                                    Clock.getHumanTime_dd_MMMM(
+                                        wp.dt.time
+                                    )
+                                }" +
+                                "\n<font color='gray'>Клиенты:</font> ${WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(wp.addr_id).toString().removeSurrounding("[", "]")}" +
+                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        status = DialogStatus.NORMAL
+                    )
+                )
+            )
+        }
+    }
+
+    /** Обе кнопки диалога вызывают это действие */
+    fun performPending() {
+        val op = pending ?: return
+        when (op) {
+            is PendingOp.AcceptOneTime -> doAcceptOneTime(op.wp)
+            is PendingOp.AcceptInfinite -> doAcceptInfinite(op.wp)
+            is PendingOp.AcceptAllClientOneAddressOneTime -> doAcceptAllClientOneAddressOneTime(op.wp)
+            is PendingOp.AcceptAllClientOneAddressInfinite -> doAcceptAllClientOneAddressInfinite(op.wp)
+        }
+    }
+
+    fun cancelPending() {
+        pending = null
+    }
+
+    private fun doAcceptAllClientOneAddressInfinite(wp: WpDataDB) {
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+
+        val d = dao.getByAddr(wp.addr_id)
+            .subscribeOn(Schedulers.io())
+            .flatMap { list ->
+                if (list.isEmpty()) {
+//                    ###############
+//                    поменять на всех клиентов. В цикле перебрать по адресам
+                    dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressInfinite(wp))
+                        .andThen(Single.just(true))
+                } else Single.just(false)
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { inserted ->
+                    pending = null
+                    viewModelScope.launch {
+                        // временный костыль
+                        val tablesLoadingUnloading = TablesLoadingUnloading()
+                        tablesLoadingUnloading.uploadPlanBudget()
+
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
+                                )
+                            )
+                        )
+                    }
+                },
+                { e ->
+                    pending = null
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Синхронизация"
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+        disposables.add(d)
+    }
+    private fun doAcceptAllClientOneAddressOneTime(wp: WpDataDB) {
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+
+        val d = dao.getByAddr(wp.addr_id)
+            .subscribeOn(Schedulers.io())
+            .flatMap { list ->
+                if (list.isEmpty()) {
+//                    ###############
+//                    поменять на всех клиентов. В цикле перебрать по адресам
+                    dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressOneTime(wp))
+                        .andThen(Single.just(true))
+                } else Single.just(false)
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { inserted ->
+                    pending = null
+                    viewModelScope.launch {
+                        // временный костыль
+                        val tablesLoadingUnloading = TablesLoadingUnloading()
+                        tablesLoadingUnloading.uploadPlanBudget()
+
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
+                                )
+                            )
+                        )
+                    }
+                },
+                { e ->
+                    pending = null
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Синхронизация"
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+        disposables.add(d)
+    }
+
+
+    private fun doAcceptOneTime(wp: WpDataDB) {
+        val dad2 = wp.code_dad2
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+        val d = dao.getByCodeDad2(dad2)
+            .subscribeOn(Schedulers.io())
+            .flatMap { list ->
+                if (list.isEmpty()) {
+                    dao.insert(WPDataAdditionalFactory.blankWithDad2(wp)).andThen(Single.just(true))
+                } else Single.just(false)
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { inserted ->
+                    pending = null
+                    viewModelScope.launch {
+// временный костыль
+                        val tablesLoadingUnloading = TablesLoadingUnloading()
+                        tablesLoadingUnloading.uploadPlanBudget()
+
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT,
+                                )
+                            )
+                        )
+                    }
+                },
+                { _ ->
+                    pending = null
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Синхронизация"
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+        disposables.add(d)
+    }
+
+    private fun doAcceptInfinite(wp: WpDataDB) {
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+
+        val d = dao.getByClientAndAddr(wp.client_id.toInt(), wp.addr_id)
+            .subscribeOn(Schedulers.io())
+            .flatMap { list ->
+                if (list.isEmpty()) {
+                    dao.insert(WPDataAdditionalFactory.withClientAndAddress(wp))
+                        .andThen(Single.just(true))
+                } else Single.just(false)
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { inserted ->
+                    pending = null
+                    viewModelScope.launch {
+                        // временный костыль
+                        val tablesLoadingUnloading = TablesLoadingUnloading()
+                        tablesLoadingUnloading.uploadPlanBudget()
+
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
+                                )
+                            )
+                        )
+                    }
+                },
+                { e ->
+                    pending = null
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Синхронизация"
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+        disposables.add(d)
+    }
+
+
+    override fun onCleared() {
+        disposables.clear()
     }
 
     fun onChangeItemIndex(item: SettingsItemUI, offset: Int) {

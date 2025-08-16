@@ -15,7 +15,6 @@ import com.google.gson.JsonObject;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
@@ -277,12 +276,12 @@ public class Translate {
 //        }
 
 
-        /**
-         * 12.02.2021
-         * Отправка на сервер новых переводов. (заготовок под обьекты)
-         * <p>
-         * Отправка на сервер новых тестовок на перевод. Отправляются только под Петровым.
-         */
+    /**
+     * 12.02.2021
+     * Отправка на сервер новых переводов. (заготовок под обьекты)
+     * <p>
+     * Отправка на сервер новых тестовок на перевод. Отправляются только под Петровым.
+     */
     public void uploadNewTranslate() {
         String mod = "translation";
         String act = "translation_add";
@@ -315,30 +314,143 @@ public class Translate {
         // Список фотоотчётов с типом:
 
         // Для создания достижения выберите...
+
+
         res.add(new AddTranslation(
                 "1",
-                "option_control_mp_message_1",
-                "Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ",
+                "wpdata_aditional_AcceptOrder",
+                "Не доступно",
                 "app",
                 "all",
                 ""
         ));
-//        res.add(new AddTranslation(
-//                "2",
-//                "message_dialog_mp_sub_title",
-//                "Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці\"",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//        res.add(new AddTranslation(
-//                "3",
-//                "message_dialog_mp_message",
-//                "Визначити та додати поточне розташування пристрою до бази даних?",
-//                "app",
-//                "all",
-//                ""
-//        ));
+
+        res.add(new AddTranslation(
+                "2",
+                "wpdata_aditional_",
+                "Данный раздел находится в стадии в разработки",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "5",
+                "wpdata_aditional_RejectOrder",
+                "Отказаться от этого заказа",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "7",
+                "wpdata_aditional_RejectAddress",
+                "Отказаться от этого адреса",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "9",
+                "wpdata_aditional_RejectClient",
+                "Отказаться от этого клиента",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "11",
+                "wpdata_aditional_RejectByType",
+                "Отказаться от такого типа работ",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "13",
+                "wpdata_aditional_OpenVisit",
+                "Открыть посещение",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "15",
+                "wpdata_aditional_OpenOrder",
+                "Информация об этом заказе",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "17",
+                "wpdata_aditional_AskMoreMoney",
+                "Попросить больше денег",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "19",
+                "wpdata_aditional_Feedback",
+                "Обратная связь",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "21",
+                "wpdata_aditional_ConfirmAcceptOneTime",
+                "Выполнить один раз",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "23",
+                "wpdata_aditional_ConfirmAcceptInfinite",
+                "Выполнять регулярно",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "25",
+                "wpdata_aditional_ConfirmAllAcceptOneTime",
+                "Выполнить один раз все работы по этому адресу",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "27",
+                "wpdata_aditional_ConfirmAllAcceptInfinite",
+                "Выполнять регулярно все работы по этому адресу",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "29",
+                "wpdata_aditional_Close",
+                "Закрыть",
+                "app",
+                "all",
+                ""
+        ));
+
 
 
 //        res.add(new AddTranslation(

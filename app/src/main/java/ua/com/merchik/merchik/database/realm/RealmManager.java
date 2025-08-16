@@ -772,6 +772,13 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<WpDataDB> getAllWorkPlanWithOutRNO() {
+        return INSTANCE.where(WpDataDB.class)
+                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
+                .notEqualTo("user_id",14041)
+                .findAll();
+    }
+
     public static RealmResults<WpDataDB> getAllWorkPlanMAP() {
         return INSTANCE.where(WpDataDB.class).sort("dt_start", Sort.ASCENDING).distinct("addr_id").findAll();
     }
@@ -992,6 +999,16 @@ public class RealmManager {
 //        return realmResults.size();
         if (count > Integer.MAX_VALUE) {
             return Integer.MAX_VALUE; // или кинь исключение, или логируй
+        }
+        return (int) count;
+    }
+
+    public static int stackPhotoPhotoCount(long codeDad2) {
+        long count =  INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", codeDad2)
+                .count();
+        if (count > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
         }
         return (int) count;
     }

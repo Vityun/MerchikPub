@@ -19,7 +19,7 @@ fun OtherComposeTab() {
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
     viewModel.modeUI = ModeUI.DEFAULT
     viewModel.typeWindow = "container"
-    viewModel.subTitle = "subTitle"
+    viewModel.subTitle = "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам"
     viewModel.context = context
 
     LaunchedEffect(Unit) {

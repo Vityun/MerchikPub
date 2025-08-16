@@ -1,17 +1,22 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.service.autofill.OnClickAction
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import kotlinx.coroutines.coroutineScope
 import org.json.JSONObject
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 
 interface DataObjectUI {
     fun getIdResImage(): Int? {
@@ -51,6 +56,14 @@ interface DataObjectUI {
         return null
     }
 }
+
+//// Простой holder для состояния диалога
+//data class MessageDialogData(
+//    val title: String,
+//    val message: String,
+//    val status: DialogStatus = DialogStatus.NORMAL,
+//    val clickAction: (() -> Unit)? = null
+//)
 
 fun DataObjectUI.toItemUI(
     nameUIRepository: NameUIRepository,
@@ -279,6 +292,25 @@ fun DataObjectUI.toItemUI(
 
 enum class ModeUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT
+}
+
+@DrawableRes
+fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
+    ContextMenuAction.AcceptOrder         -> R.drawable.ic_37   // твои ресурсы
+    ContextMenuAction.AcceptAllAtAddress  -> R.drawable.ic_37
+    ContextMenuAction.RejectOrder         -> null
+    ContextMenuAction.RejectAddress       -> null
+    ContextMenuAction.RejectClient        -> null
+    ContextMenuAction.RejectByType        -> null
+    ContextMenuAction.OpenVisit           -> R.drawable.ic_37
+    ContextMenuAction.OpenOrder           -> R.drawable.ic_37
+    ContextMenuAction.AskMoreMoney        -> null
+    ContextMenuAction.Feedback            -> null
+    ContextMenuAction.ConfirmAcceptOneTime-> R.drawable.ic_37
+    ContextMenuAction.ConfirmAcceptInfinite->R.drawable.ic_37
+    ContextMenuAction.Close               -> R.drawable.ic_37
+    ContextMenuAction.ConfirmAllAcceptOneTime -> R.drawable.ic_37
+    ContextMenuAction.ConfirmAllAcceptInfinite -> R.drawable.ic_37
 }
 
 enum class ContextUI {

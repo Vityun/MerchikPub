@@ -3,14 +3,17 @@ package ua.com.merchik.merchik.features.main
 import android.util.Log
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
@@ -569,6 +572,18 @@ object WPDataBDOverride {
             "Тема не виявлена"
         }
 
+        "cash_ispolnitel" -> try {
+            "$value грн"
+        } catch (e: Exception) {
+            "Дані відсутні"
+        }
+
+        "status" -> try {
+            if (value == 1) "Проведено" else "Не проведено"
+        } catch (e: Exception) {
+            "Дані відсутні"
+        }
+
         else -> value.toString()
     }
 
@@ -578,17 +593,43 @@ object WPDataBDOverride {
         "addr_txt" -> 1101
         "client_txt" -> 1102
         "theme_id" -> 8021
+        "status" -> 3167
 //        "main_option_id" ->
+//        "cash_ispolnitel" ->
 
         //группа 2340
-        //статус 3167
-
 
         "dt_update" -> 5926
         "nomer_tt" -> 5930
         "obl_id" -> 5924
         "tp_id" -> 5923
         "tt_id" -> 5925
+        else -> null
+    }
+
+    fun getFieldsForOrderOnUI(): List<String> =
+        "theme_id, main_option_id".split(",").map { it.trim() }
+
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        "status" -> {
+            if (jsonObject.get("status").toString() == "0") {
+                val dad2 = jsonObject.getLong("code_dad2")
+                val count = RealmManager.stackPhotoPhotoCount(dad2)
+                if (count > 0)
+                    MerchModifier(
+                        textColor = Color.Magenta
+                    )
+                else
+                    MerchModifier(
+                        textColor = Color.Red
+                    )
+            } else
+                MerchModifier(
+                    textColor = Color.Green
+                )
+        }
+
         else -> null
     }
 }

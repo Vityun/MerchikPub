@@ -7,22 +7,33 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,7 +63,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,10 +75,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.flow.distinctUntilChanged
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
@@ -71,13 +88,17 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
+import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
@@ -89,11 +110,14 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val uiState by viewModel.uiState.collectAsState()
+
+    val focusManager = LocalFocusManager.current
 
     var isActiveFiltered by remember { mutableStateOf(false) }
 
@@ -105,6 +129,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var showFilteringDialog by remember { mutableStateOf(false) }
 
+    var showMapsDialog by remember { mutableStateOf(false) }
+
+    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
     var maxLinesSubTitle by remember { mutableStateOf(1) }
@@ -113,6 +141,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
 
+    var searchFocused by remember { mutableStateOf(false) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val imeVisible by rememberImeVisible()
 
     // Лаунчер на результат
     val launcher = rememberLauncherForActivityResult(
@@ -122,6 +155,20 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             viewModel.updateContent()
         }
     }
+
+    // На кнопку Back тоже корректно сворачиваем
+    BackHandler(enabled = searchFocused) {
+        keyboardController?.hide()
+        focusManager.clearFocus(force = true)
+    }
+
+    // как только клавиатура скрылась — снимаем фокус → панель схлопнется
+    LaunchedEffect(imeVisible) {
+        if (!imeVisible && searchFocused) {
+            focusManager.clearFocus(force = true)
+        }
+    }
+
     viewModel.launcher = launcher
 
     LaunchedEffect(Unit) {
@@ -130,70 +177,95 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 is MainEvent.ShowContextMenu -> {
                     selectedItem = event.menuState
                 }
+
+                is MainEvent.ShowMessageDialog -> {
+                    showMessageDialog = event.data
+                }
             }
         }
     }
 
 
-
-    ContextMenuDialog(
-        visible = selectedItem != null,
-        item = selectedItem?.item,
-        actions = selectedItem?.actions.orEmpty(),
-        onDismiss = { selectedItem = null },
-        onActionClick = { result ->
-            when (result.action) {
-                is ContextMenuAction.AcceptOrder -> {
-                    selectedItem = ContextMenuState(
-                        item = selectedItem!!.item, // точно не null, так как visible = true
-                        actions = listOf(
-                            ContextMenuAction.ConfirmAcceptOneTime,
-                            ContextMenuAction.ConfirmAcceptInfinite,
-                            ContextMenuAction.Close
-                        )
-                    )
-                }
-
-                is ContextMenuAction.ConfirmAcceptOneTime -> {
-                    Toast.makeText(
-                        context,
-                        "Сохранен code_dad2: ${result.codeDad2}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    selectedItem = null
-                }
-
-                is ContextMenuAction.ConfirmAcceptInfinite -> {
-                    Toast.makeText(
-                        context,
-                        "Сохранены адресс: ${result.addrTxt}, клиент: ${result.clientTxt}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    selectedItem = null
-                }
-
-                is ContextMenuAction.OpenVisit,
-                ContextMenuAction.OpenOrder -> {
-                    result.id?.let {
-                        val intent = Intent(context, DetailedReportActivity::class.java)
-                        intent.putExtra("WpDataDB_ID", it)
-                        context.startActivity(intent)
+    selectedItem?.wpDataDB?.let {
+        ContextMenuDialog(
+            visible = selectedItem != null,
+            wpDataDB = it,
+            actions = selectedItem?.actions.orEmpty(),
+            onDismiss = { selectedItem = null },
+            onActionClick = { result ->
+                focusManager.clearFocus(force = true)
+                when (result.action) {
+                    is ContextMenuAction.AcceptOrder -> {
+                        selectedItem = result.wpDataDB?.let {
+                            ContextMenuState(
+                                actions = listOf(
+                                    ContextMenuAction.ConfirmAcceptOneTime,
+                                    ContextMenuAction.ConfirmAcceptInfinite,
+                                    ContextMenuAction.Close
+                                ),
+                                wpDataDB = it
+                            )
+                        }
                     }
-                    selectedItem = null
-                }
 
-                is ContextMenuAction.Close -> selectedItem = null
-                else -> {
-                    Toast.makeText(
-                        context,
-                        "Меню: ${result.action.title} находится в разработке",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    selectedItem = null
+                    is ContextMenuAction.AcceptAllAtAddress -> {
+                        selectedItem = result.wpDataDB?.let {
+                            ContextMenuState(
+                                actions = listOf(
+                                    ContextMenuAction.ConfirmAllAcceptOneTime,
+                                    ContextMenuAction.ConfirmAllAcceptInfinite,
+                                    ContextMenuAction.Close
+                                ),
+                                wpDataDB = it
+                            )
+                        }
+                    }
+
+                    is ContextMenuAction.ConfirmAcceptOneTime -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
+                        selectedItem = null
+                    }
+
+                    is ContextMenuAction.ConfirmAcceptInfinite -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
+                        selectedItem = null
+                    }
+
+                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
+                        selectedItem = null
+                    }
+
+                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
+                        selectedItem = null
+                    }
+
+                    is ContextMenuAction.OpenVisit,
+                    ContextMenuAction.OpenOrder -> {
+                        // как было
+                        result.wpDataDB?.let {
+                            val intent = Intent(context, DetailedReportActivity::class.java)
+                            intent.putExtra("WpDataDB_ID", it.id)
+                            context.startActivity(intent)
+                        }
+                        selectedItem = null
+                    }
+
+                    is ContextMenuAction.Close -> selectedItem = null
+
+                    else -> {
+                        showMessageDialog = MessageDialogData(
+                            title = "Дополнительный заработок",
+                            message = "Меню: ${result.action.title} находится в разработке",
+                            status = DialogStatus.ALERT
+                        )
+                        selectedItem = null
+                    }
                 }
             }
-        }
-    )
+        )
+    }
 
     Column(
         modifier = modifier
@@ -418,13 +490,18 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
 
+
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
+                        // плавная перестройка строки при появлении/исчезновении кнопок
+                        .animateContentSize(animationSpec = tween(durationMillis = 220))
                 ) {
 
+                    // Поле ввода — всегда стоит первым, а при фокусе перекрывает остальных
                     TextFieldInputRounded(
-                        viewModel,
+                        viewModel = viewModel,
                         value = uiState.filters?.searchText ?: "",
                         onValueChange = {
                             val filters = Filters(
@@ -436,59 +513,163 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         modifier = Modifier
                             .weight(1f)
                             .height(40.dp)
-
+                            // при фокусе поле поднимаем над соседями
+                            .zIndex(if (searchFocused) 2f else 0f),
+                        onFocusChangedParent = { focused -> searchFocused = focused }
                     )
 
-                    if ((viewModel.typeWindow ?: "").equals("container", true)) {
-                        ImageButton(
-                            id = R.drawable.ic_settings_empt,
-                            shape = RoundedCornerShape(2.dp),
-//                            colorImage = ColorFilter.tint(color = Color.Gray),
-                            sizeButton = 40.dp,
-                            sizeImage = 24.dp,
-                            modifier = Modifier
-                                .padding(start = 7.dp),
-                            onClick = { showSettingsDialog = true }
-                        )
+                    // Все кнопки показываем только когда поле НЕ в фокусе
+                    AnimatedVisibility(
+                        visible = !searchFocused,
+                        enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
+                        exit  = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
+                    ) {
+                        Row {
+                            if ((viewModel.typeWindow ?: "").equals("container", true)) {
+                                ImageButton(
+                                    id = R.drawable.ic_maps,
+                                    shape = RoundedCornerShape(2.dp),
+                                    sizeButton = 40.dp,
+                                    sizeImage = 24.dp,
+                                    modifier = Modifier.padding(start = 7.dp),
+                                    onClick = {
+                                        showMapsDialog = true
+//                                        Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
 
-                        ImageButton(
-                            id = R.drawable.ic_refresh,
-                            shape = RoundedCornerShape(2.dp),
-//                            colorImage = ColorFilter.tint(color = Color.Gray),
-                            sizeButton = 40.dp,
-                            sizeImage = 24.dp,
-                            modifier = Modifier
-                                .padding(start = 7.dp),
-                            onClick = { viewModel.updateContent() }
-                        )
+                                ImageButton(
+                                    id = R.drawable.ic_settings_empt,
+                                    shape = RoundedCornerShape(2.dp),
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier.padding(start = 7.dp),
+                                    onClick = { showSettingsDialog = true }
+                                )
+
+                                ImageButton(
+                                    id = R.drawable.ic_refresh,
+                                    shape = RoundedCornerShape(2.dp),
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier.padding(start = 7.dp),
+                                    onClick = { viewModel.updateContent() }
+                                )
+                            }
+
+                            ImageButton(
+                                id = R.drawable.ic_plus,
+                                sizeButton = 40.dp, sizeImage = 24.dp,
+                                modifier = Modifier.padding(start = 7.dp),
+                                onClick = {
+//                                    ##
+                                    showAdditionalContent = true
+                                    showMapsDialog = true
+                                          },
+                                shape = RoundedCornerShape(2.dp)
+                            )
+
+                            ImageButton(
+                                id = R.drawable.ic_sort_down,
+                                sizeButton = 40.dp, sizeImage = 24.dp,
+                                modifier = Modifier.padding(start = 7.dp),
+                                onClick = { showSortingDialog = true },
+                                shape = RoundedCornerShape(2.dp)
+                            )
+
+                            ImageButton(
+                                id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                                sizeButton = 40.dp, sizeImage = 24.dp,
+                                modifier = Modifier.padding(start = 7.dp),
+                                onClick = { showFilteringDialog = true },
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                        }
                     }
-                    ImageButton(
-                        id = R.drawable.ic_plus,
-                        sizeButton = 40.dp,
-                        sizeImage = 24.dp,
-                        modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showAdditionalContent = true },
-                        shape = RoundedCornerShape(2.dp)
-                    )
-
-                    ImageButton(
-                        id = R.drawable.ic_sort_down,
-                        sizeButton = 40.dp,
-                        sizeImage = 24.dp,
-                        modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showSortingDialog = true },
-                        shape = RoundedCornerShape(2.dp)
-                    )
-
-                    ImageButton(
-                        id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
-                        sizeButton = 40.dp,
-                        sizeImage = 24.dp,
-                        modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showFilteringDialog = true },
-                        shape = RoundedCornerShape(2.dp)
-                    )
                 }
+
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
+//                ) {
+//
+//
+//                    TextFieldInputRounded(
+//                        viewModel,
+//                        value = uiState.filters?.searchText ?: "",
+//                        onValueChange = {
+//                            val filters = Filters(
+//                                rangeDataByKey = uiState.filters?.rangeDataByKey,
+//                                searchText = it
+//                            )
+//                            viewModel.updateFilters(filters)
+//                        },
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .height(40.dp)
+//
+//                    )
+//
+//                    if ((viewModel.typeWindow ?: "").equals("container", true)) {
+//                        ImageButton(
+//                            id = R.drawable.ic_maps,
+//                            shape = RoundedCornerShape(2.dp),
+//                            sizeButton = 40.dp,
+//                            sizeImage = 24.dp,
+//                            modifier = Modifier
+//                                .padding(start = 7.dp),
+//                            onClick = {
+//                                Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT)
+//                                    .show()
+//                            }
+//                        )
+//
+//                        ImageButton(
+//                            id = R.drawable.ic_settings_empt,
+//                            shape = RoundedCornerShape(2.dp),
+//                            sizeButton = 40.dp,
+//                            sizeImage = 24.dp,
+//                            modifier = Modifier
+//                                .padding(start = 7.dp),
+//                            onClick = { showSettingsDialog = true }
+//                        )
+//
+//                        ImageButton(
+//                            id = R.drawable.ic_refresh,
+//                            shape = RoundedCornerShape(2.dp),
+//                            sizeButton = 40.dp,
+//                            sizeImage = 24.dp,
+//                            modifier = Modifier
+//                                .padding(start = 7.dp),
+//                            onClick = { viewModel.updateContent() }
+//                        )
+//                    }
+//                    ImageButton(
+//                        id = R.drawable.ic_plus,
+//                        sizeButton = 40.dp,
+//                        sizeImage = 24.dp,
+//                        modifier = Modifier.padding(start = 7.dp),
+//                        onClick = { showAdditionalContent = true },
+//                        shape = RoundedCornerShape(2.dp)
+//                    )
+//
+//                    ImageButton(
+//                        id = R.drawable.ic_sort_down,
+//                        sizeButton = 40.dp,
+//                        sizeImage = 24.dp,
+//                        modifier = Modifier.padding(start = 7.dp),
+//                        onClick = { showSortingDialog = true },
+//                        shape = RoundedCornerShape(2.dp)
+//                    )
+//
+//                    ImageButton(
+//                        id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+//                        sizeButton = 40.dp,
+//                        sizeImage = 24.dp,
+//                        modifier = Modifier.padding(start = 7.dp),
+//                        onClick = { showFilteringDialog = true },
+//                        shape = RoundedCornerShape(2.dp)
+//                    )
+//                }
 
                 Column(
                     modifier = Modifier
@@ -496,6 +677,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         .shadow(4.dp, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
+                        .focusable()
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
                     LazyColumnScrollbar(
@@ -691,6 +873,45 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             }
         )
     }
+
+    if (showMapsDialog) {
+        MessageDialog(
+            title = "Не доступно",
+            status = DialogStatus.ALERT,
+            message = "Данный раздел находится в стадии в разработки",
+            onDismiss = {
+                showMapsDialog = false
+            },
+            onConfirmAction = {
+                showMapsDialog = false
+            }
+        )
+    }
+
+    showMessageDialog?.let { d ->
+        MessageDialog(
+            title = d.title,
+            subTitle = d.subTitle,
+            message = d.message,
+            status = d.status,
+            onDismiss = {
+                showMessageDialog = null
+                viewModel.cancelPending()
+            },
+            okButtonName = d.positivText ?: "Ok",
+            onConfirmAction = {
+                showMessageDialog = null
+                viewModel.performPending()
+            },
+            onCancelAction = if (d.status == DialogStatus.NORMAL) {
+                {
+                    showMessageDialog = null
+                    viewModel.cancelPending()
+                }
+            } else null
+        )
+    }
+
 }
 
 @Composable

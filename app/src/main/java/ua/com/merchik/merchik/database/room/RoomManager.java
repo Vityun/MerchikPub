@@ -41,7 +41,8 @@ public class RoomManager {
                         MIGRATION_61_62,
                         MIGRATION_62_63,
                         MIGRATION_63_64,
-                        MIGRATION_64_65
+                        MIGRATION_64_65,
+                        MIGRATION_65_66
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -720,10 +721,19 @@ public class RoomManager {
             database.execSQL("ALTER TABLE achievements ADD COLUMN dt_change TEXT");
         }
     };
-    static final Migration MIGRATION_64_65 = new Migration(63, 64) {
+    static final Migration MIGRATION_64_65 = new Migration(64, 65) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-//            database.execSQL("ALTER TABLE achievements ADD COLUMN dt_change TEXT");
+//            database.execSQL("ALTER TABLE wp_data_additional ADD COLUMN uploadStatus INTEGER DEFAULT 0");
         }
     };
+
+    static final Migration MIGRATION_65_66 = new Migration(65, 66) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE wp_data_additional ADD COLUMN uploadStatus INTEGER DEFAULT 0");
+        }
+    };
+
+
 }

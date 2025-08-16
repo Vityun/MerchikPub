@@ -138,6 +138,11 @@ public class Clock {
         return new SimpleDateFormat("dd-MM-yyyy").format(df);
     }
 
+    public static String getHumanTime_dd_MMMM(Long l) {
+        Date df = new java.util.Date(l);
+        return new SimpleDateFormat("dd-MMMM").format(df);
+    }
+
     public static String getHumanTimeSecPattern(Long time, String pattern){
         Date df = new java.util.Date(time * 1000);
         return new SimpleDateFormat(pattern).format(df);
