@@ -142,14 +142,13 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-//        new Translate().uploadNewTranslate();
-
+        new Translate().uploadNewTranslate();
 
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
         tablesLoadingUnloading.donwloadPlanBudgetRNO();
         tablesLoadingUnloading.downloadWPDataWithCords();
         tablesLoadingUnloading.uploadPlanBudget();
-
+//
 //        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
     }

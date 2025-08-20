@@ -188,13 +188,11 @@ public class OptionControl<T> {
             // Обращайте внимание - сохраняет ли опция контроля сигнал. Был случай когда не было
             // сохранения/обновления сигнала в БД изза чего мерчер НЕ БЛОКИРОВАЛО то что должно было блокировать.
             if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
-                if (nnkMode != null) {
+                if (nnkMode != null)
                     if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)) {
                         optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
                     } else
-                        Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "nnkMode is: " + nnkMode.name());
-                } else
-                    Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode.MAIN", "nnkMode is null");
+                        Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "nnkMode is null");
 
 
                 Long codeODAD = new UnlockCode().codeODAD(optionDB);

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,17 +22,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -54,7 +50,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +58,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -80,7 +74,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.flow.distinctUntilChanged
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
@@ -522,7 +515,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     AnimatedVisibility(
                         visible = !searchFocused,
                         enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
-                        exit  = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
+                        exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
                     ) {
                         Row {
                             if ((viewModel.typeWindow ?: "").equals("container", true)) {
@@ -562,8 +555,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 onClick = {
 //                                    ##
                                     showAdditionalContent = true
-                                    showMapsDialog = true
-                                          },
+                                },
                                 shape = RoundedCornerShape(2.dp)
                             )
 
@@ -853,6 +845,19 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         Log.e("showAdditionalContent", "+")
         viewModel.onClickAdditionalContent()
         showAdditionalContent = false
+
+        if ((viewModel.typeWindow ?: "").equals("full", true))
+            MessageDialog(
+                title = "Не доступно",
+                status = DialogStatus.ALERT,
+                message = "Данный раздел находится в стадии в разработки",
+                onDismiss = {
+                    showMapsDialog = false
+                },
+                onConfirmAction = {
+                    showMapsDialog = false
+                }
+            )
     }
 
     if (showSettingsDialog) {
@@ -875,17 +880,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showMapsDialog) {
-        MessageDialog(
-            title = "Не доступно",
-            status = DialogStatus.ALERT,
-            message = "Данный раздел находится в стадии в разработки",
-            onDismiss = {
-                showMapsDialog = false
-            },
-            onConfirmAction = {
-                showMapsDialog = false
-            }
-        )
+        MapsDialog(viewModel, onDismiss = { showMapsDialog = false })
     }
 
     showMessageDialog?.let { d ->

@@ -93,10 +93,8 @@ public class WPDataActivity extends toolbar_menus {
 //        setComposeView();
 
 
-        textLesson = 816;
-        videoLesson = 817;
-//        textLesson = 8718;
-//        videoLesson = 8719;
+
+
 
         videoLessons = null;
         setFab(this, findViewById(R.id.fab), () -> {
@@ -121,6 +119,8 @@ public class WPDataActivity extends toolbar_menus {
 
 
     private void setComposeView() {
+        textLesson = 8718;
+        videoLesson = 8719;
 
         ComposeFunctions.setContentTabs(composeView);
 
@@ -168,6 +168,9 @@ public class WPDataActivity extends toolbar_menus {
 
 
     private void setTabs(boolean initialOpen) {
+        textLesson = 816;
+        videoLesson = 817;
+
         tabLayout.getTabAt(0).setText(getText(R.string.title_0));
         tabLayout.getTabAt(1).setText(getText(R.string.title_1));
 

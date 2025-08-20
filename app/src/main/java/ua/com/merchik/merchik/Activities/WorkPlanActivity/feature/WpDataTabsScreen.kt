@@ -34,6 +34,7 @@ import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 
 
 @Composable
@@ -91,24 +92,30 @@ fun WpDataTabsScreen() {
                             )
                             val count = badgeCounts.getOrNull(index)
                             if (count != null && count > 0) {
-                                Box(
+                                CounterBadge(
+                                    count = count,
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
-                                        .offset(x = 12.dp, y = (-6).dp)
-                                        .background(Color.Red, CircleShape)
-                                        .border(
-                                            width = 1.dp,
-                                            color = Color.White,
-                                            shape = CircleShape
-                                        )
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = if (count > 9) "9+" else count.toString(),
-                                        color = Color.White,
-                                        fontSize = 10.sp
-                                    )
-                                }
+                                        .offset(x = 14.dp, y = (-9).dp)
+                                )
+//                                Box(
+//                                    modifier = Modifier
+//                                        .align(Alignment.TopEnd)
+//                                        .offset(x = 14.dp, y = (-9).dp)
+//                                        .background(Color.Red, CircleShape)
+//                                        .border(
+//                                            width = 1.dp,
+//                                            color = Color.White,
+//                                            shape = CircleShape
+//                                        )
+//                                        .padding(horizontal = 5.dp, vertical = 2.dp)
+//                                ) {
+//                                    Text(
+//                                        text = if (count > 9) "9+" else count.toString(),
+//                                        color = Color.White,
+//                                        fontSize = 11.sp,
+//                                    )
+//                                }
                             }
                         }
                     }

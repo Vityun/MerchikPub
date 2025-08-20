@@ -181,7 +181,7 @@ public class TablesLoadingUnloading {
     public void downloadAllTables(Context context) {
         sync = true;
 
-
+//if (false)
         try {
 //            Exchange.sendWpData2();
 //            updateWpData();

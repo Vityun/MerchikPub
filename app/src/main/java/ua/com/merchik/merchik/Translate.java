@@ -318,8 +318,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "wpdata_aditional_AcceptOrder",
-                "Не доступно",
+                "wpdata_aditional_plan_budget",
+                "Премія",
                 "app",
                 "all",
                 ""
@@ -327,129 +327,139 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "2",
-                "wpdata_aditional_",
-                "Данный раздел находится в стадии в разработки",
+                "wpdata_aditional_plan_budget_plan",
+                "Премія (план)",
                 "app",
                 "all",
                 ""
         ));
 
-        res.add(new AddTranslation(
-                "5",
-                "wpdata_aditional_RejectOrder",
-                "Отказаться от этого заказа",
-                "app",
-                "all",
-                ""
-        ));
 
-        res.add(new AddTranslation(
-                "7",
-                "wpdata_aditional_RejectAddress",
-                "Отказаться от этого адреса",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "9",
-                "wpdata_aditional_RejectClient",
-                "Отказаться от этого клиента",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "11",
-                "wpdata_aditional_RejectByType",
-                "Отказаться от такого типа работ",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "13",
-                "wpdata_aditional_OpenVisit",
-                "Открыть посещение",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "15",
-                "wpdata_aditional_OpenOrder",
-                "Информация об этом заказе",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "17",
-                "wpdata_aditional_AskMoreMoney",
-                "Попросить больше денег",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "19",
-                "wpdata_aditional_Feedback",
-                "Обратная связь",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "21",
-                "wpdata_aditional_ConfirmAcceptOneTime",
-                "Выполнить один раз",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "23",
-                "wpdata_aditional_ConfirmAcceptInfinite",
-                "Выполнять регулярно",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "25",
-                "wpdata_aditional_ConfirmAllAcceptOneTime",
-                "Выполнить один раз все работы по этому адресу",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "27",
-                "wpdata_aditional_ConfirmAllAcceptInfinite",
-                "Выполнять регулярно все работы по этому адресу",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "29",
-                "wpdata_aditional_Close",
-                "Закрыть",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "2",
+//                "wpdata_aditional_",
+//                "Данный раздел находится в стадии в разработки",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "5",
+//                "wpdata_aditional_RejectOrder",
+//                "Отказаться от этого заказа",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "7",
+//                "wpdata_aditional_RejectAddress",
+//                "Отказаться от этого адреса",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "9",
+//                "wpdata_aditional_RejectClient",
+//                "Отказаться от этого клиента",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "11",
+//                "wpdata_aditional_RejectByType",
+//                "Отказаться от такого типа работ",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "13",
+//                "wpdata_aditional_OpenVisit",
+//                "Открыть посещение",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "15",
+//                "wpdata_aditional_OpenOrder",
+//                "Информация об этом заказе",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "17",
+//                "wpdata_aditional_AskMoreMoney",
+//                "Попросить больше денег",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "19",
+//                "wpdata_aditional_Feedback",
+//                "Обратная связь",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "21",
+//                "wpdata_aditional_ConfirmAcceptOneTime",
+//                "Выполнить один раз",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "23",
+//                "wpdata_aditional_ConfirmAcceptInfinite",
+//                "Выполнять регулярно",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "25",
+//                "wpdata_aditional_ConfirmAllAcceptOneTime",
+//                "Выполнить один раз все работы по этому адресу",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "27",
+//                "wpdata_aditional_ConfirmAllAcceptInfinite",
+//                "Выполнять регулярно все работы по этому адресу",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "29",
+//                "wpdata_aditional_Close",
+//                "Закрыть",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 
 

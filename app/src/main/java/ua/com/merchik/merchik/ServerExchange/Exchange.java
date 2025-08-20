@@ -222,6 +222,7 @@ public class Exchange {
      */
     public void startExchange() {
 
+//        if (false)
         try {
             Log.e("startExchange", "start");
 

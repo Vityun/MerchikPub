@@ -663,7 +663,7 @@ public class Options {
 //                        click.click(); +84932/+158608/+8299/+157352/+160568/+134583/139577/+158607
                         count++;
                         success.add(item);
-                        if (count == optionsDBList.size()) {
+                        if (count == optionsDBList.size() && failure.isEmpty()) {
                             click.click();
                             // Обычное выполнение нажатия на кнопку.
                             optControl(view, context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {

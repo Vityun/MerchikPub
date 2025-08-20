@@ -3,13 +3,11 @@ package ua.com.merchik.merchik.features.main
 import android.util.Log
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
-import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
@@ -584,6 +582,14 @@ object WPDataBDOverride {
             "Дані відсутні"
         }
 
+        "user_txt" -> try {
+            if (value == "Работа Непланово Зупинена")
+                "" else
+                value.toString()
+        } catch (e: Exception) {
+            ""
+        }
+
         else -> value.toString()
     }
 
@@ -592,10 +598,10 @@ object WPDataBDOverride {
         "user_txt" -> 1103
         "addr_txt" -> 1101
         "client_txt" -> 1102
-        "theme_id" -> 8021
+        "theme_id" -> 8724
         "status" -> 3167
-//        "main_option_id" ->
-//        "cash_ispolnitel" ->
+        "main_option_id" -> 8725
+        "cash_ispolnitel" -> 8751
 
         //группа 2340
 
