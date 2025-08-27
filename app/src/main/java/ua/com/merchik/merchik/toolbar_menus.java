@@ -207,7 +207,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         this.exchange = new Exchange(cronchikViewModel);
         this.tarExchange = new ReclamationPointExchange();
-        this.exchange.context = this;
+        this.exchange.setContext(this);
         this.votesExchange = new VotesExchange();
         this.photoReports = new PhotoReports(toolbar_menus.this);
 
@@ -778,7 +778,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     if (exchange == null) {
                                         exchange = new Exchange();
                                     }
-                                    exchange.context = this;
+                                    exchange.setContext(this);
                                     Exchange.exchangeTime = 0;
                                     if (exchange.getViewModel() == null)
                                         exchange.setViewModel(cronchikViewModel);
@@ -1321,7 +1321,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     if (exchange == null) {
                         exchange = new Exchange();
                     }
-                    exchange.context = toolbar_menus.this;
+                    exchange.setContext(toolbar_menus.this);
 
 //                        loadingStart();
 

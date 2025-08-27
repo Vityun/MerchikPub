@@ -85,6 +85,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
 
     private void executeOption() {
         try {
+            Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","+");
             if (wpDataDB != null) {
                 code_dad2 = wpDataDB.getCode_dad2();
             }
@@ -97,6 +98,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
                 planogrammVizitShowcaseSDBList = List.of();
             }
 
+            Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","planogrammVizitShowcaseSDBList.size: " + planogrammVizitShowcaseSDBList.size());
 
             //4.0. тепер треба перевірити чи до усіх планограм визначені вітрини, або світлини ДО. або встановлені низькі оцінки ... Ідея така ..
             // Виконується перевірка наявності планограм встановлених до моменту початку візиту, а потім з"ясовується, чи визначені вітрини, до котрих стосуються зазначені планограми. Якщо вітрини, на момент виконання робіт, ще нема, то виконується світлина ДО з зазначенням іденифікатора планогрмаи як джерела. І у випадку, якщо виконавець вважає, що планограма "крива" (не має виконуватись у даній ТТ), то він ставить їй низьку оцінку та коментар.
@@ -120,6 +122,8 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
                 ClickableSpan clickableSpan = new ClickableSpan() {
                     @Override
                     public void onClick(View widget) {
+                        Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","onClick+");
+                        Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","item: " + item.planogram_id);
                         openFeatureActivity(item.planogram_id);
                         // Вызываем метод dialogFullPhoto при клике
 //                        dialogFullPhoto(stackPhotoDB);

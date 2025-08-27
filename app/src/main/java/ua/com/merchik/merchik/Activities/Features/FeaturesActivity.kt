@@ -31,6 +31,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
@@ -75,6 +76,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     OpinionSDBViewModel::class -> viewModel() as OpinionSDBViewModel
                                     PlanogrammVizitShowcaseViewModel::class -> viewModel() as PlanogrammVizitShowcaseViewModel
                                     ShowcaseDBViewModel::class -> viewModel() as ShowcaseDBViewModel
+                                    SMSPlanSDBViewModel::class -> viewModel() as SMSPlanSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")

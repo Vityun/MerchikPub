@@ -204,7 +204,7 @@ class UsersSDBViewModel @Inject constructor(
         }
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         val data = repository.getAllRoom(table, contextUI, null)
 //            .map {
 //                val selected = FilteringDialogDataHolder.instance()

@@ -3,6 +3,9 @@ package ua.com.merchik.merchik.Activities;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +16,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -31,6 +35,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.fcm.FcmTokenSenderRx;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
@@ -142,7 +147,22 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        new Translate().uploadNewTranslate();
+        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
+
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String token = task.getResult();
+                        Log.e("FirebaseMessaging_TOKEN",":::>>> " + token);
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("", token);
+                        clipboard.setPrimaryClip(clip);
+                    } else {
+                        Log.e("!!!!!!!!!!!!!!!!!!",":::>>> " + task.getException());
+                    }
+                });
+
+//        new Translate().uploadNewTranslate();
 
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
         tablesLoadingUnloading.donwloadPlanBudgetRNO();

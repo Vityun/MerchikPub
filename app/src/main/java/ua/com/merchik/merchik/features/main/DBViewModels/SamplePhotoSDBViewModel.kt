@@ -264,7 +264,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         return "abbr, grp_id, ID, photo_id, photo_tp, column_name".split(",")
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
         val typePhoto = 35
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, typePhoto)

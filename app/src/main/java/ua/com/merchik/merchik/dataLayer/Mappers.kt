@@ -1,12 +1,10 @@
 package ua.com.merchik.merchik.dataLayer
 
-import android.service.autofill.OnClickAction
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
-import kotlinx.coroutines.coroutineScope
 import org.json.JSONObject
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
@@ -15,7 +13,6 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 
 interface DataObjectUI {
@@ -86,7 +83,10 @@ fun DataObjectUI.toItemUI(
 
     val idResImage = this.getIdResImage()
     if (idResImage != null && "id_res_image" !in hiddenList) {
-        val label = nameUIRepository.getTranslateString("id_res_image", this.getFieldTranslateId("id_res_image"))
+        val label = nameUIRepository.getTranslateString(
+            "id_res_image",
+            this.getFieldTranslateId("id_res_image")
+        )
         fields.add(
             FieldValue(
                 "id_res_image",
@@ -108,6 +108,7 @@ fun DataObjectUI.toItemUI(
             photoId != "0" -> {
                 RealmManager.getPhotoByPhotoId(photoId)?.getPhoto_num()?.let { images.add(it) }
             }
+
             key == "photo_do_id" -> {
                 val hash = jsonObject.optString("photo_do_hash", "0")
                 if (hash.length > 12) {
@@ -116,6 +117,7 @@ fun DataObjectUI.toItemUI(
                     idResImage?.let { images.add(it.toString()) }
                 }
             }
+
             else -> idResImage?.let { images.add(it.toString()) }
         }
     }
@@ -296,21 +298,22 @@ enum class ModeUI {
 
 @DrawableRes
 fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
-    ContextMenuAction.AcceptOrder         -> R.drawable.ic_37   // твои ресурсы
-    ContextMenuAction.AcceptAllAtAddress  -> R.drawable.ic_37
-    ContextMenuAction.RejectOrder         -> null
-    ContextMenuAction.RejectAddress       -> null
-    ContextMenuAction.RejectClient        -> null
-    ContextMenuAction.RejectByType        -> null
-    ContextMenuAction.OpenVisit           -> R.drawable.ic_37
-    ContextMenuAction.OpenOrder           -> R.drawable.ic_37
-    ContextMenuAction.AskMoreMoney        -> null
-    ContextMenuAction.Feedback            -> null
-    ContextMenuAction.ConfirmAcceptOneTime-> R.drawable.ic_37
-    ContextMenuAction.ConfirmAcceptInfinite->R.drawable.ic_37
-    ContextMenuAction.Close               -> R.drawable.ic_37
+    ContextMenuAction.AcceptOrder -> R.drawable.ic_37   // твои ресурсы
+    ContextMenuAction.AcceptAllAtAddress -> R.drawable.ic_37
+    ContextMenuAction.RejectOrder -> null
+    ContextMenuAction.RejectAddress -> null
+    ContextMenuAction.RejectClient -> null
+    ContextMenuAction.RejectByType -> null
+    ContextMenuAction.OpenVisit -> R.drawable.ic_37
+    ContextMenuAction.OpenOrder -> R.drawable.ic_37
+    ContextMenuAction.AskMoreMoney -> null
+    ContextMenuAction.Feedback -> null
+    ContextMenuAction.ConfirmAcceptOneTime -> R.drawable.ic_37
+    ContextMenuAction.ConfirmAcceptInfinite -> R.drawable.ic_37
+    ContextMenuAction.Close -> R.drawable.ic_37
     ContextMenuAction.ConfirmAllAcceptOneTime -> R.drawable.ic_37
     ContextMenuAction.ConfirmAllAcceptInfinite -> R.drawable.ic_37
+    ContextMenuAction.OpenSMSPlanDirectory -> R.drawable.ic_37
 }
 
 enum class ContextUI {
@@ -330,6 +333,7 @@ enum class ContextUI {
     SHOWCASE_COMPLETED_CHECK,
     WP_DATA_IN_CONTAINER,
     WP_DATA_ADDITIONAL_IN_CONTAINER,
+    SMS_PLAN_DEFAULT,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +

@@ -64,6 +64,7 @@ sealed class ContextMenuAction(val title: String) {
     data object ConfirmAcceptInfinite : ContextMenuAction( "Выполнять регулярно")
     data object ConfirmAllAcceptOneTime : ContextMenuAction("Выполнить один раз все работы по %sклиента этому адресу")
     data object ConfirmAllAcceptInfinite : ContextMenuAction( "Выполнять регулярно все работы по %sклиента этому адресу")
+    data object OpenSMSPlanDirectory : ContextMenuAction("Просмотреть заявки")
     data object Close : ContextMenuAction("Закрыть")
 }
 

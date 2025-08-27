@@ -125,6 +125,7 @@ import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
 import ua.com.merchik.merchik.data.Translation.AddTranslation;
 import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
+import ua.com.merchik.merchik.data.UploadToServ.FCMToken;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
@@ -679,6 +680,12 @@ public interface RetrofitInterface {
 //            @PartMap Map<String, RequestBody> data,
 //            @Part List<MultipartBody.Part> audio);
             @Part List<MultipartBody.Part> parts);
+
+    @POST("mobile_app.php?")
+    Single<FCMToken> FCM_TOKEN_UPLOAD_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
 
     // -------------------------------------------------------
 

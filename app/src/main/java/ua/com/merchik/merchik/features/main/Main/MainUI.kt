@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.compose.BackHandler
@@ -47,6 +48,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,10 +56,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -70,22 +75,29 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
+import com.google.gson.Gson
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
@@ -139,6 +151,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val imeVisible by rememberImeVisible()
+
+    val rootCoords = remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val itemBounds = remember { mutableStateMapOf<Long, Rect>() } // id -> bounds
+    var counterBounds by remember { mutableStateOf<Rect?>(null) }
+
+    // Запрос на «полёт»
+    var flyRequest by remember { mutableStateOf<FlyRequest?>(null) }
+
 
     // Лаунчер на результат
     val launcher = rememberLauncherForActivityResult(
@@ -245,6 +265,25 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         selectedItem = null
                     }
 
+                    is ContextMenuAction.OpenSMSPlanDirectory -> {
+                        val intent = Intent(context, FeaturesActivity::class.java)
+                        val bundle = Bundle()
+                        bundle.putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
+                        bundle.putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
+                        bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
+
+                        bundle.putString("title", "Заявки")
+                        bundle.putString("subTitle", "## subTitle")
+
+
+                        //                bundle.putString('req', "");
+//                bundle.putInt("idResImage", R.drawable.ic_caution);
+                        intent.putExtras(bundle)
+                        launcher.launch(intent)
+
+                        selectedItem = null
+                    }
+
                     is ContextMenuAction.Close -> selectedItem = null
 
                     else -> {
@@ -264,6 +303,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         modifier = modifier
             .fillMaxSize()
             .background(color = Color.Transparent)
+            .onGloballyPositioned { rootCoords.value = it } // корень для единой системы координат
     ) {
 
         if (!(viewModel.typeWindow ?: "").equals("full", true) &&

@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
@@ -150,6 +151,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
     private String controller_opinion_id;
     private String controller_opinion_author_id;
+
+    @Ignore
+    public String statusComment;
 
     public WpDataDB() {
     }
@@ -1378,7 +1382,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "client_work_duration, priority, import_type, dt_update, code_aadd, work_stop_reason, simple_report, " +
                 "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, visit_per_week, sku, " +
                 "duration, mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
-                "addr_location_xd, addr_location_yd, action_short_txt, " +
+                "addr_location_xd, addr_location_yd, action_short_txt, main_option_id, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
                 "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id";
@@ -1396,7 +1400,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return WPDataBDOverride.INSTANCE.getValueUI(key, value);
+        return WPDataBDOverride.INSTANCE.getValueUI(key, value, this);
 //        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
     }
 

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.ValidatorEKL
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.database.realm.RealmManager
@@ -547,7 +548,7 @@ object LogMPDBDBOverride {
 
 
 object WPDataBDOverride {
-    fun getValueUI(key: String, value: Any): String = when (key) {
+    fun getValueUI(key: String, value: Any, wpDataDB: WpDataDB): String = when (key) {
         "dt" -> {
             val input = value.toString()
             val parser = SimpleDateFormat("MMM d, yyyy hh:mm:ss a", Locale.US)
@@ -577,14 +578,21 @@ object WPDataBDOverride {
         }
 
         "status" -> try {
-            if (value == 1) "Проведено" else "Не проведено"
+            if (value == 1) "Роботу виконано (звiт проведено)" else {
+                if (wpDataDB.visit_start_dt > 0){
+                    if (wpDataDB.visit_end_dt > 0)
+                        "Роботу виконано (звiт не проведено)"
+                    else
+                        "Робота виконується (звiт не проведено)"
+                } else "Робота не розпочата (звiт не проведено)"
+            }
         } catch (e: Exception) {
             "Дані відсутні"
         }
 
         "user_txt" -> try {
-            if (value == "Работа Непланово Зупинена")
-                "" else
+            if (wpDataDB.user_id == 14041)
+                "Нет исполнителя" else
                 value.toString()
         } catch (e: Exception) {
             ""
@@ -624,7 +632,7 @@ object WPDataBDOverride {
                 val count = RealmManager.stackPhotoPhotoCount(dad2)
                 if (count > 0)
                     MerchModifier(
-                        textColor = Color.Magenta
+                        textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
                     )
                 else
                     MerchModifier(
@@ -632,7 +640,9 @@ object WPDataBDOverride {
                     )
             } else
                 MerchModifier(
-                    textColor = Color.Green
+//                    textColor = Color.Green
+                    textColor = Color(android.graphics.Color.parseColor("#00FF00"))
+
                 )
         }
 

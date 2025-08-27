@@ -1,6 +1,13 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -15,6 +22,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import ua.com.merchik.merchik.Activities.CronchikViewModel
@@ -56,7 +65,7 @@ fun WpDataTabsScreen() {
 //        stringResource(R.string.title_1)
     )
 
-    cronchikViewModel.updateBadge(1, 11)
+    cronchikViewModel.updateBadge(1, 10)
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
@@ -127,6 +136,28 @@ fun WpDataTabsScreen() {
             0 -> WpDataContentTab()
             1 -> OtherComposeTab()
 //            2 -> MapComposeTab()
+        }
+    }
+
+    RequestNotificationsPermissionOnce()
+}
+
+
+@Composable
+fun RequestNotificationsPermissionOnce() {
+    if (Build.VERSION.SDK_INT >= 33) {
+        val ctx = LocalContext.current
+        val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            Log.d("FCM", "POST_NOTIFICATIONS granted=$granted")
+        }
+        LaunchedEffect(Unit) {
+            if (ContextCompat.checkSelfPermission(
+                    ctx, Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            )
+                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

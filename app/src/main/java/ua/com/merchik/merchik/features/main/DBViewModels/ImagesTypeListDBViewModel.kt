@@ -25,7 +25,7 @@ class ImagesTypeListDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = ImagesTypeListDB::class
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return repository.getAllRealm(ImagesTypeListDB::class, contextUI, null)
             .map {
                 val selected = FilteringDialogDataHolder.instance()

@@ -9,8 +9,17 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
+import java.util.List;
+
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AddressSDBOverride;
+
 @Entity(tableName = "sms_plan", indices = {@Index(value = {"serverId"}, unique = true)})
-public class SMSPlanSDB {
+public class SMSPlanSDB implements DataObjectUI {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
@@ -115,17 +124,17 @@ public class SMSPlanSDB {
     @SerializedName("tp")
     @Expose
     @ColumnInfo(name = "tp")
-    public Integer tp;
+    public Integer tp;          //Тема
 
     @SerializedName("msg_type")
     @Expose
     @ColumnInfo(name = "msg_type")
-    public Integer msgType;
+    public Integer msgType;    //Тип объекта (не используется)
 
     @SerializedName("msg_type_code")
     @Expose
     @ColumnInfo(name = "msg_type_code")
-    public Integer msgTypeCode;
+    public Integer msgTypeCode;     //Код типа объекта (не используется)
 
     @SerializedName("gw_type")
     @Expose
@@ -152,4 +161,57 @@ public class SMSPlanSDB {
     @ColumnInfo(name = "priority")
     public Integer priority;
 
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
 }

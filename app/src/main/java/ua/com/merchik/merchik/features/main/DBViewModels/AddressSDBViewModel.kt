@@ -24,7 +24,7 @@ class AddressSDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = AddressSDB::class
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return repository.getAllRoom(table, contextUI, null)
     }
 }

@@ -175,7 +175,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return try {
             when (contextUI) {
                 ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {

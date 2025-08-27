@@ -1,10 +1,27 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">081900</string>
+    <string name="ver" translatable="false">082700</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-08-19</string>
+    <string name="debug_date" translatable="false">2025-08-27</string>
 
     <string name="test" translatable="false">TEST HINT</string>
+
+    <string name="default_channel" translatable="false">default_channel</string>
+    <string name="channel_work_confirm" translatable="false">channel_work_confirm</string>
+    <string name="channel_system" translatable="false">channel_system</string>
+    <string name="channel_task" translatable="false">channel_task</string>
+    <string name="channel_chat" translatable="false">channel_chat</string>
+    <string name="channel_update" translatable="false">channel_update</string>
+    <string name="channel_reclamation" translatable="false">channel_reclamation</string>
+    <string name="channel_work_update" translatable="false">channel_work_update</string>
+
+    <plurals name="new_notifications_count" translatable="false">
+        <item quantity="one">%d нове сповіщення</item>
+        <item quantity="few">%d нові сповіщення</item>
+        <item quantity="many">%d нових сповіщень</item>
+        <item quantity="other">%d нових сповіщень</item>
+    </plurals>
+    <string name="new_notifications" translatable="false">Нові сповіщення</string>
 
     <!--Activity titles-->
     <string name="title_activity_premium">Премиальные</string>

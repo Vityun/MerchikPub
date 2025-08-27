@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
@@ -29,6 +30,7 @@ import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import kotlin.reflect.KClass
 
@@ -81,6 +83,7 @@ class MainRepository(
                 VacancySDB::class -> roomManager.vacancyDao().all.first() as DataObjectUI
                 SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.first() as DataObjectUI
                 AddressSDB::class -> roomManager.addressDao().all.first() as DataObjectUI
+                SMSPlanSDB::class -> roomManager.smsPlanDao().all.first() as DataObjectUI
 //                PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all.first() as DataObjectUI
                 else -> { null }
             }
@@ -101,7 +104,6 @@ class MainRepository(
                 .filter { field ->
                     hidedFieldsOnUI.none { it == field }
                 }
-//                .filter { !hidedFieldsOnUI.contains(it) }
                 .map {
                     val cont = hideUserFields?.contains(it) != true
                     val cont2 = hidedFieldsOnUI.contains(it)
@@ -187,15 +189,18 @@ class MainRepository(
             AddressSDB::class -> roomManager.addressDao().all
             OpinionSDB::class -> roomManager.opinionDao().all
             PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all
+            SMSPlanSDB::class -> roomManager.smsPlanDao().all
             else -> { return emptyList() }
         }
     }
 
     fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        Log.e("!!!!!!TEST!!!!!!","getItems: end 0?")
         return data.map { it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
     private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        Log.e("!!!!!!TEST!!!!!!","getItems: end 1?")
         return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 

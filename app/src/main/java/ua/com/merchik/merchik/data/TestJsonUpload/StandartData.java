@@ -88,6 +88,7 @@ public class StandartData<T> {
 
     public String location_x;
     public String location_y;
+    public String token;
 
     public static class Filter {
         public String date_from;

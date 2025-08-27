@@ -81,7 +81,7 @@ class TradeMarkDBViewModel @Inject constructor(
 
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return try
         {
             val data = repository.getAllRealmDataObjectUI(TradeMarkDB::class)

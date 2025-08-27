@@ -1,38 +1,18 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
-import androidx.core.app.ActivityCompat;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
-import ua.com.merchik.merchik.dataLayer.ContextUI;
-import ua.com.merchik.merchik.dataLayer.ModeUI;
-import ua.com.merchik.merchik.dataLayer.common.VizitShowcaseDataHolder;
-import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
-import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 
 public class OptionButPhotoPlanogramm<T> extends OptionControl {
     public int OPTION_BUTTON_PHOTO_PLANOGRAMM_ID = 164355;

@@ -80,12 +80,14 @@ public class WPDataActivity extends toolbar_menus {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         filter = findViewById(R.id.filter);
+
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
+//        composeView = findViewById(R.id.compose_wpdata_container);
+
         fabYouTube = findViewById(R.id.fab3);
         fabViber = findViewById(R.id.fab_viber);
         badgeTextView = findViewById(R.id.badge_text_view_tar);
-//        composeView = findViewById(R.id.compose_wpdata_container);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
 //         Установка закладок
@@ -115,6 +117,8 @@ public class WPDataActivity extends toolbar_menus {
         navigationView.setCheckedItem(129);
 
         wpDataInfo();   // Сообщение какие-то.
+        logFcmExtras(getIntent());
+
     }//------------------------------ /ON CREATE --------------------------------------------------
 
 
@@ -236,6 +240,25 @@ public class WPDataActivity extends toolbar_menus {
         } catch (Exception e) {
             Log.e("wpDataInfo", "Exception e: " + e);
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        logFcmExtras(intent);
+    }
+
+    private static final String TAG = "FCM";
+
+    private void logFcmExtras(Intent intent) {
+        if (intent == null || intent.getExtras() == null) {
+            return;
+        }
+
+        Bundle b = intent.getExtras();
+        for (String k : b.keySet()) {
+            Log.d(TAG, "intent." + k + "=" + b.get(k));
         }
     }
 }

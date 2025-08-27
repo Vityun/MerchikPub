@@ -41,7 +41,7 @@ class LogMPDBViewModel @Inject constructor(
             OptionButtonHistoryMP(context!!, wpDataDB, null, null, Options.NNKMode.MAKE, null, ::updateContent)
         }
     }
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         var startTime = System.currentTimeMillis()
         var endTime = System.currentTimeMillis()
 

@@ -12,6 +12,7 @@ import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.json.JSONObject
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
@@ -494,6 +495,7 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
 
                 } catch (e: Exception) {
                     Log.e("!!!!!", "err: ${e.message}")
+                    Globals.writeToMLOG("ERROR", "PlanogrammVizitShowcaseViewModel.updateFilters","error: ${e.message}")
                 }
             }
 
@@ -502,10 +504,10 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
 
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-        val clientId = dataJsonObject.get("clientId").asString
-        val addressId = dataJsonObject.get("addressId").asInt
+//        val clientId = dataJsonObject.get("clientId").asString
+//        val addressId = dataJsonObject.get("addressId").asInt
         code_dad2.value = dataJsonObject.get("wpDataDBId").asString.toLong()
 
         val colorUiContainer = dataJsonObject?.get("colorUiContainer")?.asInt ?: 0
@@ -583,9 +585,11 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                     { Log.d("DB_INSERT", "++++") },
-                    { error -> Log.e("DB_INSERT", "Ошибка при сохранении", error) }
+                    { error -> Globals.writeToMLOG("ERROR", "PlanogrammVizitShowcaseViewModel.getItems","Ошибка при сохранении: ${error.message}") }
                 )
         }
+
+        Globals.writeToMLOG("INFO", "PlanogrammVizitShowcaseViewModel.getItems","Result base size: ${base.size}")
 
         return repository.toItemUIList(PlanogrammVizitShowcaseSDB::class, base, contextUI, 5)
             .map {

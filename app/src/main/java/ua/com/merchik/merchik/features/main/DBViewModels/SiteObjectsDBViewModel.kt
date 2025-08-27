@@ -24,7 +24,7 @@ class SiteObjectsDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = SiteObjectsDB::class
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return repository.getAllRealm(SiteObjectsDB::class, contextUI, null)
     }
 }

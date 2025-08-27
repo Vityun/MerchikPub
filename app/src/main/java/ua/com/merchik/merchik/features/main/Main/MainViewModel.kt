@@ -174,7 +174,7 @@ abstract class MainViewModel(
 
     open fun updateFilters() {}
 
-    abstract fun getItems(): List<DataItemUI>
+    abstract suspend fun getItems(): List<DataItemUI>
 
     open fun onClickAdditionalContent() {}
 

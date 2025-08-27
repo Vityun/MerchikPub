@@ -765,18 +765,36 @@ public class RealmManager {
                 .findAll();
     }
 
+
     public static RealmResults<WpDataDB> getAllWorkPlanForRNO() {
-        return INSTANCE.where(WpDataDB.class)
-                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
-                .equalTo("user_id",14041)
-                .findAll();
+        try (Realm realm = Realm.getDefaultInstance()) {
+            return realm.where(WpDataDB.class)
+                    .equalTo("user_id", 14041)
+                    .sort(new String[]{"dt_start", "addr_id"},
+                            new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
+                    .findAll(); // <- unmanaged
+        }
     }
 
     public static RealmResults<WpDataDB> getAllWorkPlanWithOutRNO() {
-        return INSTANCE.where(WpDataDB.class)
-                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
-                .notEqualTo("user_id",14041)
-                .findAll();
+        try (Realm realm = Realm.getDefaultInstance()) {
+            return realm.where(WpDataDB.class)
+                    .notEqualTo("user_id", 14041)
+                    .sort(new String[]{"dt_start", "addr_id"},
+                            new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
+                    .findAll(); // <- unmanaged
+        }
+    }
+
+    public static List<WpDataDB> getAllWorkPlanWithOutRNO_LIST() {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            RealmResults<WpDataDB> res = realm.where(WpDataDB.class)
+                    .notEqualTo("user_id", 14041)
+                    .sort(new String[]{"dt_start", "addr_id"},
+                            new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
+                    .findAll();
+            return realm.copyFromRealm(res); // <- unmanaged
+        }
     }
 
     public static RealmResults<WpDataDB> getAllWorkPlanMAP() {

@@ -87,7 +87,7 @@ class TovarDBViewModel @Inject constructor(
 
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return try {
             val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
             val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)

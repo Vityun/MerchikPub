@@ -20,12 +20,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
@@ -141,3 +144,13 @@ fun FontSizeSlider(viewModel: MainViewModel, modifier: Modifier = Modifier, size
         }
     }
 }
+
+
+data class FlyRequest(
+    val start: Rect,               // прямоугольник исходного элемента в координатах корня
+    val scaleEnd: Float = 0.35f,   // конечный масштаб
+    val extraDx: Dp = (-18).dp,    // «чуть левее центра»
+    val extraDy: Dp = 8.dp         // немного ниже верхнего края
+)
+
+fun Rect.center() = Offset(left + width / 2f, top + height / 2f)

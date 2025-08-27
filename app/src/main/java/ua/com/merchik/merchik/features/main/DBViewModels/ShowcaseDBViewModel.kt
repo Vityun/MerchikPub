@@ -125,7 +125,7 @@ class ShowcaseDBViewModel @Inject constructor(
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return try {
             when (contextUI) {
                 ContextUI.SHOWCASE

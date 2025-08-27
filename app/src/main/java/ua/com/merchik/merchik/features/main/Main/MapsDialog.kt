@@ -1,11 +1,18 @@
 package ua.com.merchik.merchik.features.main.Main
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.view.View
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +31,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +53,12 @@ import androidx.compose.ui.text.input.KeyboardType.Companion.Uri
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
@@ -97,33 +113,39 @@ fun MapsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Text(
-                        text = "## Опис можливих дій"
+                        text = "## Опис можливих дій. Додасться поступово"
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .shadow(4.dp, RoundedCornerShape(8.dp))
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(color = Color.White)
-                    ) {
-                        AndroidView(
-                            factory = { context ->
-                                WebView(context).apply {
-                                    settings.javaScriptEnabled = true
-                                    settings.domStorageEnabled = true
-                                    settings.databaseEnabled = true
-                                    settings.userAgentString.replace("; wv", "")
-                                    webViewClient = WebViewClient()
+                    MapWithLoading(modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color = Color.White))
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .weight(1f)
+//                            .shadow(4.dp, RoundedCornerShape(8.dp))
+//                            .clip(RoundedCornerShape(8.dp))
+//                            .background(color = Color.White)
+//                    ) {
+//                        AndroidView(
+//                            factory = { context ->
+//                                WebView(context).apply {
+//                                    settings.javaScriptEnabled = true
+//                                    settings.domStorageEnabled = true
+//                                    settings.databaseEnabled = true
+//                                    settings.userAgentString.replace("; wv", "")
+//                                    webViewClient = WebViewClient()
 //                                    webChromeClient = WebChromeClient()
-                                    loadUrl("https://google.com")
-                                }
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
+//                                    loadUrl("https://merchik.net/")
+//                                }
+//                            },
+//                            modifier = Modifier.fillMaxSize()
+//                        )
+//                    }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -164,81 +186,203 @@ fun MapsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     }
 }
 
+
 @Composable
-fun GoogleMapsBox() {
+fun MapWithLoading(
+    url: String = "https://merchik.net/",
+    modifier: Modifier
+) {
+    var committed by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0) }
+    var minTimePassed by remember { mutableStateOf(false) }
+    var epoch by remember { mutableStateOf(0) } // ключ новой загрузки
+    val minShowMillis = 1800L
+
+    // Таймер минимального показа лоадера
+    LaunchedEffect(epoch) {
+        minTimePassed = false
+        delay(minShowMillis)
+        minTimePassed = true
+    }
+
+    val showLoading by remember {
+        derivedStateOf { !committed || progress < 95 || !minTimePassed }
+    }
+
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.White)
+        modifier = modifier
     ) {
         val context = LocalContext.current
+        val webView = remember { WebView(context) }
 
-        // Один экземпляр WebView на всё время жизни композиции
-        val webView = remember {
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.setSupportMultipleWindows(false)
-                settings.loadWithOverviewMode = true
-                settings.useWideViewPort = true
-
-                // Принудительно "десктопный" user-agent, чтобы не насильно открывало приложение
-                settings.userAgentString = settings.userAgentString
-                    .replace("Mobile", "")
-                    .replace("Android", "")
-
-                webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(
-                        view: WebView?,
-                        request: WebResourceRequest?
-                    ): Boolean {
-                        val url = request?.url?.toString().orEmpty()
-
-                        // Блокируем открытие внешних intent-ссылок и пытаемся найти веб-фоллбэк
-                        if (url.startsWith("intent:") ||
-                            url.startsWith("maps:") ||
-                            url.startsWith("google.navigation:")
-                        ) {
-                            // Пытаемся достать browser_fallback_url из intent
-                            try {
-                                val intent = Intent.parseUri(url, 0)
-                                val fallback = intent.getStringExtra("browser_fallback_url")
-                                if (!fallback.isNullOrBlank()) {
-                                    view?.loadUrl(fallback)
-                                }
-                            } catch (_: Exception) { /* ignore */ }
-                            return true // сами обработали
-                        }
-
-                        // mailto:, tel:, geo: и т.п. — лучше гасить внутри, чтобы не прыгало наружу
-                        if (url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("geo:")) {
-                            return true
-                        }
-
-                        // Всё остальное — грузим внутри WebView
-                        return false
-                    }
-
-
-                }
-
-                // Лёгкая веб-версия карт без агрессивных редиректов в app
-                loadUrl("https://www.google.com/maps?force=lite&hl=ru")
-                // можно: loadUrl("https://www.google.com/maps/search/?api=1&query=Kyiv&hl=ru")
-            }
+        DisposableEffect(Unit) {
+            onDispose { webView.destroy() }
         }
 
         AndroidView(
-            factory = { webView },
             modifier = Modifier.fillMaxSize(),
-            update = { /* nothing */ }
+            factory = {
+                webView.apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.databaseEnabled = true
+                    // важно присвоить!
+                    settings.userAgentString = settings.userAgentString.replace("; wv", "")
+
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageStarted(v: WebView?, url: String?, ico: Bitmap?) {
+                            committed = false
+                            progress = 0
+                            epoch++ // перезапуск таймера минимального показа
+                        }
+
+                        override fun onPageCommitVisible(view: WebView?, url: String?) {
+                            committed = true
+                        }
+
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            if (progress == 100) committed = true // fallback
+                        }
+
+                        override fun onReceivedError(
+                            view: WebView?, request: WebResourceRequest?, error: WebResourceError?
+                        ) {
+                            // можно показать экран ошибки; для простоты — скрываем лоадер
+                            committed = true
+                        }
+                    }
+
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                            progress = newProgress
+                        }
+                    }
+
+                    loadUrl(url)
+                }
+            }
         )
 
-        // Назад по истории WebView
-        androidx.activity.compose.BackHandler(enabled = webView.canGoBack()) {
+        // Лоадер поверх WebView
+        AnimatedVisibility(
+            visible = showLoading,
+            enter = fadeIn(),
+            exit = fadeOut(tween(350))
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                val composition by rememberLottieComposition(
+                    LottieCompositionSpec.RawRes(R.raw.maps)
+                )
+                val lottieProgress by animateLottieCompositionAsState(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    speed = 1.5f
+                )
+                LottieAnimation(
+                    composition = composition,
+                    progress = { lottieProgress },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (progress in 1..99) {
+                    Text(
+                        text = "$progress%",
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp),
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
+
+        // back по истории WebView
+        BackHandler(enabled = webView.canGoBack()) {
             webView.goBack()
         }
+//        AndroidView(
+//            modifier = Modifier.fillMaxSize(),
+//            factory = { context ->
+//                WebView(context).apply {
+//                    settings.javaScriptEnabled = true
+//                    settings.domStorageEnabled = true
+//                    settings.databaseEnabled = true
+//                    // важно: присвоить результат
+//                    settings.userAgentString = settings.userAgentString.replace("; wv", "")
+//
+//                    webViewClient = object : WebViewClient() {
+//                        override fun onPageStarted(
+//                            view: WebView?, url: String?, favicon: android.graphics.Bitmap?
+//                        ) {
+//                            isLoading = true
+//                        }
+//
+//                        // Когда контент реально отрисован (API 23+)
+//                        override fun onPageCommitVisible(view: WebView?, url: String?) {
+//                            isLoading = false
+//                        }
+//
+//                        override fun onPageFinished(view: WebView?, url: String?) {
+//                            if (progress == 10000) isLoading = false
+//                        }
+//
+//                        override fun onReceivedError(
+//                            view: WebView?,
+//                            request: WebResourceRequest?,
+//                            error: WebResourceError?
+//                        ) {
+//                            isLoading = false
+//                        }
+//                    }
+//
+//                    webChromeClient = object : WebChromeClient() {
+//                        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+//                            progress = newProgress
+//                        }
+//                    }
+//
+//                    loadUrl(url)
+//                }
+//            }
+//        )
+//
+//        if (isLoading) {
+//            // Оверлей с анимацией Lottie
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .background(Color.White),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                val composition by rememberLottieComposition(
+//                    LottieCompositionSpec.RawRes(R.raw.maps)
+//                )
+//                val lottieProgress by animateLottieCompositionAsState(
+//                    composition = composition,
+//                    iterations = LottieConstants.IterateForever,
+//                    speed = 1.5f
+//                )
+//                LottieAnimation(
+//                    composition = composition,
+//                    progress = { lottieProgress },
+//                    modifier = Modifier.fillMaxSize()
+//                )
+//
+//                if (progress in 1..99) {
+//                    Text(
+//                        text = "$progress%",
+//                        modifier = Modifier
+//                            .align(Alignment.BottomCenter)
+//                            .padding(bottom = 16.dp),
+//                        color = Color.Gray
+//                    )
+//                }
+//            }
+//        }
     }
 }

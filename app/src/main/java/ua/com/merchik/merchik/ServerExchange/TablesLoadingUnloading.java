@@ -119,7 +119,6 @@ import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
-import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -187,9 +186,10 @@ public class TablesLoadingUnloading {
 //            updateWpData();
 
             downloadWPData();
-//            downloadWPDataWithCords();
             donwloadPlanBudgetRNO();
             donwloadPlanBudget();
+            downloadWPDataWithCords();
+
 //            downloadWPDataRx().subscribe();
 
             downloadOptions();
@@ -481,12 +481,11 @@ public class TablesLoadingUnloading {
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
-                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-                                for (WpDataDB wpDataDB : wpDataDBList) {
-                                    if (wpDataDB.getUser_id() == 14041)
-                                        wpDataDBListRNO.add(wpDataDB);
-                                }
-                                int size = wpDataDBListRNO.size();
+//                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 14041)
+//                                        wpDataDBListRNO.add(wpDataDB);
+//                                }
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -592,7 +591,7 @@ public class TablesLoadingUnloading {
 
         List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
 
-        Log.e("!!!!!!","SIZE: " +wpDataAdditionals.size());
+        Log.e("!!!!!!", "SIZE: " + wpDataAdditionals.size());
         StandartData data = new StandartData();
 
         data.mod = "plan_budget";
@@ -631,7 +630,10 @@ public class TablesLoadingUnloading {
                     if (resp != null && resp.data != null) {
                         for (UploadResponse.Item it : resp.data) {
                             if (it != null && it.state && it.elementId != null) {
-                                try { ids.add(Long.parseLong(it.elementId)); } catch (NumberFormatException ignore) {}
+                                try {
+                                    ids.add(Long.parseLong(it.elementId));
+                                } catch (NumberFormatException ignore) {
+                                }
                             }
                         }
                     }
@@ -646,11 +648,11 @@ public class TablesLoadingUnloading {
                 .subscribe(
                         updatedCount -> {
                             Log.e("UPLOAD", "uploadStatus=0 проставлен для: " + updatedCount);
-                            Globals.writeToMLOG("INFO","PlanogrammTableExchange.upload",
+                            Globals.writeToMLOG("INFO", "PlanogrammTableExchange.upload",
                                     "Updated: " + updatedCount);
                         },
                         throwable -> {
-                            Globals.writeToMLOG("ERROR","PlanogrammTableExchange.upload",
+                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.upload",
                                     "exception: " + throwable.getMessage());
                         }
                 );

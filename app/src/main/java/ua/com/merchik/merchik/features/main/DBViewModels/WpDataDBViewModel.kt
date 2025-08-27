@@ -2,10 +2,13 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.Realm
+import io.realm.Sort
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -83,6 +86,7 @@ class WpDataDBViewModel @Inject constructor(
                                     ContextMenuAction.RejectClient,
                                     ContextMenuAction.RejectByType,
                                     ContextMenuAction.OpenOrder,
+                                    ContextMenuAction.OpenSMSPlanDirectory,
                                     ContextMenuAction.AskMoreMoney,
                                     ContextMenuAction.Feedback,
                                     ContextMenuAction.Close
@@ -106,16 +110,20 @@ class WpDataDBViewModel @Inject constructor(
 
 
                 val rawData =
-                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RealmManager.getAllWorkPlan()
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RealmManager.getAllWorkPlanWithOutRNO()
                     else RealmManager.getAllWorkPlanForRNO()
+                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+                    subTitle =
+                        CustomString.createTitleMsg(
+                            RealmManager.getAllWorkPlanWithOutRNO(),
+                            CustomString.TitleMode.SHORT
+                        )
+                            .toString()
+
 
                 val data: List<WpDataDB> = if (rawData.isNullOrEmpty()) {
                     emptyList()
                 } else {
-                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
-                        subTitle =
-                            CustomString.createTitleMsg(rawData, CustomString.TitleMode.SHORT)
-                                .toString()
                     RealmManager.INSTANCE.copyFromRealm(rawData)
                 }
 
@@ -136,9 +144,9 @@ class WpDataDBViewModel @Inject constructor(
                     ModeUI.MULTI_SELECT,
                     "## USER",
                     "## sub title",
+                    "user_id",
                     "user_txt",
-                    "user_txt",
-                    dataUniqUser.map { it.user_txt },
+                    dataUniqUser.map { it.user_id.toString() },
                     dataUniqUser.map { it.user_txt },
                     contextUI == ContextUI.WP_DATA_IN_CONTAINER
                 )
@@ -151,9 +159,9 @@ class WpDataDBViewModel @Inject constructor(
                     ModeUI.MULTI_SELECT,
                     "## ADRESS",
                     "## sub title",
+                    "addr_id",
                     "addr_txt",
-                    "addr_txt",
-                    dataUniqAdress.map { it.addr_txt },
+                    dataUniqAdress.map { it.addr_id.toString() },
                     dataUniqAdress.map { it.addr_txt },
                     enabled = true
                 )
@@ -166,12 +174,57 @@ class WpDataDBViewModel @Inject constructor(
                     "## ADRESS",
                     "## sub title",
                     "client_id",
-                    "client_txt",
+                    "nm",
                     client.map { it.id.toString() },
                     client.map { it.nm },
                     enabled = true
                 )
 
+                data.forEach { wpDataDB ->
+                    // Определяем статус комментарий
+                    val statusComment = try {
+                        if (wpDataDB.status == 1) {
+                            "Роботу виконано (звiт проведено)"
+                        } else {
+                            if (wpDataDB.visit_start_dt > 0) {
+                                if (wpDataDB.visit_end_dt > 0) {
+                                    // Меняем статус с 0 на 2 для "Роботу виконано (звiт не проведено)"
+                                    if (wpDataDB.status == 0) {
+                                        wpDataDB.status = 2
+                                    }
+                                    "Роботу виконано (звiт не проведено)"
+                                } else {
+                                    // Меняем статус с 0 на 3 для "Робота виконується (звiт не проведено)"
+                                    if (wpDataDB.status == 0) {
+                                        wpDataDB.status = 3
+                                    }
+                                    "Робота виконується (звiт не проведено)"
+                                }
+                            } else {
+                                "Робота не розпочата (звiт не проведено)"
+                            }
+                        }
+                    } catch (e: Exception) {
+                        "Дані відсутні"
+                    }
+
+                    // Устанавливаем статус комментарий
+                    wpDataDB.statusComment = statusComment
+                }
+
+                val filterWPDataStatus = ItemFilter(
+                    "Статус робiт",
+                    WpDataDB::class,
+                    WpDataDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## STATUS",
+                    "## sub title",
+                    "status",
+                    "statusComment",
+                    data.map { it.status.toString() }.distinct(),
+                    data.map { it.statusComment }.distinct(),
+                    enabled = true
+                )
 
                 filters = Filters(
                     searchText = "",
@@ -179,7 +232,8 @@ class WpDataDBViewModel @Inject constructor(
                         mutableListOf(
                             filterUsersSDB,
                             filterAddressSDB,
-                            filterClientSDB
+                            filterClientSDB,
+                            filterWPDataStatus
                         ),
                     rangeDataByKey = RangeDate(
                         key = "dt",
@@ -196,70 +250,127 @@ class WpDataDBViewModel @Inject constructor(
         }
     }
 
-    override fun getItems(): List<DataItemUI> {
-        launcher
-        return try {
-            when (contextUI) {
-                ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
-                    -> {
-                    val data = RealmManager.getAllWorkPlanForRNO()?.takeIf { it.isNotEmpty() }
-                        ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
-                    val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
-//                        .map {
-//                            val selected = FilteringDialogDataHolder.instance()
-//                                .filters
-//                                ?.items
-//                                ?.firstOrNull { it.clazz == table }
-//                                ?.rightValuesRaw
-//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-//                            it.copy(selected = selected == true)
-//                        }
-                    res
+    override suspend fun getItems(): List<DataItemUI> {
 
-                }
+        Log.e("!!!!!!TEST!!!!!!","getItems: start")
+        val raw: List<WpDataDB> = when (contextUI) {
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
+                RealmManager.getAllWorkPlanForRNO()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
+                    ?: emptyList()
+            }
 
-                else -> {
-                    val res = repository.getAllRealm(WpDataDB::class, contextUI, null)
-//                        .map {
-//                            val selected = FilteringDialogDataHolder.instance()
-//                                .filters
-//                                ?.items
-//                                ?.firstOrNull { it.clazz == table }
-//                                ?.rightValuesRaw
-//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-//                            it.copy(selected = selected == true)
-//                        }
+            else -> {
+                RealmManager.getAllWorkPlanWithOutRNO()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
+                    ?: emptyList()
+            }
+        }
+
+        // 2) Кооперативная проверка отмены перед тяжёлым маппингом
+
+        // 3) Тяжёлое преобразование тоже на IO
+        return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0)
+
+    }
+
+
+//    override suspend fun getItems(): List<DataItemUI> {
+//        return try {
+//            when (contextUI) {
+//                ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+//                    -> {
+//                    val data = RealmManager.getAllWorkPlanForRNO()?.takeIf { it.isNotEmpty() }
+//                        ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
+//                    val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
+////                        .map {
+////                            val selected = FilteringDialogDataHolder.instance()
+////                                .filters
+////                                ?.items
+////                                ?.firstOrNull { it.clazz == table }
+////                                ?.rightValuesRaw
+////                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+////                            it.copy(selected = selected == true)
+////                        }
 //                    res
+//
+//                }
+//
+//                else -> {
+////                    val res = repository.getAllRealm(WpDataDB::class, contextUI, null)
+////                        .map {
+////                            val selected = FilteringDialogDataHolder.instance()
+////                                .filters
+////                                ?.items
+////                                ?.firstOrNull { it.clazz == table }
+////                                ?.rightValuesRaw
+////                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+////                            it.copy(selected = selected == true)
+////                        }
+////                    res
+//
+//                    viewModelScope.launch {  }
 //                    val data = RealmManager.getAllWorkPlanWithOutRNO()?.takeIf { it.isNotEmpty() }
 //                        ?.let { RealmManager.INSTANCE.copyFromRealm(it) } ?: emptyList()
 //                    val res = repository.toItemUIList(WpDataDB::class, data, contextUI, 0)
-//                        .map {
-//                            val selected = FilteringDialogDataHolder.instance()
-//                                .filters
-//                                ?.items
-//                                ?.firstOrNull { it.clazz == table }
-//                                ?.rightValuesRaw
-//                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-//                            it.copy(selected = selected == true)
-//                        }
-                    res
-                }
+////                        .map {
+////                            val selected = FilteringDialogDataHolder.instance()
+////                                .filters
+////                                ?.items
+////                                ?.firstOrNull { it.clazz == table }
+////                                ?.rightValuesRaw
+////                                ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+////                            it.copy(selected = selected == true)
+////                        }
+//                    Log.e("!!!!!!TEST!!!!!!", "toItemUI: end")
+//
+//                    uiState
+//                    res
+//                }
+//
+//            }
 
-            }
+//        } catch (e: Exception) {
+//            repository.getAllRealm(WpDataDB::class, contextUI, null)
+//                .map {
+//                    val selected = FilteringDialogDataHolder.instance()
+//                        .filters
+//                        ?.items
+//                        ?.firstOrNull { it.clazz == table }
+//                        ?.rightValuesRaw
+//                        ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+//                    it.copy(selected = selected == true)
+//                }
+//        }
+//    }
 
-        } catch (e: Exception) {
-            repository.getAllRealm(WpDataDB::class, contextUI, null)
-                .map {
-                    val selected = FilteringDialogDataHolder.instance()
-                        .filters
-                        ?.items
-                        ?.firstOrNull { it.clazz == table }
-                        ?.rightValuesRaw
-                        ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
-                    it.copy(selected = selected == true)
-                }
+
+    fun getAllWorkPlanForRNO(): List<WpDataDB> =
+        Realm.getDefaultInstance().use { realm ->
+            val res = realm.where(WpDataDB::class.java)
+                .equalTo("user_id", 14041 as Int)
+                .sort(
+                    arrayOf("dt_start", "addr_id"),
+                    arrayOf(Sort.ASCENDING, Sort.ASCENDING)
+                )
+                .findAll()
+            realm.copyFromRealm(res)
         }
-    }
+
+    fun getAllWorkPlanWithOutRNO(): List<WpDataDB> =
+        Realm.getDefaultInstance().use { realm ->
+            val res = realm.where(WpDataDB::class.java)
+                .notEqualTo("user_id", 14041 as Int)
+                .sort(
+                    arrayOf("dt_start", "addr_id"),
+                    arrayOf(Sort.ASCENDING, Sort.ASCENDING)
+                )
+                .findAll()
+            realm.copyFromRealm(res)
+        }
+
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
         FilteringDialogDataHolder.instance().filters.apply {

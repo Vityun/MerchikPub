@@ -27,7 +27,7 @@ class CustomerSDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = CustomerSDB::class
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         val data = repository.getAllRoom(CustomerSDB::class, contextUI, null)
             .map {
                 val selected = FilteringDialogDataHolder.instance()

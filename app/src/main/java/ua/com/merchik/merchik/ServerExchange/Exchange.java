@@ -67,6 +67,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
+import ua.com.merchik.merchik.ServerExchange.fcm.FcmTokenSenderRx;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -164,7 +165,7 @@ import ua.com.merchik.merchik.toolbar_menus;
 public class Exchange {
 
     private final Globals globals = new Globals();
-    public Context context;
+    private Context context;
     public static long exchangeTime = 0;
     //    private int retryTime = 120000;   // 2
     public final int retryTime = 600000;     // 10
@@ -198,6 +199,10 @@ public class Exchange {
 
     public void setViewModel(CronchikViewModel viewModel) {
         this.viewModel = viewModel;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 
 
@@ -250,6 +255,8 @@ public class Exchange {
                     updateLanguages();  // Обновление языков
                     updateSiteObj();    // Обновление Обьектов Сайта
                     updateTranslates();  // Обновление Переводов
+
+                    FcmTokenSenderRx.INSTANCE.sendIfNeeded(context);
 
 
                     globals.writeToMLOG("_INFO.Exchange.class.startExchange.Успех.3." + "\n");

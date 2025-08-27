@@ -89,7 +89,7 @@ class OpinionSDBViewModel @Inject constructor(
         )
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         Log.e("OpinionSDBViewModel","++++")
         return try
         {

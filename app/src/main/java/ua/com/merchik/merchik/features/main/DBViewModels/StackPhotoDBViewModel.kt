@@ -193,7 +193,7 @@ class StackPhotoDBViewModel @Inject constructor(
         }
     }
 
-    override fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> {
         return try {
             when (contextUI) {
                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
