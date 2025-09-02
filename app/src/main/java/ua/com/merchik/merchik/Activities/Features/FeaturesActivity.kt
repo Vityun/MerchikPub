@@ -1,19 +1,29 @@
 package ua.com.merchik.merchik.Activities.Features
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
@@ -121,6 +131,7 @@ class FeaturesActivity: AppCompatActivity() {
                     }
                 }
             }
+            RequestNotificationsPermissionPersistent()
         }
     }
 
@@ -170,4 +181,28 @@ class FeaturesActivity: AppCompatActivity() {
     }
 }
 
+
+
+@Composable
+fun RequestNotificationsPermissionPersistent() {
+    if (Build.VERSION.SDK_INT >= 33) {
+        val ctx = LocalContext.current
+        val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            Log.d("FCM", "POST_NOTIFICATIONS granted=$granted")
+        }
+
+        // Проверяем каждый раз при рендере
+        if (ContextCompat.checkSelfPermission(
+                ctx, Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Всегда будет вызывать диалог, пока пользователь не даст "Разрешить"
+            SideEffect {
+                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+}
 

@@ -23,6 +23,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -141,12 +142,11 @@ fun WpDataTabsScreen() {
         }
     }
 
-    RequestNotificationsPermissionOnce()
+    RequestNotificationsPermissionPersistent()
 }
 
-
 @Composable
-fun RequestNotificationsPermissionOnce() {
+fun RequestNotificationsPermissionPersistent() {
     if (Build.VERSION.SDK_INT >= 33) {
         val ctx = LocalContext.current
         val launcher = rememberLauncherForActivityResult(
@@ -154,12 +154,16 @@ fun RequestNotificationsPermissionOnce() {
         ) { granted ->
             Log.d("FCM", "POST_NOTIFICATIONS granted=$granted")
         }
-        LaunchedEffect(Unit) {
-            if (ContextCompat.checkSelfPermission(
-                    ctx, Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            )
+
+        // Проверяем каждый раз при рендере
+        if (ContextCompat.checkSelfPermission(
+                ctx, Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Всегда будет вызывать диалог, пока пользователь не даст "Разрешить"
+            SideEffect {
                 launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 }
