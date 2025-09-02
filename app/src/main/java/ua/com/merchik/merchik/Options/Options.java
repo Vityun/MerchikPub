@@ -18,6 +18,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.Globals.distanceMin;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
+import static ua.com.merchik.merchik.Utils.FileUtils.fileExistsAndNotEmpty;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
@@ -1372,7 +1373,13 @@ public class Options {
 
 
                         List<StackPhotoDB> res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
-                        if (!res.isEmpty()) {
+                        List<StackPhotoDB> existing = new ArrayList<>(res.size());
+                        for (StackPhotoDB item : res) {
+                            if (fileExistsAndNotEmpty(item.photo_num)) {
+                                existing.add(item);
+                            }
+                        }
+                        if (!existing.isEmpty()) {
                             new MessageDialogBuilder(unwrap(context))
                                     .setTitle("## Данные не выгружены на сервер")
                                     .setStatus(DialogStatus.ALERT)

@@ -149,7 +149,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = AdditionalRequirementsDB::class
 
-    override fun getItemsHeader(): List<DataItemUI> {
+    override suspend fun getItemsHeader(): List<DataItemUI> {
         return when (contextUI) {
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
                 val data = AdditionalRequirementsDB::class.java.newInstance()

@@ -55,7 +55,7 @@ class UsersSDBViewModel @Inject constructor(
         }
     }
 
-    override fun getItemsHeader(): List<DataItemUI> {
+    override suspend fun getItemsHeader(): List<DataItemUI> {
         return uiItemsHeader.value
     }
 

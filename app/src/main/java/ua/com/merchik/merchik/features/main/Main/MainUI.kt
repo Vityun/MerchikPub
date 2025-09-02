@@ -1,10 +1,9 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.compose.BackHandler
@@ -13,16 +12,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +35,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -48,22 +54,27 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
@@ -72,35 +83,29 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
-import com.google.gson.Gson
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
-import org.json.JSONObject
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
-import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
-import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuDialog
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
@@ -108,14 +113,13 @@ import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
+import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
 import java.io.File
-import java.text.SimpleDateFormat
-import java.time.LocalTime
-import java.time.ZoneId
-import java.util.Date
-import java.util.Locale
+import kotlin.math.roundToInt
 
 
+@SuppressLint("StateFlowValueCalledInComposition")
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
@@ -144,7 +148,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val listState = rememberLazyListState()
 
-    var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
+//    var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
+    val menu = rememberContextMenuHost(viewModel, context)
 
     var searchFocused by remember { mutableStateOf(false) }
 
@@ -152,13 +157,16 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val imeVisible by rememberImeVisible()
 
-    val rootCoords = remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val itemBounds = remember { mutableStateMapOf<Long, Rect>() } // id -> bounds
-    var counterBounds by remember { mutableStateOf<Rect?>(null) }
+    var flying by remember { mutableStateOf<Flying<DataItemUI>?>(null) }
+    // === 2) Новый режим: призрак для перетаскивания + сжатие при отпускании ===
+    var dragging by remember { mutableStateOf<Dragging<DataItemUI>?>(null) }
+    var shrinking by remember { mutableStateOf<Shrinking<DataItemUI>?>(null) }
 
-    // Запрос на «полёт»
-    var flyRequest by remember { mutableStateOf<FlyRequest?>(null) }
+    // Какой элемент скрываем в списке (во время полёта)
+    var disappearingKey by remember { mutableStateOf<Any?>(null) }
 
+    val density = LocalDensity.current
+    val haptics = LocalHapticFeedback.current
 
     // Лаунчер на результат
     val launcher = rememberLauncherForActivityResult(
@@ -184,126 +192,127 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     viewModel.launcher = launcher
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is MainEvent.ShowContextMenu -> {
-                    selectedItem = event.menuState
-                }
-
-                is MainEvent.ShowMessageDialog -> {
-                    showMessageDialog = event.data
-                }
-            }
-        }
-    }
 
 
-    selectedItem?.wpDataDB?.let {
-        ContextMenuDialog(
-            visible = selectedItem != null,
-            wpDataDB = it,
-            actions = selectedItem?.actions.orEmpty(),
-            onDismiss = { selectedItem = null },
-            onActionClick = { result ->
-                focusManager.clearFocus(force = true)
-                when (result.action) {
-                    is ContextMenuAction.AcceptOrder -> {
-                        selectedItem = result.wpDataDB?.let {
-                            ContextMenuState(
-                                actions = listOf(
-                                    ContextMenuAction.ConfirmAcceptOneTime,
-                                    ContextMenuAction.ConfirmAcceptInfinite,
-                                    ContextMenuAction.Close
-                                ),
-                                wpDataDB = it
-                            )
-                        }
-                    }
-
-                    is ContextMenuAction.AcceptAllAtAddress -> {
-                        selectedItem = result.wpDataDB?.let {
-                            ContextMenuState(
-                                actions = listOf(
-                                    ContextMenuAction.ConfirmAllAcceptOneTime,
-                                    ContextMenuAction.ConfirmAllAcceptInfinite,
-                                    ContextMenuAction.Close
-                                ),
-                                wpDataDB = it
-                            )
-                        }
-                    }
-
-                    is ContextMenuAction.ConfirmAcceptOneTime -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAcceptInfinite -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.OpenVisit,
-                    ContextMenuAction.OpenOrder -> {
-                        // как было
-                        result.wpDataDB?.let {
-                            val intent = Intent(context, DetailedReportActivity::class.java)
-                            intent.putExtra("WpDataDB_ID", it.id)
-                            context.startActivity(intent)
-                        }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.OpenSMSPlanDirectory -> {
-                        val intent = Intent(context, FeaturesActivity::class.java)
-                        val bundle = Bundle()
-                        bundle.putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
-                        bundle.putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
-                        bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
-
-                        bundle.putString("title", "Заявки")
-                        bundle.putString("subTitle", "## subTitle")
+//    LaunchedEffect(Unit) {
+//        viewModel.events.collect { event ->
+//            when (event) {
+//                is MainEvent.ShowContextMenu -> {
+//                    selectedItem = event.menuState
+//                }
+//
+//                is MainEvent.ShowMessageDialog -> {
+//                    showMessageDialog = event.data
+//                }
+//            }
+//        }
+//    }
 
 
-                        //                bundle.putString('req', "");
-//                bundle.putInt("idResImage", R.drawable.ic_caution);
-                        intent.putExtras(bundle)
-                        launcher.launch(intent)
-
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.Close -> selectedItem = null
-
-                    else -> {
-                        showMessageDialog = MessageDialogData(
-                            title = "Дополнительный заработок",
-                            message = "Меню: ${result.action.title} находится в разработке",
-                            status = DialogStatus.ALERT
-                        )
-                        selectedItem = null
-                    }
-                }
-            }
-        )
-    }
+//    selectedItem?.wpDataDB?.let {
+//        ContextMenuDialog(
+//            visible = selectedItem != null,
+//            wpDataDB = it,
+//            actions = selectedItem?.actions.orEmpty(),
+//            onDismiss = { selectedItem = null },
+//            onActionClick = { result ->
+//                focusManager.clearFocus(force = true)
+//                when (result.action) {
+//                    is ContextMenuAction.AcceptOrder -> {
+//                        selectedItem = result.wpDataDB?.let {
+//                            ContextMenuState(
+//                                actions = listOf(
+//                                    ContextMenuAction.ConfirmAcceptOneTime,
+//                                    ContextMenuAction.ConfirmAcceptInfinite,
+//                                    ContextMenuAction.Close
+//                                ),
+//                                wpDataDB = it
+//                            )
+//                        }
+//                    }
+//
+//                    is ContextMenuAction.AcceptAllAtAddress -> {
+//                        selectedItem = result.wpDataDB?.let {
+//                            ContextMenuState(
+//                                actions = listOf(
+//                                    ContextMenuAction.ConfirmAllAcceptOneTime,
+//                                    ContextMenuAction.ConfirmAllAcceptInfinite,
+//                                    ContextMenuAction.Close
+//                                ),
+//                                wpDataDB = it
+//                            )
+//                        }
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAcceptOneTime -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAcceptInfinite -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.OpenVisit,
+//                    ContextMenuAction.OpenOrder -> {
+//                        // как было
+//                        result.wpDataDB?.let {
+//                            val intent = Intent(context, DetailedReportActivity::class.java)
+//                            intent.putExtra("WpDataDB_ID", it.id)
+//                            context.startActivity(intent)
+//                        }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.OpenSMSPlanDirectory -> {
+//                        val intent = Intent(context, FeaturesActivity::class.java)
+//                        val bundle = Bundle()
+//                        bundle.putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
+//                        bundle.putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
+//                        bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
+//
+//                        bundle.putString("title", "Заявки")
+//                        bundle.putString("subTitle", "## subTitle")
+//
+//
+//                        //                bundle.putString('req', "");
+////                bundle.putInt("idResImage", R.drawable.ic_caution);
+//                        intent.putExtras(bundle)
+//                        launcher.launch(intent)
+//
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.Close -> selectedItem = null
+//
+//                    else -> {
+//                        showMessageDialog = MessageDialogData(
+//                            title = "Дополнительный заработок",
+//                            message = "Меню: ${result.action.title} находится в разработке",
+//                            status = DialogStatus.ALERT
+//                        )
+//                        selectedItem = null
+//                    }
+//                }
+//            }
+//        )
+//    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(color = Color.Transparent)
-            .onGloballyPositioned { rootCoords.value = it } // корень для единой системы координат
     ) {
 
         if (!(viewModel.typeWindow ?: "").equals("full", true) &&
@@ -329,6 +338,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 )
                 .background(color = colorResource(id = R.color.main_form))
         ) {
+            val visibilityColumName =
+                if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
+
             Column {
 
                 if ((viewModel.typeWindow ?: "").equals("full", true)) {
@@ -345,138 +357,134 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
-                val searchStrList = uiState.filters?.searchText?.split(" ")
-                val visibilityColumName =
-                    if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
-
-                var _isActiveFiltered = uiState.filters?.searchText?.isNotEmpty() == true
-
-                fun getSortValue(it: DataItemUI, sortingField: SortingField) =
-                    it.fields.firstOrNull { fieldValue ->
-                        fieldValue.key.equals(sortingField.key, true)
-                    }?.value?.value
-
-                fun comparator(sortingField: SortingField?): Comparator<DataItemUI> =
-                    if (sortingField?.order == 1)
-                        compareBy { getSortValue(it, sortingField) }
-                    else if (sortingField?.order == -1)
-                        compareByDescending { getSortValue(it, sortingField) }
-                    else
-                        compareBy { 0 }
+//                val searchStrList = uiState.filters?.searchText?.split(" ")
+//
+//                var _isActiveFiltered = uiState.filters?.searchText?.isNotEmpty() == true
+//
+//                fun getSortValue(it: DataItemUI, sortingField: SortingField) =
+//                    it.fields.firstOrNull { fieldValue ->
+//                        fieldValue.key.equals(sortingField.key, true)
+//                    }?.value?.value
+//
+//                fun comparator(sortingField: SortingField?): Comparator<DataItemUI> =
+//                    if (sortingField?.order == 1)
+//                        compareBy { getSortValue(it, sortingField) }
+//                    else if (sortingField?.order == -1)
+//                        compareByDescending { getSortValue(it, sortingField) }
+//                    else
+//                        compareBy { 0 }
 
                 val dataItemsUI = mutableListOf<DataItemUI>()
 
                 dataItemsUI.addAll(uiState.itemsHeader)
 
-                dataItemsUI.addAll(
-                    uiState.items.filter { dataItemUI ->
-                        uiState.filters?.let { filters ->
-                            filters.rangeDataByKey?.let { rangeDataByKey ->
-                                val star = viewModel.rangeDataStart.value
-                                val end = viewModel.rangeDataEnd.value
-                                dataItemUI.fields.forEach { fieldValue ->
-                                    if (fieldValue.key.equals(rangeDataByKey.key, true)) {
-                                        val rawValue = fieldValue.value.rawValue
-                                        val timestamp = when (rawValue) {
-                                            is Long -> rawValue
-                                            is Date -> rawValue.time
-                                            is String -> {
-                                                try {
-                                                    val formatter = SimpleDateFormat(
-                                                        "MMM d, yyyy hh:mm:ss a",
-                                                        Locale.US
-                                                    )
-                                                    val parsedDate = formatter.parse(rawValue)
-                                                    parsedDate?.time ?: return@filter false
-                                                } catch (e: Exception) {
-                                                    return@filter false // строка не распарсилась — фильтруем
-                                                }
-                                            }
+                val result = filterAndSortDataItems(
+                    items = uiState.items,
+                    filters = uiState.filters,
+                    sortingFields = uiState.sortingFields,
+                    rangeStart = viewModel.rangeDataStart.value,
+                    rangeEnd = viewModel.rangeDataEnd.value,
+                    searchText = uiState.filters?.searchText
+                )
+                dataItemsUI.addAll(result.items)
 
-                                            else -> return@filter false // если ни Long, ни Date — исключаем
-                                        }
 
-// Получаем границы диапазона в миллисекундах
-                                        val startMillis = star
-                                            ?.atStartOfDay(ZoneId.systemDefault())
-                                            ?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
-
-                                        val endMillis = end
-                                            ?.atTime(LocalTime.MAX)
-                                            ?.atZone(ZoneId.systemDefault())
-                                            ?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
-
-// Фильтрация по диапазону
-                                        if (timestamp < startMillis || timestamp > endMillis) {
-                                            _isActiveFiltered = true
-                                            return@filter false
-                                        }
-
-//                                        if (((fieldValue.value.rawValue as? Long)
-//                                                ?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
-//                                                ?.toInstant()?.toEpochMilli() ?: 0)
-//                                            || ((fieldValue.value.rawValue as? Long)
-//                                                ?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
-//                                                ?.atZone(ZoneId.systemDefault())?.toInstant()
-//                                                ?.toEpochMilli() ?: 0)
-//                                        ) {
+//                dataItemsUI.addAll(
+//                    uiState.items.filter { dataItemUI ->
+//                        uiState.filters?.let { filters ->
+//                            filters.rangeDataByKey?.let { rangeDataByKey ->
+//                                val star = viewModel.rangeDataStart.value
+//                                val end = viewModel.rangeDataEnd.value
+//                                dataItemUI.fields.forEach { fieldValue ->
+//                                    if (fieldValue.key.equals(rangeDataByKey.key, true)) {
+//                                        val rawValue = fieldValue.value.rawValue
+//                                        val timestamp = when (rawValue) {
+//                                            is Long -> rawValue
+//                                            is Date -> rawValue.time
+//                                            is String -> {
+//                                                try {
+//                                                    val formatter = SimpleDateFormat(
+//                                                        "MMM d, yyyy hh:mm:ss a",
+//                                                        Locale.US
+//                                                    )
+//                                                    val parsedDate = formatter.parse(rawValue)
+//                                                    parsedDate?.time ?: return@filter false
+//                                                } catch (e: Exception) {
+//                                                    return@filter false // строка не распарсилась — фильтруем
+//                                                }
+//                                            }
+//
+//                                            else -> return@filter false // если ни Long, ни Date — исключаем
+//                                        }
+//// Получаем границы диапазона в миллисекундах
+//                                        val startMillis = star
+//                                            ?.atStartOfDay(ZoneId.systemDefault())
+//                                            ?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
+//
+//                                        val endMillis = end
+//                                            ?.atTime(LocalTime.MAX)
+//                                            ?.atZone(ZoneId.systemDefault())
+//                                            ?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
+//
+//// Фильтрация по диапазону
+//                                        if (timestamp < startMillis || timestamp > endMillis) {
 //                                            _isActiveFiltered = true
 //                                            return@filter false
 //                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        var isFound: Boolean
-                        searchStrList?.forEach {
-                            isFound = false
-                            dataItemUI.fields.forEach inner@{ fieldValue ->
-                                if (fieldValue.value.value.contains(it, true)) {
-                                    isFound = true
-                                    return@inner
-                                }
-                            }
-                            if (!isFound) {
-                                return@filter false
-                            }
-                        }
-
-                        uiState.filters?.items?.let { filters ->
-                            filters.forEach { filter ->
-                                isFound = false
-                                if (filter.rightValuesRaw.isNotEmpty()) {
-                                    dataItemUI.rawFields.forEach inner@{ fieldValue ->
-                                        if (fieldValue.key.equals(filter.leftField, true)) {
-                                            val rawVal = filter.rightValuesRaw
-                                            val fieldVal = fieldValue.value.rawValue.toString()
-                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered =
-                                                true
-                                            if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
-                                                isFound = true
-                                                return@inner
-                                            }
-                                        }
-                                    }
-                                }
-                                if (!isFound) {
-                                    return@filter false
-                                }
-                            }
-                        }
-
-                        return@filter true
-
-                    }.sortedWith(
-                        comparator(uiState.sortingFields.getOrNull(0))
-                            .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
-                            .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
-                    )
-                )
+//                                    }
+//                                }
+//                            }
+//                        }
+//
+//                        var isFound: Boolean
+//                        searchStrList?.forEach {
+//                            isFound = false
+//                            dataItemUI.fields.forEach inner@{ fieldValue ->
+//                                if (fieldValue.value.value.contains(it, true)) {
+//                                    isFound = true
+//                                    return@inner
+//                                }
+//                            }
+//                            if (!isFound) {
+//                                return@filter false
+//                            }
+//                        }
+//
+//                        uiState.filters?.items?.let { filters ->
+//                            filters.forEach { filter ->
+//                                isFound = false
+//                                if (filter.rightValuesRaw.isNotEmpty()) {
+//                                    dataItemUI.rawFields.forEach inner@{ fieldValue ->
+//                                        if (fieldValue.key.equals(filter.leftField, true)) {
+//                                            val rawVal = filter.rightValuesRaw
+//                                            val fieldVal = fieldValue.value.rawValue.toString()
+//                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered =
+//                                                true
+//                                            if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
+//                                                isFound = true
+//                                                return@inner
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                                if (!isFound) {
+//                                    return@filter false
+//                                }
+//                            }
+//                        }
+//
+//                        return@filter true
+//
+//                    }.sortedWith(
+//                        comparator(uiState.sortingFields.getOrNull(0))
+//                            .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
+//                            .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
+//                    )
+//                )
 
                 dataItemsUI.addAll(uiState.itemsFooter)
 
-                isActiveFiltered = _isActiveFiltered
+                isActiveFiltered = result.isActiveFiltered
 
                 uiState.title?.let {
                     Text(
@@ -728,24 +736,121 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         LazyColumn(
                             state = listState,
                         ) {
-                            items(dataItemsUI) { item ->
-                                ItemUI(
-                                    item = item,
-                                    visibilityColumName = visibilityColumName,
-                                    settingsItemUI = uiState.settingsItems,
-                                    contextUI = viewModel.modeUI,
-                                    onClickItem = { viewModel.onClickItem(it, context) },
-                                    onClickItemImage = { viewModel.onClickItemImage(it, context) },
-                                    onMultipleClickItemImage = { dataItem, index ->
-                                        viewModel.onClickItemImage(dataItem, context, index)
-                                    },
-                                    onCheckItem = { checked, it ->
-                                        viewModel.updateItemSelect(
-                                            checked,
-                                            it
+                            items(
+                                dataItemsUI,
+                                key = { it.hashCode() }
+                            ) { item ->
+                                val key = item.hashCode()
+
+                                var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+                                // Анимированный уход «в ноль» для исходного элемента
+                                AnimatedVisibility(
+                                    visible = disappearingKey != key,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItemPlacement(animationSpec = tween(300)), // плавное смещение соседей
+                                    exit = shrinkVertically(
+                                        animationSpec = tween(250),
+                                        shrinkTowards = Alignment.Top
+                                    ) + fadeOut(tween(180))
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .onGloballyPositioned { coords = it }
+                                            // Долгий тап -> «призрак» для перетаскивания
+                                            .pointerInput(Unit) {
+                                                detectDragGesturesAfterLongPress(
+                                                    onDragStart = { _ ->
+                                                        coords?.let { c ->
+                                                            val pos = c.positionInRoot()
+                                                            dragging = Dragging(
+                                                                item = item,
+                                                                size = c.size,
+                                                                offset = mutableStateOf(
+                                                                    Offset(
+                                                                        pos.x,
+                                                                        pos.y
+                                                                    )
+                                                                )
+                                                            )
+                                                            // лёгкая вибрация на старте
+                                                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                        }
+                                                    },
+                                                    onDrag = { change, dragAmount ->
+                                                        change.consume() // блокируем скролл списка во время перетаскивания
+                                                        dragging?.offset?.let { it.value += dragAmount }
+                                                    },
+                                                    onDragEnd = {
+                                                        dragging?.let { d ->
+                                                            shrinking = Shrinking(
+                                                                item = d.item,
+                                                                startOffset = IntOffset(
+                                                                    d.offset.value.x.roundToInt(),
+                                                                    d.offset.value.y.roundToInt()
+                                                                ),
+                                                                size = d.size
+                                                            )
+                                                        }
+                                                        dragging = null
+                                                    },
+                                                    onDragCancel = {
+                                                        // Отменили — тоже «сожмём и скроем» из текущей позиции
+                                                        dragging?.let { d ->
+                                                            shrinking = Shrinking(
+                                                                item = d.item,
+                                                                startOffset = IntOffset(
+                                                                    d.offset.value.x.roundToInt(),
+                                                                    d.offset.value.y.roundToInt()
+                                                                ),
+                                                                size = d.size
+                                                            )
+                                                        }
+                                                        dragging = null
+                                                    }
+                                                )
+                                            }
+                                    ) {
+                                        ItemUI(
+                                            item = item,
+                                            visibilityColumName = visibilityColumName,
+                                            settingsItemUI = uiState.settingsItems,
+                                            contextUI = viewModel.modeUI,
+                                            onClickItem = {
+                                                viewModel.onClickItem(it, context)
+//                                                TODO Код анимации перенести в remember
+//                                                coords?.let { c ->
+//                                                    val pos = c.positionInRoot()
+//                                                    val size = c.size
+//                                                    flying = Flying(
+//                                                        item = item,
+//                                                        startOffset = IntOffset(
+//                                                            pos.x.roundToInt(),
+//                                                            pos.y.roundToInt()
+//                                                        ),
+//                                                        size = size
+//                                                    )
+//                                                }
+//                                                disappearingKey = key
+                                            },
+                                            onClickItemImage = {
+                                                viewModel.onClickItemImage(
+                                                    it,
+                                                    context
+                                                )
+                                            },
+                                            onMultipleClickItemImage = { dataItem, index ->
+                                                viewModel.onClickItemImage(dataItem, context, index)
+                                            },
+                                            onCheckItem = { checked, it ->
+                                                viewModel.updateItemSelect(
+                                                    checked,
+                                                    it
+                                                )
+                                            }
                                         )
                                     }
-                                )
+                                }
                             }
                         }
                     }
@@ -879,8 +984,156 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
             }
+
+            // Оверлейная «летающая» копия
+            flying?.let { f ->
+                val y = remember { Animatable(f.startOffset.y.toFloat()) }
+                val x = remember { Animatable(f.startOffset.x.toFloat()) }
+                val alpha = remember { Animatable(1f) }
+                val scale = remember { Animatable(1f) }
+
+                LaunchedEffect(f.item, f.startOffset) {
+                    // Цель: улететь за верх экрана
+                    val targetY = -(f.startOffset.y + f.size.height).toFloat()
+                    // Параллельно: перемещение и угасание
+                    coroutineScope {
+                        launch {
+                            y.animateTo(
+                                targetValue = targetY,
+                                animationSpec = tween(
+                                    durationMillis = 1600,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        }
+                        launch {
+                            x.animateTo(
+                                targetValue = 0.9f,
+                                animationSpec = tween(
+                                    durationMillis = 1600,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        }
+                        launch {
+                            alpha.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(durationMillis = 1500, delayMillis = 1200)
+                            )
+                        }
+                        launch { scale.animateTo(0.01f, tween(1000)) }
+
+                    }
+                    flying = null
+                }
+
+                Box(
+                    modifier = Modifier
+                        .zIndex(100f)
+                        .offset { IntOffset(f.startOffset.x, y.value.roundToInt()) }
+                        .requiredSize(
+                            with(density) { f.size.width.toDp() },
+                            with(density) { f.size.height.toDp() }
+                        )
+                        .alpha(alpha.value)
+                        .graphicsLayer {
+                            scaleX = scale.value
+                            scaleY = scale.value
+                        }
+                ) {
+                    // Рисуем ту же разметку, что и у исходного элемента
+                    ItemUI(
+                        item = f.item,
+                        visibilityColumName = visibilityColumName,
+                        settingsItemUI = uiState.settingsItems,
+                        contextUI = viewModel.modeUI,
+                        // Клики у копии глушим
+                        onClickItem = {},
+                        onClickItemImage = {},
+                        onMultipleClickItemImage = { _, _ -> },
+                        onCheckItem = { _, _ -> }
+                    )
+                }
+            }
+
+            // === Оверлей «призрак», который двигаем пальцем ===
+            dragging?.let { d ->
+                Box(
+                    modifier = Modifier
+                        .zIndex(100f)
+                        .offset {
+                            IntOffset(
+                                d.offset.value.x.roundToInt(),
+                                d.offset.value.y.roundToInt()
+                            )
+                        }
+                        .requiredSize(
+                            with(density) { d.size.width.toDp() },
+                            with(density) { d.size.height.toDp() }
+                        )
+                        .graphicsLayer {
+                            // лёгкое «поднятие» в воздух
+                            scaleX = 1.03f
+                            scaleY = 1.03f
+                            shadowElevation = 10f
+                        }
+                ) {
+                    ItemUI(
+                        item = d.item,
+                        visibilityColumName = visibilityColumName,
+                        settingsItemUI = uiState.settingsItems,
+                        contextUI = viewModel.modeUI,
+                        onClickItem = {},
+                        onClickItemImage = {},
+                        onMultipleClickItemImage = { _, _ -> },
+                        onCheckItem = { _, _ -> }
+                    )
+                }
+            }
+
+            // === Оверлей «сжатие и исчезновение» после отпускания ===
+            shrinking?.let { s ->
+                val scale = remember { Animatable(1f) }
+                val alpha = remember { Animatable(1f) }
+
+                LaunchedEffect(s.item, s.startOffset) {
+                    coroutineScope {
+                        launch { scale.animateTo(0.1f, tween(550)) }
+                        launch { alpha.animateTo(0f, tween(550)) }
+                    }
+                    shrinking = null
+                }
+
+                Box(
+                    modifier = Modifier
+                        .zIndex(199f)
+                        .offset { IntOffset(s.startOffset.x, s.startOffset.y) }
+                        .requiredSize(
+                            with(density) { s.size.width.toDp() },
+                            with(density) { s.size.height.toDp() }
+                        )
+                        .graphicsLayer {
+                            this.alpha = alpha.value
+                            scaleX = scale.value
+                            scaleY = scale.value
+                        }
+                ) {
+                    ItemUI(
+                        item = s.item,
+                        visibilityColumName = visibilityColumName,
+                        settingsItemUI = uiState.settingsItems,
+                        contextUI = viewModel.modeUI,
+                        onClickItem = {},
+                        onClickItemImage = {},
+                        onMultipleClickItemImage = { _, _ -> },
+                        onCheckItem = { _, _ -> }
+                    )
+                }
+            }
         }
     }
+
+
     if (showAdditionalContent) {
         Log.e("showAdditionalContent", "+")
         viewModel.onClickAdditionalContent()
@@ -920,7 +1173,24 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showMapsDialog) {
-        MapsDialog(viewModel, onDismiss = { showMapsDialog = false })
+        MapsDialog(
+            viewModel,
+            onDismiss = { showMapsDialog = false },
+            onOpenContextMenu = { wp ->
+                menu.open(wp, listOf(
+                    ContextMenuAction.AcceptOrder,
+                    ContextMenuAction.AcceptAllAtAddress,
+                    ContextMenuAction.RejectOrder,
+                    ContextMenuAction.RejectAddress,
+                    ContextMenuAction.RejectClient,
+                    ContextMenuAction.RejectByType,
+                    ContextMenuAction.OpenOrder,
+                    ContextMenuAction.OpenSMSPlanDirectory,
+                    ContextMenuAction.AskMoreMoney,
+                    ContextMenuAction.Feedback,
+                    ContextMenuAction.Close
+                ))
+            })
     }
 
     showMessageDialog?.let { d ->

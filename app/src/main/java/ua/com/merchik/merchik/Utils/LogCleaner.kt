@@ -20,7 +20,8 @@ object LogCleaner {
         if (!logFile.exists()) return@withContext
 
         val dateFormat = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault())
-        val daysAgo = Date(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000) // 2 дня назад
+        val daysAgo = Date(System.currentTimeMillis() - 1L * 24 * 60 * 60 * 1000) // 1 день назад
+//        val daysAgo = Date(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000) // 2 дня назад
 //        val daysAgo = Date(System.currentTimeMillis() - 2L * 60 * 60 * 1000) // тест 2 часа
 
         val tempFile = File(cacheDir, "TEMP_LOG.txt")

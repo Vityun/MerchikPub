@@ -2605,10 +2605,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0,
                                                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-                                                    Notification notification = new NotificationCompat.Builder(context, "channel01")
+                                                    Notification notification = new NotificationCompat.Builder(context, "default_channel")
                                                             .setSmallIcon(R.mipmap.merchik)
                                                             .setContentTitle("Нове повідомлення")
                                                             .setContentText(Html.fromHtml(wsData.chat.msg))
+                                                            .setStyle(new NotificationCompat.BigTextStyle()
+                                                                    .bigText(Html.fromHtml(wsData.chat.msg)))
                                                             .setDefaults(Notification.DEFAULT_ALL)
                                                             .setPriority(NotificationCompat.PRIORITY_HIGH)
                                                             .setContentIntent(resultPendingIntent)

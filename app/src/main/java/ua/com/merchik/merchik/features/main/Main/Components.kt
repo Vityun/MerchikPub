@@ -14,6 +14,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +31,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
@@ -39,6 +43,9 @@ import ua.com.merchik.merchik.dataLayer.model.TextField
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
+/*
+TODO добавить, что бы рисовались только те поля которые прошли фильтр, в теори и поднимит производительность в разы
+ */
 @Composable
 fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
     Row(Modifier.fillMaxWidth()) {
@@ -146,11 +153,26 @@ fun FontSizeSlider(viewModel: MainViewModel, modifier: Modifier = Modifier, size
 }
 
 
-data class FlyRequest(
-    val start: Rect,               // прямоугольник исходного элемента в координатах корня
-    val scaleEnd: Float = 0.35f,   // конечный масштаб
-    val extraDx: Dp = (-18).dp,    // «чуть левее центра»
-    val extraDy: Dp = 8.dp         // немного ниже верхнего края
+@Stable
+data class Flying<T>(
+    val item: T,
+    val startOffset: IntOffset,
+    val size: IntSize
 )
 
-fun Rect.center() = Offset(left + width / 2f, top + height / 2f)
+@Stable
+data class Dragging<T>(
+    val item: T,
+    val size: IntSize,
+    val offset: MutableState<Offset> // Текущая позиция «призрака»
+)
+
+@Stable
+data class Shrinking<T>(
+    val item: T,
+    val startOffset: IntOffset,
+    val size: IntSize
+)
+
+@Stable
+private data class ItemRect(val offset: IntOffset, val size: IntSize)

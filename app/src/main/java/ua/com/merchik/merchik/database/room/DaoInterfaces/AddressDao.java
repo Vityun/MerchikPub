@@ -21,6 +21,9 @@ public interface AddressDao {
     @Query("SELECT * FROM address WHERE id = :id")
     AddressSDB getById(int id);
 
+    @Query("SELECT * FROM address WHERE id IN (:ids)")
+    List<AddressSDB> getByIds(List<Integer> ids);
+
     @Query("SELECT * FROM address WHERE nm = :nm")
     AddressSDB getByNm(String nm);
 

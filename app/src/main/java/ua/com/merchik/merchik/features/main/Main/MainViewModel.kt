@@ -168,7 +168,7 @@ abstract class MainViewModel(
 
     abstract val table: KClass<out DataObjectUI>
 
-    open fun getItemsHeader(): List<DataItemUI> = emptyList()
+    open suspend fun getItemsHeader(): List<DataItemUI> = emptyList()
 
     open fun getItemsFooter(): List<DataItemUI> = emptyList()
 
@@ -401,8 +401,8 @@ abstract class MainViewModel(
                     title = title,
                     subTitle = subTitle,
                     idResImage = idResImage,
-                    itemsHeader = getItemsHeader(),
                     items = getItems(),
+                    itemsHeader = getItemsHeader(),
                     itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
                     sortingFields = sortingFields,

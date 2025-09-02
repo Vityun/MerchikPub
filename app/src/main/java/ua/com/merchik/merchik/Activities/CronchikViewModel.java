@@ -14,6 +14,7 @@ import androidx.work.WorkManager;
 import java.util.List;
 
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class CronchikViewModel extends ViewModel {
 
@@ -73,6 +74,10 @@ public class CronchikViewModel extends ViewModel {
         if (index >= 0 && index < badgeCounts.size()) {
             badgeCounts.set(index, count);
         }
+    }
+
+    public void updateBadgeAdditionalIncome() {
+        badgeCounts.set(1, RealmManager.getAllWorkPlanForRNO().size());
     }
 
     public void clearBadge(int index) {

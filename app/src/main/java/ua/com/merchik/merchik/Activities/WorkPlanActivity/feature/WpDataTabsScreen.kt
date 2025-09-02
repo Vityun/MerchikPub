@@ -40,6 +40,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import ua.com.merchik.merchik.Activities.CronchikViewModel
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.AdditionalContentTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.R
@@ -62,10 +63,11 @@ fun WpDataTabsScreen() {
     val tabTitles = listOf(
         stringResource(R.string.title_0),
         "Доп.Заработок",
-//        stringResource(R.string.title_1)
+        "Заявки"
     )
 
-    cronchikViewModel.updateBadge(1, 10)
+//    cronchikViewModel.updateBadge(1, 10)
+    cronchikViewModel.updateBadgeAdditionalIncome()
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
@@ -135,7 +137,7 @@ fun WpDataTabsScreen() {
         when (selectedTabIndex) {
             0 -> WpDataContentTab()
             1 -> OtherComposeTab()
-//            2 -> MapComposeTab()
+            2 -> AdditionalContentTab()
         }
     }
 

@@ -953,6 +953,7 @@ public class MakePhoto {
 
                     if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
                         wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
+                        MakePhoto.photoCustomerGroup = showcase.tovarGrp.toString();
                         Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
 
                         if (needPlan) {

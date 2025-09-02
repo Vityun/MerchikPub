@@ -141,8 +141,9 @@ public class OptionControlEKL<T> extends OptionControl {
             dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
         }
 
-        if ((addressSDB.tpId == 434 || addressSDB.tpId == 6767) && !optionDB.getOptionControlId().equals("132629") && documentDt < 1756684800) { // 1756684800 == 01.09.2025 / 434 = АТБ или 676 = Акварель
-            optionMsg.append("Не проверяем для АТБ или Акварель до 01.09.2025");
+        // 02.09.2025 поменял на 01.03.2026
+        if ((addressSDB.tpId == 434 || addressSDB.tpId == 6767) && !optionDB.getOptionControlId().equals("132629") && documentDt < 1767218401) { // 1761948022 == 01.11.2025 / 434 = АТБ или 676 = Акварель
+            optionMsg.append("Не проверяем для АТБ или Акварель до 01.03.2026");
             signal = false;
         } else {
             // Определем Группу Товаров

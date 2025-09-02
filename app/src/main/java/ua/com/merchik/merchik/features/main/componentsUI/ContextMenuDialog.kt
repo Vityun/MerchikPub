@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -17,17 +20,38 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
+import ua.com.merchik.merchik.features.main.Main.MainEvent
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
+
+
+@Stable
+data class ContextMenuController(
+    val open: (wp: WpDataDB, actions: List<ContextMenuAction>) -> Unit,
+    val close: () -> Unit
+)
 
 
 data class ContextMenuState(
@@ -68,6 +92,120 @@ sealed class ContextMenuAction(val title: String) {
     data object Close : ContextMenuAction("Закрыть")
 }
 
+
+
+/** Хост: держит состояние и рисует диалог. Возвращает контроллер с open/close. */
+@Composable
+fun rememberContextMenuHost(
+    viewModel: MainViewModel,
+    context: Context
+): ContextMenuController {
+    var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
+    val focusManager = LocalFocusManager.current
+
+    // Подписка на события (как было)
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is MainEvent.ShowContextMenu -> selectedItem = event.menuState
+                is MainEvent.ShowMessageDialog -> { /* твоя логика показ диалога */ }
+            }
+        }
+    }
+
+    // Рендер самого диалога один раз, когда selectedItem != null
+    selectedItem?.let { state ->
+        ContextMenuDialog(
+            visible = true,
+            wpDataDB = state.wpDataDB,
+            actions = state.actions,
+            onDismiss = { selectedItem = null },
+            onActionClick = { result ->
+                focusManager.clearFocus(force = true)
+                when (result.action) {
+                    is ContextMenuAction.AcceptOrder -> {
+                        selectedItem = result.wpDataDB?.let {
+                            ContextMenuState(
+                                actions = listOf(
+                                    ContextMenuAction.ConfirmAcceptOneTime,
+                                    ContextMenuAction.ConfirmAcceptInfinite,
+                                    ContextMenuAction.Close
+                                ),
+                                wpDataDB = it
+                            )
+                        }
+                    }
+                    is ContextMenuAction.AcceptAllAtAddress -> {
+                        selectedItem = result.wpDataDB?.let {
+                            ContextMenuState(
+                                actions = listOf(
+                                    ContextMenuAction.ConfirmAllAcceptOneTime,
+                                    ContextMenuAction.ConfirmAllAcceptInfinite,
+                                    ContextMenuAction.Close
+                                ),
+                                wpDataDB = it
+                            )
+                        }
+                    }
+                    is ContextMenuAction.ConfirmAcceptOneTime -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.ConfirmAcceptInfinite -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
+                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.OpenVisit,
+                    ContextMenuAction.OpenOrder -> {
+                        result.wpDataDB?.let {
+                            val intent = Intent(context, DetailedReportActivity::class.java)
+                            intent.putExtra("WpDataDB_ID", it.id)
+                            context.startActivity(intent)
+                        }
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.OpenSMSPlanDirectory -> {
+                        val intent = Intent(context, FeaturesActivity::class.java)
+                        val bundle = Bundle().apply {
+                            putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
+                            putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
+                            putString("modeUI", ModeUI.MULTI_SELECT.toString())
+                            putString("title", "Заявки")
+                            putString("subTitle", "## subTitle")
+                        }
+                        intent.putExtras(bundle)
+                        // launcher.launch(intent) // если используешь launcher — передай сюда как зависимость
+                        context.startActivity(intent)
+                        selectedItem = null
+                    }
+                    is ContextMenuAction.Close -> selectedItem = null
+
+                    else -> {
+                        // твой ShowMessageDialog
+                        // showMessageDialog = ...
+                        selectedItem = null
+                    }
+                }
+            }
+        )
+    }
+
+    // Сам контроллер
+    val open: (WpDataDB, List<ContextMenuAction>) -> Unit = { wp, actions ->
+        selectedItem = ContextMenuState(actions = actions, wpDataDB = wp)
+    }
+    val close: () -> Unit = { selectedItem = null }
+
+    return remember { ContextMenuController(open, close) }
+}
 
 @Composable
 fun ContextMenuDialog(
