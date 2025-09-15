@@ -13,7 +13,8 @@ import java.util.Locale
 
 data class FilterAndSortResult(
     val items: List<DataItemUI>,
-    val isActiveFiltered: Boolean
+    val isActiveFiltered: Boolean,
+    val isActiveSorted: Boolean
 )
 
 fun filterAndSortDataItems(
@@ -52,7 +53,12 @@ fun filterAndSortDataItems(
     var isActiveFiltered = false
     if (searchTerms.isNotEmpty()) isActiveFiltered = true
     if (filters?.items?.any { it.rightValuesRaw.isNotEmpty() } == true) isActiveFiltered = true
-    if (filters?.rangeDataByKey != null && (rangeStart != null || rangeEnd != null)) isActiveFiltered = true
+    if (filters?.rangeDataByKey != null && (rangeStart != null || rangeEnd != null)) isActiveFiltered =
+        true
+
+    // есть ли вообще активные инструкции сортировки?
+    val hasActiveSorting =
+        sortingFields.any { it?.key?.isNotBlank() == true && (it.order == 1 || it.order == -1) }
 
     // --- утилиты для сортировки ---
     fun getSortValue(item: DataItemUI, sortingField: SortingField): String? =
@@ -62,7 +68,13 @@ fun filterAndSortDataItems(
     fun comparator(sf: SortingField?): Comparator<DataItemUI> =
         when (sf?.order) {
             1 -> compareBy<DataItemUI, String?>(nullsLast(naturalOrder())) { getSortValue(it, sf) }
-            -1 -> compareByDescending<DataItemUI, String?>(nullsLast(naturalOrder())) { getSortValue(it, sf) }
+            -1 -> compareByDescending<DataItemUI, String?>(nullsLast(naturalOrder())) {
+                getSortValue(
+                    it,
+                    sf
+                )
+            }
+
             else -> Comparator { _, _ -> 0 }
         }
 
@@ -81,7 +93,10 @@ fun filterAndSortDataItems(
                     is Date -> raw.time
                     is String -> try {
                         dateFmt.parse(raw)?.time ?: return@filter false
-                    } catch (_: Exception) { return@filter false }
+                    } catch (_: Exception) {
+                        return@filter false
+                    }
+
                     else -> return@filter false
                 }
 
@@ -113,11 +128,13 @@ fun filterAndSortDataItems(
     }
 
     // --- сортировка (до трёх уровней, как у тебя) ---
-    val sorted = filtered.sortedWith(
-        comparator(sortingFields.getOrNull(0))
-            .thenComparing(comparator(sortingFields.getOrNull(1)))
-            .thenComparing(comparator(sortingFields.getOrNull(2)))
-    )
+    val sorted = if (hasActiveSorting) {
+        filtered.sortedWith(
+            comparator(sortingFields.getOrNull(0))
+                .thenComparing(comparator(sortingFields.getOrNull(1)))
+                .thenComparing(comparator(sortingFields.getOrNull(2)))
+        )
+    } else filtered
 
-    return FilterAndSortResult(sorted, isActiveFiltered)
+    return FilterAndSortResult(sorted, isActiveFiltered, hasActiveSorting)
 }

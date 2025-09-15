@@ -817,20 +817,25 @@ public class DetailedReportTovarsFrag extends Fragment {
         standartData.mod = "report_prepare";
         standartData.act = "list_data";
         standartData.date_from = Clock.getDatePeriod(-30);
-        standartData.date_to = Clock.getDatePeriod(1);
+        standartData.date_to = Clock.getDatePeriod(5);
         standartData.code_dad2 = String.valueOf(codeDad2);
 
         Gson gson = new Gson();
         String json = gson.toJson(standartData);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag.getTovList.downloadReportPrepareByDad", "convertedObject: " + convertedObject);
 
         retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_REPORT_PREPARE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(Call<ReportPrepareServer> call, Response<ReportPrepareServer> response) {
                 try {
+
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
+                            String result = gson.toJson(response.body());
+                            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag.getTovList.downloadReportPrepareByDad", "onResponse: " + result);
+
                             if (response.body().getState()) {
                                 if (response.body().getList() != null && response.body().getList().size() > 0) {
                                     ReportPrepareRealm.setAll(response.body().getList());

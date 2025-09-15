@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -19,6 +20,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +30,7 @@ import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
@@ -38,13 +41,16 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
+import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.withContainerBackground
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.time.LocalDate
@@ -144,6 +150,10 @@ abstract class MainViewModel(
 
     private val _valueForCustomResult = MutableStateFlow(HashMap<String, Any?>())
     val valueForCustomResult: StateFlow<HashMap<String, Any?>> = _valueForCustomResult
+
+    private val _scrollToHash = MutableSharedFlow<Long>(extraBufferCapacity = 1)
+    val scrollToHash: SharedFlow<Long> = _scrollToHash
+
 
     // внутреннее «ожидаемое действие» после подтверждения диалога
     private sealed interface PendingOp {
@@ -303,6 +313,10 @@ abstract class MainViewModel(
     val events = _events.asSharedFlow()
 
 
+    fun requestScrollToVisit(itemHash: Long) {
+        _scrollToHash.tryEmit(itemHash)
+    }
+
     fun setStartDate(date: LocalDate) {
         _rangeDataStart.value = date
 
@@ -397,11 +411,15 @@ abstract class MainViewModel(
                     }
                 } ?: title
 
+                Globals.writeToMLOG("INFO","MainViewModel.updateContent","+")
+                val dataItemUIS = getItems()
+                Globals.writeToMLOG("INFO","MainViewModel.updateContent","getItems() size: ${dataItemUIS.size}")
+
                 it.copy(
                     title = title,
                     subTitle = subTitle,
                     idResImage = idResImage,
-                    items = getItems(),
+                    items = dataItemUIS,
                     itemsHeader = getItemsHeader(),
                     itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
@@ -409,6 +427,8 @@ abstract class MainViewModel(
                     filters = filters,
                     lastUpdate = System.currentTimeMillis()
                 )
+//                Globals.writeToMLOG("INFO","MainViewModel.updateContent","+")
+//                it
             }
         }
     }
@@ -453,6 +473,22 @@ abstract class MainViewModel(
                 )
             }
         }
+    }
+
+    /** Универсальный массовый апдейт */
+    fun highlightWhere(predicate: (DataItemUI) -> Boolean, color: Color?) {
+        _uiState.update { st ->
+            st.copy(items = st.items.map { if (predicate(it)) it.withContainerBackground(color) else it })
+        }
+    }
+
+    /** Подкрасить все элементы с данным addr_id */
+    fun highlightByAddrId(addrId: String, color: Color) {
+        val target = addrId.trim()
+        highlightWhere(
+            predicate = { it.addrIdOrNull() == target },
+            color = color
+        )
     }
 
     /** Пользователь выбрал "Принять заказ (разово)" -> показать подтверждение */
@@ -756,6 +792,42 @@ abstract class MainViewModel(
             )
         disposables.add(d)
     }
+
+    fun openContextMenu(wp: WpDataDB, contextUI: ContextUI) {
+        val actions = buildActions(contextUI)
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowContextMenu(
+                    menuState = ContextMenuState(
+                        wpDataDB = wp,
+                        actions = actions
+                    )
+                )
+            )
+        }
+    }
+
+    private fun buildActions(contextUI: ContextUI): List<ContextMenuAction> =
+        when (contextUI) {
+            ContextUI.WP_DATA_IN_CONTAINER -> listOf(
+                ContextMenuAction.OpenVisit,
+                ContextMenuAction.Close
+            )
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
+                ContextMenuAction.AcceptOrder,
+                ContextMenuAction.AcceptAllAtAddress,
+                ContextMenuAction.RejectOrder,
+                ContextMenuAction.RejectAddress,
+                ContextMenuAction.RejectClient,
+                ContextMenuAction.RejectByType,
+                ContextMenuAction.OpenOrder,
+                ContextMenuAction.OpenSMSPlanDirectory,
+                ContextMenuAction.AskMoreMoney,
+                ContextMenuAction.Feedback,
+                ContextMenuAction.Close
+            )
+            else -> emptyList()
+        }
 
 
     override fun onCleared() {

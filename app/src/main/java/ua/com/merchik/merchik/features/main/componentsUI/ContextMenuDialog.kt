@@ -42,6 +42,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -103,12 +104,16 @@ fun rememberContextMenuHost(
     var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
     val focusManager = LocalFocusManager.current
 
+    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+
     // Подписка на события (как было)
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is MainEvent.ShowContextMenu -> selectedItem = event.menuState
-                is MainEvent.ShowMessageDialog -> { /* твоя логика показ диалога */ }
+                is MainEvent.ShowMessageDialog -> { /* твоя логика показ диалога */
+                    showMessageDialog = event.data
+                }
             }
         }
     }
@@ -204,7 +209,32 @@ fun rememberContextMenuHost(
     }
     val close: () -> Unit = { selectedItem = null }
 
+    showMessageDialog?.let { d ->
+        MessageDialog(
+            title = d.title,
+            subTitle = d.subTitle,
+            message = d.message,
+            status = d.status,
+            onDismiss = {
+                showMessageDialog = null
+                viewModel.cancelPending()
+            },
+            okButtonName = d.positivText ?: "Ok",
+            onConfirmAction = {
+                showMessageDialog = null
+                viewModel.performPending()
+            },
+            onCancelAction = if (d.status == DialogStatus.NORMAL) {
+                {
+                    showMessageDialog = null
+                    viewModel.cancelPending()
+                }
+            } else null
+        )
+    }
+
     return remember { ContextMenuController(open, close) }
+
 }
 
 @Composable

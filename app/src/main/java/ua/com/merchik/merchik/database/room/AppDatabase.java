@@ -159,7 +159,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 SynchronizationTimeTable.class,
                 WPDataAdditional.class      // дополнительный заработок
         },
-        version = 68
+        version = 69
 )
 
 

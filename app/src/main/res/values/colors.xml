@@ -21,6 +21,10 @@
     <color name="yellow">#FAF7BB</color>
     <color name="colorInetYellowDark">#996809</color>
 
+    <color name="maps_green">#FF4CAF50</color>
+    <color name="maps_blue">#FF9BDAF1</color>
+    <color name="maps_dark_blue">#FF1565C0</color>
+
     <color name="colorInetRed">#FF1100</color>
     <color name="red_error">#EF5350</color>
     <color name="colorInetRedDark">#990600</color>
@@ -51,6 +55,7 @@
     <color name="orange">#fa6600</color>
 
     <color name="main_form">#D7D5D5</color>
+    <color name="main_form_not_trans">#FFD7D5D5</color>
     <color name="main_form_list">#EAE8E8</color>
     <color name="background_item_filter">#EAE8E8</color>
     <color name="background_item_filter_button">#B8B7B7</color>
@@ -62,6 +67,14 @@
     <color name="black70">#4D000000</color>
 
     <color name="ufmd_accept">#00FF77</color>
+    <color name="ufmd_accept_t">#A9FFD5</color>
 
+
+    <color name="defaultTextColor">#FFFFFF</color>
+    <color name="errorColor">#D50000</color>
+    <color name="infoColor">#3F51B5</color>
+    <color name="successColor">#388E3C</color>
+    <color name="warningColor">#FFA900</color>
+    <color name="normalColor">#353A3E</color>
 
 </resources>

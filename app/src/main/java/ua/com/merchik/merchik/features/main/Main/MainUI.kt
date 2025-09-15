@@ -39,9 +39,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,11 +54,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -92,6 +96,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -105,7 +110,6 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
@@ -129,6 +133,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val focusManager = LocalFocusManager.current
 
     var isActiveFiltered by remember { mutableStateOf(false) }
+
+    var isActiveSorted by remember { mutableStateOf(false) }
 
     var showAdditionalContent by remember { mutableStateOf(false) }
 
@@ -177,6 +183,18 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
+    var pendingId by remember { mutableStateOf<Long?>(null) }
+
+    // Ловим запросы скролла и кладём «ожидание» в локальный стейт
+    LaunchedEffect(Unit) {
+        viewModel.scrollToHash.collectLatest { h -> pendingId = h }
+    }
+
+    // сколько элементов сверху не из основного списка (хедеры/stickyHeader и т.п.)
+    val headerCount = 0
+    // хотим зазор сверху после скролла
+    val topOffsetPx = -with(LocalDensity.current) { 38.dp.roundToPx() }
+
     // На кнопку Back тоже корректно сворачиваем
     BackHandler(enabled = searchFocused) {
         keyboardController?.hide()
@@ -192,123 +210,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     viewModel.launcher = launcher
 
-
-
-//    LaunchedEffect(Unit) {
-//        viewModel.events.collect { event ->
-//            when (event) {
-//                is MainEvent.ShowContextMenu -> {
-//                    selectedItem = event.menuState
-//                }
-//
-//                is MainEvent.ShowMessageDialog -> {
-//                    showMessageDialog = event.data
-//                }
-//            }
-//        }
-//    }
-
-
-//    selectedItem?.wpDataDB?.let {
-//        ContextMenuDialog(
-//            visible = selectedItem != null,
-//            wpDataDB = it,
-//            actions = selectedItem?.actions.orEmpty(),
-//            onDismiss = { selectedItem = null },
-//            onActionClick = { result ->
-//                focusManager.clearFocus(force = true)
-//                when (result.action) {
-//                    is ContextMenuAction.AcceptOrder -> {
-//                        selectedItem = result.wpDataDB?.let {
-//                            ContextMenuState(
-//                                actions = listOf(
-//                                    ContextMenuAction.ConfirmAcceptOneTime,
-//                                    ContextMenuAction.ConfirmAcceptInfinite,
-//                                    ContextMenuAction.Close
-//                                ),
-//                                wpDataDB = it
-//                            )
-//                        }
-//                    }
-//
-//                    is ContextMenuAction.AcceptAllAtAddress -> {
-//                        selectedItem = result.wpDataDB?.let {
-//                            ContextMenuState(
-//                                actions = listOf(
-//                                    ContextMenuAction.ConfirmAllAcceptOneTime,
-//                                    ContextMenuAction.ConfirmAllAcceptInfinite,
-//                                    ContextMenuAction.Close
-//                                ),
-//                                wpDataDB = it
-//                            )
-//                        }
-//                    }
-//
-//                    is ContextMenuAction.ConfirmAcceptOneTime -> {
-//                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.ConfirmAcceptInfinite -> {
-//                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
-//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
-//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.OpenVisit,
-//                    ContextMenuAction.OpenOrder -> {
-//                        // как было
-//                        result.wpDataDB?.let {
-//                            val intent = Intent(context, DetailedReportActivity::class.java)
-//                            intent.putExtra("WpDataDB_ID", it.id)
-//                            context.startActivity(intent)
-//                        }
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.OpenSMSPlanDirectory -> {
-//                        val intent = Intent(context, FeaturesActivity::class.java)
-//                        val bundle = Bundle()
-//                        bundle.putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
-//                        bundle.putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
-//                        bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
-//
-//                        bundle.putString("title", "Заявки")
-//                        bundle.putString("subTitle", "## subTitle")
-//
-//
-//                        //                bundle.putString('req', "");
-////                bundle.putInt("idResImage", R.drawable.ic_caution);
-//                        intent.putExtras(bundle)
-//                        launcher.launch(intent)
-//
-//                        selectedItem = null
-//                    }
-//
-//                    is ContextMenuAction.Close -> selectedItem = null
-//
-//                    else -> {
-//                        showMessageDialog = MessageDialogData(
-//                            title = "Дополнительный заработок",
-//                            message = "Меню: ${result.action.title} находится в разработке",
-//                            status = DialogStatus.ALERT
-//                        )
-//                        selectedItem = null
-//                    }
-//                }
-//            }
-//        )
-//    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -319,7 +220,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             !(viewModel.typeWindow ?: "").equals("container", true)
         ) {
             TopButton(
-                modifier = Modifier.align(alignment = Alignment.End),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .align(alignment = Alignment.End),
                 onSettings = { showSettingsDialog = true },
                 onRefresh = { viewModel.updateContent() },
                 onClose = { (context as? Activity)?.finish() }
@@ -387,7 +290,26 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     searchText = uiState.filters?.searchText
                 )
                 dataItemsUI.addAll(result.items)
+                dataItemsUI.addAll(uiState.itemsFooter)
 
+//                val dataItemsUI by remember(
+//                    uiState.items,
+//                    uiState.filters,
+//                    uiState.sortingFields,
+//                    viewModel.rangeDataStart.value,
+//                    viewModel.rangeDataEnd.value
+//                ) {
+//                    mutableStateOf(
+//                        filterAndSortDataItems(
+//                            items = uiState.items,
+//                            filters = uiState.filters,
+//                            sortingFields = uiState.sortingFields,
+//                            rangeStart = viewModel.rangeDataStart.value,
+//                            rangeEnd = viewModel.rangeDataEnd.value,
+//                            searchText = uiState.filters?.searchText
+//                        ).items
+//                    )
+//                }
 
 //                dataItemsUI.addAll(
 //                    uiState.items.filter { dataItemUI ->
@@ -482,9 +404,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                    )
 //                )
 
-                dataItemsUI.addAll(uiState.itemsFooter)
 
                 isActiveFiltered = result.isActiveFiltered
+                isActiveSorted = result.isActiveSorted
 
                 uiState.title?.let {
                     Text(
@@ -608,7 +530,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             )
 
                             ImageButton(
-                                id = R.drawable.ic_sort_down,
+                                id = if (isActiveSorted) R.drawable.ic_sort_down_checked else R.drawable.ic_sort_down,
                                 sizeButton = 40.dp, sizeImage = 24.dp,
                                 modifier = Modifier.padding(start = 7.dp),
                                 onClick = { showSortingDialog = true },
@@ -736,11 +658,22 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         LazyColumn(
                             state = listState,
                         ) {
-                            items(
-                                dataItemsUI,
-                                key = { it.hashCode() }
-                            ) { item ->
-                                val key = item.hashCode()
+                            itemsIndexed(
+                                items = dataItemsUI,
+                                key = { _, item -> item.stableId }
+                            ) { index, item ->
+                                val key = item.stableId
+//                                val isTarget = pendingHash != null && item.hashCode() == pendingHash
+//                                // как только «наш» айтем отрисовался — скроллим к его индексу (он 100% точный)
+//                                LaunchedEffect(isTarget) {
+//                                    if (isTarget) {
+//                                        withFrameNanos { } // дождаться измерения
+//                                        // если у тебя есть stickyHeader/заголовки сверху — добавь их count
+//                                        val headerCount = 0
+//                                        listState.animateScrollToItem(headerCount + index, scrollOffset = topOffsetPx)
+//                                        pendingHash = null
+//                                    }
+//                                }
 
                                 var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
                                 // Анимированный уход «в ноль» для исходного элемента
@@ -983,6 +916,23 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         }
                     }
                 }
+
+                // Как только пришёл pendingId И список обновился — скроллим к индексу
+                LaunchedEffect(pendingId, dataItemsUI) {
+                    val target = pendingId ?: return@LaunchedEffect
+                    // Находим индекс по stableId
+                    val indexInData = dataItemsUI.indexOfFirst { it.stableId == target }
+                    if (indexInData >= 0) {
+                        // ждём один кадр, чтобы LazyColumn промерилась
+                        withFrameNanos { }
+                        val indexToScroll = headerCount + indexInData
+                        // Анимируем скролл
+                        listState.animateScrollToItem(indexToScroll, scrollOffset = topOffsetPx)
+                        // сбрасываем ожидание
+                        pendingId = null
+                    }
+                }
+
             }
 
             // Оверлейная «летающая» копия
@@ -1134,6 +1084,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
 
+
     if (showAdditionalContent) {
         Log.e("showAdditionalContent", "+")
         viewModel.onClickAdditionalContent()
@@ -1176,21 +1127,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         MapsDialog(
             viewModel,
             onDismiss = { showMapsDialog = false },
-            onOpenContextMenu = { wp ->
-                menu.open(wp, listOf(
-                    ContextMenuAction.AcceptOrder,
-                    ContextMenuAction.AcceptAllAtAddress,
-                    ContextMenuAction.RejectOrder,
-                    ContextMenuAction.RejectAddress,
-                    ContextMenuAction.RejectClient,
-                    ContextMenuAction.RejectByType,
-                    ContextMenuAction.OpenOrder,
-                    ContextMenuAction.OpenSMSPlanDirectory,
-                    ContextMenuAction.AskMoreMoney,
-                    ContextMenuAction.Feedback,
-                    ContextMenuAction.Close
-                ))
-            })
+            contextUI = viewModel.contextUI, // откуда у тебя он берётся
+            onOpenContextMenu = { wp, ctxUI ->
+                viewModel.openContextMenu(wp, ctxUI)
+            }
+        )
     }
 
     showMessageDialog?.let { d ->
@@ -1217,8 +1158,26 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         )
     }
 
+//    LaunchedEffect(Unit) {
+//        viewModel.scrollToHash.collectLatest { targetHash ->
+//            // ждём, пока список после фильтра/сортировки обновится и появится нужный элемент
+//            val index = snapshotFlow { uiState.items }
+//                .mapLatest { list -> list.indexOfFirst { it.hashCode() == targetHash } }
+//                .filter { it >= 0 }
+//                .first()
+//
+//            val topOffsetPx = with(density) { 8.dp.toPx().toInt() }
+//
+//            listState.animateScrollToItem(index
+//                , -topOffsetPx
+////                , scrollOffset = -topOffsetPx
+//            )
+//        }
+//    }
+
 }
 
+@Stable
 @Composable
 fun ItemUI(
     item: DataItemUI,
@@ -1432,7 +1391,7 @@ fun ItemUI(
                         } else {
                             if (!field.key.equals("id_res_image", true)) {
                                 ItemFieldValue(field, visibilityColumName)
-                                if (index < item.fields.size - 1) HorizontalDivider()
+                                if (index < item.fields.size - 1) HorizontalDivider(color = Color.LightGray)
                             }
                         }
                     }

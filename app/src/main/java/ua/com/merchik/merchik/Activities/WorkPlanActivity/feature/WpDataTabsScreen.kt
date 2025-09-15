@@ -2,8 +2,11 @@ package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,12 +43,16 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.AdditionalContentTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
+import ua.com.merchik.merchik.retrofit.GlobalErrors
 
 
 @Composable
@@ -142,12 +149,13 @@ fun WpDataTabsScreen() {
         }
     }
 
+    GlobalErrorMsg()
     RequestNotificationsPermissionPersistent()
 }
 
 @Composable
 fun RequestNotificationsPermissionPersistent() {
-    if (Build.VERSION.SDK_INT >= 33) {
+    if (VERSION.SDK_INT >= 33) {
         val ctx = LocalContext.current
         val launcher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -163,6 +171,56 @@ fun RequestNotificationsPermissionPersistent() {
             // Всегда будет вызывать диалог, пока пользователь не даст "Разрешить"
             SideEffect {
                 launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+}
+
+@Composable
+fun GlobalErrorMsg() {
+    val ctx = LocalContext.current as Activity
+    val appPackageName = ctx.packageName
+    var isShow by remember { mutableStateOf(true) }
+    val versionName = if (Build.VERSION.SDK_INT >= 33) {
+        ctx.packageManager.getPackageInfo(
+            ctx.packageName,
+            PackageManager.PackageInfoFlags.of(0)
+        ).versionName
+    } else {
+        @Suppress("DEPRECATION")
+        ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName
+    }
+    LaunchedEffect(isShow) {
+        GlobalErrors.messages.collectLatest { msg ->
+            if (isShow) {
+                isShow = false
+                MessageDialogBuilder(ctx)
+                    .setTitle("Необхідне оновлення додатку")
+                    .setSubTitle("Відповідь від сервера")
+                    .setStatus(DialogStatus.ERROR)
+                    .setMessage(msg)
+                    .setOnCancelAction("Оновити") {
+                        try {
+                            // Сначала пробуем открыть Play Market
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("market://details?id=$appPackageName")
+                            )
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            ctx.startActivity(intent)
+                        } catch (e: android.content.ActivityNotFoundException) {
+                            // Если Play Market не установлен, открываем в браузере
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")
+                            )
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            ctx.startActivity(intent)
+                        }
+                        isShow = true
+                    }
+                    .show()
+
             }
         }
     }

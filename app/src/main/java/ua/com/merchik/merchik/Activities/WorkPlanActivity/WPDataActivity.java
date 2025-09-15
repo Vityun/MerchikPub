@@ -96,8 +96,6 @@ public class WPDataActivity extends toolbar_menus {
 
 
 
-
-
         videoLessons = null;
         setFab(this, findViewById(R.id.fab), () -> {
         });

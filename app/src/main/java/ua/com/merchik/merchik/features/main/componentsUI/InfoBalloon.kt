@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,12 +26,12 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.dataLayer.common.BalloonShape
-
 
 
 /** Базовый, «слотовый» вариант — можно класть любой контент. */
@@ -117,16 +120,33 @@ fun InfoBalloonText(
     ) {
         Text(
             title,
-            style = MaterialTheme.typography.titleMedium,
-        )
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            textAlign = TextAlign.Center
+            )
         if (!subtitle.isNullOrBlank()) {
             Spacer(Modifier.height(1.dp))
-            Text(
-                "#СЧЕТЧИК $subtitle", style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.Blue,
-                    textDecoration = TextDecoration.Underline
+
+            // Подзаголовок у левого края
+            Row(
+                modifier = Modifier
+                    .align(Alignment.Start),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+//                Text(
+//                    text = subtitle,
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+//                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "$subtitle подробнее..",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Blue,
+                        textDecoration = TextDecoration.Underline
+                    )
                 )
-            )
+            }
         }
     }
 }

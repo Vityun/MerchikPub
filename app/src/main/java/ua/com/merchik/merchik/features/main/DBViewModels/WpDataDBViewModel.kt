@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
 import io.realm.Sort
 import kotlinx.coroutines.launch
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -145,9 +146,9 @@ class WpDataDBViewModel @Inject constructor(
                     ModeUI.MULTI_SELECT,
                     "## USER",
                     "## sub title",
-                    "user_id",
                     "user_txt",
-                    dataUniqUser.map { it.user_id.toString() },
+                    "user_txt",
+                    dataUniqUser.map { it.user_txt.toString() },
                     dataUniqUser.map { it.user_txt },
                     contextUI == ContextUI.WP_DATA_IN_CONTAINER
                 )
@@ -160,9 +161,9 @@ class WpDataDBViewModel @Inject constructor(
                     ModeUI.MULTI_SELECT,
                     "## ADRESS",
                     "## sub title",
-                    "addr_id",
                     "addr_txt",
-                    dataUniqAdress.map { it.addr_id.toString() },
+                    "addr_txt",
+                    dataUniqAdress.map { it.addr_txt.toString() },
                     dataUniqAdress.map { it.addr_txt },
                     enabled = true
                 )
@@ -174,9 +175,9 @@ class WpDataDBViewModel @Inject constructor(
                     ModeUI.MULTI_SELECT,
                     "## ADRESS",
                     "## sub title",
-                    "client_id",
-                    "nm",
-                    client.map { it.id.toString() },
+                    "client_txt",
+                    "client_txt",
+                    client.map { it.nm.toString() },
                     client.map { it.nm },
                     enabled = true
                 )
@@ -221,7 +222,7 @@ class WpDataDBViewModel @Inject constructor(
                     "## STATUS",
                     "## sub title",
                     "status",
-                    "statusComment",
+                    "status",
                     data.map { it.status.toString() }.distinct(),
                     data.map { it.statusComment }.distinct(),
                     enabled = true
@@ -256,24 +257,25 @@ class WpDataDBViewModel @Inject constructor(
     }
 
 
-    override suspend fun getItemsHeader(): List<DataItemUI> {
-        if (getItems().isEmpty()) {
-            val wpDataDB = SamplePhotoSDB()
-            wpDataDB.nm = "test"
-            return repository.toItemUIList(
-                SamplePhotoSDB::class,
-                mutableListOf(wpDataDB),
-                contextUI,
-                null
-            )
-        } else return emptyList()
-    }
+//    override suspend fun getItemsHeader(): List<DataItemUI> {
+//        if (getItems().isEmpty()) {
+//            val wpDataDB = SamplePhotoSDB()
+//            wpDataDB.nm = "test"
+//            return repository.toItemUIList(
+//                SamplePhotoSDB::class,
+//                mutableListOf(wpDataDB),
+//                contextUI,
+//                null
+//            )
+//        } else return emptyList()
+//    }
 
 
     override suspend fun getItems(): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!","getItems: start")
         val raw: List<WpDataDB> = when (contextUI) {
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
+                Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER")
                 RealmManager.getAllWorkPlanForRNO()
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
@@ -281,6 +283,7 @@ class WpDataDBViewModel @Inject constructor(
             }
 
             else -> {
+                Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","ContextUI is not WP_DATA_ADDITIONAL_IN_CONTAINER")
                 RealmManager.getAllWorkPlanWithOutRNO()
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
@@ -291,6 +294,7 @@ class WpDataDBViewModel @Inject constructor(
         // 2) Кооперативная проверка отмены перед тяжёлым маппингом
 
         // 3) Тяжёлое преобразование тоже на IO
+        Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","raw size: ${raw.size}")
         return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0)
 
     }

@@ -3941,13 +3941,13 @@ public class Options {
         // Пробегаемся по всем опциям данного документа
         for (OptionsDB option : optionsDB) {
             int optionId = Integer.parseInt(option.getOptionId()); // Получаем ID опции
-            int optionControlId = Integer.parseInt(option.getOptionControlId()); // Получаем ID опции
+//            int optionControlId = Integer.parseInt(option.getOptionControlId()); // Получаем ID опции
 
-            Log.e("getOptionString", "------------------------------------------");
-            Log.e("getOptionString", "optionId: " + optionId);
-            Log.e("getOptionString", "optionControlId: " + optionControlId);
-            Log.e("getOptionString", "option so: " + option.getSo());
-            Log.e("getOptionString", "option: " + option.getOptionTxt());
+//            Log.e("getOptionString", "------------------------------------------");
+//            Log.e("getOptionString", "optionId: " + optionId);
+//            Log.e("getOptionString", "optionControlId: " + optionControlId);
+//            Log.e("getOptionString", "option so: " + option.getSo());
+//            Log.e("getOptionString", "option: " + option.getOptionTxt());
 
             // Есть ли данная опция среди Опций ТПЛ-ов (та что захардкожена)
             // todo нельзя ли использовать сейчас listTovOpt?

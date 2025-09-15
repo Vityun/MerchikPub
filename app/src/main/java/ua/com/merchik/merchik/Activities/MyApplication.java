@@ -20,6 +20,7 @@ import ua.com.merchik.merchik.Utils.LogCleaner;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.RoomManager;
 
+
 @HiltAndroidApp
 public class MyApplication extends Application {
 

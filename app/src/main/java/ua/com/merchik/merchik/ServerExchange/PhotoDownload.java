@@ -136,7 +136,7 @@ public class PhotoDownload {
         call.enqueue(new Callback<TovarImgResponse>() {
             @Override
             public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
-                Globals.writeToMLOG("INFO", "downloadPhotoByIds", "response: " + new Gson().toJson(response.body()));
+//                Globals.writeToMLOG("INFO", "downloadPhotoByIds", "response: " + new Gson().toJson(response.body()));
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         if (response.body().getState()) {

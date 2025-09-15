@@ -389,10 +389,10 @@ public class TablesLoadingUnloading {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
 
-            retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
-            call.enqueue(new retrofit2.Callback<WpDataServer>() {
+            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
+            call.enqueue(new Callback<WpDataServer>() {
                 @Override
-                public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
+                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
@@ -404,7 +404,7 @@ public class TablesLoadingUnloading {
 //                            RealmManager.setWpData(wpDataDBList);
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                INSTANCE.executeTransaction(realm -> {
                                     if (sTable != null) {
                                         sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
                                         realm.copyToRealmOrUpdate(sTable);
@@ -422,7 +422,7 @@ public class TablesLoadingUnloading {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
+                public void onFailure(Call<WpDataServer> call, Throwable t) {
 //                    if (pg != null)
 //                        if (pg.isShowing())
 //                            pg.dismiss();
@@ -450,12 +450,12 @@ public class TablesLoadingUnloading {
         data.date_to = Clock.getDatePeriod(1);
 
         long vpi;
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else
+//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+//        if (sTable != null) {
+//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+//            vpi = sTable.getVpi_app();
+//            Log.e("updateWpData", "vpi: " + vpi);
+//        } else
             vpi = 0;
 
 //        data.dt_change_from = String.valueOf(vpi);
@@ -471,10 +471,10 @@ public class TablesLoadingUnloading {
 
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
 
-            retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<WpDataServer>() {
+            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<WpDataServer>() {
                 @Override
-                public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
+                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
@@ -491,12 +491,12 @@ public class TablesLoadingUnloading {
 //                            RealmManager.setWpData(wpDataDBList);
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    if (sTable != null) {
-                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
-                                        realm.copyToRealmOrUpdate(sTable);
-                                    }
-                                });
+//                                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                    if (sTable != null) {
+//                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+//                                        realm.copyToRealmOrUpdate(sTable);
+//                                    }
+//                                });
 
                             }
                         }
@@ -505,7 +505,7 @@ public class TablesLoadingUnloading {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
+                public void onFailure(Call<WpDataServer> call, Throwable t) {
 
                 }
             });
@@ -545,6 +545,7 @@ public class TablesLoadingUnloading {
                     return Completable
                             .fromAction(() -> SQL_DB.wpDataAdditionalDao().insertAll(result.list))
                             .andThen(Single.just(result.list.size()));
+
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -703,10 +704,10 @@ public class TablesLoadingUnloading {
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Тип фото");
 
-        retrofit2.Call<ImageTypes> call = RetrofitBuilder.getRetrofitInterface().IMAGE_TYPES_CALL(mod, act, images_type_list);
-        call.enqueue(new retrofit2.Callback<ImageTypes>() {
+        Call<ImageTypes> call = RetrofitBuilder.getRetrofitInterface().IMAGE_TYPES_CALL(mod, act, images_type_list);
+        call.enqueue(new Callback<ImageTypes>() {
             @Override
-            public void onResponse(retrofit2.Call<ImageTypes> call, retrofit2.Response<ImageTypes> response) {
+            public void onResponse(Call<ImageTypes> call, Response<ImageTypes> response) {
                 Log.e("TAG_TEST", "RESPONSE_1" + response.body());
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getMenuList() != null && response.body().getMenuList().getImagesTypeList() != null) {
@@ -737,7 +738,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ImageTypes> call, Throwable t) {
+            public void onFailure(Call<ImageTypes> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -762,10 +763,10 @@ public class TablesLoadingUnloading {
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Групы товаров");
 
-        retrofit2.Call<CustomerGroups> call = RetrofitBuilder.getRetrofitInterface().GROUP_TYPE(mod, act);
-        call.enqueue(new retrofit2.Callback<CustomerGroups>() {
+        Call<CustomerGroups> call = RetrofitBuilder.getRetrofitInterface().GROUP_TYPE(mod, act);
+        call.enqueue(new Callback<CustomerGroups>() {
             @Override
-            public void onResponse(retrofit2.Call<CustomerGroups> call, retrofit2.Response<CustomerGroups> response) {
+            public void onResponse(Call<CustomerGroups> call, Response<CustomerGroups> response) {
                 Log.e("TAG_TEST", "RESPONSE_2: " + response.body());
                 try {
                     if (response.isSuccessful() && response.body().getState()) {
@@ -801,7 +802,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<CustomerGroups> call, Throwable t) {
+            public void onFailure(Call<CustomerGroups> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -827,7 +828,7 @@ public class TablesLoadingUnloading {
 
         Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
+        Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<OptionsServer>() {
             @Override
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
@@ -888,12 +889,12 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(standartData);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface()
+        Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface()
                 .GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
 //                .OPTIONS_CALL(mod, act, date_from, date_to);
-        call.enqueue(new retrofit2.Callback<OptionsServer>() {
+        call.enqueue(new Callback<OptionsServer>() {
             @Override
-            public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
+            public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
                 try {
                     globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
                     if (response.isSuccessful() && response.body() != null) {
@@ -918,7 +919,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<OptionsServer> call, Throwable t) {
+            public void onFailure(Call<OptionsServer> call, Throwable t) {
                 globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
 //                if (pg != null)
 //                    if (pg.isShowing())
@@ -948,9 +949,9 @@ public class TablesLoadingUnloading {
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
         long lastUpdate = 0;
-        SynchronizationTimetableDB realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("standart_table"));
+        SynchronizationTimetableDB realmResults = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("report_prepare"));
 //        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-        if (realmResults != null) lastUpdate = realmResults.getVpo_export();
+//        if (realmResults != null) lastUpdate = realmResults.getVpo_export();
 
         // 22.08.23. Получаю с Плана Работ список Адресов так что б они не повторялись.
         List<Integer> addressIds = getWpDataAddresses();
@@ -964,21 +965,21 @@ public class TablesLoadingUnloading {
         data.act = "list_data";
         data.date_from = date_from;
         data.date_to = date_to;
-        if (lastUpdate != 0) data.vpo = lastUpdate;
+//        if (lastUpdate != 0) data.vpo = lastUpdate;
         if (addressIds != null && addressIds.size() > 0)
             data.addr_id = addressIds;
 
-        data.dt_change_from = String.valueOf(realmResults.getVpi_app());
+        data.dt_change_from = String.valueOf(realmResults != null ? realmResults.getVpi_app() : 0);
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+        Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
 
-        call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
+        call.enqueue(new Callback<ReportPrepareServer>() {
             @Override
-            public void onResponse(@NonNull retrofit2.Call<ReportPrepareServer> call, @NonNull retrofit2.Response<ReportPrepareServer> response) {
+            public void onResponse(@NonNull Call<ReportPrepareServer> call, @NonNull Response<ReportPrepareServer> response) {
                 Log.e("TAG_TEST", "RESPONSE_4");
                 Log.e("downloadReportPrepare", "downloadReportPrepare.response: " + response);
 
@@ -993,7 +994,7 @@ public class TablesLoadingUnloading {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                            INSTANCE.executeTransaction(realm -> {
                                 realmResults.setVpi_app(System.currentTimeMillis() / 1000);
                                 realm.copyToRealmOrUpdate(realmResults);
                             });
@@ -1024,7 +1025,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(@NonNull retrofit2.Call<ReportPrepareServer> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ReportPrepareServer> call, @NonNull Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1053,10 +1054,10 @@ public class TablesLoadingUnloading {
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Клиенты");
 
-        retrofit2.Call<CustomerTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_CUSTOMER_T(mod, act);
-        call.enqueue(new retrofit2.Callback<CustomerTableResponse>() {
+        Call<CustomerTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_CUSTOMER_T(mod, act);
+        call.enqueue(new Callback<CustomerTableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<CustomerTableResponse> call, retrofit2.Response<CustomerTableResponse> response) {
+            public void onResponse(Call<CustomerTableResponse> call, Response<CustomerTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSECustomerTable: " + response.body());
 
@@ -1104,7 +1105,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<CustomerTableResponse> call, Throwable t) {
+            public void onFailure(Call<CustomerTableResponse> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1132,10 +1133,10 @@ public class TablesLoadingUnloading {
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Адреса");
 
-        retrofit2.Call<AddressTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_T(mod, act);
-        call.enqueue(new retrofit2.Callback<AddressTableResponse>() {
+        Call<AddressTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_T(mod, act);
+        call.enqueue(new Callback<AddressTableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<AddressTableResponse> call, retrofit2.Response<AddressTableResponse> response) {
+            public void onResponse(Call<AddressTableResponse> call, Response<AddressTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEAddressTable: " + response.body());
                     if (response.body().getState()) {
@@ -1171,7 +1172,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<AddressTableResponse> call, Throwable t) {
+            public void onFailure(Call<AddressTableResponse> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1198,10 +1199,10 @@ public class TablesLoadingUnloading {
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Сотрудники");
 
-        retrofit2.Call<SotrTable> call = RetrofitBuilder.getRetrofitInterface().GET_SOTR_T(mod, act);
-        call.enqueue(new retrofit2.Callback<SotrTable>() {
+        Call<SotrTable> call = RetrofitBuilder.getRetrofitInterface().GET_SOTR_T(mod, act);
+        call.enqueue(new Callback<SotrTable>() {
             @Override
-            public void onResponse(retrofit2.Call<SotrTable> call, retrofit2.Response<SotrTable> response) {
+            public void onResponse(Call<SotrTable> call, Response<SotrTable> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSESotrTable: " + response.body());
                     if (response.body().getState()) {
@@ -1265,7 +1266,7 @@ public class TablesLoadingUnloading {
             }
 
             @Override
-            public void onFailure(retrofit2.Call<SotrTable> call, Throwable t) {
+            public void onFailure(Call<SotrTable> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1287,17 +1288,17 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "city_list";
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_CITY_T(mod, act);
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_CITY_T(mod, act);
+        call.enqueue(new Callback<JsonObject>() {
             @Override
-            public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSECityTable: " + response.body());
                 }
             }
 
             @Override
-            public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("TAG_TABLE", "FAILURECityTable: " + t);
             }
         });
@@ -1311,17 +1312,17 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "obl_list";
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_OBL_T(mod, act);
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_OBL_T(mod, act);
+        call.enqueue(new Callback<JsonObject>() {
             @Override
-            public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEOblTable: " + response.body());
                 }
             }
 
             @Override
-            public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("TAG_TABLE", "FAILUREOblTable: " + t);
             }
         });
@@ -1335,17 +1336,17 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "addr_tt_list";
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_TT_T(mod, act);
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_TT_T(mod, act);
+        call.enqueue(new Callback<JsonObject>() {
             @Override
-            public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEAddressTTTable: " + response.body());
                 }
             }
 
             @Override
-            public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("TAG_TABLE", "FAILUREAddressTTTable: " + t);
             }
         });
@@ -1425,7 +1426,7 @@ id_exclude - иди товаров которые есть в приложени
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<TovarTableResponse> call;
+        Call<TovarTableResponse> call;
         if (listId != null) {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_ID(mod, act, listId);
         } else {
@@ -1435,9 +1436,9 @@ id_exclude - иди товаров которые есть в приложени
 
 //        BlockingProgressDialog finalPg = pg;
 //        BlockingProgressDialog finalTovarProgressDialog = tovarProgressDialog;
-        call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
+        call.enqueue(new Callback<TovarTableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
+            public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
@@ -1469,7 +1470,7 @@ id_exclude - иди товаров которые есть в приложени
 
                             RealmManager.setTovarAsync(list);
 
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                            INSTANCE.executeTransaction(realm -> {
                                 realmResults.setVpi_app(System.currentTimeMillis() / 1000);
                                 realm.copyToRealmOrUpdate(realmResults);
                             });
@@ -1519,7 +1520,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarTableResponse> call, Throwable t) {
+            public void onFailure(Call<TovarTableResponse> call, Throwable t) {
 //                if (finalPg != null)
 //                    if (finalPg.isShowing())
 //                        finalPg.dismiss();
@@ -1588,13 +1589,13 @@ id_exclude - иди товаров которые есть в приложени
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<TovarTableResponse> call;
+        Call<TovarTableResponse> call;
         call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_TABLE(RetrofitBuilder.contentType, convertedObject);
 
 
-        call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
+        call.enqueue(new Callback<TovarTableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
+            public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
@@ -1629,7 +1630,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarTableResponse> call, Throwable t) {
+            public void onFailure(Call<TovarTableResponse> call, Throwable t) {
 
                 click.onFailure("Ошибка при получении списка товара, передайте скриншот этой ошибки руководителю: " + t.getMessage());
 
@@ -1654,10 +1655,10 @@ id_exclude - иди товаров которые есть в приложени
 
         Globals.writeToMLOG("INFO", "downloadTovarGroupTable.convertedObject", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<TovarGroupResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<TovarGroupResponse>() {
+        Call<TovarGroupResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<TovarGroupResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarGroupResponse> call, retrofit2.Response<TovarGroupResponse> response) {
+            public void onResponse(Call<TovarGroupResponse> call, Response<TovarGroupResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     TovarGroupResponse resp = response.body();
 
@@ -1678,7 +1679,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarGroupResponse> call, Throwable t) {
+            public void onFailure(Call<TovarGroupResponse> call, Throwable t) {
                 exchange.onFailure("Данные от сервера получить не удалось. Повторите попытку познее или обратитесь в службу поддержки (кнопка '?' в правом нижнем углу) за помощью. \n\nКод ошибки: " + t);
             }
         });
@@ -1696,10 +1697,10 @@ id_exclude - иди товаров которые есть в приложени
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Торговые Марки");
 
-        retrofit2.Call<TradeMarkResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TRADE_MARKS_T(mod, act);
-        call.enqueue(new retrofit2.Callback<TradeMarkResponse>() {
+        Call<TradeMarkResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TRADE_MARKS_T(mod, act);
+        call.enqueue(new Callback<TradeMarkResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TradeMarkResponse> call, retrofit2.Response<TradeMarkResponse> response) {
+            public void onResponse(Call<TradeMarkResponse> call, Response<TradeMarkResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getState()) {
 
@@ -1727,7 +1728,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TradeMarkResponse> call, Throwable t) {
+            public void onFailure(Call<TradeMarkResponse> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1748,10 +1749,10 @@ id_exclude - иди товаров которые есть в приложени
         String mod = "data_list";
         String act = "ppa_list";
 
-        retrofit2.Call<PPATableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PPA_T(mod, act);
-        call.enqueue(new retrofit2.Callback<PPATableResponse>() {
+        Call<PPATableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PPA_T(mod, act);
+        call.enqueue(new Callback<PPATableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<PPATableResponse> call, retrofit2.Response<PPATableResponse> response) {
+            public void onResponse(Call<PPATableResponse> call, Response<PPATableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEPPATable: " + response.body());
                     if (response.body().getState()) {
@@ -1761,7 +1762,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<PPATableResponse> call, Throwable t) {
+            public void onFailure(Call<PPATableResponse> call, Throwable t) {
                 Log.e("TAG_TABLE", "FAILUREPPATable: " + t);
             }
         });
@@ -1775,10 +1776,10 @@ id_exclude - иди товаров которые есть в приложени
         String mod = "data_list";
         String act = "tovar_vendor_code_list";
 
-        retrofit2.Call<ArticleTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ARTICLE_T(mod, act);
-        call.enqueue(new retrofit2.Callback<ArticleTableResponse>() {
+        Call<ArticleTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ARTICLE_T(mod, act);
+        call.enqueue(new Callback<ArticleTableResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<ArticleTableResponse> call, retrofit2.Response<ArticleTableResponse> response) {
+            public void onResponse(Call<ArticleTableResponse> call, Response<ArticleTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEArticleTable: " + response.body());
                     if (response.body().getState()) {
@@ -1788,7 +1789,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ArticleTableResponse> call, Throwable t) {
+            public void onFailure(Call<ArticleTableResponse> call, Throwable t) {
                 Log.e("TAG_TABLE", "FAILUREArticleTable: " + t);
             }
         });
@@ -1827,10 +1828,10 @@ id_exclude - иди товаров которые есть в приложени
 //            }
 //        });
 
-        retrofit2.Call<ErrorTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_ERROR_LIST(mod, act);
-        call.enqueue(new retrofit2.Callback<ErrorTableResponce>() {
+        Call<ErrorTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_ERROR_LIST(mod, act);
+        call.enqueue(new Callback<ErrorTableResponce>() {
             @Override
-            public void onResponse(retrofit2.Call<ErrorTableResponce> call, retrofit2.Response<ErrorTableResponce> response) {
+            public void onResponse(Call<ErrorTableResponce> call, Response<ErrorTableResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEdownloadErrorTable: " + response.body());
                     if (response.body().getState()) {
@@ -1849,7 +1850,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ErrorTableResponce> call, Throwable t) {
+            public void onFailure(Call<ErrorTableResponce> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1874,10 +1875,10 @@ id_exclude - иди товаров которые есть в приложени
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Акции");
 
-        retrofit2.Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_PROMO_LIST(mod, act);
-        call.enqueue(new retrofit2.Callback<PromoTableResponce>() {
+        Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_PROMO_LIST(mod, act);
+        call.enqueue(new Callback<PromoTableResponce>() {
             @Override
-            public void onResponse(retrofit2.Call<PromoTableResponce> call, retrofit2.Response<PromoTableResponce> response) {
+            public void onResponse(Call<PromoTableResponce> call, Response<PromoTableResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + response.body());
                     if (response.body().getState()) {
@@ -1892,7 +1893,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<PromoTableResponce> call, Throwable t) {
+            public void onFailure(Call<PromoTableResponce> call, Throwable t) {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1940,11 +1941,11 @@ id_exclude - иди товаров которые есть в приложени
         Log.e("TAG_TABLE", "PHOTO_TOVAR_ID_TO_SEND: " + listId);
         Log.e("TAG_TABLE", "PHOTO_TOVAR_ID_TO_SEND: " + listId.size());
 
-        retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO(mod, act, tovarOnly, nolimit, imageType, listId);
+        Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO(mod, act, tovarOnly, nolimit, imageType, listId);
         String finalImageType = imageType;
-        call.enqueue(new retrofit2.Callback<TovarImgResponse>() {
+        call.enqueue(new Callback<TovarImgResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarImgResponse> call, retrofit2.Response<TovarImgResponse> response) {
+            public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getList() != null
                         && !response.body().getList().isEmpty()) {
                     try {
@@ -1972,7 +1973,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarImgResponse> call, Throwable t) {
+            public void onFailure(Call<TovarImgResponse> call, Throwable t) {
                 Log.e("TAG_TABLE", "PHOTO_TOVAR_ERROR: " + t);
             }
         });
@@ -2001,11 +2002,11 @@ id_exclude - иди товаров которые есть в приложени
             Log.e("downloadTovarImg", "TP: " + tp);
 
             if (tp == 18) {
-                retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(list.get(i).getPhotoUrl());
+                Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(list.get(i).getPhotoUrl());
                 int finalI = i;
-                call.enqueue(new retrofit2.Callback<ResponseBody>() {
+                call.enqueue(new Callback<ResponseBody>() {
                     @Override
-                    public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_res: " + response.body().byteStream());
 
@@ -2052,7 +2053,7 @@ id_exclude - иди товаров которые есть в приложени
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<ResponseBody> call, Throwable t) {
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
                         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL: " + t);
                     }
                 });
@@ -2137,10 +2138,10 @@ id_exclude - иди товаров которые есть в приложени
             // Начинаю синхронизацию Плана работ
             try {
                 // Получаю изменённые данные с плана работ
-                retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
-                call.enqueue(new retrofit2.Callback<WpDataServer>() {
+                Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
+                call.enqueue(new Callback<WpDataServer>() {
                     @Override
-                    public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
+                    public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
                         Log.e("TAG_TEST_WP", "RESPONSE_0");
                         try {
                             if (response.isSuccessful() && response.body() != null) {
@@ -2148,7 +2149,7 @@ id_exclude - иди товаров которые есть в приложени
                                     Log.e("TAG_TEST_WP", "RESPONSE_OK");
                                     if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                                         RealmManager.updateWorkPlanFromServer(response.body().getList()); // Получаем данные для выгрузки
-                                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                                        INSTANCE.executeTransaction(realm -> {
                                             long vpiApp = System.currentTimeMillis() / 1000;
                                             sTable.setVpi_app(vpiApp + 3);
                                             realm.copyToRealmOrUpdate(sTable);
@@ -2165,7 +2166,7 @@ id_exclude - иди товаров которые есть в приложени
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
+                    public void onFailure(Call<WpDataServer> call, Throwable t) {
                         Log.e("TAG_TEST_WP", "FAILURE_0 E: " + t);
                         Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/updateWpData/onFailure", "Throwable t: " + t);
                     }
@@ -2199,11 +2200,11 @@ id_exclude - иди товаров которые есть в приложени
         Log.e("LOG_SEND", "call: " + data.size());
 
         if (!data.isEmpty()) {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().LOG(mod, act, data);
+            Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().LOG(mod, act, data);
             Log.e("LOG_SEND", "call: " + call);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
+            call.enqueue(new Callback<JsonObject>() {
                 @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     Log.e("LOG_SEND", "response: " + response.body());
 
                     if (response.isSuccessful() && response.body() != null) {
@@ -2214,7 +2215,7 @@ id_exclude - иди товаров которые есть в приложени
                             if (log.getAsJsonObject(el.getElement_id()) != null) {
                                 Log.e("LOG_SEND", "JSON: " + log.getAsJsonObject(el.getElement_id()));
                                 LogDB logDB = RealmManager.getLogRowById(el.getElement_id());
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                INSTANCE.executeTransaction(realm -> {
                                     logDB.setDt(System.currentTimeMillis() / 1000); // Надо сменить на DT из запроса
                                     INSTANCE.copyToRealmOrUpdate(logDB);
                                 });
@@ -2228,7 +2229,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                public void onFailure(Call<JsonObject> call, Throwable t) {
                     Log.e("LOG_SEND", "FAILURE_E: " + t.getMessage());
                     Log.e("LOG_SEND", "FAILURE_E2: " + t);
                 }
@@ -2364,10 +2365,10 @@ id_exclude - иди товаров которые есть в приложени
         String mod = "report_prepare";
         String act = "get_param_stats";
 
-        retrofit2.Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, codeDad2, clientId);
-        call.enqueue(new retrofit2.Callback<ReportHint>() {
+        Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, codeDad2, clientId);
+        call.enqueue(new Callback<ReportHint>() {
             @Override
-            public void onResponse(retrofit2.Call<ReportHint> call, retrofit2.Response<ReportHint> response) {
+            public void onResponse(Call<ReportHint> call, Response<ReportHint> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("REPORT_HINT", "" + response.body());
 
@@ -2375,7 +2376,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ReportHint> call, Throwable t) {
+            public void onFailure(Call<ReportHint> call, Throwable t) {
 
             }
         });
@@ -2425,7 +2426,7 @@ id_exclude - иди товаров которые есть в приложени
                                 ids[count++] = item.elementId;
                             }
 
-                            List<ReportPrepareDB> rp = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+                            List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
 
                             for (ReportPrepareDB item : rp) {
                                 for (ReportPrepareUpdateResponseList listItem : list) {
@@ -2516,7 +2517,7 @@ id_exclude - иди товаров которые есть в приложени
                                         ids[count++] = item.elementId;
                                     }
 
-                                    List<ReportPrepareDB> rp = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+                                    List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
 
                                     for (ReportPrepareDB item : rp) {
                                         for (ReportPrepareUpdateResponseList listItem : list) {
@@ -2582,7 +2583,7 @@ id_exclude - иди товаров которые есть в приложени
             Globals.writeToMLOG("INFO", "uploadRP().Start", "Size: " + data.data.size());
 
             if (data.data.size() > 0) {
-                retrofit2.Call<ReportPrepareUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP_INFO(RetrofitBuilder.contentType, convertedObject);
+                Call<ReportPrepareUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP_INFO(RetrofitBuilder.contentType, convertedObject);
                 call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
                     @Override
                     public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
@@ -2626,10 +2627,10 @@ id_exclude - иди товаров которые есть в приложени
             String json = gson.toJson(standartData);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<ReportPrepareUploadResponse>() {
+            Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<ReportPrepareUploadResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<ReportPrepareUploadResponse> call, retrofit2.Response<ReportPrepareUploadResponse> response) {
+                public void onResponse(Call<ReportPrepareUploadResponse> call, Response<ReportPrepareUploadResponse> response) {
                     long currentTime = System.currentTimeMillis() / 1000;
                     try {
                         if (response.isSuccessful()) {
@@ -2638,7 +2639,7 @@ id_exclude - иди товаров которые есть в приложени
                                     if (response.body().data != null && !response.body().data.isEmpty()) {
                                         for (ReportPrepareUploadList item : response.body().data) {
                                             ReportPrepareDB reportPrepareDB = INSTANCE.copyFromRealm(RealmManager.getReportPrepareRowById(item.elementId));
-                                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                            INSTANCE.executeTransaction(realm -> {
                                                 reportPrepareDB.setUploadStatus(0);
                                                 reportPrepareDB.setDtChange(currentTime);
                                                 realm.copyToRealmOrUpdate(reportPrepareDB);
@@ -2662,7 +2663,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<ReportPrepareUploadResponse> call, Throwable t) {
+                public void onFailure(Call<ReportPrepareUploadResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "onFailure/uploadReportPrepareToServer", "Throwable t: " + t);
                 }
             });
@@ -2686,7 +2687,7 @@ id_exclude - иди товаров которые есть в приложени
         String act = "track";
 //        String debug_param_1 = "test_something";
 
-        List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDB());
+        List<LogMPDB> logMp = INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDB());
 //        List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDBTEST());
         if (logMp != null && !logMp.isEmpty()) {
             Log.e("uploadLodMp", "LogMpUploadText. LogSize: " + logMp.size());
@@ -2701,10 +2702,10 @@ id_exclude - иди товаров которые есть в приложени
             Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());
 //            Globals.writeToMLOG("INFO", "uploadLodMp", "Данные на выгрузку: " + map);
 
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map/*, debug_param_1*/);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
+            Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map/*, debug_param_1*/);
+            call.enqueue(new Callback<JsonObject>() {
                 @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     Log.e("uploadLodMp", "RESPONSE: " + response.body());
 
                     // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
@@ -2721,7 +2722,7 @@ id_exclude - иди товаров которые есть в приложени
                                         if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
                                             try {
                                                 long id = geoInfo.get("geo_id").getAsLong();
-                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                INSTANCE.executeTransaction(realm -> {
                                                     list.serverId = id;
                                                     list.upload = System.currentTimeMillis() / 1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
                                                     realm.insertOrUpdate(list);
@@ -2736,7 +2737,7 @@ id_exclude - иди товаров которые есть в приложени
                                         } else {
                                             try {
                                                 long id = geoInfo.get("geo_id").getAsLong();
-                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                INSTANCE.executeTransaction(realm -> {
                                                     list.serverId = id;
                                                     list.upload = System.currentTimeMillis() / 1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
                                                     realm.insertOrUpdate(list);
@@ -2760,7 +2761,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                public void onFailure(Call<JsonObject> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "uploadLodMp/onFailure", "Throwable t: " + t);
                     Log.e("uploadLodMp", "FAILURE_E: " + t.getMessage());
                     Log.e("uploadLodMp", "FAILURE_E2: " + t);
@@ -2809,10 +2810,10 @@ id_exclude - иди товаров которые есть в приложени
     public void downloadMenu() {
         String mod = "menu";
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_MENU(mod);
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_MENU(mod);
+        call.enqueue(new Callback<JsonObject>() {
             @Override
-            public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 Log.e("downloadMenu", "RESPONSE: " + response);
                 Log.e("downloadMenu", "RESPONSE.BODY: " + response.body());
                 try {
@@ -2825,7 +2826,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("downloadMenu", "FAILURE_E: " + t.getMessage());
                 Log.e("downloadMenu", "FAILURE_E2: " + t);
             }
@@ -2926,10 +2927,10 @@ id_exclude - иди товаров которые есть в приложени
             String act = "list";
 //        String lang_id = "2"; //(переменная, в которой передаётся код языка, для которого требуется получить список объектов)
 
-            retrofit2.Call<SiteObjects> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_SITE_HINTS(mod, act, langId);
-            call.enqueue(new retrofit2.Callback<SiteObjects>() {
+            Call<SiteObjects> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_SITE_HINTS(mod, act, langId);
+            call.enqueue(new Callback<SiteObjects>() {
                 @Override
-                public void onResponse(retrofit2.Call<SiteObjects> call, retrofit2.Response<SiteObjects> response) {
+                public void onResponse(Call<SiteObjects> call, Response<SiteObjects> response) {
                     try {
                         if (response.isSuccessful()) {
                             if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
@@ -2944,7 +2945,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<SiteObjects> call, Throwable t) {
+                public void onFailure(Call<SiteObjects> call, Throwable t) {
                     Log.e("downloadSiteHints", "FAILURE_E: " + t.getMessage());
                     Log.e("downloadSiteHints", "FAILURE_E2: " + t);
                 }
@@ -2996,10 +2997,10 @@ id_exclude - иди товаров которые есть в приложени
         String mod = "lesson";
         String act = "list";
 
-        retrofit2.Call<SiteHints> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_VIDEO_LESSONS(mod, act);
-        call.enqueue(new retrofit2.Callback<SiteHints>() {
+        Call<SiteHints> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_VIDEO_LESSONS(mod, act);
+        call.enqueue(new Callback<SiteHints>() {
             @Override
-            public void onResponse(retrofit2.Call<SiteHints> call, retrofit2.Response<SiteHints> response) {
+            public void onResponse(Call<SiteHints> call, Response<SiteHints> response) {
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -3017,7 +3018,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<SiteHints> call, Throwable t) {
+            public void onFailure(Call<SiteHints> call, Throwable t) {
                 Log.e("downloadVideoLessons", "FAILURE_E: " + t.getMessage());
                 Log.e("downloadVideoLessons", "FAILURE_E2: " + t);
             }
@@ -3055,10 +3056,10 @@ id_exclude - иди товаров которые есть в приложени
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
 
-            retrofit2.Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<PPAonResponse>() {
+            Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<PPAonResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<PPAonResponse> call, retrofit2.Response<PPAonResponse> response) {
+                public void onResponse(Call<PPAonResponse> call, Response<PPAonResponse> response) {
                     try {
 //                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
                         Log.e("MenuMainTest", "test");
@@ -3071,7 +3072,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<PPAonResponse> call, Throwable t) {
+                public void onFailure(Call<PPAonResponse> call, Throwable t) {
                     Log.e("MenuMainTest", "test.t:" + t);
                 }
             });
@@ -3093,10 +3094,10 @@ id_exclude - иди товаров которые есть в приложени
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<TasksAndReclamationsResponce> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TasksAndReclamations(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<TasksAndReclamationsResponce>() {
+            Call<TasksAndReclamationsResponce> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TasksAndReclamations(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<TasksAndReclamationsResponce>() {
                 @Override
-                public void onResponse(retrofit2.Call<TasksAndReclamationsResponce> call, retrofit2.Response<TasksAndReclamationsResponce> response) {
+                public void onResponse(Call<TasksAndReclamationsResponce> call, Response<TasksAndReclamationsResponce> response) {
                     try {
                         TasksAndReclamationsRealm.setTasksAndReclamations(response.body().getList());
                     } catch (Exception e) {
@@ -3104,7 +3105,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<TasksAndReclamationsResponce> call, Throwable t) {
+                public void onFailure(Call<TasksAndReclamationsResponce> call, Throwable t) {
                 }
             });
         } catch (Exception e) {
@@ -3125,10 +3126,10 @@ id_exclude - иди товаров которые есть в приложени
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<TARCommentsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_ReclamationComments(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<TARCommentsResponse>() {
+            Call<TARCommentsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_ReclamationComments(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<TARCommentsResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<TARCommentsResponse> call, retrofit2.Response<TARCommentsResponse> response) {
+                public void onResponse(Call<TARCommentsResponse> call, Response<TARCommentsResponse> response) {
                     try {
                         Log.e("downloadTARComments", "response" + response.body());
                         if (response.body() != null && response.body().getList() != null && response.body().getList().size() > 0) {
@@ -3142,7 +3143,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<TARCommentsResponse> call, Throwable t) {
+                public void onFailure(Call<TARCommentsResponse> call, Throwable t) {
                     Log.e("downloadTARComments", "onFailure/Throwable t" + t);
                     Globals.writeToMLOG("ERROR", "downloadTARComments/onFailure", "Throwable t: " + t);
                 }
@@ -3165,21 +3166,21 @@ id_exclude - иди товаров которые есть в приложени
             data.act = "theme_list";
 
             // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("theme_list"));
+            SynchronizationTimetableDB synchronizationTimetableDB = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("theme_list"));
             data.dt = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<ThemeTableRespose> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_Theme(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<ThemeTableRespose>() {
+            Call<ThemeTableRespose> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_Theme(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<ThemeTableRespose>() {
                 @Override
-                public void onResponse(retrofit2.Call<ThemeTableRespose> call, retrofit2.Response<ThemeTableRespose> response) {
+                public void onResponse(Call<ThemeTableRespose> call, Response<ThemeTableRespose> response) {
                     try {
                         if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
                             ThemeRealm.setThemeDBTable(response.body().getList());
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                            INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                             });
@@ -3190,7 +3191,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<ThemeTableRespose> call, Throwable t) {
+                public void onFailure(Call<ThemeTableRespose> call, Throwable t) {
                     Globals.writeToMLOG("ERR", "downloadTheme/onFailure", "onFailure e: " + t.getMessage());
                 }
             });
@@ -3240,10 +3241,10 @@ id_exclude - иди товаров которые есть в приложени
 //                }
 //            });
 
-            retrofit2.Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<AdditionalRequirementsServerData>() {
+            Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<AdditionalRequirementsServerData>() {
                 @Override
-                public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
+                public void onResponse(Call<AdditionalRequirementsServerData> call, Response<AdditionalRequirementsServerData> response) {
                     try {
                         if (response.isSuccessful())
                             if (response.body() != null && response.body().getList() != null
@@ -3277,7 +3278,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
+                public void onFailure(Call<AdditionalRequirementsServerData> call, Throwable t) {
                     isDownloadAdditionalRequirements = false;
                     Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
                 }
@@ -3310,10 +3311,10 @@ id_exclude - иди товаров которые есть в приложени
 
             Log.e("downloadAddReqMarks", "convertedObject: " + convertedObject);
 
-            retrofit2.Call<AdditionalRequirementsMarksServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsMarksDB(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<AdditionalRequirementsMarksServerData>() {
+            Call<AdditionalRequirementsMarksServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsMarksDB(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<AdditionalRequirementsMarksServerData>() {
                 @Override
-                public void onResponse(retrofit2.Call<AdditionalRequirementsMarksServerData> call, retrofit2.Response<AdditionalRequirementsMarksServerData> response) {
+                public void onResponse(Call<AdditionalRequirementsMarksServerData> call, Response<AdditionalRequirementsMarksServerData> response) {
 //                    Log.e("downloadAddReqMarks", "Ответ: " + response.body().getList().size());
                     try {
                         if (response.isSuccessful()) {
@@ -3329,7 +3330,7 @@ id_exclude - иди товаров которые есть в приложени
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<AdditionalRequirementsMarksServerData> call, Throwable t) {
+                public void onFailure(Call<AdditionalRequirementsMarksServerData> call, Throwable t) {
                     Log.e("downloadAddReqMarks", "Throwable: " + t);
                     globals.writeToMLOG("_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onFailure. ошибка в выполнении запроса: " + t + "\n");
                 }
@@ -3354,17 +3355,19 @@ id_exclude - иди товаров которые есть в приложени
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<OpinionResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OPINION_ROOM(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<OpinionResponse>() {
+        Call<OpinionResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OPINION_ROOM(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<OpinionResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<OpinionResponse> call, retrofit2.Response<OpinionResponse> response) {
+            public void onResponse(Call<OpinionResponse> call, Response<OpinionResponse> response) {
                 Log.e("downloadOpinions", "Response: " + response.body());
 
-                SQL_DB.opinionDao().insertAll(response.body().list);
+                if (response.body() != null && response.body().list != null
+                        && response.body().state && !response.body().list.isEmpty())
+                    SQL_DB.opinionDao().insertAll(response.body().list);
             }
 
             @Override
-            public void onFailure(retrofit2.Call<OpinionResponse> call, Throwable t) {
+            public void onFailure(Call<OpinionResponse> call, Throwable t) {
                 Log.e("downloadOpinions", "Throwable t: " + t);
             }
         });
@@ -3380,17 +3383,18 @@ id_exclude - иди товаров которые есть в приложени
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<OpinionThemeResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OPINION_THEME_ROOM(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<OpinionThemeResponse>() {
+        Call<OpinionThemeResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OPINION_THEME_ROOM(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<OpinionThemeResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<OpinionThemeResponse> call, retrofit2.Response<OpinionThemeResponse> response) {
+            public void onResponse(Call<OpinionThemeResponse> call, Response<OpinionThemeResponse> response) {
                 Log.e("downloadOpinions2", "Response: " + response.body());
-
-                SQL_DB.opinionThemeDao().insertAll(response.body().list);
+                if (response.body() != null && response.body().list != null
+                        && response.body().state && !response.body().list.isEmpty())
+                    SQL_DB.opinionThemeDao().insertAll(response.body().list);
             }
 
             @Override
-            public void onFailure(retrofit2.Call<OpinionThemeResponse> call, Throwable t) {
+            public void onFailure(Call<OpinionThemeResponse> call, Throwable t) {
 
             }
         });
@@ -3416,16 +3420,18 @@ id_exclude - иди товаров которые есть в приложени
 
         Log.e("downloadOborotVed", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<OborotVedResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OBOROT_VED_ROOM(RetrofitBuilder.contentType, convertedObject);
+        Call<OborotVedResponse> call = RetrofitBuilder.getRetrofitInterface().GET_OBOROT_VED_ROOM(RetrofitBuilder.contentType, convertedObject);
 
         Log.e("downloadOborotVed", "call.request(): " + call.request());
         Log.e("downloadOborotVed", "call.request(): " + call.request().body());
 
-        call.enqueue(new retrofit2.Callback<OborotVedResponse>() {
+        call.enqueue(new Callback<OborotVedResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<OborotVedResponse> call, retrofit2.Response<OborotVedResponse> response) {
+            public void onResponse(Call<OborotVedResponse> call, Response<OborotVedResponse> response) {
                 try {
-                    SQL_DB.oborotVedDao().insertData(response.body().list);
+                    if (response.body() != null && response.body().list != null
+                            && response.body().state && !response.body().list.isEmpty())
+                        SQL_DB.oborotVedDao().insertData(response.body().list);
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "FUNC: downloadOborotVed/onResponse", "Exception e: " + e);
                 }
@@ -3433,7 +3439,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<OborotVedResponse> call, Throwable t) {
+            public void onFailure(Call<OborotVedResponse> call, Throwable t) {
                 Log.e("downloadOborotVed", "Throwable t: " + t);
             }
         });
@@ -3455,12 +3461,14 @@ id_exclude - иди товаров которые есть в приложени
 
         Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<TovarGroupClientResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP_CLIENT(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<TovarGroupClientResponse>() {
+        Call<TovarGroupClientResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP_CLIENT(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<TovarGroupClientResponse>() {
             @Override
-            public void onResponse(retrofit2.Call<TovarGroupClientResponse> call, retrofit2.Response<TovarGroupClientResponse> response) {
+            public void onResponse(Call<TovarGroupClientResponse> call, Response<TovarGroupClientResponse> response) {
                 try {
-                    SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
+                    if (response.body() != null && response.body().list != null
+                            && response.body().state && !response.body().list.isEmpty())
+                        SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {
                             try {
@@ -3482,7 +3490,7 @@ id_exclude - иди товаров которые есть в приложени
             }
 
             @Override
-            public void onFailure(retrofit2.Call<TovarGroupClientResponse> call, Throwable t) {
+            public void onFailure(Call<TovarGroupClientResponse> call, Throwable t) {
                 Globals.writeToMLOG("ERR", "downloadtovar_grp_client/onFailure", "Throwable t: " + t);
             }
         });

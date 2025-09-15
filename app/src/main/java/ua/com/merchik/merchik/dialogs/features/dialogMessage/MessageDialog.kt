@@ -1,7 +1,7 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
+import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -55,6 +56,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
+import ua.com.merchik.merchik.features.main.componentsUI.AutoResizeText
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import java.util.regex.Pattern
 
@@ -64,30 +66,39 @@ fun MessageDialog(
     subTitle: String? = "",
     message: String = "",
     onDismiss: () -> Unit,
-    okButtonName: String = "Ok",
+    okButtonName: String = "Застосувати",
     onConfirmAction: (() -> Unit)? = null,
-    cancelButtonName: String = "Отмена",
+    cancelButtonName: String = "Скасувати",
     onCancelAction: (() -> Unit)? = null,
     status: DialogStatus? = DialogStatus.NORMAL,
     showCheckbox: Boolean = false,
     onCheckboxChanged: ((Boolean) -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
-
-    val pattern = Pattern.compile("\\{([^}]*)\\}")
-    val matcher = pattern.matcher(message)
-
-    val styledAnnotatedString =
-        if (matcher.find())
-            parseAndReplaceVisitText(message) { codeDad2 ->
-                RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
-            }
-        else
-            AnnotatedString.fromHtml(message.replace("\n", "<br>"))
-
-
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    var isChecked by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Кешируем разбор сообщения, чтобы не парсить на каждой рекомпозиции
+    val styledAnnotatedString: AnnotatedString = remember(message) {
+        val pattern = Pattern.compile("\\{([^}]*)\\}")
+        val matcher = pattern.matcher(message)
+        if (matcher.find()) {
+            // parseAndReplaceVisitText — ваша функция, оставляем как есть
+            parseAndReplaceVisitText(message) { codeDad2 ->
+                // защищённый вызов Realm (если нужно — вынести в ассинхронный код)
+                try {
+                    RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
+                } catch (t: Throwable) {
+                    null
+                }
+            }
+        } else {
+            AnnotatedString.fromHtml(message.replace("\n", "<br>"))
+        }
+    }
+
+    // чекбокс сохраняем при пересоздании конфигурации
+    var isChecked by rememberSaveable { mutableStateOf(false) }
 
     val composition by rememberLottieComposition(
         when (status) {
@@ -102,14 +113,14 @@ fun MessageDialog(
     )
 
     var isCompleted by remember { mutableStateOf(false) }
-    var dialog by remember { mutableStateOf<DialogData?>(null) }
 
-
+    // при isCompleted вызываем onDismiss()
     LaunchedEffect(isCompleted) {
         if (isCompleted) onDismiss()
     }
 
-    Dialog(onDismissRequest = {}) {
+    // Позволяем закрывать диалог тапом вне области — если это НЕ нужно, замените onDismiss на {}
+    Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .wrapContentHeight()
@@ -117,22 +128,21 @@ fun MessageDialog(
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {
-            // Заголовок и кнопка "X"
+            // Заголовок и кнопка "X" (кнопка справа)
             Row(
                 modifier = Modifier
-                    .wrapContentWidth()
-                    .padding(start = 15.dp, bottom = 15.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.weight(1f))
                 ImageButton(
                     id = R.drawable.ic_letter_x,
                     shape = CircleShape,
                     colorImage = ColorFilter.tint(Color.Gray),
                     sizeButton = 40.dp,
                     sizeImage = 25.dp,
-                    modifier = Modifier.padding(end = 10.dp),
+                    modifier = Modifier.padding(end = 0.dp),
                     onClick = { isCompleted = true }
                 )
             }
@@ -151,6 +161,8 @@ fun MessageDialog(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
+
+                    // Title
                     title?.takeIf { it.isNotEmpty() }?.let {
                         Text(
                             text = it,
@@ -163,6 +175,7 @@ fun MessageDialog(
                         )
                     }
 
+                    // Lottie / loader
                     if (status == DialogStatus.LOADING) {
                         Box(
                             modifier = Modifier
@@ -187,6 +200,7 @@ fun MessageDialog(
                         )
                     }
 
+                    // Subtitle
                     subTitle?.takeIf { it.isNotEmpty() }?.let {
                         Text(
                             text = it,
@@ -195,31 +209,22 @@ fun MessageDialog(
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
-//                                .scale(1.1f)
                         )
                     }
 
+                    // Message (аннотированный текст)
                     Text(
                         text = styledAnnotatedString,
                         style = MaterialTheme.typography.titleSmall,
                         color = Color(0xCC1E201D),
                         textAlign = TextAlign.Justify,
                         modifier = Modifier
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-//                                        val intent =
-//                                            Intent(context, DetailedReportActivity::class.java)
-//                                        intent.putExtra("WpDataDB_ID", 3916440481)
-//                                        context.startActivity(intent)
-                                    })
-                            }
                             .padding(vertical = 4.dp)
-                            .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp )
-                            .padding(bottom = 2.dp),
+                            .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp)
+                            .padding(bottom = 2.dp)
                     )
 
-                    // ✅ Чекбокс "Не показывать больше"
+                    // Checkbox
                     if (showCheckbox) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -235,65 +240,111 @@ fun MessageDialog(
                                 }
                             )
                             Text(
-                                text = stringResource(id = R.string.not_show_again), // строка из ресурсов
+                                text = stringResource(id = R.string.not_show_again),
                                 modifier = Modifier.padding(start = 4.dp),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
 
-                    // Кнопки
+                    // Buttons: если обе кнопки заданы — делим пространство, если одна — занимает всю ширину
                     if (onConfirmAction != null || onCancelAction != null) {
                         Spacer(modifier = Modifier.padding(4.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            onCancelAction?.let {
-                                Button(
-                                    onClick = {
-                                        it()
-                                        isCompleted = true
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(
-                                            id = R.color.blue
-                                        )
-                                    ),
-                                    modifier = Modifier
-                                        .padding(horizontal = 2.dp)
-                                        .weight(1f)
-                                ) {
-                                    Text(cancelButtonName)
-                                }
-                            } ?: Spacer(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(16.dp)
-                            )
 
-                            onConfirmAction?.let {
-                                Button(
-                                    onClick = {
-                                        it()
-                                        isCompleted = true
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(
-                                            id = R.color.orange
-                                        )
-                                    ),
-                                    modifier = Modifier
-                                        .padding(horizontal = 2.dp)
-                                        .weight(1f)
+                        when {
+                            onConfirmAction != null && onCancelAction != null -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(okButtonName)
+                                    Button(
+                                        onClick = {
+                                            onCancelAction()
+                                            isCompleted = true
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = colorResource(id = R.color.blue)
+                                        ),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(cancelButtonName)
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            onConfirmAction()
+                                            isCompleted = true
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = colorResource(id = R.color.orange)
+                                        ),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(okButtonName)
+                                    }
+                                }
+                            }
+
+                            onCancelAction != null -> {
+                               Row {
+                                   Button(
+                                       onClick = {
+                                           onCancelAction()
+                                           isCompleted = true
+                                       },
+                                       shape = RoundedCornerShape(8.dp),
+                                       colors = ButtonDefaults.buttonColors(
+                                           containerColor = colorResource(id = R.color.blue)
+                                       ),
+                                       modifier = Modifier
+                                           .weight(1f)
+                                           .fillMaxWidth()
+                                   ) {
+                                       AutoResizeText(
+                                           text = cancelButtonName,
+                                           modifier = Modifier.fillMaxWidth(),
+                                           style = MaterialTheme.typography.labelLarge, // можно подобрать подходящий стиль
+                                           maxLines = 1,
+                                           minTextSize = 12.sp,
+                                           step = 1.sp
+                                       )
+                                   }
+                                   Spacer(modifier = Modifier.weight(1f))
+                               }
+                            }
+
+                            onConfirmAction != null -> {
+                                Row {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Button(
+                                        onClick = {
+                                            onConfirmAction()
+                                            isCompleted = true
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = colorResource(id = R.color.orange)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth()
+                                    ) {
+                                        AutoResizeText(
+                                            text = okButtonName,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            style = MaterialTheme.typography.labelLarge, // можно подобрать подходящий стиль
+                                            maxLines = 1,
+                                            minTextSize = 12.sp,
+                                            step = 1.sp
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+
                     Spacer(modifier = Modifier.padding(2.dp))
                 }
             }

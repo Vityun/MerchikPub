@@ -105,8 +105,6 @@ class MainRepository(
                     hidedFieldsOnUI.none { it == field }
                 }
                 .map {
-                    val cont = hideUserFields?.contains(it) != true
-                    val cont2 = hidedFieldsOnUI.contains(it)
                     SettingsItemUI(
                         it,
                         when (it) {
@@ -195,12 +193,17 @@ class MainRepository(
     }
 
     fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
-        Log.e("!!!!!!TEST!!!!!!","getItems: end 0?")
-        return data.map { it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
+//        Log.e("!!!!!!TEST!!!!!!","getItems: end 0?")
+        Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data size: ${data.size}")
+        return data.map {
+            Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data.map: $it")
+            it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto)
+        }
     }
 
     private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!","getItems: end 1?")
+//        Globals.writeToMLOG("INFO","MainRepository.toItemUI","toItemUI: $this" )
         return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 

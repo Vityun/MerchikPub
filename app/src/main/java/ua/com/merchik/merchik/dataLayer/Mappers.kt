@@ -1,11 +1,13 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.content.Context
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
@@ -14,6 +16,11 @@ import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 interface DataObjectUI {
     fun getIdResImage(): Int? {
@@ -62,18 +69,34 @@ interface DataObjectUI {
 //    val clickAction: (() -> Unit)? = null
 //)
 
+private fun logException(tag: String, where: String, e: Throwable, extra: String? = null) {
+    val sw = StringWriter()
+    e.printStackTrace(PrintWriter(sw))
+    val stack = sw.toString()
+    val extraInfo = extra?.let { " | extra: $it" } ?: ""
+    Globals.writeToMLOG("ERROR", tag, "$where | Exception ${e::class.java.name}: ${e.message}$extraInfo\n$stack")
+}
+
+
 fun DataObjectUI.toItemUI(
     nameUIRepository: NameUIRepository,
     hideUserFields: String?,
     typePhoto: Int?
 ): DataItemUI {
     val gson = Gson()
-    val jsonObject = JSONObject(gson.toJson(this))
+    val jsonObject = try {
+        JSONObject(gson.toJson(this))
+    } catch (e: Throwable) {
+        logException("Mappers.DataObjectUI.toItemUI", "JSONObject(gson.toJson(this))", e, "source object: $this")
+        // если не получилось распарсить — создаём пустой JSON, чтобы дальше код не падал
+        JSONObject()
+    }
 
     val fields = mutableListOf<FieldValue>()
     val rawFields = mutableListOf<FieldValue>()
     val images = mutableListOf<String>()
 
+    // Сформируем множество скрытых ключей (trim + убрать пустые)
     val hiddenList: Set<String> = (
             (hideUserFields?.split(",") ?: emptyList()) +
                     this.getHidedFieldsOnUI().split(",")
@@ -82,6 +105,7 @@ fun DataObjectUI.toItemUI(
         .toSet()
 
     val idResImage = this.getIdResImage()
+    // id_res_image обрабатываем только если он не скрыт
     if (idResImage != null && "id_res_image" !in hiddenList) {
         val label = nameUIRepository.getTranslateString(
             "id_res_image",
@@ -96,7 +120,7 @@ fun DataObjectUI.toItemUI(
         )
     }
 
-    // Обработка изображений
+    // Обработка изображений — пропускаем ключи, которые скрыты
     val imageKeys = this.getFieldsImageOnUI()
         .split(",")
         .map { it.trim() }
@@ -123,6 +147,8 @@ fun DataObjectUI.toItemUI(
     }
 
     fun updateFields(key: String) {
+//        if (key in hiddenList) return
+
         val valueRaw = jsonObject.opt(key) ?: return
         val label = nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))
         val fieldModifier = this.getFieldModifier(key, jsonObject)
@@ -134,6 +160,11 @@ fun DataObjectUI.toItemUI(
             TextField(key, "$label:", fieldModifier),
             TextField(valueRaw, valueText, valueModifier)
         )
+
+//        // rawFields тоже теперь фильтрованы — мы добавляем только если ключ не в hiddenList (уже проверено)
+//        rawFields.add(field)
+//        // fields содержит только видимые (не скрытые) элементы
+//        fields.add(field)
 
         rawFields.add(field)
         if (key !in hiddenList) {
@@ -147,6 +178,8 @@ fun DataObjectUI.toItemUI(
     orderedKeys.forEach { if (it in allKeys) updateFields(it) }
     (allKeys - orderedKeys).forEach { updateFields(it) }
 
+    Globals.writeToMLOG("INFO",  "Mappers.DataObjectUI.toItemUI ", "fields: ${fields.size} | rawFields: ${rawFields.size}")
+
     return DataItemUI(
         rawObj = listOf(this),
         rawFields = rawFields,
@@ -155,6 +188,192 @@ fun DataObjectUI.toItemUI(
         modifierContainer = getContainerModifier(jsonObject),
         false
     )
+}
+
+
+fun DataObjectUI.toItemUI_(
+    nameUIRepository: NameUIRepository,
+    hideUserFields: String?,
+    typePhoto: Int?
+): DataItemUI {
+    try {
+        val gson = Gson()
+        val jsonObject = try {
+            JSONObject(gson.toJson(this))
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "JSONObject(gson.toJson(this))", e, "source object: $this")
+            // если не получилось распарсить — создаём пустой JSON, чтобы дальше код не падал
+            JSONObject()
+        }
+
+        val fields = mutableListOf<FieldValue>()
+        val rawFields = mutableListOf<FieldValue>()
+        val images = mutableListOf<String>()
+
+        // Сформируем множество скрытых ключей (trim + убрать пустые)
+        val hiddenList: Set<String> = (
+                (hideUserFields?.split(",") ?: emptyList()) +
+                        this.getHidedFieldsOnUI().split(",")
+                ).map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toSet()
+
+        val idResImage = try {
+            this.getIdResImage()
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "getIdResImage()", e)
+            null
+        }
+
+        if (idResImage != null && "id_res_image" !in hiddenList) {
+            try {
+                val label = nameUIRepository.getTranslateString(
+                    "id_res_image",
+                    this.getFieldTranslateId("id_res_image")
+                )
+                fields.add(
+                    FieldValue(
+                        "id_res_image",
+                        TextField("id_res_image", "$label:"),
+                        TextField(idResImage, idResImage.toString())
+                    )
+                )
+            } catch (e: Throwable) {
+                logException("Mappers.DataObjectUI.toItemUI", "add id_res_image field", e)
+            }
+        }
+
+        // Обработка изображений
+        val imageKeys = try {
+            this.getFieldsImageOnUI()
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "getFieldsImageOnUI()", e)
+            emptyList()
+        }
+
+        for (key in imageKeys) {
+            try {
+                val photoId = jsonObject.optString(key, "0")
+                when {
+                    photoId != "0" -> {
+                        try {
+                            RealmManager.getPhotoByPhotoId(photoId)?.getPhoto_num()?.let { images.add(it) }
+                        } catch (e: Throwable) {
+                            logException("Mappers.DataObjectUI.toItemUI", "getPhotoByPhotoId for key=$key photoId=$photoId", e)
+                        }
+                    }
+
+                    key == "photo_do_id" -> {
+                        val hash = jsonObject.optString("photo_do_hash", "0")
+                        if (hash.length > 12) {
+                            try {
+                                RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { images.add(it) }
+                            } catch (e: Throwable) {
+                                logException("Mappers.DataObjectUI.toItemUI", "getPhotoByHash for hash=$hash", e)
+                            }
+                        } else {
+                            idResImage?.let { images.add(it.toString()) }
+                        }
+                    }
+
+                    else -> idResImage?.let { images.add(it.toString()) }
+                }
+            } catch (e: Throwable) {
+                logException("Mappers.DataObjectUI.toItemUI", "processing image key=$key", e, "jsonSnippet=${jsonObject.optString(key)}")
+            }
+        }
+
+        // локальная функция обновления полей — оборачиваем критичные операции в try/catch
+        fun updateFields(key: String) {
+            try {
+                val valueRaw = jsonObject.opt(key) ?: return
+                val label = try {
+                    nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))
+                } catch (e: Throwable) {
+                    logException("Mappers.DataObjectUI.toItemUI", "getTranslateString for key=$key", e)
+                    key
+                }
+
+                val fieldModifier = try {
+                    this.getFieldModifier(key, jsonObject)
+                } catch (e: Throwable) {
+                    logException("Mappers.DataObjectUI.toItemUI", "getFieldModifier for key=$key", e)
+                    null
+                }
+
+                val valueText = try {
+                    this.getValueUI(key, valueRaw)
+                } catch (e: Throwable) {
+                    logException("Mappers.DataObjectUI.toItemUI", "getValueUI for key=$key", e, "raw=$valueRaw")
+                    valueRaw?.toString() ?: ""
+                }
+
+                val valueModifier = try {
+                    this.getValueModifier(key, jsonObject)
+                } catch (e: Throwable) {
+                    logException("Mappers.DataObjectUI.toItemUI", "getValueModifier for key=$key", e)
+                    null
+                }
+
+                val field = FieldValue(
+                    key,
+                    TextField(key, "$label:", fieldModifier),
+                    TextField(valueRaw, valueText, valueModifier)
+                )
+
+                rawFields.add(field)
+                if (key !in hiddenList) {
+                    fields.add(field)
+                }
+            } catch (e: Throwable) {
+                logException("Mappers.DataObjectUI.toItemUI", "updateFields for key=$key", e, "jsonValue=${jsonObject.optString(key)}")
+            }
+        }
+
+        val orderedKeys = try {
+            this.getFieldsForOrderOnUI()?.map { it.trim() }?.toSet() ?: emptySet()
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "getFieldsForOrderOnUI()", e)
+            emptySet()
+        }
+
+        val allKeys = try {
+            jsonObject.keys().asSequence().toSet()
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "jsonObject.keys()", e)
+            emptySet<String>()
+        }
+
+        try {
+            orderedKeys.forEach { if (it in allKeys) updateFields(it) }
+            (allKeys - orderedKeys).forEach { updateFields(it) }
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "iterating keys", e)
+        }
+
+        return DataItemUI(
+            rawObj = listOf(this),
+            rawFields = rawFields,
+            fields = fields,
+            images = images,
+            modifierContainer = getContainerModifier(jsonObject),
+            false
+        )
+    } catch (e: Throwable) {
+        // глобальная ошибка — логируем всё и возвращаем безопасный пустой DataItemUI
+        logException("Mappers.DataObjectUI.toItemUI", "top-level", e, "object=$this")
+        return DataItemUI(
+            rawObj = listOf(this),
+            rawFields = emptyList(),
+            fields = emptyList(),
+            images = emptyList(),
+            modifierContainer = null,
+            false
+        )
+    }
 }
 
 //
@@ -292,6 +511,18 @@ fun DataObjectUI.toItemUI(
 //    )
 //}
 
+// безопасно ставим/сбрасываем фон контейнера
+fun DataItemUI.withContainerBackground(color: Color?): DataItemUI =
+    copy(modifierContainer = (modifierContainer ?: MerchModifier()).copy(background = color))
+
+// достать addr_id из rawFields как строку
+fun DataItemUI.addrIdOrNull(): String? =
+    rawFields.firstOrNull { it.key.equals("addr_id", ignoreCase = true) }
+        ?.value?.rawValue
+        ?.toString()
+        ?.trim()
+
+
 enum class ModeUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT
 }
@@ -315,6 +546,7 @@ fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
     ContextMenuAction.ConfirmAllAcceptInfinite -> R.drawable.ic_37
     ContextMenuAction.OpenSMSPlanDirectory -> R.drawable.ic_37
 }
+
 
 enum class ContextUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT,
@@ -350,3 +582,8 @@ enum class ContextUI {
 
 
 
+
+fun LocalDate.toDayMonthFormat(locale: Locale = Locale.getDefault()): String {
+    val monthName = this.month.getDisplayName(TextStyle.FULL, locale)
+    return "${this.dayOfMonth} $monthName"
+}

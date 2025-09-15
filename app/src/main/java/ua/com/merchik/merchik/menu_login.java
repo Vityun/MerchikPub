@@ -6,6 +6,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -89,6 +90,7 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
+import ua.com.merchik.merchik.retrofit.GlobalErrorsLive;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -233,6 +235,9 @@ public class menu_login extends AppCompatActivity {
                 requestPermission();
             }
 
+            GlobalErrorsLive.INSTANCE.getMessages().observe(this, msg -> {
+                showErrorDialog(msg); // твой метод показа диалога
+            });
 
         } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при входе(0): " + e);
@@ -2470,6 +2475,31 @@ public class menu_login extends AppCompatActivity {
 
     private void checkUserForCompany(Clicks.clickVoid click) {
         regCompany(click);
+    }
+
+    private void showErrorDialog(String msg) {
+        String appPackageName = getPackageName();
+
+        new MessageDialogBuilder(this)
+                .setTitle("Необхідне оновлення додатку")
+                .setSubTitle("Відповідь від сервера")
+                .setStatus(DialogStatus.ERROR)
+                .setMessage(msg)
+                .setOnCancelAction("Оновити", () -> {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("market://details?id=" + appPackageName));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (ActivityNotFoundException e) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    }
+                    return Unit.INSTANCE; // потому что Kotlin ожидает возврат Unit
+                })
+                .show();
     }
 
 }// END CLASS..380677777777/777718353

@@ -62,7 +62,7 @@ public class WPDataAdditional {
     @SerializedName("confirm_decision")
     @Expose
     @ColumnInfo(name = "confirm_decision")
-    public int confirmDecision;
+    public int confirmDecision;     // состояние 1 обработали, 0 - в процессе
 
     @SerializedName("confirm_auto")
     @Expose
@@ -78,6 +78,11 @@ public class WPDataAdditional {
     @Expose
     @ColumnInfo(name = "kps")
     public int kps;
+
+    @SerializedName("action")
+    @Expose
+    @ColumnInfo(name = "action")
+    public int action;      // начиная с 10.09.2025 значения это поле имеет такую логику: 0 - не обработана | 1 - заявка подтверждена | 2 - заявка отклонена
 
     @ColumnInfo(name = "uploadStatus")
     public int uploadStatus;

@@ -129,7 +129,7 @@ class DownloadImagesWorker(
     }
 
 
-    private val downloadSemaphore = Semaphore(10) // Ограничиваем до 10 одновременных запросов
+    private val downloadSemaphore = Semaphore(8) // Ограничиваем до 8 одновременных запросов
 
     private suspend fun downloadPhoto(photo: TovarImgList): Boolean {
         return withContext(Dispatchers.IO) {

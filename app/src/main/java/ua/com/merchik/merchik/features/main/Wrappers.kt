@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
+import ua.com.merchik.merchik.features.main.Main.parseDoubleSafe
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -288,6 +289,7 @@ object LogMPDBOverride {
 
         "CoordAccurancy" -> if (value == 1) "GPS" else "GSM"
 
+        "locationUniqueString" -> value.toString().parseDoubleSafe().toString()
         else -> value.toString()
     }
 

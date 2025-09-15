@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
+import java.util.concurrent.atomic.AtomicLong
 
 data class DataItemUI(
     val rawObj: List<DataObjectUI>,
@@ -14,7 +15,9 @@ data class DataItemUI(
     val fields: List<FieldValue>,
     val images: List<String>? = null,
     val modifierContainer: MerchModifier? = null,
-    val selected: Boolean
+    val selected: Boolean,
+    // уникальный стабильный идентификатор — присваивается при создании
+    val stableId: Long = DataItemIdGenerator.nextId()
 )
 
 data class MerchModifier(
@@ -55,3 +58,12 @@ data class SettingsItemUI(
     var isEnabled: Boolean,
     var index: Int
 )
+
+
+// генератор id для DataItemUI — потокобезопасный
+object DataItemIdGenerator {
+    // Инициализируем из currentTime, чтобы при перезапуске не начинать с нуля
+    private val counter = AtomicLong(System.currentTimeMillis())
+
+    fun nextId(): Long = counter.incrementAndGet()
+}

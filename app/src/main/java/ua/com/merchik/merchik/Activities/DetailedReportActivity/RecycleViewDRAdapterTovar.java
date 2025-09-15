@@ -70,11 +70,9 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -124,6 +122,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private int addressId;
     private boolean deletePromoOption = false;
 
+    private final List<OptionsDB> optionsList2;
+
     // Получаем инфу об обязательных опциях
     private List<TovarOptions> tovOptTplList;
 
@@ -155,6 +155,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         codeDad2 = wp.getCode_dad2();
         clientId = wp.getClient_id();
         addressId = wp.getAddr_id();
+        optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), null);
 
 
         tplType = DRAdapterTovarTPLTypeView.GONE;
@@ -174,6 +175,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         addressId = tasksAndReclamationsSDB.addr;
 
         tplType = DRAdapterTovarTPLTypeView.GONE;
+        optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), null);
+
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
 
@@ -384,8 +387,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(codeDad2), list.getiD());
                 ReportPrepareDB reportPrepareTovar2 = null;
-                List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), list.getiD());
-
 
 //                List<OptionsDB> test = RealmManager.INSTANCE.copyFromRealm(optionsList2);
 
@@ -415,7 +416,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     int id = Integer.parseInt(list.getiD());
                     Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
 
-                    if (list.timeColor != null && !list.timeColor.isEmpty()){
+                    if (list.timeColor != null && !list.timeColor.isEmpty()) {
                         int color = Color.parseColor("#" + list.timeColor);
                         Drawable coloredBackground = new ColorDrawable(color);
                         constraintLayout.setBackground(coloredBackground);
@@ -473,7 +474,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
 
                 try {
-                    Log.e("ПРОИЗВОДИТЕЛЬ", "ШТО ТУТ?:" + RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
                     tradeMark.setText(RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
                 } catch (Exception e) {
                     // todo обработать исключение
@@ -554,11 +554,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                         try {
                             List<OborotVedSDB> data = SQL_DB.oborotVedDao().getOborotData(Clock.today, Clock.today_7, Integer.parseInt(list.getiD()), addressId);
-
-                            Log.e("OBOROT_VED", "data: " + data);
-
-                            CharSequence col1 = Html.fromHtml("<b>Приход:</b>");
-                            CharSequence col2 = Html.fromHtml("<b>Расход:</b><br>");
 
                             oborotVed.append("_______________Приход");
                             oborotVed.append("__|___Расход\n");
@@ -670,10 +665,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
 
                 try {
+                    ReportPrepareDB finalReportPrepareTovar1;
+                    List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
                     if (openType.equals(OpenType.DEFAULT)) {
-                        ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
+                        finalReportPrepareTovar1 = reportPrepareTovar2;
 
-                        List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
                         // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
                         requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
                         AdditionalRequirementsDB ar = showTovarAdditionalRequirement(list);
@@ -737,10 +733,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         });
 
                         recyclerView.setAdapter(recyclerViewTPLAdapter);
-                        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-                    }else {
-                        ReportPrepareDB finalReportPrepareTovar1 = createNewRPRow(list);
-                        List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
+                    } else {
+                        finalReportPrepareTovar1 = createNewRPRow(list);
                         RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
                                 requiredOptionsTPL,
                                 finalReportPrepareTovar1,
@@ -782,8 +776,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         );
 
                         recyclerView.setAdapter(recyclerViewTPLAdapter);
-                        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                     }
+                    recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
                 }
@@ -794,8 +788,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     recyclerView.setVisibility(View.GONE);
                 }
 
-                Log.e("!!!!!!!!!!!!!!!!!","TEXT: " + s);
-                Log.e("!!!!!!!!!!!!!!!!!","TEXT: " + Html.fromHtml("<u>" + s + "</u>"));
+                Log.e("!!!!!!!!!!!!!!!!!", "TEXT: " + s);
+                Log.e("!!!!!!!!!!!!!!!!!", "TEXT: " + Html.fromHtml("<u>" + s + "</u>"));
 
                 textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
                 textViewItemTovarOptLine.setOnClickListener(v -> {
@@ -881,7 +875,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 OptionsDB optionsDB = matchingOption.get();
                                                 // Делайте что-то с объектом OptionsDB
                                                 out.println(optionsDB);
-                                                dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB, ()->{}));
+                                                dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB, () -> {
+                                                }));
 
                                             } else {
                                                 // Обработка случая, когда объект OptionsDB не найден
@@ -1130,7 +1125,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
                             if (b != null) {
                                 imageView.setImageBitmap(b);
-                            }else {
+                            } else {
                                 imageView.setImageResource(R.mipmap.merchik);
                             }
                             return true;
@@ -1216,8 +1211,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * @param pos true - простой add
          *            false - добавляем на 0 позицию
          */
-        public void test(){}
-//        @RequiresApi(api = Build.VERSION_CODES.N)
+        public void test() {
+        }
+
+        //        @RequiresApi(api = Build.VERSION_CODES.N)
         public void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
             try {
                 final int adapterPosition = getAdapterPosition();

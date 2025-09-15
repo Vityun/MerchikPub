@@ -1,22 +1,34 @@
 package ua.com.merchik.merchik.Activities;
 
+import static android.graphics.Typeface.BOLD_ITALIC;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -24,31 +36,27 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
-import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.ServerExchange.fcm.FcmTokenSenderRx;
-import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
+import ua.com.merchik.merchik.Utils.toast.ClickableToast;
+import ua.com.merchik.merchik.Utils.toast.Toasty;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
-import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -67,7 +75,7 @@ public class MenuMainActivity extends toolbar_menus {
         try {
             findViewById(R.id.fab).setOnClickListener(v -> {
                 try {
-                    Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
                     test();
                 } catch (Exception e) {
                     Log.e("MenuMainActivity", "Exception e: " + e);
@@ -145,29 +153,107 @@ public class MenuMainActivity extends toolbar_menus {
         return uniqueList;
     }
 
+    public static CharSequence getFormattedMessage() {
+        final String text = "Пояснения и нюансы" +
+                "\n" +
+                "Почему Dialog, а не WindowManager напрямую?\n" +
+                "Dialog проще подписывать под жизненный цикл Activity и не требует отдельных разрешений. Мы вручную меняем type на TYPE_APPLICATION_PANEL и «прибиваем» диалог к токену окна активити — так он оказывается выше любых внутренних окон приложения, включая стандартные Dialog/BottomSheet.\n" +
+                "\n" +
+                "Не перехватывает фокус: флаги FLAG_NOT_FOCUSABLE | FLAG_NOT_TOUCH_MODAL пропускают касания к нижним слоям, как у «настоящего» тоста.\n" +
+                "\n" +
+                "Откуда вызвать: через очередь MutableSharedFlow — можно вызывать из VM/репозитория/сервиса, лишь бы вы один раз сделали AppToast.init(application).\n" +
+                "\n" +
+                "Очередь и отмена: как у системного тоста — новый показ отменяет предыдущий.\n" +
+                "\n" +
+                "Compose не обязателен: при желании замените содержимое на обычный XML-layout — API не изменится.\n" +
+                "\n" +
+                "Ограничения: это «самый верх» в пределах вашего процесса/активити. Над окнами других приложений/системы подниматься не будет (и не должен). Если поверх вашего тоста моментально";
+
+        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+
+        // 1) Заголовок (до первой новой строки)
+        int endTitle = text.indexOf("\n");
+        if (endTitle > 0) {
+            ssb.setSpan(new ForegroundColorSpan(Color.RED), 0, endTitle, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            ssb.setSpan(new StyleSpan(Typeface.BOLD), 0, endTitle, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // 2) Английские слова другим шрифтом
+        Pattern engPattern = Pattern.compile("[A-Za-z]+");
+        Matcher engMatcher = engPattern.matcher(text);
+        while (engMatcher.find()) {
+            ssb.setSpan(new TypefaceSpan("monospace"),
+                    engMatcher.start(), engMatcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        // 3) Текст в кавычках (и «русские», и "английские")
+        // Текст в кавычках = синим + подчёркивание + кликабельность
+        Pattern quotePattern = Pattern.compile("[«\"](.*?)[»\"]");
+        Matcher quoteMatcher = quotePattern.matcher(text);
+        while (quoteMatcher.find()) {
+            final int start = quoteMatcher.start();
+            final int end = quoteMatcher.end();
+
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    // открываем ссылку
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"));
+                    widget.getContext().startActivity(browserIntent);
+                }
+
+                @Override
+                public void updateDrawState(@NonNull TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setColor(Color.BLUE);   // цвет текста
+                    ds.setUnderlineText(true); // подчёркивание
+                }
+            };
+            ssb.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        return ssb;
+    }
+
+
     private void test() {
 
-        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
+//        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
+//
+//        FirebaseMessaging.getInstance().getToken()
+//                .addOnCompleteListener(task -> {
+//                    if (task.isSuccessful()) {
+//                        String token = task.getResult();
+//                        Log.e("FirebaseMessaging_TOKEN",":::>>> " + token);
+//                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//                        ClipData clip = ClipData.newPlainText("", token);
+//                        clipboard.setPrimaryClip(clip);
+//                    } else {
+//                        Log.e("!!!!!!!!!!!!!!!!!!",":::>>> " + task.getException());
+//                    }
+//                });
 
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String token = task.getResult();
-                        Log.e("FirebaseMessaging_TOKEN",":::>>> " + token);
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        ClipData clip = ClipData.newPlainText("", token);
-                        clipboard.setPrimaryClip(clip);
-                    } else {
-                        Log.e("!!!!!!!!!!!!!!!!!!",":::>>> " + task.getException());
-                    }
-                });
+        new Translate().uploadNewTranslate();
 
-//        new Translate().uploadNewTranslate();
+//        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
+
+
+//       Toasty.success(this,
+//                       getFormattedMessage(), Toast.LENGTH_LONG, false)
+//               .show();
+
+
+
+//       Toasty.normal(this,"Test").show();
+
+
 
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
         tablesLoadingUnloading.donwloadPlanBudgetRNO();
         tablesLoadingUnloading.downloadWPDataWithCords();
         tablesLoadingUnloading.uploadPlanBudget();
+
 //
 //        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 

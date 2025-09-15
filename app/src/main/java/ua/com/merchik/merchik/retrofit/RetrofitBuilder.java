@@ -81,6 +81,7 @@ public class RetrofitBuilder {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.addInterceptor(new TimeoutInterceptor());
         httpClientBuilder.addInterceptor(new HtmlEntityInterceptor());
+        httpClientBuilder.addInterceptor(new StateErrorBroadcastInterceptor());
 
 //        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
 
@@ -114,6 +115,7 @@ public class RetrofitBuilder {
         String url = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             url = BASE_URL;
+//            url = TEST_URL;
         }else {
             url = BASE_URL_OLD;
         }

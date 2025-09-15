@@ -318,8 +318,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "wpdata_aditional_plan_budget",
-                "Премія",
+                "maps_dialog_wp_message_1",
+                "Показать все работы, по этому адресу за период с %s по %s?",
                 "app",
                 "all",
                 ""
@@ -327,12 +327,30 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "2",
-                "wpdata_aditional_plan_budget_plan",
-                "Премія (план)",
+                "maps_dialog_tooltip_3",
+                "Нажав 'Применить' система отобразит вам все клиенто-посещения по этому адресу и выделит их цветом",
                 "app",
                 "all",
                 ""
         ));
+
+//        res.add(new AddTranslation(
+//                "3",
+//                "maps_dialog_tooltip_1",
+//                "Подсказка_1",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "4",
+//                "maps_dialog_tooltip_2",
+//                "Подсказка_2",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 
 //        res.add(new AddTranslation(
