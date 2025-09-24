@@ -81,9 +81,9 @@ public class WPDataActivity extends toolbar_menus {
 
         filter = findViewById(R.id.filter);
 
-        tabLayout = findViewById(R.id.tabLayout);
-        viewPager = findViewById(R.id.viewPager);
-//        composeView = findViewById(R.id.compose_wpdata_container);
+//        tabLayout = findViewById(R.id.tabLayout);
+//        viewPager = findViewById(R.id.viewPager);
+        composeView = findViewById(R.id.compose_wpdata_container);
 
         fabYouTube = findViewById(R.id.fab3);
         fabViber = findViewById(R.id.fab_viber);
@@ -91,8 +91,8 @@ public class WPDataActivity extends toolbar_menus {
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
 //         Установка закладок
-        setTabs(getIntent().getBooleanExtra("initialOpent", false));
-//        setComposeView();
+//        setTabs(getIntent().getBooleanExtra("initialOpent", false));
+        setComposeView();
 
 
 

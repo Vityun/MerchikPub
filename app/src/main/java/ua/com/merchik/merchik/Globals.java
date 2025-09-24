@@ -1611,6 +1611,7 @@ public class Globals {
      */
 //    TODO сделать не в основном потоке
     public static void writeToMLOG(String type, String place, String msg) {
+        Log.e("writeToMLOG",type + ", " + place + ", " + msg);
         try {
             File root = MyApplication.getAppContext().getCacheDir();
             if (!root.exists()) {

@@ -389,10 +389,10 @@ object UsersSDBOverride {
         val color = try {
             val otdelId =
                 jsonObject.optInt("otdel_id", -1) // Получаем значение "otdel_id", по умолчанию -1
-            Log.d(
-                "getContainerModifier",
-                "otdel_id: $otdelId usersPTTtovarIdList: ${EKLDataHolder.instance().usersPTTtovarIdList}"
-            )
+//            Log.d(
+//                "getContainerModifier",
+//                "otdel_id: $otdelId usersPTTtovarIdList: ${EKLDataHolder.instance().usersPTTtovarIdList}"
+//            )
 //            Log.d(
 //                "getContainerModifier",
 //                "JSONObject: $jsonObject"
@@ -402,21 +402,21 @@ object UsersSDBOverride {
             } else
             // Проверка на пустоту или наличие только одного элемента 0
                 if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || (EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0)) {
-                    Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
+//                    Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
 //                Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
                     Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
                 } else if (otdelId in EKLDataHolder.instance().usersPTTtovarIdList) {
-                    Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
+//                    Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
                     Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
                 } else {
-                    Log.d("getContainerModifier", "otdel_id out usersPTTtovarIdList: $otdelId")
+//                    Log.d("getContainerModifier", "otdel_id out usersPTTtovarIdList: $otdelId")
                     if (ValidatorEKL.controlEKL().result)
                         Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
                     else
                         Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
                 }
         } catch (e: Exception) {
-//            Log.e("getContainerModifier", "Error: ${e.message}", e)
+            Log.e("getContainerModifier", "getContainerModifier Error: ${e.message}", e)
             null // Обработка ошибок
         }
 //        Log.d("getContainerModifier", "Color: $color")

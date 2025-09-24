@@ -100,6 +100,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
@@ -154,7 +155,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val listState = rememberLazyListState()
 
-//    var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
+    // действие по клику
     val menu = rememberContextMenuHost(viewModel, context)
 
     var searchFocused by remember { mutableStateOf(false) }
@@ -260,22 +261,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
-//                val searchStrList = uiState.filters?.searchText?.split(" ")
-//
-//                var _isActiveFiltered = uiState.filters?.searchText?.isNotEmpty() == true
-//
-//                fun getSortValue(it: DataItemUI, sortingField: SortingField) =
-//                    it.fields.firstOrNull { fieldValue ->
-//                        fieldValue.key.equals(sortingField.key, true)
-//                    }?.value?.value
-//
-//                fun comparator(sortingField: SortingField?): Comparator<DataItemUI> =
-//                    if (sortingField?.order == 1)
-//                        compareBy { getSortValue(it, sortingField) }
-//                    else if (sortingField?.order == -1)
-//                        compareByDescending { getSortValue(it, sortingField) }
-//                    else
-//                        compareBy { 0 }
 
                 val dataItemsUI = mutableListOf<DataItemUI>()
 
@@ -291,119 +276,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 )
                 dataItemsUI.addAll(result.items)
                 dataItemsUI.addAll(uiState.itemsFooter)
-
-//                val dataItemsUI by remember(
-//                    uiState.items,
-//                    uiState.filters,
-//                    uiState.sortingFields,
-//                    viewModel.rangeDataStart.value,
-//                    viewModel.rangeDataEnd.value
-//                ) {
-//                    mutableStateOf(
-//                        filterAndSortDataItems(
-//                            items = uiState.items,
-//                            filters = uiState.filters,
-//                            sortingFields = uiState.sortingFields,
-//                            rangeStart = viewModel.rangeDataStart.value,
-//                            rangeEnd = viewModel.rangeDataEnd.value,
-//                            searchText = uiState.filters?.searchText
-//                        ).items
-//                    )
-//                }
-
-//                dataItemsUI.addAll(
-//                    uiState.items.filter { dataItemUI ->
-//                        uiState.filters?.let { filters ->
-//                            filters.rangeDataByKey?.let { rangeDataByKey ->
-//                                val star = viewModel.rangeDataStart.value
-//                                val end = viewModel.rangeDataEnd.value
-//                                dataItemUI.fields.forEach { fieldValue ->
-//                                    if (fieldValue.key.equals(rangeDataByKey.key, true)) {
-//                                        val rawValue = fieldValue.value.rawValue
-//                                        val timestamp = when (rawValue) {
-//                                            is Long -> rawValue
-//                                            is Date -> rawValue.time
-//                                            is String -> {
-//                                                try {
-//                                                    val formatter = SimpleDateFormat(
-//                                                        "MMM d, yyyy hh:mm:ss a",
-//                                                        Locale.US
-//                                                    )
-//                                                    val parsedDate = formatter.parse(rawValue)
-//                                                    parsedDate?.time ?: return@filter false
-//                                                } catch (e: Exception) {
-//                                                    return@filter false // строка не распарсилась — фильтруем
-//                                                }
-//                                            }
-//
-//                                            else -> return@filter false // если ни Long, ни Date — исключаем
-//                                        }
-//// Получаем границы диапазона в миллисекундах
-//                                        val startMillis = star
-//                                            ?.atStartOfDay(ZoneId.systemDefault())
-//                                            ?.toInstant()?.toEpochMilli() ?: Long.MIN_VALUE
-//
-//                                        val endMillis = end
-//                                            ?.atTime(LocalTime.MAX)
-//                                            ?.atZone(ZoneId.systemDefault())
-//                                            ?.toInstant()?.toEpochMilli() ?: Long.MAX_VALUE
-//
-//// Фильтрация по диапазону
-//                                        if (timestamp < startMillis || timestamp > endMillis) {
-//                                            _isActiveFiltered = true
-//                                            return@filter false
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//
-//                        var isFound: Boolean
-//                        searchStrList?.forEach {
-//                            isFound = false
-//                            dataItemUI.fields.forEach inner@{ fieldValue ->
-//                                if (fieldValue.value.value.contains(it, true)) {
-//                                    isFound = true
-//                                    return@inner
-//                                }
-//                            }
-//                            if (!isFound) {
-//                                return@filter false
-//                            }
-//                        }
-//
-//                        uiState.filters?.items?.let { filters ->
-//                            filters.forEach { filter ->
-//                                isFound = false
-//                                if (filter.rightValuesRaw.isNotEmpty()) {
-//                                    dataItemUI.rawFields.forEach inner@{ fieldValue ->
-//                                        if (fieldValue.key.equals(filter.leftField, true)) {
-//                                            val rawVal = filter.rightValuesRaw
-//                                            val fieldVal = fieldValue.value.rawValue.toString()
-//                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered =
-//                                                true
-//                                            if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
-//                                                isFound = true
-//                                                return@inner
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                                if (!isFound) {
-//                                    return@filter false
-//                                }
-//                            }
-//                        }
-//
-//                        return@filter true
-//
-//                    }.sortedWith(
-//                        comparator(uiState.sortingFields.getOrNull(0))
-//                            .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
-//                            .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
-//                    )
-//                )
-
 
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
@@ -548,91 +420,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
 
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
-//                ) {
-//
-//
-//                    TextFieldInputRounded(
-//                        viewModel,
-//                        value = uiState.filters?.searchText ?: "",
-//                        onValueChange = {
-//                            val filters = Filters(
-//                                rangeDataByKey = uiState.filters?.rangeDataByKey,
-//                                searchText = it
-//                            )
-//                            viewModel.updateFilters(filters)
-//                        },
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .height(40.dp)
-//
-//                    )
-//
-//                    if ((viewModel.typeWindow ?: "").equals("container", true)) {
-//                        ImageButton(
-//                            id = R.drawable.ic_maps,
-//                            shape = RoundedCornerShape(2.dp),
-//                            sizeButton = 40.dp,
-//                            sizeImage = 24.dp,
-//                            modifier = Modifier
-//                                .padding(start = 7.dp),
-//                            onClick = {
-//                                Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT)
-//                                    .show()
-//                            }
-//                        )
-//
-//                        ImageButton(
-//                            id = R.drawable.ic_settings_empt,
-//                            shape = RoundedCornerShape(2.dp),
-//                            sizeButton = 40.dp,
-//                            sizeImage = 24.dp,
-//                            modifier = Modifier
-//                                .padding(start = 7.dp),
-//                            onClick = { showSettingsDialog = true }
-//                        )
-//
-//                        ImageButton(
-//                            id = R.drawable.ic_refresh,
-//                            shape = RoundedCornerShape(2.dp),
-//                            sizeButton = 40.dp,
-//                            sizeImage = 24.dp,
-//                            modifier = Modifier
-//                                .padding(start = 7.dp),
-//                            onClick = { viewModel.updateContent() }
-//                        )
-//                    }
-//                    ImageButton(
-//                        id = R.drawable.ic_plus,
-//                        sizeButton = 40.dp,
-//                        sizeImage = 24.dp,
-//                        modifier = Modifier.padding(start = 7.dp),
-//                        onClick = { showAdditionalContent = true },
-//                        shape = RoundedCornerShape(2.dp)
-//                    )
-//
-//                    ImageButton(
-//                        id = R.drawable.ic_sort_down,
-//                        sizeButton = 40.dp,
-//                        sizeImage = 24.dp,
-//                        modifier = Modifier.padding(start = 7.dp),
-//                        onClick = { showSortingDialog = true },
-//                        shape = RoundedCornerShape(2.dp)
-//                    )
-//
-//                    ImageButton(
-//                        id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
-//                        sizeButton = 40.dp,
-//                        sizeImage = 24.dp,
-//                        modifier = Modifier.padding(start = 7.dp),
-//                        onClick = { showFilteringDialog = true },
-//                        shape = RoundedCornerShape(2.dp)
-//                    )
-//                }
-
+                Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! befor Column")
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -642,6 +430,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         .focusable()
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
+                    Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! Column after")
+                    Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! befor LazyColumnScrollbar")
+
                     LazyColumnScrollbar(
                         modifier = Modifier
                             .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
@@ -655,13 +446,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             thumbShape = CircleShape,
                         ),
                     ) {
+                        Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumnScrollbar after")
                         LazyColumn(
                             state = listState,
                         ) {
+                            Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumn after")
                             itemsIndexed(
                                 items = dataItemsUI,
                                 key = { _, item -> item.stableId }
                             ) { index, item ->
+                                Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumn --> $index")
+
                                 val key = item.stableId
 //                                val isTarget = pendingHash != null && item.hashCode() == pendingHash
 //                                // как только «наш» айтем отрисовался — скроллим к его индексу (он 100% точный)
@@ -674,6 +469,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                                        pendingHash = null
 //                                    }
 //                                }
+
+                                Globals.writeToMLOG("INFO", "MainUI.LazyColumn","index: $index")
+
 
                                 var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
                                 // Анимированный уход «в ноль» для исходного элемента
@@ -1087,6 +885,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     if (showAdditionalContent) {
         Log.e("showAdditionalContent", "+")
+        Log.e("showAdditionalContent", "showAdditionalContent: ${uiState.items.size}")
         viewModel.onClickAdditionalContent()
         showAdditionalContent = false
 
@@ -1134,49 +933,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         )
     }
 
-    showMessageDialog?.let { d ->
-        MessageDialog(
-            title = d.title,
-            subTitle = d.subTitle,
-            message = d.message,
-            status = d.status,
-            onDismiss = {
-                showMessageDialog = null
-                viewModel.cancelPending()
-            },
-            okButtonName = d.positivText ?: "Ok",
-            onConfirmAction = {
-                showMessageDialog = null
-                viewModel.performPending()
-            },
-            onCancelAction = if (d.status == DialogStatus.NORMAL) {
-                {
-                    showMessageDialog = null
-                    viewModel.cancelPending()
-                }
-            } else null
-        )
-    }
-
-//    LaunchedEffect(Unit) {
-//        viewModel.scrollToHash.collectLatest { targetHash ->
-//            // ждём, пока список после фильтра/сортировки обновится и появится нужный элемент
-//            val index = snapshotFlow { uiState.items }
-//                .mapLatest { list -> list.indexOfFirst { it.hashCode() == targetHash } }
-//                .filter { it >= 0 }
-//                .first()
-//
-//            val topOffsetPx = with(density) { 8.dp.toPx().toInt() }
-//
-//            listState.animateScrollToItem(index
-//                , -topOffsetPx
-////                , scrollOffset = -topOffsetPx
-//            )
-//        }
-//    }
-
 }
 
+var index = 0
 @Stable
 @Composable
 fun ItemUI(
@@ -1189,6 +948,8 @@ fun ItemUI(
     onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
     onCheckItem: (Boolean, DataItemUI) -> Unit
 ) {
+    index++
+    Globals.writeToMLOG("INFO", "MainUI.ItemUI","index: $index")
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }

@@ -61,8 +61,6 @@ fun FilteringDialog(viewModel: MainViewModel,
                     onDismiss: () -> Unit,
                     onChanged: (Filters) -> Unit) {
 
-//    val selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
-//    val selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now().plusDays(7)) }
     val selectedFilterDateStart by viewModel.rangeDataStart.collectAsState()
     val selectedFilterDateEnd by viewModel.rangeDataEnd.collectAsState()
 

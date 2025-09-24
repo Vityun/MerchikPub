@@ -31,6 +31,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Region;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -101,41 +102,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
-import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkDetailedReport;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkPhotoReport;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckTovarUp;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingForAnAchievement;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingPercentageOfShelfSpaceDPPO;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
-import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
-import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
-import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
-import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
-import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
-import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
-import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
-import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
-import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
-import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
-import ua.com.merchik.merchik.Options.Controls.OptionControlStockTovarLeft;
-import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.Options.Controls.*;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -379,6 +346,21 @@ public class Options {
 
                     OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, optionsDB, type1, mode, unlockCodeResultListener);
                     optionControlPromotion.showOptionMassage("");
+                    break;
+
+                case 579:
+                    OptionMassageType type579 = new OptionMassageType();
+                    switch (mode) {
+                        case NULL:
+                            break;
+
+                        case CHECK_CLICK:
+                            type579.type = DIALOG;
+                            break;
+                    }
+
+                    OptionControlAvailabilityOfPrices optionControlAvailabilityOfPrices = new OptionControlAvailabilityOfPrices(context, dataDB, optionsDB, type579, mode, unlockCodeResultListener);
+                    optionControlAvailabilityOfPrices.showOptionMassage("");
                     break;
 
                 case 157278:
@@ -2046,6 +2028,16 @@ public class Options {
                 }
 
                 return optionControlPromotion.isBlockOption2() ? 1 : 0;
+
+            case 579:
+                OptionControlAvailabilityOfPrices<?> optionControlAvailabilityOfPrices = new OptionControlAvailabilityOfPrices<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityOfPrices.isBlockOption()))
+                    optionControlAvailabilityOfPrices.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlAvailabilityOfPrices.signal && optionControlAvailabilityOfPrices.isBlockOption()) {
+                    optionControlAvailabilityOfPrices.showOptionMassage(block);
+                }
+
+                return optionControlAvailabilityOfPrices.isBlockOption2() ? 1 : 0;
 
             case 157278:
             case 166528:

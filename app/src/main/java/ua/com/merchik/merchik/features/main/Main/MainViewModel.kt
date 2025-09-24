@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
@@ -18,13 +19,7 @@ import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
@@ -36,15 +31,9 @@ import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.DataObjectUI
-import ua.com.merchik.merchik.dataLayer.MainRepository
-import ua.com.merchik.merchik.dataLayer.ModeUI
-import ua.com.merchik.merchik.dataLayer.NameUIRepository
-import ua.com.merchik.merchik.dataLayer.addrIdOrNull
+import ua.com.merchik.merchik.dataLayer.*
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import ua.com.merchik.merchik.dataLayer.withContainerBackground
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
@@ -307,7 +296,7 @@ abstract class MainViewModel(
 
     protected val _events = MutableSharedFlow<MainEvent>(
         replay = 0,
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val events = _events.asSharedFlow()
@@ -402,6 +391,7 @@ abstract class MainViewModel(
             val sortingFields = repository.getSortingFields(table, contextUI)
             updateFilters()
 
+
             _uiState.update {
                 val title = title?.split(",")?.map { it.trim() }?.let {
                     it[0].toIntOrNull()?.let { intRes ->
@@ -415,6 +405,25 @@ abstract class MainViewModel(
                 val dataItemUIS = getItems()
                 Globals.writeToMLOG("INFO","MainViewModel.updateContent","getItems() size: ${dataItemUIS.size}")
 
+                Log.e("INFO","MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
+                Log.e("INFO","MainViewModel.updateContent title: $title")
+                Log.e("INFO","MainViewModel.updateContent subTitle: $subTitle")
+                Log.e("INFO","MainViewModel.updateContent idResImage: $idResImage")
+                Log.e("INFO","MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
+                Log.e("INFO","MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
+                Log.e("INFO","MainViewModel.updateContent idResImage: $idResImage")
+                Log.e("INFO","MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
+                Log.e("INFO","MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
+                Log.e("INFO","MainViewModel.updateContent sortingFields: $sortingFields")
+                Log.e("INFO","MainViewModel.updateContent filters size: ${filters?.items?.size}")
+                Log.e("INFO","MainViewModel.updateContent filters: $filters")
+
+                val items = filters?.items ?: emptyList()
+                Log.e("DBG_FILTERS", "filters.items.size = ${items.size}")
+                items.forEachIndexed { i, it ->
+                    Log.e("DBG_FILTERS", "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}")
+                }
+
                 it.copy(
                     title = title,
                     subTitle = subTitle,
@@ -427,8 +436,6 @@ abstract class MainViewModel(
                     filters = filters,
                     lastUpdate = System.currentTimeMillis()
                 )
-//                Globals.writeToMLOG("INFO","MainViewModel.updateContent","+")
-//                it
             }
         }
     }
@@ -715,6 +722,11 @@ abstract class MainViewModel(
                         val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
+                        Globals.writeToMLOG(
+                            "INFO", "MainViewModel.doAcceptOneTime",
+                            "Updated: +"
+                        )
+
                         _events.emit(
                             MainEvent.ShowMessageDialog(
                                 MessageDialogData(
@@ -764,6 +776,10 @@ abstract class MainViewModel(
                         val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
+                        Globals.writeToMLOG(
+                            "INFO", "MainViewModel.doAcceptInfinite",
+                            "Updated: +"
+                        )
                         _events.emit(
                             MainEvent.ShowMessageDialog(
                                 MessageDialogData(

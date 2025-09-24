@@ -49,6 +49,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.Additiona
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
@@ -68,7 +69,9 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    val tabTitles = listOf(
+    val tabTitles = if (RealmManager.getAllWorkPlanForRNO().isNullOrEmpty()) listOf(
+        stringResource(R.string.title_0)
+    ) else listOf(
         stringResource(R.string.title_0),
         "Доп.Заработок",
         "Заявки"

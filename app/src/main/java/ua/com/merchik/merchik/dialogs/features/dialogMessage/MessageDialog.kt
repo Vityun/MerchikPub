@@ -76,7 +76,6 @@ fun MessageDialog(
 ) {
     val scrollState = rememberScrollState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val context = LocalContext.current
 
     // Кешируем разбор сообщения, чтобы не парсить на каждой рекомпозиции
     val styledAnnotatedString: AnnotatedString = remember(message) {

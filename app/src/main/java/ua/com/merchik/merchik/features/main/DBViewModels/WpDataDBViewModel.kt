@@ -237,6 +237,7 @@ class WpDataDBViewModel @Inject constructor(
                             filterClientSDB,
                             filterWPDataStatus
                         ),
+//                    rangeDataByKey = null
                     rangeDataByKey = RangeDate(
                         key = "dt",
                         start = rangeDataStart.value,
@@ -244,6 +245,7 @@ class WpDataDBViewModel @Inject constructor(
                         enabled = true
                     )
                 )
+//                filters = null
             }
 
             else -> {

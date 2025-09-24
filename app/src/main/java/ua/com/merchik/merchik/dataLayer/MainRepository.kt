@@ -31,6 +31,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
+import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import kotlin.reflect.KClass
 
@@ -56,9 +57,35 @@ class MainRepository(
 
     private fun getSettingsUI(clazz: Class<*>, contextUI: ContextUI?) =
         try {
-            Gson().fromJson(RoomManager.SQL_DB.settingsUIDao()
-                .getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson, SettingsUI::class.java)
+            Globals.writeToMLOG("INFO", "MainRepository.getSettingsUI","class: ${clazz.simpleName}")
+
+//            Gson().fromJson(RoomManager.SQL_DB.settingsUIDao()
+//                .getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson, SettingsUI::class.java)
+            val json = RoomManager.SQL_DB.settingsUIDao()
+                .getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson
+
+            Globals.writeToMLOG("INFO", "MainRepository.getSettingsUI","class: ${clazz.simpleName} jsonLen=${json?.length ?: 0}")
+            Log.d("DBG_SETTINGS_JSON", "json preview: ${json?.take(2000)}")
+
+            val settings = Gson().fromJson(json, SettingsUI::class.java)
+
+            // диагностика вложенных элементов
+            settings?.sortFields?.forEachIndexed { i, sf ->
+                Log.d("DBG_SETTINGS", "sortFields[$i] class=${sf?.javaClass?.name}")
+            }
+            settings?.let {
+                it.sortFields?.forEachIndexed { i, sf -> Log.d("DBG_SF", "sf[$i]=${sf}") }
+                // если есть filters.items:
+                (it as? Filters)?.items?.forEachIndexed { i, itf ->
+                    Log.d("DBG_FILTERS", "filter[$i] class=${itf?.javaClass?.name}")
+                }
+            }
+
+            settings
+
         }catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "MainRepository.getSettingsUI","error: ${e.message}")
+
             null
         }
 
@@ -119,18 +146,82 @@ class MainRepository(
         } ?: return emptyList()
     }
 
-    fun <T: DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsUI: SettingsUI, contextUI: ContextUI?){
+//    fun <T: DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsUI: SettingsUI, contextUI: ContextUI?){
+//        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: start")
+//
+//        val contextTAG = contextUI?.name ?: ContextUI.DEFAULT.name
+//
+//        val settingsUISDB = RoomManager.SQL_DB.settingsUIDao()
+//            .getTableByContext(klass.java.simpleName, contextTAG) ?: SettingsUISDB()
+//
+//        settingsUISDB.contextTAG = contextTAG
+//        settingsUISDB.tableDB = klass.java.simpleName
+//        settingsUISDB.settingsJson = Gson().toJson(settingsUI)
+//
+//        RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
+//        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: finish")
+//    }
+
+    fun <T: DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsUI: SettingsUI, contextUI: ContextUI?) {
+        val tag = "!!!!!!TEST!!!!!!"
         val contextTAG = contextUI?.name ?: ContextUI.DEFAULT.name
+        try {
+            Log.e(tag, "saveSettingsUI: START for table='${klass.java.simpleName}', context='$contextTAG'")
+            Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "START for table='${klass.java.simpleName}', context='$contextTAG'")
 
-        val settingsUISDB = RoomManager.SQL_DB.settingsUIDao()
-            .getTableByContext(klass.java.simpleName, contextTAG) ?: SettingsUISDB()
+            // 1) прочитать что сейчас в таблице (если есть)
+            val before = RoomManager.SQL_DB.settingsUIDao().getTableByContext(klass.java.simpleName, contextTAG)
+            if (before == null) {
+                Log.e(tag, "saveSettingsUI: existing record = null")
+                Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "existing record = null")
+            } else {
+                Log.e(tag, "saveSettingsUI: existing id=${before.id}, tableDB='${before.tableDB}', contextTAG='${before.contextTAG}', jsonLen=${before.settingsJson?.length ?: 0}")
+                Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "existing id=${before.id}, jsonLen=${before.settingsJson?.length ?: 0}")
+                Log.d(tag, "saveSettingsUI: existing json preview: ${before.settingsJson?.take(2000)}")
+            }
 
-        settingsUISDB.contextTAG = contextTAG
-        settingsUISDB.tableDB = klass.java.simpleName
-        settingsUISDB.settingsJson = Gson().toJson(settingsUI)
+            // 2) подготовить JSON и логнуть
+            val json = Gson().toJson(settingsUI)
+            Log.e(tag, "saveSettingsUI: generated json length=${json.length}")
+            Log.d(tag, "saveSettingsUI: json preview: ${json.take(2000)}")
+            Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "json length=${json.length}")
 
-        RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
+            // 3) подготовить объект для вставки/обновления
+            val settingsUISDB = before ?: SettingsUISDB()
+            settingsUISDB.contextTAG = contextTAG
+            settingsUISDB.tableDB = klass.java.simpleName
+            settingsUISDB.settingsJson = json
+
+            // 4) попытка вставки / обновления (логируем исключения)
+            try {
+                val res = RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
+                // insert может вернуть Long (id) или быть void, поэтому логируем оба варианта
+                Log.e(tag, "saveSettingsUI: insert() executed. returned=$res")
+                Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "insert() executed. returned=$res")
+            } catch (inner: Exception) {
+                Log.e(tag, "saveSettingsUI: insert() threw exception: ${inner.message}", inner)
+                Globals.writeToMLOG("ERROR", "MainRepository.saveSettingsUI", "insert() threw exception: ${inner.message}")
+            }
+
+            // 5) прочитать обратно и проверить
+            val after = RoomManager.SQL_DB.settingsUIDao().getTableByContext(klass.java.simpleName, contextTAG)
+            if (after == null) {
+                Log.e(tag, "saveSettingsUI: READBACK NULL after insert!!")
+                Globals.writeToMLOG("ERROR", "MainRepository.saveSettingsUI", "READBACK NULL after insert!!")
+            } else {
+                Log.e(tag, "saveSettingsUI: READBACK id=${after.id}, jsonLen=${after.settingsJson?.length ?: 0}")
+                Log.d(tag, "saveSettingsUI: READBACK json preview: ${after.settingsJson?.take(2000)}")
+                Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "READBACK id=${after.id}, jsonLen=${after.settingsJson?.length ?: 0}")
+            }
+
+            Log.e(tag, "saveSettingsUI: FINISH")
+            Globals.writeToMLOG("INFO", "MainRepository.saveSettingsUI", "FINISH")
+        } catch (e: Exception) {
+            Log.e(tag, "saveSettingsUI: FAILED with exception: ${e.message}", e)
+            Globals.writeToMLOG("ERROR", "MainRepository.saveSettingsUI", "FAILED: ${e.message}")
+        }
     }
+
 
     fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!","getAllRealm: start")
@@ -197,14 +288,14 @@ class MainRepository(
         Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data size: ${data.size}")
         return data.map {
             Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data.map: $it")
-            it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto)
+            it.toItemUI_(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto)
         }
     }
 
     private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!","getItems: end 1?")
 //        Globals.writeToMLOG("INFO","MainRepository.toItemUI","toItemUI: $this" )
-        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
+        return this.map { (it as DataObjectUI).toItemUI_(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
 }

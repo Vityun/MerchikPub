@@ -94,6 +94,7 @@
 
 # Для Доп. требований.
 -keep class ua.com.merchik.merchik.Options.Controls.** { *; }
+-keep class ua.com.merchik.merchik_test.Options.Controls.** { *; }
 
 # При синхронизации ЄКЛ я получил java.lang.ClassCastException я так понял что тут: exchange.onSuccess(response.body().list); а там типа генерик <T>
 -keep class ua.com.merchik.merchik.ServerExchange.** { *; }
@@ -114,3 +115,11 @@
 -keep class com.daimajia.easing.Glider { *; }
 -keep class com.daimajia.easing.Skill { *; }
 -dontwarn com.daimajia.**
+
+
+# Сохранить классы Gson
+-keep class com.google.gson.** { *; }
+
+# Для моделей уфмд
+-keep class ua.com.merchik.merchik.features.main.Main.** { *; }
+-keep class ua.com.merchik.merchik.dataLayer.** { *; }

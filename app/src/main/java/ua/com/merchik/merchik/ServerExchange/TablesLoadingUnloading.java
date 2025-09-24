@@ -5,6 +5,8 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizat
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.trecker.imHereGPS;
+import static ua.com.merchik.merchik.trecker.imHereNET;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
@@ -188,7 +191,6 @@ public class TablesLoadingUnloading {
             downloadWPData();
             donwloadPlanBudgetRNO();
             donwloadPlanBudget();
-            downloadWPDataWithCords();
 
 //            downloadWPDataRx().subscribe();
 
@@ -321,6 +323,8 @@ public class TablesLoadingUnloading {
                 }
             }); // Загрузка таблици. ОСНОВА. Группы Товаров.
 
+            downloadWPDataWithCords();
+
             // Загрузка Задач и Рекламаций
             try {
                 ReclamationPointExchange tarExchange = new ReclamationPointExchange();
@@ -384,7 +388,7 @@ public class TablesLoadingUnloading {
             Log.e("updateWpData", "vpi: " + vpi);
         } else
             vpi = 0;
-
+//        vpi = 1758173674;
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
@@ -402,11 +406,14 @@ public class TablesLoadingUnloading {
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
+                                if (wpDataDBList.isEmpty())
+                                    return;
+
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
                                 INSTANCE.executeTransaction(realm -> {
                                     if (sTable != null) {
-                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
                                         realm.copyToRealmOrUpdate(sTable);
                                     }
                                 });
@@ -463,13 +470,42 @@ public class TablesLoadingUnloading {
 
         try {
 
-            data.additional_works_location_x = String.valueOf(Globals.CoordX);
-            data.additional_works_location_y = String.valueOf(Globals.CoordY);
+            double coordX, coordY;
+            // X (широта)
+            if (Globals.CoordX == 0) {
+                if (imHereGPS != null) {
+                    coordX = imHereGPS.getLatitude();
+                } else if (imHereNET != null) {
+                    coordX = imHereNET.getLatitude();
+                } else {
+                    coordX = 0; // fallback если нет координат
+                }
+            } else {
+                coordX = Globals.CoordX;
+            }
+
+// Y (долгота или высота — уточни!)
+            if (Globals.CoordY == 0) {
+                if (imHereGPS != null) {
+                    coordY = imHereGPS.getLongitude(); // ⚠️ лучше использовать getLongitude()
+                } else if (imHereNET != null) {
+                    coordY = imHereNET.getLongitude();
+                } else {
+                    coordY = 0;
+                }
+            } else {
+                coordY = Globals.CoordY;
+            }
+
+            data.additional_works_location_x = String.valueOf(coordX);
+            data.additional_works_location_y = String.valueOf(coordY);
+//            data.additional_works_location_x = "47.82880757156666";
+//            data.additional_works_location_y = "35.02850014936467";
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
 
             Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<WpDataServer>() {
@@ -486,6 +522,102 @@ public class TablesLoadingUnloading {
 //                                    if (wpDataDB.getUser_id() == 14041)
 //                                        wpDataDBListRNO.add(wpDataDB);
 //                                }
+
+                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
+//                            RealmManager.setWpDataAuto2(wpDataDBList);
+//                            RealmManager.setWpData(wpDataDBList);
+                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
+                                downloadTovarTable(null, wpDataDBList);
+//                                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                    if (sTable != null) {
+//                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+//                                        realm.copyToRealmOrUpdate(sTable);
+//                                    }
+//                                });
+
+                            }
+                        }
+                    } catch (Exception e) {
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<WpDataServer> call, Throwable t) {
+
+                }
+            });
+        } catch (Exception e) {
+        }
+
+        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
+
+    }
+
+    public void downloadWPDataWithCordsMy() {
+
+        StandartData data = new StandartData();
+
+        data.mod = "plan";
+        data.act = "list";
+        data.date_from = Clock.getDatePeriod(-1);
+        data.date_to = Clock.getDatePeriod(1);
+
+
+        try {
+
+            double coordX, coordY;
+            // X (широта)
+            if (Globals.CoordX == 0) {
+                if (imHereGPS != null) {
+                    coordX = imHereGPS.getLatitude();
+                } else if (imHereNET != null) {
+                    coordX = imHereNET.getLatitude();
+                } else {
+                    coordX = 0; // fallback если нет координат
+                }
+            } else {
+                coordX = Globals.CoordX;
+            }
+
+// Y (долгота или высота — уточни!)
+            if (Globals.CoordY == 0) {
+                if (imHereGPS != null) {
+                    coordY = imHereGPS.getLongitude(); // ⚠️ лучше использовать getLongitude()
+                } else if (imHereNET != null) {
+                    coordY = imHereNET.getLongitude();
+                } else {
+                    coordY = 0;
+                }
+            } else {
+                coordY = Globals.CoordY;
+            }
+
+//            data.additional_works_location_x = String.valueOf(coordX);
+//            data.additional_works_location_y = String.valueOf(coordY);
+            data.additional_works_location_x = "50.45478805335162";
+            data.additional_works_location_y = "30.593345204219315";
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
+
+            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<WpDataServer>() {
+                @Override
+                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+
+                            if (response.body().getState() && response.body().getList() != null
+                                    && !response.body().getList().isEmpty()) {
+                                List<WpDataDB> wpDataDBList = response.body().getList();
+//                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 14041)
+//                                        wpDataDBListRNO.add(wpDataDB);
+//                                }
+
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -528,7 +660,6 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-
         RetrofitBuilder.getRetrofitInterface()
                 .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
@@ -542,9 +673,10 @@ public class TablesLoadingUnloading {
                         return Single.error(new NoSuchElementException("Empty/invalid data"));
                     }
 
-                    return Completable
-                            .fromAction(() -> SQL_DB.wpDataAdditionalDao().insertAll(result.list))
-                            .andThen(Single.just(result.list.size()));
+                    // используем DAO Completable напрямую
+                    return SQL_DB.wpDataAdditionalDao()
+                            .insertAll(result.list)              // Completable от Room
+                            .andThen(Single.just(result.list.size())); // после вставки вернуть размер
 
                 })
                 .observeOn(AndroidSchedulers.mainThread())
@@ -562,25 +694,100 @@ public class TablesLoadingUnloading {
                         }
                 );
 
+    }
 
-//        RetrofitBuilder.getRetrofitInterface()
-//                .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(result -> {
-//
-//                    if (result != null && result.state == true
-//                            && result.list != null && !result.list.isEmpty()) {
-//                        Log.e("!!!!!!!!!!!!!", "result: " + result);
-//
-//                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
-//
-//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + result.list.size());
-//                    } else
-//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
-//
-//                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+    public void donwloadPlanBudgetForConfirmDecision() {
 
+        // Сначала проверим, есть ли записи с confirm_decision = 0
+        Single.fromCallable(() -> SQL_DB.wpDataAdditionalDao().getNotConfirmDecision())
+                .subscribeOn(Schedulers.io())
+                .flatMap(listBefore -> {
+                    if (listBefore == null || listBefore.isEmpty()) {
+                        Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: no not-confirmed items -> skipping network request");
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget",
+                                "No not-confirmed items, skipping download.");
+                        return Single.just(0); // ничего не делаем
+                    }
+
+                    // Есть незаконченные/неподтвержденные — делаем сетевой запрос
+                    StandartData data = new StandartData();
+                    data.mod = "plan_budget";
+                    data.act = "wp_data_request_list";
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(data);
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    // Выполняем сетевой запрос
+                    return RetrofitBuilder.getRetrofitInterface()
+                            .GET_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
+                            .subscribeOn(Schedulers.io())
+                            .flatMap(result -> {
+                                boolean ok = result != null
+                                        && Boolean.TRUE.equals(result.state)
+                                        && result.list != null
+                                        && !result.list.isEmpty();
+
+                                if (!ok) {
+                                    return Single.error(new NoSuchElementException("Empty/invalid data"));
+                                }
+
+                                // Сохраняем пришедшие записи в БД
+                                return SQL_DB.wpDataAdditionalDao()
+                                        .insertAll(result.list) // Completable
+                                        .andThen(Single.fromCallable(() -> {
+                                            // После вставки читаем количество не подтверждённых записей
+                                            List<WPDataAdditional> listAfter = SQL_DB.wpDataAdditionalDao().getNotConfirmDecision();
+
+                                            int beforeCount = listBefore.size();
+                                            int afterCount = listAfter == null ? 0 : listAfter.size();
+
+                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: inserted size: " + result.list.size());
+                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: not-confirm before=" + beforeCount + " after=" + afterCount);
+                                            Globals.writeToMLOG("INFO",
+                                                    "PlanogrammTableExchange.donwloadPlanBudget",
+                                                    "Inserted: " + result.list.size() + ". Not-confirm before: " + beforeCount + ", after: " + afterCount);
+
+                                            // Если уменьшилось — значит кто-то стал confirm_decision = 1 → запускаем downloadWPData()
+                                            if (afterCount < beforeCount) {
+                                                Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: some items became confirmed -> launching downloadWPData()");
+                                                Globals.writeToMLOG("INFO",
+                                                        "PlanogrammTableExchange.donwloadPlanBudget",
+                                                        "Detected confirmed items, calling downloadWPData()");
+                                                try {
+                                                    // Вызываем метод — он сам должен управлять своими Scheduler'ами
+                                                    downloadWPData();
+                                                } catch (Exception e) {
+                                                    Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: downloadWPData() threw", e);
+                                                    Globals.writeToMLOG("ERROR",
+                                                            "PlanogrammTableExchange.donwloadPlanBudget",
+                                                            "downloadWPData() exception: " + e.getMessage());
+                                                }
+                                            }
+
+                                            return result.list.size();
+                                        }));
+                            });
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        size -> {
+                            if (size > 0) {
+                                Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: Data inserted successfully. Size: " + size);
+                                Globals.writeToMLOG("INFO",
+                                        "PlanogrammTableExchange.donwloadPlanBudget",
+                                        "Data inserted successfully. Size: " + size);
+                            } else {
+                                Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: No network action performed (no not-confirmed items).");
+                            }
+                        },
+                        throwable -> {
+                            Globals.writeToMLOG("ERROR",
+                                    "PlanogrammTableExchange.donwloadPlanBudget",
+                                    "exception: " + throwable.getMessage());
+                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: exception", throwable);
+                        }
+                );
     }
 
     public void uploadPlanBudget() {
@@ -626,24 +833,49 @@ public class TablesLoadingUnloading {
 
         RetrofitBuilder.getRetrofitInterface()
                 .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject) // Single<UploadResponse>
-                .map(resp -> { // вытаскиваем IDs из ответа
-                    List<Long> ids = new ArrayList<>();
+                .map(resp -> {
+                    List<Pair<Long, Long>> mapping = new ArrayList<>();
                     if (resp != null && resp.data != null) {
                         for (UploadResponse.Item it : resp.data) {
-                            if (it != null && it.state && it.elementId != null) {
+                            if (it != null && it.state && it.elementId != null && it.serverId != null) {
                                 try {
-                                    ids.add(Long.parseLong(it.elementId));
-                                } catch (NumberFormatException ignore) {
-                                }
+                                    long local = Long.parseLong(it.elementId);
+                                    long server = Long.parseLong(it.serverId);
+                                    mapping.add(new Pair<>(local, server));
+                                } catch (NumberFormatException ignore) { }
                             }
                         }
                     }
-                    return ids; // список element_id
+                    return mapping;
                 })
-                .flatMap(ids -> { // апдейт в БД и вернуть кол-во обновлённых
-                    if (ids.isEmpty()) return Single.just(0);
-                    return dao.markUploadedByIds(ids).andThen(Single.just(ids.size()));
+                .flatMap(mapping -> {
+                    if (mapping.isEmpty()) return Single.just(0);
+
+                    // оборачиваем синхронную транзакцию в Completable и выполняем на IO
+                    return Completable.fromAction(() -> {
+                                dao.replaceLocalIdsWithServerIdsSync(mapping);
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .andThen(Single.just(mapping.size()));
                 })
+//                .map(resp -> { // вытаскиваем IDs из ответа
+//                    List<Long> ids = new ArrayList<>();
+//                    if (resp != null && resp.data != null) {
+//                        for (UploadResponse.Item it : resp.data) {
+//                            if (it != null && it.state && it.elementId != null) {
+//                                try {
+//                                    ids.add(Long.parseLong(it.elementId));
+//                                } catch (NumberFormatException ignore) {
+//                                }
+//                            }
+//                        }
+//                    }
+//                    return ids; // список element_id
+//                })
+//                .flatMap(ids -> { // апдейт в БД и вернуть кол-во обновлённых
+//                    if (ids.isEmpty()) return Single.just(0);
+//                    return dao.markUploadedByIds(ids).andThen(Single.just(ids.size()));
+//                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -2151,7 +2383,7 @@ id_exclude - иди товаров которые есть в приложени
                                         RealmManager.updateWorkPlanFromServer(response.body().getList()); // Получаем данные для выгрузки
                                         INSTANCE.executeTransaction(realm -> {
                                             long vpiApp = System.currentTimeMillis() / 1000;
-                                            sTable.setVpi_app(vpiApp + 3);
+                                            sTable.setVpi_app(vpiApp - 60);
                                             realm.copyToRealmOrUpdate(sTable);
                                         }); //
 

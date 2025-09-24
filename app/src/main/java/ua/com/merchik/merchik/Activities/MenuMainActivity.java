@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Activities;
 
-import static android.graphics.Typeface.BOLD_ITALIC;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -9,8 +8,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Html;
-import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
@@ -18,7 +15,6 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
-import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -49,8 +45,6 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
-import ua.com.merchik.merchik.Utils.toast.ClickableToast;
-import ua.com.merchik.merchik.Utils.toast.Toasty;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
@@ -234,7 +228,7 @@ public class MenuMainActivity extends toolbar_menus {
 //                    }
 //                });
 
-        new Translate().uploadNewTranslate();
+//        new Translate().uploadNewTranslate();
 
 //        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
 
@@ -244,15 +238,13 @@ public class MenuMainActivity extends toolbar_menus {
 //               .show();
 
 
-
 //       Toasty.normal(this,"Test").show();
-
 
 
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
         tablesLoadingUnloading.donwloadPlanBudgetRNO();
-        tablesLoadingUnloading.downloadWPDataWithCords();
-        tablesLoadingUnloading.uploadPlanBudget();
+        tablesLoadingUnloading.downloadWPDataWithCordsMy();
+        tablesLoadingUnloading.donwloadPlanBudget();
 
 //
 //        WorkManagerHelper.INSTANCE.startSyncWorker(this);

@@ -56,7 +56,7 @@ public class AddressExchange {
                 @Override
                 public void onResponse(Call<AddressResponse> call, Response<AddressResponse> response) {
                     try {
-                        if (response.body() != null){
+                        if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()){
                             Log.e("downloadAddressTable", "response.body(): " + response.body());
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
                             RealmManager.INSTANCE.executeTransaction(realm -> {

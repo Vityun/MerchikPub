@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import android.util.Log
 import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -48,6 +50,10 @@ TODO добавить, что бы рисовались только те пол
  */
 @Composable
 fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
+    Globals.writeToMLOG("INFO", "MainUI.ItemUI.ItemFieldValue","visibilityField: ${visibilityField == View.VISIBLE} | " +
+            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
+    Log.e("INFO", "MainUI.ItemUI.ItemFieldValue visibilityField: ${visibilityField == View.VISIBLE} | " +
+            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
     Row(Modifier.fillMaxWidth()) {
         if (visibilityField == View.VISIBLE) {
             ItemTextField(it.field, Modifier.weight(1f))

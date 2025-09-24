@@ -1389,7 +1389,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
                             }
                         });
+
+                        // доп заработок
+                        tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision();
+//                        if (!SQL_DB.wpDataAdditionalDao().getNotConfirmDecision().isEmpty())
+//                            tablesLoadingUnloading.donwloadPlanBudget();
+
+
                     } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "toolbar_menus.KPOH", "Exception: " + e.getMessage());
                     }
                 }
 

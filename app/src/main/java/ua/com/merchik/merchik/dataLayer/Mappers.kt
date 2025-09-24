@@ -74,6 +74,10 @@ private fun logException(tag: String, where: String, e: Throwable, extra: String
     e.printStackTrace(PrintWriter(sw))
     val stack = sw.toString()
     val extraInfo = extra?.let { " | extra: $it" } ?: ""
+    Log.e("ERROR","$tag, $where | Exception ${e::class.java.name}: ${e.message}$extraInfo\n" +
+            stack
+    )
+
     Globals.writeToMLOG("ERROR", tag, "$where | Exception ${e::class.java.name}: ${e.message}$extraInfo\n$stack")
 }
 
@@ -206,6 +210,7 @@ fun DataObjectUI.toItemUI_(
             JSONObject()
         }
 
+        Log.d("toItemUI_","Mappers.DataObjectUI.toItemUI hideUserFields: $hideUserFields")
         val fields = mutableListOf<FieldValue>()
         val rawFields = mutableListOf<FieldValue>()
         val images = mutableListOf<String>()

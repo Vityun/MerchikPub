@@ -1,13 +1,22 @@
 package ua.com.merchik.merchik.dataLayer.common
 
 
+import android.util.Log
+import com.google.gson.Gson
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.Date
 import java.util.Locale
 
@@ -26,6 +35,46 @@ fun filterAndSortDataItems(
     searchText: String?,                  // uiState.filters?.searchText
     zoneId: ZoneId = ZoneId.systemDefault()
 ): FilterAndSortResult {
+
+    filters?.items?.let { list ->
+        Log.e("DBG_FILTERS", "DBG_FILTERS filters.items.size=${list.size}")
+        list.forEachIndexed { i, el ->
+            val cls = el?.javaClass?.name ?: "null"
+            Log.e("DBG_FILTERS", "DBG_FILTERS item[$i] class=$cls title=${(el as? ItemFilter)?.title ?: "—"}")
+            if (cls.contains("LinkedTreeMap")) {
+                val json = Gson().toJson(el)
+                Log.e("DBG_FILTERS", "DBG_FILTERS item[$i] as json: ${json.take(2000)}")
+            }
+        }
+    }
+
+    // Диагностика: проверяем каждый элемент и его поля
+    items.forEachIndexed { idx, item ->
+        try {
+            Log.e("DIAG_ITEM", "DIAG_ITEM item[$idx] class=${item.javaClass.name}, fields.size=${item.fields.size}, rawFields.size=${item.rawFields.size}")
+            // логируем классы rawObj
+            item.rawObj.forEachIndexed { j, ro ->
+                Log.e("DIAG_ITEM", "DIAG_ITEM item[$idx].rawObj[$j] class=${ro?.javaClass?.name}")
+                // если ro выглядит как Map — покажем json preview
+                if (ro != null && ro.javaClass.name.contains("LinkedTreeMap") || ro is Map<*, *>) {
+                    Log.e("DIAG_ITEM_JSON", "DIAG_ITEM_JSON item[$idx].rawObj[$j] json=${Gson().toJson(ro).take(2000)}")
+                }
+            }
+            // логируем поля и их value types
+            item.fields.forEachIndexed { fidx, fv ->
+                val rawVal = fv.value.rawValue
+                val valClass = rawVal?.javaClass?.name ?: "null"
+                Log.e("DIAG_FIELD", "DIAG_FIELD item[$idx].field[$fidx] key=${fv.key} value.class=$valClass value.toString=${rawVal?.toString()?.take(200)}")
+                if (valClass.contains("LinkedTreeMap") || rawVal is Map<*, *>) {
+                    Log.e("DIAG_FIELD_JSON", "DIAG_FIELD_JSON item[$idx].field[$fidx] value.json=${Gson().toJson(rawVal).take(2000)}")
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e("DIAG_FAIL", "DIAG_FAIL item[$idx] diagnostic failed", t)
+        }
+    }
+
+
 
     // --- подготовка входных данных ---
     val searchTerms: List<String> = searchText
@@ -48,7 +97,6 @@ fun filterAndSortDataItems(
         ?.toEpochMilli()
         ?: Long.MAX_VALUE
 
-    val dateFmt = SimpleDateFormat("MMM d, yyyy hh:mm:ss a", Locale.US)
 
     var isActiveFiltered = false
     if (searchTerms.isNotEmpty()) isActiveFiltered = true
@@ -88,21 +136,34 @@ fun filterAndSortDataItems(
                 if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
 
                 val raw = fv.value.rawValue
-                val ts: Long = when (raw) {
-                    is Long -> raw
-                    is Date -> raw.time
-                    is String -> try {
-                        dateFmt.parse(raw)?.time ?: return@filter false
-                    } catch (_: Exception) {
-                        return@filter false
-                    }
-
-                    else -> return@filter false
+                Log.d("DBG_DATE", "DBG_DATE field=${fv.key}, raw=${raw?.toString()?.take(200)} class=${raw?.javaClass?.name}")
+                val ts = parseToMillis(raw, zoneId)
+                if (ts == null) {
+                    Log.d("DBG_DATE_PARSE", "Failed parse raw for item field. field=${fv.key}, raw=${raw}, class=${raw?.javaClass?.name}")
+                    return@filter false
                 }
-
                 ts in startMillis..endMillis
             }
             if (!tsOk) return@filter false
+//            val tsOk = dataItemUI.fields.all { fv ->
+//                if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
+//
+//                val raw = fv.value.rawValue
+//                val ts: Long = when (raw) {
+//                    is Long -> raw
+//                    is Date -> raw.time
+//                    is String -> try {
+//                        dateFmt.parse(raw)?.time ?: return@filter false
+//                    } catch (_: Exception) {
+//                        return@filter false
+//                    }
+//
+//                    else -> return@filter false
+//                }
+//
+//                ts in startMillis..endMillis
+//            }
+//            if (!tsOk) return@filter false
         }
 
         // 2) Фильтр по поисковой строке (каждый терм должен встретиться хотя бы в одном поле)
@@ -136,5 +197,108 @@ fun filterAndSortDataItems(
         )
     } else filtered
 
+    Log.e("DBG_FILTERS", "DBG_FILTERS filterAndSortDataItems will complete")
+
     return FilterAndSortResult(sorted, isActiveFiltered, hasActiveSorting)
+}
+
+
+/**
+ * Универсальный парсер дат/времён в millis.
+ * Пытается:
+ *  1) numeric timestamp (seconds или millis)
+ *  2) ISO instant/parsers
+ *  3) набор шаблонов (24h сначала), пробует с Locale.getDefault() и Locale.US
+ *  4) если шаблон без времени — ставит начало дня (00:00) в указанной zoneId
+ *
+ * Возвращает null, если не удалось распарсить.
+ */
+fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
+    if (raw == null) return null
+    try {
+        when (raw) {
+            is Long -> return raw
+            is Int -> return raw.toLong()
+            is Double -> return raw.toLong()
+            is Float -> return raw.toLong()
+            is Number -> return raw.toLong()
+            is Date -> return raw.time
+            is String -> {
+                val s = raw.trim()
+                if (s.isEmpty()) return null
+
+                // 1) numeric timestamp string (seconds or millis)
+                if (s.matches(Regex("^\\d{10,}$"))) {
+                    val v = s.toLongOrNull() ?: return null
+                    return if (s.length == 10) v * 1000L else v
+                }
+
+                // 2) ISO instant or offset date-time (e.g. 2025-09-17T12:34:56Z / ...+03:00)
+                try {
+                    val inst = Instant.parse(s)
+                    return inst.toEpochMilli()
+                } catch (_: DateTimeParseException) { /* ignore */ }
+
+                // 3) Try ZonedDateTime/OffsetDateTime parsing (common ISO with offset)
+                try {
+                    val odt = OffsetDateTime.parse(s)
+                    return odt.toInstant().toEpochMilli()
+                } catch (_: DateTimeParseException) { /* ignore */ }
+
+                try {
+                    val zdt = ZonedDateTime.parse(s)
+                    return zdt.toInstant().toEpochMilli()
+                } catch (_: DateTimeParseException) { /* ignore */ }
+
+                // 4) Patterns — 24h first (defaults), 12h 'a' as fallback, date-only as last
+                val patterns = listOf(
+                    "MMM d, yyyy HH:mm:ss",    // Sep 11, 2025 00:00:00  <- твой 24h пример
+                    "MMM dd, yyyy HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy-MM-dd'T'HH:mm:ss",   // without offset
+                    "d MMM yyyy HH:mm:ss",
+                    "d MMM yyyy",              // date-only
+                    // fallback 12-hour with AM/PM
+                    "MMM d, yyyy hh:mm:ss a",
+                    "MMM dd, yyyy hh:mm:ss a"
+                )
+
+                // try each pattern with both default locale and US (covers localized month names)
+                for (pat in patterns) {
+                    listOf(Locale.getDefault(), Locale.US).forEach { loc ->
+                        try {
+                            val fmt = DateTimeFormatter.ofPattern(pat, loc)
+                            // For patterns including time
+                            if (pat.contains("H") || pat.contains("h")) {
+                                val ldt = LocalDateTime.parse(s, fmt)
+                                return ldt.atZone(zoneId).toInstant().toEpochMilli()
+                            } else {
+                                // date-only pattern -> treat as start of day
+                                val ld = LocalDate.parse(s, fmt)
+                                return ld.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                            }
+                        } catch (_: DateTimeParseException) {
+                            // try next
+                        } catch (e: Exception) {
+                            // safety net for unexpected
+                            Log.d("PARSE_DATE_ERR", "pattern fail pat=$pat locale=$loc s='$s' : ${e.message}")
+                        }
+                    }
+                }
+
+                // 5) last resort: try parse as LocalDateTime with relaxed ISO formats
+                try {
+                    val ldt = LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    return ldt.atZone(zoneId).toInstant().toEpochMilli()
+                } catch (_: Exception) { /* ignore */ }
+
+                // nothing matched
+                return null
+            }
+            else -> return null
+        }
+    } catch (e: Throwable) {
+        Log.e("PARSE_DATE_ERR", "parseToMillis error for value=$raw class=${raw::class.java.name}", e)
+        return null
+    }
 }

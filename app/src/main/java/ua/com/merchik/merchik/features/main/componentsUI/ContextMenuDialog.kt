@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.main.componentsUI
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -29,13 +30,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -105,6 +111,25 @@ fun rememberContextMenuHost(
     val focusManager = LocalFocusManager.current
 
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        // жизненный цикл: подписываемся когда owner в STARTED, отписываемся при stop
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is MainEvent.ShowContextMenu -> selectedItem = event.menuState
+                    is MainEvent.ShowMessageDialog -> {
+                        // debug log
+                        Log.d("MainUI", "Received ShowMessageDialog: ${event.data}")
+                        Globals.writeToMLOG("INFO","MainUI.rememberContextMenuHost","Received ShowMessageDialog: ${event.data}")
+                        showMessageDialog = event.data
+                    }
+                }
+            }
+        }
+    }
 
     // Подписка на события (как было)
     LaunchedEffect(Unit) {
@@ -247,9 +272,12 @@ fun ContextMenuDialog(
 ) {
     if (!visible) return
 
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
+                .width(screenWidth * 0.9f)
                 .background(Color.White, shape = RoundedCornerShape(6.dp))
                 .width(IntrinsicSize.Max)
         ) {
@@ -307,9 +335,9 @@ fun ContextMenuDialog(
                 val iconRes = action.iconResOrNull()
                 val textColor =
                     if (iconRes == null)
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.45f) // светло-серый
+                        Color.Black.copy(alpha = 0.55f) // светло-серый
                     else
-                        MaterialTheme.colorScheme.surface
+                        Color.Black.copy(alpha = 0.95f)
 
                 Column {
                     Row(
@@ -326,7 +354,7 @@ fun ContextMenuDialog(
                                 painter = painterResource(id = iconRes),
                                 contentDescription = action.title,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.surface
+                                tint = Color.Black.copy(alpha = 0.95f)
                             )
                         } else {
                             Spacer(Modifier.size(20.dp)) // чтобы текст всех строк был на одном уровне
