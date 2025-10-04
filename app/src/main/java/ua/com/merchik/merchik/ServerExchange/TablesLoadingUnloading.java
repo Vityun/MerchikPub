@@ -9,6 +9,7 @@ import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -16,27 +17,25 @@ import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 
+import androidx.appcompat.app.AppCompatActivity;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import kotlin.Unit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
@@ -50,10 +49,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
@@ -123,6 +128,11 @@ import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -406,9 +416,11 @@ public class TablesLoadingUnloading {
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
-                                if (wpDataDBList.isEmpty())
+                                if (wpDataDBList.isEmpty()) {
+                                    isdownloadWPData = false;
+                                    readyWPData = true;
                                     return;
-
+                                }
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
                                 INSTANCE.executeTransaction(realm -> {
@@ -439,6 +451,7 @@ public class TablesLoadingUnloading {
                 }
             });
         } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPData", "Exception: " + e.getMessage());
             readyWPData = true;
             isdownloadWPData = false;
         }
@@ -463,7 +476,7 @@ public class TablesLoadingUnloading {
 //            vpi = sTable.getVpi_app();
 //            Log.e("updateWpData", "vpi: " + vpi);
 //        } else
-            vpi = 0;
+        vpi = 0;
 
 //        data.dt_change_from = String.valueOf(vpi);
 
@@ -696,7 +709,15 @@ public class TablesLoadingUnloading {
 
     }
 
-    public void donwloadPlanBudgetForConfirmDecision() {
+    private static final AtomicBoolean DOWNLOAD_PLAN_BUDGET_RUNNING = new AtomicBoolean(false);
+
+    public void donwloadPlanBudgetForConfirmDecision(AppCompatActivity context) {
+
+        // Если уже выполняется — выходим
+        if (!DOWNLOAD_PLAN_BUDGET_RUNNING.compareAndSet(false, true)) {
+            Log.i("donwloadPlanBudget", "Already running — skipped.");
+            return;
+        }
 
         // Сначала проверим, есть ли записи с confirm_decision = 0
         Single.fromCallable(() -> SQL_DB.wpDataAdditionalDao().getNotConfirmDecision())
@@ -704,10 +725,14 @@ public class TablesLoadingUnloading {
                 .flatMap(listBefore -> {
                     if (listBefore == null || listBefore.isEmpty()) {
                         Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: no not-confirmed items -> skipping network request");
-                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget",
+                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.donwloadPlanBudget",
                                 "No not-confirmed items, skipping download.");
                         return Single.just(0); // ничего не делаем
                     }
+
+                    // Соберём id тех, кто был в состоянии confirm_decision = 0 до запроса
+                    final Set<Long> beforeIds = new HashSet<>();
+                    for (WPDataAdditional w : listBefore) beforeIds.add(w.ID);
 
                     // Есть незаконченные/неподтвержденные — делаем сетевой запрос
                     StandartData data = new StandartData();
@@ -732,47 +757,255 @@ public class TablesLoadingUnloading {
                                     return Single.error(new NoSuchElementException("Empty/invalid data"));
                                 }
 
+                                // --- NEW: вычисляем, у каких пришедших записей поменялся исполнитель ---
+                                List<WPDataAdditional> incoming = result.list;
+                                List<Long> incomingIds = new ArrayList<>(incoming.size());
+                                for (WPDataAdditional w : incoming) {
+                                    // предполагаем что есть getId()
+                                    incomingIds.add(w.ID);
+                                }
+
+//                                List<Long> changedIds = new ArrayList<>();
+//                                try {
+//                                    // Попробуем получить существующие записи из БД по incomingIds.
+//                                    // Предпочтительно иметь DAO метод getByIds(List<Long> ids).
+//                                    List<WPDataAdditional> existing;
+//                                    try {
+//                                        existing = SQL_DB.wpDataAdditionalDao().getByIds(incomingIds);
+//                                    } catch (Throwable t) {
+//                                        // Если такого метода нет — получим все и отфильтруем (медленнее).
+//                                        List<WPDataAdditional> all = SQL_DB.wpDataAdditionalDao().getAll();
+//                                        Map<Long, WPDataAdditional> map = new HashMap<>();
+//                                        if (all != null) {
+//                                            for (WPDataAdditional e : all) map.put(e.ID, e);
+//                                        }
+//                                        existing = new ArrayList<>();
+//                                        for (Long id : incomingIds) {
+//                                            WPDataAdditional e = map.get(id);
+//                                            if (e != null) existing.add(e);
+//                                        }
+//                                    }
+//
+//                                    // Сравниваем "исполнителя" у incoming vs existing.
+//                                    // Метод getPerformerId пытается достать идентификатор исполнителя.
+//                                    Map<Long, WPDataAdditional> existingById = new HashMap<>();
+//                                    for (WPDataAdditional e : existing) existingById.put(e.ID, e);
+//
+//                                    for (WPDataAdditional inc : incoming) {
+//                                        WPDataAdditional ex = existingById.get(inc.ID);
+//                                        if (ex == null) continue; // новая запись — не считаем как смена исполнителя
+//                                        Long incPer = inc.ID;
+//                                        Long exPer = ex.ID;
+//                                        if (!Objects.equals(incPer, exPer)) {
+//                                            changedIds.add(inc.codeDad2);
+//                                        }
+//                                    }
+//                                    // Добавим в ScrollDataHolder (потокобезопасно)
+//                                    if (!changedIds.isEmpty()) {
+//                                        ScrollDataHolder.Companion.instance().addIds(changedIds);
+//                                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.donwloadPlanBudget",
+//                                                "Detected changed-performer ids: " + changedIds.size());
+//                                        Log.i("donwloadPlanBudget", "Changed-performer ids: " + changedIds);
+//                                    }
+//                                } catch (Throwable t) {
+//                                    // не ломаем весь поток из-за ошибки сравнения — логируем и продолжаем
+//                                    Globals.writeToMLOG("ERROR", "TablesLoadingUnloading.donwloadPlanBudget",
+//                                            "Error while detecting changed-performer: " + t.getMessage());
+//                                    Log.e("donwloadPlanBudget", "Error while detecting changed-performer", t);
+//                                }
+
                                 // Сохраняем пришедшие записи в БД
                                 return SQL_DB.wpDataAdditionalDao()
                                         .insertAll(result.list) // Completable
                                         .andThen(Single.fromCallable(() -> {
                                             // После вставки читаем количество не подтверждённых записей
                                             List<WPDataAdditional> listAfter = SQL_DB.wpDataAdditionalDao().getNotConfirmDecision();
+                                            Set<Long> afterIds = new HashSet<>();
+                                            if (listAfter != null) {
+                                                for (WPDataAdditional w : listAfter)
+                                                    afterIds.add(w.ID);
+                                            }
 
-                                            int beforeCount = listBefore.size();
-                                            int afterCount = listAfter == null ? 0 : listAfter.size();
+                                            // Найдём id которые были в beforeIds, а теперь отсутствуют -> это подтверждённые (0 -> 1)
+                                            Set<Long> completedIds  = new HashSet<>(beforeIds);
+                                            completedIds .removeAll(afterIds); // оставшиеся — подтвердившиеся
 
-                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: inserted size: " + result.list.size());
-                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: not-confirm before=" + beforeCount + " after=" + afterCount);
+
+                                            // Фильтруем только те, у которых action == 1 (подтверждено)
+                                            List<Long> confirmedList = new ArrayList<>();
+                                            for (WPDataAdditional w : incoming) {
+                                                if (completedIds.contains(w.ID) && w.action == 1) {
+                                                    confirmedList.add(w.ID);
+                                                }
+                                            }
+
+                                            int confirmedCount = confirmedList.size();
+
+                                            Log.e("donwloadPlanBudget", "inserted size: " + result.list.size());
+                                            Log.e("donwloadPlanBudget", "not-confirm before=" + beforeIds.size() + " after=" + afterIds.size());
                                             Globals.writeToMLOG("INFO",
-                                                    "PlanogrammTableExchange.donwloadPlanBudget",
-                                                    "Inserted: " + result.list.size() + ". Not-confirm before: " + beforeCount + ", after: " + afterCount);
+                                                    "TablesLoadingUnloading.donwloadPlanBudget",
+                                                    "Inserted: " + result.list.size() + ". Not-confirm before: " + beforeIds.size() + ", after: " + afterIds.size()
+                                                            + ". confirmedCount: " + confirmedCount);
 
-                                            // Если уменьшилось — значит кто-то стал confirm_decision = 1 → запускаем downloadWPData()
-                                            if (afterCount < beforeCount) {
-                                                Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: some items became confirmed -> launching downloadWPData()");
+                                            // Если есть confirmedIds — положим их в ScrollDataHolder и вызовем downloadWPData()
+                                            if (confirmedCount > 0) {
+                                                ScrollDataHolder.Companion.instance().addIds(confirmedList);
+
+                                                Log.e("donwloadPlanBudget", "some items became confirmed -> launching downloadWPData()");
                                                 Globals.writeToMLOG("INFO",
-                                                        "PlanogrammTableExchange.donwloadPlanBudget",
-                                                        "Detected confirmed items, calling downloadWPData()");
+                                                        "TablesLoadingUnloading.donwloadPlanBudget",
+                                                        "Detected confirmed items: " + confirmedList);
+
                                                 try {
-                                                    // Вызываем метод — он сам должен управлять своими Scheduler'ами
                                                     downloadWPData();
                                                 } catch (Exception e) {
-                                                    Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: downloadWPData() threw", e);
+                                                    Log.e("donwloadPlanBudget", "downloadWPData() threw", e);
                                                     Globals.writeToMLOG("ERROR",
-                                                            "PlanogrammTableExchange.donwloadPlanBudget",
+                                                            "TablesLoadingUnloading.donwloadPlanBudget",
                                                             "downloadWPData() exception: " + e.getMessage());
                                                 }
                                             }
 
-                                            return result.list.size();
+                                            // Возвращаем количество подтверждённых элементов — UI будет реагировать только на >0
+                                            return confirmedCount;
+
+//                                            int beforeCount = listBefore.size();
+//                                            int afterCount = listAfter == null ? 0 : listAfter.size();
+//
+//                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: inserted size: " + result.list.size());
+//                                            Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: not-confirm before=" + beforeCount + " after=" + afterCount);
+//                                            Globals.writeToMLOG("INFO",
+//                                                    "TablesLoadingUnloading.donwloadPlanBudget",
+//                                                    "Inserted: " + result.list.size() + ". Not-confirm before: " + beforeCount + ", after: " + afterCount);
+//
+//                                            // Если уменьшилось — значит кто-то стал confirm_decision = 1 → запускаем downloadWPData()
+//                                            if (afterCount < beforeCount) {
+//                                                Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: some items became confirmed -> launching downloadWPData()");
+//                                                Globals.writeToMLOG("INFO",
+//                                                        "TablesLoadingUnloading.donwloadPlanBudget",
+//                                                        "Detected confirmed items, calling downloadWPData()");
+//                                                try {
+//                                                    // Вызываем метод — он сам должен управлять своими Scheduler'ами
+//                                                    downloadWPData();
+//                                                } catch (Exception e) {
+//                                                    Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: downloadWPData() threw", e);
+//                                                    Globals.writeToMLOG("ERROR",
+//                                                            "TablesLoadingUnloading.donwloadPlanBudget",
+//                                                            "downloadWPData() exception: " + e.getMessage());
+//                                                }
+//                                            }
+//
+//                                            return result.list.size();
                                         }));
                             });
+                })
+
+                .doFinally(() -> {
+                    // Сбрасываем флаг выполнения в любом случае
+                    DOWNLOAD_PLAN_BUDGET_RUNNING.set(false);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         size -> {
                             if (size > 0) {
+
+                                ProgressViewModel progress = new ProgressViewModel(1);
+                                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(context, progress);
+
+                                try {
+                                    Exchange exchange = new Exchange();
+                                    exchange.setContext(context);
+                                    Exchange.exchangeTime = 0;
+                                    exchange.startExchange();
+                                    new TablesLoadingUnloading().downloadAllTables(context);
+
+                                    loadingDialog.show();
+                                    progress.onNextEvent("Виконую Синхронізацію з сервером", 7_700);
+//                        exchange.uploadTARComments(null);
+                                } catch (Exception e) {
+                                    Log.d("test", "test" + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                try {
+                                    /**MERCHIK_1
+                                     * Зверни увагу на примусове завантаження цих типів фото
+                                     * А може сюди*/
+                                    // #### TODO
+                                    SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                                    List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
+                                    if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
+                                        Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
+//                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
+//                            progress.show();
+                                        samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
+                                            @Override
+                                            public void onSuccess(String data) {
+                                                Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
+//                                    progress.dismiss();
+                                                progress.onNextEvent("");
+                                                progress.onCompleted();
+                                            }
+
+                                            @Override
+                                            public void onFailure(String error) {
+                                                Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
+                                                progress.onNextEvent("");
+                                                progress.onCompleted();
+                                            }
+                                        });
+                                    }
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                // 08.11.23. Загрузка принудительная Образцов фото.
+                                try {
+                                    /**MERCHIK_1
+                                     * Зверни увагу на примусове завантаження і цих типів фото
+                                     * Мені прям дуже кажется що сюди треба дивитись в першу чергу*/
+                                    ShowcaseExchange showcaseExchange = new ShowcaseExchange();
+                                    List<ShowcaseSDB> list = showcaseExchange.getSamplePhotosToDownload();
+                                    if (list != null && list.size() > 0) {
+                                        Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "list: " + list.size());
+                                        showcaseExchange.downloadShowcasePhoto(list);
+                                    } else {
+                                        Toast.makeText(context, "Всі вітрини вже завантажені!", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+
+                                try {
+                                    /**MERCHIK_1
+                                     * А це наче завантажуються фото за минулі роботи які виконував мерчандайзер,
+                                     * але перевстановив додаток та загубив ці фото*/
+//                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
+//                        photoMerchikExchange.getPhotoFromSite();
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
+                                    Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                                }
+                                loadingDialog.setOnDismissListener(() -> {
+                                    new MessageDialogBuilder(context)
+                                            .setTitle("Зміни в планi робіт")
+                                            .setStatus(DialogStatus.NORMAL)
+                                            .setSubTitle("Вам підтвердили роботу")
+                                            .setMessage("Надійшло підтвердження за заявкою, яку ви подали, щоб переглянути нову роботу, натисніть 'Ок'.")
+                                            .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
+                                            .setOnConfirmAction(() -> {
+//                                                Intent intent = new Intent(context, WPDataActivity.class);
+//                                                intent.putExtra("initialOpent", false);
+//                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                                                context.startActivity(intent);
+                                                return Unit.INSTANCE;
+                                            })
+                                            .show();
+                                });
                                 Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: Data inserted successfully. Size: " + size);
                                 Globals.writeToMLOG("INFO",
                                         "PlanogrammTableExchange.donwloadPlanBudget",
@@ -783,25 +1016,46 @@ public class TablesLoadingUnloading {
                         },
                         throwable -> {
                             Globals.writeToMLOG("ERROR",
-                                    "PlanogrammTableExchange.donwloadPlanBudget",
+                                    "TablesLoadingUnloading.donwloadPlanBudget",
                                     "exception: " + throwable.getMessage());
                             Log.e("!!!!!!!!!!!!!", "donwloadPlanBudget: exception", throwable);
                         }
                 );
     }
 
-    public void uploadPlanBudget() {
-//###############
+    // class fields (добавьте в ваш класс)
+    private final AtomicBoolean uploadRunning = new AtomicBoolean(false);
+    private final AtomicInteger uploadPending = new AtomicInteger(0);
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
-        List<WPDataAdditional> wpDataAdditionals = SQL_DB.wpDataAdditionalDao().getUploadToServer();
-        if (wpDataAdditionals.isEmpty())
+    public void uploadPlanBudget() {
+        // Если уже выполняется — пометим, что есть "отложенный" вызов и выйдем
+        if (!uploadRunning.compareAndSet(false, true)) {
+            int pending = uploadPending.incrementAndGet();
+            Log.i("UPLOAD", "Upload already running — queued pending count = " + pending);
             return;
+        }
+        // Запускаем реальную цепочку
+        startUploadChain();
+    }
+
+    private void startUploadChain() {
+        // Подкопируем вашу логику (с минимальными правками для Rx и doFinally)
+        List<WPDataAdditional> wpDataAdditionals = SQL_DB.wpDataAdditionalDao().getUploadToServer();
+        if (wpDataAdditionals.isEmpty()) {
+            // ничего не загружать — сразу сбросим флаг и посмотрим pending
+            uploadRunning.set(false);
+            int pending = uploadPending.getAndSet(0);
+            if (pending > 0 && uploadRunning.compareAndSet(false, true)) {
+                // запустить ещё раз
+                startUploadChain();
+            }
+            return;
+        }
 
         List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
 
-        Log.e("!!!!!!", "SIZE: " + wpDataAdditionals.size());
         StandartData data = new StandartData();
-
         data.mod = "plan_budget";
         data.act = "wp_data_request_add";
         data.data = servs;
@@ -810,28 +1064,9 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-
-//        RetrofitBuilder.getRetrofitInterface()
-//                .TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                        size -> {
-//                            Log.e("!!!!!!!!!!!!!", "inserted size: " + size);
-//                            Globals.writeToMLOG("INFO",
-//                                    "PlanogrammTableExchange.donwloadPlanBudget",
-//                                    "Data inserted successfully. Size: " + size);
-//                        },
-//                        throwable -> {
-//                            Globals.writeToMLOG("ERROR",
-//                                    "PlanogrammTableExchange.donwloadPlanBudget",
-//                                    "exception: " + throwable.getMessage());
-//                        }
-//                );
-
         WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
 
-        RetrofitBuilder.getRetrofitInterface()
+        Disposable d = RetrofitBuilder.getRetrofitInterface()
                 .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject) // Single<UploadResponse>
                 .map(resp -> {
                     List<Pair<Long, Long>> mapping = new ArrayList<>();
@@ -842,7 +1077,8 @@ public class TablesLoadingUnloading {
                                     long local = Long.parseLong(it.elementId);
                                     long server = Long.parseLong(it.serverId);
                                     mapping.add(new Pair<>(local, server));
-                                } catch (NumberFormatException ignore) { }
+                                } catch (NumberFormatException ignore) {
+                                }
                             }
                         }
                     }
@@ -850,34 +1086,27 @@ public class TablesLoadingUnloading {
                 })
                 .flatMap(mapping -> {
                     if (mapping.isEmpty()) return Single.just(0);
-
-                    // оборачиваем синхронную транзакцию в Completable и выполняем на IO
                     return Completable.fromAction(() -> {
                                 dao.replaceLocalIdsWithServerIdsSync(mapping);
                             })
                             .subscribeOn(Schedulers.io())
                             .andThen(Single.just(mapping.size()));
                 })
-//                .map(resp -> { // вытаскиваем IDs из ответа
-//                    List<Long> ids = new ArrayList<>();
-//                    if (resp != null && resp.data != null) {
-//                        for (UploadResponse.Item it : resp.data) {
-//                            if (it != null && it.state && it.elementId != null) {
-//                                try {
-//                                    ids.add(Long.parseLong(it.elementId));
-//                                } catch (NumberFormatException ignore) {
-//                                }
-//                            }
-//                        }
-//                    }
-//                    return ids; // список element_id
-//                })
-//                .flatMap(ids -> { // апдейт в БД и вернуть кол-во обновлённых
-//                    if (ids.isEmpty()) return Single.just(0);
-//                    return dao.markUploadedByIds(ids).andThen(Single.just(ids.size()));
-//                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doFinally(() -> {
+                    // Всегда сбрасываем флаг выполнения. Затем — если были отложенные вызовы — запускаем ещё один цикл.
+                    uploadRunning.set(false);
+
+                    int pending = uploadPending.getAndSet(0);
+                    if (pending > 0) {
+                        Log.i("UPLOAD", "Restarting upload because pending was " + pending);
+                        // Если никто не работает — стартуем. (маловероятен race, но защищаемся)
+                        if (uploadRunning.compareAndSet(false, true)) {
+                            startUploadChain();
+                        }
+                    }
+                })
                 .subscribe(
                         updatedCount -> {
                             Log.e("UPLOAD", "uploadStatus=0 проставлен для: " + updatedCount);
@@ -887,10 +1116,13 @@ public class TablesLoadingUnloading {
                         throwable -> {
                             Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.upload",
                                     "exception: " + throwable.getMessage());
+                            Log.e("UPLOAD", "upload exception", throwable);
                         }
                 );
 
+        disposables.add(d);
     }
+
 
     //    04.08.2025 новый метод для для получения количества доп работ по РНО
     public void donwloadPlanBudgetRNO() {
@@ -1169,9 +1401,10 @@ public class TablesLoadingUnloading {
 
     /**
      * ЗАГРУЗКА ТАБЛИЦИ report_prepare С СЕРВЕРА
+     * <p>
+     * //     * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
      *
-     //     * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
-     * @param mode    -- Режим работы. Если 0 - всё затераем, 1 - "умная" загрузка(обновление)
+     * @param mode -- Режим работы. Если 0 - всё затераем, 1 - "умная" загрузка(обновление)
      */
     public void downloadReportPrepare(int mode) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.START");
@@ -1217,41 +1450,23 @@ public class TablesLoadingUnloading {
 
                 Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.isSuccessful(): " + response.isSuccessful());
 
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().getState()) {
+                if (response.isSuccessful() && response.body() != null && response.body().getState()
+                        && response.body().getList() != null && !response.body().getList().isEmpty()) {
 
-                        Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
+                    Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
 
-                        if (response.body().getList() != null) {
+                    if (response.body().getList() != null) {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
-                            Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-                            INSTANCE.executeTransaction(realm -> {
-                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
-                                realm.copyToRealmOrUpdate(realmResults);
-                            });
-                        } else {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
-                        }
-                        RealmManager.setReportPrepare(response.body().getList());
-
-//                        if (RealmManager.setReportPrepare(response.body().getList())) {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//                        } else {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//
-//                        }
+                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
+                        Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
+                        INSTANCE.executeTransaction(realm -> {
+                            realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                            realm.copyToRealmOrUpdate(realmResults);
+                        });
+                    } else {
+                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                     }
-//                    else {
-//                        if (pg != null)
-//                            if (pg.isShowing())
-//                                pg.dismiss();
-//
-//                    }
+                    RealmManager.setReportPrepare(response.body().getList());
                 }
                 readyReportPrepare = true;
             }
@@ -3701,21 +3916,21 @@ id_exclude - иди товаров которые есть в приложени
                     if (response.body() != null && response.body().list != null
                             && response.body().state && !response.body().list.isEmpty())
                         SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
-                        @Override
-                        public void onComplete() {
-                            try {
-                                Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
-                                Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "response.body().list: " + response.body().list.size());
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "downloadtovar_grp_client", "Exception e: " + e);
+                            @Override
+                            public void onComplete() {
+                                try {
+                                    Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
+                                    Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "response.body().list: " + response.body().list.size());
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "downloadtovar_grp_client", "Exception e: " + e);
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                            Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Throwable e: " + e);
-                        }
-                    });
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Throwable e: " + e);
+                            }
+                        });
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Exception e: " + e);
                 }

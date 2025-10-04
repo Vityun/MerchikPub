@@ -1,11 +1,15 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
@@ -21,6 +25,21 @@ fun OtherComposeTab() {
     viewModel.typeWindow = "container"
     viewModel.subTitle = "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам"
     viewModel.context = context
+
+    // Подписка на изменения ScrollDataHolder через DisposableEffect
+    DisposableEffect(Unit) {
+        val removeListener = ScrollDataHolder.instance().addOnIdsChangedListener { ids ->
+            ids.forEach { id ->
+                try {
+                    viewModel.requestFlyByStableId(id)
+                } catch (_: Throwable) { }
+            }
+        }
+
+        onDispose {
+            removeListener()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.updateContent()

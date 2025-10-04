@@ -50,10 +50,10 @@ TODO добавить, что бы рисовались только те пол
  */
 @Composable
 fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
-    Globals.writeToMLOG("INFO", "MainUI.ItemUI.ItemFieldValue","visibilityField: ${visibilityField == View.VISIBLE} | " +
-            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
-    Log.e("INFO", "MainUI.ItemUI.ItemFieldValue visibilityField: ${visibilityField == View.VISIBLE} | " +
-            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
+//    Globals.writeToMLOG("INFO", "MainUI.ItemUI.ItemFieldValue","visibilityField: ${visibilityField == View.VISIBLE} | " +
+//            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
+//    Log.e("INFO", "MainUI.ItemUI.ItemFieldValue visibilityField: ${visibilityField == View.VISIBLE} | " +
+//            "it.field.value: ${it.field.value} | it.value.value: ${it.value.value}, it.value.rawValue: ${it.value.rawValue}")
     Row(Modifier.fillMaxWidth()) {
         if (visibilityField == View.VISIBLE) {
             ItemTextField(it.field, Modifier.weight(1f))

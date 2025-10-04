@@ -17,7 +17,7 @@ data class DataItemUI(
     val modifierContainer: MerchModifier? = null,
     val selected: Boolean,
     // уникальный стабильный идентификатор — присваивается при создании
-    val stableId: Long = DataItemIdGenerator.nextId()
+    val stableId: Long
 )
 
 data class MerchModifier(

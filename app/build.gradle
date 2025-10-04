@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 35
         //noinspection HighAppVersionCode
-        versionCode  2025092400
-        versionName "2025092400"
+        versionCode  2025100300
+        versionName "2025100300"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -212,4 +212,7 @@ dependencies {
     // Import the BoM for the Firebase platform
 //    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
 //    implementation("com.google.firebase:firebase-analytics")
+
+    debugImplementation 'com.github.amitshekhariitbhu.Android-Debug-Database:debug-db:1.0.7'
+
 }

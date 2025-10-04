@@ -10,6 +10,10 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.OptionsServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 public class OptionsExchange {
 
     private String date_from = "";
@@ -25,9 +29,11 @@ public class OptionsExchange {
         this.code_dad2 = code_dad2;
     }
 
-    public void downloadOptions(ExchangeInterface.ExchangeResponseInterface exchange){
+    public void downloadOptions(ExchangeInterface.ExchangeResponseInterface exchange) {
         Log.e("EX_downloadOptions", "downloadOptions: " + "START");
         StandartData data = new StandartData();
+        Set<Long> uniqueDad2 = new HashSet<>();
+        uniqueDad2.add(Long.valueOf(code_dad2));
         data.mod = "plan";
         data.act = "options_list";
         data.date_from = date_from;
@@ -43,7 +49,18 @@ public class OptionsExchange {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
                 Log.e("downloadOptions", "response: " + response.body());
-                exchange.onSuccess(response.body().getList());
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().getState() && response.body().getList() != null
+                        && !response.body().getList().isEmpty())
+                    exchange.onSuccess(response.body().getList());
+                else {
+                    if (response.body() != null && response.body().getError() != null)
+                        exchange.onFailure(response.body().getError());
+                    else
+                        exchange.onFailure("Виникла помилка");
+
+                }
+
             }
 
             @Override

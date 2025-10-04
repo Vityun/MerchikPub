@@ -25,6 +25,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -826,6 +827,24 @@ public class RealmManager {
 
         return INSTANCE.where(WpDataDB.class).equalTo("status", status).equalTo("dt", date).findAll().size();
     }
+
+    public static List<Long> getWpDataIdsByAdditionalIds(List<Long> code2) {
+        Realm realm = RealmManager.INSTANCE;
+        List<Long> wpIds = new ArrayList<>();
+
+        RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
+                .in("code_dad2", code2.toArray(new Long[0]))
+                .findAll();
+
+        for (WpDataDB wpData : results) {
+            if (wpData != null) {
+                wpIds.add(wpData.getId()); // или getID(), если поле называется именно так
+            }
+        }
+
+        return wpIds;
+    }
+
 
     // CUST GRP TYPE:-------------------------------------------------------------------------------
     public static RealmResults<GroupTypeDB> getAllGroupTypeByCustomerId(String customer_id) {

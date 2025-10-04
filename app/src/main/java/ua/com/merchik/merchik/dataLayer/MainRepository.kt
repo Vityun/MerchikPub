@@ -103,17 +103,20 @@ class MainRepository(
                 } as? DataObjectUI)
         } ?: run {
             val roomManager = RoomManager.SQL_DB
-            when (klass) {
-                PlanogrammSDB::class-> roomManager.planogrammDao().all.first() as DataObjectUI
-                CustomerSDB::class -> roomManager.customerDao().all.first() as DataObjectUI
-                UsersSDB::class -> roomManager.usersDao().all2.first() as DataObjectUI
-                VacancySDB::class -> roomManager.vacancyDao().all.first() as DataObjectUI
-                SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.first() as DataObjectUI
-                AddressSDB::class -> roomManager.addressDao().all.first() as DataObjectUI
-                SMSPlanSDB::class -> roomManager.smsPlanDao().all.first() as DataObjectUI
-//                PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all.first() as DataObjectUI
-                else -> { null }
-            }
+            runCatching {
+                when (klass) {
+                    PlanogrammSDB::class -> roomManager.planogrammDao().all.firstOrNull() as DataObjectUI
+                    CustomerSDB::class -> roomManager.customerDao().all.firstOrNull() as DataObjectUI
+                    UsersSDB::class -> roomManager.usersDao().all2.firstOrNull() as DataObjectUI
+                    VacancySDB::class -> roomManager.vacancyDao().all.firstOrNull() as DataObjectUI
+                    SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.firstOrNull() as DataObjectUI
+                    AddressSDB::class -> roomManager.addressDao().all.firstOrNull() as DataObjectUI
+                    SMSPlanSDB::class -> roomManager.smsPlanDao().all.firstOrNull() as DataObjectUI
+                    else -> {
+                        null
+                    }
+                }
+            }.getOrNull()
         }
 
         item?.let { obj ->
@@ -288,14 +291,14 @@ class MainRepository(
         Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data size: ${data.size}")
         return data.map {
             Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data.map: $it")
-            it.toItemUI_(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto)
+            it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto)
         }
     }
 
     private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!","getItems: end 1?")
 //        Globals.writeToMLOG("INFO","MainRepository.toItemUI","toItemUI: $this" )
-        return this.map { (it as DataObjectUI).toItemUI_(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
+        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
 }

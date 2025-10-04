@@ -34,8 +34,8 @@ public interface WPDataAdditionalDao {
     @Query("SELECT * FROM wp_data_additional WHERE confirm_decision = 0")
     List<WPDataAdditional> getNotConfirmDecision();
 
-    @Query("UPDATE wp_data_additional SET uploadStatus = 0 WHERE ID IN (:ids)")
-    Completable markUploadedByIds(List<Long> ids);
+    @Query("SELECT * FROM wp_data_additional WHERE ID IN (:ids)")
+    List<WPDataAdditional> getByIds(List<Long> ids);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insert(WPDataAdditional item);

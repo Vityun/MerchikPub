@@ -27,7 +27,7 @@ public class ReportPrepareExchange {
         this.code_dad2 = code_dad2;
     }
 
-    public void downloadReportPrepare(ExchangeInterface.ExchangeResponseInterface exchange){
+    public void downloadReportPrepare(ExchangeInterface.ExchangeResponseInterface exchange) {
         StandartData data = new StandartData();
         data.mod = "report_prepare";
         data.act = "list_data";
@@ -38,7 +38,6 @@ public class ReportPrepareExchange {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("report_prepare"));
         data.dt_change_to = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
-
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -48,11 +47,16 @@ public class ReportPrepareExchange {
             @Override
             public void onResponse(retrofit2.Call<ReportPrepareServer> call, retrofit2.Response<ReportPrepareServer> response) {
                 Log.e("downloadReportPrepare", "response: " + response.body());
-                exchange.onSuccess(response.body().getList());
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                });
+                if (response.isSuccessful() && response.body() != null && response.body().getState() &&
+                        response.body().getList() != null && !response.body().getList().isEmpty()) {
+                    exchange.onSuccess(response.body().getList());
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                    });
+                } else exchange.onFailure("Throwable: Список пуст");
+
+
             }
 
             @Override

@@ -1391,7 +1391,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         });
 
                         // доп заработок
-                        tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision();
+                        tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(toolbar_menus.this);
 //                        if (!SQL_DB.wpDataAdditionalDao().getNotConfirmDecision().isEmpty())
 //                            tablesLoadingUnloading.donwloadPlanBudget();
 

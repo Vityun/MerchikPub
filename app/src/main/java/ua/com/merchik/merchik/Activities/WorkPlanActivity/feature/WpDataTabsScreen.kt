@@ -13,6 +13,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,30 +22,29 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.AdditionalContentTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.retrofit.GlobalErrors
 
@@ -77,12 +78,45 @@ fun WpDataTabsScreen() {
         "Заявки"
     )
 
-//    cronchikViewModel.updateBadge(1, 10)
+    // Подпишемся на изменения ids (минимальные правки, без StateFlow)
+    val rememberRemoveListener = remember {
+        // создаём listener один раз и вернём функцию удаления
+        var remove: (() -> Unit)? = null
+        remove = ScrollDataHolder.instance().addOnIdsChangedListener { list ->
+            // вызываем обновление бейджа в ViewModel
+            cronchikViewModel.updateBadge(0, list.size)
+        }
+        remove
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            rememberRemoveListener.invoke()
+        }
+    }
+//    cronchikViewModel.updateBadge(0, ScrollDataHolder.instance().getIds().size)
     cronchikViewModel.updateBadgeAdditionalIncome()
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
+
+    val ids = ScrollDataHolder.instance().getIds()
+//    val idNext = ScrollDataHolder.instance().getNext()
+//    Log.e("!!!!!!","list: $ids, idNext: $idNext")
+//    val ids = mutableListOf(4060380514L,4060380514L)
+    val viewModel: WpDataDBViewModel = hiltViewModel()
+    val green = colorResource(id = R.color.ufmd_accept_t)
+
+    // Альтернативно: если getIds возвращает List<String> или иной формат — преобразуйте
+    val badgeTargets: List<Long?> = remember(ids) {
+        // пытаемся взять id для каждого таба, иначе null
+        List(maxOf(tabTitles.size, ids.size)) { idx -> ids.getOrNull(idx) }
+            .take(tabTitles.size)
+    }
+    // pendingScrollHash: хэш, который надо проскроллить после переключения таба
+    val pendingScrollHash = remember { mutableStateOf<Long?>(null) }
+    val isScrolling = remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TabRow(
@@ -90,7 +124,7 @@ fun WpDataTabsScreen() {
             modifier = Modifier.fillMaxWidth(),
             containerColor = tabBarBackground,
             indicator = {}, // отключаем дефолтный индикатор
-            divider = {}             // <-- отключаем линию
+            divider = {}    // <-- отключаем линию
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -106,38 +140,59 @@ fun WpDataTabsScreen() {
                             contentAlignment = Alignment.TopEnd,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 6.dp)
                         ) {
+                            // Сам заголовок таба — кликабелен для переключения
                             Text(
                                 text = title,
                                 color = if (selectedTabIndex == index) textSelectedColor else textUnselectedColor,
-                                modifier = Modifier.align(Alignment.Center)
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .clickable {
+                                        selectedTabIndex = index
+                                    }
                             )
+
+                            // бейдж (если есть)
                             val count = badgeCounts.getOrNull(index)
                             if (count != null && count > 0) {
-                                CounterBadge(
-                                    count = count,
+                                // оборачиваем CounterBadge в Box, чтобы ловить клик только по бейджу
+                                Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .offset(x = 14.dp, y = (-9).dp)
-                                )
-//                                Box(
-//                                    modifier = Modifier
-//                                        .align(Alignment.TopEnd)
-//                                        .offset(x = 14.dp, y = (-9).dp)
-//                                        .background(Color.Red, CircleShape)
-//                                        .border(
-//                                            width = 1.dp,
-//                                            color = Color.White,
-//                                            shape = CircleShape
-//                                        )
-//                                        .padding(horizontal = 5.dp, vertical = 2.dp)
-//                                ) {
-//                                    Text(
-//                                        text = if (count > 9) "9+" else count.toString(),
-//                                        color = Color.White,
-//                                        fontSize = 11.sp,
-//                                    )
-//                                }
+                                ) {
+                                    CounterBadge(
+                                        count = count,
+                                        modifier = Modifier
+                                            .clickable {
+                                                val targetHash = badgeTargets.getOrNull(index)
+                                                if (targetHash == null) {
+                                                    // нет цели — просто переключаем вкладку
+                                                    selectedTabIndex = index
+                                                    return@clickable
+                                                }
+
+                                                // Если таб уже выбран — скроллим сразу
+                                                if (selectedTabIndex == index) {
+                                                    if (!isScrolling.value) {
+                                                        isScrolling.value = true
+                                                        viewModel.requestScrollToVisit(targetHash)
+                                                        viewModel.highlightBId(targetHash, green)
+                                                        // сброс флага через delay (задача UI, не критично)
+//                                                        LaunchedEffect(targetHash) {
+//                                                            delay(800)
+                                                            isScrolling.value = false
+//                                                        }
+                                                    }
+                                                } else {
+                                                    // Сохраняем pending hash и переключаемся — LaunchedEffect ниже выполнит скролл
+                                                    pendingScrollHash.value = targetHash
+                                                    selectedTabIndex = index
+                                                }
+                                            }
+                                    )
+                                }
                             }
                         }
                     }
@@ -145,6 +200,51 @@ fun WpDataTabsScreen() {
             }
         }
 
+        // При смене выбранного таба, если есть pendingScrollHash — пытаемся проскроллить
+        LaunchedEffect(selectedTabIndex, pendingScrollHash.value) {
+            val pending = pendingScrollHash.value
+            if (pending == null) return@LaunchedEffect
+
+            // если уже скроллится — ждём и затем выходим
+            if (isScrolling.value) return@LaunchedEffect
+
+            // Попробуем несколько раз выполнить скролл — даём контенту время отрисоваться
+            val maxAttempts = 8
+            val delayMs = 150L
+            var succeeded = false
+
+            repeat(maxAttempts) { attempt ->
+                try {
+                    // помечаем что идёт скролл
+                    isScrolling.value = true
+
+                    // Вызов твоего метода; он обычно эмитит событие и не бросает исключение
+                    viewModel.requestScrollToVisit(pending)
+                    viewModel.highlightBId(pending, green)
+
+                    // считаем как успешный — очищаем pending
+                    pendingScrollHash.value = null
+                    succeeded = true
+
+                    // даём немного времени, чтобы скролл/анимация начались
+                    delay(400)
+                    isScrolling.value = false
+                    return@LaunchedEffect
+                } catch (t: Throwable) {
+                    // если что-то упало — ждем и пробуем снова
+                    isScrolling.value = false
+                    delay(delayMs)
+                }
+            }
+
+            if (!succeeded) {
+                // не удалось — снимаем pending, чтобы не зацикливаться
+                pendingScrollHash.value = null
+                isScrolling.value = false
+            }
+        }
+
+        // Контент выбранной вкладки
         when (selectedTabIndex) {
             0 -> WpDataContentTab()
             1 -> OtherComposeTab()

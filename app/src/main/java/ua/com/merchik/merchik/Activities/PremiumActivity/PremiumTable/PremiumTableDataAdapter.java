@@ -258,7 +258,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
          * Тут я буду загружать не достающие данные с сервера, если есть такая возможность и
          * отображать пользователю загруженный документ.
          */
-        private void downloadDoc(Long codeDad2, String datePremiumDownloadFormat) {
+        public void downloadDoc(Long codeDad2, String datePremiumDownloadFormat) {
 
             wpDownload(codeDad2, datePremiumDownloadFormat, new Clicks.clickVoid() {
                 @Override

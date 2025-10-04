@@ -32,6 +32,7 @@ import kotlin.Unit;
 import kotlin.jvm.functions.Function2;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreenKt;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -44,6 +45,10 @@ import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @AndroidEntryPoint
 public class WPDataActivity extends toolbar_menus {
@@ -108,6 +113,9 @@ public class WPDataActivity extends toolbar_menus {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
             this.startActivity(intent);
 //            ################
+//            ScrollDataHolder.Companion.instance().init();
+//            ScrollDataHolder.Companion.instance().addIds(List.of(2973797L));
+
         });
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));

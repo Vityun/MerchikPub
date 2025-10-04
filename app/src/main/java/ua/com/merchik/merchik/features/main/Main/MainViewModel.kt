@@ -18,9 +18,11 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -32,6 +34,8 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.*
+import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
+import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
@@ -142,7 +146,6 @@ abstract class MainViewModel(
 
     private val _scrollToHash = MutableSharedFlow<Long>(extraBufferCapacity = 1)
     val scrollToHash: SharedFlow<Long> = _scrollToHash
-
 
     // внутреннее «ожидаемое действие» после подтверждения диалога
     private sealed interface PendingOp {
@@ -301,6 +304,8 @@ abstract class MainViewModel(
     )
     val events = _events.asSharedFlow()
 
+    private val _dataItems = MutableStateFlow<List<DataItemUI>>(emptyList())
+    val dataItems: StateFlow<List<DataItemUI>> = _dataItems.asStateFlow()
 
     fun requestScrollToVisit(itemHash: Long) {
         _scrollToHash.tryEmit(itemHash)
@@ -334,11 +339,68 @@ abstract class MainViewModel(
 
     init {
         loadPreferences()
+        observeSourcesForItems()
     }
 
     private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
     }
+
+    private fun observeSourcesForItems() {
+        viewModelScope.launch {
+            // комбинируем источники: uiState, range start/end
+            combine(
+                _uiState,
+                _rangeDataStart,
+                _rangeDataEnd
+            ) { uiState, start, end ->
+                Triple(uiState, start, end)
+            }.collect { (uiState, start, end) ->
+                // делаем пересчёт в фоне
+                recomputeDataItems(uiState, start, end)
+            }
+        }
+    }
+
+    private fun recomputeDataItems(uiState: StateUI, rangeStart: LocalDate?, rangeEnd: LocalDate?) {
+        viewModelScope.launch {
+            val combined = withContext(Dispatchers.Default) {
+                val header = uiState.itemsHeader
+                val footer = uiState.itemsFooter
+
+                val result: FilterAndSortResult = try {
+                    filterAndSortDataItems(
+                        items = uiState.items,
+                        filters = uiState.filters,
+                        sortingFields = uiState.sortingFields,
+                        rangeStart = rangeStart,
+                        rangeEnd = rangeEnd,
+                        searchText = uiState.filters?.searchText
+                    )
+                } catch (e: Throwable) {
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "MainViewModel.recomputeDataItems",
+                        "filterAndSortDataItems failed: $e"
+                    )
+                    FilterAndSortResult(emptyList(), isActiveFiltered = false, isActiveSorted = false) // fallback
+                }
+
+                // Собираем итоговый immutable список
+                buildList {
+                    addAll(header)
+                    addAll(result.items)
+                    addAll(footer)
+                }
+            }
+
+            // обновляем state только если изменилось (чтобы не триггерить лишний раз)
+            if (_dataItems.value != combined) {
+                _dataItems.value = combined
+            }
+        }
+    }
+
 
     fun updateOffsetSizeFonts(offsetSizeFont: Float) {
         viewModelScope.launch {
@@ -401,27 +463,30 @@ abstract class MainViewModel(
                     }
                 } ?: title
 
-                Globals.writeToMLOG("INFO","MainViewModel.updateContent","+")
+                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "+")
                 val dataItemUIS = getItems()
-                Globals.writeToMLOG("INFO","MainViewModel.updateContent","getItems() size: ${dataItemUIS.size}")
+                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "getItems() size: ${dataItemUIS.size}")
 
-                Log.e("INFO","MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
-                Log.e("INFO","MainViewModel.updateContent title: $title")
-                Log.e("INFO","MainViewModel.updateContent subTitle: $subTitle")
-                Log.e("INFO","MainViewModel.updateContent idResImage: $idResImage")
-                Log.e("INFO","MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
-                Log.e("INFO","MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
-                Log.e("INFO","MainViewModel.updateContent idResImage: $idResImage")
-                Log.e("INFO","MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
-                Log.e("INFO","MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
-                Log.e("INFO","MainViewModel.updateContent sortingFields: $sortingFields")
-                Log.e("INFO","MainViewModel.updateContent filters size: ${filters?.items?.size}")
-                Log.e("INFO","MainViewModel.updateContent filters: $filters")
+                Log.e("INFO", "MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
+                Log.e("INFO", "MainViewModel.updateContent title: $title")
+                Log.e("INFO", "MainViewModel.updateContent subTitle: $subTitle")
+                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
+                Log.e("INFO", "MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
+                Log.e("INFO", "MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
+                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
+                Log.e("INFO", "MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
+                Log.e("INFO", "MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
+                Log.e("INFO", "MainViewModel.updateContent sortingFields: $sortingFields")
+                Log.e("INFO", "MainViewModel.updateContent filters size: ${filters?.items?.size}")
+                Log.e("INFO", "MainViewModel.updateContent filters: $filters")
 
                 val items = filters?.items ?: emptyList()
                 Log.e("DBG_FILTERS", "filters.items.size = ${items.size}")
                 items.forEachIndexed { i, it ->
-                    Log.e("DBG_FILTERS", "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}")
+                    Log.e(
+                        "DBG_FILTERS",
+                        "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}"
+                    )
                 }
 
                 it.copy(
@@ -437,6 +502,16 @@ abstract class MainViewModel(
                     lastUpdate = System.currentTimeMillis()
                 )
             }
+        }
+    }
+
+    // ViewModel
+    private val _flyRequests = MutableSharedFlow<Long>(replay = 0, extraBufferCapacity = 10)
+    val flyRequests = _flyRequests.asSharedFlow()
+
+    fun requestFlyByStableId(stableId: Long) {
+        viewModelScope.launch {
+            _flyRequests.emit(stableId)
         }
     }
 
@@ -459,22 +534,22 @@ abstract class MainViewModel(
                     itemsHeader = it.itemsHeader.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     items = it.items.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     itemsFooter = it.itemsFooter.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                 )
@@ -494,6 +569,14 @@ abstract class MainViewModel(
         val target = addrId.trim()
         highlightWhere(
             predicate = { it.addrIdOrNull() == target },
+            color = color
+        )
+    }
+
+    /** Подкрасить элемент по ID */
+    fun highlightBId(id: Long, color: Color) {
+        highlightWhere(
+            predicate = { it.stableId == id },
             color = color
         )
     }
@@ -555,7 +638,12 @@ abstract class MainViewModel(
                                         wp.dt.time
                                     )
                                 }" +
-                                "\n<font color='gray'>Клиенты:</font> ${WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(wp.addr_id, wp.dt).toString().removeSurrounding("[", "]")}" +
+                                "\n<font color='gray'>Клиенты:</font> ${
+                                    WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+                                        wp.addr_id,
+                                        wp.dt
+                                    ).toString().removeSurrounding("[", "]")
+                                }" +
                                 "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
                         status = DialogStatus.NORMAL
                     )
@@ -577,7 +665,11 @@ abstract class MainViewModel(
                                         wp.dt.time
                                     )
                                 }" +
-                                "\n<font color='gray'>Клиенты:</font> ${WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(wp.addr_id).toString().removeSurrounding("[", "]")}" +
+                                "\n<font color='gray'>Клиенты:</font> ${
+                                    WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+                                        wp.addr_id
+                                    ).toString().removeSurrounding("[", "]")
+                                }" +
                                 "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
                         status = DialogStatus.NORMAL
                     )
@@ -601,6 +693,8 @@ abstract class MainViewModel(
         pending = null
     }
 
+    private val tablesLoadingUnloading = TablesLoadingUnloading()
+
     private fun doAcceptAllClientOneAddressInfinite(wp: WpDataDB) {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
@@ -620,7 +714,6 @@ abstract class MainViewModel(
                     pending = null
                     viewModelScope.launch {
                         // временный костыль
-                        val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
                         _events.emit(
@@ -651,6 +744,7 @@ abstract class MainViewModel(
             )
         disposables.add(d)
     }
+
     private fun doAcceptAllClientOneAddressOneTime(wp: WpDataDB) {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
@@ -670,7 +764,6 @@ abstract class MainViewModel(
                     pending = null
                     viewModelScope.launch {
                         // временный костыль
-                        val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
                         _events.emit(
@@ -719,7 +812,6 @@ abstract class MainViewModel(
                     pending = null
                     viewModelScope.launch {
 // временный костыль
-                        val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
                         Globals.writeToMLOG(
@@ -773,7 +865,6 @@ abstract class MainViewModel(
                     pending = null
                     viewModelScope.launch {
                         // временный костыль
-                        val tablesLoadingUnloading = TablesLoadingUnloading()
                         tablesLoadingUnloading.uploadPlanBudget()
 
                         Globals.writeToMLOG(
@@ -829,6 +920,7 @@ abstract class MainViewModel(
                 ContextMenuAction.OpenVisit,
                 ContextMenuAction.Close
             )
+
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
                 ContextMenuAction.AcceptOrder,
                 ContextMenuAction.AcceptAllAtAddress,
@@ -842,6 +934,7 @@ abstract class MainViewModel(
                 ContextMenuAction.Feedback,
                 ContextMenuAction.Close
             )
+
             else -> emptyList()
         }
 

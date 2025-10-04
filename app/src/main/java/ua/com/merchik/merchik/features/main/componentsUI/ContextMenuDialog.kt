@@ -1,32 +1,20 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,17 +29,34 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableDataAdapter
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.ExchangeResponseInterface
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange
+import ua.com.merchik.merchik.ViewHolders.Clicks.clickVoid
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 @Stable
@@ -193,13 +198,72 @@ fun rememberContextMenuHost(
                         result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
                         selectedItem = null
                     }
-                    is ContextMenuAction.OpenVisit,
-                    ContextMenuAction.OpenOrder -> {
+                    is ContextMenuAction.OpenVisit -> {
                         result.wpDataDB?.let {
                             val intent = Intent(context, DetailedReportActivity::class.java)
                             intent.putExtra("WpDataDB_ID", it.id)
                             context.startActivity(intent)
                         }
+                        selectedItem = null
+                    }
+                    ContextMenuAction.OpenOrder -> {
+//                        result.wpDataDB?.let {
+//                            val progress = ProgressViewModel(2)
+//                            val loadingDialog = LoadingDialogWithPercent(context as Activity,progress)
+//                            loadingDialog.show()
+//                            progress.onNextEvent("Завантажую опциi")
+//
+//                            val intent = Intent(context, DetailedReportActivity::class.java)
+//                            intent.putExtra("WpDataDB_ID", it.id)
+//                            context.startActivity(intent)
+//                        }
+                        result.wpDataDB?.let { wp ->
+                            // Для текущей даты
+                            val currentDate = wp.dt
+                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val documentDate = formatter.format(currentDate)
+
+                            val progress = ProgressViewModel(2)
+                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                            loadingDialog.show()
+
+                            // 1) уведомление о загрузке опций
+                            progress.onNextEvent("Завантажую опції")
+
+                            // безопасный helper, чтобы выполнять UI-действия на главном потоке
+                            fun runOnUi(action: () -> Unit) {
+                                (context as Activity).runOnUiThread { action() }
+                            }
+
+                            // callback-реализация clickVoid (предполагается, что интерфейс clickVoid { fun click() } у тебя есть)
+                            val afterOptions = object : clickVoid {
+                                override fun click() {
+                                    // после загрузки опций — уведомляем и запускаем загрузку товаров
+                                    runOnUi {
+                                        progress.onNextEvent("Завантажую товари")
+                                    }
+
+                                    reportDownload(wp.code_dad2, documentDate, object : clickVoid {
+                                        override fun click() {
+                                            // по завершении загрузки товаров — закрываем диалог и открываем активити
+                                            runOnUi {
+                                                try {
+                                                    if (loadingDialog.isShowing()) progress.onCompleted()
+                                                } catch (_: Exception) { /* ignore */ }
+
+                                                val intent = Intent(context, DetailedReportActivity::class.java)
+                                                intent.putExtra("WpDataDB_ID", wp.id)
+                                                context.startActivity(intent)
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+
+                            // Запускаем загрузку опций; при любом результате — вызовем afterOptions.click()
+                            optionDownload(wp.code_dad2, documentDate, afterOptions)
+                        }
+
                         selectedItem = null
                     }
                     is ContextMenuAction.OpenSMSPlanDirectory -> {
@@ -376,4 +440,40 @@ fun ContextMenuDialog(
         }
     }
 
+}
+
+
+private fun optionDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
+    // Опції
+    val optionsExchange = OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
+    optionsExchange.downloadOptions(object : ExchangeResponseInterface {
+        override fun <T> onSuccess(data: List<T>) {
+            if (data.isNotEmpty()) {
+                RealmManager.saveDownloadedOptions(data as List<OptionsDB>)
+            }
+            click.click()
+        }
+
+        override fun onFailure(error: String) {
+            click.click()
+        }
+    })
+}
+
+private fun reportDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
+
+    val reportPrepareExchange = ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
+    reportPrepareExchange.downloadReportPrepare(object : ExchangeResponseInterface {
+        override fun <T> onSuccess(data: List<T>) {
+            if (data.isNotEmpty()) {
+                ReportPrepareRealm.setAll(data as List<ReportPrepareDB>)
+            }
+
+            click.click()
+        }
+
+        override fun onFailure(error: String) {
+            click.click()
+        }
+    })
 }

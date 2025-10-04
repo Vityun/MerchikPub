@@ -42,7 +42,11 @@ public class WPDataExchange {
             @Override
             public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
                 Log.e("downloadWPData", "response: " + response.body());
-                exchange.onSuccess(response.body().getList());
+                if (response.isSuccessful() && response.body() != null && response.body().getState()
+                        && response.body().getList() != null && !response.body().getList().isEmpty())
+                    exchange.onSuccess(response.body().getList());
+                else
+                    exchange.onFailure("error");
             }
 
             @Override

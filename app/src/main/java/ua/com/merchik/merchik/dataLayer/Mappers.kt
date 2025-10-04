@@ -9,11 +9,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.dataLayer.model.FieldValue
-import ua.com.merchik.merchik.dataLayer.model.MerchModifier
-import ua.com.merchik.merchik.dataLayer.model.Padding
-import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import java.io.PrintWriter
@@ -21,6 +17,7 @@ import java.io.StringWriter
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import java.util.zip.CRC32
 
 interface DataObjectUI {
     fun getIdResImage(): Int? {
@@ -95,6 +92,34 @@ fun DataObjectUI.toItemUI(
         // если не получилось распарсить — создаём пустой JSON, чтобы дальше код не падал
         JSONObject()
     }
+
+    // ---- новый блок: получение стабильного реального id ----
+    val stableIdFromSource: Long? = try {
+        val found = findIdKeyAndValue(jsonObject)
+        if (found != null) {
+            val (key, rawValue) = found
+            val trimmed = rawValue?.toString()?.trim() ?: ""
+            // логируем, какой ключ выбран (опционально, для отладки)
+            Globals.writeToMLOG("INFO", "Mappers.DataObjectUI.toItemUI", "Found id key: $key -> '$trimmed'")
+
+            // пробуем распарсить как число
+            val num = trimmed.toLongOrNull()
+            if (num != null && num != 0L) {
+                num
+            } else if (trimmed.isNotEmpty()) {
+                // не числовой — преобразуем детерминированно в Long
+                stableLongFromString(trimmed)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    } catch (e: Throwable) {
+        logException("Mappers.DataObjectUI.toItemUI", "extract stableId", e, "json: $jsonObject")
+        null
+    }
+    // ---------------------------------------------------------
 
     val fields = mutableListOf<FieldValue>()
     val rawFields = mutableListOf<FieldValue>()
@@ -190,7 +215,8 @@ fun DataObjectUI.toItemUI(
         fields = fields,
         images = images,
         modifierContainer = getContainerModifier(jsonObject),
-        false
+        false,
+        stableId = stableIdFromSource ?: DataItemIdGenerator.nextId()
     )
 }
 
@@ -209,6 +235,35 @@ fun DataObjectUI.toItemUI_(
             // если не получилось распарсить — создаём пустой JSON, чтобы дальше код не падал
             JSONObject()
         }
+
+        // ---- новый блок: получение стабильного реального id ----
+        val stableIdFromSource: Long? = try {
+            val found = findIdKeyAndValue(jsonObject)
+            if (found != null) {
+                val (key, rawValue) = found
+                val trimmed = rawValue?.toString()?.trim() ?: ""
+                // логируем, какой ключ выбран (опционально, для отладки)
+                Globals.writeToMLOG("INFO", "Mappers.DataObjectUI.toItemUI", "Found id key: $key -> '$trimmed'")
+
+                // пробуем распарсить как число
+                val num = trimmed.toLongOrNull()
+                if (num != null && num != 0L) {
+                    num
+                } else if (trimmed.isNotEmpty()) {
+                    // не числовой — преобразуем детерминированно в Long
+                    stableLongFromString(trimmed)
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        } catch (e: Throwable) {
+            logException("Mappers.DataObjectUI.toItemUI", "extract stableId", e, "json: $jsonObject")
+            null
+        }
+        // ---------------------------------------------------------
+
 
         Log.d("toItemUI_","Mappers.DataObjectUI.toItemUI hideUserFields: $hideUserFields")
         val fields = mutableListOf<FieldValue>()
@@ -365,7 +420,8 @@ fun DataObjectUI.toItemUI_(
             fields = fields,
             images = images,
             modifierContainer = getContainerModifier(jsonObject),
-            false
+            false,
+            stableId = stableIdFromSource ?: DataItemIdGenerator.nextId()
         )
     } catch (e: Throwable) {
         // глобальная ошибка — логируем всё и возвращаем безопасный пустой DataItemUI
@@ -376,7 +432,8 @@ fun DataObjectUI.toItemUI_(
             fields = emptyList(),
             images = emptyList(),
             modifierContainer = null,
-            false
+            false,
+            stableId = DataItemIdGenerator.nextId()
         )
     }
 }
@@ -591,4 +648,51 @@ enum class ContextUI {
 fun LocalDate.toDayMonthFormat(locale: Locale = Locale.getDefault()): String {
     val monthName = this.month.getDisplayName(TextStyle.FULL, locale)
     return "${this.dayOfMonth} $monthName"
+}
+
+
+/** Конвертирует строку в стабильный Long через CRC32 (детерминированно). */
+private fun stableLongFromString(s: String?): Long {
+    if (s == null) return 0L
+    val bytes = s.toByteArray(Charsets.UTF_8)
+    val crc = CRC32()
+    crc.update(bytes)
+    // возвращаем положительное значение
+    return crc.value.toLong()
+}
+
+/**
+ * Пытается найти реальный id в JSONObject.
+ * Приоритет:
+ * 1) ключ, равный "id" (игнорируя регистр)
+ * 2) ключи, заканчивающиеся на "_id" (игнорируя регистр)
+ * 3) ключи, содержащие "id" (как крайняя мера)
+ * Возвращает Pair(foundKey, stringValue) или null если не найдено.
+ */
+private fun findIdKeyAndValue(jsonObject: JSONObject): Pair<String, String>? {
+    val keys = jsonObject.keys().asSequence().toList()
+
+    // 1) точное совпадение "id" (независимо от регистра)
+    val exactIdKey = keys.firstOrNull { it.equals("id", ignoreCase = true) }
+    if (exactIdKey != null) return Pair(exactIdKey, jsonObject.optString(exactIdKey, ""))
+
+    // 2) ключи, заканчивающиеся на "_id" (игнорируем регистр), предпочитаем более короткие имена
+    val underscoreId = keys
+        .filter { it.endsWith("_id", ignoreCase = true) }
+        .sortedBy { it.length } // короткие имена выше по приоритету
+        .firstOrNull()
+    if (underscoreId != null) return Pair(underscoreId, jsonObject.optString(underscoreId, ""))
+
+    // 3) ключи, заканчивающиеся на "id" (без подчеркивания), например "Id", "UserId"
+    val suffixId = keys
+        .filter { it.length >= 2 && it.endsWith("id", ignoreCase = true) }
+        .sortedBy { it.length }
+        .firstOrNull()
+    if (suffixId != null) return Pair(suffixId, jsonObject.optString(suffixId, ""))
+
+    // 4) крайняя мера — любой ключ, содержащий "id" как подстроку (игнорир.)
+    val containsId = keys.firstOrNull { it.contains("id", ignoreCase = true) }
+    if (containsId != null) return Pair(containsId, jsonObject.optString(containsId, ""))
+
+    return null
 }

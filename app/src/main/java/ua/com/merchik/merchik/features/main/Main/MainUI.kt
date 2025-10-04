@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -51,16 +52,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -91,15 +83,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.*
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
@@ -164,6 +155,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val imeVisible by rememberImeVisible()
 
+//    val dataItemsUI = remember { mutableStateListOf<DataItemUI>() }
+//                val dataItemsUI = mutableListOf<DataItemUI>()
+    val dataItemsUI by viewModel.dataItems.collectAsState()
+
+
     var flying by remember { mutableStateOf<Flying<DataItemUI>?>(null) }
     // === 2) Новый режим: призрак для перетаскивания + сжатие при отпускании ===
     var dragging by remember { mutableStateOf<Dragging<DataItemUI>?>(null) }
@@ -210,6 +206,45 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     viewModel.launcher = launcher
+
+    // Карта stableId -> LayoutCoordinates (MutableStateMap чтобы изменения триггерили recomposition при необходимости)
+    val coordsMap = remember { mutableStateMapOf<Long, LayoutCoordinates>() }
+
+    // Состояние летающей копии (null = нет анимации)
+//    var flying by remember { mutableStateOf<Flying?>(null) }
+
+    // Слушаем запросы на полёт от ViewModel
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            // Collect fly requests from ViewModel
+            viewModel.flyRequests.collect { stableId ->
+                // Найти координаты по stableId
+                val coords = coordsMap[stableId]
+                coords?.let { c->
+                    if (c.isAttached) {
+                        // получаем позицию и размер
+                        val pos = coords.positionInRoot()
+                        val size = coords.size
+
+                        // создаём Flying (можно модифицировать параметры)
+                        flying = Flying(
+                            item = dataItemsUI.firstOrNull { it.stableId == stableId } ?: return@collect,
+                            startOffset = IntOffset(pos.x.roundToInt(), pos.y.roundToInt()),
+                            size = size
+                        )
+                    } else {
+                        // Если координат нет (элемент не отрисован), можно:
+                        // 1) игнорировать, 2) отложить и попробовать позже, 3) скроллить к позиции (если ты знаешь индекс).
+                        // Для простоты — игнорируем. Можно логировать:
+                        Log.d("MainUI", "requestFly no coords for stableId=$stableId")
+                    }
+                }
+
+            }
+        }
+    }
+
 
     Column(
         modifier = modifier
@@ -261,11 +296,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
+//                val dataItemsUI = mutableListOf<DataItemUI>()
 
-                val dataItemsUI = mutableListOf<DataItemUI>()
-
-                dataItemsUI.addAll(uiState.itemsHeader)
-
+//                dataItemsUI.addAll(uiState.itemsHeader)
+//
                 val result = filterAndSortDataItems(
                     items = uiState.items,
                     filters = uiState.filters,
@@ -274,8 +308,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     rangeEnd = viewModel.rangeDataEnd.value,
                     searchText = uiState.filters?.searchText
                 )
-                dataItemsUI.addAll(result.items)
-                dataItemsUI.addAll(uiState.itemsFooter)
+//                dataItemsUI.addAll(result.items)
+//                dataItemsUI.addAll(uiState.itemsFooter)
 
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
@@ -420,7 +454,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
 
-                Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! befor Column")
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -430,9 +463,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         .focusable()
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
-                    Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! Column after")
-                    Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! befor LazyColumnScrollbar")
-
                     LazyColumnScrollbar(
                         modifier = Modifier
                             .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
@@ -446,33 +476,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             thumbShape = CircleShape,
                         ),
                     ) {
-                        Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumnScrollbar after")
                         LazyColumn(
                             state = listState,
                         ) {
-                            Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumn after")
                             itemsIndexed(
                                 items = dataItemsUI,
                                 key = { _, item -> item.stableId }
                             ) { index, item ->
-                                Log.e("!!!!!!!!!TEST!!!!!!","!!TEST!! LazyColumn --> $index")
-
                                 val key = item.stableId
-//                                val isTarget = pendingHash != null && item.hashCode() == pendingHash
-//                                // как только «наш» айтем отрисовался — скроллим к его индексу (он 100% точный)
-//                                LaunchedEffect(isTarget) {
-//                                    if (isTarget) {
-//                                        withFrameNanos { } // дождаться измерения
-//                                        // если у тебя есть stickyHeader/заголовки сверху — добавь их count
-//                                        val headerCount = 0
-//                                        listState.animateScrollToItem(headerCount + index, scrollOffset = topOffsetPx)
-//                                        pendingHash = null
-//                                    }
-//                                }
-
-                                Globals.writeToMLOG("INFO", "MainUI.LazyColumn","index: $index")
-
-
                                 var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
                                 // Анимированный уход «в ноль» для исходного элемента
                                 AnimatedVisibility(
@@ -487,11 +498,32 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .onGloballyPositioned { coords = it }
+                                            .onGloballyPositioned {
+                                                // Сохраняем coords в map
+                                                coordsMap[key] = it
+                                                coords = it
+                                            }
                                             // Долгий тап -> «призрак» для перетаскивания
                                             .pointerInput(Unit) {
                                                 detectDragGesturesAfterLongPress(
                                                     onDragStart = { _ ->
+//                                                        val cronchikViewModel =
+//                                                            ViewModelProvider(context as AppCompatActivity).get<CronchikViewModel>(CronchikViewModel::class.java)
+//                                                        cronchikViewModel.updateBadge(0, 1)
+//
+//                                                        coords?.let { c ->
+//                                                            val pos = c.positionInRoot()
+//                                                            val size = c.size
+//                                                            flying = Flying(
+//                                                                item = item,
+//                                                                startOffset = IntOffset(
+//                                                                    pos.x.roundToInt(),
+//                                                                    pos.y.roundToInt()
+//                                                                ),
+//                                                                size = size
+//                                                            )
+//                                                        }
+//                                                        disappearingKey = key
                                                         coords?.let { c ->
                                                             val pos = c.positionInRoot()
                                                             dragging = Dragging(
@@ -550,6 +582,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                             onClickItem = {
                                                 viewModel.onClickItem(it, context)
 //                                                TODO Код анимации перенести в remember
+                                                // запускаем анимацию через viewModel, чтобы единая логика для внешних вызовов и кликов
+//                                                viewModel.requestFlyByStableId(key)
 //                                                coords?.let { c ->
 //                                                    val pos = c.positionInRoot()
 //                                                    val size = c.size
@@ -732,33 +766,46 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
 
             }
-
-            // Оверлейная «летающая» копия
+// Оверлейная «летающая» копия
             flying?.let { f ->
+                // animatables в пикселях
                 val y = remember { Animatable(f.startOffset.y.toFloat()) }
                 val x = remember { Animatable(f.startOffset.x.toFloat()) }
                 val alpha = remember { Animatable(1f) }
                 val scale = remember { Animatable(1f) }
 
                 LaunchedEffect(f.item, f.startOffset) {
-                    // Цель: улететь за верх экрана
+                    // цель по Y — улететь за верх экрана (в пикселях)
                     val targetY = -(f.startOffset.y + f.size.height).toFloat()
-                    // Параллельно: перемещение и угасание
+
+                    // Вариант A: фиксированное смещение влево, например 80.dp
+                    val deltaPxA = with(density) { 180.dp.toPx() }
+
+                    // Вариант B: относительное смещение, например 20% от начальной позиции X
+                    val deltaPxB = (f.startOffset.x * 0.2f)
+
+                    // Выбери delta (A или B)
+                    val deltaX = with(density) { 180.dp.toPx() }
+
+                    // Если хочешь, чтобы объект мог улететь полностью за экран влево, можно убрать coerceAtLeast:
+                    val targetX = (f.startOffset.x - deltaX) // .coerceAtLeast(0f) // убери coerceAtLeast если нужно уход за левый край
+
+                    // Параллельная анимация
                     coroutineScope {
                         launch {
                             y.animateTo(
                                 targetValue = targetY,
                                 animationSpec = tween(
-                                    durationMillis = 1600,
+                                    durationMillis = 2600,
                                     easing = FastOutSlowInEasing
                                 )
                             )
                         }
                         launch {
                             x.animateTo(
-                                targetValue = 0.9f,
+                                targetValue = targetX,
                                 animationSpec = tween(
-                                    durationMillis = 1600,
+                                    durationMillis = 2600,
                                     easing = FastOutSlowInEasing
                                 )
                             )
@@ -766,19 +813,23 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         launch {
                             alpha.animateTo(
                                 targetValue = 0f,
-                                animationSpec = tween(durationMillis = 1500, delayMillis = 1200)
+                                animationSpec = tween(durationMillis = 1900, delayMillis = 1200)
                             )
                         }
-                        launch { scale.animateTo(0.01f, tween(1000)) }
-
+                        launch {
+                            scale.animateTo(0.01f, tween(1500))
+                        }
                     }
+
+                    // после завершения анимации — убрать копию
                     flying = null
                 }
 
                 Box(
                     modifier = Modifier
                         .zIndex(100f)
-                        .offset { IntOffset(f.startOffset.x, y.value.roundToInt()) }
+                        // <- здесь нужно использовать текущие значения animatable (x.value и y.value)
+                        .offset { IntOffset(x.value.roundToInt(), y.value.roundToInt()) }
                         .requiredSize(
                             with(density) { f.size.width.toDp() },
                             with(density) { f.size.height.toDp() }
@@ -789,19 +840,18 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             scaleY = scale.value
                         }
                 ) {
-                    // Рисуем ту же разметку, что и у исходного элемента
                     ItemUI(
                         item = f.item,
                         visibilityColumName = visibilityColumName,
                         settingsItemUI = uiState.settingsItems,
                         contextUI = viewModel.modeUI,
-                        // Клики у копии глушим
                         onClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
                         onCheckItem = { _, _ -> }
                     )
                 }
+                disappearingKey = f.item.stableId
             }
 
             // === Оверлей «призрак», который двигаем пальцем ===
@@ -888,6 +938,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         Log.e("showAdditionalContent", "showAdditionalContent: ${uiState.items.size}")
         viewModel.onClickAdditionalContent()
         showAdditionalContent = false
+
+        viewModel.requestFlyByStableId(4060381953L)
 
         if ((viewModel.typeWindow ?: "").equals("full", true))
             MessageDialog(

@@ -73,6 +73,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
@@ -470,8 +471,10 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private void setActivityData() {
         Intent i = getIntent();
+        long id = i.getLongExtra("WpDataDB_ID", 0);
+        wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(id));
 
-        wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(i.getLongExtra("WpDataDB_ID", 0)));
+        ScrollDataHolder.Companion.instance().removeByCodeDad2(wpDataDB.getCode_dad2());
 
         // Получаем ViewModel и передаем туда данные
         commentViewModel = new ViewModelProvider(this).get(CommentViewModel.class);

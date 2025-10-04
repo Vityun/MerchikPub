@@ -173,17 +173,17 @@ class WpDataDBViewModel @Inject constructor(
                     CustomerSDB::class,
                     CustomerSDBViewModel::class,
                     ModeUI.MULTI_SELECT,
-                    "## ADRESS",
+                    "Додати Клієнта",
                     "## sub title",
                     "client_txt",
-                    "client_txt",
+                    "nm",
                     client.map { it.nm.toString() },
                     client.map { it.nm },
                     enabled = true
                 )
 
                 data.forEach { wpDataDB ->
-                    // Определяем статус комментарий
+                    // Определяем статус статуса
                     val statusComment = try {
                         if (wpDataDB.status == 1) {
                             "Роботу виконано (звiт проведено)"
