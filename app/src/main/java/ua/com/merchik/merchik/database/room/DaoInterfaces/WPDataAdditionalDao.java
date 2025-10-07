@@ -31,7 +31,10 @@ public interface WPDataAdditionalDao {
     @Query("SELECT * FROM wp_data_additional WHERE uploadStatus = 1")
     List<WPDataAdditional> getUploadToServer();
 
-    @Query("SELECT * FROM wp_data_additional WHERE confirm_decision = 0")
+//    dt хранится в секундах (а не в миллисекундах), то разница 3 дня — это:
+//    3 дня — это 3 * 24 * 60 * 60 = 259200 секунд
+//    1 ltym — это 24 * 60 * 60 = 86400 секунд
+@Query("SELECT * FROM wp_data_additional WHERE confirm_decision = 0 AND ID > 0 AND dt > strftime('%s','now') - 259200")
     List<WPDataAdditional> getNotConfirmDecision();
 
     @Query("SELECT * FROM wp_data_additional WHERE ID IN (:ids)")

@@ -223,8 +223,14 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
         }
+
+
         int adress = ((WpDataDB) document).getAddr_id();
-        ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+//        получаем данные из таблицы фото
+        RealmResults<StackPhotoDB> stackPhotoDB =
+                dad2ForGetStackPhotoDB > 0 ?
+                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
         ImagesTypeListDB imagesType = ImagesTypeListRealm.getByID(photoType);
         String photoTypeName;
@@ -235,7 +241,31 @@ public class OptionControlPhoto<T> extends OptionControl {
 
 //        List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
 //        подводим итог
+        ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
 
+        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
+            signal = true;
+            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
+            spannableStringBuilder.append("Не знайдено жодного фото ")
+                    .append(item != null ? item.getNm() : photoTypeName)
+                    .append(" по даному відвідуванню");
+            if (!stackPhotoFor132971.isEmpty()) {
+                signal = false;
+                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
+            }
+        } else if (stackPhotoDB.size() < m) { // главнй итог
+            spannableStringBuilder.append("Ви повинні зробити: ")
+                    .append(String.valueOf(m)).append(" фото з типом: ")
+                    .append(item != null ? item.getNm() : photoTypeName)
+                    .append(", а зробили: ")
+                    .append(String.valueOf(stackPhotoDB.size()))
+                    .append(" - доробiть фотографії.");
+            signal = true;
+        } else {
+            spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
+                    .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
+            signal = false;
+        }
 
         // Исключения
         // 3.1
@@ -269,7 +299,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                     m = 0;
                     signal = false;
                     spannableStringBuilder.append("\nВідповідно до ДВ ").append(photoTypeName)
-                            .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась. ");
+                            .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
                 }
             }
         }
@@ -313,21 +343,12 @@ public class OptionControlPhoto<T> extends OptionControl {
                                 .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78, повинен бути доданий коментар довжиною більше 10 символів");
                     }
                 } else {
-                    spannableStringBuilder.append("\nСкарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");
+                    spannableStringBuilder.append("Скарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");
                     signal = false;
                 }
             }
         }
 
-        //        3.3
-        //        получаем данные из таблицы фото
-        RealmResults<StackPhotoDB> stackPhotoDB =
-                dad2ForGetStackPhotoDB > 0 ?
-                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
-
-
-        // 3.4
         if (!signal && !optionId.equals("158609")) {
             List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
 //            AdditionalRequirementsDB additional = additionalRequirementsDBList.stream().findFirst().get();
@@ -408,29 +429,6 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
 
-        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
-            signal = true;
-            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
-            spannableStringBuilder.append("Не знайдено жодного фото ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(" по даному відвідуванню");
-            if (!stackPhotoFor132971.isEmpty()) {
-                signal = false;
-                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
-            }
-        } else if (stackPhotoDB.size() < m) { // главнй итог
-            spannableStringBuilder.append("Ви повинні зробити: ")
-                    .append(String.valueOf(m)).append(" фото з типом: ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(", а зробили: ")
-                    .append(String.valueOf(stackPhotoDB.size()))
-                    .append(" - доробiть фотографії.");
-            signal = true;
-        } else {
-            spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
-                    .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
-            signal = false;
-        }
 
         //7.0. сохраним сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +49,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.Scroll
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.AdditionalContentTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
@@ -74,10 +76,9 @@ fun WpDataTabsScreen() {
         stringResource(R.string.title_0)
     ) else listOf(
         stringResource(R.string.title_0),
-        "Доп.Заработок",
-        "Заявки"
+//        "Доп.Заработок",
+//        "Заявки"
     )
-
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
     val rememberRemoveListener = remember {
         // создаём listener один раз и вернём функцию удаления

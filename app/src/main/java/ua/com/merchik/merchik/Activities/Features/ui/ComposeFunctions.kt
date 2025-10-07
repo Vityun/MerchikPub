@@ -35,32 +35,6 @@ fun setContentOpinion(
     }
 }
 
-fun setContentWpData(
-    context: Context,
-    composeView: ComposeView,
-) {
-    composeView.setContent {
-        val viewModel: WpDataDBViewModel = hiltViewModel() // ✅ получаем через Hilt
-        viewModel.contextUI =
-            ContextUI.WP_DATA_IN_CONTAINER
-
-        viewModel.modeUI =
-                ModeUI.DEFAULT
-
-//        viewModel.title = "title"
-        viewModel.typeWindow = "container"
-        viewModel.subTitle = "subTitle"
-        viewModel.context = LocalContext.current
-
-        MerchikTheme {
-            MainUI(
-                context = context,
-                modifier = Modifier,
-                viewModel = viewModel)
-        }
-        viewModel.updateContent()
-    }
-}
 
 fun setContentTabs(
     composeView: ComposeView

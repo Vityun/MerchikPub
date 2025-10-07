@@ -95,24 +95,34 @@ fun DataObjectUI.toItemUI(
 
     // ---- новый блок: получение стабильного реального id ----
     val stableIdFromSource: Long? = try {
-        val found = findIdKeyAndValue(jsonObject)
-        if (found != null) {
-            val (key, rawValue) = found
-            val trimmed = rawValue?.toString()?.trim() ?: ""
-            // логируем, какой ключ выбран (опционально, для отладки)
-            Globals.writeToMLOG("INFO", "Mappers.DataObjectUI.toItemUI", "Found id key: $key -> '$trimmed'")
+        // ищем ключ, совпадающий с "id" без учёта регистра
+        val idKey = jsonObject.keys().asSequence().firstOrNull { it.equals("id", ignoreCase = true) }
 
-            // пробуем распарсить как число
+        if (idKey != null) {
+            val rawValue = jsonObject.opt(idKey)
+            val trimmed = rawValue?.toString()?.trim() ?: ""
+
+//            Globals.writeToMLOG(
+//                "INFO",
+//                "Mappers.DataObjectUI.toItemUI",
+//                "Found ID key: $idKey -> '$trimmed'"
+//            )
+
+            // пробуем привести к Long
             val num = trimmed.toLongOrNull()
             if (num != null && num != 0L) {
                 num
             } else if (trimmed.isNotEmpty()) {
-                // не числовой — преобразуем детерминированно в Long
                 stableLongFromString(trimmed)
             } else {
                 null
             }
         } else {
+            Globals.writeToMLOG(
+                "WARN",
+                "Mappers.DataObjectUI.toItemUI",
+                "ID key not found in json: $jsonObject"
+            )
             null
         }
     } catch (e: Throwable) {
@@ -207,7 +217,7 @@ fun DataObjectUI.toItemUI(
     orderedKeys.forEach { if (it in allKeys) updateFields(it) }
     (allKeys - orderedKeys).forEach { updateFields(it) }
 
-    Globals.writeToMLOG("INFO",  "Mappers.DataObjectUI.toItemUI ", "fields: ${fields.size} | rawFields: ${rawFields.size}")
+//    Globals.writeToMLOG("INFO",  "Mappers.DataObjectUI.toItemUI ", "fields: ${fields.size} | rawFields: ${rawFields.size}")
 
     return DataItemUI(
         rawObj = listOf(this),
@@ -238,24 +248,34 @@ fun DataObjectUI.toItemUI_(
 
         // ---- новый блок: получение стабильного реального id ----
         val stableIdFromSource: Long? = try {
-            val found = findIdKeyAndValue(jsonObject)
-            if (found != null) {
-                val (key, rawValue) = found
-                val trimmed = rawValue?.toString()?.trim() ?: ""
-                // логируем, какой ключ выбран (опционально, для отладки)
-                Globals.writeToMLOG("INFO", "Mappers.DataObjectUI.toItemUI", "Found id key: $key -> '$trimmed'")
+            // ищем ключ, совпадающий с "id" без учёта регистра
+            val idKey = jsonObject.keys().asSequence().firstOrNull { it.equals("id", ignoreCase = true) }
 
-                // пробуем распарсить как число
+            if (idKey != null) {
+                val rawValue = jsonObject.opt(idKey)
+                val trimmed = rawValue?.toString()?.trim() ?: ""
+
+                Globals.writeToMLOG(
+                    "INFO",
+                    "Mappers.DataObjectUI.toItemUI",
+                    "Found ID key: $idKey -> '$trimmed'"
+                )
+
+                // пробуем привести к Long
                 val num = trimmed.toLongOrNull()
                 if (num != null && num != 0L) {
                     num
                 } else if (trimmed.isNotEmpty()) {
-                    // не числовой — преобразуем детерминированно в Long
                     stableLongFromString(trimmed)
                 } else {
                     null
                 }
             } else {
+                Globals.writeToMLOG(
+                    "WARN",
+                    "Mappers.DataObjectUI.toItemUI",
+                    "ID key not found in json: $jsonObject"
+                )
                 null
             }
         } catch (e: Throwable) {

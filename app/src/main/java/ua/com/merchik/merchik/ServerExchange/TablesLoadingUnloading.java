@@ -765,55 +765,6 @@ public class TablesLoadingUnloading {
                                     incomingIds.add(w.ID);
                                 }
 
-//                                List<Long> changedIds = new ArrayList<>();
-//                                try {
-//                                    // Попробуем получить существующие записи из БД по incomingIds.
-//                                    // Предпочтительно иметь DAO метод getByIds(List<Long> ids).
-//                                    List<WPDataAdditional> existing;
-//                                    try {
-//                                        existing = SQL_DB.wpDataAdditionalDao().getByIds(incomingIds);
-//                                    } catch (Throwable t) {
-//                                        // Если такого метода нет — получим все и отфильтруем (медленнее).
-//                                        List<WPDataAdditional> all = SQL_DB.wpDataAdditionalDao().getAll();
-//                                        Map<Long, WPDataAdditional> map = new HashMap<>();
-//                                        if (all != null) {
-//                                            for (WPDataAdditional e : all) map.put(e.ID, e);
-//                                        }
-//                                        existing = new ArrayList<>();
-//                                        for (Long id : incomingIds) {
-//                                            WPDataAdditional e = map.get(id);
-//                                            if (e != null) existing.add(e);
-//                                        }
-//                                    }
-//
-//                                    // Сравниваем "исполнителя" у incoming vs existing.
-//                                    // Метод getPerformerId пытается достать идентификатор исполнителя.
-//                                    Map<Long, WPDataAdditional> existingById = new HashMap<>();
-//                                    for (WPDataAdditional e : existing) existingById.put(e.ID, e);
-//
-//                                    for (WPDataAdditional inc : incoming) {
-//                                        WPDataAdditional ex = existingById.get(inc.ID);
-//                                        if (ex == null) continue; // новая запись — не считаем как смена исполнителя
-//                                        Long incPer = inc.ID;
-//                                        Long exPer = ex.ID;
-//                                        if (!Objects.equals(incPer, exPer)) {
-//                                            changedIds.add(inc.codeDad2);
-//                                        }
-//                                    }
-//                                    // Добавим в ScrollDataHolder (потокобезопасно)
-//                                    if (!changedIds.isEmpty()) {
-//                                        ScrollDataHolder.Companion.instance().addIds(changedIds);
-//                                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.donwloadPlanBudget",
-//                                                "Detected changed-performer ids: " + changedIds.size());
-//                                        Log.i("donwloadPlanBudget", "Changed-performer ids: " + changedIds);
-//                                    }
-//                                } catch (Throwable t) {
-//                                    // не ломаем весь поток из-за ошибки сравнения — логируем и продолжаем
-//                                    Globals.writeToMLOG("ERROR", "TablesLoadingUnloading.donwloadPlanBudget",
-//                                            "Error while detecting changed-performer: " + t.getMessage());
-//                                    Log.e("donwloadPlanBudget", "Error while detecting changed-performer", t);
-//                                }
-
                                 // Сохраняем пришедшие записи в БД
                                 return SQL_DB.wpDataAdditionalDao()
                                         .insertAll(result.list) // Completable
@@ -827,19 +778,11 @@ public class TablesLoadingUnloading {
                                             }
 
                                             // Найдём id которые были в beforeIds, а теперь отсутствуют -> это подтверждённые (0 -> 1)
-                                            Set<Long> completedIds  = new HashSet<>(beforeIds);
-                                            completedIds .removeAll(afterIds); // оставшиеся — подтвердившиеся
+                                            Set<Long> confirmedIds = new HashSet<>(beforeIds);
+                                            confirmedIds.removeAll(afterIds); // оставшиеся — подтвердившиеся
 
 
-                                            // Фильтруем только те, у которых action == 1 (подтверждено)
-                                            List<Long> confirmedList = new ArrayList<>();
-                                            for (WPDataAdditional w : incoming) {
-                                                if (completedIds.contains(w.ID) && w.action == 1) {
-                                                    confirmedList.add(w.ID);
-                                                }
-                                            }
-
-                                            int confirmedCount = confirmedList.size();
+                                            int confirmedCount = confirmedIds.size();
 
                                             Log.e("donwloadPlanBudget", "inserted size: " + result.list.size());
                                             Log.e("donwloadPlanBudget", "not-confirm before=" + beforeIds.size() + " after=" + afterIds.size());
@@ -850,6 +793,16 @@ public class TablesLoadingUnloading {
 
                                             // Если есть confirmedIds — положим их в ScrollDataHolder и вызовем downloadWPData()
                                             if (confirmedCount > 0) {
+                                                List<WPDataAdditional> wpDataAdditionalListConfirmed =
+                                                        SQL_DB.wpDataAdditionalDao().getByIds(confirmedIds.stream().toList());
+                                                Set<Long> goodIds = new HashSet<>();
+
+                                                for (WPDataAdditional wpDataAdditional: wpDataAdditionalListConfirmed){
+                                                    if (wpDataAdditional.action == 1)
+                                                        goodIds.add(wpDataAdditional.ID);
+                                                }
+
+                                                List<Long> confirmedList = new ArrayList<>(confirmedIds);
                                                 ScrollDataHolder.Companion.instance().addIds(confirmedList);
 
                                                 Log.e("donwloadPlanBudget", "some items became confirmed -> launching downloadWPData()");
@@ -1148,8 +1101,8 @@ public class TablesLoadingUnloading {
                             && result.count != null && cronchikViewModel != null) {
                         Log.e("!!!!!!!!!!!!!", "result: " + result);
 
-                        if (cronchikViewModel != null)
-                            cronchikViewModel.updateBadge(1, result.count);
+//                        if (cronchikViewModel != null)
+//                            cronchikViewModel.updateBadge(1, result.count);
 
 //                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
                         Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");

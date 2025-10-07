@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.realm.Realm;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
@@ -18,9 +20,12 @@ public final class WPDataAdditionalFactory {
     }
 
     // Генерим очень маловероятный к коллизии отрицательный ID
+    private static final AtomicLong COUNTER = new AtomicLong();
     public static long newLocalId() {
-        return -(System.currentTimeMillis() * 1000L + (long) (Math.random() * 1000L));
-    }
+        long now = System.currentTimeMillis();
+        long counter = COUNTER.getAndIncrement() % 1000L; // защищаем от переполнения
+        long randomPart = ThreadLocalRandom.current().nextInt(0, 1000);
+        return -(now * 1_000_000L + counter * 1_000L + randomPart);    }
 
     public static WPDataAdditional blankWithDad2(WpDataDB wpDataDB) {
         WPDataAdditional e = new WPDataAdditional();

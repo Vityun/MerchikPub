@@ -15,6 +15,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
@@ -50,6 +51,8 @@ fun WpDataContentTab() {
                 progressModel.onCompleted()
                 break
             }
+            if (Globals.userId == 172906) // исключение для Шевченко
+                dataIsReady = true
             delay(1000)
         }
     }

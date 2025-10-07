@@ -5,13 +5,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
-import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 
@@ -31,7 +31,13 @@ fun OtherComposeTab() {
         val removeListener = ScrollDataHolder.instance().addOnIdsChangedListener { ids ->
             ids.forEach { id ->
                 try {
-                    viewModel.requestFlyByStableId(id)
+                    val wpAddition = RoomManager.SQL_DB.wpDataAdditionalDao().getByIdSync(id)
+                    wpAddition?.let {
+                        val wpData = RealmManager.getWorkPlanRowByCodeDad2(it.codeDad2)
+                        wpData?.let {wp ->
+                            viewModel.requestFlyByStableId(wp.id)
+                        }
+                    }
                 } catch (_: Throwable) { }
             }
         }
