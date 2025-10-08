@@ -228,7 +228,7 @@ public class MenuMainActivity extends toolbar_menus {
 //                    }
 //                });
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
 //        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
 
@@ -241,10 +241,10 @@ public class MenuMainActivity extends toolbar_menus {
 //       Toasty.normal(this,"Test").show();
 
 
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-        tablesLoadingUnloading.donwloadPlanBudgetRNO();
-        tablesLoadingUnloading.downloadWPDataWithCordsMy();
-        tablesLoadingUnloading.donwloadPlanBudget();
+//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//        tablesLoadingUnloading.donwloadPlanBudgetRNO();
+//        tablesLoadingUnloading.downloadWPDataWithCordsMy();
+//        tablesLoadingUnloading.donwloadPlanBudget();
 
 //
 //        WorkManagerHelper.INSTANCE.startSyncWorker(this);

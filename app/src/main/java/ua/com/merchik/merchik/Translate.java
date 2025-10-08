@@ -287,6 +287,7 @@ public class Translate {
         String act = "translation_add";
 
         List<AddTranslation> data = getAddTarnslationData();
+        Log.e("uploadNewTranslate", "uploadNewTranslate.response: " + data.size());
 
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().SET_NEW_TRANSLATE(mod, act, data);
         call.enqueue(new retrofit2.Callback<JsonObject>() {
@@ -318,21 +319,21 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "maps_dialog_wp_message_1",
-                "Показать все работы, по этому адресу за период с %s по %s?",
+                "wp_additional_subtitle",
+                "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
                 "app",
                 "all",
                 ""
         ));
 
-        res.add(new AddTranslation(
-                "2",
-                "maps_dialog_tooltip_3",
-                "Нажав 'Применить' система отобразит вам все клиенто-посещения по этому адресу и выделит их цветом",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "2",
+//                "maps_dialog_tooltip_3",
+//                "Нажав 'Применить' система отобразит вам все клиенто-посещения по этому адресу и выделит их цветом",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 //        res.add(new AddTranslation(
 //                "3",
