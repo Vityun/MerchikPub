@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -16,10 +17,11 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
-import ua.com.merchik.merchik.features.main.Main.parseDoubleSafe
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.floor
 
 object LogDBOverride {
     fun getHidedFieldsOnUI(): String =
@@ -183,6 +185,14 @@ object AdditionalRequirementsDBOverride {
             } ?: value.toString()
         }
 
+        "dt_start" -> {
+            formatDateString(value.toString()) ?: value.toString()
+        }
+
+        "dt_end" -> {
+            formatDateString(value.toString()) ?: value.toString()
+        }
+
         else -> value.toString()
     }
 
@@ -197,8 +207,8 @@ object AdditionalRequirementsDBOverride {
         "color" -> 5900
         "disable_score" -> 5881
         "dt_change" -> 5882
-        "dt_end" -> 5897
         "dt_start" -> 5898
+        "dt_end" -> 5897
         "exam_id" -> 5883
         "grp_id" -> 5884
         "hide_client" -> 5885
@@ -289,12 +299,97 @@ object LogMPDBOverride {
 
         "CoordAccurancy" -> if (value == 1) "GPS" else "GSM"
 
-        "locationUniqueString" -> value.toString().parseDoubleSafe().toString()
+        "locationUniqueString" -> formatLocationUniqueToDms(value.toString())
+
+        "CoordY" ->
+            (value as? Number)?.let { String.format(Locale.US, "%.6f", it.toDouble()) } ?: ""
+
+
+        "CoordX" ->
+            (value as? Number)?.let { String.format(Locale.US, "%.6f", it.toDouble()) } ?: ""
+
+
         else -> value.toString()
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
         else -> MerchModifier(padding = Padding(start = 10.dp))
+    }
+
+    private fun parseLatLonUkraine(raw: String?): Pair<Double, Double>? {
+        if (raw.isNullOrBlank()) return null
+        val s = raw.removePrefix("1") // убираем возможный префикс
+
+        // собрать индексы точек
+        val dotIndexes = s.withIndex().filter { it.value == '.' }.map { it.index }
+        if (dotIndexes.size < 2) return null
+
+        // Попробуем все возможные разрезы между первой и второй точкой
+        val firstDot = dotIndexes[0]
+        val secondDot = dotIndexes[1]
+
+        for (end in (firstDot + 1)..(secondDot - 1)) {
+            try {
+                val latStr = s.substring(0, end + 1)   // включительно end (точка и дробная часть)
+                val lonStr = s.substring(end + 1)      // остаток
+
+                val lat = latStr.toDoubleOrNull() ?: continue
+                val lon = lonStr.toDoubleOrNull() ?: continue
+
+                // ограничение для Украины: широта ~ [44,53], долгота ~ [22,40]
+                if (lat in 44.0..53.0 && lon in 22.0..40.0) {
+                    return Pair(lat, lon)
+                }
+            } catch (t: Throwable) {
+                // игнорируем и пробуем следующую позицию
+            }
+        }
+
+        // fallback: взять первые два вещественных числа и проверить диапазон
+        val regex = Regex("[-+]?[0-9]*\\.?[0-9]+")
+        val found = regex.findAll(s).map { it.value }.toList()
+        if (found.size >= 2) {
+            val lat = found[0].toDoubleOrNull()
+            val lon = found[1].toDoubleOrNull()
+            if (lat != null && lon != null && lat in 44.0..53.0 && lon in 22.0..40.0) {
+                return Pair(lat, lon)
+            }
+        }
+
+        return null
+    }
+
+    /**
+    градусов-минут-секунд (DMS)
+     **/
+    fun toDmsString(lat: Double, lon: Double): String {
+        fun convert(coord: Double, isLat: Boolean): String {
+            val hemi = if (isLat) if (coord >= 0) "N" else "S" else if (coord >= 0) "E" else "W"
+            val absCoord = abs(coord)
+            val degrees = floor(absCoord).toInt()
+            val minutesFloat = (absCoord - degrees) * 60.0
+            val minutes = floor(minutesFloat).toInt()
+            val seconds = (minutesFloat - minutes) * 60.0
+            // форматируем секунды с одной десятичной
+            val secondsStr = String.format(Locale.US, "%.1f", seconds)
+            return "%d°%d'%s\"%s".format(degrees, minutes, secondsStr, hemi)
+        }
+
+        val latStr = convert(lat, true)
+        val lonStr = convert(lon, false)
+        // между ними пробел
+        return "$latStr\n$lonStr"
+    }
+
+    /** Вывод координат в десятичном формате с 6 знаками после запятой */
+    fun toDecimalString(lat: Double, lon: Double): String {
+        return String.format(Locale.US, "%.6f, %.6f", lat, lon)
+    }
+
+    /** Удобная оболочка: принимает строку из БД и возвращает DMS либо пустую строку */
+    fun formatLocationUniqueToDms(raw: String?): String {
+        val latLon = parseLatLonUkraine(raw) ?: return ""
+        return toDecimalString(latLon.first, latLon.second)
     }
 }
 
@@ -651,3 +746,29 @@ object WPDataBDOverride {
         else -> null
     }
 }
+
+@SuppressLint("SimpleDateFormat")
+fun formatDateString(raw: String?): String {
+    if (raw.isNullOrBlank()) return ""
+
+    val possiblePatterns = listOf(
+        "EEE MMM dd HH:mm:ss zzz yyyy",   // Wed Oct 09 18:42:15 GMT+03:00 2024
+        "MMM dd, yyyy hh:mm:ss a",        // Oct 09, 2025 12:00:00 AM
+        "MMM dd yyyy HH:mm:ss",           // Oct 09 2025 00:00:00
+        "yyyy-MM-dd'T'HH:mm:ss",          // ISO без зоны
+        "yyyy-MM-dd HH:mm:ss"             // частый формат SQL
+    )
+
+    val date = possiblePatterns.firstNotNullOfOrNull { pattern ->
+        try {
+            SimpleDateFormat(pattern, Locale.ENGLISH).parse(raw)
+        } catch (_: Exception) {
+            null
+        }
+    } ?: return raw
+
+    val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) // или Locale("ru")
+    return formatter.format(date)
+}
+
+

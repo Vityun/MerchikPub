@@ -8,6 +8,7 @@ import android.os.Build;
 
 import java.io.File;
 
+import com.google.android.gms.maps.MapsInitializer;
 import dagger.hilt.android.HiltAndroidApp;
 import kotlinx.coroutines.BuildersKt;
 import kotlinx.coroutines.CoroutineStart;
@@ -52,6 +53,14 @@ public class MyApplication extends Application {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannels();
         }
+
+        MapsInitializer.initialize(
+                getApplicationContext(),
+                MapsInitializer.Renderer.LATEST,
+                renderer -> {
+                    // optional callback, можно оставить пустым
+                }
+        );
 
     }
 

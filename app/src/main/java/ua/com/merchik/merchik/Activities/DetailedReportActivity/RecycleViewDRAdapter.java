@@ -9,14 +9,17 @@ import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirement
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
+import android.animation.*;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -37,6 +40,7 @@ import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -45,11 +49,8 @@ import com.google.gson.JsonObject;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.realm.RealmResults;
 import kotlin.Pair;
@@ -147,6 +148,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //        }
 //    }
 
+    private RecyclerView recyclerView;
+
+    public void attachRecyclerView(RecyclerView rv) {
+        this.recyclerView = rv;
+    }
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -442,7 +448,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                             wp.getVisit_start_dt() > 0 && wp.getVisit_end_dt() > 0) ? wp.getVisit_start_dt() - validTime :
                                             (System.currentTimeMillis() / 1000) - validTime;
                             long endT = wp.getVisit_end_dt() > 0 ? wp.getVisit_end_dt() : System.currentTimeMillis() / 1000;
-                            logMPList = LogMPRealm.getLogMPTime(startT*1000, endT*1000);
+                            logMPList = LogMPRealm.getLogMPTime(startT * 1000, endT * 1000);
                             int loMPonPoint = 0;
                             for (LogMPDB log : logMPList) {
                                 if (log.distance != 0 && log.distance < Globals.distanceMin) {
@@ -450,7 +456,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 }
                             }
 
-                            textInteger.setText(CustomString.underlineString( logMPList.size() + "/" + loMPonPoint, optionsButtons));
+                            textInteger.setText(CustomString.underlineString(logMPList.size() + "/" + loMPonPoint, optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -458,11 +464,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("dataJson", new Gson().toJson(wp));
                                 bundle.putString("title", "Історія місцеположення");
                                 bundle.putString("subTitle", "Данные местоположения по ТТ" + ": " + wp.getAddr_txt() +
-                                        " за период с " + Clock.getHumanTime2(startT) + " по " + Clock.getHumanTime2(endT)) ;
+                                        " за период с " + Clock.getHumanTime2(startT) + " по " + Clock.getHumanTime2(endT));
                                 intent.putExtras(bundle);
                                 mContext.startActivity(intent);
                             });
-                        break;
+                            break;
 
                         case 135159:
                             int achievementSum = 0;
@@ -1118,12 +1124,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                             String currentDate = dateFormat.format(new Date());
                             long userDate = currentUser.reportDate01 != null ? currentUser.reportDate01.getTime() : 0L;
-                            if (userDate > 1754006400000L){
+                            if (userDate > 1754006400000L) {
                                 longClickDialogText = "Для Вас цей функціонал - недоступний.";
                                 pass = CodeGenerator.sha256(currentDate);
                                 pass = pass.substring(pass.length() - 5);
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "longClickDialog", "Exception e: " + e);
                         }
 
@@ -1277,6 +1283,277 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         notifyDataSetChanged();
     }
 
+    // В адаптере (или helper-классе), где доступен items и getItemPosition(...)
+    public void ensureAndShow(final OptionsDB optionsDB, final RecyclerView recyclerView) {
+        if (optionsDB == null || recyclerView == null) return;
+
+        final int pos = getItemPosition(optionsDB);
+        final RecyclerView.Adapter adapter = recyclerView.getAdapter();
+        if (pos >= 0) {
+            // Попробуем показать/создать view для позиции
+            showOrScrollAndWait(optionsDB, recyclerView, pos);
+            return;
+        }
+
+        // Если позиции нет (но ты сказал, что объект всегда в списке при инициализации),
+        // то ждём появления данных в адаптере
+        if (adapter == null) return;
+
+        final RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {
+            @Override public void onChanged() { tryOnce(); }
+            @Override public void onItemRangeInserted(int start, int count) { tryOnce(); }
+            @Override public void onItemRangeChanged(int start, int count) { tryOnce(); }
+
+            private void tryOnce() {
+                int p = getItemPosition(optionsDB);
+                if (p >= 0) {
+                    adapter.unregisterAdapterDataObserver(this);
+                    ensureAndShow(optionsDB, recyclerView);
+                }
+            }
+        };
+        adapter.registerAdapterDataObserver(observer);
+    }
+
+    private void showOrScrollAndWait(final OptionsDB optionsDB, final RecyclerView recyclerView, final int pos) {
+        RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+        if (!(lm instanceof LinearLayoutManager)) {
+            // для простоты поддержим только LinearLayoutManager; для других — smoothScroll
+            recyclerView.smoothScrollToPosition(pos);
+        } else {
+            final LinearLayoutManager llm = (LinearLayoutManager) lm;
+            int first = llm.findFirstVisibleItemPosition();
+            int last = llm.findLastVisibleItemPosition();
+
+            if (pos < first || pos > last) {
+                // не виден — прокручиваем так, чтобы он создавался (центрируем)
+                int offset = computeCenterOffset(recyclerView, llm);
+                llm.scrollToPositionWithOffset(pos, offset);
+            }
+        }
+
+        // теперь ждём появления ViewHolder — несколько попыток
+        final int MAX_ATTEMPTS = 10;
+        final long DELAY_MS = 80;
+        final Handler handler = new Handler(Looper.getMainLooper());
+        final AtomicInteger attempts = new AtomicInteger(0);
+
+        Runnable tryGet = new Runnable() {
+            @Override
+            public void run() {
+                attempts.incrementAndGet();
+                RecyclerView.ViewHolder vh = recyclerView.findViewHolderForAdapterPosition(pos);
+                int currentPos = getItemPosition(optionsDB);
+                if (vh != null && currentPos == pos) {
+                    // view создана и на ней всё ещё тот же элемент — показываем / подсвечиваем
+                    animateHighlightView(vh.itemView);
+                } else if (attempts.get() < MAX_ATTEMPTS) {
+                    // попытаемся снова через DELAY_MS
+                    handler.postDelayed(this, DELAY_MS);
+                } else {
+                    // всё — не удалось за время; можно пробовать overlay-метод как fallback
+                }
+            }
+        };
+
+        // запускаем первую попытку через post (чтобы стек обработки layout'а прошёл)
+        recyclerView.post(tryGet);
+    }
+
+    // computeCenterOffset как в предыдущих примерах
+    private int computeCenterOffset(RecyclerView recyclerView, LinearLayoutManager llm) {
+        View firstView = llm.findViewByPosition(llm.findFirstVisibleItemPosition());
+        int itemHeight = (firstView != null) ? firstView.getHeight() : 0;
+        int rvHeight = recyclerView.getHeight();
+        if (itemHeight > 0) return rvHeight / 2 - itemHeight / 2;
+        return 0;
+    }
+
+    // animateHighlightView — ваша текущая визуальная подсветка (не трогает позицию/данные)
+    private void animateHighlightView(final View itemView) {
+        if (itemView == null) return;
+        final Drawable orig = itemView.getBackground();
+        final int highlightColor = Color.parseColor("#FFF59D");
+        final ColorDrawable highlight = new ColorDrawable(highlightColor);
+        itemView.setBackground(highlight);
+
+        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(itemView, "alpha", 0.7f, 1f);
+        fadeIn.setDuration(160);
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(itemView, "alpha", 1f, 0.95f);
+        fadeOut.setDuration(160);
+
+        AnimatorSet set = new AnimatorSet();
+        set.playSequentially(fadeIn, fadeOut);
+        set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                itemView.setBackground(orig);
+                itemView.setAlpha(1f);
+            }
+        });
+        set.start();
+    }
+
+
+    // в адаптере или в helper-классе (Java)
+    public void scrollToOptionId(final OptionsDB optionsDB, final RecyclerView recyclerView) {
+        if (optionsDB == null || recyclerView == null) return;
+
+        // найдём позицию в текущем списке адаптера
+        final int pos = getItemPosition(optionsDB);
+        if (pos >= 0) {
+            // адаптер уже содержит элемент
+            handlePositionVisibleOrNot(pos, recyclerView);
+            return;
+        }
+
+        // элемент пока не в адаптере — подписываемся на обновление адаптера и пробуем позже
+        final RecyclerView.Adapter<?> adapter = recyclerView.getAdapter();
+        if (adapter == null) return;
+
+        final RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                tryScrollAndUnregister(this);
+            }
+
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                tryScrollAndUnregister(this);
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                tryScrollAndUnregister(this);
+            }
+
+            private void tryScrollAndUnregister(RecyclerView.AdapterDataObserver obs) {
+                int newPos = getItemPosition(optionsDB);
+                if (newPos >= 0) {
+                    // элемент появился — выполняем прокрутку/подсветку
+                    handlePositionVisibleOrNot(newPos, recyclerView);
+                    adapter.unregisterAdapterDataObserver(obs);
+                }
+            }
+        };
+
+        adapter.registerAdapterDataObserver(observer);
+    }
+
+    /**
+     * вспомогательный метод — решает: скроллить или подсветить
+     */
+    private void handlePositionVisibleOrNot(final int pos, final RecyclerView recyclerView) {
+        final RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+
+        // получаем видимые позиции, если линейный менеджер
+        if (lm instanceof LinearLayoutManager) {
+            final LinearLayoutManager llm = (LinearLayoutManager) lm;
+            final int first = llm.findFirstVisibleItemPosition();
+            final int last = llm.findLastVisibleItemPosition();
+
+            if (pos < first || pos > last) {
+                // НЕ виден — прокрутить и затем подсветить (после layout)
+                scrollToPositionCentered(pos, recyclerView, llm);
+            } else {
+                // УЖЕ виден — подсветить прямо сейчас
+                highlightItemAt(pos, recyclerView);
+            }
+        } else {
+            // Для других LayoutManager'ов просто попытаемся плавно проскроллить и подсветить
+            recyclerView.smoothScrollToPosition(pos);
+
+            // Подсветим спустя короткую задержку, чтобы view успела отрисоваться
+            recyclerView.postDelayed(() -> highlightItemAt(pos, recyclerView), 300);
+        }
+    }
+
+    /**
+     * Скроллит так, чтобы позиция оказалась примерно в центре экрана (немного сверху)
+     */
+    private void scrollToPositionCentered(final int position, final RecyclerView recyclerView, final LinearLayoutManager llm) {
+        // Попробуем вычислить offset: центр экрана (можно скорректировать)
+        View firstView = llm.findViewByPosition(llm.findFirstVisibleItemPosition());
+        int itemHeight = (firstView != null) ? firstView.getHeight() : 0;
+        int rvHeight = recyclerView.getHeight();
+
+        int offset = rvHeight / 2 - itemHeight / 2; // центрирование
+        // Если itemHeight == 0 (не отрисовано), используем 0
+
+        // Используем scrollToPositionWithOffset для предсказуемости
+        recyclerView.post(() -> {
+            // короткая задержка, чтобы избежать race с layout'ом
+            llm.scrollToPositionWithOffset(position, offset);
+            // подсветим спустя небольшую задержку, когда view будет отрисован
+            recyclerView.postDelayed(() -> highlightItemAt(position, recyclerView), 150);
+        });
+    }
+
+    /**
+     * Подсветить/анимировать элемент на позиции (если он видим)
+     */
+    private void highlightItemAt(int position, RecyclerView recyclerView) {
+        RecyclerView.ViewHolder vh = recyclerView.findViewHolderForAdapterPosition(position);
+        if (vh == null) {
+            // View ещё не создана (редкий случай) — отложим попытку
+            recyclerView.postDelayed(() -> highlightItemAt(position, recyclerView), 120);
+            return;
+        }
+
+        final View itemView = vh.itemView;
+
+        // Простой способ подсветки: анимируем фон (цвет должен быть defined в ресурсах)
+        // Сохраним исходный фон, чтобы вернуть назад
+        final Drawable originalBg = itemView.getBackground();
+
+        // Можно использовать ColorDrawable поверх оригинала
+        final int highlightColor = Color.parseColor("#FFF59D"); // мягкий жёлтый, поменяй при необходимости
+        final ColorDrawable highlight = new ColorDrawable(Color.RED);
+
+        // Наложим highlight через foreground/overlay или заменим фон на время анимации
+        // Сначала запомним текущий padding/params если важны
+        itemView.setBackground(highlight);
+
+        // Анимируем альфа, чтобы подсветка выглядела "пульсирующей"
+        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(itemView, "alpha", 0.6f, 1f);
+        fadeIn.setDuration(180);
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(itemView, "alpha", 1f, 0.9f);
+        fadeOut.setDuration(180);
+
+        AnimatorSet set = new AnimatorSet();
+        set.playSequentially(fadeIn, fadeOut);
+        set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // возвращаем фон и альфу после небольшой задержки
+                itemView.setBackgroundColor(highlightColor);
+                itemView.setBackground(new ColorDrawable(highlightColor));
+                itemView.setAlpha(1f);
+            }
+        });
+        set.start();
+
+        // Дополнительно: можно дать фокус и поднять view (чтобы вынести над соседями)
+        itemView.requestFocus();
+        itemView.setElevation(8f); // если требуется
+    }
+
+
+//    public void scrollToOptionId(OptionsDB optionsDB) {
+//        if (recyclerView == null || optionsDB == null)
+//            return;
+//
+//        int pos = getItemPosition(optionsDB);
+//        if (pos < 0) return; // элемент не найден
+//
+//        RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+//        if (lm instanceof LinearLayoutManager) {
+//            ((LinearLayoutManager) lm).scrollToPositionWithOffset(pos, 0);
+//        } else {
+//            recyclerView.smoothScrollToPosition(pos);
+//        }
+//    }
+
     /*Определяем конструктор*/
     public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.click click) {
 //        try {
@@ -1337,7 +1614,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             }
 
 
-                viewHolder.bind(optionsButtons, siteObjectsSDB);
+            viewHolder.bind(optionsButtons, siteObjectsSDB);
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception exception: " + Arrays.toString(e.getStackTrace()));
@@ -1364,6 +1641,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
         return 0;
     }
+    public int getItemPositionForOptionControl(OptionsDB item) {
+        try {
+            for (OptionsDB optionsDB: butt){
+                if (optionsDB.getOptionControlId().equals(item.getOptionId())
+//                        && optionsDB.getOptionTxt().contains("Кнопка")
+                )
+                    return butt.indexOf(optionsDB);
+            }
+            return butt.indexOf(item);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemPosition", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemPosition", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+        }
+        return 0;
+    }
+
 
 
     /*Активные на данный момент кнопки*/
@@ -1709,10 +2002,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0" -> new ForegroundColorSpan(Color.GRAY);
-            case "1" ->
-                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
-            case "2" ->
-                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+            case "1" -> new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+            case "2" -> new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
             default -> new ForegroundColorSpan(Color.YELLOW);
         };
         //        if (dataBaseCount >= maxPhotos) {

@@ -231,8 +231,9 @@ public class UsersSDB implements DataObjectUI{
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 
-//    @Override
-//    public String toString() {
-//        return fio;
-//    }
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
 }

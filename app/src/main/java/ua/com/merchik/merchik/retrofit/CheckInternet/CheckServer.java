@@ -98,10 +98,6 @@ public class CheckServer {
                         }
                         click.onFailure("Throwable t: " + t);
                     }catch (Exception e){
-                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/E", "blockingProgressDialog.dismiss()");
-                            blockingProgressDialog.dismiss();
-                        }
 
                         Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onFailure", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onFailure", "Exception e..: " + Arrays.toString(e.getStackTrace()));
@@ -113,6 +109,10 @@ public class CheckServer {
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e: " + e);
             Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e..: " + Arrays.toString(e.getStackTrace()));
+            if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/E", "blockingProgressDialog.dismiss()");
+                blockingProgressDialog.dismiss();
+            }
         }
     }
 

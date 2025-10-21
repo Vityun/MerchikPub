@@ -194,73 +194,74 @@ public class TablesLoadingUnloading {
         sync = true;
 
 //if (false)
-        try {
+        if (Globals.userId != 172906)
+            try {
 //            Exchange.sendWpData2();
 //            updateWpData();
 
-            downloadWPData();
-            donwloadPlanBudgetRNO();
-            donwloadPlanBudget();
+                downloadWPData();
+//            donwloadPlanBudgetRNO();
+//            donwloadPlanBudget();
 
 //            downloadWPDataRx().subscribe();
 
-            downloadOptions();
-            Log.e("uploadRP", "start");
-            uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
-                @Override
-                public <T> void onSuccess(List<T> data) {
-                    Log.e("uploadRP", "onSuccess data: " + data);
-                    if (data != null) {
-                        Log.e("uploadRP", "onSuccess: " + data.size());
-
+                downloadOptions();
+                Log.e("uploadRP", "start");
+                uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
+                    @Override
+                    public <T> void onSuccess(List<T> data) {
+                        Log.e("uploadRP", "onSuccess data: " + data);
                         if (data != null) {
-                            List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
+                            Log.e("uploadRP", "onSuccess: " + data.size());
 
-                            Long[] ids = new Long[list.size()];
-                            int count = 0;
-                            for (ReportPrepareUpdateResponseList item : list) {
-                                ids[count++] = item.elementId;
-                            }
+                            if (data != null) {
+                                List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
 
-                            List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+                                Long[] ids = new Long[list.size()];
+                                int count = 0;
+                                for (ReportPrepareUpdateResponseList item : list) {
+                                    ids[count++] = item.elementId;
+                                }
 
-                            for (ReportPrepareDB item : rp) {
-                                for (ReportPrepareUpdateResponseList listItem : list) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                        if (Objects.equals(listItem.elementId, item.getID())) {
-                                            if (listItem.state) {
-                                                item.setUploadStatus(0);
-                                                ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+
+                                for (ReportPrepareDB item : rp) {
+                                    for (ReportPrepareUpdateResponseList listItem : list) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                            if (Objects.equals(listItem.elementId, item.getID())) {
+                                                if (listItem.state) {
+                                                    item.setUploadStatus(0);
+                                                    ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                                }
                                             }
                                         }
                                     }
                                 }
+
+                                //  TODO Вернул загрузку RP
+                                downloadReportPrepare(0);
                             }
 
-                            //  TODO Вернул загрузку RP
+                        } else {
                             downloadReportPrepare(0);
                         }
+                    }
 
-                    } else {
+                    @Override
+                    public void onFailure(String error) {
+                        Log.d("uploadRP", "error: " + error);
                         downloadReportPrepare(0);
                     }
+                });
+                RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
+                if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
+                    List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
+                    downloadTovarTable(null, wpDataDBList);
                 }
-
-                @Override
-                public void onFailure(String error) {
-                    Log.d("uploadRP", "error: " + error);
-                    downloadReportPrepare(0);
-                }
-            });
-            RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
-            if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
-                List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
-                downloadTovarTable(null, wpDataDBList);
+                globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
+            } catch (Exception e) {
+                globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
             }
-            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
-        } catch (Exception e) {
-            globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
-        }
 
 
         try {
@@ -333,7 +334,7 @@ public class TablesLoadingUnloading {
                 }
             }); // Загрузка таблици. ОСНОВА. Группы Товаров.
 
-            downloadWPDataWithCords();
+//            downloadWPDataWithCords();
 
             // Загрузка Задач и Рекламаций
             try {
@@ -497,10 +498,10 @@ public class TablesLoadingUnloading {
                 coordX = Globals.CoordX;
             }
 
-// Y (долгота или высота — уточни!)
+// Y (долгота)
             if (Globals.CoordY == 0) {
                 if (imHereGPS != null) {
-                    coordY = imHereGPS.getLongitude(); // ⚠️ лучше использовать getLongitude()
+                    coordY = imHereGPS.getLongitude();
                 } else if (imHereNET != null) {
                     coordY = imHereNET.getLongitude();
                 } else {
@@ -797,7 +798,7 @@ public class TablesLoadingUnloading {
                                                         SQL_DB.wpDataAdditionalDao().getByIds(confirmedIds.stream().toList());
                                                 Set<Long> goodIds = new HashSet<>();
 
-                                                for (WPDataAdditional wpDataAdditional: wpDataAdditionalListConfirmed){
+                                                for (WPDataAdditional wpDataAdditional : wpDataAdditionalListConfirmed) {
                                                     if (wpDataAdditional.action == 1)
                                                         goodIds.add(wpDataAdditional.ID);
                                                 }

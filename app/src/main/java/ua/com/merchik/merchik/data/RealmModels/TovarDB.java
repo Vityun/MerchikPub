@@ -251,4 +251,10 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     public List<String> getFieldsForOrderOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
 }

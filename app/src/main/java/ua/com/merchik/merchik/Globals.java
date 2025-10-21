@@ -1274,8 +1274,8 @@ public class Globals {
             try {
 //ывапреонлгдш
                 if (Build.VERSION.SDK_INT >= 23 && context != null &&
-                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     Globals.writeToMLOG("ERROR", "fixMP/imHereGPS", "permission not granted");
                     return null;
                 }
@@ -1326,7 +1326,7 @@ public class Globals {
                 }
 
 
-                String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
+                String locationUniqueStringGPSThis = "1" + (imHereGPS != null ? imHereGPS.getLatitude() : 0) + (imHereGPS != null ? imHereGPS.getLongitude() : 0) + (imHereGPS != null ? imHereGPS.getTime() : 0);
                 Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis equals: " + !locationUniqueStringGPS.equals(locationUniqueStringGPSThis)
                         + ", delayGPSTime: " + delayGPSTime + " isTime: " + (delayGPSTime + retryTime < System.currentTimeMillis()));
                 if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis) || delayGPSTime + retryTime < System.currentTimeMillis()) {
@@ -1342,7 +1342,7 @@ public class Globals {
                     log.CoordSpeed = imHereGPS.getSpeed();
                     log.CoordAccuracy = imHereGPS.getAccuracy();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        log.mocking = imHereGPS.isFromMockProvider();
+                        log.mocking = imHereGPS.isMock();
                     }
 
                     if (wpDataDB != null) {
@@ -1369,8 +1369,9 @@ public class Globals {
                     log.vpi = System.currentTimeMillis() / 1000;
 
                     log.gp = POST_10(log);
-
+                    log.locationUniqueString = locationUniqueStringGPSThis;
                     delayGPSTime = System.currentTimeMillis();
+
                     RealmManager.setLogMpRow(log);
                     Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
                             ", GPS_time: " + log.CoordTime

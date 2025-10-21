@@ -172,6 +172,8 @@ public class DetailedReportActivity extends toolbar_menus {
 //    public ArrayList<Data> list = new ArrayList<Data>();
 
     //----------------------------------------------------------------------------------------------
+
+    private DetailedReportViewModel detailedReportViewModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -480,7 +482,7 @@ public class DetailedReportActivity extends toolbar_menus {
         commentViewModel = new ViewModelProvider(this).get(CommentViewModel.class);
         commentViewModel.setWpDataDB(wpDataDB);
 
-        DetailedReportViewModel detailedReportViewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
+        detailedReportViewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
         detailedReportViewModel.setWpDataDB(wpDataDB);
 
 

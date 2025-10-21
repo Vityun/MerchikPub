@@ -125,4 +125,10 @@ public class SamplePhotoSDB implements DataObjectUI {
     public List<String> getFieldsForOrderOnUI() {
         return SamplePhotoSDBOverride.INSTANCE.getFieldsForOrderOnUI();
     }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
 }

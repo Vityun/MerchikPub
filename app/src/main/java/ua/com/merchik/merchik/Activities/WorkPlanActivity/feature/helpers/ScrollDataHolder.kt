@@ -179,5 +179,6 @@ data class AdditionalWPHolder(
     val id: Long,
     val codeDad2: Long?,
     val adrId: Int?,
-    val clientId: Int?
+    val clientId: Int?,
+    val wdDataId: Long?
 )

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.annotation.DrawableRes
@@ -14,9 +15,10 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.util.Locale
+import java.util.*
 import java.util.zip.CRC32
 
 interface DataObjectUI {
@@ -45,6 +47,8 @@ interface DataObjectUI {
         return value.toString()
     }
 
+
+
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier? {
         return null
     }
@@ -56,6 +60,9 @@ interface DataObjectUI {
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? {
         return null
     }
+
+    fun getPreferredFieldOrder(): List<String> = emptyList()
+
 }
 
 //// Простой holder для состояния диалога
@@ -89,26 +96,17 @@ fun DataObjectUI.toItemUI(
         JSONObject(gson.toJson(this))
     } catch (e: Throwable) {
         logException("Mappers.DataObjectUI.toItemUI", "JSONObject(gson.toJson(this))", e, "source object: $this")
-        // если не получилось распарсить — создаём пустой JSON, чтобы дальше код не падал
         JSONObject()
     }
 
-    // ---- новый блок: получение стабильного реального id ----
+    // ---- получение стабильного реального id ----
     val stableIdFromSource: Long? = try {
-        // ищем ключ, совпадающий с "id" без учёта регистра
         val idKey = jsonObject.keys().asSequence().firstOrNull { it.equals("id", ignoreCase = true) }
 
         if (idKey != null) {
             val rawValue = jsonObject.opt(idKey)
             val trimmed = rawValue?.toString()?.trim() ?: ""
 
-//            Globals.writeToMLOG(
-//                "INFO",
-//                "Mappers.DataObjectUI.toItemUI",
-//                "Found ID key: $idKey -> '$trimmed'"
-//            )
-
-            // пробуем привести к Long
             val num = trimmed.toLongOrNull()
             if (num != null && num != 0L) {
                 num
@@ -144,7 +142,6 @@ fun DataObjectUI.toItemUI(
         .toSet()
 
     val idResImage = this.getIdResImage()
-    // id_res_image обрабатываем только если он не скрыт
     if (idResImage != null && "id_res_image" !in hiddenList) {
         val label = nameUIRepository.getTranslateString(
             "id_res_image",
@@ -186,8 +183,6 @@ fun DataObjectUI.toItemUI(
     }
 
     fun updateFields(key: String) {
-//        if (key in hiddenList) return
-
         val valueRaw = jsonObject.opt(key) ?: return
         val label = nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))
         val fieldModifier = this.getFieldModifier(key, jsonObject)
@@ -200,24 +195,48 @@ fun DataObjectUI.toItemUI(
             TextField(valueRaw, valueText, valueModifier)
         )
 
-//        // rawFields тоже теперь фильтрованы — мы добавляем только если ключ не в hiddenList (уже проверено)
-//        rawFields.add(field)
-//        // fields содержит только видимые (не скрытые) элементы
-//        fields.add(field)
-
         rawFields.add(field)
         if (key !in hiddenList) {
             fields.add(field)
         }
     }
 
-    val orderedKeys = this.getFieldsForOrderOnUI()?.map { it.trim() }?.toSet() ?: emptySet()
-    val allKeys = jsonObject.keys().asSequence().toSet()
+    // --- Универсальная логика формирования порядка ключей ---
+    // 1) приоритетные поля из модели (если модель предоставляет такой список)
+    val preferredOrder: List<String> = try {
+        this.getPreferredFieldOrder()
+    } catch (_: Throwable) {
+        emptyList()
+    }
 
-    orderedKeys.forEach { if (it in allKeys) updateFields(it) }
-    (allKeys - orderedKeys).forEach { updateFields(it) }
+    // 2) поля из конфигурации orderOnUI (если заданы)
+    val rawOrderedKeys =  this.getFieldsForOrderOnUI()?.map { it.trim() }?.toSet() ?: emptySet()
 
-//    Globals.writeToMLOG("INFO",  "Mappers.DataObjectUI.toItemUI ", "fields: ${fields.size} | rawFields: ${rawFields.size}")
+    // 3) все ключи из json
+    val allKeys: Set<String> = jsonObject.keys().asSequence().toSet()
+
+    // Собираем итоговый порядок без дубликатов, сохраняя вставку
+    val finalOrderedKeys = LinkedHashSet<String>()
+
+    // Сначала — приоритетные поля (в порядке, который вернула модель)
+    for (k in preferredOrder) {
+        if (k in allKeys) finalOrderedKeys.add(k)
+    }
+
+    // Затем — поля из конфигурации orderOnUI
+    for (k in rawOrderedKeys) {
+        if (k in allKeys) finalOrderedKeys.add(k)
+    }
+
+    // В конце — все оставшиеся ключи
+    for (k in allKeys) {
+        finalOrderedKeys.add(k)
+    }
+
+    // Генерация полей в финальном порядке
+    for (key in finalOrderedKeys) {
+        updateFields(key)
+    }
 
     return DataItemUI(
         rawObj = listOf(this),
@@ -715,4 +734,28 @@ private fun findIdKeyAndValue(jsonObject: JSONObject): Pair<String, String>? {
     if (containsId != null) return Pair(containsId, jsonObject.optString(containsId, ""))
 
     return null
+}
+
+@SuppressLint("SimpleDateFormat")
+private fun formatDateString(raw: String?): String {
+    if (raw.isNullOrBlank()) return ""
+
+    val possiblePatterns = listOf(
+        "EEE MMM dd HH:mm:ss zzz yyyy",   // Wed Oct 09 18:42:15 GMT+03:00 2024
+        "MMM dd, yyyy hh:mm:ss a",        // Oct 09, 2025 12:00:00 AM
+        "MMM dd yyyy HH:mm:ss",           // Oct 09 2025 00:00:00
+        "yyyy-MM-dd'T'HH:mm:ss",          // ISO без зоны
+        "yyyy-MM-dd HH:mm:ss"             // частый формат SQL
+    )
+
+    val date = possiblePatterns.firstNotNullOfOrNull { pattern ->
+        try {
+            SimpleDateFormat(pattern, Locale.ENGLISH).parse(raw)
+        } catch (_: Exception) {
+            null
+        }
+    } ?: return ""
+
+    val formatter = SimpleDateFormat("dd MMMM yyyy", Locale("uk")) // или Locale("ru")
+    return formatter.format(date)
 }

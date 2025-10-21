@@ -9,6 +9,10 @@ import android.widget.Toast;
 
 import java.util.Arrays;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -21,6 +25,7 @@ import ua.com.merchik.merchik.database.realm.tables.LogRealm;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogManager;
 
 /**
  * 31.05.2022
@@ -125,12 +130,19 @@ public class OptionControl<T> {
     }
 
     public void unlockCode() {
-        dialog.setCancel("Отримати код розблокування", () -> {
-//            Toast.makeText(dialog.context, "click", Toast.LENGTH_LONG).show();
+        dialog.setUnlockMode(() -> {
             WpDataDB wpDataDB1 = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionDB.getCodeDad2()));
             showUnlockCodeDialogInMainThread(wpDataDB1, isBlockOption());
         });
+        dialog.setImgBtnCall(context);
+        dialog.setCancel("Исправить замечание", () -> {
+            DetailedReportViewModel viewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(DetailedReportViewModel.class);
+            viewModel.postScrollToId(optionDB);
+            DialogManager.dismissAll();
+        });
     }
+
+
 
     public void setIsBlockOption(boolean block) {
         this.block = block;

@@ -289,7 +289,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
         String clientId = String.valueOf(wp.getClient_id());
 
-        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=message**act=to_client_addr**addr_id=%s**date=%s**client_id=%s", userId, hash, addrId, date, clientId);
+        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=message**act=to_client_addr**addr_id=%s**date=%s**client_id=%s**code_dad2=%s", userId, hash, addrId, date, clientId, wp.getCode_dad2());
     }
 
 }

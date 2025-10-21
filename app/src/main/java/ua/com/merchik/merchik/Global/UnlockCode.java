@@ -124,7 +124,9 @@ public class UnlockCode {
 
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Внесіть код розблокування!");
-            String string = "Для розблокування внесіть код. Цей код Ви можете отримати у свого керівника. Якщо зв'язку з керівником нема - можна звернутися до керівника відділку.";
+            String string = String.format("Для розблокування опції %s (%s) внесіть код. Цей код Ви можете отримати у свого керівника. Якщо зв'язку з керівником нема - можна звернутися до керівника відділку.",
+                    option.getOptionControlTxt(), option.getOptionControlId());
+
 
             SpannableString spannableString = new SpannableString(string);
 

@@ -835,13 +835,11 @@ public class RealmManager {
         RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
                 .in("code_dad2", code2.toArray(new Long[0]))
                 .findAll();
-
         for (WpDataDB wpData : results) {
             if (wpData != null) {
-                wpIds.add(wpData.getId()); // или getID(), если поле называется именно так
+                wpIds.add(wpData.getId());
             }
         }
-
         return wpIds;
     }
 

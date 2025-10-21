@@ -394,19 +394,19 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
                     ) {
                         Row {
-                            if ((viewModel.typeWindow ?: "").equals("container", true)) {
-                                ImageButton(
-                                    id = R.drawable.ic_maps,
-                                    shape = RoundedCornerShape(2.dp),
-                                    sizeButton = 40.dp,
-                                    sizeImage = 24.dp,
-                                    modifier = Modifier.padding(start = 7.dp),
-                                    onClick = {
-                                        showMapsDialog = true
+                            ImageButton(
+                                id = R.drawable.ic_maps,
+                                shape = RoundedCornerShape(2.dp),
+                                sizeButton = 40.dp,
+                                sizeImage = 24.dp,
+                                modifier = Modifier.padding(start = 7.dp),
+                                onClick = {
+                                    showMapsDialog = true
 //                                        Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT).show()
-                                    }
-                                )
+                                }
+                            )
 
+                            if ((viewModel.typeWindow ?: "").equals("container", true)) {
                                 ImageButton(
                                     id = R.drawable.ic_settings_empt,
                                     shape = RoundedCornerShape(2.dp),
@@ -975,14 +975,24 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showMapsDialog) {
+        ua.com.merchik.merchik.features.maps.presentation.main.
         MapsDialog(
-            viewModel,
+            mainViewModel = viewModel,
             onDismiss = { showMapsDialog = false },
-            contextUI = viewModel.contextUI, // откуда у тебя он берётся
+            contextUI = viewModel.contextUI,
             onOpenContextMenu = { wp, ctxUI ->
                 viewModel.openContextMenu(wp, ctxUI)
             }
         )
+
+//        MapsDialog(
+//            viewModel,
+//            onDismiss = { showMapsDialog = false },
+//            contextUI = viewModel.contextUI, // откуда у тебя он берётся
+//            onOpenContextMenu = { wp, ctxUI ->
+//                viewModel.openContextMenu(wp, ctxUI)
+//            }
+//        )
     }
 
 }

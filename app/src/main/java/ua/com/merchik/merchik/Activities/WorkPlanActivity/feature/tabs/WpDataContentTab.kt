@@ -15,6 +15,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
@@ -42,6 +43,8 @@ fun WpDataContentTab() {
 
     // Ref to ProgressViewModel (для отмены позже)
     val progressModel = remember { ProgressViewModel(1) }
+
+    WPDataActivity.textLesson = 8718
 
     // ✅ Проверка каждую 1–3 секунды
     LaunchedEffect(Unit) {

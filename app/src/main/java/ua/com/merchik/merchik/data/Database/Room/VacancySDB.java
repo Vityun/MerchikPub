@@ -153,4 +153,10 @@ public class VacancySDB implements DataObjectUI {
     public List<String> getFieldsForOrderOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
 }

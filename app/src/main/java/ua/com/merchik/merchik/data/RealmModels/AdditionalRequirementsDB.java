@@ -9,6 +9,8 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -322,5 +324,11 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Override
     public List<String> getFieldsForOrderOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return new ArrayList<>(Arrays.asList("dt_start", "dt_end"));
     }
 }

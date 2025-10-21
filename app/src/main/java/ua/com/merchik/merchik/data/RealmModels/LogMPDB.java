@@ -69,8 +69,8 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "address, CoordAltitude, CoordSpeed, CoordX, CoordY, codeDad2, id, inPlace, mocking, serverId" +
-                "upload, vpi, gp";
+        return "address, CoordAltitude, CoordSpeed, codeDad2, id, inPlace, mocking, serverId" +
+                "upload, vpi, gp, locationUniqueString";
     }
 
     @Nullable
@@ -120,4 +120,11 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     public List<String> getFieldsForOrderOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
 }

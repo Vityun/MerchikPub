@@ -637,6 +637,12 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
     public String getCode_iza() {
         return code_iza;
     }

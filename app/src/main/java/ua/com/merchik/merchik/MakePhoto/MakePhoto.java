@@ -79,7 +79,7 @@ public class MakePhoto {
 
     // TODO Устарело
     public static void startToMakePhoto(Context context, WPDataObj wpDataObj) {
-        globals.writeToMLOG( "MakePhoto.startToMakePhoto: " + "ENTER" + "\n");
+        globals.writeToMLOG("MakePhoto.startToMakePhoto: " + "ENTER" + "\n");
         mContext = context;
         wp = wpDataObj;
 
@@ -137,99 +137,102 @@ public class MakePhoto {
             if (wp.getThemeId() != 998)
                 dispatchTakePictureIntent();
             else if (enabledGPS) {
-                if (wp != null) {
-                    if (wp.getLatitude() > 0 && wp.getLongitude() > 0) {
-//                    if (true){
-                        if (Globals.CoordX != 0 && Globals.CoordY != 0) {
+                // 21.10.2025
+                dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
 
-                            Log.e("takePhoto", "takePhoto2: " + wp.getLatitude() + "/" + wp.getLongitude());
-                            Log.e("takePhoto", "takePhoto3: " + Globals.CoordX + "/" + Globals.CoordX);
-
-                            Globals.writeToMLOG("INFO", "takePhoto", "wp.getLatitude(): " + wp.getLatitude() + "/ wp.getLongitude(): " + wp.getLongitude());
-                            Globals.writeToMLOG("INFO", "takePhoto", "Globals.CoordX: " + Globals.CoordX + "/ Globals.CoordY: " + Globals.CoordY);
-
-                            double d = ua.com.merchik.merchik.trecker.coordinatesDistanse(wp.getLatitude(), wp.getLongitude(), Globals.CoordX, Globals.CoordY);
-                            if (d > 500) {
-                                String settext1 = String.format("По данным системы вы находитесь на расстоянии %s метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете выполнить фото пока, Ваше местоположение не определено.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь за помощью к своему руководителю или в службу поддержки merchik.", (int) d, wp.getAddressIdTxt());
-                                String settext2 = "*Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
-
-                                DialogData dialog1 = new DialogData(mContext);
-                                dialog1.setTitle("Нарушение по Местоположению.");
-                                dialog1.setText(settext1);
-//                                dialog1.setDialogErrorColor();
-                                dialog1.setOk(Html.fromHtml("<font color='#000000'>Всё равно сделать фото</font>"), () -> {
-                                    DialogData dialogData2 = new DialogData(mContext);
-                                    dialogData2.setTitle("ВНИМАНИЕ!");
-                                    dialogData2.setText(settext2);
-                                    dialogData2.setOk(Html.fromHtml("<font color='#000000'>Да</font>"), dialogData2::dismiss);
-                                    dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
-                                        dialog1.dismiss();
-                                        dialogData2.dismiss();
-                                        dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
-                                    });
-                                    dialogData2.setClose(dialogData2::dismiss);
-                                    dialogData2.show();
-                                });
-                                dialog1.setCancel2(Html.fromHtml("<font color='#000000'>Отказаться от изготовления фото</font>"), dialog1::dismiss);
-
-                                dialog1.setImgBtnCall(mContext);
-                                dialog1.setClose(dialog1::dismiss);
-                                dialog1.show();
-
-
-                                String title = "Нарушение по Местоположению.";
-                                String msg = String.format("По данным системы вы находитесь на расстоянии %.1f метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете использовать фото которые выполните в таком состоянии системы.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь к своему руководителю за помощью.", d, wp.getAddressIdTxt());
-                                String trueButton = "<font color='#000000'>Всё равно сделать фото</font>";
-                                String falseButton = "<font color='#000000'>Отказаться от изготовления фото</font>";
-                                String title2 = "ВНИМАНИЕ!";
-                                String msg2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
-                                String trueButton2 = "<font color='#000000'>Да</font>";
-                                String falseButton2 = "<font color='#000000'>Нет</font>";
-
-//                                alertMassageMP(1, title, msg, trueButton, falseButton, title2, msg2, trueButton2, falseButton2);
-                            } else if (serverTimeControl()) {
-                                String timeStamp = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
-                                String timeStamp2 = new SimpleDateFormat("HH:mm:ss").format(RetrofitBuilder.getServerTime());
-                                String timeDifference = "" + (Globals.serverGetTime - RetrofitBuilder.getServerTime()) / 1000;
-
-                                String t1 = "Ошибка синхронизации времени.";
-                                String m1 = String.format("Время установленное на: \n" +
-                                        "Вашем телефоне: %s \n" +
-                                        "Нашем сервере:\t\t %s \n\n" +
-                                        "Разница во времени больше %s секунд\n\n" +
-                                        "Установите на своём телефоне время аналогичное с сервером и повторите попытку.", timeStamp, timeStamp2, timeDifference);
-                                String bt1 = "<font color='#000000'>Всё равно сделать фото</font>";
-                                String bf1 = "<font color='#000000'>Отказаться от изготовления фото</font>";
-                                String t2 = "ВНИМАНИЕ!";
-                                String m2 = "Фотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
-                                String bt2 = "<font color='#000000'>Да</font>";
-                                String bf2 = "<font color='#000000'>Нет</font>";
-
-                                alertMassageMP(mContext, 1, t1, m1, bt1, bf1, t2, m2, bt2, bf2);
-                            } else {
-                                dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
-                            }
-                        } else {
-                            dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
-                            String t1 = "Координаты не определены";
-                            String m1 = "GPS на Вашем телефоне включен, но по какой-то причине не смог определить Ваши координаты.\n" +
-                                    "1. Выйдите на улицу\n" +
-                                    "2. Перезагрузите (Выключите/Включите) GPS\n" +
-                                    "3. В меню приложения нажмите на \"Перейти на главную\"\n" +
-                                    "4. Повторите попытку \n" +
-                                    "\n" +
-                                    "Если ошибка повторится - обратитесь за помощью к Вашему руководителю.";
-                            String bt1 = "";
-                            String bf1 = "Ок" +
-                                    "" +
-                                    "";
-
-                            alertMassageMP(mContext, 2, t1, m1, bt1, bf1, "", "", "", "");
-                        }
-                    }
-                } else {
-                    Toast.makeText(mContext, "Не обнаружены данные посещения, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
-                }
+//                if (wp != null) {
+//                    if (wp.getLatitude() > 0 && wp.getLongitude() > 0) {
+////                    if (true){
+//                        if (Globals.CoordX != 0 && Globals.CoordY != 0) {
+//
+//                            Log.e("takePhoto", "takePhoto2: " + wp.getLatitude() + "/" + wp.getLongitude());
+//                            Log.e("takePhoto", "takePhoto3: " + Globals.CoordX + "/" + Globals.CoordX);
+//
+//                            Globals.writeToMLOG("INFO", "takePhoto", "wp.getLatitude(): " + wp.getLatitude() + "/ wp.getLongitude(): " + wp.getLongitude());
+//                            Globals.writeToMLOG("INFO", "takePhoto", "Globals.CoordX: " + Globals.CoordX + "/ Globals.CoordY: " + Globals.CoordY);
+//
+//                            double d = ua.com.merchik.merchik.trecker.coordinatesDistanse(wp.getLatitude(), wp.getLongitude(), Globals.CoordX, Globals.CoordY);
+//                            if (d > 500) {
+//                                String settext1 = String.format("По данным системы вы находитесь на расстоянии %s метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете выполнить фото пока, Ваше местоположение не определено.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь за помощью к своему руководителю или в службу поддержки merchik.", (int) d, wp.getAddressIdTxt());
+//                                String settext2 = "*Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
+//
+//                                DialogData dialog1 = new DialogData(mContext);
+//                                dialog1.setTitle("Нарушение по Местоположению.");
+//                                dialog1.setText(settext1);
+////                                dialog1.setDialogErrorColor();
+//                                dialog1.setOk(Html.fromHtml("<font color='#000000'>Всё равно сделать фото</font>"), () -> {
+//                                    DialogData dialogData2 = new DialogData(mContext);
+//                                    dialogData2.setTitle("ВНИМАНИЕ!");
+//                                    dialogData2.setText(settext2);
+//                                    dialogData2.setOk(Html.fromHtml("<font color='#000000'>Да</font>"), dialogData2::dismiss);
+//                                    dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
+//                                        dialog1.dismiss();
+//                                        dialogData2.dismiss();
+//                                        dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
+//                                    });
+//                                    dialogData2.setClose(dialogData2::dismiss);
+//                                    dialogData2.show();
+//                                });
+//                                dialog1.setCancel2(Html.fromHtml("<font color='#000000'>Отказаться от изготовления фото</font>"), dialog1::dismiss);
+//
+//                                dialog1.setImgBtnCall(mContext);
+//                                dialog1.setClose(dialog1::dismiss);
+//                                dialog1.show();
+//
+//
+//                                String title = "Нарушение по Местоположению.";
+//                                String msg = String.format("По данным системы вы находитесь на расстоянии %.1f метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете использовать фото которые выполните в таком состоянии системы.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь к своему руководителю за помощью.", d, wp.getAddressIdTxt());
+//                                String trueButton = "<font color='#000000'>Всё равно сделать фото</font>";
+//                                String falseButton = "<font color='#000000'>Отказаться от изготовления фото</font>";
+//                                String title2 = "ВНИМАНИЕ!";
+//                                String msg2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
+//                                String trueButton2 = "<font color='#000000'>Да</font>";
+//                                String falseButton2 = "<font color='#000000'>Нет</font>";
+//
+////                                alertMassageMP(1, title, msg, trueButton, falseButton, title2, msg2, trueButton2, falseButton2);
+//                            } else if (serverTimeControl()) {
+//                                String timeStamp = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+//                                String timeStamp2 = new SimpleDateFormat("HH:mm:ss").format(RetrofitBuilder.getServerTime());
+//                                String timeDifference = "" + (Globals.serverGetTime - RetrofitBuilder.getServerTime()) / 1000;
+//
+//                                String t1 = "Ошибка синхронизации времени.";
+//                                String m1 = String.format("Время установленное на: \n" +
+//                                        "Вашем телефоне: %s \n" +
+//                                        "Нашем сервере:\t\t %s \n\n" +
+//                                        "Разница во времени больше %s секунд\n\n" +
+//                                        "Установите на своём телефоне время аналогичное с сервером и повторите попытку.", timeStamp, timeStamp2, timeDifference);
+//                                String bt1 = "<font color='#000000'>Всё равно сделать фото</font>";
+//                                String bf1 = "<font color='#000000'>Отказаться от изготовления фото</font>";
+//                                String t2 = "ВНИМАНИЕ!";
+//                                String m2 = "Фотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
+//                                String bt2 = "<font color='#000000'>Да</font>";
+//                                String bf2 = "<font color='#000000'>Нет</font>";
+//
+//                                alertMassageMP(mContext, 1, t1, m1, bt1, bf1, t2, m2, bt2, bf2);
+//                            } else {
+//                                dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
+//                            }
+//                        } else {
+//                            dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
+//                            String t1 = "Координаты не определены";
+//                            String m1 = "GPS на Вашем телефоне включен, но по какой-то причине не смог определить Ваши координаты.\n" +
+//                                    "1. Выйдите на улицу\n" +
+//                                    "2. Перезагрузите (Выключите/Включите) GPS\n" +
+//                                    "3. В меню приложения нажмите на \"Перейти на главную\"\n" +
+//                                    "4. Повторите попытку \n" +
+//                                    "\n" +
+//                                    "Если ошибка повторится - обратитесь за помощью к Вашему руководителю.";
+//                            String bt1 = "";
+//                            String bf1 = "Ок" +
+//                                    "" +
+//                                    "";
+//
+//                            alertMassageMP(mContext, 2, t1, m1, bt1, bf1, "", "", "", "");
+//                        }
+//                    }
+//                } else {
+//                    Toast.makeText(mContext, "Не обнаружены данные посещения, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
+//                }
             } else {
                 String title = "Нет сигнала GPS";
                 String msg = "Не могу определить Ваше местоположение. Возможно GPS выключен или Вы его только недавно включили.\n\n" +
@@ -326,7 +329,7 @@ public class MakePhoto {
      * Создание фото и пути к ней
      */
     public static void dispatchTakePictureIntent() {
-        globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent: " + "ENTER" + "\n");
+        globals.writeToMLOG("MakePhoto.dispatchTakePictureIntent: " + "ENTER" + "\n");
         try {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(mContext.getPackageManager()) != null) {
@@ -347,21 +350,21 @@ public class MakePhoto {
                 Uri contentUri;
                 try {
                     contentUri = FileProvider.getUriForFile(mContext, "ua.com.merchik.merchik.provider", image);
-                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(image);
-                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
-                globals.writeToMLOG( "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
+                globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 ((DetailedReportActivity) mContext).startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
 
         } catch (Exception e) {
             globals.alertDialogMsg(mContext, "Ошибка при создании фото: " + e);
-            globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            globals.writeToMLOG("MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
@@ -395,7 +398,7 @@ public class MakePhoto {
     public static String openCameraPhotoUri;
 
     public void openCamera(Activity activity, int requestCode) {
-        globals.writeToMLOG( "MakePhoto.openCamera: " + "ENTER" + "\n");
+        globals.writeToMLOG("MakePhoto.openCamera: " + "ENTER" + "\n");
         try {
             File photo = null;
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -425,23 +428,23 @@ public class MakePhoto {
                 Uri contentUri;
                 try {
                     contentUri = FileProvider.getUriForFile(activity, "ua.com.merchik.merchik.provider", photo);
-                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(photo);
-                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG(" MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
                 MakePhoto.openCameraPhotoUri = photo.getAbsolutePath();
 
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 intent.putExtra("photo_uri", contentUri);
-                globals.writeToMLOG( "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
+                globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 activity.startActivityForResult(intent, requestCode);
             }
 
         } catch (Exception e) {
             globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
-            globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            globals.writeToMLOG("MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
@@ -641,6 +644,7 @@ public class MakePhoto {
      * 28.08.23
      */
     boolean isPhotoMake = true;
+
     private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
         isPhotoMake = true;

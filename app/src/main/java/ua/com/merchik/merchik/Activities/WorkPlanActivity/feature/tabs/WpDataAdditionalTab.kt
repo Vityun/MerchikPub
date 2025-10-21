@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -18,6 +19,10 @@ import ua.com.merchik.merchik.features.main.Main.MainUI
 
 @Composable
 fun OtherComposeTab() {
+
+    WPDataActivity.textLesson = 8930
+
+
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val context = LocalContext.current
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER

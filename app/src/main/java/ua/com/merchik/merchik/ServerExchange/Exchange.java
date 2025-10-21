@@ -228,7 +228,8 @@ public class Exchange {
     public void startExchange() {
 
 //        if (false)
-        try {
+        if (Globals.userId != 172906)
+            try {
             Log.e("startExchange", "start");
 
             /**MERCHIK_1
@@ -257,7 +258,6 @@ public class Exchange {
                     updateTranslates();  // Обновление Переводов
 
                     FcmTokenSenderRx.INSTANCE.sendIfNeeded(context);
-
 
                     globals.writeToMLOG("_INFO.Exchange.class.startExchange.Успех.3." + "\n");
                 } catch (Exception e) {

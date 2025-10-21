@@ -36,46 +36,6 @@ fun filterAndSortDataItems(
     zoneId: ZoneId = ZoneId.systemDefault()
 ): FilterAndSortResult {
 
-//    filters?.items?.let { list ->
-//        Log.e("DBG_FILTERS", "DBG_FILTERS filters.items.size=${list.size}")
-//        list.forEachIndexed { i, el ->
-//            val cls = el?.javaClass?.name ?: "null"
-//            Log.e("DBG_FILTERS", "DBG_FILTERS item[$i] class=$cls title=${(el as? ItemFilter)?.title ?: "—"}")
-//            if (cls.contains("LinkedTreeMap")) {
-//                val json = Gson().toJson(el)
-//                Log.e("DBG_FILTERS", "DBG_FILTERS item[$i] as json: ${json.take(2000)}")
-//            }
-//        }
-//    }
-//
-//    // Диагностика: проверяем каждый элемент и его поля
-//    items.forEachIndexed { idx, item ->
-//        try {
-//            Log.e("DIAG_ITEM", "DIAG_ITEM item[$idx] class=${item.javaClass.name}, fields.size=${item.fields.size}, rawFields.size=${item.rawFields.size}")
-//            // логируем классы rawObj
-//            item.rawObj.forEachIndexed { j, ro ->
-//                Log.e("DIAG_ITEM", "DIAG_ITEM item[$idx].rawObj[$j] class=${ro?.javaClass?.name}")
-//                // если ro выглядит как Map — покажем json preview
-//                if (ro != null && ro.javaClass.name.contains("LinkedTreeMap") || ro is Map<*, *>) {
-//                    Log.e("DIAG_ITEM_JSON", "DIAG_ITEM_JSON item[$idx].rawObj[$j] json=${Gson().toJson(ro).take(2000)}")
-//                }
-//            }
-//            // логируем поля и их value types
-//            item.fields.forEachIndexed { fidx, fv ->
-//                val rawVal = fv.value.rawValue
-//                val valClass = rawVal?.javaClass?.name ?: "null"
-//                Log.e("DIAG_FIELD", "DIAG_FIELD item[$idx].field[$fidx] key=${fv.key} value.class=$valClass value.toString=${rawVal?.toString()?.take(200)}")
-//                if (valClass.contains("LinkedTreeMap") || rawVal is Map<*, *>) {
-//                    Log.e("DIAG_FIELD_JSON", "DIAG_FIELD_JSON item[$idx].field[$fidx] value.json=${Gson().toJson(rawVal).take(2000)}")
-//                }
-//            }
-//        } catch (t: Throwable) {
-//            Log.e("DIAG_FAIL", "DIAG_FAIL item[$idx] diagnostic failed", t)
-//        }
-//    }
-
-
-
     // --- подготовка входных данных ---
     val searchTerms: List<String> = searchText
         ?.trim()
@@ -145,25 +105,6 @@ fun filterAndSortDataItems(
                 ts in startMillis..endMillis
             }
             if (!tsOk) return@filter false
-//            val tsOk = dataItemUI.fields.all { fv ->
-//                if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
-//
-//                val raw = fv.value.rawValue
-//                val ts: Long = when (raw) {
-//                    is Long -> raw
-//                    is Date -> raw.time
-//                    is String -> try {
-//                        dateFmt.parse(raw)?.time ?: return@filter false
-//                    } catch (_: Exception) {
-//                        return@filter false
-//                    }
-//
-//                    else -> return@filter false
-//                }
-//
-//                ts in startMillis..endMillis
-//            }
-//            if (!tsOk) return@filter false
         }
 
         // 2) Фильтр по поисковой строке (каждый терм должен встретиться хотя бы в одном поле)

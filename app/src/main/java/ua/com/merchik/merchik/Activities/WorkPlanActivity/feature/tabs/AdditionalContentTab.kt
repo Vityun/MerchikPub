@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
@@ -15,6 +16,8 @@ import ua.com.merchik.merchik.features.main.Main.MainUI
 
 @Composable
 fun AdditionalContentTab() {
+    WPDataActivity.textLesson = 8969
+
     val viewModel: SMSPlanSDBViewModel = hiltViewModel()
     val context = LocalContext.current
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER

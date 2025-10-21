@@ -216,6 +216,12 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
         return result;
     }
 
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
     public PlanogrammVizitShowcaseSDB copy() {
         PlanogrammVizitShowcaseSDB copy = new PlanogrammVizitShowcaseSDB();
         copy.id = this.id;

@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.util.TypedValue
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,11 +54,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MarkerInfoWindow
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Activities.MenuMainActivity.getFormattedMessage
 import ua.com.merchik.merchik.Globals
@@ -75,6 +75,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 
@@ -206,10 +207,10 @@ fun MapsDialog(
 
 // ---------------- StorePoint ----------------
 data class StorePoint(
-    val id: String,
+    val id: String?,
     val lat: Double,
     val lon: Double,
-    val title: String,
+    val title: String?,
     val wp: WpDataDB? = null,
     val dataItemsUI: DataItemUI? = null
 )
@@ -250,7 +251,8 @@ fun String.parseDoubleSafe(): Double? {
     return s.toDoubleOrNull()
 }
 
-private fun formatSum(sum: Double): String = "${sum.roundToInt()} грн"
+private fun formatSum(sum: Double?): String =
+    sum?.let { "${it.roundToInt()} грн" } ?: ""
 
 private fun List<FieldValue>.addrIdInt(): Int? =
     stringByKey("addr_id")?.trim()?.toIntOrNull()
@@ -268,22 +270,26 @@ fun StoresMap(
     contextUI: ContextUI,
     onOpenContextMenu: (WpDataDB, ContextUI) -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val initialLat = if (isValidLatLon(userLat, userLon)) userLat else 0.0
+    val initialLon = if (isValidLatLon(userLat, userLon)) userLon else 0.0
+    val initialZoom = if (isValidLatLon(userLat, userLon)) 14f else 2f
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(userLat, userLon), 14f)
+        position = CameraPosition.fromLatLngZoom(LatLng(initialLat, initialLon), initialZoom)
     }
 
-    val context = LocalContext.current
     var showPerevopros by remember { mutableStateOf(false) }
-    var selectedStableId by remember { mutableStateOf<Long?>(null) } // <-- новый state
-    var selectedWpDataDB by remember { mutableStateOf<WpDataDB?>(null) } // <-- новый state
-
+    var selectedStableId by remember { mutableStateOf<Long?>(null) }
+    var selectedWpDataDB by remember { mutableStateOf<WpDataDB?>(null) }
 
     val green = colorResource(id = R.color.ufmd_accept_t)
 
-    // --- Агрегация по addr_id ---
+    val addressCache = remember { mutableStateMapOf<Int, AddressSDB?>() }
+
+    // aggregation for badges (unchanged)
     val cashAggByAddrId by remember(items) {
         derivedStateOf {
             items.asSequence()
@@ -301,10 +307,7 @@ fun StoresMap(
         }
     }
 
-    // Кеш адресов
-    val addressCache = remember { mutableStateMapOf<Int, AddressSDB?>() }
-
-    // Собираем список уникальных addr_id, для которых может понадобиться подгрузка
+    // address cache filling (unchanged)
     val missingIds by remember(items, addressCache.keys) {
         derivedStateOf {
             items.asSequence()
@@ -312,19 +315,17 @@ fun StoresMap(
                 .distinct()
                 .filter { id ->
                     if (addressCache.containsKey(id)) return@filter false
-                    // проверяем наличие валидных coords/title в первой записи с этим id
                     val first = items.firstOrNull { it.rawFields.addrIdInt() == id } ?: return@filter true
                     val f = first.rawFields
-                    val lat = f.stringByKey("addr_location_xd")?.parseDoubleSafe()
-                    val lon = f.stringByKey("addr_location_yd")?.parseDoubleSafe()
-                    val title = f.stringByKey("addr_txt")
+                    val lat = f.stringByKey("log_addr_location_xd")?.parseDoubleSafe()
+                    val lon = f.stringByKey("log_addr_location_yd")?.parseDoubleSafe()
+                    val title = f.stringByKey("log_addr_txt")
                     (lat == null || lon == null || !isValidLatLon(lat, lon) || title.isNullOrBlank())
                 }
                 .toList()
         }
     }
 
-    // Загружаем недостающие адреса
     LaunchedEffect(missingIds) {
         if (missingIds.isEmpty()) return@LaunchedEffect
         withContext(Dispatchers.IO) {
@@ -332,7 +333,6 @@ fun StoresMap(
                 val addr = try {
                     fetchAddressById(id)
                 } catch (e: Exception) {
-                    // обработать ошибку (лог/Crashlytics) при необходимости
                     null
                 }
                 withContext(Dispatchers.Main) {
@@ -342,19 +342,22 @@ fun StoresMap(
         }
     }
 
-    // Формируем список StorePoint — берём данные из поля, а если чего-то нет — из кэша
-    val stores by remember(items, addressCache) {
+    // --- fallbackStores: old behaviour (used when NO log_* center) ---
+    val fallbackStores by remember(items, addressCache) {
         derivedStateOf {
             items.mapNotNull { item ->
                 val f = item.rawFields
-                val idStr = f.stringByKey("addr_id") ?: return@mapNotNull null
-                val idInt = idStr.toIntOrNull()
+                val idStr = f.stringByKey("addr_id")
+                val idInt = idStr?.toIntOrNull()
 
+                // old logic: prefer addr_location_* then fallback to CoordX/CoordY
                 var lat = f.stringByKey("addr_location_xd")?.parseDoubleSafe()
+                    ?: f.stringByKey("CoordX")?.parseDoubleSafe()
                 var lon = f.stringByKey("addr_location_yd")?.parseDoubleSafe()
-                var title = f.stringByKey("addr_txt")
+                    ?: f.stringByKey("CoordY")?.parseDoubleSafe()
+                var title = f.stringByKey("addr_txt")?.takeIf { it.isNotBlank() }
 
-                if ((lat == null || lon == null || !isValidLatLon(lat, lon) || title.isNullOrBlank()) && idInt != null) {
+                if ((!isValidLatLon(lat, lon) || title.isNullOrBlank()) && idInt != null) {
                     addressCache[idInt]?.let { addr ->
                         if (lat == null) lat = addr.locationXd?.toDouble()
                         if (lon == null) lon = addr.locationYd?.toDouble()
@@ -366,40 +369,119 @@ fun StoresMap(
 
                 val wp = item.rawObj.filterIsInstance<WpDataDB>().firstOrNull()
                 StorePoint(
-                    id = idStr,
+                    id = idStr ?: "${lat}_${lon}",
                     lat = lat!!,
                     lon = lon!!,
-                    title = title ?: "ТТ №$idStr",
+                    title = title ?: "Результат",
                     wp = wp,
                     dataItemsUI = item
                 )
-            }.distinctBy { it.id }
+            }.distinctBy { it.id ?: "${it.lat}_${it.lon}" }
         }
     }
 
-    // При изменении магазинов — перемещаем камеру
-    LaunchedEffect(stores) {
-        val points = stores.map { LatLng(it.lat, it.lon) }
-        when {
-            points.size >= 2 -> {
-                val builder = LatLngBounds.builder()
-                points.forEach { builder.include(it) }
-                if (isValidLatLon(userLat, userLon)) builder.include(LatLng(userLat, userLon))
-                val bounds = builder.build()
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 80))
-            }
-            points.size == 1 -> {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(points.first(), 14f))
-            }
-            else -> {
-                if (isValidLatLon(userLat, userLon)) {
-                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(userLat, userLon), 14f))
+    // --- storeCenterPoint: built only from log_* fields (if exist) ---
+    val storeCenterPoint by remember(items) {
+        derivedStateOf {
+            // find first item that has explicit log_* coords
+            val candidate = items.firstOrNull { item ->
+                val f = item.rawFields
+                val lx = f.stringByKey("log_addr_location_xd")?.parseDoubleSafe()
+                val ly = f.stringByKey("log_addr_location_yd")?.parseDoubleSafe()
+                isValidLatLon(lx, ly)
+            } ?: return@derivedStateOf null
+
+            val f = candidate.rawFields
+            val lx = f.stringByKey("log_addr_location_xd")!!.parseDoubleSafe()!!
+            val ly = f.stringByKey("log_addr_location_yd")!!.parseDoubleSafe()!!
+            val title = f.stringByKey("log_addr_txt") ?: candidate.rawObj.filterIsInstance<WpDataDB>().firstOrNull()?.addr_txt
+            val addrId = candidate.rawFields.addrIdInt()
+            Triple(LatLng(lx, ly), title ?: "Магазин", addrId)
+        }
+    }
+
+    // --- positionPoints: ALWAYS use CoordX/CoordY for positions when storeCenter exists.
+    // If no store center, we'll use fallbackStores to render (old behaviour).
+    val positionPoints by remember(items) {
+        derivedStateOf {
+            items.mapNotNull { item ->
+                val f = item.rawFields
+                val cx = f.stringByKey("CoordX")?.parseDoubleSafe()
+                val cy = f.stringByKey("CoordY")?.parseDoubleSafe()
+                if (!isValidLatLon(cx, cy)) return@mapNotNull null
+                val idStr = f.stringByKey("addr_id")
+                val wp = item.rawObj.filterIsInstance<WpDataDB>().firstOrNull()
+                val title = f.stringByKey("addr_txt") ?: wp?.addr_txt ?: "Результат"
+                StorePoint(
+                    id = idStr ?: "${cx}_${cy}",
+                    lat = cx!!,
+                    lon = cy!!,
+                    title = title,
+                    wp = wp,
+                    dataItemsUI = item
+                )
+            }.distinctBy { it.id ?: "${it.lat}_${it.lon}" }
+        }
+    }
+
+    // haversine
+    fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = kotlin.math.sin(dLat / 2).pow(2.0) +
+                kotlin.math.cos(Math.toRadians(lat1)) *
+                kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(dLon / 2).pow(2.0)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        return earthRadius * c
+    }
+
+    // store icon
+    val storeIcon: BitmapDescriptor? = remember {
+        try {
+            val bmp = context.renderVector(R.drawable.ic_store, context.dp(48f))
+            BitmapDescriptorFactory.fromBitmap(bmp)
+        } catch (t: Throwable) {
+            null
+        }
+    }
+
+    // camera includes either storeCenter + positionPoints + user OR fallbackStores + user
+    LaunchedEffect(storeCenterPoint, positionPoints.map { it.lat to it.lon }, fallbackStores.map { it.lat to it.lon }, userLat, userLon) {
+        delay(80)
+        val latLngs = mutableListOf<LatLng>()
+        if (storeCenterPoint != null) {
+            latLngs.add(storeCenterPoint!!.first)
+            positionPoints.forEach { latLngs.add(LatLng(it.lat, it.lon)) }
+        } else {
+            fallbackStores.forEach { latLngs.add(LatLng(it.lat, it.lon)) }
+        }
+        if (isValidLatLon(userLat, userLon)) latLngs.add(LatLng(userLat, userLon))
+
+        try {
+            when {
+                latLngs.size >= 2 -> {
+                    val builder = LatLngBounds.builder()
+                    latLngs.forEach { builder.include(it) }
+                    val bounds = builder.build()
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 80))
+                }
+                latLngs.size == 1 -> {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14f))
+                }
+                else -> {
+                    if (isValidLatLon(userLat, userLon)) {
+                        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(userLat, userLon), 14f))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            val p = latLngs.firstOrNull()
+            p?.let { cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(it, 12f)) }
         }
     }
 
-    // prepare badge factories (remember внутри)
     val getBadgePin = rememberBadgePinCache(
         pinRes = R.drawable.ic_3,
         pinHeightDp = 44f,
@@ -423,18 +505,16 @@ fun StoresMap(
         pinTint = ContextCompat.getColor(context, R.color.maps_dark_blue)
     )
 
+    // Drawing
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState
     ) {
-        // маркер пользователя
+        // user marker (always)
         if (isValidLatLon(userLat, userLon)) {
             MarkerInfoWindow(
                 state = MarkerState(position = LatLng(userLat, userLon)),
                 icon = getBadgeYou(1),
-                onInfoWindowClick = {
-                    Toasty.normal(context, getFormattedMessage()).show()
-                }
             ) {
                 InfoBalloonText(
                     title = "Ваше местоположение",
@@ -444,51 +524,115 @@ fun StoresMap(
             }
         }
 
-        // маркеры магазинов
-        stores.forEach { s ->
-            val idInt = s.id.toIntOrNull()
-            val agg = idInt?.let { cashAggByAddrId[it] }
-            val count = agg?.first ?: 0
-            val iconDesc: BitmapDescriptor =
-                if (count > 0) getBadgePin(count) else BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+        if (storeCenterPoint != null) {
+            // --- SCENARIO A: there is explicit store center from log_* ---
+            val (centerLatLng, centerTitle, _) = storeCenterPoint!!
+            val radiusMeters = Globals.distanceMin.toDouble().coerceAtLeast(0.0)
 
-            val subtitle = agg?.let { (cnt, sum) -> "$cnt/${formatSum(sum)}" }
+            Circle(
+                center = centerLatLng,
+                radius = radiusMeters,
+                strokeColor = Color.Gray,
+                fillColor = Color(0x3300FF00),
+                clickable = false,
+                strokeWidth = 2f
+            )
 
             MarkerInfoWindow(
-                state = MarkerState(position = LatLng(s.lat, s.lon)),
-                onInfoWindowClick = {
-                    // если у записи есть объект wp и пользователь соответствует условию — открыт контекст
-                    if (count == 1 && s.wp?.user_id != 14041) {
-                        s.wp?.let { onOpenContextMenu(it, contextUI) }
-                    } else {
-
-                        selectedWpDataDB = s.wp
-                        // сохраняем stableId локально, но НЕ эмитим scroll пока пользователь не подтвердит
-                        selectedStableId = s.dataItemsUI?.stableId
-
-                        showPerevopros = true
-                    }
-                },
-                icon = iconDesc
+                state = MarkerState(position = centerLatLng),
+                icon = storeIcon ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
             ) {
-                InfoBalloonText(
-                    title = s.title,
-                    subtitle = subtitle,
-                    tailAlignment = 0.5f,
-                    tailOnBottom = true
-                )
+                InfoBalloonText(title = centerTitle ?: "Магазин", tailAlignment = 0.5f, tailOnBottom = true)
+            }
+
+            // draw positionPoints (CoordX/CoordY) colored by distance to center
+            positionPoints.forEach { p ->
+                val idInt = p.id?.toIntOrNull()
+                val agg = idInt?.let { cashAggByAddrId[it] }
+                val count = agg?.first ?: 0
+                val subtitle = agg?.let { (cnt, sum) -> "${cnt}/${formatSum(sum)}" } ?: ""
+
+                val insideRadius = run {
+                    val d = distanceMeters(centerLatLng.latitude, centerLatLng.longitude, p.lat, p.lon)
+                    d <= Globals.distanceMin
+                }
+
+                val iconDesc: BitmapDescriptor = when {
+                    insideRadius && count > 0 -> getBadgePin(count)
+                    insideRadius -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    !insideRadius && count > 0 -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                }
+
+                MarkerInfoWindow(
+                    state = MarkerState(position = LatLng(p.lat, p.lon)),
+                    onInfoWindowClick = {
+                        if (count == 1 && p.wp?.user_id != 14041) {
+                            p.wp?.let { onOpenContextMenu(it, contextUI) }
+                        } else {
+                            p.wp?.let {
+                                selectedWpDataDB = p.wp
+                                selectedStableId = p.dataItemsUI?.stableId
+                                showPerevopros = true
+                            }
+                        }
+                    },
+                    icon = iconDesc
+                ) {
+                    InfoBalloonText(
+                        title = p.title ?: "Позиция",
+                        subtitle = subtitle,
+                        tailAlignment = 0.5f,
+                        tailOnBottom = true
+                    )
+                }
+            }
+        } else {
+            // --- SCENARIO B: no log_* store center — fallback to old behavior using fallbackStores ---
+            fallbackStores.forEach { s ->
+                val idInt = s.id?.toIntOrNull()
+                val agg = idInt?.let { cashAggByAddrId[it] }
+                val count = agg?.first ?: 0
+                val subtitle = agg?.let { (cnt, sum) -> "${cnt}/${formatSum(sum)}" } ?: ""
+
+                // previous logic: insideRadius defaults to true when no store center
+                val insideRadius = true
+
+                val iconDesc: BitmapDescriptor =
+                    if (insideRadius && count > 0) getBadgePin(count)
+                    else if (insideRadius) BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    else BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+
+                MarkerInfoWindow(
+                    state = MarkerState(position = LatLng(s.lat, s.lon)),
+                    onInfoWindowClick = {
+                        if (count == 1 && s.wp?.user_id != 14041) {
+                            s.wp?.let { onOpenContextMenu(it, contextUI) }
+                        } else {
+                            s.wp?.let {
+                                selectedWpDataDB = s.wp
+                                selectedStableId = s.dataItemsUI?.stableId
+                                showPerevopros = true
+                            }
+                        }
+                    },
+                    icon = iconDesc
+                ) {
+                    InfoBalloonText(
+                        title = s.title ?: "Точнiсть: 13.5132065",
+                        subtitle = subtitle,
+                        tailAlignment = 0.5f,
+                        tailOnBottom = true
+                    )
+                }
             }
         }
     }
 
-    // Диалог перехода к посещениям
+    // confirm dialog (unchanged)
     if (showPerevopros) {
-        val sortingFieldAdr = remember {
-            SortingField("addr_txt", viewModel.getTranslateString("Адреса", 1101), 1)
-        }
-        val sortingFieldDate = remember {
-            SortingField("dt", viewModel.getTranslateString("Дата", 1100), 1)
-        }
+        val sortingFieldAdr = remember { SortingField("addr_txt", viewModel.getTranslateString("Адреса", 1101), 1) }
+        val sortingFieldDate = remember { SortingField("dt", viewModel.getTranslateString("Дата", 1100), 1) }
 
         LaunchedEffect(sortingFieldAdr, sortingFieldDate) {
             viewModel.updateSorting(sortingFieldAdr, 0)
@@ -496,7 +640,7 @@ fun StoresMap(
         }
 
         MessageDialog(
-            title = "Перейти к посещениям",
+            title = "Перейти к посещенням",
             status = DialogStatus.NORMAL,
             subTitle = selectedWpDataDB?.addr_txt,
             message = "Показать все работы, по этому адресу за период с ${uiState.filters?.rangeDataByKey?.start?.toDayMonthFormat()} " +
@@ -504,18 +648,10 @@ fun StoresMap(
                     "\nНажав 'Применить' система отобразит вам все клиенто-посещения по этому адресу и выделит их цветом",
             onDismiss = { showPerevopros = false },
             onConfirmAction = {
-                // эмитим запрос на скролл (если есть сохранённый stableId)
-                selectedStableId?.let { id ->
-                    viewModel.requestScrollToVisit(id)
-                }
-
-                selectedWpDataDB?.let {
-                    viewModel.highlightByAddrId(it.addr_id.toString(), color = green)
-                }
-
+                selectedStableId?.let { id -> viewModel.requestScrollToVisit(id) }
+                selectedWpDataDB?.let { viewModel.highlightByAddrId(it.addr_id.toString(), color = green) }
                 showPerevopros = false
                 onDismiss()
-//                Toasty.normal(context, getFormattedMessage()).show()
             },
             onCancelAction = { showPerevopros = false }
         )
@@ -667,7 +803,7 @@ private fun Context.makePinWithBadgeIcon(
 }
 
 @Composable
-private fun rememberBadgePinCache(
+fun rememberBadgePinCache(
     @DrawableRes pinRes: Int,
     pinHeightDp: Float = 44f,
     badgeDiameter: Dp = 22.dp,
@@ -681,7 +817,17 @@ private fun rememberBadgePinCache(
     val ctx = LocalContext.current
     val cache = remember { mutableMapOf<Int, BitmapDescriptor>() }
 
-    return remember(pinRes, pinHeightDp, badgeDiameter, badgeYOffsetK, badgeBg, badgeBorder, badgeText, badgeIconRes, pinTint) {
+    return remember(
+        pinRes,
+        pinHeightDp,
+        badgeDiameter,
+        badgeYOffsetK,
+        badgeBg,
+        badgeBorder,
+        badgeText,
+        badgeIconRes,
+        pinTint
+    ) {
         { n: Int ->
             val key = n.coerceIn(1, 9)
             cache.getOrPut(key) {

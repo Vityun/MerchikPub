@@ -319,8 +319,14 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "wp_additional_subtitle",
-                "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
+                "execute_current_work_positions",
+                "Выполнить текущую работу<br>" +
+                        "<font color='gray'>Посещение от</font> %s" +
+                        "<br><font color='gray'>Клиент:</font> %s" +
+                        "<br><font color='gray'>Адрес:</font> %s" +
+                        "<br><font color='gray'>Премiя (план):</font> %s грн." +
+                        "<br><font color='gray'>СКЮ (количество товарных позиций):</font> %s" +
+                        "<br><font color='gray'>Середній час роботи:</font> %s хв",
                 "app",
                 "all",
                 ""
@@ -328,8 +334,8 @@ public class Translate {
 
 //        res.add(new AddTranslation(
 //                "2",
-//                "maps_dialog_tooltip_3",
-//                "Нажав 'Применить' система отобразит вам все клиенто-посещения по этому адресу и выделит их цветом",
+//                "document_will_not_be_processed",
+//                "Документ проведен не будет!",
 //                "app",
 //                "all",
 //                ""

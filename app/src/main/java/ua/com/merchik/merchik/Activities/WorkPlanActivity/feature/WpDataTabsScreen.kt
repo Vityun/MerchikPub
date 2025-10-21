@@ -76,7 +76,7 @@ fun WpDataTabsScreen() {
         stringResource(R.string.title_0)
     ) else listOf(
         stringResource(R.string.title_0),
-//        "Доп.Заработок",
+        "Доп.Заработок",
 //        "Заявки"
     )
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
@@ -249,7 +249,7 @@ fun WpDataTabsScreen() {
         when (selectedTabIndex) {
             0 -> WpDataContentTab()
             1 -> OtherComposeTab()
-            2 -> AdditionalContentTab()
+//            2 -> AdditionalContentTab()
         }
     }
 

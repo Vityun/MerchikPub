@@ -6,13 +6,19 @@ import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.Manifest;
+import android.animation.*;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +37,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,7 +47,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import kotlin.Unit;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -326,6 +336,18 @@ public class DetailedReportOptionsFrag extends Fragment {
                 }
             }
         });
+
+        viewModel.getScrollToIdEvent().observe(this, new Observer<OptionsDB>() {
+            @Override
+            public void onChanged(OptionsDB optionsDB) {
+                int scrollPosition = recycleViewDRAdapter.getItemPositionForOptionControl(optionsDB);
+                if (scrollPosition > 0) {
+                    rvContacts.smoothScrollToPosition(scrollPosition);
+                    // запустить попытки найти ViewHolder и затем анимировать
+                    waitForViewAndHighlight(scrollPosition, rvContacts);
+                }
+            }
+        });
         return v;
     }
 
@@ -345,9 +367,9 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             if (optionsButtons.isEmpty()) {
                 ProgressViewModel progress = new ProgressViewModel(1);
-                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(),progress);
+                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
                 loadingDialog.show();
-                progress.onNextEvent("Завантажую опції до цього відвідування",2000);
+                progress.onNextEvent("Завантажую опції до цього відвідування", 2000);
 
                 TablesLoadingUnloading tlu = new TablesLoadingUnloading();
                 tlu.downloadOptionsByDAD2(wpDataDB.getCode_dad2(), new Clicks.click() {
@@ -430,8 +452,10 @@ public class DetailedReportOptionsFrag extends Fragment {
                     });
                 }
 
-                if (recycleViewDRAdapter != null)
+                if (recycleViewDRAdapter != null) {
                     recycleViewDRAdapter.setDataButtons(optionsButtons);
+                    recycleViewDRAdapter.attachRecyclerView(rvContacts);
+                }
             }
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
@@ -562,17 +586,55 @@ public class DetailedReportOptionsFrag extends Fragment {
                 Globals.writeToMLOG("ERROR", "Вибрати з галереї", "requestReadExternalStoragePermission: " + e.getMessage());
             }
         }
+    }
 
-        // callback
-        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-            if (requestCode == PermissionUtils.READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE) {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission granted, you can now access external storage
+    // ---------- вспомогательный метод в Activity/Fragment (Java) ----------
+    private void waitForViewAndHighlight(final int pos, final RecyclerView recyclerView) {
+        final int MAX_ATTEMPTS = 12;      // сколько раз попробуем
+        final long DELAY_MS = 80L;       // интервал между попытками
+        final Handler handler = new Handler(Looper.getMainLooper());
+        final AtomicInteger attempts = new AtomicInteger(0);
+
+        Runnable tryRunnable = new Runnable() {
+            @Override
+            public void run() {
+                attempts.incrementAndGet();
+                RecyclerView.ViewHolder vh = recyclerView.findViewHolderForAdapterPosition(pos);
+                if (vh != null) {
+                    // нашли view — выполняем подсветку и пульсацию
+                    highlightAndTada(vh.itemView);
+                } else if (attempts.get() < MAX_ATTEMPTS) {
+                    handler.postDelayed(this, DELAY_MS);
                 } else {
-                    // Permission denied, handle accordingly
+                    // Не удалось найти view за отведённое время — ничего не делаем
                 }
             }
-        }
+        };
+
+        // запускаем первый раз чуть позже, чтобы scroll начал выполняться
+        handler.postDelayed(tryRunnable, 120);
+    }
+
+    // ---------- анимация подсветки + "тада" ----------
+    private void highlightAndTada(final View itemView) {
+        if (itemView == null) return;
+
+        // Сохраняем оригинальный фон
+//        final Drawable originalBg = itemView.getBackground();
+
+        // Цвет подсветки (можешь заменить на свой)
+//        final int highlightColor = ContextCompat.getColor(itemView.getContext(), R.color.colorInetYellow);
+
+        // Меняем фон на цвет подсветки
+//        itemView.setBackgroundColor(highlightColor);
+
+        // Запускаем пульсацию
+        YoYo.with(Techniques.Pulse)
+                .duration(850)
+                .repeat(15)
+//                .onEnd(animator -> itemView.setBackground(originalBg))
+                .playOn(itemView);
+
     }
 
 

@@ -1440,4 +1440,10 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         return WPDataBDOverride.INSTANCE.getFieldsForOrderOnUI();
     }
 
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
 }

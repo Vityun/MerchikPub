@@ -2803,12 +2803,12 @@ public class Options {
                     // Всё хорошо с опцией контроля
                 } else {
                     // Нужно отобразить сообщение что всё плохо
-                    DialogData dialog = new DialogData(context);
-                    dialog.setTitle("Ошибка. Проверка.");
-                    dialog.setDialogIco();
-                    dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
+//                    DialogData dialog = new DialogData(context);
+//                    dialog.setTitle("Ошибка. Проверка.");
+//                    dialog.setDialogIco();
+//                    dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
+//                    dialog.setClose(dialog::dismiss);
+//                    dialog.show();
                 }
                 break;
 

@@ -588,14 +588,32 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Выполнить текущую работу\n" +
-                                "<font color='gray'>Посещение от</font> ${
-                                    Clock.getHumanTime_dd_MMMM(
-                                        wp.dt.time
-                                    )
-                                }" +
-                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
-                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+//                        message = "Выполнить текущую работу\n" +
+//                                "<font color='gray'>Посещение от</font> ${
+//                                    Clock.getHumanTime_dd_MMMM(
+//                                        wp.dt.time
+//                                    )
+//                                }" +
+//                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
+//                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}" +
+//                                "\n<font color='gray'>Премiя (план):</font> ${wp.cash_ispolnitel} грн." +
+//                                "\n<font color='gray'>СКЮ (количество товарных позиций):</font> ${wp.sku_plan}" +
+//                                "\n<font color='gray'>Середній час роботи:</font> ${wp.duration} хв",
+                        message = String.format(
+                            "Выполнить текущую работу<br>" +
+                                    "<font color='gray'>Посещение от</font> %s" +
+                                    "<br><font color='gray'>Клиент:</font> %s" +
+                                    "<br><font color='gray'>Адрес:</font> %s" +
+                                    "<br><font color='gray'>Премiя (план):</font> %s грн." +
+                                    "<br><font color='gray'>СКЮ (количество товарных позиций):</font> %s" +
+                                    "<br><font color='gray'>Середній час роботи:</font> %s хв",
+                            Clock.getHumanTime_dd_MMMM(wp.dt.time),
+                            wp.client_txt,
+                            wp.addr_txt,
+                            wp.cash_ispolnitel,
+                            wp.sku_plan,
+                            wp.duration
+                        ),
                         status = DialogStatus.NORMAL
                     )
                 )

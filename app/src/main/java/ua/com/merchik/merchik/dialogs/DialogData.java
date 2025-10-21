@@ -7,11 +7,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.*;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -27,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -113,6 +110,8 @@ public class DialogData {
     public ImageButton imgBtnCall;
     public ImageButton filter;
 
+    public ImageButton imgButtonLighting;
+
     private Button ok, okRv, okRecycler, cancel, cancel2;
     private Button operationButton1, operationButton2;
     // ---- UI end ----
@@ -134,6 +133,7 @@ public class DialogData {
 
     public DialogData(Context context) {
         this.context = context;
+        DialogManager.register(this);
 
         dialog = new Dialog(context);
         dialog.setCancelable(true);
@@ -160,6 +160,7 @@ public class DialogData {
         imgBtnVideoLesson = dialog.findViewById(R.id.imageButtonVideoLesson);
         imgBtnCall = dialog.findViewById(R.id.imageButtonCall);
         filter = dialog.findViewById(R.id.filter);
+        imgButtonLighting = dialog.findViewById(R.id.imageButtonLighting);
 
         merchikIco = dialog.findViewById(R.id.merchik_ico);
 
@@ -190,7 +191,7 @@ public class DialogData {
 
     }
 
-    public boolean isDialogShow(){
+    public boolean isDialogShow() {
         return dialog.isShowing();
     }
 
@@ -203,7 +204,10 @@ public class DialogData {
     }
 
     public void dismiss() {
-        if (dialog != null) dialog.dismiss();
+        if (dialog != null) {
+            dialog.dismiss();
+            DialogManager.unregister(this);
+        }
     }
 
     //---------------
@@ -236,8 +240,8 @@ public class DialogData {
         }
     }
 
-    public void setTextScroll(){
-        if (text != null && !text.equals("")){
+    public void setTextScroll() {
+        if (text != null && !text.equals("")) {
             text.setMovementMethod(new ScrollingMovementMethod());
             text.setVerticalScrollBarEnabled(true);
             text.setScrollbarFadingEnabled(false);
@@ -266,9 +270,9 @@ public class DialogData {
         });
     }
 
-    public String getEditTextSearchText(){
+    public String getEditTextSearchText() {
         String res = "";
-        if (this.editTextSearch != null){
+        if (this.editTextSearch != null) {
             res = this.editTextSearch.getText().toString();
         }
         return res;
@@ -411,11 +415,11 @@ public class DialogData {
                         ViewListSDB viewListSDB = new ViewListSDB();
                         viewListSDB.lessonId = finalData.getID();
                         viewListSDB.merchikId = Globals.userId;
-                        viewListSDB.dt = System.currentTimeMillis()/1000;
+                        viewListSDB.dt = System.currentTimeMillis() / 1000;
                         SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
                         Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + finalData.getID());
                         click.click();
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
                     }
 
@@ -531,12 +535,12 @@ public class DialogData {
         Log.e("setImgBtnCall", "i`m here");
 
         imgBtnCall.setVisibility(View.VISIBLE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            imgBtnCall.getBackground().setTint(context.getResources().getColor(R.color.greenCol));
-        } else {
-            imgBtnCall.setBackgroundColor(Color.GREEN);
-        }
-        imgBtnCall.setColorFilter(Color.WHITE);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            imgBtnCall.getBackground().setTint(context.getResources().getColor(R.color.greenCol));
+//        } else {
+//            imgBtnCall.setBackgroundColor(Color.GREEN);
+//        }
+        imgBtnCall.setColorFilter(Color.DKGRAY);
         imgBtnCall.setOnClickListener((v -> {
             Globals.telephoneCall(context, HELPDESK_PHONE_NUMBER);
         }));
@@ -740,7 +744,7 @@ public class DialogData {
             case TEXT:
                 ok.setVisibility(View.GONE);
                 editText.setVisibility(View.VISIBLE);
-                if (data.contains("Ваш")){
+                if (data.contains("Ваш")) {
                     editText.setHint(data);
                 } else {
                     editText.setText(data);
@@ -1016,7 +1020,7 @@ public class DialogData {
                         spinner2.setSelection(spinnerPosition);
                     }
 
-                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData(){
+                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData() {
                         public void onItemSelected(AdapterView<?> parent,
                                                    View view, int pos, long id) {
                             try {
@@ -1104,10 +1108,24 @@ public class DialogData {
                 break;
         }
 
+        // Очень важно: показываем клавиатуру ПОСЛЕ показа диалога
+        dialog.setOnShowListener(d -> {
+            if (editText.getVisibility() == View.VISIBLE) {
+                editText.requestFocus();
+                editText.postDelayed(() -> {
+                    InputMethodManager imm = (InputMethodManager)
+                            context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+                    }
+                }, 100);
+            }
+        });
+
         Log.e("setOperation", "All.result: " + result);
     }
 
-    public void setOperationButtons(String button1, DialogClickListener listenerButton1, String button2, DialogClickListener listenerButton2){
+    public void setOperationButtons(String button1, DialogClickListener listenerButton1, String button2, DialogClickListener listenerButton2) {
         operationLayout.setVisibility(View.VISIBLE);
         operationButton1.setVisibility(View.VISIBLE);
         operationButton2.setVisibility(View.VISIBLE);
@@ -1220,16 +1238,16 @@ public class DialogData {
     }
 
     public void setAdditionalOperationRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout) {
-            additionalOperationLayout.setVisibility(View.VISIBLE);
-            rView.setVisibility(View.VISIBLE);
-            textView42.setVisibility(View.VISIBLE);
+        additionalOperationLayout.setVisibility(View.VISIBLE);
+        rView.setVisibility(View.VISIBLE);
+        textView42.setVisibility(View.VISIBLE);
 
-            GradientDrawable backgroundGradient = (GradientDrawable) rView.getBackground();
-            backgroundGradient.setStroke(2, Color.parseColor("#B1BCBE"));
+        GradientDrawable backgroundGradient = (GradientDrawable) rView.getBackground();
+        backgroundGradient.setStroke(2, Color.parseColor("#B1BCBE"));
 
-            rView.setHasFixedSize(true);
-            rView.setLayoutManager(layout);
-            rView.setAdapter(adapter);
+        rView.setHasFixedSize(true);
+        rView.setLayoutManager(layout);
+        rView.setAdapter(adapter);
     }
 
     public void setRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout) {
@@ -1250,7 +1268,7 @@ public class DialogData {
         }
     }
 
-    public void setRecyclerFilterSearch(){
+    public void setRecyclerFilterSearch() {
         editTextFilter.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
@@ -1334,6 +1352,19 @@ public class DialogData {
         });
     }
 
+    public void setUnlockMode(DialogClickListener clickListener) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            imgButtonLighting.getBackground().setTint(context.getColor(R.color.colorInetYellow));
+//        } else {
+//            imgButtonLighting.setBackgroundColor(Color.GREEN);
+//        }
+        imgButtonLighting.setVisibility(View.VISIBLE);
+        imgButtonLighting.setColorFilter(Color.DKGRAY);
+        imgButtonLighting.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+        });
+    }
+
     public void setCancel2(CharSequence setButtonText, DialogClickListener clickListener) {
         cancel2.setVisibility(View.VISIBLE);
         cancel2.setText(setButtonText);
@@ -1345,7 +1376,7 @@ public class DialogData {
 
     public void setDialogErrorColor() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            drawable.setTint(context.getResources().getColor(R.color.red_error));
+            drawable.setTint(context.getColor(R.color.red_error));
         }
     }
 
@@ -1359,11 +1390,11 @@ public class DialogData {
         layoutDialog.setBackground(drawable);
     }
 
-    public void showFilter(DialogClickListener clickListener){
+    public void showFilter(DialogClickListener clickListener) {
         layoutFilter.setVisibility(View.VISIBLE);
         editTextFilter.setVisibility(View.VISIBLE);
         filter.setVisibility(View.VISIBLE);
-        filter.setOnClickListener(v->{
+        filter.setOnClickListener(v -> {
 
             // Хрень с датой по умолчанию для фильтра, но тут надо будет придумать какой-то регулятор ее
             // Данные для фильтра даты
