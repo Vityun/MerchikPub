@@ -99,7 +99,7 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) document;
 
-            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000); //+TODO CHANGE DATE
+//            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000); //+TODO CHANGE DATE
 
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();

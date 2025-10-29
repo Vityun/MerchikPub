@@ -27,7 +27,9 @@ import com.google.android.gms.maps.model.LatLngBounds
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
+import ua.com.merchik.merchik.features.maps.domain.distanceMeters
 import ua.com.merchik.merchik.features.maps.domain.formatSum
+import ua.com.merchik.merchik.features.maps.domain.haversine
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
@@ -42,6 +44,7 @@ fun StoresMap(
     val userLat = s.userLat
     val userLon = s.userLon
 
+    val circleR = s.circleRadiusMeters
 
 // provide icons/badges in UI as before
     val context = LocalContext.current
@@ -105,6 +108,16 @@ fun StoresMap(
         pinTint = ContextCompat.getColor(context, R.color.selected_item)
     )
 
+    // ---- ЛИНИЯ МАРШРУТА: сортируем по времени и соединяем ----
+    val pathPoints = remember(s.pointsUi) {
+        s.pointsUi
+            .asSequence()
+            .filter { it.point.coordTimeMillis != null }
+            .sortedBy { it.point.coordTimeMillis }                  // порядок по времени
+            .map { LatLng(it.point.lat, it.point.lon) }
+            .toList()
+    }
+
 
     com.google.maps.android.compose.GoogleMap(
         modifier = Modifier.fillMaxSize(),
@@ -140,6 +153,7 @@ fun StoresMap(
             }
 
             Log.e("!!!MAP!!!", "s point size: ${s.pointsUi.size}")
+            Log.e("!!!MAP!!!", "with time: " + s.pointsUi.count { it.point.coordTimeMillis != null })
 
             // ---- маленькие круглые маркеры для КАЖДОЙ точки ----
             s.pointsUi.forEachIndexed { index, pUi ->
@@ -171,8 +185,34 @@ fun StoresMap(
                     }
                 }
             }
+            if (pathPoints.size >= 2) {
+                com.google.maps.android.compose.Polyline(
+                    points = pathPoints,
+                    color = Color(0xFF1976D2),     // синий (можно свой colorResource)
+                    width = 6f,
+                    geodesic = true
+                )
+            }
         } else {
             // FromWPdata — твой текущий код с бейджами (без изменений)
+            val uLat = userLat
+            val uLon = userLon
+
+            // Проверка: если есть хотя бы одна точка с wp.user_id == 14041
+            val isUserRNO = s.pointsUi.any { it.point.wp?.user_id == 14041 }
+
+            // 2) Рисуем круг (если есть валидный центр)
+            if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
+                com.google.maps.android.compose.Circle(
+                    center = LatLng(uLat!!, uLon!!),
+                    radius = circleR,
+                    strokeColor = Color.Gray,
+                    fillColor = Color(0x221E88E5), // лёгкая заливка (прозрачная)
+                    strokeWidth = 2f
+                )
+            }
+
+            // 3) Точки: альфа = 1f если внутри круга, иначе 0.4f (полупрозрачные)
             s.pointsUi.forEach { pUi ->
                 val iconDesc = when {
                     pUi.insideRadius && pUi.count > 0 -> getBadgePin(pUi.count)
@@ -180,14 +220,20 @@ fun StoresMap(
                     !pUi.insideRadius && pUi.count > 0 -> redDefault
                     else -> redDefault
                 }
-                val subtitle = if (pUi.count > 0) "${pUi.count} КПС ${formatSum(pUi.sum)}" else ""
+                val subtitle = if (pUi.count > 0) "${pUi.count} кпс, премия ${formatSum(pUi.sum)}" else ""
+
+                val alpha = if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
+                    val d = haversine(uLat!!, uLon!!, pUi.point.lat, pUi.point.lon)
+                    if (d <= circleR) 1f else 0.4f
+                } else 1f
 
                 com.google.maps.android.compose.MarkerInfoWindow(
                     state = com.google.maps.android.compose.MarkerState(
                         position = LatLng(pUi.point.lat, pUi.point.lon)
                     ),
                     onInfoWindowClick = { vm.process(MapIntent.MarkerClicked(pUi)) },
-                    icon = iconDesc
+                    icon = iconDesc,
+                    alpha = alpha
                 ) {
                     InfoBalloonText(
                         title = pUi.point.title ?: "Позиция",
@@ -327,6 +373,11 @@ private fun Context.drawCounterBadgeBitmap(
         style = Paint.Style.STROKE
         strokeWidth = dp(1f).toFloat()
     }
+    val outerBorder = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        style = Paint.Style.STROKE
+        strokeWidth = dp(2f).toFloat()
+    }
     val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = textColor
         textAlign = Paint.Align.CENTER
@@ -336,10 +387,11 @@ private fun Context.drawCounterBadgeBitmap(
 
     val cx = size / 2f
     val cy = size / 2f
-    val radius = cx - border.strokeWidth / 2f
+    val radius = cx - outerBorder.strokeWidth / 2f
 
     canvas.drawCircle(cx, cy, radius, fill)
-    canvas.drawCircle(cx, cy, radius, border)
+    canvas.drawCircle(cx, cy, radius, outerBorder)
+    canvas.drawCircle(cx, cy, radius - outerBorder.strokeWidth / 2f, border) // внутренняя рамка
 
     val text = if (count > 9) "9+" else count.toString()
     val fm = textPaint.fontMetrics

@@ -307,7 +307,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                     check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
                 } else {
-                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
+                    if (wpDataDB.getDt().getTime() < System.currentTimeMillis()) {    //+TODO CHANGE DATE
                         check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                         check.setColorFilter(mContext.getResources().getColor(R.color.colorInetRed));
                     } else {

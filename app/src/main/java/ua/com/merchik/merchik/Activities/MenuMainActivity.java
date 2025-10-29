@@ -41,6 +41,7 @@ import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
@@ -213,6 +214,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+        Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
 //        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
 //
 //        FirebaseMessaging.getInstance().getToken()
@@ -241,9 +243,9 @@ public class MenuMainActivity extends toolbar_menus {
 //       Toasty.normal(this,"Test").show();
 
 
-//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 //        tablesLoadingUnloading.donwloadPlanBudgetRNO();
-//        tablesLoadingUnloading.downloadWPDataWithCordsMy();
+        tablesLoadingUnloading.downloadWPDataWithCordsMy();
 //        tablesLoadingUnloading.donwloadPlanBudget();
 
 //

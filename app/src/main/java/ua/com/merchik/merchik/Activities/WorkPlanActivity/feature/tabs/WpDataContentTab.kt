@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
 import android.app.Activity
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -13,7 +14,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideE
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.delay
+import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Globals
@@ -46,12 +49,17 @@ fun WpDataContentTab() {
 
     WPDataActivity.textLesson = 8718
 
+    val activity = context as ComponentActivity
+    val cronchikViewModel =
+        ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
+
     // ✅ Проверка каждую 1–3 секунды
     LaunchedEffect(Unit) {
         while (!dataIsReady) {
             if (checkRealmReady()) {
                 dataIsReady = true
                 progressModel.onCompleted()
+                cronchikViewModel.updateBadgeAdditionalIncome()
                 break
             }
             if (Globals.userId == 172906) // исключение для Шевченко
@@ -73,7 +81,7 @@ fun WpDataContentTab() {
             })
 
             dialog.show()
-            progressModel.onNextEvent("Отримання даних вiд сервера", 16_500)
+            progressModel.onNextEvent("Отримання даних вiд сервера", 23_500)
         }
     }
 

@@ -61,7 +61,7 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
             try {
                 text.setText(item.txt);
 
-                long dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                long dateDocumentLong = wpDataDB.getDt().getTime();
                 long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000;
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, item.id, String.valueOf(Globals.userId));
 

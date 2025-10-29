@@ -72,13 +72,20 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    val tabTitles = if (RealmManager.getAllWorkPlanForRNO().isNullOrEmpty()) listOf(
+    val hasRno by remember { mutableStateOf(RealmManager.getAllWorkPlanForRNO().isNullOrEmpty()) }
+
+    val tabTitles =
+        if (hasRno)
+            listOf(
         stringResource(R.string.title_0)
-    ) else listOf(
+    )
+        else
+        listOf(
         stringResource(R.string.title_0),
         "Доп.Заработок",
 //        "Заявки"
     )
+
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
     val rememberRemoveListener = remember {
         // создаём listener один раз и вернём функцию удаления
@@ -102,7 +109,10 @@ fun WpDataTabsScreen() {
 
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
+    Log.e("WpDataTabsScreen","ScrollDataHolder.instance().getIds() -")
     val ids = ScrollDataHolder.instance().getIds()
+    Log.e("WpDataTabsScreen","ScrollDataHolder.instance().getIds() +")
+
 //    val idNext = ScrollDataHolder.instance().getNext()
 //    Log.e("!!!!!!","list: $ids, idNext: $idNext")
 //    val ids = mutableListOf(4060380514L,4060380514L)

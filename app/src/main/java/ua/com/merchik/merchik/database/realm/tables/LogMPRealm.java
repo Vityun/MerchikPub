@@ -50,14 +50,19 @@ public class LogMPRealm {
     }
 
     public static List<LogMPDB> getLogMPTime(long startTime, long endTime) {
+        startTime = normalizeToMillis(startTime);
+        endTime = normalizeToMillis(endTime);
+
         RealmQuery<LogMPDB> query = INSTANCE.where(LogMPDB.class);
         query = query.greaterThanOrEqualTo("CoordTime", startTime);
         query = query.and().lessThanOrEqualTo("CoordTime", endTime);
+
         RealmResults<LogMPDB> results = query
-                .sort("CoordTime", Sort.DESCENDING) // Сортировка по убыванию
+                .sort("CoordTime", Sort.DESCENDING)
                 .notEqualTo("CoordX", 0d)
                 .notEqualTo("CoordY", 0d)
                 .findAll();
+
         return INSTANCE.copyFromRealm(results);
     }
 
@@ -89,5 +94,21 @@ public class LogMPRealm {
         return INSTANCE.copyFromRealm(results);
     }
 
+    /**
+     * Нормализует время к миллисекундам.
+     * Если значение слишком большое для миллисекунд (микросекунды), делим на 1000.
+     * Если наоборот слишком маленькое (секунды), умножаем на 1000.
+     */
+    public static long normalizeToMillis(long time) {
+        long currentMillis = System.currentTimeMillis();
+
+        if (time > currentMillis * 10) { // микросекунды
+            return time / 1000L;
+        } else if (time < 10_000_000_000L) { // секунды (примерно до 2286 года)
+            return time * 1000L;
+        } else {
+            return time; // уже миллисекунды
+        }
+    }
 
 }

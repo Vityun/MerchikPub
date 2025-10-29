@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.maps.domain.scenarios
 
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -44,20 +45,31 @@ class FromMapsScenario : MapScenario {
                 }
             }.trimEnd()
 
+// Универсальный поиск CoordTime во всех полях
+            val tMillis = (
+                    item.fields.firstOrNull { it.key.equals("coord_time", true) || it.key.equals("CoordTime", true) }?.value?.rawValue
+                        ?: f.firstOrNull { it.key.equals("coord_time", true) || it.key.equals("CoordTime", true) }?.value?.rawValue
+                    )
+                ?.toString()
+                ?.trim()
+                ?.toLongOrNull()
+
+            Log.e("!!!",">>> time: $tMillis")
             StorePoint(
                 id = idStr,                 // можно оставить, но не для distinct
                 lat = cx!!,
                 lon = cy!!,
                 title = title,
                 wp = wp,
-                dataItemsUI = item
+                dataItemsUI = item,
+                coordTimeMillis = tMillis
             )
         }
             // либо вообще без distinct:
             //.toList()
 
             // либо distinct только по координатам (с нормализацией до 6 знаков):
-            .distinctBy { "%.6f_%.6f".format(Locale.getDefault(), it.lat, it.lon) }
+//            .distinctBy { "%.6f_%.6f".format(Locale.getDefault(), it.lat, it.lon) }
 
 
     override fun isInsideRadius(center: StoreCenter?, point: StorePoint, radiusMeters: Double): Boolean {

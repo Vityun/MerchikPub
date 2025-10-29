@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
+import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlanWithOutRNO_LIST;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.graphics.Bitmap;
@@ -37,7 +38,8 @@ public class ShowcaseExchange {
         try {
 //            List<Integer> addr_id = new ArrayList<>();
 //            addr_id.add(27710);
-            List<WpDataDB> wpDataDBList = getWorkPlanList();
+//            List<WpDataDB> wpDataDBList = getWorkPlanList();
+            List<WpDataDB> wpDataDBList = getAllWorkPlanWithOutRNO_LIST();
             List<ShowcaseSDB> showcaseSDBSList = SQL_DB.showcaseDao().getAll();
 
             // Используем Set для автоматического удаления дубликатов

@@ -1341,9 +1341,12 @@ public class Globals {
                     log.CoordTime = imHereGPS.getTime();
                     log.CoordSpeed = imHereGPS.getSpeed();
                     log.CoordAccuracy = imHereGPS.getAccuracy();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         log.mocking = imHereGPS.isMock();
+                    } else {
+                        log.mocking = imHereGPS.isFromMockProvider();
                     }
+
 
                     if (wpDataDB != null) {
                         log.codeDad2 = wpDataDB.getCode_dad2();
@@ -1433,7 +1436,9 @@ public class Globals {
                     logNET.CoordTime = imHereNET.getTime();
                     logNET.CoordSpeed = imHereNET.getSpeed();
                     logNET.CoordAccuracy = imHereNET.getAccuracy();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        logNET.mocking = imHereNET.isMock();
+                    } else {
                         logNET.mocking = imHereNET.isFromMockProvider();
                     }
                     if (wpDataDB != null) {

@@ -5,6 +5,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.os.Build;
 
+import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
@@ -55,7 +56,7 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
         try {
             if (document instanceof WpDataDB) {
                 this.wpDataDB = (WpDataDB) document;
-                dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                dateDocumentLong = wpDataDB.getDt().getTime();
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalMaterialsMark/getDocumentVar", "Exception e: " + e);

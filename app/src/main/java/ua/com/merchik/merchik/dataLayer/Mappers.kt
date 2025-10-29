@@ -48,7 +48,6 @@ interface DataObjectUI {
     }
 
 
-
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier? {
         return null
     }

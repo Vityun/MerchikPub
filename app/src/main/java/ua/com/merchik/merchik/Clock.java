@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public class Clock {
@@ -151,6 +152,13 @@ public class Clock {
     public static String getHumanTimeYYYYMMDD(Long l) {
         Date df = new java.util.Date(l * 1000);
         return new SimpleDateFormat("yyyy-MM-dd").format(df);
+//        return new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(df);
+    }
+
+    public static String getHumanTimeDDMMYYYY(Long l) {
+        Date df = new java.util.Date();
+//        return new SimpleDateFormat("yyyy-MM-dd").format(df);
+        return new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(df);
     }
 
     public static String getHumanTimeOpt(long l) {

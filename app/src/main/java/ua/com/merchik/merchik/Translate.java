@@ -319,60 +319,64 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "execute_current_work_positions",
-                "Выполнить текущую работу<br>" +
-                        "<font color='gray'>Посещение от</font> %s" +
-                        "<br><font color='gray'>Клиент:</font> %s" +
-                        "<br><font color='gray'>Адрес:</font> %s" +
-                        "<br><font color='gray'>Премiя (план):</font> %s грн." +
-                        "<br><font color='gray'>СКЮ (количество товарных позиций):</font> %s" +
-                        "<br><font color='gray'>Середній час роботи:</font> %s хв",
+                "maps_dialog_subtile_with_data",
+                "Адреса с возможностью дополнительного заработка за период с %s по %s Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы.",
+                "app",
+                "all",
+                ""
+        ));
+//
+        res.add(new AddTranslation(
+                "2",
+                "ufmd_wpdata_additional_subtile",
+                "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
                 "app",
                 "all",
                 ""
         ));
 
-//        res.add(new AddTranslation(
-//                "2",
-//                "document_will_not_be_processed",
-//                "Документ проведен не будет!",
-//                "app",
-//                "all",
-//                ""
-//        ));
+        res.add(new AddTranslation(
+                "3",
+                "ufmd_sorting_dialog_subtitle",
+                "Вы можете выбрать реквизиты по которым будет отсортирована табличная часть. " +
+                        "Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы.", "app",
+                "all",
+                ""
+        ));
 
-//        res.add(new AddTranslation(
-//                "3",
-//                "maps_dialog_tooltip_1",
-//                "Подсказка_1",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//
-//        res.add(new AddTranslation(
-//                "4",
-//                "maps_dialog_tooltip_2",
-//                "Подсказка_2",
-//                "app",
-//                "all",
-//                ""
-//        ));
+        res.add(new AddTranslation(
+                "4",
+                "maps_dialog_option_mp_question",
+                "Сортировка таблицы",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "5",
+                "wp_data_duration",
+                "Продолжительность работ (ср.)",
+                "app",
+                "all",
+                ""
+        ));
 
 
-//        res.add(new AddTranslation(
-//                "2",
-//                "wpdata_aditional_",
-//                "Данный раздел находится в стадии в разработки",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//
 //        res.add(new AddTranslation(
 //                "5",
-//                "wpdata_aditional_RejectOrder",
-//                "Отказаться от этого заказа",
+//                "maps_dialog_wp",
+//                "Адреса в которых выполняются работы за период с %s по %s Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы.",
+//                "app",
+//                "all",
+//                ""
+//        ));
+
+//
+//        res.add(new AddTranslation(
+//                "6",
+//                "maps_dialog_wp_question",
+//                "На карте, зелеными маркерами помечены адреса, в которых запланировано выполнение работ. Числа внутри маркеров обозначает количество запланированных работ по указанному адресу. Синим маркером, отмечено ваше текущее местоположение (МП). Для того, чтобы подробнее узнать про работы (и оплату за их выполнение) по конкретному адресу, кликните на соответствующем маркере - адресе.",
 //                "app",
 //                "all",
 //                ""
@@ -380,8 +384,18 @@ public class Translate {
 //
 //        res.add(new AddTranslation(
 //                "7",
-//                "wpdata_aditional_RejectAddress",
-//                "Отказаться от этого адреса",
+//                "maps_dialog_tooltip",
+//                "Подсказка",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "8",
+//                "wpdata_client_start_work",
+//                "Время начало работы",
 //                "app",
 //                "all",
 //                ""
@@ -389,8 +403,17 @@ public class Translate {
 //
 //        res.add(new AddTranslation(
 //                "9",
-//                "wpdata_aditional_RejectClient",
-//                "Отказаться от этого клиента",
+//                "wpdata_client_end_work",
+//                "Время окончания работы",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "10",
+//                "wpdata_client_period_work",
+//                "Продолжительность работы",
 //                "app",
 //                "all",
 //                ""
@@ -398,8 +421,17 @@ public class Translate {
 //
 //        res.add(new AddTranslation(
 //                "11",
-//                "wpdata_aditional_RejectByType",
-//                "Отказаться от такого типа работ",
+//                "wpdata_sku",
+//                "СКЮ",
+//                "app",
+//                "all",
+//                ""
+//        ));
+
+//        res.add(new AddTranslation(
+//                "1",
+//                "wpdata_duration",
+//                "Продолжительность работ ср.",
 //                "app",
 //                "all",
 //                ""
@@ -485,7 +517,6 @@ public class Translate {
 //                "all",
 //                ""
 //        ));
-
 
 
 //        res.add(new AddTranslation(

@@ -10,7 +10,8 @@ data class StorePoint(
     val lon: Double,
     val title: String?,
     val wp: WpDataDB? = null,
-    val dataItemsUI: DataItemUI? = null
+    val dataItemsUI: DataItemUI? = null,
+    val coordTimeMillis: Long? = null        // 👈 добавили
 )
 
 

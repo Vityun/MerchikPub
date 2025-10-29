@@ -182,7 +182,7 @@ public class PhotoDownload {
                 try {
 
                     String url = item.getPhotoUrl().replace("thumb_", "");
-                    retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
+                    retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterfaceForImage().DOWNLOAD_PHOTO_BY_URL(url);
                     call.enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -1205,7 +1205,7 @@ public class PhotoDownload {
                 exchange.onFailure("Ссылка на фото отсутствует");
                 return;
             }
-            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
+            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterfaceForImage().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {

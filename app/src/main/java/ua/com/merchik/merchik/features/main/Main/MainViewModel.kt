@@ -52,6 +52,7 @@ import kotlin.reflect.KClass
 data class StateUI(
     val title: String? = null,
     val subTitle: String? = null,
+    val subTitleLong: String? = null,
     val idResImage: Int? = null,
     val itemsHeader: List<DataItemUI> = emptyList(),
     val items: List<DataItemUI> = emptyList(),
@@ -163,6 +164,7 @@ abstract class MainViewModel(
     var title: String? = null
     var typeWindow: String? = null
     var subTitle: String? = null
+    var subTitleLong: String? = null
     var idResImage: Int? = null
     var modeUI: ModeUI = ModeUI.DEFAULT
     var contextUI: ContextUI = ContextUI.DEFAULT
@@ -197,6 +199,11 @@ abstract class MainViewModel(
     open fun getDefaultHideUserFields(): List<String>? {
         return null
     }
+
+    open fun getDefaultSortUserFields(): List<String>? {
+        return null
+    }
+
 
     var filters: Filters? = null
 
@@ -450,7 +457,10 @@ abstract class MainViewModel(
 
             val list = getDefaultHideUserFields()
             val settingsItems = repository.getSettingsItemList(table, contextUI, list)
-            val sortingFields = repository.getSortingFields(table, contextUI)
+
+            val defaultSort = getDefaultSortUserFields()
+            val sortingFields = repository.getSortingFields(table, contextUI, defaultSort)
+//            val sortingFields = repository.getSortingFields(table, contextUI)
             updateFilters()
 
 
@@ -463,35 +473,36 @@ abstract class MainViewModel(
                     }
                 } ?: title
 
-                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "+")
+//                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "+")
                 val dataItemUIS = getItems()
                 Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "getItems() size: ${dataItemUIS.size}")
 
-                Log.e("INFO", "MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
-                Log.e("INFO", "MainViewModel.updateContent title: $title")
-                Log.e("INFO", "MainViewModel.updateContent subTitle: $subTitle")
-                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
-                Log.e("INFO", "MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
-                Log.e("INFO", "MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
-                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
-                Log.e("INFO", "MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
-                Log.e("INFO", "MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
-                Log.e("INFO", "MainViewModel.updateContent sortingFields: $sortingFields")
-                Log.e("INFO", "MainViewModel.updateContent filters size: ${filters?.items?.size}")
-                Log.e("INFO", "MainViewModel.updateContent filters: $filters")
+//                Log.e("INFO", "MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
+//                Log.e("INFO", "MainViewModel.updateContent title: $title")
+//                Log.e("INFO", "MainViewModel.updateContent subTitle: $subTitle")
+//                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
+//                Log.e("INFO", "MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
+//                Log.e("INFO", "MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
+//                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
+//                Log.e("INFO", "MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
+//                Log.e("INFO", "MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
+//                Log.e("INFO", "MainViewModel.updateContent sortingFields: $sortingFields")
+//                Log.e("INFO", "MainViewModel.updateContent filters size: ${filters?.items?.size}")
+//                Log.e("INFO", "MainViewModel.updateContent filters: $filters")
 
-                val items = filters?.items ?: emptyList()
-                Log.e("DBG_FILTERS", "filters.items.size = ${items.size}")
-                items.forEachIndexed { i, it ->
-                    Log.e(
-                        "DBG_FILTERS",
-                        "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}"
-                    )
-                }
+//                val items = filters?.items ?: emptyList()
+//                Log.e("DBG_FILTERS", "filters.items.size = ${items.size}")
+//                items.forEachIndexed { i, it ->
+//                    Log.e(
+//                        "DBG_FILTERS",
+//                        "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}"
+//                    )
+//                }
 
                 it.copy(
                     title = title,
                     subTitle = subTitle,
+                    subTitleLong = subTitleLong,
                     idResImage = idResImage,
                     items = dataItemUIS,
                     itemsHeader = getItemsHeader(),

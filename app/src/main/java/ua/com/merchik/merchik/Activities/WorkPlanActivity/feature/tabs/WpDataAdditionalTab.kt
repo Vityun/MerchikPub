@@ -28,7 +28,10 @@ fun OtherComposeTab() {
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
     viewModel.modeUI = ModeUI.DEFAULT
     viewModel.typeWindow = "container"
-    viewModel.subTitle = "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам"
+    viewModel.subTitle = viewModel.getTranslateString(
+        "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
+        9070
+    )
     viewModel.context = context
 
     // Подписка на изменения ScrollDataHolder через DisposableEffect
@@ -39,11 +42,12 @@ fun OtherComposeTab() {
                     val wpAddition = RoomManager.SQL_DB.wpDataAdditionalDao().getByIdSync(id)
                     wpAddition?.let {
                         val wpData = RealmManager.getWorkPlanRowByCodeDad2(it.codeDad2)
-                        wpData?.let {wp ->
+                        wpData?.let { wp ->
                             viewModel.requestFlyByStableId(wp.id)
                         }
                     }
-                } catch (_: Throwable) { }
+                } catch (_: Throwable) {
+                }
             }
         }
 

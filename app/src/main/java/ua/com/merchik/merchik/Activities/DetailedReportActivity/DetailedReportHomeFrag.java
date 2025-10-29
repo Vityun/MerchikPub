@@ -40,6 +40,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
@@ -68,7 +69,7 @@ public class DetailedReportHomeFrag extends Fragment {
     //    private static AppCompatActivity mContext;
     private WpDataDB wpDataDB;
 
-    private GoogleMap map;
+//    private GoogleMap map;
 
     private Float spotLat;
     private Float spotLon;
@@ -88,6 +89,7 @@ public class DetailedReportHomeFrag extends Fragment {
     private ImageView merchikImg;
 
     private ComposeView composeView;
+    private ComposeView composeMap;
     private static CommentViewModel viewModel;
 
     public DetailedReportHomeFrag() {
@@ -201,6 +203,7 @@ public class DetailedReportHomeFrag extends Fragment {
             option_signal_layout2.setOnClickListener(view -> openConductDialog());
             recycler = v.findViewById(R.id.recycler);
             composeView = v.findViewById(R.id.composeView);
+            composeMap = v.findViewById(R.id.composeMapView);
 
             viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
                 if (data != null) {
@@ -241,20 +244,22 @@ public class DetailedReportHomeFrag extends Fragment {
                     Log.e("DetailedReportHomeFrag", "onCreateView.spotLat: " + spotLat);
                     Log.e("DetailedReportHomeFrag", "onCreateView.spotLon: " + spotLon);
 
-                    // 23.08.23 Видаляю згадування про мапу для того щоб перевірити чи не ізза неї ідуть проблеми
-                    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                            .findFragmentById(R.id.mapView2);
+//                    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+//                            .findFragmentById(R.id.mapView2);
+//
+//                    Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
+//
+//                    if (mapFragment != null) {
+//                        mapFragment.getMapAsync(googleMap -> {
+//                            map = googleMap;
+//                            updateMap();
+//                        });
+//                    }
 
-                    Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
-
-                    if (mapFragment != null) {
-                        mapFragment.getMapAsync(googleMap -> {
-                            map = googleMap;
-                            updateMap();
-                        });
-                    }
                     setTransleted();
                     ComposeFunctions.setContentOpinion(composeView, wpDataDB, viewModel);
+                    StoresMapFromMapsHostKt.attachStoresMapFromMaps(composeMap, wpDataDB);
+
 
                     fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
                     fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
@@ -286,7 +291,7 @@ public class DetailedReportHomeFrag extends Fragment {
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + wpDataDB.cash_penalty + "</u></font>" + " грн."), this::openConductDialog));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
-                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
+               CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
 
@@ -327,34 +332,34 @@ public class DetailedReportHomeFrag extends Fragment {
     }
 
 
-    private void updateMap() {
-        Log.e("DetailedReportHomeFrag", "updateMap.spotLat: " + spotLat);
-        Log.e("DetailedReportHomeFrag", "updateMap.spotLon: " + spotLon);
-
-        if (map == null) return;
-        map.getUiSettings().setScrollGesturesEnabled(false);
-        if (spotLat != null && spotLon != null) {
-            LatLng coord = new LatLng(spotLat, spotLon);
-            map.addMarker(new MarkerOptions()
-                    .position(coord)
-                    .title(wpDataDB.getAddr_txt())
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-            );
-
-            LatLng coordUser = new LatLng(Globals.CoordX, Globals.CoordY);
-            map.addMarker(new MarkerOptions()
-                    .position(coordUser)
-                    .title("Ваше місце розташування")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-
-            CameraPosition camPos = new CameraPosition.Builder()
-                    .target(coord)
-                    .zoom(14)
-                    .build();
-            CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
-            map.animateCamera(camUpd3);
-        }
-    }
+//    private void updateMap() {
+//        Log.e("DetailedReportHomeFrag", "updateMap.spotLat: " + spotLat);
+//        Log.e("DetailedReportHomeFrag", "updateMap.spotLon: " + spotLon);
+//
+//        if (map == null) return;
+//        map.getUiSettings().setScrollGesturesEnabled(false);
+//        if (spotLat != null && spotLon != null) {
+//            LatLng coord = new LatLng(spotLat, spotLon);
+//            map.addMarker(new MarkerOptions()
+//                    .position(coord)
+//                    .title(wpDataDB.getAddr_txt())
+//                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+//            );
+//
+//            LatLng coordUser = new LatLng(Globals.CoordX, Globals.CoordY);
+//            map.addMarker(new MarkerOptions()
+//                    .position(coordUser)
+//                    .title("Ваше місце розташування")
+//                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+//
+//            CameraPosition camPos = new CameraPosition.Builder()
+//                    .target(coord)
+//                    .zoom(14)
+//                    .build();
+//            CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
+//            map.animateCamera(camUpd3);
+//        }
+//    }
 
     private SpannableString createLinkedString(String msg) {
         SpannableString res = new SpannableString(msg);
@@ -398,5 +403,6 @@ public class DetailedReportHomeFrag extends Fragment {
             }
         });
     }
+
 
 }

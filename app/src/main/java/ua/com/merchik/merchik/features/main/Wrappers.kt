@@ -18,6 +18,9 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
@@ -181,7 +184,7 @@ object AdditionalRequirementsDBOverride {
     fun getValueUI(key: String, value: Any): String = when (key) {
         "dt_change" -> {
             value.toString().toLongOrNull()?.let {
-                SimpleDateFormat("dd MMMM YYYY").format(Date(it))
+                SimpleDateFormat("dd MMMM yyyy").format(Date(it))
             } ?: value.toString()
         }
 
@@ -647,18 +650,37 @@ object LogMPDBDBOverride {
 object WPDataBDOverride {
     fun getValueUI(key: String, value: Any, wpDataDB: WpDataDB): String = when (key) {
         "dt" -> {
-            val input = value.toString()
-            val parser = SimpleDateFormat("MMM d, yyyy hh:mm:ss a", Locale.US)
-            val date = try {
-                parser.parse(input)
-            } catch (e: Exception) {
-                null
-            }
-            date?.let {
-                val formatter = SimpleDateFormat("dd MMMM", Locale.getDefault())
-                formatter.format(it)
-//                it.time.toString()
-            } ?: input // если не получилось распарсить — вернем как есть
+            formatDateString(value.toString()) ?: value.toString()
+        }
+
+        "client_start_dt" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm",  Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis * 1000)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter)
+                } catch (e: Exception) {
+                    "Робота не розпочата"
+                }
+        }
+
+        "client_end_dt" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis * 1000)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter).toString()
+                } catch (e: Exception) {
+                    "Робота не закінчена"
+                }
         }
 
         "theme_id" -> try {
@@ -674,9 +696,15 @@ object WPDataBDOverride {
             "Дані відсутні"
         }
 
+        "duration" -> try {
+            "$value хв."
+        } catch (e: Exception) {
+            value.toString()
+        }
+
         "status" -> try {
             if (value == 1) "Роботу виконано (звiт проведено)" else {
-                if (wpDataDB.visit_start_dt > 0){
+                if (wpDataDB.visit_start_dt > 0) {
                     if (wpDataDB.visit_end_dt > 0)
                         "Роботу виконано (звiт не проведено)"
                     else
@@ -695,6 +723,12 @@ object WPDataBDOverride {
             ""
         }
 
+        "sku" -> try {
+            "$value шт."
+        } catch (e: Exception) {
+            ""
+        }
+
         else -> value.toString()
     }
 
@@ -707,7 +741,6 @@ object WPDataBDOverride {
         "status" -> 3167
         "main_option_id" -> 8725
         "cash_ispolnitel" -> 8751
-
         //группа 2340
 
         "dt_update" -> 5926
@@ -715,6 +748,11 @@ object WPDataBDOverride {
         "obl_id" -> 5924
         "tp_id" -> 5923
         "tt_id" -> 5925
+        "client_start_dt" -> 9062
+        "client_end_dt" -> 9063
+        "sku" -> 9065
+        "duration" -> 9064
+
         else -> null
     }
 
@@ -755,8 +793,11 @@ fun formatDateString(raw: String?): String {
         "EEE MMM dd HH:mm:ss zzz yyyy",   // Wed Oct 09 18:42:15 GMT+03:00 2024
         "MMM dd, yyyy hh:mm:ss a",        // Oct 09, 2025 12:00:00 AM
         "MMM dd yyyy HH:mm:ss",           // Oct 09 2025 00:00:00
+        "MMM d, yyyy HH:mm:ss",
+        "MMM d yyyy HH:mm:ss",
         "yyyy-MM-dd'T'HH:mm:ss",          // ISO без зоны
-        "yyyy-MM-dd HH:mm:ss"             // частый формат SQL
+        "yyyy-MM-dd HH:mm:ss",            // частый формат SQL
+        "dd.MM.yyyy"
     )
 
     val date = possiblePatterns.firstNotNullOfOrNull { pattern ->
@@ -767,7 +808,7 @@ fun formatDateString(raw: String?): String {
         }
     } ?: return raw
 
-    val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()) // или Locale("ru")
+    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     return formatter.format(date)
 }
 

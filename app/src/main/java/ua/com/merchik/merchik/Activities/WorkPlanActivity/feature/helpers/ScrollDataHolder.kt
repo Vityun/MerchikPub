@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers
 
+import android.util.Log
 import androidx.collection.mutableLongListOf
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -43,7 +44,9 @@ class ScrollDataHolder private constructor() {
     fun addOnIdsChangedListener(listener: (List<Long>) -> Unit): () -> Unit {
         listeners.add(listener)
         // сразу отправим текущее состояние
+        Log.e("ScrollDataHolder","listener.invoke(ids.toList()) -")
         listener.invoke(ids.toList())
+        Log.e("ScrollDataHolder","listener.invoke(ids.toList()) +")
         return {
             listeners.remove(listener)
         }
@@ -57,7 +60,9 @@ class ScrollDataHolder private constructor() {
     }
 
     private fun notifyListeners() {
+        Log.e("ScrollDataHolder","notifyListeners -")
         val snapshot = ids.toList()
+        Log.e("ScrollDataHolder","notifyListeners +")
         for (l in listeners) {
             try {
                 l.invoke(snapshot)

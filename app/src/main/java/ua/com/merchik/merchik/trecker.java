@@ -147,14 +147,14 @@ public class trecker implements LocationListener {
 
     // Проверка: включён ли мокинг
     static void isMockSettingsON() {
-        if (android.os.Build.VERSION.SDK_INT >= 18) {
-            if (imHereGPS != null) {
-                isMockGPS = imHereGPS.isFromMockProvider();
-            }
-            if (imHereNET != null) {
-                isMockNET = imHereNET.isFromMockProvider();
-            }
+
+        if (imHereGPS != null) {
+            isMockGPS = imHereGPS.isFromMockProvider();
         }
+        if (imHereNET != null) {
+            isMockNET = imHereNET.isFromMockProvider();
+        }
+
     }
 
     public boolean isMockGPS(Context context) {
@@ -211,8 +211,8 @@ public class trecker implements LocationListener {
             Globals.mocking = 1;
         }
 
-        globals.writeToMLOG( " Coordinates.trecker.imHereGPS: " + trecker.imHereGPS + "\n");
-        globals.writeToMLOG( " Coordinates.trecker.imHereNET: " + trecker.imHereNET + "\n");
+        globals.writeToMLOG(" Coordinates.trecker.imHereGPS: " + trecker.imHereGPS + "\n");
+        globals.writeToMLOG(" Coordinates.trecker.imHereNET: " + trecker.imHereNET + "\n");
 
 
         // Сохранение текущего состояния GPS
@@ -229,7 +229,7 @@ public class trecker implements LocationListener {
             Globals.CoordAccuracy = imHereGPS.getAccuracy();
             Globals.provider = provider;
 
-            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG(" Coordinates.provider: " + provider + "\n");
 
             return provider;
         } else if (trecker.imHereNET != null) {
@@ -245,14 +245,14 @@ public class trecker implements LocationListener {
             Globals.CoordAltitude = imHereNET.getAltitude();
             Globals.CoordAccuracy = imHereNET.getAccuracy();
 
-            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG(" Coordinates.provider: " + provider + "\n");
             return provider;
         } else {
             // Никаких координат нет
 //            Globals.provider = 0;
             provider = 0;
 
-            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG(" Coordinates.provider: " + provider + "\n");
             return provider;
         }
     }
@@ -298,7 +298,7 @@ public class trecker implements LocationListener {
                 Globals.CoordAccuracy = imHereGPS.getAccuracy();
 
                 Globals.writeToMLOG("INFO", "Coordinates/NEW", "imHereGPS: " + imHereGPS);
-            }else if (outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))){
+            } else if (outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))) {
                 provider = 1;
                 Globals.providerType = 1;
                 Globals.locationGPS = imHereGPS;
@@ -309,7 +309,7 @@ public class trecker implements LocationListener {
                 Globals.CoordSpeed = imHereGPS.getSpeed();
                 Globals.CoordAltitude = imHereGPS.getAltitude();
                 Globals.CoordAccuracy = imHereGPS.getAccuracy();
-            }else {
+            } else {
                 Globals.writeToMLOG("INFO", "Coordinates/NEW/else", "imHereGPS: " + imHereGPS);
 
                 Globals.CoordX = 0;
@@ -320,7 +320,7 @@ public class trecker implements LocationListener {
                 Globals.CoordAccuracy = 0;
                 Globals.provider = 0;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("INFO", "Coordinates/NEW", "Exception e: " + e);
         }
     }
@@ -328,14 +328,14 @@ public class trecker implements LocationListener {
     /**
      * 10.08.23.
      * То самое место, где будет решаться сколько время будет актуальны координаты. Все условия тут.
-     * */
+     */
     private static int calculateMinutes(WpDataDB wpDataDB) {
         int res = 30; // Минуты по умолчанию
 
         UsersSDB usersSDB = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
 
         // 1. Первое условие.
-        if (usersSDB.clientId.equals(wpDataDB.getClient_id()) && wpDataDB.getClient_id().equals("32246")){
+        if (usersSDB.clientId.equals(wpDataDB.getClient_id()) && wpDataDB.getClient_id().equals("32246")) {
             res = 45;   // Для мерчей Ласунки(32246) можно просрочить координаты на 45 минут.
             dalayMaxTimeGPS = res;
         }
@@ -374,10 +374,10 @@ public class trecker implements LocationListener {
      * @param coordTime  Время когда получены последние координаты.
      * @param minutes    Минуты которые разрешены для того что б координаты считать устаревшими.
      */
-    public static long howOldCoordinates(long deviceTime, long coordTime, int minutes){
+    public static long howOldCoordinates(long deviceTime, long coordTime, int minutes) {
         try {
             return Math.abs(deviceTime - coordTime) / 1000 / 60;    // /1000 - переводим в секунды /60 - Переводим в минуты
-        }catch (Exception e){
+        } catch (Exception e) {
             return 0L;
         }
     }

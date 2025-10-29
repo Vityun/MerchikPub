@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.dataLayer.common
 
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
@@ -129,12 +131,20 @@ fun filterAndSortDataItems(
         true
     }
 
-    // --- сортировка (до трёх уровней, как у тебя) ---
+    // --- сортировка (до трёх уровней) ---
+//    val sorted = if (hasActiveSorting) {
+//        filtered.sortedWith(
+//            comparator(sortingFields.getOrNull(0))
+//                .thenComparing(comparator(sortingFields.getOrNull(1)))
+//                .thenComparing(comparator(sortingFields.getOrNull(2)))
+//        )
+//    } else filtered
+
     val sorted = if (hasActiveSorting) {
         filtered.sortedWith(
-            comparator(sortingFields.getOrNull(0))
-                .thenComparing(comparator(sortingFields.getOrNull(1)))
-                .thenComparing(comparator(sortingFields.getOrNull(2)))
+            makeComparator(sortingFields.getOrNull(0), zoneId)
+                .thenComparing(makeComparator(sortingFields.getOrNull(1), zoneId))
+                .thenComparing(makeComparator(sortingFields.getOrNull(2), zoneId))
         )
     } else filtered
 
@@ -242,4 +252,66 @@ fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
         Log.e("PARSE_DATE_ERR", "parseToMillis error for value=$raw class=${raw::class.java.name}", e)
         return null
     }
+}
+
+
+private fun parseNum(raw: Any?): Double? = when (raw) {
+    null -> null
+    is Number -> raw.toDouble()
+    is String -> raw
+        .trim()
+        .replace(" ", "")
+        .replace(",", ".")
+        .toDoubleOrNull()
+    else -> null
+}
+
+// эвристика: по ключу понимаем, что это поле-дата
+private fun looksLikeDateKey(key: String): Boolean {
+    val k = key.lowercase()
+    return k.contains("dt") || k.contains("date") || k.contains("time")
+}
+
+private fun getFieldRaw(item: DataItemUI, key: String): Any? =
+    item.fields.firstOrNull { it.key.equals(key, ignoreCase = true) }?.value?.rawValue
+
+@RequiresApi(Build.VERSION_CODES.N)
+private fun makeComparator(
+    sf: SortingField?,
+    zoneId: ZoneId
+): Comparator<DataItemUI> {
+    if (sf?.key == null || sf.key.isBlank() || (sf.order != 1 && sf.order != -1))
+        return Comparator { _, _ -> 0 }
+
+    val key = sf.key
+    val asc = sf.order == 1
+
+    // готовим селектор "сначала пробуем дату, потом число, потом строку"
+    val selectorDate: (DataItemUI) -> Long? = { item ->
+        val raw = key?.let { getFieldRaw(item, it) }
+        // если ключ похож на дату — пробуем распарсить в любом случае
+        val ts = parseToMillis(raw, zoneId)
+        if (ts != null) ts
+        else if (key?.let { looksLikeDateKey(it) } == true) parseToMillis(
+            // иногда value.value хранит нормализованную строку
+            item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value,
+            zoneId
+        )
+        else null
+    }
+    val selectorNum: (DataItemUI) -> Double? = { item ->
+        parseNum(key?.let { getFieldRaw(item, it) })
+            ?: parseNum(item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value)
+    }
+    val selectorStr: (DataItemUI) -> String? = { item ->
+        item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value
+    }
+
+    // Приоритет: дата > число > строка
+    val cmpDate = compareBy<DataItemUI, Long?>(nullsLast(naturalOrder()), selectorDate)
+    val cmpNum  = compareBy<DataItemUI, Double?>(nullsLast(naturalOrder()), selectorNum)
+    val cmpStr  = compareBy<DataItemUI, String?>(nullsLast(naturalOrder()), selectorStr)
+
+    val base = cmpDate.thenComparing(cmpNum).thenComparing(cmpStr)
+    return if (asc) base else base.reversed()
 }

@@ -220,14 +220,9 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                             ?.let { elementDB ->
                                 elementDB as AdditionalRequirementsDB
 
-                                val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
-
                                 val dateDocumentLong =
-                                    Clock.dateConvertToLong(
-                                        Clock.getHumanTimeYYYYMMDD(
-                                            wpDataDB.getDt().getTime() / 1000
-                                        )
-                                    )
+                                    wpDataDB.dt.time / 1000
+
                                 val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
                                 AdditionalRequirementsMarkRealm.getMark(
                                     dateFrom,
@@ -445,16 +440,12 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
                     val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
-                    val dateDocumentLong =
-                        Clock.dateConvertToLong(
-                            Clock.getHumanTimeYYYYMMDD(
-                                wpDataDB.getDt().getTime() / 1000
-                            )
-                        )
+                    val dateDocumentLong = wpDataDB.dt.time
+
                     val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
                     val score = AdditionalRequirementsMarkRealm.getMark(
                         dateFrom,
-                        elementDB.getId(),
+                        elementDB.id,
                         Globals.userId.toString()
                     )?.score ?: 0
 

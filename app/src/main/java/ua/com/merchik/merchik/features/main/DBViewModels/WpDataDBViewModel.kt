@@ -48,6 +48,9 @@ class WpDataDBViewModel @Inject constructor(
         get() = WpDataDB::class
 // РНО 14041
 
+    override fun getDefaultSortUserFields(): List<String>? {
+        return "dt, addr_txt, client_txt".split(",")
+    }
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
         val wp = try {
@@ -114,19 +117,27 @@ class WpDataDBViewModel @Inject constructor(
                 val rawData =
                     if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RealmManager.getAllWorkPlanWithOutRNO()
                     else RealmManager.getAllWorkPlanForRNO()
-                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
-                    subTitle =
-                        CustomString.createTitleMsg(
-                            RealmManager.getAllWorkPlanWithOutRNO(),
-                            CustomString.TitleMode.SHORT
-                        )
-                            .toString()
 
 
                 val data: List<WpDataDB> = if (rawData.isNullOrEmpty()) {
                     emptyList()
                 } else {
                     RealmManager.INSTANCE.copyFromRealm(rawData)
+                }
+
+                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                    subTitle =
+                        CustomString.createTitleMsg(
+                            data,
+                            CustomString.TitleMode.MIX
+                        )
+                            .toString()
+                    subTitleLong =
+                        CustomString.createTitleMsg(
+                            data,
+                            CustomString.TitleMode.FULL
+                        )
+                            .toString()
                 }
 
                 val dataUniqUser = data.distinctBy { it.user_id }

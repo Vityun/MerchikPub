@@ -3285,7 +3285,7 @@ public class Options {
 
                 dad2 = ((WpDataDB) dataDB).getCode_dad2();
                 startWork = ((WpDataDB) dataDB).getVisit_start_dt();
-                date = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wp.getDt().getTime() / 1000));
+                date = wp.getDt().getTime();
                 userId = ((WpDataDB) dataDB).getUser_id();
                 clientId = ((WpDataDB) dataDB).getClient_id();
                 userTxt = ((WpDataDB) dataDB).getUser_txt();

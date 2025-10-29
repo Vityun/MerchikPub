@@ -97,7 +97,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
                 text.setText(additionalText);
 
-                long dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                long dateDocumentLong = wpDataDB.getDt().getTime();
                 long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000;
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, elementDB.getId(), String.valueOf(Globals.userId));
 

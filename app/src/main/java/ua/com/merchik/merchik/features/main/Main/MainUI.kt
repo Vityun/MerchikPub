@@ -10,7 +10,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -90,11 +89,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
-import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
@@ -102,14 +101,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
-import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
-import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
-import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
-import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
-import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
-import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
-import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
-import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
+import ua.com.merchik.merchik.features.main.componentsUI.*
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -221,7 +213,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             viewModel.flyRequests.collect { stableId ->
                 // Найти координаты по stableId
                 val coords = coordsMap[stableId]
-                coords?.let { c->
+                coords?.let { c ->
                     if (c.isAttached) {
                         // получаем позицию и размер
                         val pos = coords.positionInRoot()
@@ -334,6 +326,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     )
                 }
 
+//                uiState.let {
+//                    CollapsibleSubtitle(uiState = it, viewModel = viewModel)
+//                }
                 uiState.subTitle?.let {
                     Box(
                         modifier = Modifier
@@ -341,7 +336,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             .animateContentSize()
                     ) {
                         Text(
-                            text = it,
+                            text = if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
+                                && maxLinesSubTitle == 99) uiState.subTitleLong ?: it else it,
+
+
                             maxLines = maxLinesSubTitle,
                             overflow = TextOverflow.Ellipsis,
                             color = if ((viewModel.typeWindow ?: "").equals(
@@ -728,10 +726,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors =
-                                if (selectedItems.isNotEmpty())
-                                    ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
-                                else
-                                    ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                            if (selectedItems.isNotEmpty())
+                                ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
+                            else
+                                ButtonDefaults.buttonColors(containerColor = Color.Gray),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
@@ -788,7 +786,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     val deltaX = with(density) { 180.dp.toPx() }
 
                     // Если хочешь, чтобы объект мог улететь полностью за экран влево, можно убрать coerceAtLeast:
-                    val targetX = (f.startOffset.x - deltaX) // .coerceAtLeast(0f) // убери coerceAtLeast если нужно уход за левый край
+                    val targetX =
+                        (f.startOffset.x - deltaX) // .coerceAtLeast(0f) // убери coerceAtLeast если нужно уход за левый край
 
                     // Параллельная анимация
                     coroutineScope {
@@ -975,8 +974,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showMapsDialog) {
-        ua.com.merchik.merchik.features.maps.presentation.main.
-        MapsDialog(
+        ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog(
             mainViewModel = viewModel,
             onDismiss = { showMapsDialog = false },
             contextUI = viewModel.contextUI,
@@ -998,6 +996,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 }
 
 var index = 0
+
 @Stable
 @Composable
 fun ItemUI(
@@ -1011,7 +1010,7 @@ fun ItemUI(
     onCheckItem: (Boolean, DataItemUI) -> Unit
 ) {
     index++
-    Globals.writeToMLOG("INFO", "MainUI.ItemUI","index: $index")
+    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }
@@ -1125,9 +1124,9 @@ fun ItemUI(
                                                     circleColor = Color.Gray,
                                                     textColor = Color.Gray,
                                                     aroundColor =
-                                                        if (item.selected) colorResource(id = R.color.selected_item)
-                                                        else item.modifierContainer?.background
-                                                            ?: Color.White.copy(alpha = 0.5f),
+                                                    if (item.selected) colorResource(id = R.color.selected_item)
+                                                    else item.modifierContainer?.background
+                                                        ?: Color.White.copy(alpha = 0.5f),
                                                     circleSize = 30.dp,
                                                     textSize = 20f.toPx(),
                                                 )
@@ -1231,8 +1230,8 @@ fun ItemUI(
                     ),
                     checked = item.selected,
                     aroundColor =
-                        if (item.selected) colorResource(id = R.color.selected_item)
-                        else item.modifierContainer?.background ?: Color.White,
+                    if (item.selected) colorResource(id = R.color.selected_item)
+                    else item.modifierContainer?.background ?: Color.White,
                     onCheckedChange = { onCheckItem(it, item) }
                 )
             }
@@ -1250,8 +1249,8 @@ fun ItemUI(
                         circleColor = if (text == "0") Color.Red else Color.Gray,
                         textColor = if (text == "0") Color.Red else Color.Gray,
                         aroundColor =
-                            if (item.selected) colorResource(id = R.color.selected_item)
-                            else item.modifierContainer?.background ?: Color.White,
+                        if (item.selected) colorResource(id = R.color.selected_item)
+                        else item.modifierContainer?.background ?: Color.White,
                         circleSize = 30.dp,
                         textSize = 20f.toPx(),
                     )

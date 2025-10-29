@@ -59,7 +59,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
         try {
             if (document instanceof WpDataDB) {
                 this.wpDataDB = (WpDataDB) document;
-                dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                dateDocumentLong = wpDataDB.getDt().getTime();
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark/getDocumentVar", "Exception e: " + e);

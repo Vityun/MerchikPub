@@ -36,6 +36,7 @@ import java.net.URLDecoder;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
@@ -195,73 +196,74 @@ public class TablesLoadingUnloading {
 
 //if (false)
         if (Globals.userId != 172906)
-            try {
+            if (Globals.userId != 19653)
+                try {
 //            Exchange.sendWpData2();
 //            updateWpData();
 
-                downloadWPData();
+                    downloadWPData();
 //            donwloadPlanBudgetRNO();
 //            donwloadPlanBudget();
 
 //            downloadWPDataRx().subscribe();
 
-                downloadOptions();
-                Log.e("uploadRP", "start");
-                uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        Log.e("uploadRP", "onSuccess data: " + data);
-                        if (data != null) {
-                            Log.e("uploadRP", "onSuccess: " + data.size());
-
+                    downloadOptions();
+                    Log.e("uploadRP", "start");
+                    uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            Log.e("uploadRP", "onSuccess data: " + data);
                             if (data != null) {
-                                List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
+                                Log.e("uploadRP", "onSuccess: " + data.size());
 
-                                Long[] ids = new Long[list.size()];
-                                int count = 0;
-                                for (ReportPrepareUpdateResponseList item : list) {
-                                    ids[count++] = item.elementId;
-                                }
+                                if (data != null) {
+                                    List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
 
-                                List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+                                    Long[] ids = new Long[list.size()];
+                                    int count = 0;
+                                    for (ReportPrepareUpdateResponseList item : list) {
+                                        ids[count++] = item.elementId;
+                                    }
 
-                                for (ReportPrepareDB item : rp) {
-                                    for (ReportPrepareUpdateResponseList listItem : list) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                            if (Objects.equals(listItem.elementId, item.getID())) {
-                                                if (listItem.state) {
-                                                    item.setUploadStatus(0);
-                                                    ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                    List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+
+                                    for (ReportPrepareDB item : rp) {
+                                        for (ReportPrepareUpdateResponseList listItem : list) {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                                if (Objects.equals(listItem.elementId, item.getID())) {
+                                                    if (listItem.state) {
+                                                        item.setUploadStatus(0);
+                                                        ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+
+                                    //  TODO Вернул загрузку RP
+                                    downloadReportPrepare(0);
                                 }
 
-                                //  TODO Вернул загрузку RP
+                            } else {
                                 downloadReportPrepare(0);
                             }
+                        }
 
-                        } else {
+                        @Override
+                        public void onFailure(String error) {
+                            Log.d("uploadRP", "error: " + error);
                             downloadReportPrepare(0);
                         }
+                    });
+                    RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
+                    if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
+                        List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
+                        downloadTovarTable(null, wpDataDBList);
                     }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.d("uploadRP", "error: " + error);
-                        downloadReportPrepare(0);
-                    }
-                });
-                RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
-                if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
-                    List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
-                    downloadTovarTable(null, wpDataDBList);
+                    globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
+                } catch (Exception e) {
+                    globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
                 }
-                globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
-            } catch (Exception e) {
-                globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
-            }
 
 
         try {
@@ -411,6 +413,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
+//                            downloadWPDataWithCords();
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
@@ -532,10 +535,11 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
 //                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-//                                for (WpDataDB wpDataDB : wpDataDBList) {
-//                                    if (wpDataDB.getUser_id() == 14041)
-//                                        wpDataDBListRNO.add(wpDataDB);
-//                                }
+                                for (WpDataDB wpDataDB : wpDataDBList) {
+                                    if (wpDataDB.getUser_id() == 176053)
+                                        Log.e("!!!!!!!!!!", "+++++++++++");
+                                }
+
 
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
@@ -795,7 +799,9 @@ public class TablesLoadingUnloading {
                                             // Если есть confirmedIds — положим их в ScrollDataHolder и вызовем downloadWPData()
                                             if (confirmedCount > 0) {
                                                 List<WPDataAdditional> wpDataAdditionalListConfirmed =
-                                                        SQL_DB.wpDataAdditionalDao().getByIds(confirmedIds.stream().toList());
+                                                        SQL_DB.wpDataAdditionalDao().getByIds(confirmedIds.stream()
+                                                                .collect(Collectors.toList())
+                                                        );
                                                 Set<Long> goodIds = new HashSet<>();
 
                                                 for (WPDataAdditional wpDataAdditional : wpDataAdditionalListConfirmed) {

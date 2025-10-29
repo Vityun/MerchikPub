@@ -136,7 +136,7 @@ class DownloadImagesWorker(
             downloadSemaphore.acquire() // Ограничиваем количество одновременных запросов
             try {
                 // Загружаем изображение по URL
-                val response: Response<ResponseBody> = RetrofitBuilder.getRetrofitInterface()
+                val response: Response<ResponseBody> = RetrofitBuilder.getRetrofitInterfaceForImage()
                     .DOWNLOAD_PHOTO_BY_URL_WORKER(photo.photoUrl)
                     .execute()
 
@@ -244,7 +244,7 @@ class DownloadImagesWorker(
                 val convertedObject = Gson().fromJson(json, JsonObject::class.java)
 
                 // Выполняем запрос
-                val response = RetrofitBuilder.getRetrofitInterface()
+                val response = RetrofitBuilder.getRetrofitInterfaceForImage()
                     .GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject)
                     .execute()
 
@@ -272,7 +272,7 @@ class DownloadImagesWorker(
                 val originalUrl =
                     stackPhoto.photoServerURL?.replace("thumb_", "") ?: return@withContext false
 
-                val response = RetrofitBuilder.getRetrofitInterface()
+                val response = RetrofitBuilder.getRetrofitInterfaceForImage()
                     .DOWNLOAD_PHOTO_BY_URL(originalUrl)
                     .execute()
 

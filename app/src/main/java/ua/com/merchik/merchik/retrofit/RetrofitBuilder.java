@@ -51,11 +51,15 @@ public class RetrofitBuilder {
 
     private RetrofitInterface interfaceAPI;
 
+    private RetrofitInterface interfaceAPIforImage;
+
+
     private static boolean serverStatus;//todo add int interConnection
     private static long serverTime;
 
     private final int MAX_CONCURRENT_REQUESTS = 12; // Ограничиваем до 12 одновременных запросов
     private final ExecutorService executorService = Executors.newFixedThreadPool(MAX_CONCURRENT_REQUESTS);
+    private final ExecutorService executorServiceForImage = Executors.newFixedThreadPool(8);
 
     private RetrofitBuilder() {
         // было 29.11.23.
@@ -127,7 +131,28 @@ public class RetrofitBuilder {
                 .client(client)
                 .build();
 
+        Dispatcher imageDispatcher = new Dispatcher(Executors.newFixedThreadPool(8));
+        imageDispatcher.setMaxRequests(12);
+        imageDispatcher.setMaxRequestsPerHost(8);
+
+        OkHttpClient imageClient = new OkHttpClient.Builder()
+//                .dispatcher(imageDispatcher)
+//                .dispatcher(new Dispatcher(executorServiceForImage))
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
+
+        Retrofit retrofitForImage = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
+                .client(imageClient)
+                .build();
+
+
         interfaceAPI = retrofit.create(RetrofitInterface.class);
+        interfaceAPIforImage = retrofitForImage.create(RetrofitInterface.class);
     }
 
 
@@ -270,6 +295,10 @@ public class RetrofitBuilder {
 
     public static RetrofitInterface getRetrofitInterface() {
         return INSTANCE.interfaceAPI;
+    }
+
+    public static RetrofitInterface getRetrofitInterfaceForImage() {
+        return INSTANCE.interfaceAPIforImage;
     }
 
 

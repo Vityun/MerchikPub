@@ -1,9 +1,7 @@
 package ua.com.merchik.merchik.features.main.Main
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,9 +34,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 
@@ -50,6 +53,10 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     var selectedItemFirst by remember { mutableStateOf(SortingField()) }
     var selectedItemSecond by remember { mutableStateOf(SortingField()) }
     var selectedItemThird by remember { mutableStateOf(SortingField()) }
+    var maxLinesSubTitle by remember { mutableStateOf(1) }
+
+
+    var showToolTip by remember { mutableStateOf(false) }
 
 
     fun getSelectedItem(
@@ -71,17 +78,28 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 40.dp)
                 .background(color = Color.Transparent)
         ) {
-            ImageButton(
-                id = R.drawable.ic_letter_x,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp)
-                    .align(alignment = Alignment.End),
-                onClick = { onDismiss.invoke() }
-            )
+            Row(modifier = Modifier.align(Alignment.End)) {
+
+                ImageButton(
+                    id = R.drawable.ic_question_1,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 23.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { showToolTip = true }
+                )
+
+                ImageButton(
+                    id = R.drawable.ic_letter_x,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(color = Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 25.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { onDismiss.invoke() }
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -101,9 +119,38 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_table), 5990)
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
-                    Text(
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc), 5991)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                    ) {
+                        Text(
+                            text = viewModel.getTranslateString(
+                                "Вы можете выбрать реквизиты по которым будет отсортирована табличная часть. " +
+                                        "Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы.",
+                                9071
+                            ),
+
+                            maxLines = maxLinesSubTitle,
+                            overflow = TextOverflow.Ellipsis,
+                            color = if ((viewModel.typeWindow ?: "").equals(
+                                    "container",
+                                    true
+                                )
+                            ) Color.DarkGray else Color.Black,
+                            textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
+                            modifier = Modifier
+                                .padding(start = 2.dp, end = 2.dp)
+                                .clickable {
+                                    maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1
+                                }
+                        )
+                    }
+//                    Text(
+//                        text = "Вы можете выбрать реквизиты по которым будет отсортирована табличная часть. " +
+//                                "Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы."
+////                        viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc), 5991)
+//                    )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Box(
                         modifier = Modifier
@@ -117,7 +164,8 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             modifier = Modifier.padding(7.dp)
                         ) {
 
-                            val itemsSorting = uiState.settingsItems.filter { !it.key.equals("column_name", true) }.map { SortingField(it.key, it.text, 1) }
+                            val itemsSorting = uiState.settingsItems.filter { !it.key.equals("column_name", true) }
+                                .map { SortingField(it.key, it.text, 1) }
 
                             selectedItemFirst = getSelectedItem(itemsSorting, 0)
                             selectedItemSecond = getSelectedItem(itemsSorting, 1)
@@ -196,6 +244,24 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
             }
         }
     }
+
+    if (showToolTip) {
+
+        MessageDialog(
+            title = "Не доступно",
+            status = DialogStatus.ALERT,
+            message = "Данный раздел находится в стадии в разработки",
+            okButtonName = "Ок",
+            onDismiss = {
+                showToolTip = false
+            },
+            onConfirmAction = {
+                showToolTip = false
+            }
+        )
+
+
+    }
 }
 
 @Composable
@@ -258,14 +324,14 @@ fun DropDownSortingList(
                 }
             )
             ImageButton(
-                id = if ((selectedItem.order?: 1) == 1) R.drawable.ic_arrow_down_2
+                id = if ((selectedItem.order ?: 1) == 1) R.drawable.ic_arrow_down_2
                 else R.drawable.ic_arrow_up_2,
                 sizeButton = 40.dp,
                 sizeImage = 20.dp,
                 colorImage = ColorFilter.tint(color = Color.Gray),
                 modifier = Modifier.padding(start = 7.dp),
                 onClick = {
-                    selectedItem =selectedItem.copy(order = if (selectedItem.order == 1) -1 else 1)
+                    selectedItem = selectedItem.copy(order = if (selectedItem.order == 1) -1 else 1)
                     onSelectedItem.invoke(selectedItem)
                 }
             )

@@ -223,7 +223,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                             check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
                             check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
                         } else {
-                            if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
+//                            if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
+                            if (wpDataDB.getDt().getTime() < System.currentTimeMillis()) { //+TODO CHANGE DATE
                                 check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                                 check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
                             } else {

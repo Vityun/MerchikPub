@@ -259,7 +259,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             StringBuilder stringBuilder = new StringBuilder();
             try {
-                stringBuilder.append(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
+                stringBuilder.append(Clock.getHumanTimeDDMMYYYY(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
                 stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
             } catch (Exception e) {
                 stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());

@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -1375,13 +1377,13 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "dot_user_id, visit_start_dt, visit_start_dt_receive, visit_start_geo_distance, visit_start_geo_accuracy, " +
                 "visit_start_geo_id, visit_end_dt, visit_end_dt_receive, visit_end_geo_distance, visit_end_geo_accuracy, " +
                 "visit_end_geo_id, visit_arrive_dt, visit_arrive_geo_distance, visit_arrive_geo_accuracy, " +
-                "visit_arrive_geo_id, visit_report_starsh, visit_report_starsh_quality, client_start_dt, " +
+                "visit_arrive_geo_id, visit_report_starsh, visit_report_starsh_quality, " +
                 "client_start_dt_receive, client_start_geo_distance, client_start_geo_accuracy, client_start_geo_id, " +
-                "client_start_anybody, client_end_dt, client_end_dt_receive, client_end_geo_distance, " +
+                "client_start_anybody, client_end_dt_receive, client_end_geo_distance, " +
                 "client_end_geo_accuracy, client_end_geo_id, client_end_anybody, client_report_starsh, " +
                 "client_work_duration, priority, import_type, dt_update, code_aadd, work_stop_reason, simple_report, " +
-                "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, visit_per_week, sku, " +
-                "duration, mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
+                "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, visit_per_week, " +
+                "mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
                 "addr_location_xd, addr_location_yd, action_short_txt, main_option_id, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
@@ -1443,7 +1445,6 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @NonNull
     @Override
     public List<String> getPreferredFieldOrder() {
-        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+        return new ArrayList<>(Arrays.asList("theme_id", "addr_txt", "client_txt", "dt", "cash_ispolnitel", "client_start_dt", "client_end_dt"));
     }
-
 }

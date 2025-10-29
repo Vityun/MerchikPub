@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.database.realm.tables.LogMPRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogMap
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -48,29 +49,25 @@ class LogMPDBViewModel @Inject constructor(
         var startTime = System.currentTimeMillis()
         var endTime = System.currentTimeMillis()
 
-
         val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
-        wpDataDB.addr_txt
-        wpDataDB.addr_location_xd
-        wpDataDB.addr_location_yd
         val validTime = 1800
 
         startTime = if ((wpDataDB.visit_start_dt > 0) && wpDataDB.visit_end_dt > 0)
             wpDataDB.visit_start_dt - validTime
         else
-            (System.currentTimeMillis() / 1000) - validTime
+            System.currentTimeMillis() - validTime
 
         endTime =
-            if (wpDataDB.visit_end_dt > 0) wpDataDB.visit_end_dt else System.currentTimeMillis() / 1000
+            if (wpDataDB.visit_end_dt > 0) wpDataDB.visit_end_dt else System.currentTimeMillis()
 
 
         val logMPDBUI = repository
             .getByRangeDateRealmDataObjectUI(
                 LogMPDB::class,
                 "CoordTime",
-                startTime * 1000,
-                endTime * 1000,
+                LogMPRealm.normalizeToMillis(startTime),
+                LogMPRealm.normalizeToMillis(endTime),
                 contextUI,
                 null
             )
