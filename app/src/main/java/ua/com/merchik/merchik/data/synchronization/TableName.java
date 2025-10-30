@@ -15,7 +15,7 @@ public enum TableName {
     PROMO_LIST("promoList"), //PromoDB
     ERROR_LIST("errorsList"), //ErrorDB
     STACK_PHOTO("stack_photo"),
-    TASK_AND_RECLAMATION("task_and_reclamations"), //2025102903
+    TASK_AND_RECLAMATION("task_and_reclamations"), //2025103000
     PLANOGRAMM("planogram"),
     PLANOGRAMM_ADDRESS("PlanogrammAddressSDB"),
     PLANOGRAMM_GROUP("planogramm_group"),

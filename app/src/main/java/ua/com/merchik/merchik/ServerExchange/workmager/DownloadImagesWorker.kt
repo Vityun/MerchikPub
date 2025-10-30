@@ -244,7 +244,7 @@ class DownloadImagesWorker(
                 val convertedObject = Gson().fromJson(json, JsonObject::class.java)
 
                 // Выполняем запрос
-                val response = RetrofitBuilder.getRetrofitInterfaceForImage()
+                val response = RetrofitBuilder.getRetrofitInterface()
                     .GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject)
                     .execute()
 

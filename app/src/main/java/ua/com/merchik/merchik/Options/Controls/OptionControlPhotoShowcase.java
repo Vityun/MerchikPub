@@ -89,6 +89,8 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             dateTo = date;
             usersSDB = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
 
+
+            // 2.1
             additionalRequirementsDBS = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 160568);
 
             List<Integer> shwAR = new ArrayList<>();
@@ -96,6 +98,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 shwAR.add(item.showcaseTpId);
             }
 
+            // 2.2
             // Тут ещё должен быть фильтр по Дате - 2 дня. Но у меня Дата в Date, а дата у Витрин - Строка
             if (shwAR.size() > 0) {
                 showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), shwAR);
@@ -103,6 +106,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id());
             }
 
+            // 3.1
             // ШЕВА ПРОСИТ 45 ТИП СЮДА ДОБАВИТЬ
             stackPhotoDBSList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0)); // 0 - Фото Витрины
             List<StackPhotoDB> stackPhotoDBSList45 = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45)); // 0 - Фото Витрины
@@ -262,7 +266,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         signal = false;
                     }
                 } else {
-                    stringBuilderMsg.append(" але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
+                    stringBuilderMsg.append(" Але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
                     signal = false;
                 }
             }
