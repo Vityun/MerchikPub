@@ -259,8 +259,18 @@ public class DetailedReportActivity extends toolbar_menus {
 
             StringBuilder stringBuilder = new StringBuilder();
             try {
-                stringBuilder.append(Clock.getHumanTimeDDMMYYYY(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
-                stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
+                stringBuilder
+                        .append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000))
+                        .append(" ")
+                        .append(safeSubstring(wpDataDB.getAddr_txt(), 27))
+                        .append("\n")
+                        .append(safeSubstring(wpDataDB.getClient_txt(), 12))
+                        .append(".. ")
+                        .append(safeSubstring(wpDataDB.getUser_txt(), 12))
+                        .append(".. ");
+
+//                stringBuilder.append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
+//                stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
             } catch (Exception e) {
                 stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
             }
@@ -1235,6 +1245,11 @@ public class DetailedReportActivity extends toolbar_menus {
             Globals.writeToMLOG("ERROR", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             return null;
         }
+    }
+
+    private static String safeSubstring(String text, int maxLength) {
+        if (text == null) return "";
+        return text.length() > maxLength ? text.substring(0, maxLength) : text;
     }
 }
 

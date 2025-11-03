@@ -156,9 +156,14 @@ public class Clock {
     }
 
     public static String getHumanTimeDDMMYYYY(Long l) {
-        Date df = new java.util.Date();
+        Date df = new java.util.Date(l * 1000);
 //        return new SimpleDateFormat("yyyy-MM-dd").format(df);
         return new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(df);
+    }
+
+    public static String getHumanTimeWithPointDD(Long l) {
+        Date df = new java.util.Date(l * 1000);
+        return new SimpleDateFormat("dd MMM", Locale.getDefault()).format(df);
     }
 
     public static String getHumanTimeOpt(long l) {

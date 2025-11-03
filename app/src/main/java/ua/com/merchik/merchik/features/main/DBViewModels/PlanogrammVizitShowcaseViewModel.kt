@@ -58,7 +58,6 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
 
     private val code_dad2 = mutableStateOf<Long>(0)
 
-
     override val table: KClass<out DataObjectUI>
         get() = PlanogrammVizitShowcaseSDB::class
 
@@ -506,6 +505,7 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
 
     override suspend fun getItems(): List<DataItemUI> {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+
 //        val clientId = dataJsonObject.get("clientId").asString
 //        val addressId = dataJsonObject.get("addressId").asInt
         code_dad2.value = dataJsonObject.get("wpDataDBId").asString.toLong()
