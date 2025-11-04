@@ -279,20 +279,53 @@ public class DetailedReportTovarsFrag extends Fragment {
         List<TovarDB> res = new ArrayList<>();
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
-            downloadDetailedReportTovarsData(TovarDisplayType.DETAILED_REPORT, new Clicks.clickStatusMsg() {
+
+            ProgressViewModel progress = new ProgressViewModel(1);
+            LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
+            loadingDialog.show();
+            progress.onNextEvent("Завантажую усі товари цього клієнта", 2500);
+
+            List<WpDataDB> dataList = new ArrayList<>();
+            dataList.add(wpDataDB);
+            new TablesLoadingUnloading().downloadTovarTableWhithResult(dataList, new Click() {
                 @Override
-                public void onSuccess(String data) {
-                    Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
-                    addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
-                    updateTov = false;
+                public <T> void onSuccess(T data) {
+                    tovarDBListFromServer = (List<TovarDB>) data;
+                    RealmManager.setTovarAsync(tovarDBListFromServer);
+
+                    for (TovarDB tovarDB : tovarDBListFromServer) {
+                        tovarDB.timeColor = "FAF7BB";
+                    }
+                    downloadDetailedReportTovarsData(TovarDisplayType.DETAILED_REPORT, new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show();
+                            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
+                            addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+                            updateTov = false;
+                            progress.onCompleted();
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
+                            updateTov = false;
+                            progress.onCompleted();
+                        }
+                    });
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
-                    updateTov = false;
+                    progress.onCanceled();
+
+                    new MessageDialogBuilder(requireActivity())
+                            .setTitle("Сталася помилка")
+                            .setStatus(DialogStatus.ERROR)
+                            .setMessage(error)
+                            .setOnCancelAction(() -> Unit.INSTANCE)
+                            .show();
                 }
             });
         }
@@ -700,10 +733,15 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/addRecycleView/adapter");
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/RecycleViewDRAdapterTovar", "mContext: " + requireContext());
-            if (wpDataDB != null) {
-                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
-            } else {
+//            if (wpDataDB != null) {
+//                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+//            } else {
+//                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+//            }
+            if (tasksAndReclamationsSDB != null) {
                 adapter = new RecycleViewDRAdapterTovar(requireContext(), list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+            } else {
+                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             }
             adapter.setAkciyaTovList(promotionalTov, data);
 

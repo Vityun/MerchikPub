@@ -392,7 +392,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     {2025, Calendar.AUGUST, 1},
                     {2025, Calendar.SEPTEMBER, 1},
                     {2025, Calendar.OCTOBER, 1},
-                    {2026, Calendar.JANUARY, 1}  // до нового года включительно
+                    {2025, Calendar.NOVEMBER, 1}
             };
 
             for (int i = 0; i < reportThresholds.length; i++) {

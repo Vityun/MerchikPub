@@ -66,10 +66,12 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -98,6 +100,8 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -122,7 +126,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private int addressId;
     private boolean deletePromoOption = false;
 
-    private final List<OptionsDB> optionsList2;
+    private List<OptionsDB> optionsList2;
 
     // Получаем инфу об обязательных опциях
     private List<TovarOptions> tovOptTplList;
@@ -158,6 +162,27 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), null);
 
 
+        if (optionsList2.isEmpty()) {
+
+            TablesLoadingUnloading tlu = new TablesLoadingUnloading();
+            tlu.downloadOptionsByDAD2(codeDad2, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    if (data instanceof List<?>) {
+                        List<?> list = (List<?>) data;
+                        if (!list.isEmpty() && list.get(0) instanceof OptionsDB) {
+                            // Теперь безопасно приводим к List<OptionsDB>
+
+                            optionsList2 = (List<OptionsDB>) list;
+
+                            }
+                        } else {
+//                            errorMessage(String.valueOf(data));
+                        }
+                }
+            });
+        }
+
         tplType = DRAdapterTovarTPLTypeView.GONE;
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
@@ -176,6 +201,27 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
         tplType = DRAdapterTovarTPLTypeView.GONE;
         optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), null);
+
+        if (optionsList2.isEmpty()) {
+
+            TablesLoadingUnloading tlu = new TablesLoadingUnloading();
+            tlu.downloadOptionsByDAD2(codeDad2, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    if (data instanceof List<?>) {
+                        List<?> list = (List<?>) data;
+                        if (!list.isEmpty() && list.get(0) instanceof OptionsDB) {
+                            // Теперь безопасно приводим к List<OptionsDB>
+
+                            optionsList2 = (List<OptionsDB>) list;
+
+                        }
+                    } else {
+//                            errorMessage(String.valueOf(data));
+                    }
+                }
+            });
+        }
 
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }

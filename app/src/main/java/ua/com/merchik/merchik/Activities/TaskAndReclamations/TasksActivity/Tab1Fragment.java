@@ -45,11 +45,15 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
@@ -107,6 +111,7 @@ public class Tab1Fragment extends Fragment {
         else {
             initView(v);
             setData();
+            downloadOptionIfNeeded();
         }
 
         if (TARActivity.TARType == 1) {
@@ -126,6 +131,21 @@ public class Tab1Fragment extends Fragment {
         }); // ГЛАВНАЯ
 
         return v;
+    }
+
+    private void downloadOptionIfNeeded() {
+        List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(data.codeDad2SrcDoc), null);
+
+        if (optionsList2.isEmpty()) {
+
+            TablesLoadingUnloading tlu = new TablesLoadingUnloading();
+            tlu.downloadOptionsByDAD2(data.codeDad2SrcDoc, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+
+                }
+            });
+        }
     }
 
     private void setFragmentsOnPhoto() {
