@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -41,19 +42,19 @@ import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.*;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-import ua.com.merchik.merchik.toolbar_menus;
 
 
 public class MenuMainActivity extends toolbar_menus {
@@ -215,6 +216,8 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
         Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
+
+        downloadWPData();
 //        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
 //
 //        FirebaseMessaging.getInstance().getToken()
@@ -243,9 +246,9 @@ public class MenuMainActivity extends toolbar_menus {
 //       Toasty.normal(this,"Test").show();
 
 
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 //        tablesLoadingUnloading.donwloadPlanBudgetRNO();
-        tablesLoadingUnloading.downloadWPDataWithCordsMy();
+//        tablesLoadingUnloading.downloadWPDataWithCordsMy();
 //        tablesLoadingUnloading.donwloadPlanBudget();
 
 //
@@ -512,6 +515,84 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
         DialogShowcase dialog = new DialogShowcase(this);
         dialog.setClose(dialog::dismiss);
         dialog.show();
+    }
+
+    public void downloadWPData() {
+
+        String mod = "plan";
+        String act = "list";
+        String date_from = Clock.getDatePeriod(-21);
+//        String date_from = timeYesterday7;
+        String date_to =  Clock.getDatePeriod(5);
+        long vpi;
+
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
+            vpi = 0;
+//        vpi = 1758173674;
+        vpi = 0;
+        try {
+            Log.e("TAG_TEST_WP", "RESPONSE_0 T");
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
+
+            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
+            call.enqueue(new Callback<WpDataServer>() {
+                @Override
+                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+
+//                            downloadWPDataWithCords();
+                            if (response.body().getState() && response.body().getList() != null
+                                    && !response.body().getList().isEmpty()) {
+                                List<WpDataDB> wpDataDBList = response.body().getList();
+                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
+//                            RealmManager.setWpDataAuto2(wpDataDBList);
+//                            RealmManager.setWpData(wpDataDBList);
+
+                                HashSet<String> clientName = new HashSet<>();
+                                for (WpDataDB wpDataDB: wpDataDBList){
+                                    if (wpDataDB.getClient_txt().contains("ОТС"))
+                                        Log.e("!!!!!!!!","+++");
+                                    clientName.add(wpDataDB.getClient_txt());
+
+                                }
+                                if (wpDataDBList.isEmpty()) {
+
+                                    return;
+                                }
+                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
+                                INSTANCE.executeTransaction(realm -> {
+                                    if (sTable != null) {
+                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
+                                        realm.copyToRealmOrUpdate(sTable);
+                                    }
+                                });
+
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e("Exception","Error : " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<WpDataServer> call, Throwable t) {
+                    Log.e("Exception","Error : " + t.getMessage());
+
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPData", "Exception: " + e.getMessage());
+
+        }
+
+        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
+
     }
 
     public void checkRequest() {

@@ -71,6 +71,7 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
             Integer offsetSum = 0;        // Подсчёт суммы Зачет
             double averageRating = 0.0d;    // Средняя оценка
             double deviationFromTheMeanSum = 0.0d;     // Отклонение от среднего
+            String json = "";
 
             // Для формирования итогового сообщения
             StringBuilder msg = new StringBuilder();
@@ -94,7 +95,7 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
 
                 // Херачим "Виртуальную" таблицу, как в 1С
                 Gson gson = new Gson();
-                String json = gson.toJson(data);
+                json = gson.toJson(data);
                 Type listType = new TypeToken<ArrayList<VirtualAdditionalMaterialsDB>>() {
                 }.getType();
 
@@ -162,14 +163,15 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
             } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateFrom))
                         .append(" по ")
-                        .append(Clock.getHumanTime3(dateTo))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateTo))
                         .append(" ")
                         .append(wpDataDB.getUser_txt())
                         .append(" НЕ поставил оценку(и) по ")
                         .append(nedotochSum)
                         .append(" Доп.материалам. ");
+                Globals.writeToMLOG("OptionControlAdditionalMaterialsMark.executeOption","AdditionalMaterialsJOINAdditionalMaterialsAddressSDB: ",json);
 
                 signal = true;
             } else if (virtualTable.size() > 1 && deviationFromTheMeanSum < 0.5) {
@@ -184,9 +186,9 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
                 signal = true;
             } else {
                 msg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateFrom))
                         .append(" по ")
-                        .append(Clock.getHumanTime3(dateTo))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateTo))
                         .append(" ")
                         .append(wpDataDB.getUser_txt())
                         .append(" поставил оценку(и) по ")

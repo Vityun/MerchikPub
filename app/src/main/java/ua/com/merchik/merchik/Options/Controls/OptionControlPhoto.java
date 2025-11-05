@@ -270,7 +270,8 @@ public class OptionControlPhoto<T> extends OptionControl {
         // Исключения
         // 3.1
         if ((signal && optionId.equals("158609")) || (signal && optionId.equals("169109"))) {
-            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), Integer.parseInt(optionId));
+//            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), Integer.parseInt(optionId));
+            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
             if (!additionalRequirementsDBList.isEmpty()) {
                 // Инициализируем флаги для поиска
                 boolean hasAddrOrGrp = false;

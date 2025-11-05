@@ -220,7 +220,6 @@ class WpDataDBViewModel @Inject constructor(
                     } catch (e: Exception) {
                         "Дані відсутні"
                     }
-
                     // Устанавливаем статус комментарий
                     wpDataDB.statusComment = statusComment
                 }
@@ -304,7 +303,36 @@ class WpDataDBViewModel @Inject constructor(
             }
         }
 
-        // 2) Кооперативная проверка отмены перед тяжёлым маппингом
+        raw.forEach { wpDataDB ->
+            // Определяем статус статуса
+            val statusComment = try {
+                if (wpDataDB.status == 1) {
+                    "Роботу виконано (звiт проведено)"
+                } else {
+                    if (wpDataDB.visit_start_dt > 0) {
+                        if (wpDataDB.visit_end_dt > 0) {
+                            // Меняем статус с 0 на 2 для "Роботу виконано (звiт не проведено)"
+                            if (wpDataDB.status == 0) {
+                                wpDataDB.status = 2
+                            }
+                            "Роботу виконано (звiт не проведено)"
+                        } else {
+                            // Меняем статус с 0 на 3 для "Робота виконується (звiт не проведено)"
+                            if (wpDataDB.status == 0) {
+                                wpDataDB.status = 3
+                            }
+                            "Робота виконується (звiт не проведено)"
+                        }
+                    } else {
+                        "Робота не розпочата (звiт не проведено)"
+                    }
+                }
+            } catch (e: Exception) {
+                "Дані відсутні"
+            }
+            // Устанавливаем статус комментарий
+            wpDataDB.statusComment = statusComment
+        }
 
         // 3) Тяжёлое преобразование тоже на IO
         Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","raw size: ${raw.size}")

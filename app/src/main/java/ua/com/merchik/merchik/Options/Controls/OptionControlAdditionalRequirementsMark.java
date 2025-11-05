@@ -254,9 +254,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateFrom))
                         .append(" по ")
-                        .append(Clock.getHumanTime3(dateTo))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateTo))
                         .append(" ")
                         .append(wpDataDB.getUser_txt())
                         .append(" НЕ поставил оценку(и) по ")
@@ -278,9 +278,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //                unlockCodeResultListener.onUnlockCodeFailure();
             } else {
                 msg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateFrom))
                         .append(" по ")
-                        .append(Clock.getHumanTime3(dateTo))
+                        .append(Clock.getHumanTimeDDMMYYYY(dateTo))
                         .append(" ")
                         .append(wpDataDB.getUser_txt())
                         .append(" поставил оценку(и) по ")

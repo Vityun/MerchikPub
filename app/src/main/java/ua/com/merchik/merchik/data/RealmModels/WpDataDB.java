@@ -1387,7 +1387,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "addr_location_xd, addr_location_yd, action_short_txt, main_option_id, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
-                "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id";
+                "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id, statusComment";
 
 //        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
     }

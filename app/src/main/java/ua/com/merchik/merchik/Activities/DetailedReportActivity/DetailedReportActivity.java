@@ -40,6 +40,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -257,27 +258,28 @@ public class DetailedReportActivity extends toolbar_menus {
             tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
 
 
-            StringBuilder stringBuilder = new StringBuilder();
-            try {
-                stringBuilder
-                        .append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000))
-                        .append(" ")
-                        .append(safeSubstring(wpDataDB.getAddr_txt(), 27))
-                        .append("\n")
-                        .append(safeSubstring(wpDataDB.getClient_txt(), 12))
-                        .append(".. ")
-                        .append(safeSubstring(wpDataDB.getUser_txt(), 12))
-                        .append(".. ");
-
-//                stringBuilder.append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
-//                stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
-            } catch (Exception e) {
-                stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
-            }
-
-
-            activity_title.setText(stringBuilder);
-            activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
+            bindTwoLineTitle(wpDataDB);
+//            StringBuilder stringBuilder = new StringBuilder();
+//            try {
+//                stringBuilder
+//                        .append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000))
+//                        .append(" ")
+//                        .append(safeSubstring(wpDataDB.getAddr_txt(), 27))
+//                        .append("\n")
+//                        .append(safeSubstring(wpDataDB.getClient_txt(), 12))
+//                        .append(".. ")
+//                        .append(safeSubstring(wpDataDB.getUser_txt(), 12))
+//                        .append(".. ");
+//
+////                stringBuilder.append(Clock.getHumanTimeWithPointDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
+////                stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
+//            } catch (Exception e) {
+//                stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
+//            }
+//
+//
+//            activity_title.setText(stringBuilder);
+//            activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
 
             setTab();
 
@@ -1247,10 +1249,48 @@ public class DetailedReportActivity extends toolbar_menus {
         }
     }
 
-    private static String safeSubstring(String text, int maxLength) {
-        if (text == null) return "";
-        return text.length() > maxLength ? text.substring(0, maxLength) : text;
+    // Безопасная подстановка null
+    private static String safe(String s) { return s == null ? "" : s + ","; }
+
+    // Установка текста
+    private void bindTwoLineTitle(WpDataDB wp) {
+        TextView tvDate    = findViewById(R.id.tvDate);
+        TextView tvAddress = findViewById(R.id.tvAddress);
+        TextView tvClient  = findViewById(R.id.tvClient);
+        TextView tvUser    = findViewById(R.id.tvUser);
+
+        // 1-я строка
+        tvDate.setText(Clock.getHumanTimeDDMMYYYY(wp.getDt().getTime() / 1000L));
+        setTextWithTwoDotEllipsis(tvAddress, safe(wp.getAddr_txt())); // адрес режем ".." по концу
+
+        // 2-я строка (каждый TextView сам режет себя по концу)
+        setTextWithTwoDotEllipsis(tvClient, safe(wp.getClient_txt()));
+        setTextWithTwoDotEllipsis(tvUser,  wp.getUser_txt());
     }
+
+    private static void setTextWithTwoDotEllipsis(final TextView tv, final CharSequence src) {
+        if (src == null) { tv.setText(""); return; }
+
+        // Обновляем текст уже после измерения вью
+        tv.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override public boolean onPreDraw() {
+                tv.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                int avail = tv.getWidth() - tv.getPaddingLeft() - tv.getPaddingRight();
+                if (avail > 0) {
+                    // Обрезаем строго по доступной ширине и только с конца
+                    CharSequence ell = TextUtils.ellipsize(src, tv.getPaint(), avail, TextUtils.TruncateAt.END);
+                    // Меняем «…» на «..»
+                    String out = ell.toString().replace("\u2026", "..");
+                    tv.setText(out);
+                } else {
+                    tv.setText(src); // fallback
+                }
+                return true;
+            }
+        });
+    }
+
 }
 
 

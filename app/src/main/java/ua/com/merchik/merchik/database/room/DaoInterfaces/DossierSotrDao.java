@@ -29,4 +29,10 @@ public interface DossierSotrDao {
             "AND (:codeIZA IS NULL OR (exam_id = '103693' || SUBSTR(:codeIZA,7, 16)) OR (exam_id = :codeIZA)) " + // в exam_id код ИЗА с бека
             "ORDER BY priznak DESC")
     List<DossierSotrSDB> getData(Long id, Long themeId, String codeIZA);
+
+    @Query("SELECT * FROM dossier_sotr " +
+            "WHERE (:themeId IS NULL OR theme_id = :themeId) " +
+            "AND (:addrId IS NULL OR addr_id = :addrId) " +
+            "AND (:clientId IS NULL OR client_id = :clientId)")
+    List<DossierSotrSDB> getDataByClientAddress(Long themeId, Long addrId, String clientId);
 }

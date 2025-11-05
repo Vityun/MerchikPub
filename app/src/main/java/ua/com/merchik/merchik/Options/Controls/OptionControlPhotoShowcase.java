@@ -251,6 +251,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             //4.1. Виключення на випадок, якщо це перша/друга робота у даній ТТ з даним кліснтом
             if (signal) {
                 List<DossierSotrSDB> dossierSotrSDBList = SQL_DB.dossierSotrDao().getData(null, 982L, wpDataDB.getCode_iza());
+//                List<DossierSotrSDB> dossierSotrSDBList = SQL_DB.dossierSotrDao().getDataByClientAddress( 982L, Long.valueOf(wpDataDB.getAddr_id()), wpDataDB.getClient_id());
                 if (!dossierSotrSDBList.isEmpty()) {
                     Long dataNR;
                     long dataWP = wpDataDB.getDt().getTime() / 1000;
