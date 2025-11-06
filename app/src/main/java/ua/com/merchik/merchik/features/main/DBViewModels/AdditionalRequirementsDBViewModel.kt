@@ -221,7 +221,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                                 elementDB as AdditionalRequirementsDB
 
                                 val dateDocumentLong =
-                                    wpDataDB.dt.time / 1000
+                                    wpDataDB.dt.time
 
                                 val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
                                 AdditionalRequirementsMarkRealm.getMark(

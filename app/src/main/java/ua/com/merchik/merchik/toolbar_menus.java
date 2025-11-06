@@ -392,11 +392,30 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 startActivity(intentRef);
                 break;
 
-            case 156:   // Клиенты
-                Toast.makeText(this, "Клиенты", Toast.LENGTH_SHORT).show();
-                intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.CUSTOMER);
-                startActivity(intentRef);
+            case 156:   //
+//                Toast.makeText(this, "Клиенты", Toast.LENGTH_SHORT).show();
+//                intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.CUSTOMER);
+//                startActivity(intentRef);
+
+                try {
+                    MenuItemFromWebDB menuItem156 = RealmManager.getSiteMenuItem(156);
+                    String menuItem156format = "mobile.php" + menuItem156.getUrl();
+
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                    hash = Globals.getSha1Hex(hash);
+
+                    menuItem156format = menuItem156format.replace("&", "**");
+
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem156format);
+
+                    Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                    this.startActivity(menuItem165browserIntent);
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "menu/165", "Exception e: " + e);
+                }
                 break;
+
 
             case 157:   // Сотрудники
                 Toast.makeText(this, "Сотрудники", Toast.LENGTH_SHORT).show();
