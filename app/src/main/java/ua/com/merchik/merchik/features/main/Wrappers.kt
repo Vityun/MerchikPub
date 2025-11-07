@@ -770,23 +770,46 @@ object WPDataBDOverride {
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
         "status" -> {
-            if (jsonObject.get("status").toString() == "0") {
-                val dad2 = jsonObject.getLong("code_dad2")
-                val count = RealmManager.stackPhotoPhotoCount(dad2)
-                if (count > 0)
+            val status: String = jsonObject.get("status").toString()
+            when (status) {
+                "0" -> {
+                    val dad2 = jsonObject.getLong("code_dad2")
+                    val count = RealmManager.stackPhotoPhotoCount(dad2)
+                    if (count > 0)
+                        MerchModifier(
+                            textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
+                        )
+                    else
+                        MerchModifier(
+                            textColor = Color.Red
+                        )
+                }
+                "1" -> {
                     MerchModifier(
-                        textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
+                        textColor = Color(android.graphics.Color.parseColor("#00FF00"))
                     )
-                else
-                    MerchModifier(
-                        textColor = Color.Red
-                    )
-            } else
-                MerchModifier(
-//                    textColor = Color.Green
-                    textColor = Color(android.graphics.Color.parseColor("#00FF00"))
-
+                }
+                else ->          MerchModifier(
+                    textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
                 )
+            }
+//            if (jsonObject.get("status").toString() == "0") {
+//                val dad2 = jsonObject.getLong("code_dad2")
+//                val count = RealmManager.stackPhotoPhotoCount(dad2)
+//                if (count > 0)
+//                    MerchModifier(
+//                        textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
+//                    )
+//                else
+//                    MerchModifier(
+//                        textColor = Color.Red
+//                    )
+//            } else
+//                MerchModifier(
+////                    textColor = Color.Green
+//                    textColor = Color(android.graphics.Color.parseColor("#00FF00"))
+//
+//                )
         }
 
         else -> null
