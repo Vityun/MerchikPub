@@ -181,7 +181,6 @@ class StackPhotoDBViewModel @Inject constructor(
 
                 filters = Filters(
                     rangeDataByKey = null,
-                    searchText = "",
                     items = mutableListOf(
                         filterWpDataDB,
                         filterImagesTypeListDB

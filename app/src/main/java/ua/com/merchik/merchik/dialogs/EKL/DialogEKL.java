@@ -944,6 +944,14 @@ public class DialogEKL {
                             startUFMD();
 
                         }
+                    } else {
+                        progress.onCanceled();
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("Виникла помилка при отриманні переліку ПТТ")
+                                .setStatus(DialogStatus.ERROR)
+                                .setOnCancelAction(() -> Unit.INSTANCE
+                                )
+                                .show();
                     }
                 } catch (Exception e) {
                     progress.onCanceled();
@@ -968,6 +976,7 @@ public class DialogEKL {
                         .setOnCancelAction(() -> Unit.INSTANCE
                         )
                         .show();
+                progress.onCanceled();
 //                        DialogData dialogData = new DialogData(context);
 //                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
 //                        dialogData.setText(error);

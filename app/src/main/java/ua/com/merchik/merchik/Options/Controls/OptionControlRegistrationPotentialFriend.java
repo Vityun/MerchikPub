@@ -85,6 +85,9 @@ public class OptionControlRegistrationPotentialFriend<T> extends OptionControl {
 
 //        formatMsg(potentialClients);
 
+        // 12.11.2025 Отключил опцию до решения Петрова
+        signal = false;
+
         if (signal){
             if (optionDB.getBlockPns().equals("1")){
                 stringBuilderMsg.append("\n\nДокумент проведен не будет!");

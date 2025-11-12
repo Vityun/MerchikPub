@@ -337,7 +337,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     ) {
                         Text(
                             text = if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
-                                && maxLinesSubTitle == 99) uiState.subTitleLong ?: it else it,
+                                && maxLinesSubTitle == 99
+                            ) uiState.subTitleLong ?: it else it,
 
 
                             maxLines = maxLinesSubTitle,
@@ -371,11 +372,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         viewModel = viewModel,
                         value = uiState.filters?.searchText ?: "",
                         onValueChange = {
-                            val filters = Filters(
-                                rangeDataByKey = uiState.filters?.rangeDataByKey,
-                                searchText = it
-                            )
-                            viewModel.updateFilters(filters)
+                            val current = uiState.filters
+                            if (current != null)
+                                viewModel.updateFilters(current.copy(searchText = it))
+                            else {
+                                val filters = Filters(
+                                    searchText = it
+                                )
+                                viewModel.updateFilters(filters)
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)

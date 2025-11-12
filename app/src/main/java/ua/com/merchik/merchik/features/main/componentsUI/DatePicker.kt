@@ -44,7 +44,7 @@ fun DatePicker(
     val dateDialog = rememberMaterialDialogState()
 
     Column(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier.padding(bottom = 16.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = "$title:")

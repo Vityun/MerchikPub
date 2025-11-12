@@ -414,7 +414,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
-//                            downloadWPDataWithCords();
+                            downloadWPDataWithCords();
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
@@ -471,8 +471,8 @@ public class TablesLoadingUnloading {
 
         data.mod = "plan";
         data.act = "list";
-        data.date_from = Clock.getDatePeriod(-1);
-        data.date_to = Clock.getDatePeriod(1);
+        data.date_from = Clock.getDatePeriod(-3);
+        data.date_to = Clock.getDatePeriod(3);
 
         long vpi;
 //        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
@@ -515,29 +515,36 @@ public class TablesLoadingUnloading {
                 coordY = Globals.CoordY;
             }
 
-            data.additional_works_location_x = String.valueOf(coordX);
-            data.additional_works_location_y = String.valueOf(coordY);
-//            data.additional_works_location_x = "47.82880757156666";
-//            data.additional_works_location_y = "35.02850014936467";
+            if (coordX == 0)
+                data.additional_works_location_x = "50.454698130193506";
+            else
+                data.additional_works_location_x = String.valueOf(coordX);
+            if (coordY == 0)
+                data.additional_works_location_y = "30.593419371718536";
+            else
+                data.additional_works_location_y = String.valueOf(coordY);
+
+//            data.additional_works_location_x = "50.454698130193506";
+//            data.additional_works_location_y = "30.593419371718536";
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
 
-            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
-            test.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    JsonObject object = response.body();
-                    Log.e("Result", "result: " + object);
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-
-                }
-            });
+//            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
+//            test.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    JsonObject object = response.body();
+//                    Log.e("Result", "result: " + object);
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                }
+//            });
 
             Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<WpDataServer>() {

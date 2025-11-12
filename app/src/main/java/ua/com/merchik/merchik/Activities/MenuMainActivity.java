@@ -246,7 +246,8 @@ public class MenuMainActivity extends toolbar_menus {
 //       Toasty.normal(this,"Test").show();
 
 
-//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+        tablesLoadingUnloading.downloadWPDataWithCords();
 //        tablesLoadingUnloading.donwloadPlanBudgetRNO();
 //        tablesLoadingUnloading.downloadWPDataWithCordsMy();
 //        tablesLoadingUnloading.donwloadPlanBudget();

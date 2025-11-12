@@ -70,24 +70,6 @@ fun filterAndSortDataItems(
     val hasActiveSorting =
         sortingFields.any { it?.key?.isNotBlank() == true && (it.order == 1 || it.order == -1) }
 
-//    // --- утилиты для сортировки ---
-//    fun getSortValue(item: DataItemUI, sortingField: SortingField): String? =
-//        item.fields.firstOrNull { fv -> fv.key.equals(sortingField.key, ignoreCase = true) }
-//            ?.value?.value
-
-//    fun comparator(sf: SortingField?): Comparator<DataItemUI> =
-//        when (sf?.order) {
-//            1 -> compareBy<DataItemUI, String?>(nullsLast(naturalOrder())) { getSortValue(it, sf) }
-//            -1 -> compareByDescending<DataItemUI, String?>(nullsLast(naturalOrder())) {
-//                getSortValue(
-//                    it,
-//                    sf
-//                )
-//            }
-//
-//            else -> Comparator { _, _ -> 0 }
-//        }
-
     // --- сама фильтрация ---
     val filtered = items.filter { dataItemUI ->
 
@@ -130,15 +112,6 @@ fun filterAndSortDataItems(
 
         true
     }
-
-    // --- сортировка (до трёх уровней) ---
-//    val sorted = if (hasActiveSorting) {
-//        filtered.sortedWith(
-//            comparator(sortingFields.getOrNull(0))
-//                .thenComparing(comparator(sortingFields.getOrNull(1)))
-//                .thenComparing(comparator(sortingFields.getOrNull(2)))
-//        )
-//    } else filtered
 
     val sorted = if (hasActiveSorting) {
         filtered.sortedWith(

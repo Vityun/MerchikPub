@@ -41,6 +41,8 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 
@@ -51,6 +53,8 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     var offsetSizeFont by remember { mutableStateOf(viewModel.offsetSizeFonts.value) }
 
+    var showToolTip by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -59,17 +63,27 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 40.dp)
                 .background(color = Color.Transparent)
         ) {
-            ImageButton(
-                id = R.drawable.ic_letter_x,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp)
-                    .align(alignment = Alignment.End),
-                onClick = { onDismiss.invoke() }
-            )
+            Row(modifier = Modifier.align(Alignment.End)) {
+                ImageButton(
+                    id = R.drawable.ic_question_1,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 22.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { showToolTip = true }
+                )
+
+                ImageButton(
+                    id = R.drawable.ic_letter_x,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(color = Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 25.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { onDismiss.invoke() }
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -177,5 +191,20 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 }
             }
         }
+    }
+    if (showToolTip) {
+
+        MessageDialog(
+            title = "Не доступно",
+            status = DialogStatus.ALERT,
+            message = "Данный раздел находится в стадии в разработки",
+            okButtonName = "Ок",
+            onDismiss = {
+                showToolTip = false
+            },
+            onConfirmAction = {
+                showToolTip = false
+            }
+        )
     }
 }

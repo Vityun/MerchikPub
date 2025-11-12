@@ -134,14 +134,21 @@ public class EKLRequests {
 
         Log.e("EKLRequests", "convertedObject" + convertedObject);
 
-        retrofit2.Call<PTTRequest> call = RetrofitBuilder.getRetrofitInterface().GET_PTT_LIST(RetrofitBuilder.contentType, convertedObject);
+        Call<PTTRequest> call = RetrofitBuilder.getRetrofitInterface().GET_PTT_LIST(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PTTRequest>() {
             @Override
             public void onResponse(Call<PTTRequest> call, Response<PTTRequest> response) {
                 Log.e("EKLRequests", "response" + response);
                 Log.e("EKLRequests", "response" + response.body());
                 Globals.writeToMLOG("INFO", "EKLRequests/getPTTByAddress/onResponse", "response.body(): " + response.body());
-                click.onSuccess(response.body());
+                if (response.body() != null && response.body().state && response.body().list != null && !response.body().list.isEmpty())
+                    click.onSuccess(response.body());
+                else {
+                    if ((response.body() != null ? response.body().error : null) != null)
+                        click.onFailure(response.body().error);
+                    else
+                        click.onFailure("Виникла помилка");
+                }
             }
 
             @Override
@@ -227,7 +234,7 @@ public class EKLRequests {
 
 
         Log.e("DialogEKL", "LOOP.POS6");
-        retrofit2.Call<DialogEKL.EKLCheckData> call = RetrofitBuilder.getRetrofitInterface().EKL_CHECK_DATA_CALL(RetrofitBuilder.contentType, convertedObject);
+        Call<DialogEKL.EKLCheckData> call = RetrofitBuilder.getRetrofitInterface().EKL_CHECK_DATA_CALL(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<DialogEKL.EKLCheckData>() {
             @Override
             public void onResponse(Call<DialogEKL.EKLCheckData> call, Response<DialogEKL.EKLCheckData> response) {
@@ -241,7 +248,7 @@ public class EKLRequests {
                         exchange.onFailure(new ErrorData(errorType, error));
                     }
                 } else {
-                    exchange.onFailure(new ErrorData("error_send_failed","Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
+                    exchange.onFailure(new ErrorData("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                 }
             }
 

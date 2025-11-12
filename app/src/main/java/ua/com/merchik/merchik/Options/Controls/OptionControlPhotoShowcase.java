@@ -3,18 +3,21 @@ package ua.com.merchik.merchik.Options.Controls;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.util.Log;
+import android.view.View;
 import androidx.annotation.RequiresApi;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogPhotoAdapter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -22,14 +25,14 @@ import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RealmModels.*;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 /**
  * Контроль изготовления ФОТО с указанием витрин к которым они относятся.
@@ -54,6 +57,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private List<StackPhotoDB> stackPhotoDBSList;
     private List<AdditionalRequirementsDB> additionalRequirementsDBS;
     private final List<StackPhotoDB> list = new ArrayList<>();
+    private final List<ShowcaseSDB> showcaseSDBListNotCreated = new ArrayList<>();
 
     public OptionControlPhotoShowcase(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -146,6 +150,18 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     }
                 }
             }
+            // ✅ ДОБАВЛЯЕМ ВИТРИНЫ, КОТОРЫХ НЕТ В СФОТОГРАФИРОВАННЫХ
+            for (ShowcaseSDB showcase : showcaseSDBList) {
+                boolean isCreated = stackPhotoDBSList.stream()
+                        .map(StackPhotoDB::getShowcase_id)
+                        .filter(Objects::nonNull)
+                        .map(String::valueOf)
+                        .anyMatch(id -> id.equals(String.valueOf(showcase.id)));
+
+                if (!isCreated) {
+                    showcaseSDBListNotCreated.add(showcase);
+                }
+            }
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
             try {
@@ -175,10 +191,10 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
 //            4.0
             if (stackPhotoDBSList.size() == 0) {
-                stringBuilderMsg.append("Не можу знайти світлини стосовні до поточного відвідування.");
+                spannableStringBuilder.append("Не можу знайти світлини стосовні до поточного відвідування.");
                 signal = true;
             } /*else if (showcaseSDBList.size() == 0) {
-                stringBuilderMsg.append("Не можу знайти жодної вітрини у даній Адресі (для даного Клієнта).");
+                spannableStringBuilder.append("Не можу знайти жодної вітрини у даній Адресі (для даного Клієнта).");
 
                 // создание объекта для даты '01.01.2024'
                 Calendar calendar = Calendar.getInstance();
@@ -196,48 +212,49 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     signal = true;
             // (вітрина панорамна)
                 }
-            }*/ else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {
-                stringBuilderMsg.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
+            }*/ else if (!showcaseSDBList.isEmpty() && filledShowcaseIdsCount == 0) {
+                spannableStringBuilder.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(String.valueOf(showcaseSDBList.size())).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
-                stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
-                        .append(list.size())
+                spannableStringBuilder.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
+                        .append(String.valueOf(list.size()))
                         .append(" фото з ")
-                        .append(stackPhotoDBSList.size())
+                        .append(String.valueOf(stackPhotoDBSList.size()))
                         .append(" (")
-                        .append(percentValue).append("%), що МЕНШЕ плану в ").append(colMin).append("%")
+                        .append(String.valueOf(percentValue)).append("%), що МЕНШЕ плану в ")
+                        .append(String.valueOf(colMin)).append("%")
                         .append(" Загальна кількість вітрин на ТТ: ")
-                        .append(showcaseSDBList.size())
-                        .append(", з них фото зроблено ").append(list.size())
-                        .append("(").append(perShowcase).append("%)");
+                        .append(String.valueOf(showcaseSDBList.size()))
+                        .append(", з них фото зроблено ").append(String.valueOf(list.size()))
+                        .append("(").append(String.valueOf(perShowcase)).append("%)");
                 signal = true;
-            } else if (showcaseSDBList.size() > 0 && list.size() < showcaseSDBList.size() * colMin / 100) {
-                stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише у ")
-                        .append(list.size())
+            } else if (!showcaseSDBList.isEmpty() && list.size() < showcaseSDBList.size() * colMin / 100) {
+                spannableStringBuilder.append("При виготовленні світлин, Ви сфотографували лише у ")
+                        .append(String.valueOf(list.size()))
                         .append(" вітрин з ")
-                        .append(showcaseSDBList.size()).append(" присутніх на ТТ (")
-                        .append(percentValue)
+                        .append(String.valueOf(showcaseSDBList.size())).append(" присутніх на ТТ (")
+                        .append(String.valueOf(percentValue))
                         .append("%), що МЕНШЕ плану в ")
-                        .append(colMin).append("%.")
-                        .append(" Усього зроблено фото ").append(stackPhotoDBSList.size());
+                        .append(String.valueOf(colMin)).append("%.")
+                        .append(" Усього зроблено фото ").append(String.valueOf(stackPhotoDBSList.size()));
                 signal = false;
 
-            } else if (showcaseSDBList.size() == 0 && list.size() == 0 && newTT == 1) {
-                stringBuilderMsg.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. Зауважень нема.");
+            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 1) {
+                spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. Зауважень нема.");
                 signal = true;
 
-            } else if (showcaseSDBList.size() == 0 && list.size() == 0 && newTT == 0) {
-                stringBuilderMsg.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. " +
+            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 0) {
+                spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. " +
                         "Але роботи у ТТ вже виконувались раніше і Вітрини вже повинні були бути створені");
                 signal = true;
             } else {
-                stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини у ")
-                        .append(list.size())
+                spannableStringBuilder.append("При виготовленні світлин, Ви зазначили вітрини у ")
+                        .append(String.valueOf(list.size()))
                         .append(" з ")
-                        .append(showcaseSDBList.size())
+                        .append(String.valueOf(showcaseSDBList.size()))
                         .append(" присутнiх на ТТ")
-                        .append(" (").append(percentValue)
-                        .append("%), що БІЛЬШЕ плану в ").append(colMin).append("%.")
+                        .append(" (").append(String.valueOf(percentValue))
+                        .append("%), що БІЛЬШЕ плану в ").append(String.valueOf(colMin)).append("%.")
 //                        .append(stackPhotoDBSList.size())
 //                        .append(" СВІТЛИН ")
 //                        .append(" Загальна кількість вітрин на ТТ: ")
@@ -245,6 +262,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 //                        .append(" Усього зроблено фото ").append(list.size())
 //                        .append("(").append(perShowcase).append("%)")
                         .append(" Зауважень немає.");
+
                 signal = false;
             }
 
@@ -261,14 +279,24 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         dataNR = dataWP;
                     }
                     if (dataNR > dataWP - (14 * 86400)) { // 86400 - 1 день в сек.
-                        stringBuilderMsg.append(" але, роботи з цим ІЗА почали ");
-                        stringBuilderMsg.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR * 1000)));
-                        stringBuilderMsg.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
+                        spannableStringBuilder.append(" але, роботи з цим ІЗА почали ");
+                        spannableStringBuilder.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR * 1000)));
+                        spannableStringBuilder.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
                         signal = false;
                     }
                 } else {
-                    stringBuilderMsg.append(" Але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
+                    spannableStringBuilder.append(" Але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
                     signal = false;
+                }
+            }
+
+            if (!showcaseSDBListNotCreated.isEmpty()) {
+                spannableStringBuilder.append("\nНе виготовлені світлини по:\n");
+                for (ShowcaseSDB showcase : showcaseSDBListNotCreated) {
+                    String msg = showcase.photoId + " (" + showcase.nm + ")";
+                    spannableStringBuilder
+                            .append(createLinkedString(msg, showcase))
+                            .append("\n");
                 }
             }
 
@@ -287,9 +315,9 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                    spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
             checkUnlockCode(optionDB);
@@ -302,6 +330,47 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption", "Exception e: " + e);
         }
+    }
+
+    private SpannableString createLinkedString(String msg, ShowcaseSDB showcaseSDB) {
+        SpannableString res = new SpannableString(msg);
+        StackPhotoDB stackPhotoDB = RealmManager.getPhotoByPhotoId(String.valueOf(showcaseSDB.photoId));
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                if (showcaseSDB != null){
+                    DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(context);
+                    dialogFullPhoto.setWpDataDB(wpDataDB);
+                    dialogFullPhoto.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+                        @Override
+                        public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+                            try {
+                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(context);
+                                dialogFullPhoto.setPhoto(stackPhotoDB);
+
+                                // Pika
+                                dialogFullPhoto.setComment(stackPhotoDB.getComment());
+
+                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                dialogFullPhoto.show();
+                            } catch (Exception e) {
+                                Log.e("ShowcaseAdapter", "Exception e: " + e);
+                            }
+                        }
+                    }, ()->{});
+                    dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                    dialogFullPhoto.show();
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
     }
 
     public String getCounter() {

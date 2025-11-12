@@ -108,7 +108,6 @@ class ShowcaseDBViewModel @Inject constructor(
 
             filters = Filters(
                 rangeDataByKey = null,
-                searchText = "",
                 items = mutableListOf(
                     filterWpDataDB,
                     filterImagesTypeListDB

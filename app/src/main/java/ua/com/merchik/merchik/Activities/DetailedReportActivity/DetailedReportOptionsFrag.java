@@ -366,7 +366,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
-            if (optionsButtons.isEmpty()) {
+            if (optionsButtons.isEmpty() && wpDataDB != null) {
                 ProgressViewModel progress = new ProgressViewModel(1);
                 LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
                 loadingDialog.show();

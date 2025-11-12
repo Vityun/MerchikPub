@@ -42,6 +42,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
+import io.realm.Realm
+import io.realm.RealmChangeListener
+import io.realm.RealmResults
+import io.realm.Sort
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
@@ -51,6 +55,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComp
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
@@ -72,8 +77,19 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    val hasRno by remember { mutableStateOf(RealmManager.getAllWorkPlanForRNO().isNullOrEmpty()) }
+    // --- создаём State, завязанный на Realm ---
+    val hasRno by produceState(initialValue = true) {
+        val results = RealmManager.getAllWorkPlanForRNO()
+        val listener = RealmChangeListener<RealmResults<WpDataDB>> {
+            value = it.isEmpty()
+        }
 
+        results.addChangeListener(listener)
+
+        awaitDispose {
+            results.removeChangeListener(listener)
+        }
+    }
     val tabTitles =
         if (hasRno)
             listOf(
@@ -83,7 +99,6 @@ fun WpDataTabsScreen() {
         listOf(
         stringResource(R.string.title_0),
         "Доп.Заработок",
-//        "Заявки"
     )
 
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)

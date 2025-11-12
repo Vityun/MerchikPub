@@ -239,7 +239,6 @@ class WpDataDBViewModel @Inject constructor(
                 )
 
                 filters = Filters(
-                    searchText = "",
                     items =
                         mutableListOf(
                             filterUsersSDB,
@@ -344,7 +343,7 @@ class WpDataDBViewModel @Inject constructor(
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
         FilteringDialogDataHolder.instance().filters.apply {
             this?.let { filters ->
-                filters.items = filters.items?.map { itemFilter ->
+                filters.items = filters.items.map { itemFilter ->
                     if (itemFilter.clazz == table) {
                         val rightValuesRaw = mutableListOf<String>()
                         val rightValuesUI = mutableListOf<String>()

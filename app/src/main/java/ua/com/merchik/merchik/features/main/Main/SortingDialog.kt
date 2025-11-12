@@ -85,7 +85,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                     shape = CircleShape,
                     colorImage = ColorFilter.tint(Color.Gray),
                     sizeButton = 40.dp,
-                    sizeImage = 23.dp,
+                    sizeImage = 22.dp,
                     modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
                     onClick = { showToolTip = true }
                 )
@@ -259,8 +259,6 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 showToolTip = false
             }
         )
-
-
     }
 }
 

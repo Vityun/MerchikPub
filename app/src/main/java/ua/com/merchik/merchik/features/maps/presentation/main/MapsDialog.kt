@@ -149,6 +149,14 @@ fun MapsDialog(
 
 // определяем время
     val startTime = remember {
+//        if (!isRnoUserOnMap) return@remember uiState.filters?.rangeDataByKey?.start?.let {
+//            Instant.ofEpochMilli(it.toEpochDay())
+//                .atZone(ZoneId.systemDefault())
+//                .format(formatterHHdd_DDmmYYYY)
+//        }
+
+
+
         val startMillis = if (wpDataDB != null && wpDataDB.visit_start_dt > 0 && wpDataDB.visit_end_dt > 0) {
             wpDataDB.visit_start_dt - validTime
         } else {
@@ -164,6 +172,12 @@ fun MapsDialog(
     }
 
     val endTime = remember {
+//        if (!isRnoUserOnMap) return@remember uiState.filters?.rangeDataByKey?.end?.let {
+//            Instant.ofEpochMilli(it.toEpochDay())
+//                .atZone(ZoneId.systemDefault())
+//                .format(formatterHHdd_DDmmYYYY)
+//        }
+
         val endMillis = if (wpDataDB != null && wpDataDB.visit_end_dt > 0) {
             wpDataDB.visit_end_dt
         } else {
@@ -191,7 +205,7 @@ fun MapsDialog(
                 String.format(mainViewModel.getTranslateString(
                     text = "Адреса с возможностью дополнительного заработка за период с %s по %s. Для получения дополнительной информации нажмите иконку «?» вверху текущей формы.",
                     translateId = 9069
-                ),startTime,endTime),
+                ),periodStrt,periodEnd),
 
                 "На карте, зелеными маркерами помечены адреса, в которых есть возможность выполнять работы за отдельную (дополнительную) оплату. " +
                         "Числа внутри маркеров обозначают количество доступных работ по указанному адресу. " +
@@ -336,7 +350,7 @@ fun MapsDialog(
                     .padding(16.dp)
             ) {
                 Column(Modifier.fillMaxWidth()) {
-                    Text(text = "Карта", modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text(text = mainViewModel.getTranslateString("Карта", 8763), modifier = Modifier.align(Alignment.CenterHorizontally))
                     Spacer(Modifier.height(8.dp))
                     Box(
                         modifier = Modifier

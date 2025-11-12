@@ -67,8 +67,8 @@ data class Filters(
     val title: String = "Фільтри",
     val subTitle: String? = "В этой форме Вы можете настроить фильтры для ограничения списка элементов",
     val rangeDataByKey: RangeDate? = null,
-    val searchText: String,
-    var items: List<ItemFilter>? = null
+    val searchText: String = "",
+    var items: List<ItemFilter> = emptyList()
 )
 
 data class ItemFilter(

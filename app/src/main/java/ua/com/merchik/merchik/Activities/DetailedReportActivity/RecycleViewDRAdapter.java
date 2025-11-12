@@ -683,7 +683,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                                dataJson.addProperty("optionDBId", optionId);
                                 bundle.putString("dataJson", new Gson().toJson(dataJson));
 //                                bundle.putString("dataJson", new Gson().toJson(dad2));
-                                bundle.putString("title", "Зразок вітрини");
+                                bundle.putString("title", "Список витрин");
                                 bundle.putString("subTitle", "Представленi усі вітрини на цій торговій точці, зеленим кольором відзначені вітрини за якими виготовлені фотографії, червоним – за якими немає");
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
@@ -1713,7 +1713,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 showPhotoLink = true;
                 break;
 
-            case "151139":  // - 5  - Фото планограммы
+//            case "151139":  // - 5  - Фото планограммы
+            case "164355":  // - 5  - Фото планограммы
                 photoType = 5;
                 showPhotoLink = true;
                 break;
@@ -1801,7 +1802,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     ss.append("\n\n");
                     break;
 
-                case "151139":
+                case "164355":
+//                case "151139":
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
                         click.click(5);
                     }));

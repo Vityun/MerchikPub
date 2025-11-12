@@ -46,13 +46,17 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import java.time.LocalDate
 
@@ -63,7 +67,9 @@ fun FilteringDialog(viewModel: MainViewModel,
 
     val selectedFilterDateStart by viewModel.rangeDataStart.collectAsState()
     val selectedFilterDateEnd by viewModel.rangeDataEnd.collectAsState()
+    var searchText = remember { viewModel.filters?.searchText ?: "" }
 
+    var showToolTip by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -89,17 +95,27 @@ fun FilteringDialog(viewModel: MainViewModel,
                 .statusBarsPadding()
                 .background(color = Color.Transparent)
         ) {
-            ImageButton(
-                id = R.drawable.ic_letter_x,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp)
-                    .align(alignment = Alignment.End),
-                onClick = { onDismiss.invoke() }
-            )
+            Row(modifier = Modifier.align(Alignment.End)) {
+                ImageButton(
+                    id = R.drawable.ic_question_1,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 22.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { showToolTip = true }
+                )
+
+                ImageButton(
+                    id = R.drawable.ic_letter_x,
+                    shape = CircleShape,
+                    colorImage = ColorFilter.tint(color = Color.Gray),
+                    sizeButton = 40.dp,
+                    sizeImage = 25.dp,
+                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                    onClick = { onDismiss.invoke() }
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -139,6 +155,29 @@ fun FilteringDialog(viewModel: MainViewModel,
                             }
                     }
 
+                    TextFieldInputRounded(
+                        viewModel = viewModel,
+                        value = uiState.filters?.searchText ?: "",
+                        onValueChange = {
+                            searchText = it
+                            val current = uiState.filters
+                            if (current != null) {
+                                viewModel.updateFilters(current.copy(searchText = it))
+                                FilteringDialogDataHolder.instance().filters = current
+                            }
+                            else {
+                                val filters = Filters(
+                                    searchText = it
+                                )
+                                viewModel.updateFilters(filters)
+                                FilteringDialogDataHolder.instance().filters = filters
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .height(40.dp)
+                    )
+
                     uiState.filters?.items?.let {
                         LazyColumnScrollbar(
                             modifier = Modifier
@@ -159,14 +198,16 @@ fun FilteringDialog(viewModel: MainViewModel,
                                 items(it) {
                                     if (it.enabled)
                                         ItemFilterUI(viewModel, viewModel.context, it) { changedItemFilter ->
-                                            uiState.filters?.copy(
-                                                items = uiState.filters?.items?.map {
-                                                    if (it.clazz == changedItemFilter.clazz) changedItemFilter
-                                                    else it
+                                            uiState.filters?.items?.map {
+                                                if (it.clazz == changedItemFilter.clazz) changedItemFilter
+                                                else it
+                                            }?.let { it1 ->
+                                                uiState.filters?.copy(
+                                                    items = it1
+                                                )?.let { filters ->
+                                                    FilteringDialogDataHolder.instance().filters = filters
+                                                    viewModel.updateFilters(filters)
                                                 }
-                                            )?.let { filters ->
-                                                FilteringDialogDataHolder.instance().filters = filters
-                                                viewModel.updateFilters(filters)
                                             }
                                         }
                                     else {
@@ -209,7 +250,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                                         else
                                             it.rangeDataByKey,
                                         searchText = "",
-                                        items = it.items?.map {
+                                        items = it.items.map {
                                             if (it.enabled)
                                                 it.copy(
                                                     rightValuesRaw = emptyList(),
@@ -232,6 +273,21 @@ fun FilteringDialog(viewModel: MainViewModel,
                 }
             }
         }
+    }
+    if (showToolTip) {
+
+        MessageDialog(
+            title = "Не доступно",
+            status = DialogStatus.ALERT,
+            message = "Данный раздел находится в стадии в разработки",
+            okButtonName = "Ок",
+            onDismiss = {
+                showToolTip = false
+            },
+            onConfirmAction = {
+                showToolTip = false
+            }
+        )
     }
 }
 
