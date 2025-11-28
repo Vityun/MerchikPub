@@ -78,10 +78,14 @@ fun WpDataTabsScreen() {
     val textUnselectedColor = Color.Gray
 
     // --- создаём State, завязанный на Realm ---
-    val hasRno by produceState(initialValue = true) {
+    val hasRno by produceState(initialValue = false) {
         val results = RealmManager.getAllWorkPlanForRNO()
-        val listener = RealmChangeListener<RealmResults<WpDataDB>> {
-            value = it.isEmpty()
+
+        // начальное значение – сразу из текущих данных
+        value = results.isNotEmpty()
+
+        val listener = RealmChangeListener<RealmResults<WpDataDB>> { updated ->
+            value = updated.isNotEmpty()
         }
 
         results.addChangeListener(listener)
@@ -90,16 +94,18 @@ fun WpDataTabsScreen() {
             results.removeChangeListener(listener)
         }
     }
+
     val tabTitles =
         if (hasRno)
             listOf(
-        stringResource(R.string.title_0)
-    )
+                stringResource(R.string.title_0),
+                "Доп.Заработок",
+            )
         else
-        listOf(
-        stringResource(R.string.title_0),
-        "Доп.Заработок",
-    )
+            listOf(
+                stringResource(R.string.title_0)
+            )
+
 
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
     val rememberRemoveListener = remember {
@@ -123,6 +129,12 @@ fun WpDataTabsScreen() {
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
+
+    LaunchedEffect(hasRno) {
+        if (!hasRno && selectedTabIndex > 0) {
+            selectedTabIndex = 0
+        }
+    }
 
     Log.e("WpDataTabsScreen","ScrollDataHolder.instance().getIds() -")
     val ids = ScrollDataHolder.instance().getIds()
@@ -228,8 +240,7 @@ fun WpDataTabsScreen() {
 
         // При смене выбранного таба, если есть pendingScrollHash — пытаемся проскроллить
         LaunchedEffect(selectedTabIndex, pendingScrollHash.value) {
-            val pending = pendingScrollHash.value
-            if (pending == null) return@LaunchedEffect
+            val pending = pendingScrollHash.value ?: return@LaunchedEffect
 
             // если уже скроллится — ждём и затем выходим
             if (isScrolling.value) return@LaunchedEffect

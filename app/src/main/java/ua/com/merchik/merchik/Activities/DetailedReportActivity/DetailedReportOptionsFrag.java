@@ -504,10 +504,10 @@ public class DetailedReportOptionsFrag extends Fragment {
         // Получаю все опции по данному отчёту.
         List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
 
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "wpDataDB: " + wpDataDB);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "optionsButtons: " + optionsButtons);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
+//        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "wpDataDB: " + wpDataDB);
+//        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "optionsButtons: " + optionsButtons);
+//        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
+//        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
 
         recycleViewDRAdapter = new RecycleViewDRAdapter(requireContext(), wpDataDB, optionsButtons, allReportOption, list, new Clicks.click() {
             @Override

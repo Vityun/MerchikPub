@@ -46,6 +46,8 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -64,6 +66,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
@@ -149,14 +152,34 @@ public class DetailedReportTovarsFrag extends Fragment {
             tasksAndReclamationsSDB = args.getParcelable("tasksAndReclamationsSDB");
             if (tasksAndReclamationsSDB != null) {
                 WpDataDB t = RealmManager.getWorkPlanRowByCodeDad2(tasksAndReclamationsSDB.codeDad2SrcDoc);
-                try {
-                    wpDataDB = RealmManager.INSTANCE.copyFromRealm(t);
-                    this.codeDad2 = wpDataDB.getCode_dad2();
-                    this.clientId = wpDataDB.getClient_id();
-                    this.addressId = wpDataDB.getAddr_id();
+                if (t == null) {
+                    WPDataExchange wpDataExchange = new WPDataExchange("", "", tasksAndReclamationsSDB.codeDad2SrcDoc.toString());
+                    wpDataExchange.downloadWPData(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            if (data != null && data.size() > 0) {
+                                List<WpDataDB> dataDB = (List<WpDataDB>) data;
+//                                WpDataRealm.setWpData((List<WpDataDB>) data);
+                                Log.e("!", ">> d");
+                            } else {
+                                Log.e("!", ">> ");
+                            }
+                        }
 
-                } catch (Exception ignored) {
-                }
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("!", ">> ");
+                        }
+                    });
+                } else
+                    try {
+                        wpDataDB = RealmManager.INSTANCE.copyFromRealm(t);
+                        this.codeDad2 = wpDataDB.getCode_dad2();
+                        this.clientId = wpDataDB.getClient_id();
+                        this.addressId = wpDataDB.getAddr_id();
+
+                    } catch (Exception ignored) {
+                    }
             }
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/tasksAndReclamationsSDB: " + tasksAndReclamationsSDB);
         }
@@ -277,6 +300,9 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void downloadData() {
         List<TovarDB> res = new ArrayList<>();
+        if (codeDad2 == 0)
+            return;
+
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
 

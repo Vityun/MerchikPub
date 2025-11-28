@@ -64,6 +64,8 @@ fun WpDataContentTab() {
             }
             if (Globals.userId == 172906) // исключение для Шевченко
                 dataIsReady = true
+            if (Globals.userId == 19653)
+                dataIsReady = true
             delay(1000)
         }
     }

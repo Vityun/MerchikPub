@@ -26,11 +26,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.features.main.Main.Filters
-import ua.com.merchik.merchik.features.main.Main.ItemFilter
-import ua.com.merchik.merchik.features.main.Main.MainEvent
-import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.RangeDate
+import ua.com.merchik.merchik.features.main.Main.*
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import javax.inject.Inject
@@ -48,9 +44,21 @@ class WpDataDBViewModel @Inject constructor(
         get() = WpDataDB::class
 // РНО 14041
 
+    override fun getDefaultGroupUserFields(): List<String> =
+        listOf(
+            "dt",        // 1-й уровень группировки
+            "addr_txt",  // 2-й уровень (если включишь вторую группировку)
+//            "client_txt" // 3-й уровень (опционально)
+        )
+
     override fun getDefaultSortUserFields(): List<String>? {
         return "dt, addr_txt, client_txt".split(",")
     }
+
+    override fun getDefaultHideUserFields(): List<String>? {
+        return "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(",")
+    }
+
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
         val wp = try {
@@ -263,10 +271,6 @@ class WpDataDBViewModel @Inject constructor(
         }
     }
 
-    override fun getDefaultHideUserFields(): List<String>? {
-        return "ID, comment, nm".split(",")
-    }
-
 
 //    override suspend fun getItemsHeader(): List<DataItemUI> {
 //        if (getItems().isEmpty()) {
@@ -333,9 +337,18 @@ class WpDataDBViewModel @Inject constructor(
             wpDataDB.statusComment = statusComment
         }
 
+        val state = uiState.value
+        var groupingKeys: List<String> =
+            state.sortingFields
+                .filter { it.group && !it.key.isNullOrBlank() }
+                .map { it.key!! }
+        if (groupingKeys.isEmpty()){
+
+        }
+
         // 3) Тяжёлое преобразование тоже на IO
         Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","raw size: ${raw.size}")
-        return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0)
+        return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
 
     }
 

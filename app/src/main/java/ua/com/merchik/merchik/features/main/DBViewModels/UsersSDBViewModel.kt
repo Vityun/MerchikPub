@@ -206,31 +206,6 @@ class UsersSDBViewModel @Inject constructor(
 
     override suspend fun getItems(): List<DataItemUI> {
         val data = repository.getAllRoom(table, contextUI, null)
-//            .map {
-//                val selected = FilteringDialogDataHolder.instance()
-//                    .filters
-//                    ?.items
-//                    ?.firstOrNull { it.clazz == table }
-//                    ?.rightValuesRaw
-//                    ?.contains((it.rawObj.firstOrNull { it is UsersSDB } as? UsersSDB)?.fio.toString())
-//
-//                // Преобразуем UsersSDB
-//                val updatedRawObj = it.rawObj.map { obj ->
-//                    if (obj is UsersSDB) {
-//                        val updatedColor = if (list.contains(obj.otdelId.toString())) "66BB6A" else "FFC4C4"
-//                        obj.flag = updatedColor
-//                        obj
-//                    } else {
-//                        obj
-//                    }
-//                } as List<DataObjectUI>
-//
-//                it.copy(
-//                    selected = selected == true,
-//                    rawObj = updatedRawObj // Подставляем обновленный список объектов
-//                )
-//                }
-
             .map {
                 val selected = FilteringDialogDataHolder.instance()
                     .filters

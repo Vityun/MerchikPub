@@ -748,24 +748,24 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                            );
                             textInteger.setText(spannableString164355);
 
-//                            textInteger.setOnClickListener(v -> {
-//                                Intent intent = new Intent(mContext, FeaturesActivity.class);
-//                                Bundle bundle = new Bundle();
-//                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
-//                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
-//                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//                                bundle.putString("dataJson", new Gson().toJson(dad2));
-//                                bundle.putString("title", "Перелік фото звітів");
-//                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(5).getNm());
-//                                intent.putExtras(bundle);
-//                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
-//                            });
-                            textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(5).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
 
                             break;
 
@@ -1584,7 +1584,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     @Override
     public RecycleViewDRAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int i) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dr_option_item_button, parent, false);
-        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onCreateViewHolder", "View v: " + v);
+//        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onCreateViewHolder", "View v: " + v);
         return new ViewHolder(v);
     }
 

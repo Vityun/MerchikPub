@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.maps.domain.usecases
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.StoreCenter
@@ -18,12 +19,13 @@ class FilterAndSortItemsUC(private val repo: ItemsRepository) {
         items: List<DataItemUI>,
         filters: Filters?,
         sorting: List<SortingField?>,
+        grouping: List<GroupingField?>,
         rangeStart: LocalDate?,
         rangeEnd: LocalDate?,
         search: String?,
         zoneId: ZoneId = ZoneId.systemDefault()
     ): FilterAndSortResult = repo.filterAndSort(
-        items, filters, sorting, rangeStart, rangeEnd, search, zoneId
+        items, filters, sorting, grouping, rangeStart, rangeEnd, search, zoneId
     )
 }
 

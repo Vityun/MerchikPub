@@ -1,37 +1,31 @@
 package ua.com.merchik.merchik.dataLayer.common
 
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
-import com.google.gson.Gson
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
-import ua.com.merchik.merchik.features.main.Main.ItemFilter
+import ua.com.merchik.merchik.features.main.Main.GroupMeta
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 data class FilterAndSortResult(
     val items: List<DataItemUI>,
+    val groups: List<GroupMeta> = emptyList(),
     val isActiveFiltered: Boolean,
-    val isActiveSorted: Boolean
+    val isActiveSorted: Boolean,
+    val isActiveGrouped: Boolean
 )
+
 
 fun filterAndSortDataItems(
     items: List<DataItemUI>,
     filters: Filters?,                    // твоя модель фильтров
     sortingFields: List<SortingField?>,   // список до 3-х, можно и больше
+    groupingFields: List<GroupingField?>, // ← добавили
     rangeStart: LocalDate?,               // viewModel.rangeDataStart.value
     rangeEnd: LocalDate?,                 // viewModel.rangeDataEnd.value
     searchText: String?,                  // uiState.filters?.searchText
@@ -59,31 +53,40 @@ fun filterAndSortDataItems(
         ?.toEpochMilli()
         ?: Long.MAX_VALUE
 
-
     var isActiveFiltered = false
     if (searchTerms.isNotEmpty()) isActiveFiltered = true
     if (filters?.items?.any { it.rightValuesRaw.isNotEmpty() } == true) isActiveFiltered = true
-    if (filters?.rangeDataByKey != null && (rangeStart != null || rangeEnd != null)) isActiveFiltered =
-        true
+    if (filters?.rangeDataByKey != null && (rangeStart != null || rangeEnd != null)) {
+        isActiveFiltered = true
+    }
 
     // есть ли вообще активные инструкции сортировки?
     val hasActiveSorting =
         sortingFields.any { it?.key?.isNotBlank() == true && (it.order == 1 || it.order == -1) }
+
+    // активные инструкции группировки (уже отсортированы по priority)
+    val activeGrouping: List<GroupingField> = groupingFields
+        .filter { it?.key?.isNotBlank() == true }
+        .map { it!! }
+        .sortedBy { it.priority }
+
+    val hasActiveGrouping = activeGrouping.isNotEmpty()
 
     // --- сама фильтрация ---
     val filtered = items.filter { dataItemUI ->
 
         // 1) Фильтр по диапазону дат (если задан ключ)
         filters?.rangeDataByKey?.let { rangeKey ->
-            // ищем нужное поле и приводим к timestamp
             val tsOk = dataItemUI.fields.all { fv ->
                 if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
 
                 val raw = fv.value.rawValue
-//                Log.d("DBG_DATE", "DBG_DATE field=${fv.key}, raw=${raw?.toString()?.take(200)} class=${raw?.javaClass?.name}")
                 val ts = parseToMillis(raw, zoneId)
                 if (ts == null) {
-                    Log.d("DBG_DATE_PARSE", "Failed parse raw for item field. field=${fv.key}, raw=${raw}, class=${raw?.javaClass?.name}")
+                    Log.d(
+                        "DBG_DATE_PARSE",
+                        "Failed parse raw for item field. field=${fv.key}, raw=${raw}, class=${raw?.javaClass?.name}"
+                    )
                     return@filter false
                 }
                 ts in startMillis..endMillis
@@ -91,7 +94,7 @@ fun filterAndSortDataItems(
             if (!tsOk) return@filter false
         }
 
-        // 2) Фильтр по поисковой строке (каждый терм должен встретиться хотя бы в одном поле)
+        // 2) Фильтр по поисковой строке
         if (searchTerms.isNotEmpty()) {
             val allTermsFound = searchTerms.all { term ->
                 dataItemUI.fields.any { fv -> fv.value.value.contains(term, ignoreCase = true) }
@@ -113,17 +116,96 @@ fun filterAndSortDataItems(
         true
     }
 
-    val sorted = if (hasActiveSorting) {
-        filtered.sortedWith(
-            makeComparator(sortingFields.getOrNull(0), zoneId)
-                .thenComparing(makeComparator(sortingFields.getOrNull(1), zoneId))
-                .thenComparing(makeComparator(sortingFields.getOrNull(2), zoneId))
+    // общий компаратор для сортировки (если есть)
+    val baseComparator: Comparator<DataItemUI>? = if (hasActiveSorting) {
+        makeComparator(sortingFields.getOrNull(0), zoneId)
+            .thenComparing(makeComparator(sortingFields.getOrNull(1), zoneId))
+            .thenComparing(makeComparator(sortingFields.getOrNull(2), zoneId))
+    } else null
+
+    // --- без группировки: как раньше ---
+    if (!hasActiveGrouping) {
+        val sorted = if (baseComparator != null) {
+            filtered.sortedWith(baseComparator)
+        } else {
+            filtered
+        }
+
+        return FilterAndSortResult(
+            items = sorted,
+            groups = emptyList(),
+            isActiveFiltered = isActiveFiltered,
+            isActiveSorted = hasActiveSorting,
+            isActiveGrouped = false
         )
-    } else filtered
+    }
 
-//    Log.e("DBG_FILTERS", "DBG_FILTERS filterAndSortDataItems will complete")
+    // --- с группировкой ---
 
-    return FilterAndSortResult(sorted, isActiveFiltered, hasActiveSorting)
+    // ✅ для TOP-уровня используем ТОЛЬКО первую группировку
+    val topGrouping = activeGrouping.first()
+    val groupingForTopLevel = listOf(topGrouping)
+
+    // 1) группируем по значению первого поля группировки
+    val grouped: Map<List<Comparable<*>?>, List<DataItemUI>> = filtered.groupBy { item ->
+        extractGroupKeyValues(item, groupingForTopLevel, zoneId)
+    }
+
+    // 2) компаратор для ключей групп (список из одного элемента, но код универсальный)
+    val groupKeyComparator = Comparator<List<Comparable<*>?>> { k1, k2 ->
+        val maxSize = maxOf(k1.size, k2.size)
+        for (i in 0 until maxSize) {
+            val v1 = k1.getOrNull(i)
+            val v2 = k2.getOrNull(i)
+            val cmp = compareValues(v1, v2)
+            if (cmp != 0) return@Comparator cmp
+        }
+        0
+    }
+
+    // 3) сортируем группы по ключам
+    val sortedGroupEntries = grouped.entries.sortedWith { e1, e2 ->
+        groupKeyComparator.compare(e1.key, e2.key)
+    }
+
+    // 4) разворачиваем в плоский список + считаем мету по группам
+    val resultItems = mutableListOf<DataItemUI>()
+    val groupsMeta = mutableListOf<GroupMeta>()
+    var index = 0
+
+    for ((groupKeyValues, groupItems) in sortedGroupEntries) {
+        val sortedGroupItems = if (baseComparator != null) {
+            groupItems.sortedWith(baseComparator)
+        } else {
+            groupItems
+        }
+
+        val startIndex = index
+        resultItems.addAll(sortedGroupItems)
+        index += sortedGroupItems.size
+
+        // 👇 тайтл строим тоже только по первой группировке
+        val groupTitle = buildGroupTitle(
+            sampleItem = sortedGroupItems.firstOrNull(),
+            grouping = groupingForTopLevel,
+            groupKeyValues = groupKeyValues
+        )
+
+        groupsMeta += GroupMeta(
+            groupKey = groupTitle,
+            title = groupTitle,
+            startIndex = startIndex,
+            endIndexExclusive = index
+        )
+    }
+
+    return FilterAndSortResult(
+        items = resultItems,
+        groups = groupsMeta,
+        isActiveFiltered = isActiveFiltered,
+        isActiveSorted = hasActiveSorting,
+        isActiveGrouped = true
+    )
 }
 
 
@@ -248,7 +330,7 @@ private fun looksLikeDateKey(key: String): Boolean {
 private fun getFieldRaw(item: DataItemUI, key: String): Any? =
     item.fields.firstOrNull { it.key.equals(key, ignoreCase = true) }?.value?.rawValue
 
-@RequiresApi(Build.VERSION_CODES.N)
+
 private fun makeComparator(
     sf: SortingField?,
     zoneId: ZoneId
@@ -288,3 +370,47 @@ private fun makeComparator(
     val base = cmpDate.thenComparing(cmpNum).thenComparing(cmpStr)
     return if (asc) base else base.reversed()
 }
+
+
+private fun extractGroupKeyValues(
+    item: DataItemUI,
+    grouping: List<GroupingField>,
+    zoneId: ZoneId
+): List<Comparable<*>?> {
+    return grouping.map { g ->
+        val fv = item.fields.firstOrNull { it.key.equals(g.key, ignoreCase = true) }
+        val raw = fv?.value?.rawValue
+
+        // пробуем как дату/время
+        val ts = parseToMillis(raw, zoneId)
+        if (ts != null) {
+            ts as Comparable<*> // Long
+        } else {
+            // fallback – UI-строка, чтобы хотя бы как-то сравнивалось
+            fv?.value?.value ?: raw?.toString() ?: ""
+        }
+    }
+}
+
+private fun buildGroupTitle(
+    sampleItem: DataItemUI?,
+    grouping: List<GroupingField>,
+    groupKeyValues: List<Comparable<*>?>
+): String {
+    if (sampleItem == null) return groupKeyValues.joinToString(" • ") { it?.toString().orEmpty() }
+
+    val parts = grouping.mapIndexed { index, g ->
+        val fv = sampleItem.fields.firstOrNull { it.key.equals(g.key, ignoreCase = true) }
+        val txt = fv?.value?.value
+        if (!txt.isNullOrBlank()) {
+            txt
+        } else {
+            groupKeyValues.getOrNull(index)?.toString().orEmpty()
+        }
+    }.filter { it.isNotBlank() }
+
+    return parts.joinToString(" • ").ifBlank {
+        groupKeyValues.joinToString(" • ") { it?.toString().orEmpty() }
+    }
+}
+

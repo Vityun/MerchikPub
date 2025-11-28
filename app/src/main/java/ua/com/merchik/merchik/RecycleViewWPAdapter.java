@@ -590,7 +590,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.workPlanList.clear();
         this.workPlanList2.clear();
 
-        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData", "wp: " + wp);
+//        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData", "wp: " + wp);
         this.WP = wp;
         this.workPlanList = wp;
         this.workPlanList2 = wp;

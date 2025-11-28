@@ -59,6 +59,7 @@ data class StateUI(
     val itemsFooter: List<DataItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
     var sortingFields: List<SortingField> = emptyList(),
+    val groupingFields: List<GroupingField> = emptyList(),
     val filters: Filters? = null,
     val lastUpdate: Long = 0
 )
@@ -112,13 +113,29 @@ data class RangeDate(
 data class SortingField(
     val key: String? = null,
     val title: String? = null,
-    var order: Int? = null
+    var order: Int? = null, //порядо сортировки 1 по алфавиту
+    var group: Boolean = false // Группировать по этому полю или нет
 )
 
 data class SettingsUI(
     val hideFields: List<String>? = null,
     val sortFields: List<SortingField>? = null,
+    val groupFields: List<GroupingField>? = null,
     val sizeFonts: Int? = null
+)
+
+data class GroupingField(
+    val key: String,                // по какому полю группируем (как в FieldValue.key)
+    val title: String? = null,      // заголовок для UI (например "По дате", "По магазину")
+    val priority: Int = 0,          // порядок применения, если группировок несколько
+    val collapsedByDefault: Boolean = false // свернута ли группа по умолчанию
+)
+
+data class GroupMeta(
+    val groupKey: String,           // ключ группы (например "2025-11-19" или "Київ")
+    val title: String? = null,      // что показывать в заголовке группы
+    val startIndex: Int,            // индекс первого элемента группы в result.items
+    val endIndexExclusive: Int      // индекс после последнего (как в subList)
 )
 
 sealed interface MainEvent {
@@ -203,6 +220,8 @@ abstract class MainViewModel(
     open fun getDefaultSortUserFields(): List<String>? {
         return null
     }
+
+    open fun getDefaultGroupUserFields(): List<String> = emptyList()
 
 
     var filters: Filters? = null
@@ -380,6 +399,7 @@ abstract class MainViewModel(
                         items = uiState.items,
                         filters = uiState.filters,
                         sortingFields = uiState.sortingFields,
+                        groupingFields = uiState.groupingFields, // новый список в StateUI
                         rangeStart = rangeStart,
                         rangeEnd = rangeEnd,
                         searchText = uiState.filters?.searchText
@@ -390,7 +410,7 @@ abstract class MainViewModel(
                         "MainViewModel.recomputeDataItems",
                         "filterAndSortDataItems failed: $e"
                     )
-                    FilterAndSortResult(emptyList(), isActiveFiltered = false, isActiveSorted = false) // fallback
+                    FilterAndSortResult(emptyList(), isActiveFiltered = false, isActiveSorted = false, isActiveGrouped = false) // fallback
                 }
 
                 // Собираем итоговый immutable список
@@ -459,56 +479,97 @@ abstract class MainViewModel(
             val settingsItems = repository.getSettingsItemList(table, contextUI, list)
 
             val defaultSort = getDefaultSortUserFields()
-            val sortingFields = repository.getSortingFields(table, contextUI, defaultSort)
-//            val sortingFields = repository.getSortingFields(table, contextUI)
+
+            // 1) Берём сортировки из репозитория (как и раньше)
+            val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
+
+            // 2) Дефолтные ключи для группировки (то, что мы только что добавили)
+            val defaultGroupKeys: List<String> = getDefaultGroupUserFields()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+
+            // 3) Есть ли уже сохранённая группировка у пользователя?
+            val hasUserGrouping: Boolean = sortingFieldsFromRepo.any {
+                it.group && !it.key.isNullOrBlank()
+            }
+
+            // 4) Если пользователь ещё НИЧЕГО не включал (нет group = true),
+            //    но у нас есть дефолтные ключи — проставляем group = true для них.
+            val sortingFields: List<SortingField> =
+                if (!hasUserGrouping && defaultGroupKeys.isNotEmpty()) {
+                    sortingFieldsFromRepo.map { sf ->
+                        val k = sf.key
+                        if (!k.isNullOrBlank() &&
+                            defaultGroupKeys.any { def -> def.equals(k, ignoreCase = true) }
+                        ) {
+                            sf.copy(group = true)
+                        } else {
+                            sf
+                        }
+                    }
+                } else {
+                    // уже есть пользовательская группировка или дефолт не задан —
+                    // оставляем как есть
+                    sortingFieldsFromRepo
+                }
+
+            // 5) Собираем groupingFields ИЗ сортировок (по флагу group)
+            val groupingFields: List<GroupingField> = sortingFields
+                .mapIndexedNotNull { index, sf ->
+                    sf.takeIf { it.group && !it.key.isNullOrBlank() }?.let {
+                        GroupingField(
+                            key = it.key!!,
+                            title = it.title,
+                            priority = index,          // порядок по позиции в sortingFields
+                            collapsedByDefault = false
+                        )
+                    }
+                }
+
             updateFilters()
 
+            // 👉 Ключи полей, по которым включена группировка (по уровням)
+            val groupingKeys: List<String> = sortingFields
+                .filter { it.group && !it.key.isNullOrBlank() }
+                .map { it.key!! }
 
-            _uiState.update {
-                val title = title?.split(",")?.map { it.trim() }?.let {
+            _uiState.update { old ->
+                val titleResolved = title?.split(",")?.map { it.trim() }?.let {
                     it[0].toIntOrNull()?.let { intRes ->
                         context?.let { cont ->
-                            getTranslateString(cont.getString(intRes), it[1].toLongOrNull())
+                            getTranslateString(
+                                cont.getString(intRes),
+                                it[1].toLongOrNull()
+                            )
                         }
                     }
                 } ?: title
 
-//                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "+")
                 val dataItemUIS = getItems()
-                Globals.writeToMLOG("INFO", "MainViewModel.updateContent", "getItems() size: ${dataItemUIS.size}")
+                Globals.writeToMLOG(
+                    "INFO",
+                    "MainViewModel.updateContent",
+                    "getItems() size: ${dataItemUIS.size}"
+                )
 
-//                Log.e("INFO", "MainViewModel.updateContent getItems() size: ${dataItemUIS.size}")
-//                Log.e("INFO", "MainViewModel.updateContent title: $title")
-//                Log.e("INFO", "MainViewModel.updateContent subTitle: $subTitle")
-//                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
-//                Log.e("INFO", "MainViewModel.updateContent getItemsHeader() size: ${getItemsHeader().size}")
-//                Log.e("INFO", "MainViewModel.updateContent getItemsFooter() size: ${getItemsFooter().size}")
-//                Log.e("INFO", "MainViewModel.updateContent idResImage: $idResImage")
-//                Log.e("INFO", "MainViewModel.updateContent settingsItems size: ${settingsItems.size}")
-//                Log.e("INFO", "MainViewModel.updateContent sortingFields size: ${sortingFields.size}")
-//                Log.e("INFO", "MainViewModel.updateContent sortingFields: $sortingFields")
-//                Log.e("INFO", "MainViewModel.updateContent filters size: ${filters?.items?.size}")
-//                Log.e("INFO", "MainViewModel.updateContent filters: $filters")
+                // 👇 если есть группировка — поднимаем эти поля вверх в каждой карточке
+                val finalItems = if (groupingKeys.isEmpty()) {
+                    dataItemUIS
+                } else {
+                    dataItemUIS.map { it.withGroupingOnTop(groupingKeys) }
+                }
 
-//                val items = filters?.items ?: emptyList()
-//                Log.e("DBG_FILTERS", "filters.items.size = ${items.size}")
-//                items.forEachIndexed { i, it ->
-//                    Log.e(
-//                        "DBG_FILTERS",
-//                        "item[$i] class=${it?.javaClass?.name} title=${it?.title} rightValuesRaw.size=${it?.rightValuesRaw?.size}"
-//                    )
-//                }
-
-                it.copy(
-                    title = title,
+                old.copy(
+                    title = titleResolved,
                     subTitle = subTitle,
                     subTitleLong = subTitleLong,
                     idResImage = idResImage,
-                    items = dataItemUIS,
+                    items = finalItems,            // уже с полями группировки сверху
                     itemsHeader = getItemsHeader(),
                     itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
-                    sortingFields = sortingFields,
+                    sortingFields = sortingFields, // уже с дефолтным group=true при первом запуске
+                    groupingFields = groupingFields,
                     filters = filters,
                     lastUpdate = System.currentTimeMillis()
                 )
@@ -622,7 +683,7 @@ abstract class MainViewModel(
                             wp.client_txt,
                             wp.addr_txt,
                             wp.cash_ispolnitel,
-                            wp.sku_plan,
+                            wp.sku,
                             wp.duration
                         ),
                         status = DialogStatus.NORMAL

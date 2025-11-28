@@ -916,35 +916,77 @@ public class MakePhoto {
                     PlanogrammVizitShowcaseSDB planogrammVizitShowcaseSDB = null;
 
                     try {
-                        // Проверяем photoId и id
-                        MakePhoto.img_src_id = showcase.photoId != null ? String.valueOf(showcase.photoId) : "";
-                        MakePhoto.showcase_id = showcase.id != null ? String.valueOf(showcase.id) : "";
-                        MakePhoto.example_img_id = showcase.photoId != null ? String.valueOf(showcase.photoId) : "";
+                        // 1. Всегда сбрасываем все поля, чтобы не было артефактов от прошлого вызова
+                        MakePhoto.img_src_id      = "";
+                        MakePhoto.showcase_id     = "";
+                        MakePhoto.example_img_id  = "";
+                        MakePhoto.planogram_id    = "";
+                        MakePhoto.planogram_img_id = "";
 
+                        if (showcase == null) {
+                            // если вдруг пришёл null – просто выходим, поля уже очищены
+                            return;
+                        }
+
+                        // 2. Заполняем базовые значения из showcase
+                        MakePhoto.img_src_id = showcase.photoId != null
+                                ? String.valueOf(showcase.photoId)
+                                : "";
+                        MakePhoto.showcase_id = showcase.id != null
+                                ? String.valueOf(showcase.id)
+                                : "";
+                        MakePhoto.example_img_id = showcase.photoId != null
+                                ? String.valueOf(showcase.photoId)
+                                : "";
+
+                        // 3. Ищем витринный планограм по dad2
                         List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB
                                 .planogrammVizitShowcaseDao()
                                 .getByCodeDad2(wp.dad2);
-                        for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
-                            if (item != null && Objects.equals(item.showcase_id, showcase.id)) {
-                                planogrammVizitShowcaseSDB = item;
-                                break;
+
+                        if (planogrammVizitShowcaseSDBList != null) {
+                            for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
+                                if (item != null && Objects.equals(item.showcase_id, showcase.id)) {
+                                    planogrammVizitShowcaseSDB = item;
+                                    break;
+                                }
                             }
                         }
+
+                        // 4. Заполняем поля планограма
                         if (planogrammVizitShowcaseSDB != null) {
                             MakePhoto.planogram_id = planogrammVizitShowcaseSDB.planogram_id != null
-                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_id) : "";
+                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_id)
+                                    : "";
                             MakePhoto.planogram_img_id = planogrammVizitShowcaseSDB.planogram_photo_id != null
-                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id) : "";
+                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id)
+                                    : "";
                         } else {
-                            MakePhoto.planogram_id = showcase.planogramId != null
-                                    ? String.valueOf(showcase.planogramId) : "";
-                            planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
-                            MakePhoto.planogram_img_id = planogrammSDB != null && planogrammSDB.photoId != null
-                                    ? String.valueOf(planogrammSDB.photoId) : "";
+                            // запасной вариант – из showcase / planogrammDao
+                            if (showcase.planogramId != null) {
+                                MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                                planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                                MakePhoto.planogram_img_id = (planogrammSDB != null && planogrammSDB.photoId != null)
+                                        ? String.valueOf(planogrammSDB.photoId)
+                                        : "";
+                            } else {
+                                // если даже planogramId нет – оставляем пустые строки (уже очищены выше)
+                                MakePhoto.planogram_id = "";
+                                MakePhoto.planogram_img_id = "";
+                            }
                         }
+
                     } catch (Exception e) {
+                        // при ошибке тоже лучше сбросить, чтобы не висели старые значения
+                        MakePhoto.img_src_id      = "";
+                        MakePhoto.showcase_id     = "";
+                        MakePhoto.example_img_id  = "";
+                        MakePhoto.planogram_id    = "";
+                        MakePhoto.planogram_img_id = "";
+
                         Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);
                     }
+
 
                     boolean needPlan;
                     if (planogrammSDB != null) {

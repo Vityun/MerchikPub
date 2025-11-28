@@ -79,6 +79,7 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
                 items = uiState.items,
                 filters = uiState.filters,
                 sorting = uiState.sortingFields,
+                grouping = uiState.groupingFields,
                 rangeStartLocalDate = mainVm.rangeDataStart.value,
                 rangeEndLocalDate = mainVm.rangeDataEnd.value,
                 search = uiState.filters?.searchText,

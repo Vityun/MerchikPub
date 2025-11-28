@@ -61,7 +61,7 @@ abstract class BaseMapViewModel(
 
     private fun onSetInput(i: MapIntent.SetInput) = viewModelScope.launch(Dispatchers.Default) {
         val filtered =
-            filterUC(i.items, i.filters, i.sorting, i.rangeStartLocalDate, i.rangeEndLocalDate, i.search).items
+            filterUC(i.items, i.filters, i.sorting, i.grouping, i.rangeStartLocalDate, i.rangeEndLocalDate, i.search).items
         val (center, points, badges) = buildUC(filtered)
         val pointsUi = makeUiUC(center, points, badges, radiusMeters)
 

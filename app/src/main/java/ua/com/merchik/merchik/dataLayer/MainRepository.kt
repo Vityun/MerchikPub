@@ -96,9 +96,7 @@ class MainRepository(
                     SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.firstOrNull() as DataObjectUI
                     AddressSDB::class -> roomManager.addressDao().all.firstOrNull() as DataObjectUI
                     SMSPlanSDB::class -> roomManager.smsPlanDao().all.firstOrNull() as DataObjectUI
-                    else -> {
-                        null
-                    }
+                    else -> null
                 }
             }.getOrNull()
         }
@@ -107,27 +105,46 @@ class MainRepository(
             val jsonObject = JSONObject(Gson().toJson(obj))
             val fields = mutableListOf<String>()
             fields.add("column_name")
+            fields.add("group_header")
             obj.getIdResImage()?.let {
                 fields.add("id_res_image")
             }
             jsonObject.keys().forEach { key -> fields.add(key) }
-            val hideUserFields =
-                (getSettingsUI(obj::class.java, contextUI)?.hideFields ?: defaultHideUserFields)?.map { it.trim() }
+
+            // 👇 сначала забираем сохранённые настройки (если есть)
+            val settingsUI = getSettingsUI(obj::class.java, contextUI)
+
+            // базовый список скрытых (или дефолтный)
+            val baseHide = settingsUI?.hideFields ?: defaultHideUserFields
+
+            // 👉 если пользователь ещё ничего не настраивал (settingsUI == null),
+            //    добавляем group_header в скрытые "по умолчанию"
+            val hideUserFields: List<String>? = if (settingsUI == null) {
+                (baseHide.orEmpty() + "group_header").map { it.trim() }
+            } else {
+                baseHide?.map { it.trim() }
+            }
+
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
 
             return fields
                 .filter { field ->
                     hidedFieldsOnUI.none { it == field }
                 }
-                .map {
+                .map { key ->
                     SettingsItemUI(
-                        it,
-                        when (it) {
+                        key,
+                        when (key) {
                             "column_name" -> "Назва реквізитів"
                             "id_res_image" -> "Зображення"
-                            else -> nameUIRepository.getTranslateString(it, obj.getFieldTranslateId(it))
+                            "group_header" -> "Заголовок групи"
+                            else -> nameUIRepository.getTranslateString(
+                                key,
+                                obj.getFieldTranslateId(key)
+                            )
                         },
-                        hideUserFields?.contains(it) != true,
+                        // 👇 логика видимости оставлена как была
+                        hideUserFields?.contains(key) != true,
                         0
                     )
                 }
@@ -193,7 +210,6 @@ class MainRepository(
                 SortingField(
                     key   = key,
                     title = sample?.let { nameUIRepository.getTranslateString(key, it.getFieldTranslateId(key)) } ?: key,
-//                    order = defaultSortKeys.indexOf(rawKey) // порядок приоритета: 0,1,2...
                     order = 1
                 )
             }
@@ -269,7 +285,8 @@ class MainRepository(
         kClass: KClass<T>,
         data: List<DataObjectUI>,
         contextUI: ContextUI?,
-        typePhoto: Int?
+        typePhoto: Int?,
+        groupingKeys: List<String> = emptyList()
     ): List<DataItemUI> {
 //        Log.e("!!!!!!TEST!!!!!!","getItems: end 0?")
 //        Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data size: ${data.size}")
@@ -278,7 +295,8 @@ class MainRepository(
             it.toItemUI(
                 nameUIRepository,
                 getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," },
-                typePhoto
+                typePhoto,
+                groupingKeys
             )
         }
     }

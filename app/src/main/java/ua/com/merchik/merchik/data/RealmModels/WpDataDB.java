@@ -1367,12 +1367,13 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         }
     };
 
+//    doc_num_otchet, main_option_id
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
         return "ID, isp, isp_fact, tech_sup_active, addr_id, dt_start, client_id, dt_stop, action, action_txt, action_type, stajirovka_stage, " +
-                "one_time_work, theme_grp, code_dda, code_ddas, codedad, code_dad2, smeta, smeta_1c, doc_num, " +
-                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, doc_num_otchet, signal_cnt, doc_num_otchet_id, user_id, " +
+                "one_time_work, theme_grp, code_dda, code_ddas, codedad, code_dad2, smeta_1c, doc_num, " +
+                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, signal_cnt, doc_num_otchet_id, user_id, " +
                 "smeta_active, super_id, territorial_id, regional_id, nop_id, starsh_tt_id, contacter_id, fot_user_id, " +
                 "dot_user_id, visit_start_dt, visit_start_dt_receive, visit_start_geo_distance, visit_start_geo_accuracy, " +
                 "visit_start_geo_id, visit_end_dt, visit_end_dt_receive, visit_end_geo_distance, visit_end_geo_accuracy, " +
@@ -1384,7 +1385,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "client_work_duration, priority, import_type, dt_update, code_aadd, work_stop_reason, simple_report, " +
                 "copy_price_days, cash_zakaz, cash_sum_30, cash_sum_addr_30, visit_per_week, " +
                 "mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
-                "addr_location_xd, addr_location_yd, action_short_txt, main_option_id, " +
+                "addr_location_xd, addr_location_yd, action_short_txt, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
                 "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id, statusComment";

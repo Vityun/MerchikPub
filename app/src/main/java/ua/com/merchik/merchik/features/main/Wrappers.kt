@@ -710,14 +710,6 @@ object WPDataBDOverride {
                 3 -> "Робота виконується (звiт не проведено)"
                 else -> "Дані відсутні"
             }
-//            if (value == 1) "Роботу виконано (звiт проведено)" else {
-//                if (wpDataDB.visit_start_dt > 0) {
-//                    if (wpDataDB.visit_end_dt > 0)
-//                        "Роботу виконано (звiт не проведено)"
-//                    else
-//                        "Робота виконується (звiт не проведено)"
-//                } else "Робота не розпочата (звiт не проведено)"
-//            }
 
         } catch (e: Exception) {
             "Дані відсутні"
@@ -760,6 +752,8 @@ object WPDataBDOverride {
         "client_end_dt" -> 9063
         "sku" -> 9065
         "duration" -> 9064
+        "smeta" -> 9154
+        "doc_num_otchet" -> 9155
 
         else -> null
     }
@@ -773,9 +767,8 @@ object WPDataBDOverride {
             val status: String = jsonObject.get("status").toString()
             when (status) {
                 "0" -> {
-                    val dad2 = jsonObject.getLong("code_dad2")
-                    val count = RealmManager.stackPhotoPhotoCount(dad2)
-                    if (count > 0)
+                    val dtStart = jsonObject.getLong("client_start_dt")
+                    if (dtStart > 0)
                         MerchModifier(
                             textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
                         )
@@ -793,23 +786,6 @@ object WPDataBDOverride {
                     textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
                 )
             }
-//            if (jsonObject.get("status").toString() == "0") {
-//                val dad2 = jsonObject.getLong("code_dad2")
-//                val count = RealmManager.stackPhotoPhotoCount(dad2)
-//                if (count > 0)
-//                    MerchModifier(
-//                        textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
-//                    )
-//                else
-//                    MerchModifier(
-//                        textColor = Color.Red
-//                    )
-//            } else
-//                MerchModifier(
-////                    textColor = Color.Green
-//                    textColor = Color(android.graphics.Color.parseColor("#00FF00"))
-//
-//                )
         }
 
         else -> null

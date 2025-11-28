@@ -19,14 +19,12 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,21 +49,30 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -82,7 +89,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
@@ -101,7 +111,14 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
-import ua.com.merchik.merchik.features.main.componentsUI.*
+import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
+import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
+import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
+import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
+import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
+import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
+import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -117,8 +134,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val focusManager = LocalFocusManager.current
 
     var isActiveFiltered by remember { mutableStateOf(false) }
-
     var isActiveSorted by remember { mutableStateOf(false) }
+    var isActiveGrouped by remember { mutableStateOf(false) }
 
     var showAdditionalContent by remember { mutableStateOf(false) }
 
@@ -149,7 +166,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
 //    val dataItemsUI = remember { mutableStateListOf<DataItemUI>() }
 //                val dataItemsUI = mutableListOf<DataItemUI>()
-    val dataItemsUI by viewModel.dataItems.collectAsState()
+
+//        ## проверим, как будет работать без него
+    val dataItemsUI_ by viewModel.dataItems.collectAsState()
 
 
     var flying by remember { mutableStateOf<Flying<DataItemUI>?>(null) }
@@ -221,7 +240,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                         // создаём Flying (можно модифицировать параметры)
                         flying = Flying(
-                            item = dataItemsUI.firstOrNull { it.stableId == stableId } ?: return@collect,
+                            item = dataItemsUI_.firstOrNull { it.stableId == stableId }
+                                ?: return@collect,
                             startOffset = IntOffset(pos.x.roundToInt(), pos.y.roundToInt()),
                             size = size
                         )
@@ -236,6 +256,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             }
         }
     }
+
+
+    var isCollapsed by rememberSaveable { mutableStateOf(true) }
 
 
     Column(
@@ -272,6 +295,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             val visibilityColumName =
                 if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
+            val visibilityHeaderGroupName =
+                uiState.settingsItems.firstOrNull { it.key == "group_header" }?.isEnabled == true
+
             Column {
 
                 if ((viewModel.typeWindow ?: "").equals("full", true)) {
@@ -296,6 +322,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     items = uiState.items,
                     filters = uiState.filters,
                     sortingFields = uiState.sortingFields,
+                    groupingFields = uiState.groupingFields,
                     rangeStart = viewModel.rangeDataStart.value,
                     rangeEnd = viewModel.rangeDataEnd.value,
                     searchText = uiState.filters?.searchText
@@ -305,6 +332,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
+                isActiveGrouped = result.isActiveGrouped
+
+                val dataItemsUI = result.items
+                val groups = result.groups
 
                 uiState.title?.let {
                     Text(
@@ -399,7 +430,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         Row {
                             ImageButton(
                                 id = R.drawable.ic_maps,
-                                shape = RoundedCornerShape(2.dp),
+                                shape = RoundedCornerShape(4.dp),
                                 sizeButton = 40.dp,
                                 sizeImage = 24.dp,
                                 modifier = Modifier.padding(start = 7.dp),
@@ -412,7 +443,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             if ((viewModel.typeWindow ?: "").equals("container", true)) {
                                 ImageButton(
                                     id = R.drawable.ic_settings_empt,
-                                    shape = RoundedCornerShape(2.dp),
+                                    shape = RoundedCornerShape(4.dp),
                                     sizeButton = 40.dp, sizeImage = 24.dp,
                                     modifier = Modifier.padding(start = 7.dp),
                                     onClick = { showSettingsDialog = true }
@@ -420,7 +451,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                                 ImageButton(
                                     id = R.drawable.ic_refresh,
-                                    shape = RoundedCornerShape(2.dp),
+                                    shape = RoundedCornerShape(4.dp),
                                     sizeButton = 40.dp, sizeImage = 24.dp,
                                     modifier = Modifier.padding(start = 7.dp),
                                     onClick = { viewModel.updateContent() }
@@ -435,7 +466,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                                    ##
                                     showAdditionalContent = true
                                 },
-                                shape = RoundedCornerShape(2.dp)
+                                shape = RoundedCornerShape(4.dp)
                             )
 
                             ImageButton(
@@ -443,7 +474,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 sizeButton = 40.dp, sizeImage = 24.dp,
                                 modifier = Modifier.padding(start = 7.dp),
                                 onClick = { showSortingDialog = true },
-                                shape = RoundedCornerShape(2.dp)
+                                shape = RoundedCornerShape(4.dp)
                             )
 
                             ImageButton(
@@ -451,7 +482,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 sizeButton = 40.dp, sizeImage = 24.dp,
                                 modifier = Modifier.padding(start = 7.dp),
                                 onClick = { showFilteringDialog = true },
-                                shape = RoundedCornerShape(2.dp)
+                                shape = RoundedCornerShape(4.dp)
                             )
                         }
                     }
@@ -468,7 +499,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 ) {
                     LazyColumnScrollbar(
                         modifier = Modifier
-                            .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
+                            .padding(start = 2.dp, top = 10.dp, bottom = 10.dp)
                             .weight(1f),
                         state = listState,
                         settings = ScrollbarSettings(
@@ -479,148 +510,199 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             thumbShape = CircleShape,
                         ),
                     ) {
+
                         LazyColumn(
                             state = listState,
                         ) {
-                            itemsIndexed(
-                                items = dataItemsUI,
-                                key = { _, item -> item.stableId }
-                            ) { index, item ->
-                                val key = item.stableId
-                                var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
-                                // Анимированный уход «в ноль» для исходного элемента
-                                AnimatedVisibility(
-                                    visible = disappearingKey != key,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateItemPlacement(animationSpec = tween(300)), // плавное смещение соседей
-                                    exit = shrinkVertically(
-                                        animationSpec = tween(250),
-                                        shrinkTowards = Alignment.Top
-                                    ) + fadeOut(tween(180))
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .onGloballyPositioned {
-                                                // Сохраняем coords в map
-                                                coordsMap[key] = it
-                                                coords = it
-                                            }
-                                            // Долгий тап -> «призрак» для перетаскивания
-                                            .pointerInput(Unit) {
-                                                detectDragGesturesAfterLongPress(
-                                                    onDragStart = { _ ->
-//                                                        val cronchikViewModel =
-//                                                            ViewModelProvider(context as AppCompatActivity).get<CronchikViewModel>(CronchikViewModel::class.java)
-//                                                        cronchikViewModel.updateBadge(0, 1)
-//
-//                                                        coords?.let { c ->
-//                                                            val pos = c.positionInRoot()
-//                                                            val size = c.size
-//                                                            flying = Flying(
-//                                                                item = item,
-//                                                                startOffset = IntOffset(
-//                                                                    pos.x.roundToInt(),
-//                                                                    pos.y.roundToInt()
-//                                                                ),
-//                                                                size = size
-//                                                            )
-//                                                        }
-//                                                        disappearingKey = key
-                                                        coords?.let { c ->
-                                                            val pos = c.positionInRoot()
-                                                            dragging = Dragging(
-                                                                item = item,
-                                                                size = c.size,
-                                                                offset = mutableStateOf(
-                                                                    Offset(
-                                                                        pos.x,
-                                                                        pos.y
-                                                                    )
-                                                                )
-                                                            )
-                                                            // лёгкая вибрация на старте
-                                                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                                        }
-                                                    },
-                                                    onDrag = { change, dragAmount ->
-                                                        change.consume() // блокируем скролл списка во время перетаскивания
-                                                        dragging?.offset?.let { it.value += dragAmount }
-                                                    },
-                                                    onDragEnd = {
-                                                        dragging?.let { d ->
-                                                            shrinking = Shrinking(
-                                                                item = d.item,
-                                                                startOffset = IntOffset(
-                                                                    d.offset.value.x.roundToInt(),
-                                                                    d.offset.value.y.roundToInt()
-                                                                ),
-                                                                size = d.size
-                                                            )
-                                                        }
-                                                        dragging = null
-                                                    },
-                                                    onDragCancel = {
-                                                        // Отменили — тоже «сожмём и скроем» из текущей позиции
-                                                        dragging?.let { d ->
-                                                            shrinking = Shrinking(
-                                                                item = d.item,
-                                                                startOffset = IntOffset(
-                                                                    d.offset.value.x.roundToInt(),
-                                                                    d.offset.value.y.roundToInt()
-                                                                ),
-                                                                size = d.size
-                                                            )
-                                                        }
-                                                        dragging = null
-                                                    }
-                                                )
-                                            }
-                                    ) {
-                                        ItemUI(
-                                            item = item,
-                                            visibilityColumName = visibilityColumName,
-                                            settingsItemUI = uiState.settingsItems,
-                                            contextUI = viewModel.modeUI,
-                                            onClickItem = {
-                                                viewModel.onClickItem(it, context)
-//                                                TODO Код анимации перенести в remember
-                                                // запускаем анимацию через viewModel, чтобы единая логика для внешних вызовов и кликов
-//                                                viewModel.requestFlyByStableId(key)
-//                                                coords?.let { c ->
-//                                                    val pos = c.positionInRoot()
-//                                                    val size = c.size
-//                                                    flying = Flying(
-//                                                        item = item,
-//                                                        startOffset = IntOffset(
-//                                                            pos.x.roundToInt(),
-//                                                            pos.y.roundToInt()
-//                                                        ),
-//                                                        size = size
-//                                                    )
-//                                                }
-//                                                disappearingKey = key
-                                            },
-                                            onClickItemImage = {
-                                                viewModel.onClickItemImage(
-                                                    it,
-                                                    context
-                                                )
-                                            },
-                                            onMultipleClickItemImage = { dataItem, index ->
-                                                viewModel.onClickItemImage(dataItem, context, index)
-                                            },
-                                            onCheckItem = { checked, it ->
-                                                viewModel.updateItemSelect(
-                                                    checked,
-                                                    it
-                                                )
-                                            }
-                                        )
-                                    }
+                            if (!isActiveGrouped || groups.isEmpty()) {
+                                // ----- обычный режим, как сейчас -----
+                                itemsIndexed(
+                                    items = dataItemsUI,
+                                    key = { _, item -> item.stableId }
+                                ) { index, item ->
+                                    ItemRowCard(
+                                        item = item,
+                                        uiState = uiState,
+                                        viewModel = viewModel,
+                                        context = context,
+                                        visibilityColumName = visibilityColumName
+                                    )
+                                }
+                            } else {
+                                // ----- режим колод -----
+                                items(
+                                    items = groups,
+                                    key = { it.groupKey } // groupKey или другой стабильный ключ группы
+                                ) { groupMeta ->
+                                    val groupItems = dataItemsUI.subList(
+                                        groupMeta.startIndex,
+                                        groupMeta.endIndexExclusive
+                                    )
+
+                                    GroupDeck(
+                                        groupMeta = if (visibilityHeaderGroupName) groupMeta else null,
+                                        items = groupItems,
+                                        visibilityColumName = visibilityColumName,
+                                        settingsItems = uiState.settingsItems,
+                                        viewModel = viewModel,
+                                        context = context,
+                                        groupingFields = uiState.groupingFields, // 👈 список всех группировок
+                                        level = 0                                // 👈 верхний уровень
+                                    )
+                                    //                                    GroupDeck(
+//                                        groupMeta = groupMeta,
+//                                        items = groupItems,
+//                                        visibilityColumName = visibilityColumName,
+//                                        settingsItems = uiState.settingsItems,
+//                                        viewModel = viewModel,
+//                                        context = context
+//                                    )
                                 }
                             }
                         }
+
+//                        LazyColumn(
+//                            state = listState,
+//                        ) {
+//                            itemsIndexed(
+//                                items = dataItemsUI,
+//                                key = { _, item -> item.stableId }
+//                            ) { index, item ->
+//                                val key = item.stableId
+//                                var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+//                                // Анимированный уход «в ноль» для исходного элемента
+//                                AnimatedVisibility(
+//                                    visible = disappearingKey != key,
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .animateItemPlacement(animationSpec = tween(300)), // плавное смещение соседей
+//                                    exit = shrinkVertically(
+//                                        animationSpec = tween(250),
+//                                        shrinkTowards = Alignment.Top
+//                                    ) + fadeOut(tween(180))
+//                                ) {
+//                                    Box(
+//                                        modifier = Modifier
+//                                            .onGloballyPositioned {
+//                                                // Сохраняем coords в map
+//                                                coordsMap[key] = it
+//                                                coords = it
+//                                            }
+//                                            // Долгий тап -> «призрак» для перетаскивания
+//                                            .pointerInput(Unit) {
+//                                                detectDragGesturesAfterLongPress(
+//                                                    onDragStart = { _ ->
+////                                                        val cronchikViewModel =
+////                                                            ViewModelProvider(context as AppCompatActivity).get<CronchikViewModel>(CronchikViewModel::class.java)
+////                                                        cronchikViewModel.updateBadge(0, 1)
+////
+////                                                        coords?.let { c ->
+////                                                            val pos = c.positionInRoot()
+////                                                            val size = c.size
+////                                                            flying = Flying(
+////                                                                item = item,
+////                                                                startOffset = IntOffset(
+////                                                                    pos.x.roundToInt(),
+////                                                                    pos.y.roundToInt()
+////                                                                ),
+////                                                                size = size
+////                                                            )
+////                                                        }
+////                                                        disappearingKey = key
+//                                                        coords?.let { c ->
+//                                                            val pos = c.positionInRoot()
+//                                                            dragging = Dragging(
+//                                                                item = item,
+//                                                                size = c.size,
+//                                                                offset = mutableStateOf(
+//                                                                    Offset(
+//                                                                        pos.x,
+//                                                                        pos.y
+//                                                                    )
+//                                                                )
+//                                                            )
+//                                                            // лёгкая вибрация на старте
+//                                                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+//                                                        }
+//                                                    },
+//                                                    onDrag = { change, dragAmount ->
+//                                                        change.consume() // блокируем скролл списка во время перетаскивания
+//                                                        dragging?.offset?.let { it.value += dragAmount }
+//                                                    },
+//                                                    onDragEnd = {
+//                                                        dragging?.let { d ->
+//                                                            shrinking = Shrinking(
+//                                                                item = d.item,
+//                                                                startOffset = IntOffset(
+//                                                                    d.offset.value.x.roundToInt(),
+//                                                                    d.offset.value.y.roundToInt()
+//                                                                ),
+//                                                                size = d.size
+//                                                            )
+//                                                        }
+//                                                        dragging = null
+//                                                    },
+//                                                    onDragCancel = {
+//                                                        // Отменили — тоже «сожмём и скроем» из текущей позиции
+//                                                        dragging?.let { d ->
+//                                                            shrinking = Shrinking(
+//                                                                item = d.item,
+//                                                                startOffset = IntOffset(
+//                                                                    d.offset.value.x.roundToInt(),
+//                                                                    d.offset.value.y.roundToInt()
+//                                                                ),
+//                                                                size = d.size
+//                                                            )
+//                                                        }
+//                                                        dragging = null
+//                                                    }
+//                                                )
+//                                            }
+//                                    ) {
+//                                        ItemUI(
+//                                            item = item,
+//                                            visibilityColumName = visibilityColumName,
+//                                            settingsItemUI = uiState.settingsItems,
+//                                            contextUI = viewModel.modeUI,
+//                                            onClickItem = {
+//                                                viewModel.onClickItem(it, context)
+////                                                TODO Код анимации перенести в remember
+//                                                // запускаем анимацию через viewModel, чтобы единая логика для внешних вызовов и кликов
+////                                                viewModel.requestFlyByStableId(key)
+////                                                coords?.let { c ->
+////                                                    val pos = c.positionInRoot()
+////                                                    val size = c.size
+////                                                    flying = Flying(
+////                                                        item = item,
+////                                                        startOffset = IntOffset(
+////                                                            pos.x.roundToInt(),
+////                                                            pos.y.roundToInt()
+////                                                        ),
+////                                                        size = size
+////                                                    )
+////                                                }
+////                                                disappearingKey = key
+//                                            },
+//                                            onClickItemImage = {
+//                                                viewModel.onClickItemImage(
+//                                                    it,
+//                                                    context
+//                                                )
+//                                            },
+//                                            onMultipleClickItemImage = { dataItem, index ->
+//                                                viewModel.onClickItemImage(dataItem, context, index)
+//                                            },
+//                                            onCheckItem = { checked, it ->
+//                                                viewModel.updateItemSelect(
+//                                                    checked,
+//                                                    it
+//                                                )
+//                                            }
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
 
                     Row {
@@ -700,6 +782,317 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
 
+//                Column(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+//                        .shadow(4.dp, RoundedCornerShape(8.dp))
+//                        .clip(RoundedCornerShape(8.dp))
+//                        .focusable()
+//                        .background(colorResource(id = R.color.main_form_list))
+//                ) {
+//                    // Верхняя часть – анимируем область, где либо стопка, либо полный список
+//                    Box(
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .fillMaxWidth()
+//                            .animateContentSize(
+//                                animationSpec = spring(
+//                                    dampingRatio = Spring.DampingRatioNoBouncy,
+//                                    stiffness = Spring.StiffnessMedium
+//                                )
+//                            )
+//                    ) {
+//                        AnimatedContent(
+//                            targetState = isCollapsed,
+//                            modifier = Modifier.fillMaxSize(),
+//                            transitionSpec = {
+//                                if (!targetState) {
+//                                    // Свернуто -> развернуто (лента выезжает из области стопки)
+//                                    (slideInVertically(
+//                                        initialOffsetY = { fullHeight -> -fullHeight / 4 } // слегка сверху
+//                                    ) + fadeIn()) togetherWith
+//                                            (slideOutVertically(
+//                                                targetOffsetY = { fullHeight -> fullHeight / 4 }
+//                                            ) + fadeOut())
+//                                } else {
+//                                    // Развернуто -> свернуто (список стягивается в область стопки)
+//                                    (slideInVertically(
+//                                        initialOffsetY = { fullHeight -> fullHeight / 4 }
+//                                    ) + fadeIn()) togetherWith
+//                                            (slideOutVertically(
+//                                                targetOffsetY = { fullHeight -> -fullHeight / 4 }
+//                                            ) + fadeOut())
+//                                }
+//                            },
+//                            label = "stack_expand_collapse"
+//                        ) { collapsed ->
+//                            if (collapsed) {
+//                                // --- СВЕРНУТОЕ СОСТОЯНИЕ: СТОПКА КАРТОЧЕК ---
+//                                val previewItems = remember(dataItemsUI) { dataItemsUI.take(3) }
+//
+//                                val elevation by animateDpAsState(targetValue = 10.dp, label = "stack_elevation")
+//                                val offsetY by animateDpAsState(targetValue = (-8).dp, label = "stack_offset_y")
+//
+//                                Box(
+//                                    modifier = Modifier
+//                                        .fillMaxSize()
+//                                        .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+//                                        .offset(y = offsetY)
+//                                        .clickable {
+//                                            // по клику разворачиваем список
+//                                            isCollapsed = false
+//                                        }
+//                                ) {
+//                                    previewItems.forEachIndexed { index, item ->
+//                                        val cardOffset = (index * 6).dp
+//                                        val cardAlpha = 1f - index * 0.18f
+//
+//                                        Card(
+//                                            shape = RoundedCornerShape(8.dp),
+//                                            elevation = CardDefaults.cardElevation(
+//                                                defaultElevation = elevation - index.dp
+//                                            ),
+//                                            modifier = Modifier
+//                                                .fillMaxWidth()
+//                                                .align(Alignment.TopCenter)
+//                                                .offset(y = cardOffset)
+//                                                .zIndex((previewItems.size - index).toFloat())
+//                                                .graphicsLayer { alpha = cardAlpha }
+//                                        ) {
+//                                            // внутри используем тот же ItemUI (можно считать превью)
+//                                            ItemUI(
+//                                                item = item,
+//                                                visibilityColumName = visibilityColumName,
+//                                                settingsItemUI = uiState.settingsItems,
+//                                                contextUI = viewModel.modeUI,
+//                                                onClickItem = {
+//                                                    // разворачиваем и обрабатываем клик как раньше
+//                                                    isCollapsed = false
+////                                                    viewModel.onClickItem(it, context)
+//                                                },
+//                                                onClickItemImage = {
+//                                                    viewModel.onClickItemImage(it, context)
+//                                                },
+//                                                onMultipleClickItemImage = { dataItem, idx ->
+//                                                    viewModel.onClickItemImage(dataItem, context, idx)
+//                                                },
+//                                                onCheckItem = { checked, it2 ->
+//                                                    viewModel.updateItemSelect(checked, it2)
+//                                                }
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            } else {
+//                                // --- РАЗВЁРНУТОЕ СОСТОЯНИЕ: ТВОЙ ОРИГИНАЛЬНЫЙ СПИСОК ---
+//                                LazyColumnScrollbar(
+//                                    modifier = Modifier
+//                                        .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
+//                                        .fillMaxSize(),
+//                                    state = listState,
+//                                    settings = ScrollbarSettings(
+//                                        scrollbarPadding = 2.dp,
+//                                        alwaysShowScrollbar = true,
+//                                        thumbUnselectedColor = colorResource(id = R.color.scrollbar),
+//                                        thumbSelectedColor = colorResource(id = R.color.scrollbar),
+//                                        thumbShape = CircleShape,
+//                                    ),
+//                                ) {
+//                                    LazyColumn(
+//                                        state = listState,
+//                                    ) {
+//                                        itemsIndexed(
+//                                            items = dataItemsUI,
+//                                            key = { _, item -> item.stableId }
+//                                        ) { index, item ->
+//                                            val key = item.stableId
+//                                            var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+//                                            // Анимированный уход «в ноль» для исходного элемента
+//                                            this@Column.AnimatedVisibility(
+//                                                visible = disappearingKey != key,
+//                                                label = "",
+//                                                modifier = Modifier
+//                                                    .fillMaxWidth()
+//                                                    .animateItemPlacement(animationSpec = tween(300)), // плавное смещение соседей
+//                                                exit = shrinkVertically(
+//                                                    animationSpec = tween(250),
+//                                                    shrinkTowards = Alignment.Top
+//                                                ) + fadeOut(tween(180))
+//                                            ) {
+//                                                Box(
+//                                                    modifier = Modifier
+//                                                        .onGloballyPositioned {
+//                                                            // Сохраняем coords в map
+//                                                            coordsMap[key] = it
+//                                                            coords = it
+//                                                        }
+//                                                        // Долгий тап -> «призрак» для перетаскивания
+//                                                        .pointerInput(Unit) {
+//                                                            detectDragGesturesAfterLongPress(
+//                                                                onDragStart = { _ ->
+//                                                                    coords?.let { c ->
+//                                                                        val pos = c.positionInRoot()
+//                                                                        dragging = Dragging(
+//                                                                            item = item,
+//                                                                            size = c.size,
+//                                                                            offset = mutableStateOf(
+//                                                                                Offset(
+//                                                                                    pos.x,
+//                                                                                    pos.y
+//                                                                                )
+//                                                                            )
+//                                                                        )
+//                                                                        // лёгкая вибрация на старте
+//                                                                        haptics.performHapticFeedback(
+//                                                                            androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress
+//                                                                        )
+//                                                                    }
+//                                                                },
+//                                                                onDrag = { change, dragAmount ->
+//                                                                    change.consume() // блокируем скролл списка во время перетаскивания
+//                                                                    dragging?.offset?.let { it.value += dragAmount }
+//                                                                },
+//                                                                onDragEnd = {
+//                                                                    dragging?.let { d ->
+//                                                                        shrinking = Shrinking(
+//                                                                            item = d.item,
+//                                                                            startOffset = IntOffset(
+//                                                                                d.offset.value.x.roundToInt(),
+//                                                                                d.offset.value.y.roundToInt()
+//                                                                            ),
+//                                                                            size = d.size
+//                                                                        )
+//                                                                    }
+//                                                                    dragging = null
+//                                                                },
+//                                                                onDragCancel = {
+//                                                                    // Отменили — тоже «сожмём и скроем» из текущей позиции
+//                                                                    dragging?.let { d ->
+//                                                                        shrinking = Shrinking(
+//                                                                            item = d.item,
+//                                                                            startOffset = IntOffset(
+//                                                                                d.offset.value.x.roundToInt(),
+//                                                                                d.offset.value.y.roundToInt()
+//                                                                            ),
+//                                                                            size = d.size
+//                                                                        )
+//                                                                    }
+//                                                                    dragging = null
+//                                                                }
+//                                                            )
+//                                                        }
+//                                                ) {
+//                                                    ItemUI(
+//                                                        item = item,
+//                                                        visibilityColumName = visibilityColumName,
+//                                                        settingsItemUI = uiState.settingsItems,
+//                                                        contextUI = viewModel.modeUI,
+//                                                        onClickItem = {
+//                                                            viewModel.onClickItem(it, context)
+//                                                        },
+//                                                        onClickItemImage = {
+//                                                            viewModel.onClickItemImage(
+//                                                                it,
+//                                                                context
+//                                                            )
+//                                                        },
+//                                                        onMultipleClickItemImage = { dataItem, indexImg ->
+//                                                            viewModel.onClickItemImage(dataItem, context, indexImg)
+//                                                        },
+//                                                        onCheckItem = { checked, it3 ->
+//                                                            viewModel.updateItemSelect(
+//                                                                checked,
+//                                                                it3
+//                                                            )
+//                                                        }
+//                                                    )
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    // --- НИЖНИЙ ROW ОСТАВЛЯЕМ КАК БЫЛ ---
+//                    Row {
+//                        Tooltip(
+//                            text = viewModel.getTranslateString(
+//                                stringResource(
+//                                    id = R.string.total_number_selected,
+//                                    dataItemsUI.size
+//                                )
+//                            )
+//                        ) {
+//                            Text(
+//                                text = "\u2211 ${dataItemsUI.size}",
+//                                fontSize = 16.sp,
+//                                textDecoration = TextDecoration.Underline,
+//                                modifier = Modifier
+//                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+//                            )
+//                        }
+//
+//                        Tooltip(
+//                            text = viewModel.getTranslateString(
+//                                stringResource(
+//                                    id = R.string.total_number_selected,
+//                                    0
+//                                )
+//                            )
+//                        ) {
+//                            Text(
+//                                text = "⚲ ${0}",
+//                                fontSize = 16.sp,
+//                                textDecoration = TextDecoration.Underline,
+//                                modifier = Modifier
+//                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+//                            )
+//                        }
+//
+//                        Tooltip(
+//                            text = viewModel.getTranslateString(
+//                                stringResource(
+//                                    id = R.string.total_number_selected,
+//                                    0
+//                                )
+//                            )
+//                        ) {
+//                            Text(
+//                                text = "\u2207 ${0}",
+//                                fontSize = 16.sp,
+//                                textDecoration = TextDecoration.Underline,
+//                                modifier = Modifier
+//                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+//                            )
+//                        }
+//
+//                        Spacer(modifier = Modifier.weight(1f))
+//
+//                        if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
+//                            val selectedCount = dataItemsUI.count { it.selected }
+//                            Tooltip(
+//                                text = viewModel.getTranslateString(
+//                                    stringResource(
+//                                        id = R.string.total_number_marked,
+//                                        selectedCount
+//                                    )
+//                                )
+//                            ) {
+//                                Text(
+//                                    text = "\u2713 $selectedCount",
+//                                    fontSize = 16.sp,
+//                                    textDecoration = TextDecoration.Underline,
+//                                    modifier = Modifier
+//                                        .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+
                 if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
                     Row {
                         Button(
@@ -731,10 +1124,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors =
-                            if (selectedItems.isNotEmpty())
-                                ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
-                            else
-                                ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                                if (selectedItems.isNotEmpty())
+                                    ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
+                                else
+                                    ButtonDefaults.buttonColors(containerColor = Color.Gray),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
@@ -1002,6 +1395,270 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
 var index = 0
 
+//@Stable
+//@Composable
+//fun ItemUI(
+//    item: DataItemUI,
+//    settingsItemUI: List<SettingsItemUI>,
+//    visibilityColumName: Int,
+//    contextUI: ModeUI,
+//    onClickItem: (DataItemUI) -> Unit,
+//    onClickItemImage: (DataItemUI) -> Unit,
+//    onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
+//    onCheckItem: (Boolean, DataItemUI) -> Unit
+//) {
+//    index++
+//    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
+//
+//    Box(
+//        modifier = Modifier
+//            .clickable { onClickItem(item) }
+//            .fillMaxWidth()
+////            .padding(end = 10.dp, bottom = 7.dp)
+//            .clip(RoundedCornerShape(8.dp))
+//            .border(1.dp, Color.LightGray)
+//            .shadow(6.dp, RoundedCornerShape(8.dp))
+//            .then(
+//                Modifier.background(
+//                    if (item.selected) colorResource(id = R.color.selected_item)
+//                    else item.modifierContainer?.background ?: Color.White
+//                )
+//            )
+//    ) {
+//        if (item.images?.size == 3)
+//        // Новый блок для трех изображений в ряд
+//            Column(
+//                Modifier
+//                    .fillMaxWidth()
+//                    .padding(7.dp)
+//            ) {
+//                item.fields.firstOrNull { it.key.equals("id_res_image", true) }?.let {
+//                    val images = item.images.take(3)
+//                    val defaultImage = painterResource(R.drawable.merchik)
+//
+//                    Row(
+//                        modifier = Modifier
+////                            .padding(end = 5.dp)
+//                    ) {
+//                        repeat(3) { index ->
+//                            Box(
+//                                modifier = Modifier
+//                                    .weight(1f)
+//                                    .padding(2.dp)
+//                                    .aspectRatio(1f)
+//                                    .border(1.dp, Color.LightGray)
+//                                    .background(Color.White)
+//                            ) {
+//                                val painter = when {
+//                                    index < images.size -> {
+//                                        val file = File(images[index])
+//                                        if (file.exists()) {
+//                                            rememberAsyncImagePainter(model = file)
+//                                        } else {
+//                                            defaultImage
+//                                        }
+//                                    }
+//
+//                                    else -> defaultImage
+//                                }
+//
+//                                val fields = item.rawObj.firstOrNull()?.getFieldsForOrderOnUI()
+//                                when {
+//                                    fields.isNullOrEmpty() || index >= fields.size || fields[index].isNullOrEmpty() -> {
+//                                        Image(
+//                                            painter = painter,
+//                                            contentDescription = null,
+//                                            modifier = Modifier
+//                                                .fillMaxSize()
+//                                                .clickable {
+//                                                    onMultipleClickItemImage(
+//                                                        item,
+//                                                        index
+//                                                    )
+//                                                },
+//                                            contentScale = ContentScale.Crop
+//                                        )
+//                                    }
+//
+//                                    else -> {
+//                                        // Получаем базовый текст
+//                                        val baseText = fields[index].orEmpty()
+//                                        val modifiedText = if (baseText == "Планограма") {
+//                                            item.rawObj
+//                                                .filterIsInstance<PlanogrammVizitShowcaseSDB>()
+//                                                .firstOrNull()
+//                                                ?.planogram_id
+//                                                ?.let { "$baseText $it" }
+//                                                ?: baseText
+//                                        } else {
+//                                            baseText
+//                                        }
+//
+//                                        ImageWithText(
+//                                            item = item,
+//                                            index = index,
+//                                            painter = painter,
+//                                            imageText = modifiedText
+//                                        )
+//                                        { clickedItem, clickedIndex ->
+//                                            onMultipleClickItemImage(clickedItem, clickedIndex)
+//                                        }
+//
+//                                    }
+//                                }
+//                                if (index == 0) {
+//                                    item.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB }
+//                                        ?.let {
+//                                            it as PlanogrammVizitShowcaseSDB
+//                                            val text = it.score
+//                                            Box(
+//                                                modifier = Modifier.align(Alignment.TopEnd)
+//                                            )
+//                                            {
+//                                                TextInStrokeCircle(
+//                                                    modifier = Modifier
+//                                                        .clickable { onClickItem(item) }
+//                                                        .align(Alignment.Center),
+//                                                    text = text,
+//                                                    circleColor = Color.Gray,
+//                                                    textColor = Color.Gray,
+//                                                    aroundColor =
+//                                                        if (item.selected) colorResource(id = R.color.selected_item)
+//                                                        else item.modifierContainer?.background
+//                                                            ?: Color.White.copy(alpha = 0.5f),
+//                                                    circleSize = 30.dp,
+//                                                    textSize = 20f.toPx(),
+//                                                )
+//                                            }
+//                                        }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        else
+//            Row(Modifier.padding(7.dp)) {
+//                item.fields.firstOrNull {
+//                    it.key.equals(
+//                        "id_res_image",
+//                        true
+//                    )
+//                }?.let {
+//                    val idResImage = (it.value.rawValue as? Int)
+//                        ?: R.drawable.merchik
+//                    Box(
+//                        modifier = Modifier
+//                            .weight(1f)
+//                            .padding(end = 5.dp)
+//                            .border(1.dp, Color.LightGray)
+//                            .background(Color.White)
+//                            .align(alignment = Alignment.Top)
+//                    ) {
+//                        val images = mutableListOf<Painter>()
+//                        if (item.images.isNullOrEmpty()) {
+//                            images.add(painterResource(idResImage))
+//                        } else {
+//                            item.images.forEach { pathImage ->
+//                                val file = File(pathImage)
+//                                if (file.exists()) {
+//                                    images.add(
+//                                        rememberAsyncImagePainter(model = file)
+//                                    )
+//                                } else
+//                                    images.add(painterResource(idResImage))
+//                            }
+//                        }
+//
+//                        if (images.size <= 1) {
+//                            Image(
+//                                painter = images[0],
+//                                modifier = Modifier
+//                                    .padding(5.dp)
+//                                    .size(100.dp)
+//                                    .clickable { onClickItemImage(item) },
+//                                contentScale = ContentScale.FillWidth,
+//                                contentDescription = null
+//                            )
+//                        } else {
+//                            LazyRow {
+//                                items(images) { image ->
+//                                    Image(
+//                                        painter = image,
+//                                        modifier = Modifier
+//                                            .padding(5.dp)
+//                                            .size(100.dp)
+//                                            .clickable { onClickItemImage(item) },
+//                                        contentScale = ContentScale.FillWidth,
+//                                        contentDescription = null
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                Column(
+//                    modifier = Modifier
+//                        .weight(if (item.images?.size == 3) 1f else 2f)
+//                ) {
+//                    item.fields.forEachIndexed { index, field ->
+//                        if (settingsItemUI.firstOrNull {
+//                                it.key.equals(
+//                                    field.key,
+//                                    true
+//                                )
+//                            }?.isEnabled == false) {
+//                        } else {
+//                            if (!field.key.equals("id_res_image", true)) {
+//                                ItemFieldValue(field, visibilityColumName)
+//                                if (index < item.fields.size - 1)
+//                                    HorizontalDivider(color = Color.LightGray)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//        Column(modifier = Modifier.align(Alignment.TopEnd)) {
+//
+//            if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT) {
+//                RoundCheckbox(
+//                    modifier = Modifier.padding(
+//                        top = 3.dp,
+//                        end = 3.dp
+//                    ),
+//                    checked = item.selected,
+//                    aroundColor =
+//                        if (item.selected) colorResource(id = R.color.selected_item)
+//                        else item.modifierContainer?.background ?: Color.White,
+//                    onCheckedChange = { onCheckItem(it, item) }
+//                )
+//            }
+//
+//            item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
+//                ?.let {
+//                    it as AdditionalRequirementsMarkDB
+//                    val text = it.score ?: "0"
+//                    TextInStrokeCircle(
+//                        modifier = Modifier.padding(
+//                            top = 3.dp,
+//                            end = 3.dp
+//                        ),
+//                        text = text,
+//                        circleColor = if (text == "0") Color.Red else Color.Gray,
+//                        textColor = if (text == "0") Color.Red else Color.Gray,
+//                        aroundColor =
+//                            if (item.selected) colorResource(id = R.color.selected_item)
+//                            else item.modifierContainer?.background ?: Color.White,
+//                        circleSize = 30.dp,
+//                        textSize = 20f.toPx(),
+//                    )
+//                }
+//        }
+//    }
+//}
+
 @Stable
 @Composable
 fun ItemUI(
@@ -1016,14 +1673,33 @@ fun ItemUI(
 ) {
     index++
     Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
+
+    // 👇 Список реально видимых полей с учётом настроек
+//    val visibleFields = remember(item.fields, settingsItemUI, visibilityColumName) {
+//        item.fields.filter { field ->
+//            // Здесь твоя логика "поле включено/выключено"
+//            val setting = settingsItemUI.firstOrNull {
+//                it.key.equals(field.key, ignoreCase = true)
+//            }
+//            val hiddenByUser = setting?.isEnabled == true
+//            !hiddenByUser
+//        }
+//    }
+
+    // ✅ всегда считаем актуальный список видимых полей
+    val visibleFields = item.fields.filter { field ->
+        val setting = settingsItemUI.firstOrNull {
+            it.key.equals(field.key, ignoreCase = true)
+        }
+        setting?.isEnabled == true
+    }
+
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }
             .fillMaxWidth()
-            .padding(end = 10.dp, bottom = 7.dp)
-            .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, Color.LightGray)
+            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
             .then(
                 Modifier.background(
                     if (item.selected) colorResource(id = R.color.selected_item)
@@ -1129,9 +1805,9 @@ fun ItemUI(
                                                     circleColor = Color.Gray,
                                                     textColor = Color.Gray,
                                                     aroundColor =
-                                                    if (item.selected) colorResource(id = R.color.selected_item)
-                                                    else item.modifierContainer?.background
-                                                        ?: Color.White.copy(alpha = 0.5f),
+                                                        if (item.selected) colorResource(id = R.color.selected_item)
+                                                        else item.modifierContainer?.background
+                                                            ?: Color.White.copy(alpha = 0.5f),
                                                     circleSize = 30.dp,
                                                     textSize = 20f.toPx(),
                                                 )
@@ -1203,25 +1879,55 @@ fun ItemUI(
                         }
                     }
                 }
-
                 Column(
                     modifier = Modifier
                         .weight(if (item.images?.size == 3) 1f else 2f)
                 ) {
-                    item.fields.forEachIndexed { index, field ->
-                        if (settingsItemUI.firstOrNull {
-                                it.key.equals(
-                                    field.key,
-                                    true
-                                )
-                            }?.isEnabled == false) {
-                        } else {
-                            if (!field.key.equals("id_res_image", true)) {
-                                ItemFieldValue(field, visibilityColumName)
-                                if (index < item.fields.size - 1) HorizontalDivider(color = Color.LightGray)
+                    visibleFields.forEachIndexed { index, field ->
+                        if (!field.key.equals("id_res_image", true)) {
+                            ItemFieldValue(field, visibilityColumName)
+                            if (index < visibleFields.lastIndex) {
+                                val bg = item.modifierContainer?.background
+                                val color = when {
+                                    // если контейнера нет → LightGray
+                                    bg == null -> Color.LightGray
+                                    // если фон светлее, чем LightGray → LightGray
+                                    bg.isLighterThan(Color.LightGray) -> Color.LightGray
+                                    // если такой же или темнее → White
+                                    else -> Color.White
+                                }
+                                HorizontalDivider(color = color)
                             }
                         }
                     }
+
+//                    item.fields.forEachIndexed { index, field ->
+//                        if (settingsItemUI.firstOrNull {
+//                                it.key.equals(
+//                                    field.key,
+//                                    true
+//                                )
+//                            }?.isEnabled == false) {
+//                        } else {
+//                            if (!field.key.equals("id_res_image", true)) {
+//                                ItemFieldValue(field, visibilityColumName)
+//                                if (index < visibleFields.size - 1) {
+//                                    val bg = item.modifierContainer?.background
+//                                    val color = when {
+//                                        // если контейнера нет → LightGray
+//                                        bg == null -> Color.LightGray
+//                                        // если фон светлее, чем LightGray → LightGray
+//                                        bg.isLighterThan(Color.LightGray) -> Color.LightGray
+//                                        // если такой же или темнее → White
+//                                        else -> Color.White
+//                                    }
+//                                    HorizontalDivider(
+//                                        color = color
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    }
                 }
             }
 
@@ -1235,8 +1941,8 @@ fun ItemUI(
                     ),
                     checked = item.selected,
                     aroundColor =
-                    if (item.selected) colorResource(id = R.color.selected_item)
-                    else item.modifierContainer?.background ?: Color.White,
+                        if (item.selected) colorResource(id = R.color.selected_item)
+                        else item.modifierContainer?.background ?: Color.White,
                     onCheckedChange = { onCheckItem(it, item) }
                 )
             }
@@ -1254,8 +1960,8 @@ fun ItemUI(
                         circleColor = if (text == "0") Color.Red else Color.Gray,
                         textColor = if (text == "0") Color.Red else Color.Gray,
                         aroundColor =
-                        if (item.selected) colorResource(id = R.color.selected_item)
-                        else item.modifierContainer?.background ?: Color.White,
+                            if (item.selected) colorResource(id = R.color.selected_item)
+                            else item.modifierContainer?.background ?: Color.White,
                         circleSize = 30.dp,
                         textSize = 20f.toPx(),
                     )
@@ -1264,6 +1970,8 @@ fun ItemUI(
     }
 }
 
+fun Color.isLighterThan(other: Color): Boolean =
+    this.luminance() < other.luminance()
 
 @Composable
 fun TopButton(

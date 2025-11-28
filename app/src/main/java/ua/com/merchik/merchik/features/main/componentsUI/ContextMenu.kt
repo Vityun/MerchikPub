@@ -60,7 +60,7 @@ fun ContextMenu(
                         time = 0
                         isVisible = false
                     },
-                    offset = IntOffset(0, -100),
+                    offset = IntOffset(0, 100),
                     alignment = Alignment.Center
                 ) {
                     Box(

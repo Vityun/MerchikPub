@@ -5,6 +5,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.StoreCenter
@@ -16,6 +17,7 @@ sealed interface MapIntent {
         val items: List<DataItemUI>,
         val filters: Filters?,
         val sorting: List<SortingField?>,
+        val grouping: List<GroupingField?>,
         val rangeStartLocalDate: LocalDate?, // поменяли тип на LocalDate?
         val rangeEndLocalDate: LocalDate?,
         val search: String?,

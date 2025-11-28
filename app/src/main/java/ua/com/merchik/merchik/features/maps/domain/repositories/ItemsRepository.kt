@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.maps.domain.repositories
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import java.time.LocalDate
 import java.time.ZoneId
@@ -14,6 +15,7 @@ interface ItemsRepository {
         items: List<DataItemUI>,
         filters: Filters?,
         sorting: List<SortingField?>,
+        grouping: List<GroupingField?>,
         rangeStart: java.time.LocalDate?,
         rangeEnd: java.time.LocalDate?,
         searchText: String?,

@@ -217,7 +217,7 @@ public class MenuMainActivity extends toolbar_menus {
 
         Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
 
-        downloadWPData();
+//        downloadWPData();
 //        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
 //
 //        FirebaseMessaging.getInstance().getToken()
@@ -246,8 +246,8 @@ public class MenuMainActivity extends toolbar_menus {
 //       Toasty.normal(this,"Test").show();
 
 
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-        tablesLoadingUnloading.downloadWPDataWithCords();
+//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//        tablesLoadingUnloading.downloadWPDataWithCords();
 //        tablesLoadingUnloading.donwloadPlanBudgetRNO();
 //        tablesLoadingUnloading.downloadWPDataWithCordsMy();
 //        tablesLoadingUnloading.donwloadPlanBudget();

@@ -187,7 +187,7 @@ public class AdditionalRequirementsRealm {
         Log.e("getData3", "mod: " + mod);
 
         int themeId, addressId;
-        String clientId;
+        String clientId, mainOption;
         long dad2;
         Date date = new Date();
 
@@ -197,12 +197,14 @@ public class AdditionalRequirementsRealm {
             themeId = ((WpDataDB) data).getTheme_id();
             dad2 = ((WpDataDB) data).getCode_dad2();
             date = ((WpDataDB) data).getDt();
+            mainOption = ((WpDataDB) data).getMain_option_id();
         } else if (data instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
             addressId = wp.getAddr_id();
             clientId = wp.getClient_id();
             themeId = wp.getTheme_id();
             dad2 = wp.getCode_dad2();
+            mainOption = wp.getMain_option_id();
         } else {
             return null;
         }
@@ -331,11 +333,18 @@ public class AdditionalRequirementsRealm {
                 .endGroup()
                 .findAll();
 
-        if (optionId != null && !optionId.equals("")) {
+        if (optionId != null && !optionId.isEmpty() && !optionId.equals("0")) {
             realmResults = realmResults.where()
                     .equalTo("optionId", optionId)
                     .findAll();
-        }
+        } else
+            //        18.11 добавил фильтр по главной опции исключаем если указана и не равна
+            if (mainOption != null && !mainOption.isEmpty() && !mainOption.equals("0"))
+                realmResults = realmResults.where()
+                        .equalTo("optionId", mainOption)
+                        .or()
+                        .equalTo("optionId", "0")
+                        .findAll();
 
 
         return RealmManager.INSTANCE.copyFromRealm(realmResults);
