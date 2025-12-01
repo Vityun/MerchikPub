@@ -172,6 +172,127 @@ public class AdditionalRequirementsRealm {
         return result;
     }
 
+    public static <T> List<AdditionalRequirementsDB> getDocumentAdditionalRequirementsForDMP(
+            Object document,
+            boolean tovExist,
+            Integer optionId,
+            Date dateStartFrom,
+            Date dateStartTo,
+            Date dateEndFrom,
+            Date dateEndTo,
+            Object dt,
+            Long dateChangeFrom,
+            Long dateChangeTo) {
+        BaseBusinessData data = getAdditionalRequirementsDocumentData(document);
+        AddressDB addressDB = AddressRealm.getAddressById(data.addressId);
+
+        // --------------------
+        RealmResults res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", data.clientId)
+                .equalTo("not_approve", "0")
+                .findAll();
+
+        try {
+            // --------------------
+            if (optionId != null && optionId != 0) {
+                res = res.where()
+                        .equalTo("optionId", String.valueOf(optionId))
+                        .findAll();
+            }
+
+            // --------------------
+//            res = res.where()
+//                    .beginGroup()
+//                    .equalTo("grpId", "0")
+//                    .equalTo("addrId", "0")
+//                    .endGroup()
+//                    .or()
+//                    .beginGroup()
+//                    .equalTo("grpId", "0")
+//                    .equalTo("addrId", String.valueOf(data.addressId))
+//                    .endGroup()
+//                    .or()
+//                    .beginGroup()
+//                    .equalTo("grpId", "0")
+//                    .equalTo("addrId", String.valueOf(addressDB.getTpId()))
+//                    .endGroup()
+//                    .or()
+//                    .beginGroup()
+//                    .equalTo("grpId", String.valueOf(addressDB.getTpId()))
+//                    .equalTo("addrId", "0")
+//                    .endGroup()
+//                    .findAll();
+
+            // --------------------
+            if (data.themeId != 998) {
+                res = res.where()
+                        .equalTo("themeId", String.valueOf(data.themeId))
+                        .findAll();
+            }
+
+            // --------------------
+            if (tovExist) {
+                res = res.where()
+                        .isNotEmpty("tovarId")
+                        .notEqualTo("tovarId", "0")
+                        .or()
+                        .isNotEmpty("tovarManufacturerId")
+                        .notEqualTo("tovarManufacturerId", "0")
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateStartFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtStart", dateStartFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateStartTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtStart", dateStartTo)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateEndFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtEnd", dateEndFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateEndTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtEnd", dateEndTo)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateChangeFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtChange", dateChangeFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateChangeTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtChange", dateChangeTo)
+                        .findAll();
+            }
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
+        }
+
+        List<AdditionalRequirementsDB> result = new ArrayList<>();
+        if (res != null)
+            result = INSTANCE.copyFromRealm(res);
+
+        return result;
+    }
     /**
      * 07.03.23.
      * Режим работы функции "getData3". В зависимости от енума - данные будут или скрываться или нет.
