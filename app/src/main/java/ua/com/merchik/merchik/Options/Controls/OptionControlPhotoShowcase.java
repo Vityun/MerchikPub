@@ -190,29 +190,11 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
 
 //            4.0
-            if (stackPhotoDBSList.size() == 0) {
+            if (stackPhotoDBSList.isEmpty()) {
                 spannableStringBuilder.append("Не можу знайти світлини стосовні до поточного відвідування.");
                 signal = true;
-            } /*else if (showcaseSDBList.size() == 0) {
-                spannableStringBuilder.append("Не можу знайти жодної вітрини у даній Адресі (для даного Клієнта).");
-
-                // создание объекта для даты '01.01.2024'
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(2024, Calendar.FEBRUARY, 1);
-                Date specificDate = calendar.getTime();
-
-                int comparisonResult = date.compareTo(specificDate);
-
-                // НОвого клиента запустили и у него нет витрин
-                // Дата - 40 (начала работ клиента)
-
-                if (comparisonResult < 0) {
-                    signal = false;
-                } else {
-                    signal = true;
-            // (вітрина панорамна)
-                }
-            }*/ else if (!showcaseSDBList.isEmpty() && filledShowcaseIdsCount == 0) {
+            }
+            if (!showcaseSDBList.isEmpty() && filledShowcaseIdsCount == 0) {
                 spannableStringBuilder.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(String.valueOf(showcaseSDBList.size())).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
@@ -241,7 +223,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 0) {
                 spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. Зауважень нема.");
-                signal = true;
+                signal = false;
 
             } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 1) {
                 spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. " +
