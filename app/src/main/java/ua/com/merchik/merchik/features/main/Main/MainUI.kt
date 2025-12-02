@@ -1674,18 +1674,6 @@ fun ItemUI(
     index++
     Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
 
-    // 👇 Список реально видимых полей с учётом настроек
-//    val visibleFields = remember(item.fields, settingsItemUI, visibilityColumName) {
-//        item.fields.filter { field ->
-//            // Здесь твоя логика "поле включено/выключено"
-//            val setting = settingsItemUI.firstOrNull {
-//                it.key.equals(field.key, ignoreCase = true)
-//            }
-//            val hiddenByUser = setting?.isEnabled == true
-//            !hiddenByUser
-//        }
-//    }
-
     // ✅ всегда считаем актуальный список видимых полей
     val visibleFields = item.fields.filter { field ->
         val setting = settingsItemUI.firstOrNull {
@@ -1883,51 +1871,53 @@ fun ItemUI(
                     modifier = Modifier
                         .weight(if (item.images?.size == 3) 1f else 2f)
                 ) {
-                    visibleFields.forEachIndexed { index, field ->
-                        if (!field.key.equals("id_res_image", true)) {
-                            ItemFieldValue(field, visibilityColumName)
-                            if (index < visibleFields.lastIndex) {
-                                val bg = item.modifierContainer?.background
-                                val color = when {
-                                    // если контейнера нет → LightGray
-                                    bg == null -> Color.LightGray
-                                    // если фон светлее, чем LightGray → LightGray
-                                    bg.isLighterThan(Color.LightGray) -> Color.LightGray
-                                    // если такой же или темнее → White
-                                    else -> Color.White
+                    if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT)
+
+                        item.fields.forEachIndexed { index, field ->
+                            if (settingsItemUI.firstOrNull {
+                                    it.key.equals(
+                                        field.key,
+                                        true
+                                    )
+                                }?.isEnabled == false) {
+                            } else {
+                                if (!field.key.equals("id_res_image", true)) {
+                                    ItemFieldValue(field, visibilityColumName)
+                                    if (index < visibleFields.size - 1) {
+                                        val bg = item.modifierContainer?.background
+                                        val color = when {
+                                            // если контейнера нет → LightGray
+                                            bg == null -> Color.LightGray
+                                            // если фон светлее, чем LightGray → LightGray
+                                            bg.isLighterThan(Color.LightGray) -> Color.LightGray
+                                            // если такой же или темнее → White
+                                            else -> Color.White
+                                        }
+                                        HorizontalDivider(
+                                            color = color
+                                        )
+                                    }
                                 }
-                                HorizontalDivider(color = color)
                             }
                         }
-                    }
-
-//                    item.fields.forEachIndexed { index, field ->
-//                        if (settingsItemUI.firstOrNull {
-//                                it.key.equals(
-//                                    field.key,
-//                                    true
-//                                )
-//                            }?.isEnabled == false) {
-//                        } else {
-//                            if (!field.key.equals("id_res_image", true)) {
-//                                ItemFieldValue(field, visibilityColumName)
-//                                if (index < visibleFields.size - 1) {
-//                                    val bg = item.modifierContainer?.background
-//                                    val color = when {
-//                                        // если контейнера нет → LightGray
-//                                        bg == null -> Color.LightGray
-//                                        // если фон светлее, чем LightGray → LightGray
-//                                        bg.isLighterThan(Color.LightGray) -> Color.LightGray
-//                                        // если такой же или темнее → White
-//                                        else -> Color.White
-//                                    }
-//                                    HorizontalDivider(
-//                                        color = color
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
+                    else
+                        visibleFields.forEachIndexed { index, field ->
+                            if (!field.key.equals("id_res_image", true)) {
+                                ItemFieldValue(field, visibilityColumName)
+                                if (index < visibleFields.lastIndex) {
+                                    val bg = item.modifierContainer?.background
+                                    val color = when {
+                                        // если контейнера нет → LightGray
+                                        bg == null -> Color.LightGray
+                                        // если фон светлее, чем LightGray → LightGray
+                                        bg.isLighterThan(Color.LightGray) -> Color.LightGray
+                                        // если такой же или темнее → White
+                                        else -> Color.White
+                                    }
+                                    HorizontalDivider(color = color)
+                                }
+                            }
+                        }
                 }
             }
 

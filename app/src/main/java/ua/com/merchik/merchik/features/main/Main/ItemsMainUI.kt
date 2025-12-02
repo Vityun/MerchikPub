@@ -408,17 +408,17 @@ fun GroupDeck(
 
     if (items.isEmpty()) return
 
+    val hasGroupHeader = groupMeta?.title?.isNotBlank() == true
+
     val topItemRaw = remember(items) { buildGroupSummaryItem(items) }
     // 👇 сводная карточка БЕЗ кастомных UI-модификаторов
     val topItem = remember(topItemRaw, level) {
         topItemRaw.witBackgroundUiModifiers(level)
     }
-//    val topItem = remember(topItemRaw) { topItemRaw.witBackgroundUiModifiers() }
 
     val stackSize = min(maxStackSize, items.size)
     val hasDeck = items.size > 1
     val count = items.size.coerceAtMost(4)
-
 
     val shadow: Shadow = Shadow(
         radius = 1.dp,
@@ -429,13 +429,14 @@ fun GroupDeck(
 
     // небольшой подъём верхней карточки при раскрытии
     val topCardOffsetY by animateDpAsState(
-        targetValue = if (expanded && hasDeck) (-6).dp else 0.dp,
+        targetValue = if (expanded && hasDeck && !hasGroupHeader) (-6).dp else 0.dp,
+        // ↳ смещаем вверх только в режиме, когда карта остаётся при expanded
         animationSpec = tween(250),
         label = "topCardOffset"
     )
 
     val cardBottomPadding by animateDpAsState(
-        targetValue = if (expanded && hasDeck) 8.dp else (2 + count * 5).dp,
+        targetValue = if (expanded && hasDeck && !hasGroupHeader) 8.dp else (2 + count * 5).dp,
         animationSpec = tween(250),
         label = "cardBottomPadding"
     )
@@ -450,32 +451,31 @@ fun GroupDeck(
     ) {
 
         // --- Заголовок группы ---
-        groupMeta?.let { groupMeta1 ->
-            groupMeta1.title?.takeIf { it.isNotBlank() }?.let { title ->
-                Row(
+        if (hasGroupHeader) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = (10 + 10 * level).dp, end = 10.dp)
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (level > 0) "${groupMeta!!.title}" else groupMeta!!.title.orEmpty(),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 1.dp, end = 8.dp)
+                )
+                Image(
+                    painter =
+                        if (expanded) painterResource(R.drawable.ic_arrow_up_1)
+                        else painterResource(R.drawable.ic_arrow_down_1),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = (10 + 10 * level).dp, end = 10.dp)
-                        .clickable { expanded = !expanded },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (level > 0) "$title" else title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 1.dp, end = 8.dp)
-                    )
-                    Image(
-                        painter =
-                            if (expanded) painterResource(R.drawable.ic_arrow_up_1) else painterResource(
-                                R.drawable.ic_arrow_down_1
-                            ),
-                        modifier = Modifier.size(20.dp).padding(end = 7.dp)
-                            .align(Alignment.CenterVertically),
-                        contentScale = ContentScale.Inside,
-                        contentDescription = null
-                    )
-                }
+                        .size(20.dp)
+                        .padding(end = 7.dp)
+                        .align(Alignment.CenterVertically),
+                    contentScale = ContentScale.Inside,
+                    contentDescription = null
+                )
             }
         }
 
@@ -490,8 +490,13 @@ fun GroupDeck(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
-                // ============= 1. СВЁРНУТАЯ КОЛОДА (верхняя карта остаётся всегда) =============
-                if (hasDeck) {
+                // ============= 1. СВЁРНУТАЯ КОЛОДА / ОДНА КАРТА =============
+                // ЛОГИКА:
+                //  - если НЕТ заголовка -> как раньше: карта/колода есть и при expanded = true
+                //  - если ЕСТЬ заголовок -> карта/колода только когда expanded = false
+                val showTopCardBlock = !expanded || !hasGroupHeader
+
+                if (hasDeck && showTopCardBlock) {
                     // кол-во подложек (слоёв)
                     val backCount = stackSize.coerceAtLeast(0)
 
@@ -513,17 +518,23 @@ fun GroupDeck(
                             return@LaunchedEffect
                         }
 
-                        if (expanded) {
-                            // раскрываем: снизу вверх гасим слои
+                        if (expanded && !hasGroupHeader) {
+                            // режим без заголовка: при раскрытии гасим слои
                             for (i in backCount - 1 downTo 0) {
                                 backAlphas[i] = 0f
                                 delay(120)
                             }
-                        } else {
-                            // сворачиваем: сверху вниз возвращаем слои
+                        } else if (!expanded && !hasGroupHeader) {
+                            // сворачиваем обратно (и только в режиме без заголовка)
                             for (i in 0 until backCount) {
                                 backAlphas[i] = 1f
                                 delay(120)
+                            }
+                        } else {
+                            // если есть заголовок, мы вообще прячем блок при expanded = true,
+                            // так что тут можно просто держать альфы = 1f
+                            for (i in 0 until backCount) {
+                                backAlphas[i] = 1f
                             }
                         }
                     }
@@ -551,7 +562,7 @@ fun GroupDeck(
                             )
                         }
 
-                        // верхняя агрегированная карточка (остаётся и при expanded = true)
+                        // верхняя агрегированная карточка
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -571,7 +582,7 @@ fun GroupDeck(
                                 settingsItemUI = settingsItems,
                                 contextUI = viewModel.modeUI,
                                 onClickItem = {
-                                    // клик по карте действует как по groupMeta.title раньше
+                                    // клик по карте действует как по заголовку
                                     expanded = !expanded
                                 },
                                 onClickItemImage = {
@@ -586,8 +597,8 @@ fun GroupDeck(
                             )
                         }
                     }
-                } else {
-                    // если в группе всего 1 элемент — показываем просто одну карточку без стопки
+                } else if (!hasDeck && showTopCardBlock) {
+                    // группа из одного элемента
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -605,7 +616,6 @@ fun GroupDeck(
                             settingsItemUI = settingsItems,
                             contextUI = viewModel.modeUI,
                             onClickItem = {
-                                // тут можно тоже раскрывать/сворачивать, если хочется
                                 expanded = !expanded
                             },
                             onClickItemImage = {
@@ -621,12 +631,12 @@ fun GroupDeck(
                     }
                 }
 
-                // ============= 2. РАСКРЫТЫЙ КОНТЕНТ (СПИСОК / СУБГРУППЫ) НИЖЕ КАРТОЧКИ =============
+                // ============= 2. РАСКРЫТЫЙ КОНТЕНТ (СПИСОК / СУБГРУППЫ) НИЖЕ =============
                 AnimatedVisibility(
                     visible = expanded,
                     enter = slideInVertically(
                         animationSpec = tween(1500),
-                        initialOffsetY = { fullHeight -> -fullHeight }  // эффект "выезжает из-под карточки"
+                        initialOffsetY = { fullHeight -> -fullHeight }
                     ) + expandVertically(
                         animationSpec = tween(1500),
                         expandFrom = Alignment.Top
@@ -692,12 +702,15 @@ fun GroupDeck(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             subGroups.forEach { sub ->
-                                val subMeta = if (groupMeta != null) GroupMeta(
-                                    groupKey = sub.key,
-                                    title = sub.title,
-                                    startIndex = 0,
-                                    endIndexExclusive = sub.items.size
-                                ) else null
+                                val subMeta = if (groupMeta != null) {
+                                    GroupMeta(
+                                        groupKey = sub.key,
+                                        title = sub.title,
+                                        startIndex = 0,
+                                        endIndexExclusive = sub.items.size
+                                    )
+                                } else null
+
                                 GroupDeck(
                                     groupMeta = subMeta,
                                     items = sub.items,

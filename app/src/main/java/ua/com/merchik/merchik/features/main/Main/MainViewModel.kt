@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
@@ -20,7 +19,14 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -33,11 +39,18 @@ import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.*
+import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.DataObjectUI
+import ua.com.merchik.merchik.dataLayer.MainRepository
+import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.NameUIRepository
+import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.withContainerBackground
+import ua.com.merchik.merchik.dataLayer.withGroupingOnTop
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
@@ -410,7 +423,12 @@ abstract class MainViewModel(
                         "MainViewModel.recomputeDataItems",
                         "filterAndSortDataItems failed: $e"
                     )
-                    FilterAndSortResult(emptyList(), isActiveFiltered = false, isActiveSorted = false, isActiveGrouped = false) // fallback
+                    FilterAndSortResult(
+                        emptyList(),
+                        isActiveFiltered = false,
+                        isActiveSorted = false,
+                        isActiveGrouped = false
+                    ) // fallback
                 }
 
                 // Собираем итоговый immutable список
@@ -454,22 +472,22 @@ abstract class MainViewModel(
     }
 
     fun updateSorting(newSortingField: SortingField?, position: Int) {
-        viewModelScope.launch {
-            val newSortingFields = mutableListOf<SortingField>()
-            newSortingFields.addAll(_uiState.value.sortingFields)
-            newSortingField?.let {
-                if (position < newSortingFields.size) newSortingFields[position] = it
-                else newSortingFields.add(position, it)
-            } ?: run {
-                if (position < newSortingFields.size) newSortingFields[position] =
-                    SortingField()
-            }
-            _uiState.update {
-                it.copy(
-                    sortingFields = newSortingFields
-                )
-            }
+//        viewModelScope.launch {
+        val newSortingFields = mutableListOf<SortingField>()
+        newSortingFields.addAll(_uiState.value.sortingFields)
+        newSortingField?.let {
+            if (position < newSortingFields.size) newSortingFields[position] = it
+            else newSortingFields.add(position, it)
+        } ?: run {
+            if (position < newSortingFields.size) newSortingFields[position] =
+                SortingField()
         }
+        _uiState.update {
+            it.copy(
+                sortingFields = newSortingFields
+            )
+        }
+//        }
     }
 
     fun updateContent() {
@@ -480,23 +498,26 @@ abstract class MainViewModel(
 
             val defaultSort = getDefaultSortUserFields()
 
-            // 1) Берём сортировки из репозитория (как и раньше)
+            // 1) Берём сортировки
             val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
 
-            // 2) Дефолтные ключи для группировки (то, что мы только что добавили)
+            // 2) Дефолтные ключи группировки
             val defaultGroupKeys: List<String> = getDefaultGroupUserFields()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
 
-            // 3) Есть ли уже сохранённая группировка у пользователя?
+            // 3) Есть ли вообще сохранённые сортировки у пользователя в БД?
+            val hasUserSorting: Boolean = repository.hasUserSorting(table, contextUI)
+
+            // 4) Есть ли включённая группировка в том, что пришло из репозитория?
             val hasUserGrouping: Boolean = sortingFieldsFromRepo.any {
                 it.group && !it.key.isNullOrBlank()
             }
 
-            // 4) Если пользователь ещё НИЧЕГО не включал (нет group = true),
-            //    но у нас есть дефолтные ключи — проставляем group = true для них.
+            // 5) Применяем дефолтную группировку
             val sortingFields: List<SortingField> =
-                if (!hasUserGrouping && defaultGroupKeys.isNotEmpty()) {
+                if (!hasUserSorting && !hasUserGrouping && defaultGroupKeys.isNotEmpty()) {
+                    // 👆 Только если НЕТ пользовательских сортировок (первый запуск)
                     sortingFieldsFromRepo.map { sf ->
                         val k = sf.key
                         if (!k.isNullOrBlank() &&
@@ -508,19 +529,18 @@ abstract class MainViewModel(
                         }
                     }
                 } else {
-                    // уже есть пользовательская группировка или дефолт не задан —
-                    // оставляем как есть
+                    // Есть пользовательские настройки -> уважаем их, ничего не навязываем
                     sortingFieldsFromRepo
                 }
 
-            // 5) Собираем groupingFields ИЗ сортировок (по флагу group)
+            // дальше твой код без изменений
             val groupingFields: List<GroupingField> = sortingFields
                 .mapIndexedNotNull { index, sf ->
                     sf.takeIf { it.group && !it.key.isNullOrBlank() }?.let {
                         GroupingField(
                             key = it.key!!,
                             title = it.title,
-                            priority = index,          // порядок по позиции в sortingFields
+                            priority = index,
                             collapsedByDefault = false
                         )
                     }
@@ -528,7 +548,6 @@ abstract class MainViewModel(
 
             updateFilters()
 
-            // 👉 Ключи полей, по которым включена группировка (по уровням)
             val groupingKeys: List<String> = sortingFields
                 .filter { it.group && !it.key.isNullOrBlank() }
                 .map { it.key!! }
@@ -552,7 +571,6 @@ abstract class MainViewModel(
                     "getItems() size: ${dataItemUIS.size}"
                 )
 
-                // 👇 если есть группировка — поднимаем эти поля вверх в каждой карточке
                 val finalItems = if (groupingKeys.isEmpty()) {
                     dataItemUIS
                 } else {
@@ -564,11 +582,11 @@ abstract class MainViewModel(
                     subTitle = subTitle,
                     subTitleLong = subTitleLong,
                     idResImage = idResImage,
-                    items = finalItems,            // уже с полями группировки сверху
+                    items = finalItems,
                     itemsHeader = getItemsHeader(),
                     itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
-                    sortingFields = sortingFields, // уже с дефолтным group=true при первом запуске
+                    sortingFields = sortingFields,
                     groupingFields = groupingFields,
                     filters = filters,
                     lastUpdate = System.currentTimeMillis()
@@ -606,22 +624,22 @@ abstract class MainViewModel(
                     itemsHeader = it.itemsHeader.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     items = it.items.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                     itemsFooter = it.itemsFooter.map { oldItemUI ->
                         oldItemUI.copy(
                             selected =
-                            if (itemUI === oldItemUI) checked
-                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (itemUI === oldItemUI) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
                         )
                     },
                 )

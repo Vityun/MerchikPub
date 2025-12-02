@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
 import android.util.Log
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import io.realm.Realm
 import io.realm.RealmChangeListener
@@ -24,14 +23,12 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
-import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
-import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
@@ -118,12 +115,22 @@ class MainRepository(
             val baseHide = settingsUI?.hideFields ?: defaultHideUserFields
 
             // 👉 если пользователь ещё ничего не настраивал (settingsUI == null),
-            //    добавляем group_header в скрытые "по умолчанию"
+            //    НЕ скрываем group_header, он по умолчанию включён
             val hideUserFields: List<String>? = if (settingsUI == null) {
-                (baseHide.orEmpty() + "group_header").map { it.trim() }
+                baseHide
+                    .orEmpty()
+                    .filterNot {
+                        it.equals(
+                            "group_header",
+                            ignoreCase = true
+                        )
+                    } // <- убираем из скрытых
+                    .map { it.trim() }
             } else {
-                baseHide?.map { it.trim() }
+                baseHide
+                    ?.map { it.trim() }
             }
+
 
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
 
@@ -151,7 +158,11 @@ class MainRepository(
         } ?: return emptyList()
     }
 
-    fun <T : DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsUI: SettingsUI, contextUI: ContextUI?) {
+    fun <T : DataObjectUI> saveSettingsUI(
+        klass: KClass<T>,
+        settingsUI: SettingsUI,
+        contextUI: ContextUI?
+    ) {
 //        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: start")
 
         val contextTAG = contextUI?.name ?: ContextUI.DEFAULT.name
@@ -166,6 +177,7 @@ class MainRepository(
         RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
 //        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: finish")
     }
+
     fun <T : DataObjectUI> getSortingFields(
         klass: KClass<T>,
         contextUI: ContextUI?,
@@ -192,12 +204,12 @@ class MainRepository(
                 runCatching {
                     when (klass) {
                         PlanogrammSDB::class -> room.planogrammDao().all.firstOrNull() as DataObjectUI
-                        CustomerSDB::class   -> room.customerDao().all.firstOrNull() as DataObjectUI
-                        UsersSDB::class      -> room.usersDao().all2.firstOrNull() as DataObjectUI
-                        VacancySDB::class    -> room.vacancyDao().all.firstOrNull() as DataObjectUI
-                        SamplePhotoSDB::class-> room.samplePhotoDao().all.firstOrNull() as DataObjectUI
-                        AddressSDB::class    -> room.addressDao().all.firstOrNull() as DataObjectUI
-                        SMSPlanSDB::class    -> room.smsPlanDao().all.firstOrNull() as DataObjectUI
+                        CustomerSDB::class -> room.customerDao().all.firstOrNull() as DataObjectUI
+                        UsersSDB::class -> room.usersDao().all2.firstOrNull() as DataObjectUI
+                        VacancySDB::class -> room.vacancyDao().all.firstOrNull() as DataObjectUI
+                        SamplePhotoSDB::class -> room.samplePhotoDao().all.firstOrNull() as DataObjectUI
+                        AddressSDB::class -> room.addressDao().all.firstOrNull() as DataObjectUI
+                        SMSPlanSDB::class -> room.smsPlanDao().all.firstOrNull() as DataObjectUI
                         else -> null
                     }
                 }.getOrNull()
@@ -208,16 +220,36 @@ class MainRepository(
             .mapNotNull { rawKey ->
                 val key = rawKey.trim().takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 SortingField(
-                    key   = key,
-                    title = sample?.let { nameUIRepository.getTranslateString(key, it.getFieldTranslateId(key)) } ?: key,
+                    key = key,
+                    title = sample?.let {
+                        nameUIRepository.getTranslateString(
+                            key,
+                            it.getFieldTranslateId(key)
+                        )
+                    } ?: key,
                     order = 1
                 )
             }
     }
 
 
+    suspend fun hasUserSorting(
+        table: KClass<out DataObjectUI>,
+        contextUI: ContextUI?
+    ): Boolean {
+        val settings = getSettingsUI(
+            table.java,
+            contextUI
+        )   // тот же способ, как ты сейчас грузишь SettingsUI
+        return settings?.sortFields?.isNotEmpty() == true
+    }
 
-    fun <T : RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+
+    fun <T : RealmObject> getAllRealm(
+        kClass: KClass<T>,
+        contextUI: ContextUI?,
+        typePhoto: Int?
+    ): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!", "getAllRealm: start")
         return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI, typePhoto)
     }
@@ -259,7 +291,11 @@ class MainRepository(
             .map { it as DataObjectUI }
     }
 
-    fun <T : DataObjectUI> getAllRoom(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+    fun <T : DataObjectUI> getAllRoom(
+        kClass: KClass<T>,
+        contextUI: ContextUI?,
+        typePhoto: Int?
+    ): List<DataItemUI> {
         return getAllRoomDataObjectUI(kClass).toItemUI(kClass, contextUI, typePhoto)
     }
 
@@ -350,15 +386,16 @@ fun List<DataItemUI>.join(rightTable: List<DataItemUI>, query: String): List<Dat
                 }?.value?.value == fieldLeftUI.value.value
             }
             expFields.forEach { expField ->
-                itemRightUI?.fields?.firstOrNull { it.key.equals(expField, true) }?.let { fieldRightUI ->
-                    joinedFields.add(
-                        FieldValue(
-                            "${fieldLeftUI.key}_${fieldRightUI.key}",
-                            fieldRightUI.field,
-                            fieldRightUI.value,
+                itemRightUI?.fields?.firstOrNull { it.key.equals(expField, true) }
+                    ?.let { fieldRightUI ->
+                        joinedFields.add(
+                            FieldValue(
+                                "${fieldLeftUI.key}_${fieldRightUI.key}",
+                                fieldRightUI.field,
+                                fieldRightUI.value,
+                            )
                         )
-                    )
-                }
+                    }
             }
         }
 

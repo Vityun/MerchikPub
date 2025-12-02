@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 2025120101,
-      "versionName": "2025120101",
-      "outputFile": "merchik.2025120101.apk"
+      "versionCode": 2025120200,
+      "versionName": "2025120200",
+      "outputFile": "merchik.2025120200.apk"
     }
   ],
   "elementType": "File",
@@ -22,14 +22,14 @@
       "minApi": 28,
       "maxApi": 30,
       "baselineProfiles": [
-        "baselineProfiles/1/merchik.2025120101.dm"
+        "baselineProfiles/1/merchik.2025120200.dm"
       ]
     },
     {
       "minApi": 31,
       "maxApi": 2147483647,
       "baselineProfiles": [
-        "baselineProfiles/0/merchik.2025120101.dm"
+        "baselineProfiles/0/merchik.2025120200.dm"
       ]
     }
   ],

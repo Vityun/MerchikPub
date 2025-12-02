@@ -239,11 +239,11 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append(" Усього зроблено фото ").append(String.valueOf(stackPhotoDBSList.size()));
                 signal = false;
 
-            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 1) {
+            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 0) {
                 spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. Зауважень нема.");
                 signal = true;
 
-            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 0) {
+            } else if (showcaseSDBList.isEmpty() && list.isEmpty() && newTT == 1) {
                 spannableStringBuilder.append("На момент виконання робіт, Вітрини по даному Кліенту/Адресі ще не визначені. " +
                         "Але роботи у ТТ вже виконувались раніше і Вітрини вже повинні були бути створені");
                 signal = true;
