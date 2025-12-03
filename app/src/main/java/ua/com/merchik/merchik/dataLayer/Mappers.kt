@@ -358,14 +358,13 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +
     SAMPLE_PHOTO_FROM_OPTION_132969,    // Фото Тележка с Товаром (ФТТ) (10) +
-    SAMPLE_PHOTO_FROM_OPTION_135809,    // Фото витрины до начала работ (14) + TODO проверить где используется! №№№
+    SAMPLE_PHOTO_FROM_OPTION_135809,    // Фото витрины до начала работ (14) +
     SAMPLE_PHOTO_FROM_OPTION_158309,    // Фото витрины наближене (39) +
     SAMPLE_PHOTO_FROM_OPTION_158604,    // Фото витрины наполненности (41) +
     SAMPLE_PHOTO_FROM_OPTION_157277,    // Фото акционного товра + ценник (28? = 26!)
     SAMPLE_PHOTO_FROM_OPTION_157354,    // Фото ДМП (42)
     SAMPLE_PHOTO_FROM_OPTION_164355,    // Фото планограмы (5)
-    SAMPLE_PHOTO_FROM_OPTION_169108    // фото POS материалов (47) +
-
+    SAMPLE_PHOTO_FROM_OPTION_169108     // фото POS материалов (47) +
 }
 
 

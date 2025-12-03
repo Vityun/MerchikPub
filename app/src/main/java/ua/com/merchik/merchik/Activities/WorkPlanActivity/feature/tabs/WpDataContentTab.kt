@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.InitStateEntity
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -29,6 +30,7 @@ import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.hasData
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
@@ -42,7 +44,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 fun WpDataContentTab() {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
-    var dataIsReady by remember { mutableStateOf(checkRealmReady()) }
+    var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
 
     // Ref to ProgressViewModel (для отмены позже)
     val progressModel = remember { ProgressViewModel(1) }
@@ -56,7 +58,7 @@ fun WpDataContentTab() {
     // ✅ Проверка каждую 1–3 секунды
     LaunchedEffect(Unit) {
         while (!dataIsReady) {
-            if (checkRealmReady()) {
+            if (isDataReadyCompat()) {
                 dataIsReady = true
                 progressModel.onCompleted()
                 cronchikViewModel.updateBadgeAdditionalIncome()
@@ -114,6 +116,37 @@ fun WpDataContentTab() {
     }
 }
 
+/**
+ * Совместимая проверка готовности:
+ * 1) Если Room-флаги уже говорят "всё загружено" → true
+ * 2) Иначе проверяем старую логику Realm.
+ *    Если там всё ок → считаем готово и ДОзаполняем Room-флаги, чтобы потом
+ *    уже всегда идти по новой схеме.
+ */
+fun isDataReadyCompat(): Boolean {
+    // 1. Сначала пробуем новый путь (через Room-флаги)
+    if (checkRealmReadyII()) return true
+
+    // 2. Старый путь: все таблицы Realm существуют и не пустые
+    if (checkRealmReady()) {
+        // Миграция: проставим флаги в Room, чтобы в следующий раз
+        // уже не опираться на Realm-состояние.
+        val initDao = RoomManager.SQL_DB.initStateDao()
+        val current = initDao.getState()
+
+        val updated = (current ?: InitStateEntity(id = 1)).copy(
+            wpLoaded = true,
+            siteLoaded = true,
+            optionsLoaded = true,
+            themeLoaded = true
+        )
+        initDao.saveState(updated)
+
+        return true
+    }
+
+    return false
+}
 
 
 fun checkRealmReady(): Boolean {
@@ -123,4 +156,11 @@ fun checkRealmReady(): Boolean {
     val hasThema = RealmManager.INSTANCE.hasData<ThemeDB>()
 
     return hasWp && hasStObj && hasOption && hasThema
+}
+
+fun checkRealmReadyII(): Boolean {
+    val initDao = RoomManager.SQL_DB.initStateDao()
+    val state = initDao.getState()
+
+    return state?.wpLoaded == true && state.siteLoaded && state.optionsLoaded && state.themeLoaded
 }

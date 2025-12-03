@@ -315,11 +315,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
 
 //                val dataItemsUI = mutableListOf<DataItemUI>()
-
 //                dataItemsUI.addAll(uiState.itemsHeader)
-//
+//                dataItemsUI.addAll(result.items)
+//                dataItemsUI.addAll(uiState.itemsFooter)
+
+                // 1. Берём шапку/подвал из uiState
+                val headerItems = uiState.itemsHeader
+                val footerItems = uiState.itemsFooter
+
+// 2. Гоним ТОЛЬКО тело в filterAndSortDataItems
                 val result = filterAndSortDataItems(
-                    items = uiState.items,
+                    items = uiState.items,                 // <-- только body
                     filters = uiState.filters,
                     sortingFields = uiState.sortingFields,
                     groupingFields = uiState.groupingFields,
@@ -327,15 +333,31 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     rangeEnd = viewModel.rangeDataEnd.value,
                     searchText = uiState.filters?.searchText
                 )
-//                dataItemsUI.addAll(result.items)
-//                dataItemsUI.addAll(uiState.itemsFooter)
 
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
                 isActiveGrouped = result.isActiveGrouped
 
-                val dataItemsUI = result.items
-                val groups = result.groups
+// 3. Собираем итоговый список для LazyColumn: header + сгруппированное тело + footer
+                val dataItemsUI = remember(headerItems, result.items, footerItems) {
+                    buildList {
+                        addAll(headerItems)
+                        addAll(result.items)
+                        addAll(footerItems)
+                    }
+                }
+
+// 4. Сдвигаем индексы групп на размер header
+                val groups: List<GroupMeta> = remember(result.groups, headerItems.size) {
+                    val headerSize = headerItems.size
+                    result.groups.map { g ->
+                        g.copy(
+                            startIndex = g.startIndex + headerSize,
+                            endIndexExclusive = g.endIndexExclusive + headerSize
+                        )
+                    }
+                }
+
 
                 uiState.title?.let {
                     Text(
@@ -549,14 +571,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                         groupingFields = uiState.groupingFields, // 👈 список всех группировок
                                         level = 0                                // 👈 верхний уровень
                                     )
-                                    //                                    GroupDeck(
-//                                        groupMeta = groupMeta,
-//                                        items = groupItems,
-//                                        visibilityColumName = visibilityColumName,
-//                                        settingsItems = uiState.settingsItems,
-//                                        viewModel = viewModel,
-//                                        context = context
-//                                    )
                                 }
                             }
                         }

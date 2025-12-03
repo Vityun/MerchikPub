@@ -346,6 +346,10 @@ abstract class MainViewModel(
     private val _dataItems = MutableStateFlow<List<DataItemUI>>(emptyList())
     val dataItems: StateFlow<List<DataItemUI>> = _dataItems.asStateFlow()
 
+    private val _groups = MutableStateFlow<List<GroupMeta>>(emptyList())
+    val groups: StateFlow<List<GroupMeta>> get() = _groups
+
+
     fun requestScrollToVisit(itemHash: Long) {
         _scrollToHash.tryEmit(itemHash)
     }
@@ -401,9 +405,13 @@ abstract class MainViewModel(
         }
     }
 
-    private fun recomputeDataItems(uiState: StateUI, rangeStart: LocalDate?, rangeEnd: LocalDate?) {
+    private fun recomputeDataItems(
+        uiState: StateUI,
+        rangeStart: LocalDate?,
+        rangeEnd: LocalDate?
+    ) {
         viewModelScope.launch {
-            val combined = withContext(Dispatchers.Default) {
+            val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
                 val header = uiState.itemsHeader
                 val footer = uiState.itemsFooter
 
@@ -412,7 +420,7 @@ abstract class MainViewModel(
                         items = uiState.items,
                         filters = uiState.filters,
                         sortingFields = uiState.sortingFields,
-                        groupingFields = uiState.groupingFields, // новый список в StateUI
+                        groupingFields = uiState.groupingFields,
                         rangeStart = rangeStart,
                         rangeEnd = rangeEnd,
                         searchText = uiState.filters?.searchText
@@ -424,24 +432,41 @@ abstract class MainViewModel(
                         "filterAndSortDataItems failed: $e"
                     )
                     FilterAndSortResult(
-                        emptyList(),
+                        items = emptyList(),
+                        groups = emptyList(),
                         isActiveFiltered = false,
                         isActiveSorted = false,
                         isActiveGrouped = false
-                    ) // fallback
+                    )
                 }
 
-                // Собираем итоговый immutable список
-                buildList {
+                // 👉 сдвигаем индексы групп на размер header
+                val headerSize = header.size
+                val groupsWithOffset: List<GroupMeta> = result.groups.map { g ->
+                    g.copy(
+                        startIndex = g.startIndex + headerSize,
+                        endIndexExclusive = g.endIndexExclusive + headerSize
+                    )
+                }
+
+                // Собираем итоговый список для UI
+                val combinedList = buildList {
                     addAll(header)
                     addAll(result.items)
                     addAll(footer)
                 }
+
+                combinedList to groupsWithOffset
             }
 
-            // обновляем state только если изменилось (чтобы не триггерить лишний раз)
+            // обновляем элементы
             if (_dataItems.value != combined) {
                 _dataItems.value = combined
+            }
+
+            // обновляем группы (для GroupDeck / отрисовки)
+            if (_groups.value != shiftedGroups) {
+                _groups.value = shiftedGroups
             }
         }
     }
@@ -497,6 +522,9 @@ abstract class MainViewModel(
             val settingsItems = repository.getSettingsItemList(table, contextUI, list)
 
             val defaultSort = getDefaultSortUserFields()
+
+            val itemsHeader = getItemsHeader()
+            val itemsFooter = getItemsFooter()
 
             // 1) Берём сортировки
             val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
@@ -583,8 +611,8 @@ abstract class MainViewModel(
                     subTitleLong = subTitleLong,
                     idResImage = idResImage,
                     items = finalItems,
-                    itemsHeader = getItemsHeader(),
-                    itemsFooter = getItemsFooter(),
+                    itemsHeader = itemsHeader,
+                    itemsFooter = itemsFooter,
                     settingsItems = settingsItems,
                     sortingFields = sortingFields,
                     groupingFields = groupingFields,

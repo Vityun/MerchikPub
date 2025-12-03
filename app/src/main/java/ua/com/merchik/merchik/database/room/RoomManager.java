@@ -43,7 +43,8 @@ public class RoomManager {
                         MIGRATION_63_64,
                         MIGRATION_64_65,
                         MIGRATION_65_66,
-                        MIGRATION_66_67
+                        MIGRATION_66_67,
+                        MIGRATION_67_68
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -742,6 +743,30 @@ public class RoomManager {
             database.execSQL("ALTER TABLE wp_data_additional ADD COLUMN 'action' INTEGER DEFAULT 0");
         }
     };
+
+    public static final Migration MIGRATION_67_68 = new Migration(67, 68) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // создаём таблицу init_state
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS init_state (" +
+                            "id INTEGER NOT NULL, " +
+                            "wp_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "site_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "options_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "theme_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "PRIMARY KEY(id)" +
+                            ")"
+            );
+            // начальная строка (все флаги = 0)
+            database.execSQL(
+                    "INSERT INTO init_state " +
+                            "(id, wp_loaded, site_loaded, options_loaded, theme_loaded) " +
+                            "VALUES (1, 0, 0, 0, 0)"
+            );
+        }
+    };
+
 
 
 }

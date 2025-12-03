@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.data.Database.Room.DateConverter;
 import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
+import ua.com.merchik.merchik.data.Database.Room.InitStateEntity;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
@@ -72,6 +73,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.DossierSotrDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.InitStateDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LanguagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
@@ -157,9 +159,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 SiteUrlSDB.class,
                 SiteAccountSDB.class,
                 SynchronizationTimeTable.class,
-                WPDataAdditional.class      // дополнительный заработок
+                WPDataAdditional.class,      // дополнительный заработок
+                InitStateEntity.class
         },
-        version = 69
+        version = 70
 )
 
 
@@ -261,6 +264,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SynchronizationTimetableDao synchronizationTimetableDao();
 
     public abstract WPDataAdditionalDao wpDataAdditionalDao();
+
+    public abstract InitStateDao initStateDao();
 
     public class MyAutoMigration {
     }

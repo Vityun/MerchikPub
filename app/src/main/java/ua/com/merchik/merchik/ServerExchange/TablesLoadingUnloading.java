@@ -128,6 +128,7 @@ import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
@@ -414,6 +415,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
+                            RoomManager.SQL_DB.initStateDao().markWpLoaded();
                             downloadWPDataWithCords();
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
@@ -1344,6 +1346,7 @@ public class TablesLoadingUnloading {
                 try {
                     globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
                     if (response.isSuccessful() && response.body() != null) {
+                        RoomManager.SQL_DB.initStateDao().markOptionsLoaded();
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
                         globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
 
@@ -3607,6 +3610,7 @@ id_exclude - иди товаров которые есть в приложени
                 @Override
                 public void onResponse(Call<ThemeTableRespose> call, Response<ThemeTableRespose> response) {
                     try {
+                        RoomManager.SQL_DB.initStateDao().markThemeLoaded();
                         if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
                             ThemeRealm.setThemeDBTable(response.body().getList());
                             INSTANCE.executeTransaction(realm -> {

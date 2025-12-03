@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteObjectsResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 /**
@@ -44,7 +45,7 @@ public class SiteObjectsExchange {
                         // todo ADD M_LOG
                         Log.e("SiteObjectsExchange", "3");
 //                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response", " response: " + (response.body() != null ? response.body().objectSQLList : "null"));
-
+                        RoomManager.SQL_DB.initStateDao().markSiteLoaded();
                         if (response.body().state) {
                             if (response.body().error != null) {
                                 // todo ADD M_LOG
