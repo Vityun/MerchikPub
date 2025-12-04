@@ -155,6 +155,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val listState = rememberLazyListState()
 
+    // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
+    LaunchedEffect(uiState.lastUpdate) {
+        listState.scrollToItem(0)
+    }
+
     // действие по клику
     val menu = rememberContextMenuHost(viewModel, context)
 

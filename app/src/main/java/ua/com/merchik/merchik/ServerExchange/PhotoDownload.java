@@ -895,20 +895,20 @@ public class PhotoDownload {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-//        {
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
-//            call.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//            });
-//        }
+        {
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.d("smarti", "onResponse: ");
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.d("smarti", "onResponse: ");
+                }
+            });
+        }
 
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
@@ -1049,6 +1049,8 @@ public class PhotoDownload {
 
                 stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
 
+                stackPhotoDB.setComment(item.getComments());
+
                 stackList.add(stackPhotoDB);
 
                 id++;
@@ -1115,6 +1117,8 @@ public class PhotoDownload {
                     stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(), "0"));
                     stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(), "0"));
                     stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(), "0"));
+
+                    stackPhotoDB.setComment(item.getComments());
 
                 } catch (Exception e) {
                     Log.e("Exception", "e: " + e.getMessage());

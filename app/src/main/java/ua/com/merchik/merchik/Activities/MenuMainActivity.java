@@ -43,13 +43,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
+import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
@@ -212,28 +216,36 @@ public class MenuMainActivity extends toolbar_menus {
         return ssb;
     }
 
+    private void downloadPhotoInfoById(String stackPhotoDBID, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
+        PhotoDownload photoDownloader = new PhotoDownload();
+
+        PhotoTableRequest request = new PhotoTableRequest();
+        request.mod = "images_view";
+        request.act = "list_image";
+        request.nolimit = "1";
+        request.id_list = stackPhotoDBID;
+
+        photoDownloader.getPhotoInfoAndSaveItToDB(request, clickUpdatePhoto);
+    }
 
     private void test() {
 
         Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
 
-//        downloadWPData();
-//        FcmTokenSenderRx.INSTANCE.sendIfNeeded(this);
-//
-//        FirebaseMessaging.getInstance().getToken()
-//                .addOnCompleteListener(task -> {
-//                    if (task.isSuccessful()) {
-//                        String token = task.getResult();
-//                        Log.e("FirebaseMessaging_TOKEN",":::>>> " + token);
-//                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-//                        ClipData clip = ClipData.newPlainText("", token);
-//                        clipboard.setPrimaryClip(clip);
-//                    } else {
-//                        Log.e("!!!!!!!!!!!!!!!!!!",":::>>> " + task.getException());
-//                    }
-//                });
 
-        new Translate().uploadNewTranslate();
+//        new Translate().uploadNewTranslate();
+
+        downloadPhotoInfoById("56411768", new Clicks.clickObjectAndStatus<StackPhotoDB>() {
+            @Override
+            public void onSuccess(StackPhotoDB data) {
+                Log.e("e","_");
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e("e","_");
+            }
+        });
 
 //        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
 

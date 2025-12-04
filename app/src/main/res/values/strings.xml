@@ -21,6 +21,7 @@
         <item quantity="many">%d нових сповіщень</item>
         <item quantity="other">%d нових сповіщень</item>
     </plurals>
+
     <string name="new_notifications" translatable="false">Нові сповіщення</string>
 
     <!--Activity titles-->

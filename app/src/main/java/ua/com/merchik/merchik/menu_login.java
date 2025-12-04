@@ -922,6 +922,35 @@ public class menu_login extends AppCompatActivity {
         });
     }
 
+    private void registerUserCompanyRequestKostil(Clicks.clickVoid click) {
+        StandartData data = new StandartData();
+        data.mod = "auth";
+        data.act = "register_company";
+
+        data.company_id = "92106";               // едрпоу
+        data.company_name = "Не определен";           // название компании
+        data.company_type = "existing";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "onResponse: " + response);
+                if (response.isSuccessful())
+                    click.click();
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+            }
+        });
+    }
+
     /*получение проверочного кода от администратора
     компании для регистрации учетки в существующую
     компанию у которой в поиске confirmation=true*/
@@ -1590,6 +1619,9 @@ public class menu_login extends AppCompatActivity {
                             Log.e("APP_LOGIN", "LOGIN_callLogin: " + response.body().getState());
                             if (response.body().getState()) {
                                 if (response.body().registerCompany != null && response.body().registerCompany) {
+//                                    registerUserCompanyRequestKostil(() -> {
+//                                        sessionCheck(mod, finalLogin, finalPassword);
+//                                    });
                                     checkUserForCompany(() -> {
                                         sessionCheck(mod, finalLogin, finalPassword);
                                     });
