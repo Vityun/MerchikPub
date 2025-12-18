@@ -12,7 +12,7 @@ public class StandartData<T> {
     public String vpi;
 
     public String dt;
-    public String id;
+    public T id;
     public String id_list;      // Фильтр. список idшников фоток
     public String login;
     public String term;
@@ -52,6 +52,8 @@ public class StandartData<T> {
     public List<T> tovar_id;    // Тестовая хрень, надо поменять
     public List<T> photo_tovar_id;    // Тестовая хрень, надо поменять
     public List<String> hash_list;
+    public List<String> hash;
+    public List<String> code_dad2_hash;
 
     public String list_type;
 

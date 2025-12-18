@@ -270,11 +270,6 @@ public class Translate {
         SiteObjectsSDB obj = SQL_DB.siteObjectsDao().getObjectsByRealId(id);
         return obj != null && obj.comments != null ? obj.comments : defaultText;
     }
-//    public static String translationText(int id, String defaultText) {
-//        return Objects.requireNonNullElse(
-//                SQL_DB.siteObjectsDao().getObjectsByRealId(id).comments, defaultText);
-//        }
-
 
     /**
      * 12.02.2021
@@ -319,24 +314,17 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "dialog_server_error_message",
-                "Зв`язок з сервером на поточний момент встановити не вдалось! Додаток буде працювати у режимі off-line. " +
-                        "У цьому режимі він не може отримувати від серверу дані та не може передавати свої дані у зворотньому напрямку але, " +
-                        "якщо дані вже завантажені, то ви можете працювати майже без обмеження функціоналу. У випадку, якщо це ваш перший " +
-                        "вхід у систему (після встановлення Додатку) то ви не зможете почати роботи, поки не відновите зв`язок з сервером. " +
-                        "Система періодично (раз на 10 хвилин) буде автоматично намагатись відновити зв`язок з сервером і виконати обмін даними. " +
-                        "Для того, щоб ініціювати цей процес власноруч, \n" +
-                        "а) впевніться що у вас ввімкнений (і працює) і-нет, \n" +
-                        "б) натисніть іконку 'обмін даними' у верхній частині додатку. \n\n" +
-                        "Допомогу ви можете отримати у свого керівника чи у оператора служби підтримки merchik +380674491265", "app",
+                "button_registration",
+                "Регистрация",
+                "app",
                 "all",
                 ""
         ));
 //
         res.add(new AddTranslation(
                 "2",
-                "ufmd_wpdata_smeta",
-                "Смета",
+                "button_add_registration",
+                "Зарегистрировать",
                 "app",
                 "all",
                 ""
@@ -344,8 +332,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "3",
-                "ufmd_wpdata_docement_number",
-                "Документ",
+                "dialog_exit_app_msg",
+                "Приложение будет закрыто. Завершить работу?",
                 "app",
                 "all",
                 ""
@@ -353,31 +341,31 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "4",
-                "dialog_server_error_subtitle",
-                "Статус связи",
+                "access_to_orders",
+                "доступ к заказам",
                 "app",
                 "all",
                 ""
         ));
 
-//        res.add(new AddTranslation(
-//                "5",
-//                "wp_data_duration",
-//                "Продолжительность работ (ср.)",
-//                "app",
-//                "all",
-//                ""
-//        ));
+        res.add(new AddTranslation(
+                "5",
+                "take_the_training",
+                "пройти тренинг",
+                "app",
+                "all",
+                ""
+        ));
 
 
-//        res.add(new AddTranslation(
-//                "5",
-//                "maps_dialog_wp",
-//                "Адреса в которых выполняются работы за период с %s по %s Для получения дополнительной информации нажмите иконку с изображением знака вопроса в верхней части текущей формы.",
-//                "app",
-//                "all",
-//                ""
-//        ));
+        res.add(new AddTranslation(
+                "6",
+                "dialog_exit_close",
+                "Система буде закрита",
+                "app",
+                "all",
+                ""
+        ));
 
 //
 //        res.add(new AddTranslation(

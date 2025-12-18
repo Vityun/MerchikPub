@@ -202,6 +202,10 @@ public class Options {
 
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
 
+            if (optionControlId == 165276 || optionControlId == 84005
+                    || optionControlId == 84967 || optionControlId == 164985 )
+                Log.e("!!!","+");
+
             OptionMassageType newOptionType = new OptionMassageType();
             switch (mode) {
                 case NULL:
@@ -2051,6 +2055,16 @@ public class Options {
                     }
                 }
                 return optionControlPhotoPromotion.isBlockOption2() ? 1 : 0;
+
+            case 166896:
+                OptionControlTwoWorkInOneDay optionControlTwoWorkInOneDay =
+                        new OptionControlTwoWorkInOneDay(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlTwoWorkInOneDay.isBlockOption()))
+                    optionControlTwoWorkInOneDay.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlTwoWorkInOneDay.signal && optionControlTwoWorkInOneDay.isBlockOption()) {
+                    optionControlTwoWorkInOneDay.showOptionMassage(block);
+                }
+                return optionControlTwoWorkInOneDay.isBlockOption2() ? 1 : 0;
 
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork =

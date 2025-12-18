@@ -105,6 +105,8 @@ public class Globals {
     public static final String APP_OFFSET_SIZE_FONTS = "app_offset_size_fonts";
     public static final String APP_PREFERENCES_REALM = "realm";
 
+    public static int OTDEL_KADROV_USER_ID = 0;
+
     final Handler handlerCount = new Handler();
 
     boolean viewMassage = true;

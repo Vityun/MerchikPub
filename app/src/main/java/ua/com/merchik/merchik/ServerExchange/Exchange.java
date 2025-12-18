@@ -147,6 +147,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
@@ -534,22 +535,26 @@ public class Exchange {
                                                     @Override
                                                     public void onComplete() {
                                                         Log.e("CustomerExchange", "onComplete OK");
+                                                        RoomManager.SQL_DB.initStateDao().markCustomerLoaded();
                                                     }
 
                                                     @Override
                                                     public void onError(@NonNull Throwable e) {
                                                         Log.e("CustomerExchange", "Throwable e: " + e);
+                                                        RoomManager.SQL_DB.initStateDao().markCustomerLoaded();
                                                     }
                                                 });
 
                                     } catch (Exception e) {
                                         Log.e("CustomerExchange", "Exception e: " + e);
+                                        RoomManager.SQL_DB.initStateDao().markCustomerLoaded();
                                     }
                                 }
 
                                 @Override
                                 public void onFailure(String error) {
                                     Log.e("CustomerExchange", "2error." + error);
+                                    RoomManager.SQL_DB.initStateDao().markCustomerLoaded();
                                 }
                             });
                             new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
@@ -563,6 +568,7 @@ public class Exchange {
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
+                                                        RoomManager.SQL_DB.initStateDao().markUsersLoaded();
                                                     }
 
                                                     @Override
@@ -1446,6 +1452,7 @@ public class Exchange {
             @Override
             public void onSuccess(String msg) {
 
+
                 Log.e("SiteObjectsExchange", "S");
 
 
@@ -1748,7 +1755,8 @@ public class Exchange {
         call.enqueue(new Callback<DossierSotrResponse>() {
             @Override
             public void onResponse(Call<DossierSotrResponse> call, Response<DossierSotrResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                if (response.isSuccessful() && response.body() != null && response.body().state
+                && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<DossierSotrSDB> dossierSotrSDBList = new ArrayList<>();
                     for (DossierSotrItemResponse item : response.body().list) {
                         dossierSotrSDBList.add(new DossierSotrSDB(item));
@@ -2557,6 +2565,8 @@ public class Exchange {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 Log.e("chatExchange", "response: " + response);
+                if (response.isSuccessful() && response.body().state
+                        && response.body().list != null && !response.body().list.isEmpty())
 //                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/chatExchange/onResponse", "(response.body().list: " + response.body().list.size());
                 SQL_DB.chatDao().insertData(response.body().list)
                         .subscribeOn(Schedulers.io())

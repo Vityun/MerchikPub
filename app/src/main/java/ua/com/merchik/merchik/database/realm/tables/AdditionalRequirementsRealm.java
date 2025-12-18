@@ -37,6 +37,7 @@ public class AdditionalRequirementsRealm {
             res.clientId = wp.getClient_id();
             res.addressId = wp.getAddr_id();
             res.themeId = wp.getTheme_id();
+            res.mainOption = wp.getMain_option_id();
 
         } else if (document instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) document).codeDad2SrcDoc);
@@ -44,11 +45,14 @@ public class AdditionalRequirementsRealm {
             res.clientId = wp.getClient_id();
             res.addressId = wp.getAddr_id();
             res.themeId = wp.getTheme_id();
+            res.mainOption = wp.getMain_option_id();
+
         }
 
         return res;
     }
 
+    // 18.12.2025 добавил фильтр по главной опции
     public static <T> List<AdditionalRequirementsDB> getDocumentAdditionalRequirements(
             Object document,
             boolean tovExist,
@@ -63,6 +67,7 @@ public class AdditionalRequirementsRealm {
         BaseBusinessData data = getAdditionalRequirementsDocumentData(document);
         AddressDB addressDB = AddressRealm.getAddressById(data.addressId);
 
+        String mainOption = data.mainOption;
         // --------------------
         RealmResults res = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", data.clientId)
@@ -160,6 +165,13 @@ public class AdditionalRequirementsRealm {
                         .lessThanOrEqualTo("dtChange", dateChangeTo)
                         .findAll();
             }
+
+            if (mainOption != null && !mainOption.isEmpty() && !mainOption.equals("0"))
+                res = res.where()
+                        .equalTo("mainOptionId", mainOption)
+                        .or()
+                        .equalTo("mainOptionId", "0")
+                        .findAll();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
@@ -462,9 +474,9 @@ public class AdditionalRequirementsRealm {
             //        18.11 добавил фильтр по главной опции исключаем если указана и не равна
             if (mainOption != null && !mainOption.isEmpty() && !mainOption.equals("0"))
                 realmResults = realmResults.where()
-                        .equalTo("optionId", mainOption)
+                        .equalTo("mainOptionId", mainOption)
                         .or()
-                        .equalTo("optionId", "0")
+                        .equalTo("mainOptionId", "0")
                         .findAll();
 
 

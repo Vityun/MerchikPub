@@ -538,8 +538,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     // Получение RP
                     ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(String.valueOf(codeDad2), list.getiD());
                     String ostatok = rp.getOborotvedNum();
-                    Long ostatokDate = Long.parseLong(rp.oborotved_num_date);
+//                    Long ostatokDate = Long.parseLong(rp.oborotved_num_date);
 
+                    Long ostatokDate = null;
+
+                    String s = rp.oborotved_num_date;
+                    if (s != null) {
+                        s = s.trim();
+                        if (!s.isEmpty()) {
+                            try {
+                                ostatokDate = Long.parseLong(s);
+                            } catch (NumberFormatException ignored) {
+                                ostatokDate = 0L;
+                            }
+                        }
+                    }
 
                     // 30 дней в миллисекундах == 2592000000
                     // Дата старше 30 дней или нет

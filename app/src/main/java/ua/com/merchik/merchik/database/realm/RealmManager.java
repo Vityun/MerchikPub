@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import androidx.preference.PreferenceManager;
+
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -70,7 +72,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-//                .schemaVersion(21)
+                .schemaVersion(22)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -78,11 +80,20 @@ public class RealmManager {
         INSTANCE = Realm.getInstance(Realm.getDefaultConfiguration());
 
 
+
         sharedPreferences = context.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("realm", false)) {
             List<SynchronizationTimetableDB> synchronizationTimetableDBList = RealmManager.getSynchronizationTimetable();
             if (synchronizationTimetableDBList == null) {
                 addSynchronizationTimetable();
+                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putString("user_id", null).apply();
+
+                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putString("login", null).apply();
+
+                PreferenceManager.getDefaultSharedPreferences(context).edit()
+                        .putString("password", null).apply();
             }
         } else {
             sharedPreferences.edit().putBoolean("realm", true).apply();
@@ -1052,6 +1063,7 @@ public class RealmManager {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", codeDad2)
                 .equalTo("photo_type", photoType)
+                .equalTo("dvi", 0)
                 .isNotNull("photo_hash").findAll();
         if (realmResults != null && !realmResults.isEmpty()) {
             return INSTANCE.copyFromRealm(realmResults);

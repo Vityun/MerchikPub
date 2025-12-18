@@ -44,6 +44,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -233,19 +234,62 @@ public class MenuMainActivity extends toolbar_menus {
         Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
 
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
-        downloadPhotoInfoById("56411768", new Clicks.clickObjectAndStatus<StackPhotoDB>() {
-            @Override
-            public void onSuccess(StackPhotoDB data) {
-                Log.e("e","_");
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.e("e","_");
-            }
-        });
+        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+//        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
+//            @Override
+//            public void onSuccess(Object data) {
+//                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "+");
+//
+////                            List<SamplePhotoSDB> listPhotosToDownload = (List<SamplePhotoSDB>) data;
+////                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
+//
+//                try {
+//                    RealmManager.INSTANCE.executeTransaction(realm -> {
+//                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
+//                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+//                        }
+//                    });
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+//                }
+//
+//                try {
+////                                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+//                    List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
+//
+//                    if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
+////                                            photoCount = listPhotosToDownload.size();
+//                        Log.i("````", "listPhotosToDownload: " + listPhotosToDownload.size());
+//
+//                        samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
+//                            @Override
+//                            public void onSuccess(String data) {
+//                                Toast.makeText(MenuMainActivity.this, data, Toast.LENGTH_LONG).show();
+//                            }
+//
+//                            @Override
+//                            public void onFailure(String error) {
+//
+//                            }
+//                        });
+//                    } else {
+//                        TablesLoadingUnloading.readySamplePhotos = true;
+//                        Log.i("````", "....1");
+//                    }
+//                } catch (Exception e) {
+//                    TablesLoadingUnloading.readySamplePhotos = true;
+//                    Log.e("````", "err", e);
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(String error) {
+//                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+//            }
+//        });
 
 //        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
 

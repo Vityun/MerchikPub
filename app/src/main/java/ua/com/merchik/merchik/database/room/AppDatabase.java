@@ -162,7 +162,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 WPDataAdditional.class,      // дополнительный заработок
                 InitStateEntity.class
         },
-        version = 70
+        version = 72
 )
 
 

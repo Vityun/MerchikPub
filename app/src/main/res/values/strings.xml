@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">120300</string>
+    <string name="ver" translatable="false">121802</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-12-03</string>
+    <string name="debug_date" translatable="false">2025-12-18</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -48,8 +48,8 @@
     <string name="title_tab_tar_2">Переписка</string>
     <string name="title_tab_tar_3">Товары</string>
 
-    <string name="edit_text_login">логин</string>
-    <string name="edit_text_password">пароль</string>
+    <string name="edit_text_login">Логин</string>
+    <string name="edit_text_password">Пароль</string>
 
     <string name="ok">Ok</string>
 
@@ -285,6 +285,9 @@
     <string name="not_photo_title">Все фото переданы на сервер</string>
     <string name="not_photo">Нет фото для экспорта на сервер</string>
     <string name="not_show_again">Больше не показывать это уведомление</string>
+
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="regisration">Регистрация</string>
 
 </resources>
 

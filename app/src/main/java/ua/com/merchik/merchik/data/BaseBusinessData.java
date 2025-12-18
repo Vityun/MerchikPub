@@ -11,6 +11,7 @@ public class BaseBusinessData {
     public int userId;
     public int themeId;
     public long dad2;
+    public String mainOption;
 }
 
 

@@ -9,31 +9,37 @@ import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
-
 import android.widget.Toast;
-import androidx.annotation.NonNull;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
-import kotlin.Unit;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -41,16 +47,18 @@ import java.util.stream.Collectors;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+import kotlin.Unit;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -63,6 +71,7 @@ import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
+import ua.com.merchik.merchik.data.HashElements;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
@@ -72,6 +81,7 @@ import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
@@ -132,7 +142,6 @@ import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -415,7 +424,6 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
-                            RoomManager.SQL_DB.initStateDao().markWpLoaded();
                             downloadWPDataWithCords();
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
@@ -436,8 +444,10 @@ public class TablesLoadingUnloading {
                                         realm.copyToRealmOrUpdate(sTable);
                                     }
                                 });
+                                RoomManager.SQL_DB.initStateDao().markWpLoaded();
+                            } else
+                                RoomManager.SQL_DB.initStateDao().markWpLoaded();
 
-                            }
                         }
                         isdownloadWPData = false;
                         readyWPData = true;
@@ -534,19 +544,19 @@ public class TablesLoadingUnloading {
 
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
 
-//            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
-//            test.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    JsonObject object = response.body();
-//                    Log.e("Result", "result: " + object);
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//
-//                }
-//            });
+            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
+            test.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    JsonObject object = response.body();
+                    Log.e("Result", "result: " + object);
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+
+                }
+            });
 
             Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<WpDataServer>() {
@@ -563,8 +573,24 @@ public class TablesLoadingUnloading {
                                     if (wpDataDB.getUser_id() == 176053)
                                         Log.e("!!!!!!!!!!", "+++++++++++");
                                 }
+                                HashElements he = response.body().getHashElements();
+                                Map<String, String> addrMap = he != null ? he.getAddrId() : null;
+                                Map<String, String> clientMap = he != null ? he.getClientId() : null;
+                                Map<String, String> dad2Map = he != null ? he.getCodeDad2() : null;
+                                downloadAddressTableByHash(addrMap);
+                                downloadClientTableByHash(clientMap);
+                                downloadOptionTableByHash(dad2Map);
+                                downloadReportPrepearByHash(dad2Map);
 
-
+                                List<String> clientId = new ArrayList<>(clientMap.size());
+                                List<String> dad2 = new ArrayList<>(dad2Map.size());
+                                for (Map.Entry<String, String> e : clientMap.entrySet()) {
+                                    clientId.add(e.getKey());
+                                }
+                                for (Map.Entry<String, String> e : dad2Map.entrySet()) {
+                                    dad2.add(e.getKey());
+                                }
+                                downloadTovarTableDad2(dad2);
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -1347,12 +1373,20 @@ public class TablesLoadingUnloading {
                     globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
                     if (response.isSuccessful() && response.body() != null) {
                         RoomManager.SQL_DB.initStateDao().markOptionsLoaded();
+
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
                         globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
 
                         if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                             globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
+
+                            for (OptionsDB optionsDB : response.body().getList()) {
+                                if (optionsDB.getOptionControlId().equals("166896"))
+                                    Log.e("!","+++++");
+                                if (optionsDB.getOptionId().equals("166896"))
+                                    Log.e("!","+++++");
+                            }
 //                            RealmManager.setOptions2(response.body().getList());
 //                            RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
@@ -1553,6 +1587,187 @@ public class TablesLoadingUnloading {
 
     }
 
+    public void downloadReportPrepearByHash(Map<String, String> addrIdToHash) {
+        if (addrIdToHash == null || addrIdToHash.isEmpty()) return;
+
+        StandartData data = new StandartData();
+
+        data.mod = "report_prepare";
+        data.act = "list_data";
+
+        List<String> ids = new ArrayList<>(addrIdToHash.size());
+        List<String> hashes = new ArrayList<>(addrIdToHash.size());
+
+        for (Map.Entry<String, String> e : addrIdToHash.entrySet()) {
+            ids.add(e.getKey());
+            hashes.add(e.getValue());
+        }
+
+        data.code_dad2 = ids;
+        data.code_dad2_hash = hashes;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_REPORT_PREPEAR_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(reportPrepareServer -> {
+                    Log.e("!", "__ " + reportPrepareServer);
+
+                    if (reportPrepareServer.getState() && reportPrepareServer.getList() != null
+                            && !reportPrepareServer.getList().isEmpty())
+                        RealmManager.setReportPrepare(reportPrepareServer.getList());
+                });
+
+    }
+
+    public void downloadOptionTableByHash(Map<String, String> addrIdToHash) {
+        if (addrIdToHash == null || addrIdToHash.isEmpty()) return;
+
+        StandartData data = new StandartData();
+
+        data.mod = "plan";
+        data.act = "options_list";
+
+        List<String> ids = new ArrayList<>(addrIdToHash.size());
+        List<String> hashes = new ArrayList<>(addrIdToHash.size());
+
+        for (Map.Entry<String, String> e : addrIdToHash.entrySet()) {
+            ids.add(e.getKey());
+            hashes.add(e.getValue());
+        }
+
+        data.code_dad2 = ids;
+        data.code_dad2_hash = hashes;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_OPTIONS_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(optionsServer -> {
+                    Log.e("!", "__ " + optionsServer);
+                    if (optionsServer.getState() && optionsServer.getList() != null
+                            && !optionsServer.getList().isEmpty())
+                        RealmManager.setOptions2(optionsServer.getList());
+
+                });
+
+    }
+
+    public void downloadAddressTableByHash(Map<String, String> addrIdToHash) {
+        if (addrIdToHash == null || addrIdToHash.isEmpty()) return;
+
+        StandartData data = new StandartData();
+
+        data.mod = "data_list";
+        data.act = "addr_list";
+
+        List<String> ids = new ArrayList<>(addrIdToHash.size());
+        List<String> hashes = new ArrayList<>(addrIdToHash.size());
+
+        for (Map.Entry<String, String> e : addrIdToHash.entrySet()) {
+            ids.add(e.getKey());
+            hashes.add(e.getValue());
+        }
+
+        data.id = ids;
+        data.hash = hashes;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_ADDRESS_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(addressTableResponse -> {
+                    if (addressTableResponse.state && addressTableResponse.list != null
+                            && !addressTableResponse.list.isEmpty()) {
+//                        RealmManager.setRowToAddress(addressTableResponse.getList());
+                        SQL_DB.addressDao().insertData(addressTableResponse.list)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        Log.e("AddressExchange", "END1");
+                                    }
+
+                                    @Override
+                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        Log.e("AddressExchange", "END1: " + e);
+                                    }
+                                });
+                    }
+                });
+
+    }
+
+    public void downloadClientTableByHash(Map<String, String> clientIdToHash) {
+        if (clientIdToHash == null || clientIdToHash.isEmpty()) return;
+
+        StandartData data = new StandartData();
+
+        data.mod = "data_list";
+        data.act = "client_list";
+
+        List<String> ids = new ArrayList<>(clientIdToHash.size());
+        List<String> hashes = new ArrayList<>(clientIdToHash.size());
+
+        for (Map.Entry<String, String> e : clientIdToHash.entrySet()) {
+            ids.add(e.getKey());
+            hashes.add(e.getValue());
+        }
+
+        data.id = ids;
+        data.hash = hashes;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_CLIENT_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(clientResponce -> {
+                    Log.e("!", "__ " + clientResponce);
+                    if (clientResponce != null && clientResponce.state
+                            && clientResponce.list != null && !clientResponce.list.isEmpty()) {
+//                        CustomerRealm.setAddressTable(clientResponce.list);
+                        SQL_DB.customerDao().insertData(clientResponce.list)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        Log.e("CustomerExchange", "onComplete OK");
+                                    }
+
+                                    @Override
+                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        Log.e("CustomerExchange", "Throwable e: " + e);
+                                    }
+                                });
+                    }
+
+                });
+
+    }
 
     /**
      * Обновление таблицы Адресов
@@ -1788,6 +2003,182 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Товаров
      */
+    public void downloadTovarTableDad2(List<String> wpDataDBList) {
+        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.START");
+
+        String mod = "data_list";
+        String act = "tovar_list";
+
+        ArrayList<String> listId = null;
+//##################################
+//        тут некорректный фильтр по дате, нужно убрать date_from / date_to
+//нужно добавить dt - unixtime (аналог dt_change_from)
+        String date_from = Clock.getDatePeriod(-30);
+        String date_to = Clock.getDatePeriod(1);
+
+
+        // Используем Set для автоматического удаления дубликатов
+        Set<String> uniqueClientIds = new HashSet<>();
+        Set<Long> uniqueDad2 = new HashSet<>();
+        Set<String> uniqueTovarRemove = new HashSet<>();
+
+        RealmResults<TovarDB> results = INSTANCE.where(TovarDB.class).findAll();
+        if (results != null && !results.isEmpty()) {
+            List<TovarDB> tovarDBList = INSTANCE.copyFromRealm(results);
+            for (TovarDB tovar : tovarDBList) {
+                uniqueTovarRemove.add(tovar.getiD());
+            }
+        }
+
+        // Проходим по каждому элементу списка wpDataDBList
+//        for (WpDataDB wpDataDB : wpDataDBList) {
+//            // Добавляем client_id в Set (дубликаты игнорируются)
+//            uniqueClientIds.add(wpDataDB.getClient_id());
+//            uniqueDad2.add(wpDataDB.getCode_dad2());
+//        }
+
+        long vpi;
+        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("tovar_list");
+        if (realmResults != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + realmResults);
+            vpi = realmResults.getVpi_app();
+        } else
+            vpi = 0;
+
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "tovar_list";
+        data.dt = String.valueOf(vpi);
+//        data.date_from = date_from;
+//        data.date_to = date_to;
+//        data.client_id = new ArrayList<>(uniqueClientIds);
+        data.code_dad2 = new ArrayList<>(wpDataDBList);
+//        if (!uniqueTovarRemove.isEmpty())
+//            data.exclude_id = new ArrayList<>(uniqueTovarRemove);
+
+//                Arrays.asList("38283","9382"); //9382
+
+        /*
+        фильтры:
+id - число или массив кодов товаров
+client_id - массив клиентов
+dt - ВПИ
+deleted - признак удаления (0 - только неудалённые (по умолчанию если не передано, то значение фильтра считает нулём), 1 - только удалённые, 2 - любые)
+code_dad2 - число или массив чисел
+фильтр id_exclude с массивом кодов товаров для исключения
+id_exclude - иди товаров которые есть в приложении
+         */
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Call<TovarTableResponse> call;
+        if (listId != null) {
+            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_ID(mod, act, listId);
+        } else {
+//            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
+            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_TABLE(RetrofitBuilder.contentType, convertedObject);
+        }
+
+//        BlockingProgressDialog finalPg = pg;
+//        BlockingProgressDialog finalTovarProgressDialog = tovarProgressDialog;
+        call.enqueue(new Callback<TovarTableResponse>() {
+            @Override
+            public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        if (response.body().getState()) {
+                            List<TovarDB> list = response.body().getList();
+
+                            try {
+                                try {
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                } catch (Exception e) {
+                                    globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                }
+                            } catch (Exception e) {
+                                globals.writeToMLOG("_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
+                            }
+
+                            if (list != null) {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarTable/onSuccess", "list.size(): " + list.size());
+
+                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: " + list.size());
+                            } else {
+                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: NuLL");
+                            }
+
+//                            list.stream()
+//                                    .filter(tovarDB -> wpDataDBList.stream()
+//                                            .anyMatch(wpDataDB -> Objects.equals(tovarDB.getClientId(), wpDataDB.getClient_id())));
+
+
+                            RealmManager.setTovarAsync(list);
+
+                            INSTANCE.executeTransaction(realm -> {
+                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                                realm.copyToRealmOrUpdate(realmResults);
+                            });
+
+//                            getTovarImg(list, "small");
+                            // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
+//                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
+//                                    @Override
+//                                    public void onSuccess(String data) {
+//                                        Log.e("test", "String data: " + data);
+//                                    }
+//
+//                                    @Override
+//                                    public void onFailure(String error) {
+//                                        Log.e("test", "String error: " + error);
+//                                    }
+//                                }, new Clicks.clickStatusMsgMode() {
+//                                    @Override
+//                                    public void onSuccess(String data, Clicks.MassageMode mode) {
+//
+//                                    }
+//
+//                                    @Override
+//                                    public void onFailure(String error) {
+//
+//                                    }
+//                                }, context);
+
+//                                if (finalPg != null)
+//                                    if (finalPg.isShowing())
+//                                        finalPg.dismiss();
+
+                        }
+                    } else {
+//                        if (finalPg != null)
+//                            if (finalPg.isShowing())
+//                                finalPg.dismiss();
+
+                    }
+                    readyTovarTable = true;
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "downloadTovarTable/onResponse/Exception", "Exception: " + e);
+//                    if (finalPg != null)
+//                        if (finalPg.isShowing())
+//                            finalPg.dismiss();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TovarTableResponse> call, Throwable t) {
+//                if (finalPg != null)
+//                    if (finalPg.isShowing())
+//                        finalPg.dismiss();
+                readyTovarTable = false;
+                syncInternetError = true;
+                Log.e("TAG_TABLE", "FAILURETovarTable: " + t);
+            }
+        });
+        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.END");
+
+    }
 
     public void downloadTovarTable(ArrayList<String> listId, List<WpDataDB> wpDataDBList) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.START");
@@ -2640,21 +3031,25 @@ id_exclude - иди товаров которые есть в приложени
                     Log.e("LOG_SEND", "response: " + response.body());
 
                     if (response.isSuccessful() && response.body() != null) {
-                        JsonObject obj = response.body();
-                        JsonObject log = obj.getAsJsonObject("log");
+                        try {
+                            JsonObject obj = response.body();
+                            JsonObject log = obj.getAsJsonObject("log");
+                            if (log != null)
+                                for (LogUploadToServ el : data) {
+                                    if (log.getAsJsonObject(el.getElement_id()) != null) {
+                                        Log.e("LOG_SEND", "JSON: " + log.getAsJsonObject(el.getElement_id()));
+                                        LogDB logDB = RealmManager.getLogRowById(el.getElement_id());
+                                        INSTANCE.executeTransaction(realm -> {
+                                            logDB.setDt(System.currentTimeMillis() / 1000); // Надо сменить на DT из запроса
+                                            INSTANCE.copyToRealmOrUpdate(logDB);
+                                        });
+                                    } else {
 
-                        for (LogUploadToServ el : data) {
-                            if (log.getAsJsonObject(el.getElement_id()) != null) {
-                                Log.e("LOG_SEND", "JSON: " + log.getAsJsonObject(el.getElement_id()));
-                                LogDB logDB = RealmManager.getLogRowById(el.getElement_id());
-                                INSTANCE.executeTransaction(realm -> {
-                                    logDB.setDt(System.currentTimeMillis() / 1000); // Надо сменить на DT из запроса
-                                    INSTANCE.copyToRealmOrUpdate(logDB);
-                                });
-                            } else {
+                                    }
 
-                            }
-
+                                }
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERR", "sendAndUpdateLog", "Exception e: " + e);
                         }
 
                     }
@@ -2672,83 +3067,7 @@ id_exclude - иди товаров которые есть в приложени
     /*
 
      */
-/**
- * 17.08.2020
- * <p>
- * Выгрузка Плана работ на Сервер
- * <p>
- * send WpData in data object(JSON).
- * Data mast min exist: element_id, code_dad2, user_id, client_id, isp + changing fields
- *//*
 
-    public void sendWpData() {
-        String mod = "plan";
-        String act = "update_data";
-        ArrayList<WpDataUploadToServ> data = RealmManager.getWpDataToSend();   // wp_data which must sending on server. passed data to send.
-
-
-        JsonArray convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonArray.class);
-        Log.e("WPDATA_SEND", "convertedObject.json: " + convertedObject);
-
-
-        Log.e("WPDATA_SEND", "Data: " + data.size());
-
-        if (data != null && data.size() > 0) {
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(mod, act, data);
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(mod, act, data);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
-                @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                    Log.e("WPDATA_SEND", "RESPONSE: " + response);
-                    Log.e("WPDATA_SEND", "RESPONSE.body: " + response.body());
-                }
-
-                @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    Log.e("WPDATA_SEND", "FAILURE_E: " + t.getMessage());
-                    Log.e("WPDATA_SEND", "FAILURE_E2: " + t);
-                }
-            });
-        }
-    }
-
-
-    */
-/**
- * 31.03.2021
- * Новая отправка на сервер данных о Начале/Конце работы
- *//*
-
-    public void sendWpData2() {
-        UploadDataSEWork data = new UploadDataSEWork();
-        data.mod = "plan";
-        data.act = "update_data";
-        data.data = RealmManager.getWpDataStartEndWork();
-
-        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-        Log.e("sendWpData2", "convertedObject.json: " + convertedObject);
-//        SEND_WP_DATA
-
-
-        if (data != null && data.data.size() > 0) {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
-                @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                    Log.e("sendWpData2", "RESPONSE: " + response);
-                    Log.e("sendWpData2", "RESPONSE.body: " + response.body());
-                }
-
-                @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    Log.e("sendWpData2", "FAILURE_E: " + t.getMessage());
-                    Log.e("sendWpData2", "FAILURE_E2: " + t);
-                }
-            });
-        }
-    }
-
-*/
 
     /**
      * 17.08.2020
@@ -3365,9 +3684,10 @@ id_exclude - иди товаров которые есть в приложени
                 public void onResponse(Call<SiteObjects> call, Response<SiteObjects> response) {
                     try {
                         if (response.isSuccessful()) {
-                            if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
+                            if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && !response.body().getObjectList().isEmpty()) {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
                                 saveSiteObjectsDB(response.body().getObjectList());
+                                RoomManager.SQL_DB.initStateDao().markSiteLoaded();
                             }
                         }
                     } catch (Exception e) {

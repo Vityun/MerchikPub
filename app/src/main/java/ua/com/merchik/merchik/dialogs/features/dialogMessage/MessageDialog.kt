@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
 import android.content.Intent
+import android.net.Uri
+import android.text.SpannedString
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -40,21 +43,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.PHONE_TAG
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.componentsUI.AutoResizeText
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
@@ -66,6 +72,7 @@ fun MessageDialog(
     subTitle: String? = "",
     message: String = "",
     onDismiss: () -> Unit,
+    onCloseClick: (() -> Unit)? = null,
     okButtonName: String = "Застосувати",
     onConfirmAction: (() -> Unit)? = null,
     cancelButtonName: String = "Скасувати",
@@ -73,18 +80,42 @@ fun MessageDialog(
     status: DialogStatus? = DialogStatus.NORMAL,
     showCheckbox: Boolean = false,
     onCheckboxChanged: ((Boolean) -> Unit)? = null,
+    dismissOnBackPress: Boolean = true,
+    dismissOnClickOutside: Boolean = true
 ) {
     val scrollState = rememberScrollState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     // Кешируем разбор сообщения, чтобы не парсить на каждой рекомпозиции
+// Кешируем разбор сообщения, чтобы не парсить на каждой рекомпозиции
+//    val styledAnnotatedString: AnnotatedString = remember(message, messageAnnotated) {
+//        when {
+//            // приоритет — уже готовый AnnotatedString с кликами
+//            messageAnnotated != null -> messageAnnotated
+//
+//            else -> {
+//                val pattern = Pattern.compile("\\{([^}]*)\\}")
+//                val matcher = pattern.matcher(message)
+//                if (matcher.find()) {
+//                    parseAndReplaceVisitText(message) { codeDad2 ->
+//                        try {
+//                            RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
+//                        } catch (t: Throwable) {
+//                            null
+//                        }
+//                    }
+//                } else {
+//                    AnnotatedString.fromHtml(message.replace("\n", "<br>"))
+//                }
+//            }
+//        }
+//    }
     val styledAnnotatedString: AnnotatedString = remember(message) {
+
         val pattern = Pattern.compile("\\{([^}]*)\\}")
         val matcher = pattern.matcher(message)
         if (matcher.find()) {
-            // parseAndReplaceVisitText — ваша функция, оставляем как есть
             parseAndReplaceVisitText(message) { codeDad2 ->
-                // защищённый вызов Realm (если нужно — вынести в ассинхронный код)
                 try {
                     RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
                 } catch (t: Throwable) {
@@ -92,9 +123,19 @@ fun MessageDialog(
                 }
             }
         } else {
-            AnnotatedString.fromHtml(message.replace("\n", "<br>"))
+
+            AnnotatedString.fromHtml(
+                htmlString = message.replace("\n", "<br>").replace("/n", "<br>"),
+                linkStyles = TextLinkStyles(
+                    style = SpanStyle(
+                        color = Color.Blue,
+                        textDecoration = TextDecoration.Underline
+                    )
+                )
+            )
         }
     }
+
 
     // чекбокс сохраняем при пересоздании конфигурации
     var isChecked by rememberSaveable { mutableStateOf(false) }
@@ -119,7 +160,16 @@ fun MessageDialog(
     }
 
     // Позволяем закрывать диалог тапом вне области — если это НЕ нужно, замените onDismiss на {}
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = {
+            // сюда прилетает back/клик мимо
+            onDismiss()
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = dismissOnBackPress,
+            dismissOnClickOutside = dismissOnClickOutside
+        )
+    ) {
         Column(
             modifier = Modifier
                 .wrapContentHeight()
@@ -142,7 +192,12 @@ fun MessageDialog(
                     sizeButton = 40.dp,
                     sizeImage = 25.dp,
                     modifier = Modifier.padding(end = 0.dp),
-                    onClick = { isCompleted = true }
+                    onClick = {
+                        if (onCloseClick != null)
+                            onCloseClick()
+                        else
+                            isCompleted = true
+                    }
                 )
             }
 
@@ -211,7 +266,6 @@ fun MessageDialog(
                         )
                     }
 
-                    // Message (аннотированный текст)
                     Text(
                         text = styledAnnotatedString,
                         style = MaterialTheme.typography.titleSmall,
@@ -222,6 +276,7 @@ fun MessageDialog(
                             .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp)
                             .padding(bottom = 2.dp)
                     )
+
 
                     // Checkbox
                     if (showCheckbox) {
@@ -287,31 +342,31 @@ fun MessageDialog(
                             }
 
                             onCancelAction != null -> {
-                               Row {
-                                   Button(
-                                       onClick = {
-                                           onCancelAction()
-                                           isCompleted = true
-                                       },
-                                       shape = RoundedCornerShape(8.dp),
-                                       colors = ButtonDefaults.buttonColors(
-                                           containerColor = colorResource(id = R.color.blue)
-                                       ),
-                                       modifier = Modifier
-                                           .weight(1f)
-                                           .fillMaxWidth()
-                                   ) {
-                                       AutoResizeText(
-                                           text = cancelButtonName,
-                                           modifier = Modifier.fillMaxWidth(),
-                                           style = MaterialTheme.typography.labelLarge, // можно подобрать подходящий стиль
-                                           maxLines = 1,
-                                           minTextSize = 12.sp,
-                                           step = 1.sp
-                                       )
-                                   }
-                                   Spacer(modifier = Modifier.weight(1f))
-                               }
+                                Row {
+                                    Button(
+                                        onClick = {
+                                            onCancelAction()
+                                            isCompleted = true
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = colorResource(id = R.color.blue)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth()
+                                    ) {
+                                        AutoResizeText(
+                                            text = cancelButtonName,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            style = MaterialTheme.typography.labelLarge, // можно подобрать подходящий стиль
+                                            maxLines = 1,
+                                            minTextSize = 12.sp,
+                                            step = 1.sp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
 
                             onConfirmAction != null -> {

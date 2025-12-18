@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.RetrofitResponse.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import ua.com.merchik.merchik.data.HashElements;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 public class WpDataServer {
@@ -16,6 +17,19 @@ public class WpDataServer {
     @SerializedName("list")
     @Expose
     private java.util.List<WpDataDB> wp_data = null;
+
+    @SerializedName("hash_elements")
+    @Expose
+    private HashElements hashElements;
+
+    public HashElements getHashElements() {
+        return hashElements;
+    }
+
+    public void setHashElements(HashElements hashElements) {
+        this.hashElements = hashElements;
+    }
+
 
     public Boolean getState() {
         return state;

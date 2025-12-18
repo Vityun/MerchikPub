@@ -203,6 +203,19 @@ public class MyMigration implements RealmMigration {
             oldVersion++; // Увеличиваем версию схемы
         }
 
+        if (oldVersion == 22) {
+            RealmObjectSchema additionalRequirementsDB = schema.get("AdditionalRequirementsDB");
+
+            // Добавляем новые поля
+            if (additionalRequirementsDB != null) {
+                additionalRequirementsDB
+                        .addField("main_option_id", String.class);
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "WpDataDB schema is null");
+            }
+            oldVersion++; // Увеличиваем версию схемы
+        }
+
     }
 }
 

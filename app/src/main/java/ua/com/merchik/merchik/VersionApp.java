@@ -13,6 +13,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.gson.JsonObject;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,6 +22,9 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ua.com.merchik.merchik.data.ServerInfo.AppVersion.AppVersion;
 import ua.com.merchik.merchik.data.ServerInfo.AppVersion.Datum;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -50,6 +55,18 @@ public class VersionApp {
     public void getMinVer(Globals.getVersionInterface callback){
         String mod = "constant_list";
         String act = "get";
+//        RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_JSON(mod, act)
+//                .enqueue(new Callback<JsonObject>() {
+//                    @Override
+//                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                        Log.e("@","$");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                    }
+//                });
         retrofit2.Call<AppVersion> call = RetrofitBuilder.getRetrofitInterface().GET_CONSTANT_APP_VERSION(mod, act);
         call.enqueue(new retrofit2.Callback<AppVersion>() {
             @Override
@@ -63,6 +80,9 @@ public class VersionApp {
                                 VERSION_APP = Long.valueOf(list.getVal());
                                 Log.e("getVer", "VERSION_APP: " + VERSION_APP);
                                 callback.onSuccess(VERSION_APP);
+                            }
+                            if (list.getID() != null && list.getID().equals("6299")) {
+                                Globals.OTDEL_KADROV_USER_ID = Integer.parseInt(list.getVal());
                             }
                         }
                     }

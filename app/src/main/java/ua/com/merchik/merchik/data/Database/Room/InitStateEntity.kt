@@ -21,5 +21,13 @@ data class InitStateEntity(
     val optionsLoaded: Boolean = false,
 
     @ColumnInfo(name = "theme_loaded")
-    val themeLoaded: Boolean = false
+    val themeLoaded: Boolean = false,
+
+    @ColumnInfo(name = "customer_loaded")
+    val customerLoaded: Boolean = false,
+
+    @ColumnInfo(name = "user_loaded")
+    val userLoaded: Boolean = false,
+
+
 )

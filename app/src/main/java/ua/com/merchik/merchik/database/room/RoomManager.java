@@ -44,7 +44,9 @@ public class RoomManager {
                         MIGRATION_64_65,
                         MIGRATION_65_66,
                         MIGRATION_66_67,
-                        MIGRATION_67_68
+                        MIGRATION_67_68,
+                        MIGRATION_68_69,
+                        MIGRATION_69_70
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -768,5 +770,52 @@ public class RoomManager {
     };
 
 
+    public static final Migration MIGRATION_68_69 = new Migration(68, 69) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE sotr ADD COLUMN zamestitel_id INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("ALTER TABLE sotr ADD COLUMN supervisor_id INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("ALTER TABLE sotr ADD COLUMN teritorial_id INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("ALTER TABLE sotr ADD COLUMN regional_id INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("ALTER TABLE sotr ADD COLUMN nach_otd_proizv_id INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("ALTER TABLE sotr ADD COLUMN instructor_id INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
+
+    public static final Migration MIGRATION_69_70 = new Migration(69, 70) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+
+            // на всякий случай: если таблицы вдруг нет (у кого-то старый путь) — создаём
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS init_state (" +
+                            "id INTEGER NOT NULL, " +
+                            "wp_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "site_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "options_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "theme_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "customer_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "user_loaded INTEGER NOT NULL DEFAULT 0, " +
+                            "PRIMARY KEY(id)" +
+                            ")"
+            );
+
+            // если таблица уже была создана ранее без customer_loaded — добавляем колонку
+            database.execSQL(
+                    "ALTER TABLE init_state ADD COLUMN customer_loaded INTEGER NOT NULL DEFAULT 0"
+            );
+            database.execSQL(
+                    "ALTER TABLE init_state ADD COLUMN user_loaded INTEGER NOT NULL DEFAULT 0"
+            );
+
+            // чтобы гарантировать, что строка id=1 существует (не продублирует)
+            database.execSQL(
+                    "INSERT OR IGNORE INTO init_state " +
+                            "(id, wp_loaded, site_loaded, options_loaded, theme_loaded, customer_loaded, user_loaded) " +
+                            "VALUES (1, 0, 0, 0, 0, 0)"
+            );
+        }
+    };
 
 }

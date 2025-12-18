@@ -207,62 +207,62 @@ fun rememberContextMenuHost(
                         selectedItem = null
                     }
                     ContextMenuAction.OpenOrder -> {
-//                        result.wpDataDB?.let {
+                        result.wpDataDB?.let {
 //                            val progress = ProgressViewModel(2)
 //                            val loadingDialog = LoadingDialogWithPercent(context as Activity,progress)
 //                            loadingDialog.show()
 //                            progress.onNextEvent("Завантажую опциi")
 //
-//                            val intent = Intent(context, DetailedReportActivity::class.java)
-//                            intent.putExtra("WpDataDB_ID", it.id)
-//                            context.startActivity(intent)
-//                        }
-                        result.wpDataDB?.let { wp ->
-                            // Для текущей даты
-                            val currentDate = wp.dt
-                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val documentDate = formatter.format(currentDate)
-
-                            val progress = ProgressViewModel(2)
-                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
-                            loadingDialog.show()
-
-                            // 1) уведомление о загрузке опций
-                            progress.onNextEvent("Завантажую опції")
-
-                            // безопасный helper, чтобы выполнять UI-действия на главном потоке
-                            fun runOnUi(action: () -> Unit) {
-                                (context as Activity).runOnUiThread { action() }
-                            }
-
-                            // callback-реализация clickVoid (предполагается, что интерфейс clickVoid { fun click() } у тебя есть)
-                            val afterOptions = object : clickVoid {
-                                override fun click() {
-                                    // после загрузки опций — уведомляем и запускаем загрузку товаров
-                                    runOnUi {
-                                        progress.onNextEvent("Завантажую товари")
-                                    }
-
-                                    reportDownload(wp.code_dad2, documentDate, object : clickVoid {
-                                        override fun click() {
-                                            // по завершении загрузки товаров — закрываем диалог и открываем активити
-                                            runOnUi {
-                                                try {
-                                                    if (loadingDialog.isShowing()) progress.onCompleted()
-                                                } catch (_: Exception) { /* ignore */ }
-
-                                                val intent = Intent(context, DetailedReportActivity::class.java)
-                                                intent.putExtra("WpDataDB_ID", wp.id)
-                                                context.startActivity(intent)
-                                            }
-                                        }
-                                    })
-                                }
-                            }
-
-                            // Запускаем загрузку опций; при любом результате — вызовем afterOptions.click()
-                            optionDownload(wp.code_dad2, documentDate, afterOptions)
+                            val intent = Intent(context, DetailedReportActivity::class.java)
+                            intent.putExtra("WpDataDB_ID", it.id)
+                            context.startActivity(intent)
                         }
+//                        result.wpDataDB?.let { wp ->
+//                            // Для текущей даты
+//                            val currentDate = wp.dt
+//                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+//                            val documentDate = formatter.format(currentDate)
+//
+//                            val progress = ProgressViewModel(2)
+//                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+//                            loadingDialog.show()
+//
+//                            // 1) уведомление о загрузке опций
+//                            progress.onNextEvent("Завантажую опції")
+//
+//                            // безопасный helper, чтобы выполнять UI-действия на главном потоке
+//                            fun runOnUi(action: () -> Unit) {
+//                                (context as Activity).runOnUiThread { action() }
+//                            }
+//
+//                            // callback-реализация clickVoid (предполагается, что интерфейс clickVoid { fun click() } у тебя есть)
+//                            val afterOptions = object : clickVoid {
+//                                override fun click() {
+//                                    // после загрузки опций — уведомляем и запускаем загрузку товаров
+//                                    runOnUi {
+//                                        progress.onNextEvent("Завантажую товари")
+//                                    }
+//
+//                                    reportDownload(wp.code_dad2, documentDate, object : clickVoid {
+//                                        override fun click() {
+//                                            // по завершении загрузки товаров — закрываем диалог и открываем активити
+//                                            runOnUi {
+//                                                try {
+//                                                    if (loadingDialog.isShowing()) progress.onCompleted()
+//                                                } catch (_: Exception) { /* ignore */ }
+//
+//                                                val intent = Intent(context, DetailedReportActivity::class.java)
+//                                                intent.putExtra("WpDataDB_ID", wp.id)
+//                                                context.startActivity(intent)
+//                                            }
+//                                        }
+//                                    })
+//                                }
+//                            }
+//
+//                            // Запускаем загрузку опций; при любом результате — вызовем afterOptions.click()
+//                            optionDownload(wp.code_dad2, documentDate, afterOptions)
+//                        }
 
                         selectedItem = null
                     }

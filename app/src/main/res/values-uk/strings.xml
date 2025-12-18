@@ -9,8 +9,8 @@
     <string name="login">Вхід</string>
     <string name="logout">Вихід</string>
 
-    <string name="edit_text_login">логін</string>
-    <string name="edit_text_password">пароль</string>
+    <string name="edit_text_login">Логін</string>
+    <string name="edit_text_password">Пароль</string>
 
     <string name="ok">Ок</string>
 
@@ -256,4 +256,6 @@
     <string name="not_photo">Немає фото для експорту на сервер</string>
     <string name="not_show_again">Більше не показувати це сповіщення</string>
 
+    <string name="forgot_password">Забули свій пароль?</string>
+    <string name="regisration">Реєстрація</string>
 </resources>

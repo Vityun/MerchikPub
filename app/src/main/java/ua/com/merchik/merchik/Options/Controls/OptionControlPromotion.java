@@ -113,6 +113,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
+        //3.0  Товары ОСВ
         // Получение Доп. Требований с дополнительными фильтрами.
         List<AdditionalRequirementsDB> additionalRequirements;
         String[] tovIds;
@@ -137,7 +138,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         errMsgType2.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции: ").append("\n\n");
 
         // 5.0
-        // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
+        // Тут должена формироваться более подроная информация о том с какими Товарами есть проблема
         int find = 0;
         int totalOSV = 0;
         for (ReportPrepareDB item : reportPrepare) {

@@ -8,12 +8,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,14 +19,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,32 +41,203 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
-import io.realm.Realm
-import io.realm.RealmChangeListener
-import io.realm.RealmResults
-import io.realm.Sort
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.AdditionalContentTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComposeTab
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.InitStateEntity
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.dataLayer.hasData
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.retrofit.GlobalErrors
 
+
+
+//
+//@Composable
+//fun WpDataTabsScreen() {
+//    val context = LocalContext.current
+//    val activity = context as ComponentActivity
+//
+//    val cronchikViewModel =
+//        ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
+//
+//    val selectedColor = Color(ContextCompat.getColor(context, R.color.main_form))
+//    val tabBarBackground = Color(0xFFB1B1B1)
+//    val textSelectedColor = Color.DarkGray
+//    val textUnselectedColor = Color.Gray
+//
+//    // ✅ общий флаг готовности (как ты уже сделал)
+//    var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
+//
+//    // ✅ выбранный таб
+//    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+//
+//    // ✅ чтобы “авто-выбор при старте” сработал ровно один раз
+//    var initialTabResolved by rememberSaveable { mutableStateOf(false) }
+//
+//    // ✅ третий сценарий
+//    var emptyScenario by rememberSaveable { mutableStateOf(false) }
+//
+//    val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+//
+//    // ✅ чтобы диалог показался один раз
+////    var emptyDialogShown by rememberSaveable { mutableStateOf(false) } // ⬅ NEW
+//
+//    LaunchedEffect(dataIsReady) {
+//        if (!dataIsReady || initialTabResolved) return@LaunchedEffect
+//
+//        // 1) если список для WpDataContentTab не пустой -> открываем 1й таб
+//        val hasFirstTabData =
+//            RealmManager.getAllWorkPlanWithOutRNO().isNotEmpty()
+//
+//        // 2) если 1й пустой -> смотрим данные для OtherComposeTab
+//        val hasSecondTabData =
+//            RealmManager.getAllWorkPlanForRNO().isNotEmpty()
+//
+//        // юзер для проверки reportCount
+//
+//        // третий сценарий: обе выборки пустые и reportCount == 0
+//        val isEmptyScenario =
+//            !hasFirstTabData &&
+////                    !hasSecondTabData &&
+//                    (user?.reportCount == 0)
+////                    && (user.clientId.equals("92106"))
+//
+//        selectedTabIndex = when {
+//            hasFirstTabData -> 0
+//            hasSecondTabData -> 1
+//            else -> 0
+//        }
+//
+//        emptyScenario = isEmptyScenario
+//
+//        initialTabResolved = true
+//    }
+//
+//    val dialogBuilder = remember(activity) { MessageDialogBuilder(activity) }
+//
+//
+//    var emptyDialogShown by rememberSaveable { mutableStateOf(false) }
+//
+//    var testDialog by rememberSaveable { mutableStateOf(false) }
+//// Показ первого диалога для третьего сценария
+//    LaunchedEffect(emptyScenario) {
+//        if (emptyScenario && !emptyDialogShown) {
+//            emptyDialogShown = true
+//            val otdelKadrov =
+//                RoomManager.SQL_DB.usersDao().getUserById(Globals.OTDEL_KADROV_USER_ID)
+//            val otdelKadrovNumber = otdelKadrov.tel ?: 0
+//            val instruktor = RoomManager.SQL_DB.usersDao().getUserById(user.instructorId)
+//            val instruktorNumber =
+//
+//                if (!true)
+//                    dialogBuilder
+//                        .setStatus(DialogStatus.NORMAL)
+//                        .setTitle("Регистрация")
+//                        .setMessage(
+//                            "Приветствую! Вы зарегистрированы в системе Merchik. " +
+//                                    "Теперь Вам следует пройти инструктаж и получить доступ к заказам. " +
+//                                    "\ninstructorId: $otdelKadrovNumber"
+//                        )
+//                        .setOnConfirmAction("Пройти иструктаж") {
+//                            // "Да" – выходим из приложения
+//                            val intent = Intent(Intent.ACTION_DIAL).apply {
+//                                data = Uri.parse("tel:$otdelKadrovNumber")
+//                            }
+//                            activity.startActivity(intent)
+//                            testDialog = false
+//                        }
+//                        .show()
+//                else
+//                    dialogBuilder
+//                        .setStatus(DialogStatus.NORMAL)
+//                        .setTitle("Регистрация")
+//                        .setMessage(
+//                            "Вас приветствует приложение merchik! Если Вы работаете мерчандайзером, торговым представителем, " +
+//                                    "продавцом-консультантом в магазине и т.д. то, при помощи данного приложения, " +
+//                                    "Вы сможете получить дополнительные доходы выполняя заказы наших клиентов. " +
+//                                    "Нажмите «Позвонить» для того, чтобы зарегистрироваться и получить доступ к заказам." +
+//                                    "\nuserId:1565" +
+//                                    "\ntel:$otdelKadrovNumber"
+//                        )
+//                        .setOnConfirmAction("Зарегистрироваться") {
+//
+//                            val intent = Intent(Intent.ACTION_DIAL).apply {
+//                                data = Uri.parse("tel:$otdelKadrovNumber")
+//                            }
+//                            activity.startActivity(intent)
+//                            dialogBuilder.show()
+//                        }
+//                        .show()
+//        }
+//    }
+//    val exitDialog = MessageDialogBuilder(activity)
+//
+//// Второй диалог – показываем ТОЛЬКО когда первый закрыли, и так постоянно
+//    LaunchedEffect(emptyDialogShown) {
+//        if (!emptyDialogShown) return@LaunchedEffect
+//
+//        while (true) {
+//            // Ждём, пока первый диалог закроют (крестик, back, кнопки и т.п.)
+//            while (dialogBuilder.isShowing()) {
+//                delay(200)
+//            }
+//
+//            // Как только первый закрыт – открываем второй диалог "Выйти?"
+//            exitDialog
+//                .setTitle("Регистрация")
+//                .setStatus(DialogStatus.ERROR)
+//                .setMessage(
+//                    "Для того, чтобы продолжить работу, Вы должны пройти этап регистрации."
+//                )
+//                .setOnDismissListener {
+//                    exitDialog.dismiss()
+//                    exitDialog.setMessage("Закрыть приложение?")
+//                        .setOnConfirmAction("Да") { activity.finishAffinity() }
+//                        .setOnCancelAction { exitDialog.dismiss()
+//
+//                        }
+//                        .show()
+//                }
+//                .setOnConfirmAction("Регистрация") {
+//                    // "Отмена" – снова показываем первый диалог
+//                    dialogBuilder
+//
+//                        .show()
+//                }
+//
+//            exitDialog.show()
+//
+//            // ждём, пока второй диалог закроется, прежде чем идти на следующий цикл
+//            while (exitDialog.isShowing()) {
+//                delay(200)
+//            }
+//
+//            // если нажали "Да", activity скорее всего закроется и корутина будет отменена,
+//            // так что дальше этот цикл уже не продолжится
+//        }
+//
+//    }
 
 @Composable
 fun WpDataTabsScreen() {
@@ -77,92 +252,159 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    // --- создаём State, завязанный на Realm ---
-    val hasRno by produceState(initialValue = false) {
-        val results = RealmManager.getAllWorkPlanForRNO()
+    // VM для диалогов
+//    val dialogViewModel: WpDataTabsDialogViewModel = viewModel()
 
-        // начальное значение – сразу из текущих данных
-        value = results.isNotEmpty()
+    // ✅ общий флаг готовности
+    var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
 
-        val listener = RealmChangeListener<RealmResults<WpDataDB>> { updated ->
-            value = updated.isNotEmpty()
+    // ✅ выбранный таб
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    // ✅ чтобы “авто-выбор при старте” сработал ровно один раз
+    var initialTabResolved by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ третий сценарий
+//    var emptyScenario by rememberSaveable { mutableStateOf(false) }
+
+//    val user = remember {
+//        RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+//    }
+
+    LaunchedEffect(dataIsReady) {
+        if (!dataIsReady || initialTabResolved) return@LaunchedEffect
+
+        val hasFirstTabData =
+            RealmManager.getAllWorkPlanWithOutRNO().isNotEmpty()
+
+        val hasSecondTabData =
+            RealmManager.getAllWorkPlanForRNO().isNotEmpty()
+
+//        val isEmptyScenario =
+//            !hasFirstTabData &&
+//                    // !hasSecondTabData &&  // если нужно учитывать вторую вкладку — раскомментируй
+//                    (user?.reportCount == 0)
+
+        selectedTabIndex = when {
+            hasFirstTabData -> 0
+            hasSecondTabData -> 1
+            else -> 0
         }
 
-        results.addChangeListener(listener)
-
-        awaitDispose {
-            results.removeChangeListener(listener)
-        }
+//        emptyScenario = isEmptyScenario
+        initialTabResolved = true
     }
 
-    val tabTitles =
-        if (hasRno)
-            listOf(
-                stringResource(R.string.title_0),
-                "Доп.Заработок",
-            )
-        else
-            listOf(
-                stringResource(R.string.title_0)
-            )
+    // 🔥 Стартуем диалоговый сценарий во ViewModel, если нужно
+//    LaunchedEffect(emptyScenario) {
+//        if (emptyScenario) {
+//            dialogViewModel.startRegistrationIfNeeded(
+//                activity = activity,
+//                isEmptyScenario = emptyScenario,
+//                user = user
+//            )
+//        }
+//    }
 
+    val tabTitles = if (Globals.userId == 176053 || Globals.userId == 255212) {
+        listOf(
+            stringResource(R.string.title_0),
+            "Доп.Заработок",
+        )
+    } else {
+        listOf(
+            stringResource(R.string.title_0)
+        )
+    }
 
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
     val rememberRemoveListener = remember {
-        // создаём listener один раз и вернём функцию удаления
         var remove: (() -> Unit)? = null
         remove = ScrollDataHolder.instance().addOnIdsChangedListener { list ->
-            // вызываем обновление бейджа в ViewModel
             cronchikViewModel.updateBadge(0, list.size)
         }
         remove
     }
 
     DisposableEffect(Unit) {
-        onDispose {
-            rememberRemoveListener.invoke()
-        }
+        onDispose { rememberRemoveListener?.invoke() }
     }
-//    cronchikViewModel.updateBadge(0, ScrollDataHolder.instance().getIds().size)
+
     cronchikViewModel.updateBadgeAdditionalIncome()
+
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
     val badgeCounts = remember { cronchikViewModel.badgeCounts }
 
-    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
+    // -----------------------------
+    // ✅ ОБЩАЯ ЛОГИКА ГОТОВНОСТИ ДАННЫХ
+    // -----------------------------
+    var isLoading by remember { mutableStateOf(false) }
+    val progressModel = remember { ProgressViewModel(1) }
 
-    LaunchedEffect(hasRno) {
-        if (!hasRno && selectedTabIndex > 0) {
-            selectedTabIndex = 0
+    // ✅ Проверка каждую ~1 сек
+    LaunchedEffect(Unit) {
+        while (!dataIsReady) {
+            if (isDataReadyCompat()) {
+                delay(800)
+                dataIsReady = true
+                progressModel.onCompleted()
+                cronchikViewModel.updateBadgeAdditionalIncome()
+                break
+            }
+
+            // исключения
+            if (Globals.userId == 172906 || Globals.userId == 19653) {
+                dataIsReady = true
+                progressModel.onCompleted()
+                break
+            }
+
+            delay(1000)
         }
     }
 
-    Log.e("WpDataTabsScreen","ScrollDataHolder.instance().getIds() -")
-    val ids = ScrollDataHolder.instance().getIds()
-    Log.e("WpDataTabsScreen","ScrollDataHolder.instance().getIds() +")
+    // ✅ Показ общего лоадинг-диалога
+    LaunchedEffect(isLoading, dataIsReady) {
+        if (!dataIsReady && !isLoading) {
+            isLoading = true
+            val dialog = LoadingDialogWithPercent(context as Activity, progressModel)
 
-//    val idNext = ScrollDataHolder.instance().getNext()
-//    Log.e("!!!!!!","list: $ids, idNext: $idNext")
-//    val ids = mutableListOf(4060380514L,4060380514L)
+            dialog.setOnDismissListener(object : DialogDismissedListener {
+                override fun onDialogDismissed() {
+                    isLoading = false
+                }
+            })
+
+            dialog.show()
+            progressModel.onNextEvent("Отримання даних вiд сервера", 23_500)
+        }
+    }
+
+    // -----------------------------
+    // ✅ BADGE + SCROLL LOGIC (как было)
+    // -----------------------------
+    Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() -")
+    val ids = ScrollDataHolder.instance().getIds()
+    Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() +")
+
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val green = colorResource(id = R.color.ufmd_accept_t)
 
-    // Альтернативно: если getIds возвращает List<String> или иной формат — преобразуйте
     val badgeTargets: List<Long?> = remember(ids) {
-        // пытаемся взять id для каждого таба, иначе null
-        List(maxOf(tabTitles.size, ids.size)) { idx -> ids.getOrNull(idx) }
-            .take(tabTitles.size)
+        List(tabTitles.size) { idx -> ids.getOrNull(idx) }
     }
-    // pendingScrollHash: хэш, который надо проскроллить после переключения таба
+
     val pendingScrollHash = remember { mutableStateOf<Long?>(null) }
     val isScrolling = remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
+
         TabRow(
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier.fillMaxWidth(),
             containerColor = tabBarBackground,
-            indicator = {}, // отключаем дефолтный индикатор
-            divider = {}    // <-- отключаем линию
+            indicator = {},
+            divider = {}
         ) {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
@@ -170,9 +412,7 @@ fun WpDataTabsScreen() {
                     onClick = { selectedTabIndex = index },
                     modifier = Modifier
                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                        .background(
-                            if (selectedTabIndex == index) selectedColor else Color.Transparent
-                        ),
+                        .background(if (selectedTabIndex == index) selectedColor else Color.Transparent),
                     text = {
                         Box(
                             contentAlignment = Alignment.TopEnd,
@@ -180,21 +420,16 @@ fun WpDataTabsScreen() {
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp, vertical = 6.dp)
                         ) {
-                            // Сам заголовок таба — кликабелен для переключения
                             Text(
                                 text = title,
                                 color = if (selectedTabIndex == index) textSelectedColor else textUnselectedColor,
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .clickable {
-                                        selectedTabIndex = index
-                                    }
+                                    .clickable { selectedTabIndex = index }
                             )
 
-                            // бейдж (если есть)
                             val count = badgeCounts.getOrNull(index)
                             if (count != null && count > 0) {
-                                // оборачиваем CounterBadge в Box, чтобы ловить клик только по бейджу
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -202,33 +437,25 @@ fun WpDataTabsScreen() {
                                 ) {
                                     CounterBadge(
                                         count = count,
-                                        modifier = Modifier
-                                            .clickable {
-                                                val targetHash = badgeTargets.getOrNull(index)
-                                                if (targetHash == null) {
-                                                    // нет цели — просто переключаем вкладку
-                                                    selectedTabIndex = index
-                                                    return@clickable
-                                                }
-
-                                                // Если таб уже выбран — скроллим сразу
-                                                if (selectedTabIndex == index) {
-                                                    if (!isScrolling.value) {
-                                                        isScrolling.value = true
-                                                        viewModel.requestScrollToVisit(targetHash)
-                                                        viewModel.highlightBId(targetHash, green)
-                                                        // сброс флага через delay (задача UI, не критично)
-//                                                        LaunchedEffect(targetHash) {
-//                                                            delay(800)
-                                                            isScrolling.value = false
-//                                                        }
-                                                    }
-                                                } else {
-                                                    // Сохраняем pending hash и переключаемся — LaunchedEffect ниже выполнит скролл
-                                                    pendingScrollHash.value = targetHash
-                                                    selectedTabIndex = index
-                                                }
+                                        modifier = Modifier.clickable {
+                                            val targetHash = badgeTargets.getOrNull(index)
+                                            if (targetHash == null) {
+                                                selectedTabIndex = index
+                                                return@clickable
                                             }
+
+                                            if (selectedTabIndex == index) {
+                                                if (!isScrolling.value) {
+                                                    isScrolling.value = true
+                                                    viewModel.requestScrollToVisit(targetHash)
+                                                    viewModel.highlightBId(targetHash, green)
+                                                    isScrolling.value = false
+                                                }
+                                            } else {
+                                                pendingScrollHash.value = targetHash
+                                                selectedTabIndex = index
+                                            }
+                                        }
                                     )
                                 }
                             }
@@ -241,52 +468,44 @@ fun WpDataTabsScreen() {
         // При смене выбранного таба, если есть pendingScrollHash — пытаемся проскроллить
         LaunchedEffect(selectedTabIndex, pendingScrollHash.value) {
             val pending = pendingScrollHash.value ?: return@LaunchedEffect
-
-            // если уже скроллится — ждём и затем выходим
             if (isScrolling.value) return@LaunchedEffect
 
-            // Попробуем несколько раз выполнить скролл — даём контенту время отрисоваться
             val maxAttempts = 8
             val delayMs = 150L
-            var succeeded = false
 
-            repeat(maxAttempts) { attempt ->
+            repeat(maxAttempts) {
                 try {
-                    // помечаем что идёт скролл
                     isScrolling.value = true
 
-                    // Вызов твоего метода; он обычно эмитит событие и не бросает исключение
                     viewModel.requestScrollToVisit(pending)
                     viewModel.highlightBId(pending, green)
 
-                    // считаем как успешный — очищаем pending
                     pendingScrollHash.value = null
-                    succeeded = true
 
-                    // даём немного времени, чтобы скролл/анимация начались
                     delay(400)
                     isScrolling.value = false
                     return@LaunchedEffect
-                } catch (t: Throwable) {
-                    // если что-то упало — ждем и пробуем снова
+                } catch (_: Throwable) {
                     isScrolling.value = false
                     delay(delayMs)
                 }
             }
 
-            if (!succeeded) {
-                // не удалось — снимаем pending, чтобы не зацикливаться
-                pendingScrollHash.value = null
-                isScrolling.value = false
-            }
+            pendingScrollHash.value = null
+            isScrolling.value = false
         }
 
         // Контент выбранной вкладки
-        when (selectedTabIndex) {
-            0 -> WpDataContentTab()
-            1 -> OtherComposeTab()
-//            2 -> AdditionalContentTab()
-        }
+//        if (Globals.userId == 176053 || Globals.userId == 2)
+
+        if (Globals.userId == 255247)
+            WpDataContentTab(dataIsReady = dataIsReady)
+        else
+
+            when (selectedTabIndex) {
+                0 -> WpDataContentTab(dataIsReady = dataIsReady)
+                1 -> OtherComposeTab(dataIsReady = dataIsReady)
+            }
     }
 
     GlobalErrorMsg()
@@ -364,4 +583,55 @@ fun GlobalErrorMsg() {
             }
         }
     }
+}
+
+
+/**
+ * Совместимая проверка готовности:
+ * 1) Если Room-флаги уже говорят "всё загружено" → true
+ * 2) Иначе проверяем старую логику Realm.
+ *    Если там всё ок → считаем готово и ДОзаполняем Room-флаги, чтобы потом
+ *    уже всегда идти по новой схеме.
+ */
+fun isDataReadyCompat(): Boolean {
+    // 1. Сначала пробуем новый путь (через Room-флаги)
+    if (checkRealmReadyII()) return true
+
+    // 2. Старый путь: все таблицы Realm существуют и не пустые
+    if (checkRealmReady()) {
+        // Миграция: проставим флаги в Room, чтобы в следующий раз
+        // уже не опираться на Realm-состояние.
+        val initDao = RoomManager.SQL_DB.initStateDao()
+        val current = initDao.getState()
+
+        val updated = (current ?: InitStateEntity(id = 1)).copy(
+            wpLoaded = true,
+            siteLoaded = true,
+            optionsLoaded = true,
+            themeLoaded = true,
+            customerLoaded = true
+        )
+        initDao.saveState(updated)
+
+        return true
+    }
+
+    return false
+}
+
+
+fun checkRealmReady(): Boolean {
+    val hasWp = RealmManager.INSTANCE.hasData<WpDataDB>()
+    val hasStObj = RealmManager.INSTANCE.hasData<SiteObjectsDB>()
+    val hasOption = RealmManager.INSTANCE.hasData<OptionsDB>()
+    val hasThema = RealmManager.INSTANCE.hasData<ThemeDB>()
+
+    return hasWp && hasStObj && hasOption && hasThema
+}
+
+fun checkRealmReadyII(): Boolean {
+    val initDao = RoomManager.SQL_DB.initStateDao()
+    val state = initDao.getState()
+
+    return state?.wpLoaded == true && state.siteLoaded && state.optionsLoaded && state.themeLoaded
 }

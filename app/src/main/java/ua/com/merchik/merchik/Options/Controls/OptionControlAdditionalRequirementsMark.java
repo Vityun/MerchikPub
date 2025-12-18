@@ -91,6 +91,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 ttCategory = addressSDB.ttId;
             }
 
+            // 3.2
             // Получаем Доп.Требования.
 //            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
 //            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
@@ -242,7 +243,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             if (virtualTable.isEmpty()) {
 
                 msg.append("У клиента ")
-                        .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
+//                        .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
+                        .append(SQL_DB.customerDao().getById(wpDataDB.getClient_id()).nm)
                         .append(" нет доп. требований по этому адресу");
                 signal = false;
 //                unlockCodeResultListener.onUnlockCodeSuccess();

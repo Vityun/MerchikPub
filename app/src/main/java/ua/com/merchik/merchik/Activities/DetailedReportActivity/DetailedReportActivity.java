@@ -28,7 +28,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -39,7 +38,6 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -71,6 +69,7 @@ import java.util.List;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
@@ -119,7 +118,7 @@ public class DetailedReportActivity extends toolbar_menus {
     public static final int NEED_UPDATE_UI_REQUEST = 333;
 
     private Translate translate = new Translate();
-//    private WorkPlan workPlan = new WorkPlan();
+    //    private WorkPlan workPlan = new WorkPlan();
     private WpDataDB wpDataDB;
 //    private WpDataDB rowWP;
 
@@ -175,6 +174,7 @@ public class DetailedReportActivity extends toolbar_menus {
     //----------------------------------------------------------------------------------------------
 
     private DetailedReportViewModel detailedReportViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -213,7 +213,7 @@ public class DetailedReportActivity extends toolbar_menus {
             tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
             tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
 
-            globals.writeToMLOG( "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
+            globals.writeToMLOG("DetailedReportActivity.onCreate: " + "ENTER" + "\n");
 
             setContentView(R.layout.drawler_dr);
 
@@ -287,7 +287,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
             try {
-                globals.writeToMLOG( "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
+                globals.writeToMLOG("DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
                 fab = findViewById(R.id.fab);
                 fabViber = findViewById(R.id.fab_viber1);
 
@@ -313,7 +313,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 navigationView = findViewById(R.id.nav_view);
                 navigationView.setCheckedItem(R.id.nav_dr);
             } catch (Exception e) {
-                globals.writeToMLOG( "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
+                globals.writeToMLOG("DetailedReportActivity.onCreate.fab.e: " + e + "\n");
                 e.printStackTrace();
             }
 
@@ -883,9 +883,9 @@ public class DetailedReportActivity extends toolbar_menus {
             switch (requestCode) {
                 case 101:
                     try {
-                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
+                        globals.writeToMLOG("DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
                         image = MakePhoto.image;
-                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
+                        globals.writeToMLOG("DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
 
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/101", "Image: " + image);
 
@@ -896,7 +896,7 @@ public class DetailedReportActivity extends toolbar_menus {
                         String msg = "";
                         msg = String.format("image: %s \nimagelength: %s\nimagegetAbsolutePath: %s\nresultCode: %s\nrequestCode: %s", image, image.length(), image.getAbsolutePath(), resultCode, requestCode);
 
-                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
+                        globals.writeToMLOG("DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
                     } catch (Exception e) {
                         e.printStackTrace();
                         Globals.writeToMLOG("ERROR", ".DetailedReportActivity.DetailedReportActivity.onActivityResult (DetailedReportActivity.java:238)", "Exception e: " + e);
@@ -995,70 +995,80 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
     public static void savePhoto(Globals globals, Activity activity) {
-        try {
-            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
+        File photoFile = new File(MakePhoto.photoNum);
+        Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "File(MakePhoto.photoNum).size: " + photoFile.length());
 
-            StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
-            File photoFile = new File(MakePhoto.photoNum);
-
-            JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
-            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
-
-            final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
-            if (rotation > 0) {
-                photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
-            }
-
+        if (photoFile.length() <= 1) {
+            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
+            new MessageDialogBuilder(activity)
+                    .setTitle("Помилка при виготовленні фото")
+                    .setStatus(DialogStatus.ERROR)
+                    .setMessage("Не вдалося зберегти фото. Якщо помилка повториться, перевірте, чи достатньо вільного місця в пам'яті телефону.")
+                    .setOnCancelAction(() -> null)
+                    .show();
+        } else
             try {
-                photoFile = resizeImageFile(activity, photoFile);
-            } catch (Exception e) {
-                globals.alertDialogMsg(activity, "Ошибка В ужатии: " + e);
-            }
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
 
-            exifPhotoData(photoFile);
+                StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
 
-            Log.e("2222", "hash1 = " + photo.getPhoto_hash());
+                JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
-            if (TextUtils.isEmpty(photo.getPhoto_hash())) {
-                String hash;
-                hash = globals.getHashMD5FromFile2(photoFile, activity);
-                if (hash == null || hash.equals("")) {
-                    hash = globals.getHashMD5FromFile(photoFile, activity);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
+
+                final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
+                if (rotation > 0) {
+                    photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
                 }
-                photo.setPhoto_hash(hash);
+
+                try {
+                    photoFile = resizeImageFile(activity, photoFile);
+                } catch (Exception e) {
+                    globals.alertDialogMsg(activity, "Ошибка В ужатии: " + e);
+                }
+
+                exifPhotoData(photoFile);
+
+                Log.e("2222", "hash1 = " + photo.getPhoto_hash());
+
+                if (TextUtils.isEmpty(photo.getPhoto_hash())) {
+                    String hash;
+                    hash = globals.getHashMD5FromFile2(photoFile, activity);
+                    if (hash == null || hash.equals("")) {
+                        hash = globals.getHashMD5FromFile(photoFile, activity);
+                    }
+                    photo.setPhoto_hash(hash);
+                }
+
+                Log.e("2222", "hash2 = " + photo.getPhoto_hash());
+                Globals.writeToMLOG("INFO", "A_YA_GOVORIL", "HASH: " + photo.getPhoto_hash());
+
+                photo.setPhoto_num(photoFile.getAbsolutePath());
+                photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+
+                photo.dt = MakePhoto.dt;
+
+                photo.img_src_id = MakePhoto.img_src_id;
+                photo.showcase_id = MakePhoto.showcase_id;
+                photo.planogram_id = MakePhoto.planogram_id;
+                photo.planogram_img_id = MakePhoto.planogram_img_id;
+                photo.example_id = MakePhoto.example_id;
+                photo.example_img_id = MakePhoto.example_img_id;
+
+                if (MakePhoto.photoType.equals("4")) {
+                    photo.tovar_id = MakePhoto.tovarId;
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
+                }
+
+                JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
+
+                StackPhotoRealm.setAll(Collections.singletonList(photo));
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
             }
-
-            Log.e("2222", "hash2 = " + photo.getPhoto_hash());
-            Globals.writeToMLOG("INFO", "A_YA_GOVORIL", "HASH: " + photo.getPhoto_hash());
-
-            photo.setPhoto_num(photoFile.getAbsolutePath());
-            photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
-
-            photo.dt = MakePhoto.dt;
-
-            photo.img_src_id = MakePhoto.img_src_id;
-            photo.showcase_id = MakePhoto.showcase_id;
-            photo.planogram_id = MakePhoto.planogram_id;
-            photo.planogram_img_id = MakePhoto.planogram_img_id;
-            photo.example_id = MakePhoto.example_id;
-            photo.example_img_id = MakePhoto.example_img_id;
-
-            if (MakePhoto.photoType.equals("4")) {
-                photo.tovar_id = MakePhoto.tovarId;
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
-            }
-
-            JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
-
-            StackPhotoRealm.setAll(Collections.singletonList(photo));
-        } catch (Exception e) {
-            Log.i("2222", "Exception ", e);
-            Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
-        }
     }
 
 
@@ -1250,14 +1260,16 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
     // Безопасная подстановка null
-    private static String safe(String s) { return s == null ? "" : s + ","; }
+    private static String safe(String s) {
+        return s == null ? "" : s + ",";
+    }
 
     // Установка текста
     private void bindTwoLineTitle(WpDataDB wp) {
-        TextView tvDate    = findViewById(R.id.tvDate);
+        TextView tvDate = findViewById(R.id.tvDate);
         TextView tvAddress = findViewById(R.id.tvAddress);
-        TextView tvClient  = findViewById(R.id.tvClient);
-        TextView tvUser    = findViewById(R.id.tvUser);
+        TextView tvClient = findViewById(R.id.tvClient);
+        TextView tvUser = findViewById(R.id.tvUser);
 
         // 1-я строка
         tvDate.setText(Clock.getHumanTimeDDMMYYYY(wp.getDt().getTime() / 1000L));
@@ -1265,15 +1277,19 @@ public class DetailedReportActivity extends toolbar_menus {
 
         // 2-я строка (каждый TextView сам режет себя по концу)
         setTextWithTwoDotEllipsis(tvClient, safe(wp.getClient_txt()));
-        setTextWithTwoDotEllipsis(tvUser,  wp.getUser_txt());
+        setTextWithTwoDotEllipsis(tvUser, wp.getUser_txt());
     }
 
     private static void setTextWithTwoDotEllipsis(final TextView tv, final CharSequence src) {
-        if (src == null) { tv.setText(""); return; }
+        if (src == null) {
+            tv.setText("");
+            return;
+        }
 
         // Обновляем текст уже после измерения вью
         tv.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override public boolean onPreDraw() {
+            @Override
+            public boolean onPreDraw() {
                 tv.getViewTreeObserver().removeOnPreDrawListener(this);
 
                 int avail = tv.getWidth() - tv.getPaddingLeft() - tv.getPaddingRight();

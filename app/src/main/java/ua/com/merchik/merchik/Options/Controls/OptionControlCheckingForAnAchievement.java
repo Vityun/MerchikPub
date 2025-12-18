@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -116,8 +117,17 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     private void executeOption() {
         try {
             //4.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
-            if (optionDB.getOptionId().equals(164985) || optionDB.getOptionControlId().equals(164985)) {
-                List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 164985);
+            if (optionDB.getOptionId().equals("164985") || optionDB.getOptionControlId().equals("164985")) {
+                Integer ttCategory = null;
+
+                AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                if (addressSDB != null) {
+                    ttCategory = addressSDB.ttId;
+                }
+                // 18.12.2025 поменял запрос в бд
+                List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, null, 1);
+//                List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 164985);
+
                 for (AdditionalRequirementsDB item : ad) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("")) {
                         tovListOSV.add(Integer.valueOf(item.getTovarId()));

@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 
 import android.app.Activity;
 import android.content.Context;
@@ -104,7 +105,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
         if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
             // Получение Доп. Требований с дополнительными фильтрами.
+
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, wp.getDt(), wp.getDt(), null, null, null, null);
+
             for (AdditionalRequirementsDB item : additionalRequirements) {
                 spisTovOSV.add(item.getTovarId());
             }

@@ -39,6 +39,19 @@ interface InitStateDao {
         saveState(current.copy(themeLoaded = true))
     }
 
+    @Transaction
+    fun markCustomerLoaded() {
+        val current = getState() ?: InitStateEntity()
+        saveState(current.copy(customerLoaded = true))
+    }
+
+    @Transaction
+    fun markUsersLoaded() {
+        val current = getState() ?: InitStateEntity()
+        saveState(current.copy(userLoaded = true))
+    }
+
+
     // Если нужно полностью сбрасывать состояние (например, при логауте):
     @Transaction
     fun resetAll() {

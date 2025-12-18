@@ -7,6 +7,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 
 @Dao
@@ -22,6 +23,6 @@ public interface SiteObjectsDao {
     SiteObjectsSDB getObjectsByRealId(int id);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<SiteObjectsSDB> data);
+    Completable insertAll(List<SiteObjectsSDB> data);
 
 }

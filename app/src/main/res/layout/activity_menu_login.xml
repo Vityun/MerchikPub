@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:ems="10"
-            android:hint="Пароль"
+            android:hint="@string/edit_text_password"
             android:inputType="textPassword"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -140,7 +140,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:onClick="registration"
-        android:text="Регистрация"
+        android:text="@string/regisration"
         android:background="@drawable/bg_temp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,7 +156,7 @@
         android:layout_marginRight="32dp"
         android:completionThreshold="1"
         android:dropDownAnchor="@+id/login"
-        android:hint="Логин"
+        android:hint="@string/edit_text_login"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_login" />
@@ -225,6 +225,20 @@
 <!--        app:layout_constraintTop_toBottomOf="@+id/button_regestration"-->
 <!--        app:srcCompat="@mipmap/merchik_m" />-->
 
+    <TextView
+        android:id="@+id/forgot_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center"
+        android:text="@string/forgot_password"
+        android:textColor="@color/colorPrimaryDark"
+        app:layout_constraintTop_toBottomOf="@+id/button_regestration"
+        app:layout_constraintBottom_toTopOf="@+id/flag"
+        android:layout_margin="16dp"
+        />
+
     <ImageView
         android:id="@+id/flag"
         android:layout_width="50dp"
@@ -237,7 +251,7 @@
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_regestration"
+        app:layout_constraintTop_toBottomOf="@+id/forgot_password"
         app:srcCompat="@mipmap/merchik_m" />
 
 

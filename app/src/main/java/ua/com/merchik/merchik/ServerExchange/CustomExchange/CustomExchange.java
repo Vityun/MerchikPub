@@ -154,7 +154,7 @@ public class CustomExchange {
                                 public void onSuccess(String data) {
                                     Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
                                     progress.dismiss();
-                                    Toast.makeText(context, "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(context, "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
                                 }
 
                                 @Override

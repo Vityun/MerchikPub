@@ -336,6 +336,30 @@ public interface RetrofitInterface {
     Call<AddressTableResponse> GET_ADDRESS_T(@Query("mod") String mod,
                                              @Query("act") String act);
 
+    @POST("mobile_app.php?")
+    Single<AddressResponse> GET_ADDRESS_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<CustomerResponse> GET_CLIENT_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<JsonObject> GET_CLIENT_RX_TEST(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<OptionsServer> GET_OPTIONS_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<ReportPrepareServer> GET_REPORT_PREPEAR_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     @POST("mobile_app.php?")
     Call<SotrTable> GET_SOTR_T(@Query("mod") String mod,

@@ -7,6 +7,10 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,7 +49,6 @@ public class SiteObjectsExchange {
                         // todo ADD M_LOG
                         Log.e("SiteObjectsExchange", "3");
 //                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response", " response: " + (response.body() != null ? response.body().objectSQLList : "null"));
-                        RoomManager.SQL_DB.initStateDao().markSiteLoaded();
                         if (response.body().state) {
                             if (response.body().error != null) {
                                 // todo ADD M_LOG
@@ -58,9 +61,22 @@ public class SiteObjectsExchange {
                                 // Нормальный функционал
                                 if (response.body().objectSQLList != null) {
                                     try {
-                                        SQL_DB.siteObjectsDao().insertAll(response.body().objectSQLList);
+                                        SQL_DB.siteObjectsDao().insertAll(response.body().objectSQLList)
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe(new DisposableCompletableObserver() {
+                                                    @Override
+                                                    public void onComplete() {
+                                                        exchangeInterface.onSuccess("Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
+
+                                                    }
+
+                                                    @Override
+                                                    public void onError(@NonNull Throwable e) {
+                                                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response_error", ".Throwable: " + e.getMessage());
+                                                    }
+                                                });
                                         Log.e("SiteObjectsExchange", "Ok");
-                                        exchangeInterface.onSuccess("Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
                                         Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response_error", " response: " + "Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
                                     } catch (Exception e) {
                                         Log.e("SiteObjectsExchange", "ERR");

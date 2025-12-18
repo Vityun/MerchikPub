@@ -176,7 +176,38 @@ public class UsersSDB implements DataObjectUI{
     public String last_ekl_date;
 
 
+    // ==== НОВЫЕ ПОЛЯ ====
 
+    @SerializedName("zamestitel_id")
+    @Expose
+    @ColumnInfo(name = "zamestitel_id")
+    public Integer zamestitelId;
+
+    @SerializedName("supervisor_id")
+    @Expose
+    @ColumnInfo(name = "supervisor_id")
+    public Integer supervisorId;
+
+    @SerializedName("teritorial_id")
+    @Expose
+    @ColumnInfo(name = "teritorial_id")
+    public Integer teritorialId;
+
+    @SerializedName("regional_id")
+    @Expose
+    @ColumnInfo(name = "regional_id")
+    public Integer regionalId;
+
+    @SerializedName("nach_otd_proizv_id")
+    @Expose
+    @ColumnInfo(name = "nach_otd_proizv_id")
+    public Integer nachOtdProizvId;
+
+    @SerializedName("instructor_id")
+    @Expose
+    @ColumnInfo(name = "instructor_id")
+    public Integer instructorId;
+    
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {

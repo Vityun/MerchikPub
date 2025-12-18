@@ -25,6 +25,7 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.Main.*
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
@@ -157,7 +158,7 @@ class WpDataDBViewModel @Inject constructor(
                         }
                     }
                 val dataUniqAdress = data.distinctBy { it.addr_id }
-                val client = CustomerRealm.getAll()
+                val client = RoomManager.SQL_DB.customerDao().all
                 val filterUsersSDB = ItemFilter(
                     "Виконавець",
                     UsersSDB::class,

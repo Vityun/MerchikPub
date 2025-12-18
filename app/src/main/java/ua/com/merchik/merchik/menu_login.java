@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -54,7 +55,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -65,6 +69,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
+import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
@@ -88,6 +93,7 @@ import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.PhoneRegistrationDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.GlobalErrorsLive;
@@ -146,6 +152,7 @@ public class menu_login extends AppCompatActivity {
     EditText //editText_login,
             editText_password;
 
+    TextView forgotPassword;
     TextView text1;
     EditText edit1;
     EditText edit2;
@@ -155,6 +162,9 @@ public class menu_login extends AppCompatActivity {
 
     private ProgressViewModel progress;
     private LoadingDialogWithPercent loadingDialog;
+    private MessageDialogBuilder messageDialogBuilder;
+
+    private static boolean isGPSDialogShow = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +183,7 @@ public class menu_login extends AppCompatActivity {
         but2 = findViewById(R.id.button_regestration);
 
         editText_password = findViewById(R.id.editText_password);
+        forgotPassword = findViewById(R.id.forgot_password);
 
         autoText = findViewById(R.id.login);
         autoEditText();
@@ -221,6 +232,25 @@ public class menu_login extends AppCompatActivity {
             textViewVer.setText(content);
 
 
+            SpannableString forgotPasswordText = new SpannableString(forgotPassword.getText());
+            forgotPasswordText.setSpan(new UnderlineSpan(), 0, forgotPasswordText.length(), 0);
+            forgotPassword.setText(forgotPasswordText);
+
+            forgotPassword.setOnClickListener(v -> {
+                new PhoneRegistrationDialogBuilder(this)
+//                        .setTitle("Відновлення пароля")
+//                        .setSubTitle("Для відновлення пароля введіть свій номер телефону")
+//                        .setOkButtonName("Відновити")
+//                        .setInitialDigits("501234567")
+                        .setOnConfirmListener((phone, raw) -> {
+                            // phone = "+38XXXXXXXXXX"
+                            // raw   = "XXXXXXXXXX"
+
+                            forgotPasswordRequest(phone);
+                        })
+                        .show();
+            });
+
 //            toolbar_menus.textLesson = 812;
 //            toolbar_menus.videoLesson = 813;
 //            toolbar_menus.setFab(this, findViewById(R.id.fab));
@@ -252,39 +282,40 @@ public class menu_login extends AppCompatActivity {
             instructions = "Требуется работа в штатном режиме. Прокликать ВСЕ кнопки и попробовать зайти во все меню.";
 
             // Получение двнных с нажатой ссылки на сайте
-            Uri data = this.getIntent().getData();
-            Log.e("MVS_JSON", "data: " + data);
+            if (LocationUtils.canUseLocationServices(this)) {
 
-            if (data != null && data.isHierarchical()) /*Если данные получены с МВС*/ {
+                Uri data = this.getIntent().getData();
+                Log.e("MVS_JSON", "data: " + data);
+                if (data != null && data.isHierarchical()) /*Если данные получены с МВС*/ {
 
-                if (debugStatus.equals("1")) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setCancelable(false);
-                    builder.setMessage(msg + instructions);
-                    builder.setPositiveButton("Ок", (dialog, which) -> loginOnServer());
-                    builder.create().show();
-                } else {
-                    loginOnServer();
-                }
+                    if (debugStatus.equals("1")) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setCancelable(false);
+                        builder.setMessage(msg + instructions);
+                        builder.setPositiveButton("Ок", (dialog, which) -> loginOnServer());
+                        builder.create().show();
+                    } else {
+                        loginOnServer();
+                    }
 
-            } else/*При обычном входе*/ {
-                Log.e("MVS_JSON", "Когда данных с МВС нет");
+                } else/*При обычном входе*/ {
+                    Log.e("MVS_JSON", "Когда данных с МВС нет");
 
 //                intent = new Intent(menu_login.this, MenuMainActivity.class);
-                intent = new Intent(menu_login.this, WPDataActivity.class);
-                intent.putExtra("initialOpent", true);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                if (debugStatus.equals("1")) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setCancelable(false);
-                    builder.setMessage(msg + instructions);
-                    builder.setPositiveButton("Ок", (dialog, which) -> loginOnServer());
-                    builder.create().show();
-                } else {
-                    loginOnServer();
+                    intent = new Intent(menu_login.this, WPDataActivity.class);
+                    intent.putExtra("initialOpent", true);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    if (debugStatus.equals("1")) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setCancelable(false);
+                        builder.setMessage(msg + instructions);
+                        builder.setPositiveButton("Ок", (dialog, which) -> loginOnServer());
+                        builder.create().show();
+                    } else {
+                        loginOnServer();
+                    }
                 }
             }
-
         } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при входе: " + e);
         }
@@ -292,7 +323,7 @@ public class menu_login extends AppCompatActivity {
 
     }//---------------------------------------------------------------------------------------------
 
-//    @Override
+    //    @Override
 //    protected void onStart(){
 //        super.onStart();
 //        FirebaseCrashlytics.getInstance().log("Test crash");
@@ -302,6 +333,66 @@ public class menu_login extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!LocationUtils.canUseLocationServices(this)) {
+            showLocationRequiredDialog();
+        } else {
+            // Разрешение есть, GPS включен — продолжаем работу
+            if (messageDialogBuilder != null && messageDialogBuilder.isShowing()) {
+                messageDialogBuilder.dismiss();
+                Uri data = this.getIntent().getData();
+                Log.e("MVS_JSON", "data: " + data);
+                if (data != null && data.isHierarchical()) /*Если данные получены с МВС*/ {
+
+                    loginOnServer();
+
+
+                } else/*При обычном входе*/ {
+                    Log.e("MVS_JSON", "Когда данных с МВС нет");
+
+//                intent = new Intent(menu_login.this, MenuMainActivity.class);
+                    intent = new Intent(menu_login.this, WPDataActivity.class);
+                    intent.putExtra("initialOpent", true);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+                    loginOnServer();
+
+                }
+            }
+        }
+    }
+
+    private void showLocationRequiredDialog() {
+        messageDialogBuilder = new MessageDialogBuilder(this);
+        messageDialogBuilder
+                .setTitle("Потрібна геолокація")
+                .setStatus(DialogStatus.ERROR)
+                .setMessage("Додаток потребує доступу до GPS та дозволу на геолокацію. Увімкніть GPS та надайте доступ.")
+                .setOnConfirmAction("Налаштування", () -> {
+                    openLocationSettings();
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction("Вийти", () -> {
+                    finishAffinity();
+                    return Unit.INSTANCE;
+                })
+                .setCancelable(false) // не закрывать back/тапом мимо
+                .setOnDismissListener(() -> {
+                    if (!LocationUtils.canUseLocationServices(this)) {
+                        showLocationRequiredDialog();
+                    } else {
+                        // Разрешение есть, GPS включен — продолжаем работу
+                        if (messageDialogBuilder != null && messageDialogBuilder.isShowing())
+                            messageDialogBuilder.dismiss();
+                    }
+                })
+
+                .show();
+    }
+
+    private void openLocationSettings() {
+        // Открываем настройки GPS
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivity(intent);
     }
 
     /**
@@ -558,7 +649,7 @@ public class menu_login extends AppCompatActivity {
         }
     }
 
-    //---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
     // BUTTON_1 Login in system
     public void LogIn(View view) {
@@ -596,20 +687,20 @@ public class menu_login extends AppCompatActivity {
     }
 
     // BUTTON_3 REGESTRATION
-    // TODO Заменить все текстовки на Обьекты Сайта
+// TODO Заменить все текстовки на Обьекты Сайта
     public void registration(View view) {
         DialogTelephoneRegistration dialog = new DialogTelephoneRegistration(this);
-        dialog.setTitle("Регестрация в системе");
-        dialog.setText("Внесите свой мобильный телефон (он будет использоваться как логин). На него прийдёт сообщение с паролем для входа в систему.");
+        dialog.setTitle("Реєстрація в системі");
+        dialog.setText("Внесіть свій мобільний телефон (він використовуватиметься як логін). На нього прийде повідомлення із паролем для входу в систему.");
         dialog.setTelephone();
-        dialog.setButtonOk("Зарегестрироваться", () -> {
+        dialog.setButtonOk("Зареєструватись", () -> {
             DialogData dialogReg = new DialogData(this);
-            dialogReg.setTitle("Регистрация");
+            dialogReg.setTitle("Реєстрація");
             dialogReg.setMerchikIco(this);
-            dialogReg.setText("После подтверждения регистрации Вам прийдёт сообщение с паролем для авторизации. Продолжить регистрацию?");
+            dialogReg.setText("Після підтвердження реєстрації Вам буде надіслано повідомлення з паролем для авторизації. Продовжити реєстрацію?");
             dialogReg.setClose(dialogReg::dismiss);
-            dialogReg.setCancel("Отменить", dialogReg::dismiss);
-            dialogReg.setOk("Зарегистрироваться", () -> {
+            dialogReg.setCancel("Скасувати", dialogReg::dismiss);
+            dialogReg.setOk("Зареєструватись", () -> {
 //                autoText.setText(dialog.getTelephone());
                 dialog.dismiss();
 
@@ -667,11 +758,11 @@ public class menu_login extends AppCompatActivity {
     private void regCompany(Clicks.clickVoid click) {
 //        but2.setOnLongClickListener(view -> {
         DialogData dialog = new DialogData(this);
-        dialog.setTitle("Компания - место работы");
+        dialog.setTitle("Компанія – місце роботи");
         dialog.setMerchikIco(this);
-        dialog.setText("Укажите (выберите из списка) компанию на которой работаете. Для этого начните вносить её название или код ЕДРПОУ. Если в нашей базе данных она отсутствует - зарегестрируйте новую.");
+        dialog.setText("Вкажіть (виберіть зі списку) компанію, на якій працюєте. Для цього почніть вносити назву або код ЄДРПОУ. Якщо в нашій базі даних вона відсутня – зареєструйте нову.");
         dialog.setRecycler(createDialogAdapter(click), new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        dialog.setTxtLinkOk("Зарег. новую компанию", () -> {
+        dialog.setTxtLinkOk("Зарег. нову компанію", () -> {
             createDialogCreateCompany(click);
         });
         dialog.setClose(dialog::dismiss);
@@ -702,7 +793,7 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.AutoTextLayoutData autoTextLayoutData = new ViewHolderTypeList.AutoTextLayoutData();
-        autoTextLayoutData.dataTextAutoTextHint = "ЕДРПОУ или Название компании";
+        autoTextLayoutData.dataTextAutoTextHint = "ЄДРПОУ або Назва компанії";
         autoTextLayoutData.result = "";
         autoTextLayoutData.click = new ViewHolderTypeList.AutoTextLayoutData.Click() {
             @Override
@@ -710,7 +801,7 @@ public class menu_login extends AppCompatActivity {
                 EDRPOUResponse item = (EDRPOUResponse) data;
                 autoTextLayoutData.result = item.label;
                 autoTextLayoutData.resultData = item;
-                Toast.makeText(menu_login.this, "Выбран клиент с ID: " + item.clientId, Toast.LENGTH_LONG).show();
+                Toast.makeText(menu_login.this, "Вибраний клієнт з ID: " + item.clientId, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -730,13 +821,13 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
-        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.data = "Зареєструвати";
         buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
             @Override
             public <T> void onSuccess(T data) {
                 String item1 = viewHolderTypeList1.autoTextBlock.result;
                 EDRPOUResponse item = (EDRPOUResponse) viewHolderTypeList1.autoTextBlock.resultData;
-                Toast.makeText(menu_login.this, "Вы зарегистрировались на компанию: " + item1, Toast.LENGTH_LONG).show();
+                Toast.makeText(menu_login.this, "Ви зареєструвалися на компанію: " + item1, Toast.LENGTH_LONG).show();
 
                 if (item.confirmation) {
                     getAdminCodeForRegisterUserCompanyRequest(context, item);
@@ -757,14 +848,14 @@ public class menu_login extends AppCompatActivity {
         return res;
     }
 
-    //----------------------------------------------------------
+//----------------------------------------------------------
 
     private void createDialogCreateCompany(Clicks.clickVoid click) {
         DialogData dialog = new DialogData(this);
-        dialog.setTitle("Регистрация компании");
-        dialog.setText("Код ЕДРПОУ вашей компании необходим для обеспечения безопасности данных. " +
-                "Вы можете узнать его в вашей бухгалтерии или ввести часть названия вашей компании " +
-                "(в поле \"Название компании\") и выбрать её из предложенного списка.");
+        dialog.setTitle("Реєстрація компанії");
+        dialog.setText("Код ЄДРПОУ вашої компанії необхідний для забезпечення безпеки даних. " +
+                "Ви можете дізнатися його у вашій бухгалтерії або ввести частину назви вашої компанії " +
+                "(у полі \"Назва компанії\") та вибрати її із запропонованого списку.");
         dialog.setMerchikIco(this);
         dialog.setRecycler(createDialogCreateCompanyAdapter(click), new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         dialog.setClose(dialog::dismiss);
@@ -785,8 +876,8 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
-        editTextLayoutData.dataTitle = "ЕДРПОУ вашей компании";
-        editTextLayoutData.dataEditTextHint = "ЕДРПОУ вашей компании";
+        editTextLayoutData.dataTitle = "ЄДРПОУ вашої компанії";
+        editTextLayoutData.dataEditTextHint = "ЄДРПОУ вашої компанії";
         editTextLayoutData.editTextType = ViewHolderTypeList.EditTextLayoutData.EditTextType.NUMBER;
         editTextLayoutData.result = "";
         editTextLayoutData.click = new ViewHolderTypeList.EditTextLayoutData.Click() {
@@ -811,7 +902,7 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.AutoTextLayoutData autoTextLayoutData = new ViewHolderTypeList.AutoTextLayoutData();
-        autoTextLayoutData.dataTextTitle = "Название компании";
+        autoTextLayoutData.dataTextTitle = "Назва компанії";
 //        autoTextLayoutData.dataTextAutoTextHint = "ЕДРПОУ вашей компании";
         autoTextLayoutData.result = "";
         autoTextLayoutData.click = new ViewHolderTypeList.AutoTextLayoutData.Click() {
@@ -862,7 +953,7 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
-        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.data = "Зареєструвати";
         buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
             @Override
             public <T> void onSuccess(T data) {
@@ -927,7 +1018,9 @@ public class menu_login extends AppCompatActivity {
         data.mod = "auth";
         data.act = "register_company";
 
-        data.company_id = "92106";               // едрпоу
+//        data.company_id = "92106";               // client_dd
+        data.company_id = "1234567890";               // едрпоу
+
         data.company_name = "Не определен";           // название компании
         data.company_type = "existing";
 
@@ -980,7 +1073,7 @@ public class menu_login extends AppCompatActivity {
                         String msg = response.body().get("notice").getAsString();
 
                         DialogData dialog = new DialogData(context);
-                        dialog.setTitle("Внесите проверочный код");
+                        dialog.setTitle("Внесіть код перевірки");
                         dialog.setText(msg);
                         dialog.setMerchikIco(context);
                         dialog.setRecycler(specialCodeAdapter(item), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
@@ -1010,8 +1103,8 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
-        editTextLayoutData.dataTitle = "Код администратора";
-        editTextLayoutData.dataEditTextHint = "Внесите сюда код администратора";
+        editTextLayoutData.dataTitle = "Код адміністратора";
+        editTextLayoutData.dataEditTextHint = "Внесіть код адміністратора сюди";
         editTextLayoutData.result = "";
         editTextLayoutData.click = new ViewHolderTypeList.EditTextLayoutData.Click() {
             @Override
@@ -1035,7 +1128,7 @@ public class menu_login extends AppCompatActivity {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
-        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.data = "Зареєструвати";
         buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
             @Override
             public <T> void onSuccess(T data) {
@@ -1055,7 +1148,7 @@ public class menu_login extends AppCompatActivity {
 
         return res;
     }
-    //----------------------------------------------------------
+//----------------------------------------------------------
 
     private DialogAdapter createDialogRegistrationAdapter() {
 
@@ -1388,14 +1481,14 @@ public class menu_login extends AppCompatActivity {
 
     private void showDialogVer(StringBuilder msg) {
         DialogData dialog = new DialogData(this);
-        dialog.setTitle("Версия приложения");
+        dialog.setTitle("Версія програми");
         dialog.setText(String.valueOf(msg));
         dialog.setMerchikIco(this);
         dialog.show();
     }
 
 
-    //---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
 
     private void loginOnServer() {
         try {
@@ -1619,12 +1712,12 @@ public class menu_login extends AppCompatActivity {
                             Log.e("APP_LOGIN", "LOGIN_callLogin: " + response.body().getState());
                             if (response.body().getState()) {
                                 if (response.body().registerCompany != null && response.body().registerCompany) {
-//                                    registerUserCompanyRequestKostil(() -> {
-//                                        sessionCheck(mod, finalLogin, finalPassword);
-//                                    });
-                                    checkUserForCompany(() -> {
+                                    registerUserCompanyRequestKostil(() -> {
                                         sessionCheck(mod, finalLogin, finalPassword);
                                     });
+//                                    checkUserForCompany(() -> {
+//                                        sessionCheck(mod, finalLogin, finalPassword);
+//                                    });
                                 } else {
                                     sessionCheck(mod, finalLogin, finalPassword);
                                 }
@@ -2534,4 +2627,38 @@ public class menu_login extends AppCompatActivity {
                 .show();
     }
 
+    private void forgotPasswordRequest(String phoneNumber) {
+
+        StandartData data = new StandartData();
+        data.mod = "sotr_auth";
+        data.act = "register";
+        data.type = "recover";
+        data.login = phoneNumber;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        RetrofitBuilder.getRetrofitInterface().GET_CLIENT_RX_TEST(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        result ->
+                                Log.e("@#!!!!!!", "8===> ")
+                        ,
+                        e -> {
+                            Log.e("@#!!!!!!", "forgotPasswordRequest error", e);
+                            new MessageDialogBuilder(this)
+                                    .setTitle("Відновлення пароля")
+                                    .setStatus(DialogStatus.NORMAL)
+                                    .setMessage("На вказаний вами номер відправлено повідомлення з паролем для доступу в систему")
+//                                    .setMessage("Таке повідомлення вже надсилалось декілька хвилин тому. Зачекайте 5 хвилин, якщо потрібно повторно надіслате таке саме повідомлення.")
+                                    .setOnConfirmAction(() -> null)
+                                    .show();
+                        }
+                );
+
+
+
+}
 }// END CLASS..380677777777/777718353

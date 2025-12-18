@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CustomerResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class  CustomerExchange <T>{

@@ -224,7 +224,7 @@ class StackPhotoDBViewModel @Inject constructor(
 //                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
 //                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
 //                    )
-
+                    Globals.writeToMLOG("INFO","StackPhotoDBViewModel.getItems", "codeDad2: $codeDad2")
                     val typePhoto = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                         ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> 14

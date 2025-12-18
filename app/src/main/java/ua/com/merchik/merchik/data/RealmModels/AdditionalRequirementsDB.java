@@ -110,6 +110,11 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Expose
     public Integer showcaseTpId;
 
+    @SerializedName("main_option_id")
+    @Expose
+    public String mainOptionId;
+
+
     public Integer getId() {
         return id;
     }
@@ -266,6 +271,15 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
         this.dtChange = dtChange;
     }
 
+
+    public String getMainOptionId() {
+        return mainOptionId;
+    }
+
+    public void setMainOptionId(String mainOptionId) {
+        this.mainOptionId = mainOptionId;
+    }
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
@@ -331,4 +345,5 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     public List<String> getPreferredFieldOrder() {
         return new ArrayList<>(Arrays.asList("dt_start", "dt_end"));
     }
+
 }

@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.RetrofitResponse.Log
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -603,6 +604,12 @@ abstract class MainViewModel(
                     dataItemUIS
                 } else {
                     dataItemUIS.map { it.withGroupingOnTop(groupingKeys) }
+                }
+
+                android.util.Log.e("TEST_BAG1", "value ${RoomManager.SQL_DB.siteObjectsDao().all.size}")
+
+                finalItems.forEach {
+                    android.util.Log.e("TEST_BAG", "value ${it.fields.first().field}")
                 }
 
                 old.copy(
