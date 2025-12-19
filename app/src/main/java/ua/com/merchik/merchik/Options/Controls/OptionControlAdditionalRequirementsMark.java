@@ -31,7 +31,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
-import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 
 public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
     public int OPTION_CONTROL_ADD_COMMENT_ID = 138341;
@@ -91,7 +90,6 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 ttCategory = addressSDB.ttId;
             }
 
-            // 3.2
             // Получаем Доп.Требования.
 //            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
 //            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
@@ -168,12 +166,13 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                             Log.e("OptionControlARMark", "5.2");
 
-                            if (Long.parseLong(item.dtChange) >= dateDocumentLong) {
+                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt()) {
                                 item.nedotoch = 0;
                                 item.offset = 1;
                                 item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
                                 continue;
-                            } else if (item.dtEnd != null && item.dtEnd.getTime() == dateDocumentLong) {
+                            }
+                            if (item.dtEnd != null && item.dtEnd.getTime() == dateDocumentLong) {
                                 item.nedotoch = 0;
                                 item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
                                 continue;
@@ -186,7 +185,13 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                             item.nedotoch = 0;
                             item.note = "";
                         } else {
-                            item.mark = 0;
+                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt()) {
+                                item.nedotoch = 0;
+                                item.offset = 1;
+                                item.mark = 0;
+                                item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
+                            } else
+                                item.mark = 0;
                         }
                     }
                 }

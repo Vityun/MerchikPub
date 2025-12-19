@@ -623,6 +623,57 @@ object StackPhotoDBOverride {
         }
         return MerchModifier()
     }
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "dt" -> 1100
+        "user_txt" -> 1103
+        "addr_txt" -> 1101
+        "client_txt" -> 1102
+        "theme_id" -> 8724
+        "status" -> 3167
+        "main_option_id" -> 8725
+        "cash_ispolnitel" -> 8751
+        //группа 2340
+
+        "dt_update" -> 5926
+        "nomer_tt" -> 5930
+        "obl_id" -> 5924
+        "tp_id" -> 5923
+        "tt_id" -> 5925
+        "client_start_dt" -> 9062
+        "client_end_dt" -> 9063
+        "sku" -> 9065
+        "duration" -> 9064
+        "smeta" -> 9154
+        "doc_num_otchet" -> 9155
+
+        "comment" -> 5911
+
+        else -> null
+    }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+
+        "create_time" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy",  Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter)
+                } catch (e: Exception) {
+                    "Робота не розпочата"
+                }
+        }
+        "" -> {""}
+
+        else -> value.toString()
+    }
+
+//
 }
 
 

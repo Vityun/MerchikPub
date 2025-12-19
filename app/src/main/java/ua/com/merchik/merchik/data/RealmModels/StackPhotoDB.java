@@ -583,22 +583,21 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "addr_id, approve, code_dad2, create_time, dvi, dviUpload, errorTime," +
-                "get_on_server, id, markUpload, object_id, photoServerId, photo_hash, photo_num, photo_type, " +
-                "premiyaUpload, specialCol, status, upload_status, upload_time, upload_to_server, vpi, " +
-                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt";
+//        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return "dviUpload, markUpload, object_id, photo_num, status, " +
+                "premiyaUpload, specialCol, upload_time, photoServerURL, time_event";
     }
 
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return StackPhotoDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return StackPhotoDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

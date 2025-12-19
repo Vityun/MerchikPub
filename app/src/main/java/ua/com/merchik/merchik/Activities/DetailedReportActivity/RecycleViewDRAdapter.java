@@ -603,7 +603,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                                intent.putExtra("dad2", dad2);
 //                                view.getContext().startActivity(intent);
 //                            });
-                            SpannableString spannableString157277 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 26));
+                            SpannableString spannableString157277 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28));
                             spannableString157277.setSpan(new UnderlineSpan(), 0, spannableString157277.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                             textInteger.setText(spannableString157277);

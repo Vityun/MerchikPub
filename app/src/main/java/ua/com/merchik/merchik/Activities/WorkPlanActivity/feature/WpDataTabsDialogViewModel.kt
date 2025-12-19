@@ -71,7 +71,7 @@ class WpDataTabsDialogViewModel : ViewModel() {
             "<a href=\"tel:$hrPhone\">$partTwo</a>"
         )
 
-        val isRegistration = true
+        val isRegistration = instruktorNumber != 0
 
         while (true) {
             // ---------- 1. Приветственный диалог ----------

@@ -2630,7 +2630,7 @@ public class menu_login extends AppCompatActivity {
     private void forgotPasswordRequest(String phoneNumber) {
 
         StandartData data = new StandartData();
-        data.mod = "sotr_auth";
+        data.mod = "auth";
         data.act = "register";
         data.type = "recover";
         data.login = phoneNumber;
@@ -2639,20 +2639,29 @@ public class menu_login extends AppCompatActivity {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        RetrofitBuilder.getRetrofitInterface().GET_CLIENT_RX_TEST(RetrofitBuilder.contentType, convertedObject)
+        RetrofitBuilder.getRetrofitInterface().GET_CLIENT_RX_FORGET_PASSWORD(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        result ->
-                                Log.e("@#!!!!!!", "8===> ")
-                        ,
+                        result -> {
+                            Log.e("@#!!!!!!", "8===> ");
+                            if (result != null && result.notice != null){
+                                new MessageDialogBuilder(this)
+                                        .setTitle("Відновлення пароля")
+                                        .setStatus(DialogStatus.NORMAL)
+                                        .setSubTitle(result.fio)
+                                        .setMessage(result.notice)
+                                        .setOnConfirmAction(() -> null)
+                                        .show();
+                            }
+                        },
                         e -> {
                             Log.e("@#!!!!!!", "forgotPasswordRequest error", e);
                             new MessageDialogBuilder(this)
                                     .setTitle("Відновлення пароля")
                                     .setStatus(DialogStatus.NORMAL)
-                                    .setMessage("На вказаний вами номер відправлено повідомлення з паролем для доступу в систему")
-//                                    .setMessage("Таке повідомлення вже надсилалось декілька хвилин тому. Зачекайте 5 хвилин, якщо потрібно повторно надіслате таке саме повідомлення.")
+                                    .setSubTitle("Помилка")
+                                    .setMessage(e.getMessage())
                                     .setOnConfirmAction(() -> null)
                                     .show();
                         }

@@ -36,9 +36,23 @@ public class TovarGroupSDB {
 
     public String getNmFromList(List<TovarGroupSDB> list) {
         StringBuilder res = new StringBuilder();
-        if (list != null && list.size() > 0) {
+        if (list != null && !list.isEmpty()) {
             for (TovarGroupSDB item : list) {
                 res.append(item.nm).append(", ");
+            }
+            res = new StringBuilder(res.substring(0, res.length() - 2));
+        } else {
+            return "";
+        }
+
+        return res.toString();
+    }
+
+    public String getIdFromList(List<TovarGroupSDB> list) {
+        StringBuilder res = new StringBuilder();
+        if (list != null && !list.isEmpty()) {
+            for (TovarGroupSDB item : list) {
+                res.append(item.id).append(", ");
             }
             res = new StringBuilder(res.substring(0, res.length() - 2));
         } else {

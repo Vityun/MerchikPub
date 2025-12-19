@@ -98,6 +98,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.Premial;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReclamationPercentage.ReclamationPercentageResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.RegistrationResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShelfSizeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
@@ -348,6 +349,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Single<JsonObject> GET_CLIENT_RX_TEST(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<RegistrationResponse> GET_CLIENT_RX_FORGET_PASSWORD(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

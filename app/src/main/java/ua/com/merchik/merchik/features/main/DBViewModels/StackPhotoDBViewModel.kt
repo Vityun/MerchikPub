@@ -157,7 +157,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 26
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                     else -> 0 // Резервное значение, не должно использоваться
@@ -237,7 +237,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 26
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                         else -> 0 // Резервное значение, не должно использоваться
@@ -375,5 +375,13 @@ class StackPhotoDBViewModel @Inject constructor(
 
             else -> {}
         }
+    }
+
+    override fun getDefaultHideUserFields(): List<String> {
+        return ("addr_id, approve, code_dad2, dviUpload, errorTime, dvi, upload_status, " +
+                "get_on_server, id, markUpload, object_id, photo_hash, photo_num, photo_type, " +
+                "premiyaUpload, specialCol, commentUpload, upload_time, upload_to_server, vpi, " +
+                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt, code_iza, " +
+                "example_id, example_img_id, planogram_id, planogram_img_id").split(",")
     }
 }

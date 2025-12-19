@@ -48,8 +48,8 @@ fun WpDataContentTab(dataIsReady: Boolean) {
             RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
         }
         val isEmptyScenario =
-            user.clientId == "92106" &&
-                    (user?.reportCount == 0)
+            user?.clientId == "92106" &&
+                    (user.reportCount == 0)
 
         LaunchedEffect(dataIsReady) {
             if (isEmptyScenario) {

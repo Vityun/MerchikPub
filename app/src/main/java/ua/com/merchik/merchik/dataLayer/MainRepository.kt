@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.dataLayer
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.realm.Realm
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
@@ -98,8 +99,12 @@ class MainRepository(
             }.getOrNull()
         }
 
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .create()
+
         item?.let { obj ->
-            val jsonObject = JSONObject(Gson().toJson(obj))
+            val jsonObject = JSONObject(gson.toJson(obj))
             val fields = mutableListOf<String>()
             fields.add("column_name")
             fields.add("group_header")
