@@ -166,7 +166,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                             Log.e("OptionControlARMark", "5.2");
 
-                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt()) {
+                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt() && wpDataDB.getClient_start_dt()  != 0) {
                                 item.nedotoch = 0;
                                 item.offset = 1;
                                 item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
@@ -255,8 +255,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (offsetSum == virtualTable.size()) {
                 msg.append("Все доп.требования были изменены после текущего посещения, проверка не выполняется.");
+                signal = false;
 
-                signal = true;
 //                unlockCodeResultListener.onUnlockCodeFailure();
             } else if (nedotochSum > 0) {
 

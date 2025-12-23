@@ -320,7 +320,7 @@ public class AdditionalRequirementsRealm {
         Log.e("getData3", "mod: " + mod);
 
         int themeId, addressId;
-        String clientId, mainOption;
+        String clientId;
         long dad2;
         Date date = new Date();
 
@@ -330,17 +330,20 @@ public class AdditionalRequirementsRealm {
             themeId = ((WpDataDB) data).getTheme_id();
             dad2 = ((WpDataDB) data).getCode_dad2();
             date = ((WpDataDB) data).getDt();
-            mainOption = ((WpDataDB) data).getMain_option_id();
+//            mainOption = ((WpDataDB) data).getMain_option_id();
         } else if (data instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
             addressId = wp.getAddr_id();
             clientId = wp.getClient_id();
             themeId = wp.getTheme_id();
             dad2 = wp.getCode_dad2();
-            mainOption = wp.getMain_option_id();
+//            mainOption = wp.getMain_option_id();
         } else {
             return null;
         }
+
+        BaseBusinessData businessData = getAdditionalRequirementsDocumentData(data);
+        String mainOption = businessData.mainOption;
 
         AddressDB addressDB = AddressRealm.getAddressById(addressId);
 

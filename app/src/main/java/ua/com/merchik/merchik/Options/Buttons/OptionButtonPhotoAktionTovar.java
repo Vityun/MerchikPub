@@ -1,9 +1,13 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
+
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -40,8 +44,9 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
 
-            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
-//            new OptionControlPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
+//            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
+            new MakePhoto().openCamera((Activity) context, CAMERA_REQUEST_PROMOTION_TOV_PHOTO);
+
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoAktionTovar/executeOption/Exception", "Exception e: " + e);

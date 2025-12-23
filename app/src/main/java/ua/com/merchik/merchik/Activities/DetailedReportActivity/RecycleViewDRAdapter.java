@@ -315,6 +315,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 168598   // Кнопка "Мнение о посещении"
                         || optionId == 169108   // фото POS материалов (46)
                         || optionId == 2243
+                        || optionId == 172100   // Фото вітрини з акційними цінниками
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -856,6 +857,27 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
                                 bundle.putString("title", "Перелік фото звітів");
                                 bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(4).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
+                            break;
+
+                        case (172100):  // Фото вітрини з акційними цінниками
+//                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
+                            SpannableString spannableString172100 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 48));
+                            spannableString172100.setSpan(new UnderlineSpan(), 0, spannableString172100.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            textInteger.setText(spannableString172100);
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4), optionsButtons));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(48).getNm());
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });

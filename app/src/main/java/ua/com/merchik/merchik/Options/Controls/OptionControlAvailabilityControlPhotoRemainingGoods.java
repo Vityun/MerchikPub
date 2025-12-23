@@ -15,9 +15,12 @@ import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Clock;
@@ -56,13 +59,13 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
     public int OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID = 159707;
 
+    private static final LocalDate EXCEPTION_BEFORE_DATE = LocalDate.of(2026, 1, 3);
+
     public boolean signal = true;
 
     private int userId;
     private long dad2;
 
-    // 1.2
-    private Integer[] groups = {434};  // исключаем из отчетов: 434-АТБ
 //    private String[] tovIds;    // Список Товаров с ОСВ.
 
     private WpDataDB wpDataDB;
@@ -109,11 +112,17 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
+            LocalDate planDay = wpDataDB.getDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             //1.0
             String group = addressSDBDocument.tpId.toString();
+            int ptId = addressSDBDocument.tpId;
             List<String> tovIds = new ArrayList<>();
 
+            // 1.2
+            Integer[] groups = {434};  // исключаем из отчетов: 434-АТБ
+            if (planDay.isBefore(EXCEPTION_BEFORE_DATE))
+                groups = new Integer[]{434, 319};
 
             //2.0. получим данные о товарах в отчете (если она еще не рассчитана)
             List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
@@ -241,7 +250,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 signal = false;
             }
 
-            // 7.0.
+            // 7.0 исключения
             if (signal) {
                 if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955) {
                     spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
@@ -251,6 +260,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                     signal = false;
                 } else if (usersSDB.reportDate05 == null/*usersSDB.reportDate05 != null && usersSDB.reportDate05.getTime() <= wpDataDB.getDt().getTime()*/) {
                     spannableStringBuilder.append(", але виконавець не провів ще свого 5-го звіту. Сигнал прибрано.");
+                    signal = false;
+                } else if (Arrays.asList(groups).contains(ptId)) {
+                    stringBuilderMsg.append(", але не перевіряю наявність ФОТ (фото залишків товару) для цієї мережі. ");
                     signal = false;
                 }
             }

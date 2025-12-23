@@ -1503,6 +1503,13 @@ public class menu_login extends AppCompatActivity {
             if ((login == null && password == null) || (login.isEmpty() && password.isEmpty()))
                 return;
 
+            if (user_id == null)
+                return;
+            AppUsersDB appUsersDB = RealmManager.getAppUserById(user_id);
+            if (appUsersDB == null)
+                return;
+
+
             progress = new ProgressViewModel(1);
             loadingDialog = new LoadingDialogWithPercent(this, progress);
             loadingDialog.show();
@@ -1642,7 +1649,8 @@ public class menu_login extends AppCompatActivity {
                                     } else {
                                         AUTH();
                                     }
-                                } else if (!resp.getAuth()) {
+                                } else
+                                    if (!resp.getAuth()) {
                                     // login
                                     AUTH(); // Вход через Бд или через Логин/Пароль
                                 } else {

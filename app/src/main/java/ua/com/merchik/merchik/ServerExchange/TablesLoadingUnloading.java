@@ -1381,12 +1381,7 @@ public class TablesLoadingUnloading {
                             globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
 
-                            for (OptionsDB optionsDB : response.body().getList()) {
-                                if (optionsDB.getOptionControlId().equals("166896"))
-                                    Log.e("!","+++++");
-                                if (optionsDB.getOptionId().equals("166896"))
-                                    Log.e("!","+++++");
-                            }
+
 //                            RealmManager.setOptions2(response.body().getList());
 //                            RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);

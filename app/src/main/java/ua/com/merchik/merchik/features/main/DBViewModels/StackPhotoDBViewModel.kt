@@ -98,8 +98,9 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
             ContextUI.STACK_PHOTO_FROM_OPTION_158605,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108
-            -> {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
+                -> {
 
                 try {
                     val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
@@ -160,6 +161,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                     else -> 0 // Резервное значение, не должно использоваться
                 }
 
@@ -207,8 +209,9 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
                 ContextUI.STACK_PHOTO_FROM_OPTION_158605,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108
-                -> {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
+                    -> {
                     var codeDad2: Long
                     var id: Int
                     try {
@@ -224,7 +227,11 @@ class StackPhotoDBViewModel @Inject constructor(
 //                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
 //                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
 //                    )
-                    Globals.writeToMLOG("INFO","StackPhotoDBViewModel.getItems", "codeDad2: $codeDad2")
+                    Globals.writeToMLOG(
+                        "INFO",
+                        "StackPhotoDBViewModel.getItems",
+                        "codeDad2: $codeDad2"
+                    )
                     val typePhoto = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                         ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> 14
@@ -240,6 +247,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                         else -> 0 // Резервное значение, не должно использоваться
                     }
 
@@ -317,7 +325,7 @@ class StackPhotoDBViewModel @Inject constructor(
     private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
         when (contextUI) {
             ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT
-            -> {
+                -> {
                 val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
                 val wpDataDB =
                     WpDataRealm.getWpDataRowByDad2Id(

@@ -114,6 +114,14 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Expose
     public String mainOptionId;
 
+    @SerializedName("amount_min")
+    @Expose
+    private String amountMin;
+
+    @SerializedName("amount_max")
+    @Expose
+    private String amountMax;
+
 
     public Integer getId() {
         return id;
@@ -272,6 +280,7 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     }
 
 
+
     public String getMainOptionId() {
         return mainOptionId;
     }
@@ -346,4 +355,19 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
         return new ArrayList<>(Arrays.asList("dt_start", "dt_end"));
     }
 
+    public String getAmountMin() {
+        return amountMin;
+    }
+
+    public void setAmountMin(String amountMin) {
+        this.amountMin = amountMin;
+    }
+
+    public String getAmountMax() {
+        return amountMax;
+    }
+
+    public void setAmountMax(String amountMax) {
+        this.amountMax = amountMax;
+    }
 }

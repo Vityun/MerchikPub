@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
-import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,6 +18,8 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +42,12 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 
 public class OptionControlPhotoPromotion<T> extends OptionControl {
     public int OPTION_CONTROL_PROMOTION_ID = 157278;
+    public int OPTION_CONTROL_PROMOTION_SHOWCASE_ID = 172101;
 
     public static WpDataDB wpDataDBOPTION_CONTROL_PROMOTION_ID;
     public static TovarDB tovarDBOPTION_CONTROL_PROMOTION_ID;
+
+    private static final LocalDate EXCEPTION_BEFORE_DATE = LocalDate.of(2025, 12, 29);
 
     private WpDataDB wp;
     private String documentDate, clientId, optionId;
@@ -53,6 +57,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     public boolean signal = false;
 
     public OptionControlPhotoPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+        // 1.0.
         try {
             this.context = context;
             this.document = document;
@@ -91,6 +96,42 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
+        long dad2ForGetStackPhotoDB = dad2;
+        String[] codeIZAForGetStackPhotoDB = null;
+        int m = Integer.parseInt(optionDB.getAmountMin());
+        String mainOption = wp.getMain_option_id();
+
+//        int photoType = 28;
+        String optionId = optionDB.getOptionId();
+        int photoType = switch (optionId) {
+            case "172101" -> 48;
+            default -> 28;
+        };
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate planDay = wp.getDt().toInstant().atZone(zone).toLocalDate();
+
+
+//        switch (optionId) {
+//            case "141361": {
+//                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+//                if (quantityMax > 0) {
+//                    dad2ForGetStackPhotoDB = 0;
+//                    long date = wpDataDB.getDt().getTime();
+//                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
+//                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
+//                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
+//                            replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
+////                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
+////                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+//                }
+//
+////                photoType = 31; // Фото товара на скалде
+//                m = m > 0 ? m : 1;
+//                break;
+//            }
+//        }
+
         // values
 //        int OSV = 0;            // ОсобоеВнимание
         int signalInt = 0;         // Сигнал заблокированно или нет
@@ -103,10 +144,13 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         //2.0. получим данные о товарах в отчете
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
-        if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
+
+        //3.0 получаем акционные товары из доп требований
+        if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278") ||
+                optionDB.getOptionId().equals("172101") || optionDB.getOptionControlId().equals("172101")) {
             // Получение Доп. Требований с дополнительными фильтрами.
 
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, wp.getDt(), wp.getDt(), null, null, null, null);
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, photoType, null, wp.getDt(), wp.getDt(), null, null, null, null);
 
             for (AdditionalRequirementsDB item : additionalRequirements) {
                 spisTovOSV.add(item.getTovarId());
@@ -124,15 +168,28 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         errMsgType1.append("Для товара: ").append("\n");
 
 
-        List<StackPhotoDB> stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), PHOTO_PROMOTION_TOV);
-        int size = 0;
-
-        // 5.0
-        // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
+        // 4.0
         int find = 0;
         int totalOSV = 0;
+        int kolSKU = 0;
+        int kolAkciaTovarNaVitrine = 0;  //використовую для опції 172101 Фото вітрини (з Акційними товарами) для того, щоб скласти перелік товарів з ОСВ і коты присутні на вітрині
+
+
+        // 5.0
+        List<StackPhotoDB> stackPhotoDBS = new ArrayList<>();
+        stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), PHOTO_PROMOTION_TOV);
+        int size = 0;
+
+        // 6.0
+        // Тут должена формироваться более подроная информация о том с какими Товарами есть проблема
         boolean showTovList = false;
         for (ReportPrepareDB item : reportPrepare) {
+//            int face = Integer.parseInt(item.face);
+//            if (face > 0) {
+//                kolSKU = 1;
+//            }
+
+            // 6.1
             int OSV = 0;
 
             if (spisTovOSV.contains(item.getTovarId())) {
@@ -141,19 +198,26 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 OSV = 1;
             }
 
-            if (item.getAkciya() == null || item.getAkciya().equals("2"))
+            //6.2
+            if (optionId.equals("172101")) {
+                //тут ми просто відмічаємо товари у котрих є ОСВ (Акція) та вони присутні на вітрині. Це нам потрібно у подальшому для того, щоб вивести у сповіщенні кількість товарів, котрі контролер повинен побачити на Панорамній Фото Вітрини для опції 172101
+                if (OSV == 1 || Integer.parseInt(item.face) >= 1) {
+                    kolAkciaTovarNaVitrine = kolAkciaTovarNaVitrine + 1;
+                }
+                continue;
+            } else if (item.getAkciya() == null || item.getAkciya().equals("2")) //=1-есть, =2-нет
                 continue;
 
-            else if (item.face == null || item.face.equals("") || item.face.equals("0"))
+            else if (item.face == null || item.face.equals("") || item.face.equals("0")) //если товара на витрине нет вообще	(у цьому реквфзиті зберігається число 1, якщо цей товар є на вітрині фейс>0)
                 continue;
 
-            else if (OSV == 0 && (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")))
+            else if (OSV == 0 && (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278"))) //якщо це НЕ товар з особливою увагою
                 continue;
 
-            else if ((item.getAkciya().equals("0")) && (optionDB.getOptionId().equals("166528") || optionDB.getOptionControlId().equals("166528")))
+            else if ((item.getAkciya().equals("0")) && (optionDB.getOptionId().equals("166528") || optionDB.getOptionControlId().equals("166528"))) //якщо по цьому товару НЕМА акції
                 continue;
 
-            // 6.2 new 27.06.24
+            // 6.3 new 27.06.24
             if (stackPhotoDBS != null) {
                 StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
                 if (currentTovPhoto != null) {
@@ -191,13 +255,30 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         }
 
 
-        // 6.0
+        // 7.0
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
-        if (reportPrepare.size() == 0) {
+        if (reportPrepare.isEmpty()) {
             spannableStringBuilder.append("Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.");
             signalInt = 1;
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
+        } else if (kolAkciaTovarNaVitrine == 0 && optionId.equals("172101")) {
+            spannableStringBuilder.append("Товарів, по котрим треба виконати світлини 'Акційного товару', не знайдено. Зауважень нема.");
+            signalInt = 2;
+            signal = false;
+        } else if (kolAkciaTovarNaVitrine > 0 && stackPhotoDBS != null && stackPhotoDBS.isEmpty() && optionId.equals("172101")) {
+            spannableStringBuilder.append("Фото вітрин (з ").append(String.valueOf(kolAkciaTovarNaVitrine)).append(" акційними товарами), НЕ знайдено!");
+            signalInt = 1;
+            signal = true;
+        } else if (kolAkciaTovarNaVitrine > 0 && stackPhotoDBS != null && stackPhotoDBS.size() < m && optionId.equals("172101")) {
+            spannableStringBuilder.append("Знайдено лише ").append(String.valueOf(stackPhotoDBS.size()))
+                    .append(" Фото вітрин (з ")
+                    .append(String.valueOf(kolAkciaTovarNaVitrine))
+                    .append(" акційними товарами)! Ви повинні виготовити не менше ")
+                    .append(String.valueOf(m))
+                    .append(" таких світлин.");
+            signalInt = 1;
+            signal = true;
         } else if (totalOSV == 0) {
             spannableStringBuilder.append("Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.");
             signalInt = 2;
@@ -216,6 +297,12 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         }
 
         spannableStringBuilder.append("\n\n").append(massageToUser);
+
+        if (signal && planDay.isBefore(EXCEPTION_BEFORE_DATE) ){
+            spannableStringBuilder.append("\nАле, до '29.12.2025' зроблено виключення. Зауважень немає.");
+            signalInt = 2;
+            signal = false;
+        }
 
         // 7.0 сохраним сигнал
 //        if (optionDB.getIsSignal().equals("0")) {

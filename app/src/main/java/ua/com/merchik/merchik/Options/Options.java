@@ -31,7 +31,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.graphics.Region;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -367,6 +366,7 @@ public class Options {
                     optionControlAvailabilityOfPrices.showOptionMassage("");
                     break;
 
+                case 172101:
                 case 157278:
                 case 166528:
                     OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -2055,6 +2055,17 @@ public class Options {
                     }
                 }
                 return optionControlPhotoPromotion.isBlockOption2() ? 1 : 0;
+
+
+            case 1474:
+                OptionControlOverTimelinessOfReporting<?> optionControlOverTimelinessOfReporting =
+                        new OptionControlOverTimelinessOfReporting<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlOverTimelinessOfReporting.isBlockOption()))
+                    optionControlOverTimelinessOfReporting.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlOverTimelinessOfReporting.signal && optionControlOverTimelinessOfReporting.isBlockOption()) {
+                    optionControlOverTimelinessOfReporting.showOptionMassage(block);
+                }
+                return optionControlOverTimelinessOfReporting.isBlockOption2() ? 1 : 0;
 
             case 166896:
                 OptionControlTwoWorkInOneDay optionControlTwoWorkInOneDay =
