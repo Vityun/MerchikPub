@@ -81,6 +81,12 @@ public class AddressSDB implements DataObjectUI {
     @ColumnInfo(name = "nomer_tt")
     public Integer nomerTT;
 
+    @SerializedName("kps")
+    @Expose
+    @ColumnInfo(name = "kps")
+    public Integer kps;
+
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {

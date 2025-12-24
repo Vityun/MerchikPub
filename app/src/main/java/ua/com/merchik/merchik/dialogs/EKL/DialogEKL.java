@@ -1172,7 +1172,13 @@ public class DialogEKL {
     private String createAddNewPTTLinkVersion2() {
         // Формирование основного пути с параметрами
         int addrId = wp.getAddr_id(); // Получаем значение
-        String link = String.format("/mobile.php?mod=sotr_list**act=add_sotr**filter[addr_id]=%d", addrId);
+        String link =
+//        String.format("/mobile.php?mod=sotr_list**act=add_sotr**filter[addr_id]=%d", addrId);
+                String.format(
+                        "/mobile.php?mod=sotr_list**act=add_sotr**addr_id=%d**theme_id=%d",
+                        addrId,
+                        998
+                );
 
         // Получаем данные пользователя
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);

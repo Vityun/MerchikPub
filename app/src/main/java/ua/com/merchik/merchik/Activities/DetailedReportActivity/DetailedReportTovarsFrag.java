@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.compose.ui.platform.ComposeView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -66,7 +69,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
@@ -247,21 +249,28 @@ public class DetailedReportTovarsFrag extends Fragment {
 
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "v: " + v);
 
-        try {
 
-            badgeTextView = v.findViewById(R.id.badge_text_view);
-            fab = v.findViewById(R.id.fab);
-            editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);
-            fullTovList = v.findViewById(R.id.full_tov_list);
-            filter = v.findViewById(R.id.filter);
+//        if (tasksAndReclamationsSDB == null) {
+//            ComposeView composeView = v.findViewById(R.id.compose_view_tovar);
+//            ConstraintLayout layoutTovar = v.findViewById(R.id.constraint_tovar);
+//            composeView.setVisibility(View.VISIBLE);
+//            layoutTovar.setVisibility(View.GONE);
+//        } else
+            try {
 
-            recyclerView = v.findViewById(R.id.DRRecyclerViewTovar);
+                badgeTextView = v.findViewById(R.id.badge_text_view);
+                fab = v.findViewById(R.id.fab);
+                editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);
+                fullTovList = v.findViewById(R.id.full_tov_list);
+                filter = v.findViewById(R.id.filter);
+
+                recyclerView = v.findViewById(R.id.DRRecyclerViewTovar);
 //            allTov = v.findViewById(R.id.textLikeLink);
 
 
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
-        }
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
+            }
 
         Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/onCreateView/FINISH");
         return v;

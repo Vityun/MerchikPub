@@ -46,7 +46,8 @@ public class RoomManager {
                         MIGRATION_66_67,
                         MIGRATION_67_68,
                         MIGRATION_68_69,
-                        MIGRATION_69_70
+                        MIGRATION_69_70,
+                        MIGRATION_70_71
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -815,6 +816,13 @@ public class RoomManager {
                             "(id, wp_loaded, site_loaded, options_loaded, theme_loaded, customer_loaded, user_loaded) " +
                             "VALUES (1, 0, 0, 0, 0, 0)"
             );
+        }
+    };
+
+    public static final Migration MIGRATION_70_71 = new Migration(70, 71) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE address ADD COLUMN kps INTEGER NOT NULL DEFAULT 0");
         }
     };
 

@@ -140,7 +140,7 @@ public class Globals {
 
     public static long delayGPS, delayNET;
     public static int dalayMaxTimeGPS = 30; // 30 минут по умолчанию
-    public static int distanceMin = 500;
+    public static int distanceMin = 500; // дистанция по умолчанию
     public static float distanceAB;
     public static double lat, lon;
 

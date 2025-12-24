@@ -39,7 +39,7 @@ public class OptionControlMP<T> extends OptionControl {
 
     public int distanceMin = Globals.distanceMin;
 
-    private final int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
+    private int validTime = Globals.dalayMaxTimeGPS;   // 30 (1800сек) минут допустимого времени.
     private float coordAddrX, coordAddrY;
 
     private StringBuilder stringBuilder = new StringBuilder();
@@ -56,7 +56,7 @@ public class OptionControlMP<T> extends OptionControl {
         this.nnkMode = nnkMode;
         this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
-//        executeOption();
+        executeOption();
     }
 
     private void getDocumentVar() {
@@ -68,7 +68,16 @@ public class OptionControlMP<T> extends OptionControl {
 
                 AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
                 if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")) {
-                    distanceMin = 1800;
+//                    distanceMin = 1800;
+                    int kps = addressSDB.kps;
+
+                    if (kps >= 100 )
+                        validTime = 60 * 60;
+                    else if (kps >= 70)
+                        validTime = 40 * 60;
+                    else
+                        validTime = validTime * 60;
+
                 }
 
                 if (addressSDB != null) {
@@ -85,6 +94,16 @@ public class OptionControlMP<T> extends OptionControl {
                     }
                 }
             }
+
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlMP/getDocumentVar", "Exception e: " + e);
+        }
+    }
+
+    private void executeOption() {
+        try {
+
 
 //            15.07 .2025 изменил по указанию Петрова теперь сигнал расчитывается ИСКЛЮЧИТЕЛЬНО за последние 30 минут если работа не окончена!
             long startTime =
@@ -124,15 +143,6 @@ public class OptionControlMP<T> extends OptionControl {
                         .append("Адрес ТТ: ")
                         .append(addressSDB.nm)
                         .append("\n");
-
-
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlMP/getDocumentVar", "Exception e: " + e);
-        }
-    }
-
-    private void executeOption() {
-        try {
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlMP/executeOption", "Exception e: " + e);

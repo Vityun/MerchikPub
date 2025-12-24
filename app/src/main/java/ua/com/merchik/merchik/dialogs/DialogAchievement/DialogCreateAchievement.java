@@ -185,7 +185,6 @@ public class DialogCreateAchievement {
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
                 bundle.putString("contextUI", ContextUI.TOVAR_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-//                bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
                 try {
                     bundle.putString("dataJson", new Gson().toJson(
                             new JSONObject()
@@ -196,8 +195,6 @@ public class DialogCreateAchievement {
                 }
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Выберите товар");
-//                bundle.putString('req', "");
-//                bundle.putInt("idResImage", R.drawable.ic_caution);
                 intent.putExtras(bundle);
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });

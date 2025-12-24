@@ -594,11 +594,11 @@ abstract class MainViewModel(
                 } ?: title
 
                 val dataItemUIS = getItems()
-                Globals.writeToMLOG(
-                    "INFO",
-                    "MainViewModel.updateContent",
-                    "getItems() size: ${dataItemUIS.size}"
-                )
+//                Globals.writeToMLOG(
+//                    "INFO",
+//                    "MainViewModel.updateContent",
+//                    "getItems() size: ${dataItemUIS.size}"
+//                )
 
                 val finalItems = if (groupingKeys.isEmpty()) {
                     dataItemUIS
