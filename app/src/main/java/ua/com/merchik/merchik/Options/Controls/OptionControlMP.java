@@ -68,22 +68,23 @@ public class OptionControlMP<T> extends OptionControl {
 
                 AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
                 if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")) {
-//                    distanceMin = 1800;
-                    int kps = addressSDB.kps;
+                    distanceMin = 800;
+                }
 
-                    if (kps >= 100 )
+
+                if (addressSDB != null) {
+                    int kps = addressSDB.kps;
+                    if (kps >= 100)
                         validTime = 60 * 60;
                     else if (kps >= 70)
                         validTime = 40 * 60;
                     else
                         validTime = validTime * 60;
 
-                }
-
-                if (addressSDB != null) {
                     coordAddrX = addressSDB.locationXd;
                     coordAddrY = addressSDB.locationYd;
                 } else {
+                    validTime = validTime * 60;
                     try {
                         if (wpDataDB != null) {
                             coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
