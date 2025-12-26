@@ -92,16 +92,16 @@ sealed class ContextMenuAction(val title: String) {
     data object RejectAddress : ContextMenuAction("Отказаться от этого адреса")
     data object RejectClient : ContextMenuAction("Отказаться от этого клиента")
     data object RejectByType : ContextMenuAction("Отказаться от такого типа работ")
-    data object OpenVisit : ContextMenuAction("Открыть посещение")
+    data object OpenVisit : ContextMenuAction("Відкрити відвідування")
     data object OpenOrder : ContextMenuAction("Информация об этом заказе")
     data object AskMoreMoney : ContextMenuAction("Попросить больше денег")
     data object Feedback : ContextMenuAction("Обратная связь")
     data object ConfirmAcceptOneTime : ContextMenuAction("Выполнить один раз")
     data object ConfirmAcceptInfinite : ContextMenuAction( "Выполнять регулярно")
-    data object ConfirmAllAcceptOneTime : ContextMenuAction("Выполнить один раз все работы по %sклиента этому адресу")
-    data object ConfirmAllAcceptInfinite : ContextMenuAction( "Выполнять регулярно все работы по %sклиента этому адресу")
+    data object ConfirmAllAcceptOneTime : ContextMenuAction("Выполнить один раз все работы по %s клиента этому адресу")
+    data object ConfirmAllAcceptInfinite : ContextMenuAction( "Выполнять регулярно все работы по %s клиента этому адресу")
     data object OpenSMSPlanDirectory : ContextMenuAction("Просмотреть журнал заявок")
-    data object Close : ContextMenuAction("Закрыть")
+    data object Close : ContextMenuAction("Закрити")
 }
 
 
@@ -372,7 +372,7 @@ fun ContextMenuDialog(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = if (!isMultiClient) "Выберите действие для клиента:" else "Выберите действие для клиентов:",
+                    text = if (!isMultiClient) "Виберіть дію для клієнта:" else "Виберіть дію для клієнтів:",
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -385,7 +385,7 @@ fun ContextMenuDialog(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Text(
-                    text = "по адресу: ${wpDataDB.addr_txt}",
+                    text = "за адресою: ${wpDataDB.addr_txt}",
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     modifier = Modifier.padding(horizontal = 16.dp)
