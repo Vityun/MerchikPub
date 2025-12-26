@@ -1,18 +1,16 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.RealmResults
 import org.json.JSONObject
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
-import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
-import ua.com.merchik.merchik.data.RealmModels.UsersDB
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -21,11 +19,9 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
-import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
-import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
-import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -43,8 +39,56 @@ class TovarDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = TovarDB::class
 
+    override fun getFieldsForCommentsImage(): List<String>? {
+        return when (contextUI) {
+            ContextUI.TOVAR_FROM_TOVAR_TABS -> ("nm, barcode" +
+//                    ", manufacturerId" +
+                    "").split(",").map { it.trim() }
+
+            else -> null
+        }
+    }
+
+    override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+//        super.onClickItemImage(clickedDataItemUI, context)
+        Log.e("!!!!!!!!!", "++++")
+        val tovar =
+            (clickedDataItemUI.rawObj.firstOrNull { it is TovarDB } as? TovarDB)
+        tovar?.let {
+            val tovId = tovar.getiD().toInt()
+
+            val stackPhotoDB = RealmManager.getTovarPhotoByIdAndType(tovId, tovar.photoId, 18, true)
+
+            if (stackPhotoDB != null)
+                if (stackPhotoDB.getPhoto_num() != null && stackPhotoDB.getPhoto_num() != "") {
+                    Log.e(
+                        "ФОТО_ТОВАРОВ",
+                        "displayFullSizeTovarPhotoDialog: " + Uri.parse(stackPhotoDB.getPhoto_num())
+                    )
+
+                    val dialogPhotoTovar = DialogPhotoTovar(context)
+
+                    dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()))
+
+                    val sb = StringBuilder()
+                    sb.append("Штрихкод: ").append(tovar.barcode).append("\n")
+                    sb.append("Артикул: ").append(getArticle(tovar, 0))
+
+                    dialogPhotoTovar.setPhotoBarcode(tovar.barcode)
+                    dialogPhotoTovar.setTextInfo(sb)
+
+                    dialogPhotoTovar.setClose { dialogPhotoTovar.dismiss() }
+                    dialogPhotoTovar.show()
+
+                    Log.e("ФОТО_ТОВАРОВ", "Вроде отобразил диалог")
+                } else
+                    super.onClickItemImage(clickedDataItemUI, context)
+        }
+    }
+
     override fun updateFilters() {
-        val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
+        val codeDad2 =
+            Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
         val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
         val filterTovarDB = ItemFilter(
             "Доп. фильтр",
@@ -89,25 +133,33 @@ class TovarDBViewModel @Inject constructor(
 
     override suspend fun getItems(): List<DataItemUI> {
         return try {
-            val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
+            val codeDad2 =
+                Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
             val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
             repository.toItemUIList(TovarDB::class, data, contextUI, 18)
                 .map {
                     when (contextUI) {
                         ContextUI.TOVAR_FROM_ACHIEVEMENT -> {
-                            val selected = (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()?.toIntOrNull() == AchievementDataHolder.instance().tovarId
+                            val selected =
+                                (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
+                                    ?.toIntOrNull() == AchievementDataHolder.instance().tovarId
                             it.copy(selected = selected)
                         }
+
                         ContextUI.DEFAULT -> {
                             val selected = FilteringDialogDataHolder.instance()
                                 .filters
                                 ?.items
                                 ?.firstOrNull { it.clazz == table }
                                 ?.rightValuesRaw
-                                ?.contains((it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD().toString())
+                                ?.contains((it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
+                                    .toString())
                             it.copy(selected = selected == true)
                         }
-                        else -> { it }
+
+                        else -> {
+                            it
+                        }
                     }
                 }
         } catch (e: Exception) {
@@ -123,9 +175,10 @@ class TovarDBViewModel @Inject constructor(
                     AchievementDataHolder.instance().tovarName = it.nm
                 }
             }
+
             ContextUI.DEFAULT -> {
                 FilteringDialogDataHolder.instance().filters.apply {
-                    this?.let {filters ->
+                    this?.let { filters ->
                         filters.items = filters.items.map { itemFilter ->
                             if (itemFilter.clazz == table) {
                                 val rightValuesRaw = mutableListOf<String>()
@@ -147,6 +200,7 @@ class TovarDBViewModel @Inject constructor(
                     }
                 }
             }
+
             else -> {}
         }
     }

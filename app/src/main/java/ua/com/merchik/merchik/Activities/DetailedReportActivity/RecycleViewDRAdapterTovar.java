@@ -374,7 +374,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         /*
         Получаем значение артикула товара
         mode -- Добавлять перед значением "Арт:" или нет*/
-        private String getArticle(TovarDB tovar, int mode) {
+        public static String getArticle(TovarDB tovar, int mode) {
             try {
                 StringBuilder res = new StringBuilder();
                 ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));

@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +45,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -106,6 +106,8 @@ public class DetailedReportTovarsFrag extends Fragment {
     RecycleViewDRAdapterTovar adapter;
 
     private boolean flag = true;
+
+    private ComposeView composeView;
 
     private List<TovarDB> tovarDBListFromServer = new ArrayList<>();
 
@@ -251,7 +253,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
 
 //        if (tasksAndReclamationsSDB == null) {
-//            ComposeView composeView = v.findViewById(R.id.compose_view_tovar);
+//            composeView = v.findViewById(R.id.compose_view_tovar);
 //            ConstraintLayout layoutTovar = v.findViewById(R.id.constraint_tovar);
 //            composeView.setVisibility(View.VISIBLE);
 //            layoutTovar.setVisibility(View.GONE);
@@ -287,19 +289,24 @@ public class DetailedReportTovarsFrag extends Fragment {
                     this.clientId = wpDataDB.getClient_id();
                     this.addressId = wpDataDB.getAddr_id();
 
-                    setPopup();
-
                     downloadData();
-                    addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
 
-                    setFabVideo(this::showYouTubeFab);
-                    showYouTubeFab();
+                    if (composeView != null && composeView.getVisibility() == View.VISIBLE)
+                        ComposeFunctions.setContentTovarData(composeView, wpDataDB);
+                    else {
+                        setPopup();
+                        addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+                        setFabVideo(this::showYouTubeFab);
+                        showYouTubeFab();
+                    }
+
                 }
             });
         else {
             setPopup();
 
             downloadData();
+
             addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
 
             setFabVideo(this::showYouTubeFab);

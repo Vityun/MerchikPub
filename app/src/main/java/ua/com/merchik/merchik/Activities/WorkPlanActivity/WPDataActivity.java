@@ -14,10 +14,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.compose.runtime.Composer;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -28,11 +26,7 @@ import com.google.android.material.tabs.TabLayout;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreenKt;
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -41,14 +35,9 @@ import ua.com.merchik.merchik.RecycleViewWPAdapter;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @AndroidEntryPoint
 public class WPDataActivity extends toolbar_menus {
@@ -132,7 +121,7 @@ public class WPDataActivity extends toolbar_menus {
         textLesson = 8718;
         videoLesson = 8719;
 
-        ComposeFunctions.setContentTabs(composeView);
+        ComposeFunctions.setContentTabsWpData(composeView);
 
 //        ComposeFunctions.setContentWpData(this, composeView);
 

@@ -104,41 +104,14 @@ public class OptionControlTwoWorkInOneDay<T> extends OptionControl {
         spannableStringBuilder.clear();
 
         // Текущий старт (СЕКУНДЫ)
-        long currentStartSec = wpDataDB != null ? wpDataDB.getVisit_start_dt() : 0L;
+        long currentStartSec;
+        if (wpDataDB != null && wpDataDB.getVisit_start_dt() > 0)
+            currentStartSec = wpDataDB.getVisit_start_dt();
+        else
+            currentStartSec = System.currentTimeMillis() / 1000;
 
         // День текущего визита (по факту старта)
         LocalDate day = unixSecondsToLocalDateSafe(currentStartSec, wpDataDB != null ? wpDataDB.getDt() : null);
-
-//        if (day == null || currentStartSec <= 0) {
-//            // В 1С в новом варианте этого кейса нет, но в приложении лучше не падать.
-//            massageToUser = "Немає данних для аналізу (не можу визначити час початку робіт).";
-//
-//            // Если хочешь — можешь оставить старые исключения, но имей в виду:
-//            // в новом 1С они не фигурируют.
-//            if (fot != 0 || dot != 0) {
-//                massageToUser += " Зроблено виключення для випадку ДОТ/ФОТ.\n";
-//                signal = false;
-//            } else if (theme != TEMA_998) {
-//                massageToUser += " Роботи виконувались по Темі " + theme + ". Зроблено виключення.\n";
-//                signal = false;
-//            } else {
-//                signal = true;
-//            }
-//
-//            spannableStringBuilder.append(massageToUser);
-//            RealmManager.INSTANCE.executeTransaction(realm -> {
-//                if (optionDB != null) {
-//                    optionDB.setIsSignal(signal ? "1" : "2");
-//                    realm.insertOrUpdate(optionDB);
-//                }
-//            });
-//
-//            setIsBlockOption(signal);
-//            checkUnlockCode(optionDB);
-//
-//            Log.d("test", "massageToUser: " + massageToUser);
-//            return;
-//        }
 
         ZoneId zone = ZoneId.systemDefault();
         long dayStartSec = day.atStartOfDay(zone).toEpochSecond();

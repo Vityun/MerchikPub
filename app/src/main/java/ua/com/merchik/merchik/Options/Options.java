@@ -101,7 +101,44 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
-import ua.com.merchik.merchik.Options.Controls.*;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityOfPrices;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkDetailedReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkPhotoReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckTovarUp;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingForAnAchievement;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingPercentageOfShelfSpaceDPPO;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
+import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
+import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
+import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
+import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
+import ua.com.merchik.merchik.Options.Controls.OptionControlOverTimelinessOfReporting;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
+import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
+import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockTovarLeft;
+import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlTwoWorkInOneDay;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -202,8 +239,8 @@ public class Options {
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
 
             if (optionControlId == 165276 || optionControlId == 84005
-                    || optionControlId == 84967 || optionControlId == 164985 )
-                Log.e("!!!","+");
+                    || optionControlId == 84967 || optionControlId == 164985)
+                Log.e("!!!", "+");
 
             OptionMassageType newOptionType = new OptionMassageType();
             switch (mode) {
@@ -1292,7 +1329,10 @@ public class Options {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
                                 msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
-                        optionSumRes += wp.getCash_zakaz() * 0.08;
+                        if (item.getOptionControlId().equals("84006"))
+                            optionSumRes += wp.getCash_zakaz() * 0.16;
+                        else
+                            optionSumRes += wp.getCash_zakaz() * 0.08;
                     }
                 }
 

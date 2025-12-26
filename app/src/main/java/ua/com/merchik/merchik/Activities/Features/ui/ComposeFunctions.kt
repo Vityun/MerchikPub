@@ -2,25 +2,13 @@
 
 package ua.com.merchik.merchik.Activities.Features.ui
 
-import android.content.Context
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.CommentViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionAndCommentView
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.TovarTabs
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreen
-import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.ModeUI
-import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
-import ua.com.merchik.merchik.features.main.Main.MainUI
 
 
 fun setContentOpinion(
@@ -36,11 +24,22 @@ fun setContentOpinion(
 }
 
 
-fun setContentTabs(
+fun setContentTabsWpData(
     composeView: ComposeView
     ) {
     composeView.setContent {
         WpDataTabsScreen()
+
+    }
+}
+
+
+fun setContentTovarData(
+    composeView: ComposeView,
+    wpDataDB: WpDataDB
+) {
+    composeView.setContent {
+        TovarTabs(wpDataDB)
 
     }
 }

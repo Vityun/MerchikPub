@@ -17,6 +17,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
+import ua.com.merchik.merchik.features.main.LogMPDBOverride.formatLocationUniqueToDms
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -437,6 +438,12 @@ object TovarDBOverride {
         "width" -> 5976
         else -> null
     }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "weight_gr" -> "ФП/ЦВКДОШАНП"
+        else -> value.toString()
+    }
+
 }
 
 object UsersSDBOverride {
@@ -522,17 +529,6 @@ object UsersSDBOverride {
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
-//        "obj_id" -> {
-//            if (jsonObject.get("obj_id").toString().contains("20"))
-//                MerchModifier(
-//                    fontStyle = FontStyle.Italic,
-//                    background = Color.Red,
-//                    alignment = Alignment.End,
-//                    weight = 1f
-//                )
-//            else
-//                MerchModifier(fontStyle = FontStyle.Italic)
-//        }
 
         "tel", "tel2" -> {
             MerchModifier(fontStyle = FontStyle.Italic)
