@@ -305,6 +305,7 @@ public class AdditionalRequirementsRealm {
 
         return result;
     }
+
     /**
      * 07.03.23.
      * Режим работы функции "getData3". В зависимости от енума - данные будут или скрываться или нет.
@@ -545,6 +546,19 @@ public class AdditionalRequirementsRealm {
         return res;
     }
 
+    public static List<AdditionalRequirementsDB> getADByClientAllAndDateEnd(String clientId, String themeId, Date date) {
+        List<AdditionalRequirementsDB> res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .equalTo("themeId", themeId)
+                .beginGroup()
+                .isNull("dtEnd")
+                .or()
+                .greaterThanOrEqualTo("dtEnd", date)
+                .endGroup()
+                .findAll();
+        if (res != null) res = INSTANCE.copyFromRealm(res);
+        return res;
+    }
 
     /**
      * 20.09.2022

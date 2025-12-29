@@ -65,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -1843,6 +1844,8 @@ fun ItemUI(
                             .border(1.dp, Color.LightGray)
                             .background(Color.White)
                             .align(alignment = Alignment.Top)
+                            .clipToBounds(),
+                        contentAlignment = Alignment.Center
                     ) {
                         val images = mutableListOf<Painter>()
                         if (item.images.isNullOrEmpty()) {
@@ -1863,10 +1866,10 @@ fun ItemUI(
                             Image(
                                 painter = images[0],
                                 modifier = Modifier
-                                    .padding(5.dp)
+                                    .padding(2.dp)
                                     .size(100.dp)
                                     .clickable { onClickItemImage(item) },
-                                contentScale = ContentScale.FillWidth,
+                                contentScale = ContentScale.Fit,
                                 contentDescription = null
                             )
                         } else {
@@ -1875,10 +1878,10 @@ fun ItemUI(
                                     Image(
                                         painter = image,
                                         modifier = Modifier
-                                            .padding(5.dp)
+                                            .padding(2.dp)
                                             .size(100.dp)
                                             .clickable { onClickItemImage(item) },
-                                        contentScale = ContentScale.FillWidth,
+                                        contentScale = ContentScale.Fit,
                                         contentDescription = null
                                     )
                                 }

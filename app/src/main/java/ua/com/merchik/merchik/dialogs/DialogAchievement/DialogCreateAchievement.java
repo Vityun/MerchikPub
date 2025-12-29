@@ -70,7 +70,7 @@ public class DialogCreateAchievement {
 
     private Dialog dialog;
     private Context context;
-//    private WpDataDB wpDataDB;
+    private WpDataDB wpDataDB;
 
     private int addressId, userId;
     private long codeDad2;
@@ -132,7 +132,8 @@ public class DialogCreateAchievement {
                 bundle.putString("viewModel", AdditionalRequirementsDBViewModel.class.getCanonicalName());
                 bundle.putString("contextUI", ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-                bundle.putString("dataJson", new Gson().toJson(clientId));
+//                bundle.putString("dataJson", new Gson().toJson(clientId));
+                bundle.putString("dataJson", new Gson().toJson(wpDataDB));
                 bundle.putString("title", "Предложение");
                 bundle.putString("subTitle", "Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов");
                 intent.putExtras(bundle);
@@ -725,6 +726,7 @@ public class DialogCreateAchievement {
     public void setData(WpDataDB wpDataDB) {
         AchievementDataHolder.Companion.instance().init();
 
+        this.wpDataDB = wpDataDB;
         userId = wpDataDB.getUser_id();
         userTxt = wpDataDB.getUser_txt();
         addressId = wpDataDB.getAddr_id();

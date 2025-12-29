@@ -413,7 +413,7 @@ object SamplePhotoSDBOverride {
 object TovarDBOverride {
     fun getHidedFieldsOnUI(): String =
         "barcode, client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +
-                "height, ID, manufacturer_id, photo_id, related_tovar_id, width, sortcol"
+                "height, ID, manufacturer_id, photo_id, related_tovar_id, width, sortcol, manufacturer"
 
     fun getFieldFirstImageUI(): String = "photo_id"
 
@@ -440,7 +440,7 @@ object TovarDBOverride {
     }
 
     fun getValueUI(key: String, value: Any): String = when (key) {
-        "weight_gr" -> "ФП/ЦВКДОШАНП"
+//        "weight_gr" -> "ФП/ЦВКДОШАНП"
         else -> value.toString()
     }
 

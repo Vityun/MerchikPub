@@ -54,17 +54,18 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
             ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS ->
                 ("addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
                         "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
-                        "tovar_id, user_id, option_id, client_id, color").split(",")
+                        "tovar_id, user_id, option_id, client_id, color, main_option_id, amount_min, amount_max").split(",")
 
             else -> null
         }
     }
 
     override fun updateFilters() {
+        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
         when (contextUI) {
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
-                val clientId = Gson().fromJson(dataJson, String::class.java)
-                val client = CustomerRealm.getCustomerById(clientId)
+                val client = CustomerRealm.getCustomerById(wpDataDB.client_id)
                 val filterCustomerSDB = ItemFilter(
                     "Клиент",
                     CustomerSDB::class,
@@ -104,7 +105,6 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
             }
 
             ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
-                val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
                 var ttCategory: Int? = null
                 val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
@@ -176,11 +176,14 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
+        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
         return try {
             when (contextUI) {
                 ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
-                    val clientId = Gson().fromJson(dataJson, String::class.java)
-                    val data = AdditionalRequirementsRealm.getADByClientAll(clientId, "1253")
+                    val clientId = wpDataDB.client_id
+                    val date = wpDataDB.dt
+                    val data = AdditionalRequirementsRealm.getADByClientAllAndDateEnd(clientId, "1253", date)
                     repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI, null)
                         .map {
                             val selected =
@@ -190,7 +193,6 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 }
 
                 ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
-                    val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
                     var ttCategory: Int? = null
                     val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)

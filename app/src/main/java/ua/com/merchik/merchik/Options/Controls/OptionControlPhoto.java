@@ -275,85 +275,108 @@ public class OptionControlPhoto<T> extends OptionControl {
 // ВАЖНО: этот блок должен выполняться ДО основной проверки (до выставления signal),
 // иначе будет рассинхрон с 1С.
 
-        if (optionId.equals("158609") || optionId.equals("169109")) {
+        if ("158609".equals(optionId) || "169109".equals(optionId)) {
+
             List<AdditionalRequirementsDB> osvList =
                     AdditionalRequirementsRealm.getDocumentAdditionalRequirementsForDMP(
                             document,
-                            false,                          // =0 только НЕ удаленные (аналог коммента в 1С)
+                            false, // =0 только НЕ удаленные (как коммент в 1С)
                             Integer.parseInt(optionId),
                             null,
                             wpDataDB.getDt(), wpDataDB.getDt(),
                             null, null, null, null
                     );
-            if (!osvList.isEmpty()) {
-                int currentAddrId = wpDataDB.getAddr_id();
-                int currentGrpId = addressSDB.tpId; // "Сеть/Группа"
 
-                boolean foundByAddr = false;
-                boolean foundByGrp = false;
+            if (osvList != null && !osvList.isEmpty()) {
 
+                final int currentAddrId = wpDataDB.getAddr_id();
+                final int currentGrpId  = addressSDB.tpId; // "Сеть/Группа"
+
+                // 1) Аналог ВсеСетиАдреса:
+                //    ищем строку, которая относится ко ВСЕМ Адрес+Сеть (и Адрес пустой, и Сеть пустая)
+                boolean allAddrAndGrp = false;
                 for (AdditionalRequirementsDB r : osvList) {
-                    int addrId = parseIntSafe(r.getAddrId());
-                    int grpId = parseIntSafe(r.getGrpId());
+                    int addrId = parseIntSafe(r.getAddrId()); // если null/"" -> 0
+                    int grpId  = parseIntSafe(r.getGrpId());  // если null/"" -> 0
 
-                    // аналог: НайтиЗначение(Адр.Код,"Адр","Адр")
-                    if (addrId == currentAddrId) {
-                        foundByAddr = true;
+                    // 1С: (ПустоеЗначение(ТзнОСВ.Грп)=1) и (ПустоеЗначение(ТзнОСВ.Адр)=1)
+                    if (addrId == 0 && grpId == 0) {
+                        allAddrAndGrp = true;
                         break;
                     }
-                    // аналог: НайтиЗначение(Адр.Сеть,"Спр","Грп")
-                    // (как запись "по сети": addrId==0 и grpId==currentGrpId)
-                    if (addrId == 0 && grpId == currentGrpId) {
-                        foundByGrp = true;
-                        // не break — вдруг есть точный addrId, но обычно можно и break
-                    }
                 }
-                // 1С: Если найдено по сети, и по адресу => Продолжить (проверку не делаем)
-                if (foundByAddr && foundByGrp) {
-                    //сбросить требования/мин и убрать сигнал
-                    m = 0;
-                    signal = false;
-                    spannableStringBuilder
-                            .append("\nВідповідно до ДВ ")
-                            .append(photoTypeName)
-                            .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась.");
+
+                // 2) Если ДВ НЕ для всех Адрес/Сеть — проверяем, есть ли текущая Сеть или текущий Адрес в ДВ.
+                if (!allAddrAndGrp) {
+                    boolean foundGrp  = false; // 1С: НайтиЗначение(Грп...) <> 0
+                    boolean foundAddr = false; // 1С: НайтиЗначение(Адр...) <> 0
+
+                    for (AdditionalRequirementsDB r : osvList) {
+                        int addrId = parseIntSafe(r.getAddrId());
+                        int grpId  = parseIntSafe(r.getGrpId());
+
+                        if (grpId == currentGrpId)  foundGrp  = true;
+                        if (addrId == currentAddrId) foundAddr = true;
+
+                        if (foundGrp || foundAddr) break; // достаточно любого совпадения
+                    }
+
+                    // 1С: Если (НайтиЗначение(Грп)=0) и (НайтиЗначение(Адр)=0) Тогда ... (проверка не выполнялась)
+                    if (!foundGrp && !foundAddr) {
+                        m = 0;
+                        signal = false;
+
+                        spannableStringBuilder
+                                .append("\nЗгідно ДВ ")
+                                .append(photoTypeName)
+                                .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась.");
+                    }
                 }
             }
         }
 
-//        if ((signal && optionId.equals("158609")) || (signal && optionId.equals("169109"))) {
-////            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), Integer.parseInt(optionId));
-////            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
-//            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirementsForDMP(document, false, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
-//            if (!additionalRequirementsDBList.isEmpty()) {
-//                // Инициализируем флаги для поиска
-//                boolean hasAddrOrGrp = false;
+//        if (optionId.equals("158609") || optionId.equals("169109")) {
+//            List<AdditionalRequirementsDB> osvList =
+//                    AdditionalRequirementsRealm.getDocumentAdditionalRequirementsForDMP(
+//                            document,
+//                            false,                          // =0 только НЕ удаленные (аналог коммента в 1С)
+//                            Integer.parseInt(optionId),
+//                            null,
+//                            wpDataDB.getDt(), wpDataDB.getDt(),
+//                            null, null, null, null
+//                    );
+//            if (!osvList.isEmpty()) {
+//                int currentAddrId = wpDataDB.getAddr_id();
+//                int currentGrpId = addressSDB.tpId; // "Сеть/Группа"
 //
-//                for (AdditionalRequirementsDB additionalRequirementsDB : additionalRequirementsDBList) {
-////                promotionalTov.add(additionalRequirementsDB.getTovarId());
-//                    if (Integer.parseInt(additionalRequirementsDB.getAddrId()) == (wpDataDB.getAddr_id())
-//                    ) {
-//                        hasAddrOrGrp = true;
-//                        break;
-//                    } else if (
-//                            Integer.parseInt(additionalRequirementsDB.getAddrId()) == 0 &&
-//                                    Integer.parseInt(additionalRequirementsDB.getGrpId()) == (addressSDB.tpId)
-//                    ) {
-//                        hasAddrOrGrp = true;
+//                boolean foundByAddr = false;
+//                boolean foundByGrp = false;
+//
+//                for (AdditionalRequirementsDB r : osvList) {
+//                    int addrId = parseIntSafe(r.getAddrId());
+//                    int grpId = parseIntSafe(r.getGrpId());
+//
+//                    // аналог: НайтиЗначение(Адр.Код,"Адр","Адр")
+//                    if (addrId == currentAddrId) {
+//                        foundByAddr = true;
 //                        break;
 //                    }
+//                    // аналог: НайтиЗначение(Адр.Сеть,"Спр","Грп")
+//                    // (как запись "по сети": addrId==0 и grpId==currentGrpId)
+//                    if (addrId == 0 && grpId == currentGrpId) {
+//                        foundByGrp = true;
+//                        // не break — вдруг есть точный addrId, но обычно можно и break
+//                    }
 //                }
-//                // Логика обработки
-//                if (hasAddrOrGrp) {
-//                    // ОСВ найдены для этой Сети/Адреса
-//                    // Выполняем дальнейшую проверку
-//                    Log.e("GOOD", "++");
-//                } else {
-//                    // 22.09.2025 кол мин сбрасываю в 0
+//                // 1С: Если найдено по сети, и по адресу => Продолжить (проверку не делаем)
+//                if (foundByAddr && foundByGrp) {
+//                    //сбросить требования/мин и убрать сигнал
 //                    m = 0;
 //                    signal = false;
-//                    spannableStringBuilder.append("\nВідповідно до ДВ ").append(photoTypeName)
-//                            .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
+//                    spannableStringBuilder
+//                            .append("\nВідповідно до ДВ ")
+//                            .append(photoTypeName)
+//                            .append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась.");
 //                }
 //            }
 //        }
