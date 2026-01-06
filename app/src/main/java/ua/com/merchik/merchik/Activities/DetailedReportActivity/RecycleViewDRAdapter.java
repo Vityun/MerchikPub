@@ -1230,12 +1230,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             UsersSDB users = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
             if (users != null) {
-                float shtraf = 0.32f;
+                float shtraf = 0.308f;
                 if (users.last_ekl_date != null) {
                     long ekl_date = convertDateToSeconds(users.last_ekl_date);
                     long countDay = startDt - (DAYS * 24 * 60 * 60);
                     if (ekl_date != -1 && ekl_date > countDay)
-                        shtraf = 0.16f;
+                        shtraf = 0.154f;
                 }
                 res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
                 res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");

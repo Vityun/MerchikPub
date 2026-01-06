@@ -5,8 +5,10 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -24,7 +26,9 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolde
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
+import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -47,6 +51,27 @@ class TovarDBViewModel @Inject constructor(
 
             else -> null
         }
+    }
+
+    override fun getDefaultHideFieldsForCards(): List<String> {
+        return ("manufacturer, ID").split(",").map { it.trim() }
+    }
+
+    override fun onClickItem(itemUI: DataItemUI, context: Context) {
+        super.onClickItem(itemUI, context)
+        viewModelScope.launch {
+            Log.e("!!!!!","onClickItem+++++++++")
+            _events.emit(
+                MainEvent.ShowCardItemsDialog(
+                    cardItemsData = CardItemsData(
+                        dateItemUI = itemUI,
+                        title = "Товари"
+                    )
+                )
+            )
+
+        }
+
     }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {

@@ -27,7 +27,6 @@ import com.google.android.gms.maps.model.LatLngBounds
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
-import ua.com.merchik.merchik.features.maps.domain.distanceMeters
 import ua.com.merchik.merchik.features.maps.domain.formatSum
 import ua.com.merchik.merchik.features.maps.domain.haversine
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon

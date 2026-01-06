@@ -103,6 +103,7 @@ public class Globals {
 
     public static final String APP_PREFERENCES = "mysettings";
     public static final String APP_OFFSET_SIZE_FONTS = "app_offset_size_fonts";
+    public static final String APP_OFFSET_DISTANCE_METERS = "app_offset_distance_meters";
     public static final String APP_PREFERENCES_REALM = "realm";
 
     public static int OTDEL_KADROV_USER_ID = 0;

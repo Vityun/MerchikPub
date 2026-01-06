@@ -2350,6 +2350,19 @@ public class Exchange {
         Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer", "convertedObject: " + convertedObject);
 
         if (data != null && data.data.size() > 0) {
+            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            test.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.e("DIGEUECYYGRFVUA","+++");
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.e("DIGEUECYYGRFVUA","---");
+
+                }
+            });
             Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<WpDataUpdateResponse>() {
                 @Override

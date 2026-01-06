@@ -44,6 +44,7 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     @SerializedName("manufacturer_id")
     @Expose
     private String manufacturerId;
+
     private TradeMarkDB manufacturer;
     @SerializedName("barcode")
     @Expose

@@ -45,9 +45,7 @@ import ua.com.merchik.merchik.dataLayer.model.TextField
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
-/*
-TODO добавить, что бы рисовались только те поля которые прошли фильтр, в теори и поднимит производительность в разы
- */
+
 @Composable
 fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
 //    Globals.writeToMLOG("INFO", "MainUI.ItemUI.ItemFieldValue","visibilityField: ${visibilityField == View.VISIBLE} | " +

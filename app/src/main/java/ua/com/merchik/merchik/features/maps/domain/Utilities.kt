@@ -5,6 +5,41 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import kotlin.math.roundToInt
 
 
+import android.location.Location
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+
+data class GeoPoint(val lat: Double, val lon: Double)
+
+fun parseWpPoint(wp: WpDataDB): GeoPoint? {
+    val lat = wp.addr_location_xd?.trim()?.replace(",", ".")?.toDoubleOrNull()
+    val lon = wp.addr_location_yd?.trim()?.replace(",", ".")?.toDoubleOrNull()
+    if (lat == null || lon == null) return null
+    // простая валидация
+    if (lat !in -90.0..90.0) return null
+    if (lon !in -180.0..180.0) return null
+    return GeoPoint(lat, lon)
+}
+
+fun distanceMeters(from: Location, to: GeoPoint): Float {
+    val results = FloatArray(1)
+    Location.distanceBetween(from.latitude, from.longitude, to.lat, to.lon, results)
+    return results[0]
+}
+
+fun filterByDistance(
+    current: Location,
+    items: List<WpDataDB>,
+    maxDistanceMeters: Float
+): List<WpDataDB> {
+    return items
+        .mapNotNull { wp ->
+            val p = parseWpPoint(wp) ?: return@mapNotNull null
+            val d = distanceMeters(current, p)
+            if (d <= maxDistanceMeters) wp else null
+        }
+}
+
+
 fun isValidLatLon(lat: Double?, lon: Double?): Boolean =
     lat != null && lon != null && lat in -90.0..90.0 && lon in -180.0..180.0 && !(lat == 0.0 && lon == 0.0)
 
@@ -64,3 +99,5 @@ fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Doub
     val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
     return R * c
 }
+
+

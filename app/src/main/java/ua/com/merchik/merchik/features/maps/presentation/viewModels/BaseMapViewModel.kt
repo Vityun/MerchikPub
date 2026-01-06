@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.features.maps.presentation.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.realm.kotlin.types.geo.Distance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,13 +19,15 @@ import ua.com.merchik.merchik.features.maps.presentation.*
 abstract class BaseMapViewModel(
     private val filterUC: FilterAndSortItemsUC,
     private val buildUC: BuildMapPointsUC,
-    private val makeUiUC: MakePointUiUC,
-    protected val radiusMeters: Double
+    private val makeUiUC: MakePointUiUC
 ) : ViewModel() {
 
 
     private val _state = MutableStateFlow(MapState())
     val state: StateFlow<MapState> = _state
+
+    private val _radiusMeters = MutableStateFlow(5_000.0f)
+    val radiusMeters: StateFlow<Float> = _radiusMeters
 
 
     // ❗️Без буфера и без реплея, чтобы не тянуть старые эффекты
@@ -41,6 +44,10 @@ abstract class BaseMapViewModel(
 
     private var didAutoCenter = false
     private var currentSessionId: Long = 0L     // 👈 текущая сессия
+
+    fun setDistance(distance: Float){
+        _radiusMeters.value = distance
+    }
 
     fun process(intent: MapIntent) {
         _state.update { MapReducer.reduce(it, intent) }
@@ -63,7 +70,7 @@ abstract class BaseMapViewModel(
         val filtered =
             filterUC(i.items, i.filters, i.sorting, i.grouping, i.rangeStartLocalDate, i.rangeEndLocalDate, i.search).items
         val (center, points, badges) = buildUC(filtered)
-        val pointsUi = makeUiUC(center, points, badges, radiusMeters)
+        val pointsUi = makeUiUC(center, points, badges, radiusMeters.value.toDouble())
 
 
         _state.update {

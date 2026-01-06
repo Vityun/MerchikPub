@@ -94,6 +94,12 @@ public class LogMPRealm {
         return INSTANCE.copyFromRealm(results);
     }
 
+    public static LogMPDB getLatestLogMP() {
+        return INSTANCE.where(LogMPDB.class)
+                .sort("CoordTime", Sort.DESCENDING)
+                .findFirst();
+    }
+
     /**
      * Нормализует время к миллисекундам.
      * Если значение слишком большое для миллисекунд (микросекунды), делим на 1000.
@@ -110,5 +116,6 @@ public class LogMPRealm {
             return time; // уже миллисекунды
         }
     }
+
 
 }

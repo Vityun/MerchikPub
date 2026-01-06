@@ -2,19 +2,19 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.content.Context
+import android.location.Location
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.Realm
-import io.realm.Sort
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -24,12 +24,17 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.features.main.Main.*
+import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.ItemFilter
+import ua.com.merchik.merchik.features.main.Main.MainEvent
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
+import ua.com.merchik.merchik.features.maps.domain.filterByDistance
+import ua.com.merchik.merchik.trecker
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -57,7 +62,9 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(",")
+        return "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(
+            ","
+        )
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
@@ -157,8 +164,10 @@ class WpDataDBViewModel @Inject constructor(
                             list
                         }
                     }
-                val dataUniqAdress = data.distinctBy { it.addr_id }
-                val client = RoomManager.SQL_DB.customerDao().all
+                val dataUniqAdress =
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) data.distinctBy { it.addr_id } else emptyList()
+                val client =
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RoomManager.SQL_DB.customerDao().all else emptyList()
                 val filterUsersSDB = ItemFilter(
                     "Виконавець",
                     UsersSDB::class,
@@ -185,7 +194,7 @@ class WpDataDBViewModel @Inject constructor(
                     "addr_txt",
                     dataUniqAdress.map { it.addr_txt.toString() },
                     dataUniqAdress.map { it.addr_txt },
-                    enabled = true
+                    enabled = false
                 )
 
                 val filterClientSDB = ItemFilter(
@@ -244,7 +253,7 @@ class WpDataDBViewModel @Inject constructor(
                     "status",
                     data.map { it.status.toString() }.distinct(),
                     data.map { it.statusComment }.distinct(),
-                    enabled = true
+                    enabled = false
                 )
 
                 filters = Filters(
@@ -288,18 +297,43 @@ class WpDataDBViewModel @Inject constructor(
 
 
     override suspend fun getItems(): List<DataItemUI> {
-        Log.e("!!!!!!TEST!!!!!!","getItems: start")
+        Log.e("!!!!!!TEST!!!!!!", "getItems: start")
         val raw: List<WpDataDB> = when (contextUI) {
+
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
-                Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER")
-                RealmManager.getAllWorkPlanForRNO()
+                val data = RealmManager.getAllWorkPlanForRNO()
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
                     ?: emptyList()
+
+                Globals.writeToMLOG(
+                    "INFO",
+                    "WpDataDBViewModel.getItems",
+                    "ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER"
+                )
+                var location: Location? = null
+                if (trecker.imHereGPS != null) {
+                    location = trecker.imHereGPS
+                } else if (trecker.imHereNET != null) {
+                    location = trecker.imHereNET
+                } else if (context != null) {
+                    val client = LocationServices.getFusedLocationProviderClient(context!!)
+                    val last = runCatching { client.lastLocation.await() }.getOrNull()
+                    location = last
+                }
+                if (location != null)
+                    filterByDistance(location, data, offsetDistanceMeters.value)
+                else
+                    data
+
             }
 
             else -> {
-                Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","ContextUI is not WP_DATA_ADDITIONAL_IN_CONTAINER")
+                Globals.writeToMLOG(
+                    "INFO",
+                    "WpDataDBViewModel.getItems",
+                    "ContextUI is not WP_DATA_ADDITIONAL_IN_CONTAINER"
+                )
                 RealmManager.getAllWorkPlanWithOutRNO()
                     ?.takeIf { it.isNotEmpty() }
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
@@ -343,12 +377,12 @@ class WpDataDBViewModel @Inject constructor(
             state.sortingFields
                 .filter { it.group && !it.key.isNullOrBlank() }
                 .map { it.key!! }
-        if (groupingKeys.isEmpty()){
+        if (groupingKeys.isEmpty()) {
 
         }
 
         // 3) Тяжёлое преобразование тоже на IO
-        Globals.writeToMLOG("INFO","WpDataDBViewModel.getItems","raw size: ${raw.size}")
+        Globals.writeToMLOG("INFO", "WpDataDBViewModel.getItems", "raw size: ${raw.size}")
         return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
 
     }

@@ -18,6 +18,5 @@ class MapFromMapsViewModel @Inject constructor(
 ) : BaseMapViewModel(
     filterUC = filterUC,
     buildUC = buildUC,
-    makeUiUC = makeUiUC,
-    radiusMeters = Globals.distanceMin.toDouble()
+    makeUiUC = makeUiUC
 )

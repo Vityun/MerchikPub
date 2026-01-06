@@ -2,10 +2,12 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP
 import ua.com.merchik.merchik.Options.Options
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
@@ -17,9 +19,9 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm
-import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.DialogMap
+import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -33,6 +35,8 @@ class LogMPDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class
+
+
 
     override fun onClickAdditionalContent() {
         super.onClickAdditionalContent()
@@ -82,28 +86,41 @@ class LogMPDBViewModel @Inject constructor(
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
-        val activity = (context as? AppCompatActivity) ?: return
-
-        val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)
-
-        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
-
-        val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
-
-        if (logMPDB != null) {
-            val dialogMap = DialogMap(
-                activity,
-                "",
-                addressSDB?.locationXd ?: 0f,
-                addressSDB?.locationYd ?: 0f,
-                "Місцеположення ТТ",
-                logMPDB.CoordX,
-                logMPDB.CoordY,
-                "Ваше місцеположення"
+//        val activity = (context as? AppCompatActivity) ?: return
+//
+//        val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)
+//
+//        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+//
+//        val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
+//
+//        if (logMPDB != null) {
+//            val dialogMap = DialogMap(
+//                activity,
+//                "",
+//                addressSDB?.locationXd ?: 0f,
+//                addressSDB?.locationYd ?: 0f,
+//                "Місцеположення ТТ",
+//                logMPDB.CoordX,
+//                logMPDB.CoordY,
+//                "Ваше місцеположення"
+//            )
+//            dialogMap.setData("", "Місцеположення")
+//            dialogMap.show()
+//        }
+        super.onClickItem(itemUI, context)
+        viewModelScope.launch {
+            Log.e("!!!!!", "onClickItem+++++++++")
+            _events.emit(
+                MainEvent.ShowCardItemsDialog(
+                    cardItemsData = CardItemsData(
+                        dateItemUI = itemUI,
+                        title = "Данные МП"
+                    )
+                )
             )
-            dialogMap.setData("", "Місцеположення")
-            dialogMap.show()
         }
+
     }
 }
 

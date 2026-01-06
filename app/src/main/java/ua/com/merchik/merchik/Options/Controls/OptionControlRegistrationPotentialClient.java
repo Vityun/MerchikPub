@@ -47,7 +47,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
 
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlRegistrationPotentialClient", "Exception e: " + Arrays.toString(e.getStackTrace()));
         }
     }
@@ -61,7 +61,10 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         }
 
         dtFrom = dt - 2592000;  // -30 дней
-        dtTo = dt + (86400 * 2);      // +2 дня
+        if (wpDataDB.getUser_id() == 143565)
+            dtTo = dt + (86400 * 3);      // +3 дня для одного пользователя - Балаба
+        else
+            dtTo = dt + (86400 * 2);      // +2 дня
         dateDiapason = "За период с " + Clock.getHumanTime3(dtFrom) + " по " + Clock.getHumanTime3(dtTo);
     }
 
@@ -80,7 +83,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 //        if (err > 0 && user != null && user.reportCount < 200) {
 
-        if (err > 0 && user != null && (user.reportDate200 == null || (wpDataDB.getDt().getTime() + (2 * 24 * 60 * 60))<= user.reportDate200.getTime())) {
+        if (err > 0 && user != null && (user.reportDate200 == null || (wpDataDB.getDt().getTime() + (2 * 24 * 60 * 60)) <= user.reportDate200.getTime())) {
             count = 0;
             potentialClientMsg.append(", но он еще не провел своего 200-го отчета.");
             report200 = true;
@@ -88,11 +91,11 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
 
         formatMsg(potentialClients);
 
-        if (signal){
-            if (optionDB.getBlockPns().equals("1")){
+        if (signal) {
+            if (optionDB.getBlockPns().equals("1")) {
                 stringBuilderMsg.append("\n\nДокумент проведен не будет!");
                 setIsBlockOption(signal);    // Установка блокирует ли опция работу приложения или нет
-            }else {
+            } else {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если Вы (или ваши подчиненные) будут регистрировать ").append(type);
             }
         }
@@ -100,9 +103,9 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         // Блокировка
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
-                if (signal){
+                if (signal) {
                     optionDB.setIsSignal("1");
-                }else {
+                } else {
                     optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);

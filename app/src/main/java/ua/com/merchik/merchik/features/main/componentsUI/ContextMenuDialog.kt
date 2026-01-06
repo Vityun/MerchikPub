@@ -41,6 +41,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
@@ -51,6 +52,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
+import ua.com.merchik.merchik.features.main.Main.CardItemsUI
 import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import java.text.SimpleDateFormat
@@ -85,6 +87,11 @@ data class MessageDialogData(
     val positivText: String? = null
 )
 
+data class CardItemsData(
+    val dateItemUI: DataItemUI,
+    val title: String
+)
+
 sealed class ContextMenuAction(val title: String) {
     data object AcceptOrder : ContextMenuAction("Принять этот заказ")
     data object AcceptAllAtAddress : ContextMenuAction("Принять всех клиентов этого адреса")
@@ -116,6 +123,7 @@ fun rememberContextMenuHost(
     val focusManager = LocalFocusManager.current
 
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+    var showCardItemsDialog by remember { mutableStateOf<CardItemsData?>(null) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -131,6 +139,8 @@ fun rememberContextMenuHost(
                         Globals.writeToMLOG("INFO","MainUI.rememberContextMenuHost","Received ShowMessageDialog: ${event.data}")
                         showMessageDialog = event.data
                     }
+
+                    is MainEvent.ShowCardItemsDialog -> showCardItemsDialog = event.cardItemsData
                 }
             }
         }
@@ -144,6 +154,8 @@ fun rememberContextMenuHost(
                 is MainEvent.ShowMessageDialog -> { /* твоя логика показ диалога */
                     showMessageDialog = event.data
                 }
+
+                is MainEvent.ShowCardItemsDialog -> event.cardItemsData
             }
         }
     }
@@ -298,6 +310,17 @@ fun rememberContextMenuHost(
     }
     val close: () -> Unit = { selectedItem = null }
 
+    showCardItemsDialog?.let {
+        CardItemsUI (
+            title = it.title,
+            item = it.dateItemUI,
+            viewModel = viewModel,
+            onDismiss = {
+                showCardItemsDialog = null
+                viewModel.cancelPending()
+            }
+        )
+    }
     showMessageDialog?.let { d ->
         MessageDialog(
             title = d.title,

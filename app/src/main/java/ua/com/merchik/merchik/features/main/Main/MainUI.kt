@@ -725,7 +725,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                        }
                     }
 
-                    Row {
+                    Row(modifier = Modifier.padding(start = 1.dp)) {
                         Tooltip(
                             text = viewModel.getTranslateString(
                                 stringResource(
@@ -1395,7 +1395,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog(
             mainViewModel = viewModel,
             onDismiss = { showMapsDialog = false },
-            contextUI = viewModel.contextUI,
             onOpenContextMenu = { wp, ctxUI ->
                 viewModel.openContextMenu(wp, ctxUI)
             }

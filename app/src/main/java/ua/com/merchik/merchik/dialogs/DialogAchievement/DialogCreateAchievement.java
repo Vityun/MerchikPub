@@ -157,7 +157,7 @@ public class DialogCreateAchievement {
                 bundle.putString("viewModel", ThemeDBViewModel.class.getCanonicalName());
                 bundle.putString("contextUI", ContextUI.THEME_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-                bundle.putString("dataJson", new Gson().toJson(new String[]{"595", "1252", "1251"}));
+                bundle.putString("dataJson", new Gson().toJson(new String[]{"595", "1252", "1251", "1378"}));
                 bundle.putString("title", "Вид достижения");
                 bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
                 intent.putExtras(bundle);

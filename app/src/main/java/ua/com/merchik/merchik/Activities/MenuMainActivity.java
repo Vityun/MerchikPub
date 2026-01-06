@@ -4,10 +4,12 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -231,85 +233,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        Log.e("!!!!!!!!!!!!!!","USER: " + Globals.userId);
+//        new Translate().uploadNewTranslate();
 
+        startActivity(new Intent(this, WifiScannerActivity.class));
 
-        new Translate().uploadNewTranslate();
-
-        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-//        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
-//            @Override
-//            public void onSuccess(Object data) {
-//                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "+");
-//
-////                            List<SamplePhotoSDB> listPhotosToDownload = (List<SamplePhotoSDB>) data;
-////                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
-//
-//                try {
-//                    RealmManager.INSTANCE.executeTransaction(realm -> {
-//                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
-//                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-//                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
-//                        }
-//                    });
-//                } catch (Exception e) {
-//                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
-//                }
-//
-//                try {
-////                                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-//                    List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
-//
-//                    if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
-////                                            photoCount = listPhotosToDownload.size();
-//                        Log.i("````", "listPhotosToDownload: " + listPhotosToDownload.size());
-//
-//                        samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
-//                            @Override
-//                            public void onSuccess(String data) {
-//                                Toast.makeText(MenuMainActivity.this, data, Toast.LENGTH_LONG).show();
-//                            }
-//
-//                            @Override
-//                            public void onFailure(String error) {
-//
-//                            }
-//                        });
-//                    } else {
-//                        TablesLoadingUnloading.readySamplePhotos = true;
-//                        Log.i("````", "....1");
-//                    }
-//                } catch (Exception e) {
-//                    TablesLoadingUnloading.readySamplePhotos = true;
-//                    Log.e("````", "err", e);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(String error) {
-//                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-//            }
-//        });
-
-//        AppToaster.INSTANCE.show("Test", AppToaster.Style.SUCCESS, AppToaster.Length.LONG);
-
-
-//       Toasty.success(this,
-//                       getFormattedMessage(), Toast.LENGTH_LONG, false)
-//               .show();
-
-
-//       Toasty.normal(this,"Test").show();
-
-
-//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-//        tablesLoadingUnloading.downloadWPDataWithCords();
-//        tablesLoadingUnloading.donwloadPlanBudgetRNO();
-//        tablesLoadingUnloading.downloadWPDataWithCordsMy();
-//        tablesLoadingUnloading.donwloadPlanBudget();
-
-//
-//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
     }
 

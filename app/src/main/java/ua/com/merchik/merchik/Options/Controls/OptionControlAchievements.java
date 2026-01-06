@@ -4,10 +4,8 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -25,7 +23,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -113,7 +110,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
 //                minusDay = minusDay + 1;
                 dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
-                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 3) / 1000;    // Тут надо указывать на +1 день, потому что функция работает до НАЧАЛА дня, а не до конца
+                if (wpDataDB.getUser_id() == 143565) // исключения для одного пользователя Балаба
+                    dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 4) / 1000;
+                else
+                    dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 3) / 1000;    // Тут надо указывать на +1 день, потому что функция работает до НАЧАЛА дня, а не до конца
             }
 
         } catch (Exception e) {
@@ -172,7 +172,8 @@ public class OptionControlAchievements<T> extends OptionControl {
             for (TovarDB tovarDB : tovarFromReportPrepare) {
                 Log.e("!!!DBOSV!!!", "tovar name: " + tovarDB.getNm() + " | id: " + tovarDB.getiD());
             }
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, null, null, null, null, null, dateChangeTo);
+
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, dateChangeTo);
 
             // 06.02.2025 добавил проверку что бы товар был в репорт препеа, что бы исключить случай когда товара вообще нет в ТТ, а требуют достижение по нему
             Set<String> manufacturerIds = tovarFromReportPrepare.stream()
@@ -222,7 +223,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                         item.error = 1;
                         item.note = new SpannableStringBuilder()
                                 .append("\n")
-                                .append(createLinkedString("Досягнення #" + item.serverId,item))
+                                .append(createLinkedString("Досягнення #" + item.serverId, item))
                                 .append(" тема досягнення ")
                                 .append(String.valueOf(item.themeId)).append(" - ").append(themeTxt)
                                 .append(" не влаштовує! Повинна бути тема: ")
@@ -412,7 +413,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                     DialogAchievement dialogAchievement = new DialogAchievement(context);
                     dialogAchievement.setClose(dialogAchievement::dismiss);
                     dialogAchievement.setAchievement(data);
-                    dialogAchievement.setOk("Створити ДІНДОС", ()->{
+                    dialogAchievement.setOk("Створити ДІНДОС", () -> {
                         try {
                             DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(context);
                             dialogCreateAchievement.setData(data);
@@ -421,7 +422,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                             dialogCreateAchievement.buttonPhotoTo();
                             dialogCreateAchievement.buttonPhotoAfter();
                             dialogCreateAchievement.show();
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
                             Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
                         }

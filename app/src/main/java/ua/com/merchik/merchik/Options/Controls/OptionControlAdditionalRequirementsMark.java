@@ -157,7 +157,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                             Log.e("OptionControlARMark", "5.1");
 
                             if (currentMark != null) {
-                                item.mark = Integer.valueOf(currentMark.getScore());
+                                item.mark = currentMark.getScore() != null
+                                        ? Integer.parseInt(currentMark.getScore())
+                                        : 0;
                                 // Эту оценку никто нигде не использует, по этому я не буду лишний раз парсить тудой сюдой
                                 // Тзн.ДатаОценки=ПолучитьДатуИзUnix(СокрЛП(ТзнОцен.ДатаЮ));
                             } else {
@@ -185,7 +187,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                             item.nedotoch = 0;
                             item.note = "";
                         } else {
-                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt()) {
+                            if (Long.parseLong(item.dtChange) >= wpDataDB.getClient_start_dt() && wpDataDB.getClient_start_dt()  != 0) {
                                 item.nedotoch = 0;
                                 item.offset = 1;
                                 item.mark = 0;

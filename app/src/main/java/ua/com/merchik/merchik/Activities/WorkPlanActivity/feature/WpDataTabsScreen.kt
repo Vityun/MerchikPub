@@ -127,7 +127,7 @@ fun WpDataTabsScreen() {
         initialTabResolved = true
     }
 
-    // 🔥 Стартуем диалоговый сценарий во ViewModel, если нужно
+// 🔥 Стартуем диалоговый сценарий во ViewModel, если нужно
 //    LaunchedEffect(emptyScenario) {
 //        if (emptyScenario) {
 //            dialogViewModel.startRegistrationIfNeeded(
@@ -138,7 +138,7 @@ fun WpDataTabsScreen() {
 //        }
 //    }
 
-    val tabTitles = if (Globals.userId == 176053 || Globals.userId == 255212) {
+    val tabTitles = if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562) {
         listOf(
             stringResource(R.string.title_0),
             "Доп.Заработок",

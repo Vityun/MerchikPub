@@ -5,11 +5,27 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.collectLatest
@@ -43,11 +59,10 @@ import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromWPdataViewModel
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Locale
 
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "StateFlowValueCalledInComposition")
@@ -55,10 +70,12 @@ import java.util.*
 fun MapsDialog(
     mainViewModel: MainViewModel,
     onDismiss: () -> Unit,
-    contextUI: ContextUI,
     onOpenContextMenu: (WpDataDB, ContextUI) -> Unit
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
+    val contextUI = mainViewModel.contextUI
+
+    val distance = mainViewModel.offsetDistanceMeters.value
 
     val highlightColor: Color = colorResource(id = R.color.ufmd_accept_t)
 
@@ -93,6 +110,9 @@ fun MapsDialog(
 
     val vm: BaseMapViewModel =
         if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>() else hiltViewModel<MapFromWPdataViewModel>()
+
+    if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+        vm.setDistance(distance)
 
     // 1) Подписываемся на состояние карты
     val mapState by vm.state.collectAsState()
@@ -156,12 +176,12 @@ fun MapsDialog(
 //        }
 
 
-
-        val startMillis = if (wpDataDB != null && wpDataDB.visit_start_dt > 0 && wpDataDB.visit_end_dt > 0) {
-            wpDataDB.visit_start_dt - validTime
-        } else {
-            System.currentTimeMillis() - validTime
-        }
+        val startMillis =
+            if (wpDataDB != null && wpDataDB.visit_start_dt > 0 && wpDataDB.visit_end_dt > 0) {
+                wpDataDB.visit_start_dt - validTime
+            } else {
+                System.currentTimeMillis() - validTime
+            }
 
         // Приводим к миллисекундам, если данные в секундах
         val millis = if (startMillis < 10_000_000_000L) startMillis * 1000 else startMillis
@@ -197,15 +217,22 @@ fun MapsDialog(
     // Вторая строка -> подзаголовок на карте (вместо "## Опис …")
     // Третья строка -> message в диалоге "Довідка"
     val isFromMaps = hasLogCenter
-    val (infoSubtitle, mapSubheaderText, helpMessage) = remember(isFromMaps, isRnoUserOnMap, periodStrt, periodEnd) {
+    val (infoSubtitle, mapSubheaderText, helpMessage) = remember(
+        isFromMaps,
+        isRnoUserOnMap,
+        periodStrt,
+        periodEnd
+    ) {
         when {
             // 1) FromWPdata + user 14041  — "Додатковий заробіток."
             !isFromMaps && isRnoUserOnMap -> Triple(
                 "Додатковий заробіток.",
-                String.format(mainViewModel.getTranslateString(
-                    text = "Адреса с возможностью дополнительного заработка за период с %s по %s. Для получения дополнительной информации нажмите иконку «?» вверху текущей формы.",
-                    translateId = 9069
-                ),periodStrt,periodEnd),
+                String.format(
+                    mainViewModel.getTranslateString(
+                        text = "Адреса с возможностью дополнительного заработка за период с %s по %s. Для получения дополнительной информации нажмите иконку «?» вверху текущей формы.",
+                        translateId = 9069
+                    ), periodStrt, periodEnd
+                ),
 
                 "На карте, зелеными маркерами помечены адреса, в которых есть возможность выполнять работы за отдельную (дополнительную) оплату. " +
                         "Числа внутри маркеров обозначают количество доступных работ по указанному адресу. " +
@@ -259,7 +286,10 @@ fun MapsDialog(
                             )
                         } else if (latLngs.size == 1) {
                             cameraController.animate(
-                                CameraUpdateFactory.newLatLngZoom(latLngs.first(), e.zoomIfSingle ?: 14f)
+                                CameraUpdateFactory.newLatLngZoom(
+                                    latLngs.first(),
+                                    e.zoomIfSingle ?: 14f
+                                )
                             )
                         }
                     } catch (_: Throwable) {
@@ -352,7 +382,10 @@ fun MapsDialog(
                     .padding(16.dp)
             ) {
                 Column(Modifier.fillMaxWidth()) {
-                    Text(text = mainViewModel.getTranslateString("Карта", 8763), modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text(
+                        text = mainViewModel.getTranslateString("Карта", 8763),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
                     Spacer(Modifier.height(8.dp))
                     Box(
                         modifier = Modifier
@@ -405,8 +438,15 @@ fun MapsDialog(
     val state by vm.state.collectAsState()
     if (state.pendingWp != null) {
         val wp = state.pendingWp
-        val sortingFieldAdr = remember { SortingField("addr_txt", mainViewModel.getTranslateString("Адреса", 1101), 1) }
-        val sortingFieldDate = remember { SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1) }
+        val sortingFieldAdr = remember {
+            SortingField(
+                "addr_txt",
+                mainViewModel.getTranslateString("Адреса", 1101),
+                1
+            )
+        }
+        val sortingFieldDate =
+            remember { SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1) }
         val periodDate = remember(uiState.filters?.rangeDataByKey) {
             uiState.filters?.rangeDataByKey?.let { range ->
                 val start =

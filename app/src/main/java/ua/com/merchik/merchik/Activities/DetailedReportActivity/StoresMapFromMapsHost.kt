@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import ua.com.merchik.merchik.features.maps.presentation.main.StoresMap
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
+import androidx.compose.runtime.collectAsState
 
 @Composable
 private fun StoresMapFromMapsHost(wpData: WpDataDB) {
@@ -67,8 +68,8 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         uiState.items,
         uiState.filters,
         uiState.sortingFields,
-        mainVm.rangeDataStart.value,
-        mainVm.rangeDataEnd.value,
+        mainVm.rangeDataStart.collectAsState().value,
+        mainVm.rangeDataEnd.collectAsState().value,
         uiState.filters?.searchText,
         Globals.CoordX,
         Globals.CoordY,
@@ -120,7 +121,6 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         MapsDialog(
             mainViewModel = mainVm,
             onDismiss = { showMapsDialog = false },
-            contextUI = contextUI,
             onOpenContextMenu = { wp, ctxUI ->
                 mainVm.openContextMenu(wp, ctxUI)
             }

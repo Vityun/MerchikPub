@@ -67,8 +67,8 @@ class MainRepository(
             null
         }
 
-    fun <T : DataObjectUI> getSortingFields(klass: KClass<T>, contextUI: ContextUI?) =
-        getSettingsUI(klass.java, contextUI)?.sortFields ?: emptyList()
+//    fun <T : DataObjectUI> getSortingFields(klass: KClass<T>, contextUI: ContextUI?) =
+//        getSettingsUI(klass.java, contextUI)?.sortFields ?: emptyList()
 
     fun <T : DataObjectUI> getSettingsItemList(
         klass: KClass<T>,

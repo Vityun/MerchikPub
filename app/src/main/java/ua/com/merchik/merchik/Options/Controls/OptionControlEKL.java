@@ -494,14 +494,14 @@ public class OptionControlEKL<T> extends OptionControl {
 
         int bonus = -32;
         CharSequence valBonus = "";
-        float shtraf = 0.32f;
+        float shtraf = 0.308f;
         long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
         long ekl_date = -1L;
 
         if (documentUser.last_ekl_date != null) {
             ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
             if (ekl_date != -1 && ekl_date > countDay) {
-                shtraf = 0.16f;
+                shtraf = 0.154f;
                 bonus = -16;
             }
         }

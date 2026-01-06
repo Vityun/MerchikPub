@@ -34,6 +34,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Globals.APP_OFFSET_DISTANCE_METERS
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
@@ -57,6 +58,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
@@ -72,6 +74,7 @@ data class StateUI(
     val items: List<DataItemUI> = emptyList(),
     val itemsFooter: List<DataItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
+    val settingsItemsForCard: List<SettingsItemUI> = emptyList(),
     var sortingFields: List<SortingField> = emptyList(),
     val groupingFields: List<GroupingField> = emptyList(),
     val filters: Filters? = null,
@@ -155,6 +158,7 @@ data class GroupMeta(
 sealed interface MainEvent {
     data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
+    data class ShowCardItemsDialog(val cardItemsData: CardItemsData): MainEvent
 }
 
 
@@ -172,6 +176,9 @@ abstract class MainViewModel(
 
     private val _offsetSizeFonts = MutableStateFlow(0.0f)
     val offsetSizeFonts: StateFlow<Float> = _offsetSizeFonts
+
+    private val _offsetDistanceMeters = MutableStateFlow(10_000.0f)
+    val offsetDistanceMeters: StateFlow<Float> = _offsetDistanceMeters
 
     private val _valueForCustomResult = MutableStateFlow(HashMap<String, Any?>())
     val valueForCustomResult: StateFlow<HashMap<String, Any?>> = _valueForCustomResult
@@ -237,6 +244,9 @@ abstract class MainViewModel(
 
     open fun getDefaultGroupUserFields(): List<String> = emptyList()
 
+    open fun getDefaultHideFieldsForCards(): List<String>? {
+        return null
+    }
 
     var filters: Filters? = null
 
@@ -388,6 +398,7 @@ abstract class MainViewModel(
 
     private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
+        _offsetDistanceMeters.value = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 5_000f)
     }
 
     private fun observeSourcesForItems() {
@@ -480,6 +491,13 @@ abstract class MainViewModel(
         }
     }
 
+    fun updateOffsetDistanceMeters(offsetDistanceMeters: Float) {
+        viewModelScope.launch {
+            sharedPreferences.edit().putFloat(APP_OFFSET_DISTANCE_METERS, offsetDistanceMeters).apply()
+            _offsetDistanceMeters.value = offsetDistanceMeters
+        }
+    }
+
     fun getTranslateString(text: String, translateId: Long? = null) =
         nameUIRepository.getTranslateString(text, translateId)
 
@@ -526,6 +544,9 @@ abstract class MainViewModel(
 
             val itemsHeader = getItemsHeader()
             val itemsFooter = getItemsFooter()
+
+            val hideFieldsForCards = getDefaultHideFieldsForCards()
+            val settingsForCardsItems = repository.getSettingsItemList(table, contextUI, hideFieldsForCards)
 
             // 1) Берём сортировки
             val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
@@ -621,6 +642,7 @@ abstract class MainViewModel(
                     itemsHeader = itemsHeader,
                     itemsFooter = itemsFooter,
                     settingsItems = settingsItems,
+                    settingsItemsForCard = settingsForCardsItems,
                     sortingFields = sortingFields,
                     groupingFields = groupingFields,
                     filters = filters,

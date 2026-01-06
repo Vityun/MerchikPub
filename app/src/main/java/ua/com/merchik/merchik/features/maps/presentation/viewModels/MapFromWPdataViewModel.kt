@@ -17,6 +17,5 @@ class MapFromWPdataViewModel @Inject constructor(
 ) : BaseMapViewModel(
     filterUC = filterUC,
     buildUC = buildUC,
-    makeUiUC = makeUiUC,
-    radiusMeters = 0.0
+    makeUiUC = makeUiUC
 )
