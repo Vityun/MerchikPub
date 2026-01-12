@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,7 +31,7 @@ const val PHONE_TAG = "phone_tag"
 @Composable
 fun WpDataContentTab(dataIsReady: Boolean) {
     val context = LocalContext.current
-    val activity = context as ComponentActivity
+    val activity = LocalActivity.current
 
     WPDataActivity.textLesson = 8718
 
@@ -54,7 +55,7 @@ fun WpDataContentTab(dataIsReady: Boolean) {
         LaunchedEffect(dataIsReady) {
             if (isEmptyScenario) {
                 dialogViewModel.startRegistrationIfNeeded(
-                    activity = activity,
+                    activity = activity!!,
                     isEmptyScenario = localReady,
                     user = user
                 )
@@ -81,6 +82,9 @@ fun WpDataContentTab(dataIsReady: Boolean) {
                 modifier = Modifier,
                 viewModel = viewModel
             )
+        }
+        activity?.let {
+            viewModel.startPlanBudgetPolling(it)
         }
     }
 }

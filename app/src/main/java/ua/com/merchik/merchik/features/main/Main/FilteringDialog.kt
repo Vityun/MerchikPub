@@ -51,12 +51,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
@@ -84,7 +82,7 @@ fun FilteringDialog(
     val listState = rememberLazyListState()
 
     val savedDistance = viewModel.offsetDistanceMeters.collectAsState().value
-    var localDistance by remember { mutableStateOf(2_000f) }
+    var localDistance by remember { mutableStateOf(5_000f) }
 
     ComposableLifecycle { source, event ->
         when (event) {
@@ -102,194 +100,192 @@ fun FilteringDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
+//    Dialog(onDismissRequest = onDismiss) {
+    Column(
+        modifier = Modifier
+            .statusBarsPadding()
+            .background(color = Color.Transparent)
+    ) {
+        Row(modifier = Modifier.align(Alignment.End)) {
+            ImageButton(
+                id = R.drawable.ic_question_1,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 22.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { showToolTip = true }
+            )
+
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { onDismiss.invoke() }
+            )
+        }
+
+        Box(
             modifier = Modifier
-                .statusBarsPadding()
-                .background(color = Color.Transparent)
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = Color.White)
         ) {
-            Row(modifier = Modifier.align(Alignment.End)) {
-                ImageButton(
-                    id = R.drawable.ic_question_1,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 22.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { showToolTip = true }
-                )
-
-                ImageButton(
-                    id = R.drawable.ic_letter_x,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(color = Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { onDismiss.invoke() }
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(color = Color.White)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(10.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(10.dp)
-                ) {
+                Text(
+                    modifier = Modifier
+                        .padding(start = 10.dp, bottom = 7.dp, end = 10.dp),
+                    fontWeight = FontWeight.Bold,
+                    text = viewModel.uiState.value.filters?.title ?: "Фільтри"
+                )
+
+                viewModel.uiState.collectAsState().value.filters?.subTitle?.let {
                     Text(
+                        text = it,
                         modifier = Modifier
-                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp),
-                        fontWeight = FontWeight.Bold,
-                        text = viewModel.uiState.value.filters?.title ?: "Фільтри"
+                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
                     )
+                }
 
-                    viewModel.uiState.collectAsState().value.filters?.subTitle?.let {
-                        Text(
-                            text = it,
-                            modifier = Modifier
-                                .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
-                        )
-                    }
+                uiState.filters?.rangeDataByKey?.let {
+                    if (it.enabled)
+                        ItemDateFilterUI(
+                            it, selectedFilterDateStart, selectedFilterDateEnd,
 
-                    uiState.filters?.rangeDataByKey?.let {
-                        if (it.enabled)
+                            onStartDateChanged = { date -> viewModel.setStartDate(date) },
+                            onEndDateChanged = { date -> viewModel.setEndDate(date) })
+                    else
+                        Tooltip(
+                            text = viewModel.getTranslateString(
+                                stringResource(id = R.string.ui_filter_not_available_edit),
+                                5998
+                            )
+                        ) {
                             ItemDateFilterUI(
                                 it, selectedFilterDateStart, selectedFilterDateEnd,
-
                                 onStartDateChanged = { date -> viewModel.setStartDate(date) },
                                 onEndDateChanged = { date -> viewModel.setEndDate(date) })
-                        else
-                            Tooltip(
-                                text = viewModel.getTranslateString(
-                                    stringResource(id = R.string.ui_filter_not_available_edit),
-                                    5998
-                                )
-                            ) {
-                                ItemDateFilterUI(
-                                    it, selectedFilterDateStart, selectedFilterDateEnd,
-                                    onStartDateChanged = { date -> viewModel.setStartDate(date) },
-                                    onEndDateChanged = { date -> viewModel.setEndDate(date) })
-                            }
-                    }
-
-                    if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
-                        Spacer(modifier = Modifier.padding(4.dp))
-                        DistanceSlider(
-                            viewModel = viewModel,
-                            modifier = Modifier,
-                            meters = savedDistance
-                        ) {
-                            localDistance = it
                         }
-                        Spacer(modifier = Modifier.padding(2.dp))
-                    } else
-                        TextFieldInputRounded(
-                            viewModel = viewModel,
-                            value = uiState.filters?.searchText ?: "",
-                            onValueChange = {
-                                searchText = it
-                                val current = uiState.filters
-                                if (current != null) {
-                                    viewModel.updateFilters(current.copy(searchText = it))
-                                    FilteringDialogDataHolder.instance().filters = current
-                                } else {
-                                    val filters = Filters(
-                                        searchText = it
-                                    )
-                                    viewModel.updateFilters(filters)
-                                    FilteringDialogDataHolder.instance().filters = filters
-                                }
-                            },
-                            modifier = Modifier
-                                .padding(horizontal = 10.dp)
-                                .height(40.dp)
-                        )
+                }
 
-                    uiState.filters?.items?.let {
-                        LazyColumnScrollbar(
-                            modifier = Modifier
-                                .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
-                                .weight(1f),
+                TextFieldInputRounded(
+                    viewModel = viewModel,
+                    value = uiState.filters?.searchText ?: "",
+                    onValueChange = {
+                        searchText = it
+                        val current = uiState.filters
+                        if (current != null) {
+                            viewModel.updateFilters(current.copy(searchText = it))
+                            FilteringDialogDataHolder.instance().filters = current
+                        } else {
+                            val filters = Filters(
+                                searchText = it
+                            )
+                            viewModel.updateFilters(filters)
+                            FilteringDialogDataHolder.instance().filters = filters
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .height(40.dp)
+                )
+                Spacer(modifier = Modifier.padding(4.dp))
+                DistanceSlider(
+                    viewModel = viewModel,
+                    modifier = Modifier,
+                    meters = savedDistance
+                ) {
+                    localDistance = it
+                }
+                Spacer(modifier = Modifier.padding(2.dp))
+
+                uiState.filters?.items?.let {
+                    LazyColumnScrollbar(
+                        modifier = Modifier
+                            .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
+                            .weight(1f),
+                        state = listState,
+                        settings = ScrollbarSettings(
+                            scrollbarPadding = 2.dp,
+                            alwaysShowScrollbar = true,
+                            thumbUnselectedColor = colorResource(id = R.color.scrollbar),
+                            thumbSelectedColor = colorResource(id = R.color.scrollbar),
+                            thumbShape = CircleShape,
+                        ),
+                    ) {
+                        LazyColumn(
                             state = listState,
-                            settings = ScrollbarSettings(
-                                scrollbarPadding = 2.dp,
-                                alwaysShowScrollbar = true,
-                                thumbUnselectedColor = colorResource(id = R.color.scrollbar),
-                                thumbSelectedColor = colorResource(id = R.color.scrollbar),
-                                thumbShape = CircleShape,
-                            ),
                         ) {
-                            LazyColumn(
-                                state = listState,
-                            ) {
-                                items(it) {
-                                    if (it.enabled)
-                                        ItemFilterUI(
-                                            viewModel,
-                                            viewModel.context,
-                                            it
-                                        ) { changedItemFilter ->
-                                            uiState.filters?.items?.map {
-                                                if (it.clazz == changedItemFilter.clazz) changedItemFilter
-                                                else it
-                                            }?.let { it1 ->
-                                                uiState.filters?.copy(
-                                                    items = it1
-                                                )?.let { filters ->
-                                                    FilteringDialogDataHolder.instance().filters =
-                                                        filters
-                                                    viewModel.updateFilters(filters)
-                                                }
+                            items(it) {
+                                if (it.enabled)
+                                    ItemFilterUI(
+                                        viewModel,
+                                        viewModel.context,
+                                        it
+                                    ) { changedItemFilter ->
+                                        uiState.filters?.items?.map {
+                                            if (it.clazz == changedItemFilter.clazz) changedItemFilter
+                                            else it
+                                        }?.let { it1 ->
+                                            uiState.filters?.copy(
+                                                items = it1
+                                            )?.let { filters ->
+                                                FilteringDialogDataHolder.instance().filters =
+                                                    filters
+                                                viewModel.updateFilters(filters)
                                             }
                                         }
-                                    else {
-                                        Tooltip(
-                                            text = viewModel.getTranslateString(
-                                                stringResource(
-                                                    id = R.string.ui_filter_not_available_edit
-                                                ), 5998
-                                            )
-                                        ) {
-                                            ItemFilterUI(viewModel, viewModel.context, it)
-                                        }
                                     }
-                                    Spacer(modifier = Modifier.padding(10.dp))
+                                else {
+                                    Tooltip(
+                                        text = viewModel.getTranslateString(
+                                            stringResource(
+                                                id = R.string.ui_filter_not_available_edit
+                                            ), 5998
+                                        )
+                                    ) {
+                                        ItemFilterUI(viewModel, viewModel.context, it)
+                                    }
                                 }
+                                Spacer(modifier = Modifier.padding(10.dp))
                             }
                         }
                     }
+                }
 
 
-                    Row {
-                        Button(
-                            onClick = {
-                                viewModel.updateOffsetDistanceMeters(localDistance)
-                                FilteringDialogDataHolder.instance().filters?.let {
-                                    onChanged.invoke(it)
-                                }
-                                viewModel.updateContent()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Text(
-                                viewModel.getTranslateString(
-                                    stringResource(id = R.string.ui_apply),
-                                    5995
-                                )
+                Row {
+                    Button(
+                        onClick = {
+                            viewModel.updateOffsetDistanceMeters(localDistance)
+                            FilteringDialogDataHolder.instance().filters?.let {
+                                onChanged.invoke(it)
+                            }
+                            viewModel.updateContent()
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Text(
+                            viewModel.getTranslateString(
+                                stringResource(id = R.string.ui_apply),
+                                5995
                             )
-                        }
-                        Spacer(modifier = Modifier.padding(10.dp))
-                        Button(
-                            onClick = {
-                                FilteringDialogDataHolder.instance().filters?.let {
-                                    onChanged.invoke(
-                                        it.copy(
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(10.dp))
+                    Button(
+                        onClick = {
+                            FilteringDialogDataHolder.instance().filters?.let {
+                                onChanged.invoke(
+                                    it.copy(
                                         rangeDataByKey =
                                             if (it.rangeDataByKey?.enabled == true)
                                                 it.rangeDataByKey.copy(
@@ -309,25 +305,25 @@ fun FilteringDialog(
                                                 it
                                         }
                                     ))
-                                }
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            Text(
-                                viewModel.getTranslateString(
-                                    stringResource(id = R.string.ui_clear),
-                                    5996
-                                )
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Text(
+                            viewModel.getTranslateString(
+                                stringResource(id = R.string.ui_clear),
+                                5996
                             )
-                        }
+                        )
                     }
                 }
             }
         }
     }
+//    }
     if (showToolTip) {
 
         MessageDialog(

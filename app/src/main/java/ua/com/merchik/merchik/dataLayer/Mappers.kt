@@ -12,7 +12,10 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
+import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -446,4 +449,14 @@ private fun formatDateString(raw: String?): String {
 
     val formatter = SimpleDateFormat("dd MMMM yyyy", Locale("uk")) // или Locale("ru")
     return formatter.format(date)
+}
+
+
+sealed interface MainEvent {
+    data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent
+    data class ShowCardItemsDialog(val cardItemsData: CardItemsData) : MainEvent
+    data class ShowLoading(val title: String, val durationMs: Long = 28_700L) : MainEvent
+    data object LoadingCompleted : MainEvent
+    data object LoadingCanceled : MainEvent
+    data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
 }

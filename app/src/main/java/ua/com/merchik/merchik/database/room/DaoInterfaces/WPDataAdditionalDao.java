@@ -62,6 +62,9 @@ public interface WPDataAdditionalDao {
     @Query("DELETE FROM wp_data_additional WHERE ID = :id")
     void deleteByIdSync(long id);
 
+    @Query("SELECT `action` FROM wp_data_additional WHERE code_dad2 = :dad2 ORDER BY dt DESC LIMIT 1")
+    Integer getLastActionByDad2(long dad2);
+
     // синхронная транзакционная операция — возвращает void (не Completable)
     @Transaction
     default void replaceLocalIdWithServerIdSync(long localId, long serverId) {

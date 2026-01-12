@@ -35,7 +35,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
@@ -55,142 +54,165 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     var showToolTip by remember { mutableStateOf(false) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
+    Column(
+        modifier = Modifier
+            .statusBarsPadding()
+            .fillMaxSize()
+            .padding(top = 40.dp, bottom = 40.dp)
+            .background(color = Color.Transparent)
+    ) {
+        Row(modifier = Modifier.align(Alignment.End)) {
+            ImageButton(
+                id = R.drawable.ic_question_1,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 22.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { showToolTip = true }
+            )
+
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { onDismiss.invoke() }
+            )
+        }
+
+        Box(
             modifier = Modifier
-                .statusBarsPadding()
                 .fillMaxSize()
-                .padding(top = 40.dp, bottom = 40.dp)
-                .background(color = Color.Transparent)
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = Color.White)
         ) {
-            Row(modifier = Modifier.align(Alignment.End)) {
-                ImageButton(
-                    id = R.drawable.ic_question_1,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 22.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { showToolTip = true }
-                )
-
-                ImageButton(
-                    id = R.drawable.ic_letter_x,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(color = Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { onDismiss.invoke() }
-                )
-            }
-
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(color = Color.White)
+                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
-                Column(
+                Text(
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(alignment = Alignment.CenterHorizontally),
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_table), 5990)
+                        .align(alignment = Alignment.CenterHorizontally),
+                    text = viewModel.getTranslateString(
+                        stringResource(id = R.string.ui_setting_table),
+                        5990
                     )
-                    Spacer(modifier = Modifier.padding(8.dp))
-                    Text(
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc), 5991)
+                )
+                Spacer(modifier = Modifier.padding(8.dp))
+                Text(
+                    text = viewModel.getTranslateString(
+                        stringResource(id = R.string.ui_setting_column_visibility_desc),
+                        5991
                     )
-                    Spacer(modifier = Modifier.padding(8.dp))
+                )
+                Spacer(modifier = Modifier.padding(8.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .shadow(4.dp, RoundedCornerShape(8.dp))
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(color = Color.White)
-                    ) {
-                        Column {
-                            ItemFieldValue(
-                                FieldValue(
-                                    key = "",
-                                    TextField(
-                                        "",
-                                        viewModel.getTranslateString(stringResource(id = R.string.ui_column_name), 5992),
-                                        MerchModifier(
-                                            fontWeight = FontWeight.Bold,
-                                            padding = Padding(10.dp, 7.dp, 10.dp, 7.dp)
-                                        )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color = Color.White)
+                ) {
+                    Column {
+                        ItemFieldValue(
+                            FieldValue(
+                                key = "",
+                                TextField(
+                                    "",
+                                    viewModel.getTranslateString(
+                                        stringResource(id = R.string.ui_column_name),
+                                        5992
                                     ),
-                                    TextField(
-                                        "",
-                                        viewModel.getTranslateString(stringResource(id = R.string.ui_visibility), 5993),
-                                        MerchModifier(
-                                            fontWeight = FontWeight.Bold,
-                                            padding = Padding(10.dp, 7.dp, 10.dp, 7.dp),
-                                            weight = 1f,
-                                            alignment = Alignment.End
-                                        )
+                                    MerchModifier(
+                                        fontWeight = FontWeight.Bold,
+                                        padding = Padding(10.dp, 7.dp, 10.dp, 7.dp)
                                     )
                                 ),
-                                View.VISIBLE
-                            )
-                            HorizontalDivider(thickness = 1.dp)
+                                TextField(
+                                    "",
+                                    viewModel.getTranslateString(
+                                        stringResource(id = R.string.ui_visibility),
+                                        5993
+                                    ),
+                                    MerchModifier(
+                                        fontWeight = FontWeight.Bold,
+                                        padding = Padding(10.dp, 7.dp, 10.dp, 7.dp),
+                                        weight = 1f,
+                                        alignment = Alignment.End
+                                    )
+                                )
+                            ),
+                            View.VISIBLE
+                        )
+                        HorizontalDivider(thickness = 1.dp)
 
-                            LazyColumn {
-                                items(uiState.settingsItems) { itemSettingsUI ->
-                                    SettingsItemView(item = itemSettingsUI)
-                                }
+                        LazyColumn {
+                            items(uiState.settingsItems) { itemSettingsUI ->
+                                SettingsItemView(item = itemSettingsUI)
                             }
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                    Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_option_in_progress), 6001)) {
-                        FontSizeSlider(viewModel, size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
+                Tooltip(
+                    text = viewModel.getTranslateString(
+                        stringResource(id = R.string.ui_option_in_progress),
+                        6001
+                    )
+                ) {
+                    FontSizeSlider(viewModel, size = 16 + offsetSizeFont) {
+                        offsetSizeFont = it - 16
+                    }
+                }
+
+                Row {
+                    Button(
+                        onClick = {
+                            viewModel.updateContent()
+                            onDismiss.invoke()
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                    ) {
+                        Text(
+                            viewModel.getTranslateString(
+                                stringResource(id = R.string.ui_cancel),
+                                5994
+                            )
+                        )
                     }
 
-                    Row {
-                        Button(
-                            onClick = {
-                                viewModel.updateContent()
-                                onDismiss.invoke()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(5.dp)
-                        ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel), 5994))
-                        }
-
-                        Button(
-                            onClick = {
-                                viewModel.saveSettings()
-                                viewModel.updateContent()
-                                viewModel.updateOffsetSizeFonts(offsetSizeFont)
-                                onDismiss.invoke()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(5.dp)
-                        ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.save)))
-                        }
+                    Button(
+                        onClick = {
+                            viewModel.saveSettings()
+                            viewModel.updateContent()
+                            viewModel.updateOffsetSizeFonts(offsetSizeFont)
+                            onDismiss.invoke()
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                    ) {
+                        Text(viewModel.getTranslateString(stringResource(id = R.string.save)))
                     }
                 }
             }
         }
+
     }
     if (showToolTip) {
 

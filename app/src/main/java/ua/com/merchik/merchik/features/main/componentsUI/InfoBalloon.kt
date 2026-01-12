@@ -26,8 +26,11 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -140,11 +143,14 @@ fun InfoBalloonText(
 //                )
 //                Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "$subtitle подробнее..",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Blue,
-                        textDecoration = TextDecoration.Underline
-                    )
+                    text = buildAnnotatedString {
+                        append(subtitle)
+                        append(" ")
+                        withStyle(
+                            SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
+                        ) { append("подробнее..") }
+                    },
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }

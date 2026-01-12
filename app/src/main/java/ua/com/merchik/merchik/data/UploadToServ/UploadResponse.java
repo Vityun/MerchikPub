@@ -13,5 +13,7 @@ public class UploadResponse {
         @SerializedName("element_id") public String elementId; // это твой local ID
         @SerializedName("state") public boolean state;
         @SerializedName("id") public String serverId; // если нужно, сохрани отдельно
+        @SerializedName("auto_approved") public boolean autoApproved; // автоподтверждение
+
     }
 }

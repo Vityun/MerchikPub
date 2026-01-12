@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
+import android.app.Activity
+import android.content.Context
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,11 +18,15 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.isDataReadyCompat
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 
 
 @Composable
@@ -28,6 +35,8 @@ fun OtherComposeTab(dataIsReady: Boolean) {
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val context = LocalContext.current
+    val activity = LocalActivity.current
+
 
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
     viewModel.modeUI = ModeUI.DEFAULT
@@ -74,4 +83,9 @@ fun OtherComposeTab(dataIsReady: Boolean) {
             )
         }
     }
+
+    activity?.let {
+        viewModel.startPlanBudgetPolling(it)
+    }
 }
+

@@ -4,6 +4,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -74,6 +76,8 @@ fun TextFieldInputRounded(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
+            val iconId = if (value.isNotEmpty()) R.drawable.ic_close else R.drawable.ic_search
+
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -91,14 +95,20 @@ fun TextFieldInputRounded(
                     .weight(1f)
             )
 
-            // Иконку поиска можно оставить — при фокусе она будет справа, поле всё равно на весь ряд
             Image(
+                painter = painterResource(id = iconId),
+                contentDescription = "",
+                colorFilter = ColorFilter.tint(Color.Black),
                 modifier = Modifier
                     .padding(end = 7.dp, start = 7.dp)
-                    .size(30.dp),
-                painter = painterResource(id = R.drawable.ic_search),
-                contentDescription = "",
-                colorFilter = ColorFilter.tint(Color.Black)
+                    .size(30.dp)
+                    .clickable(
+                        enabled = value.isNotEmpty(),
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        onValueChange("")
+                    }
             )
         }
     }
@@ -123,7 +133,7 @@ fun TextFieldInputRounded(
             .background(color = Color.White)
             .onFocusChanged { isFocusedSearchView = it.isFocused }
     ) {
-        if (!isFocusedSearchView && value.isEmpty())
+        if (!isFocusedSearchView && value.isEmpty()) {
             Text(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -132,8 +142,9 @@ fun TextFieldInputRounded(
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
             )
+        }
 
-        Row(verticalAlignment = Alignment.CenterVertically){
+        Row(verticalAlignment = Alignment.CenterVertically) {
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -141,18 +152,26 @@ fun TextFieldInputRounded(
                 maxLines = 1,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 modifier = Modifier
-                    .align(Alignment.CenterVertically)
                     .padding(start = 7.dp)
                     .weight(1f)
             )
 
+            val iconId = if (value.isNotEmpty()) R.drawable.ic_close else R.drawable.ic_search
+
             Image(
+                painter = painterResource(id = iconId),
+                contentDescription = "",
+                colorFilter = ColorFilter.tint(Color.Black),
                 modifier = Modifier
                     .padding(end = 7.dp, start = 7.dp)
-                    .size(30.dp),
-                painter = painterResource(id = R.drawable.ic_search),
-                contentDescription = "",
-                colorFilter = ColorFilter.tint(Color.Black)
+                    .size(30.dp)
+                    .clickable(
+                        enabled = value.isNotEmpty(),
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        onValueChange("")
+                    }
             )
         }
     }

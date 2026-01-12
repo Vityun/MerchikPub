@@ -314,58 +314,58 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "button_registration",
-                "Регистрация",
+                "еhe_number_of_visits_has_been_selected",
+                "Отобрано %s посещений. Кликнув на любом из них, вы сможете получить развернутую информацию о нем и подать заявку на выполнение этой работы.",
                 "app",
                 "all",
                 ""
         ));
 //
-        res.add(new AddTranslation(
-                "2",
-                "button_add_registration",
-                "Зарегистрировать",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "3",
-                "dialog_exit_app_msg",
-                "Приложение будет закрыто. Завершить работу?",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "4",
-                "access_to_orders",
-                "доступ к заказам",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "5",
-                "take_the_training",
-                "пройти тренинг",
-                "app",
-                "all",
-                ""
-        ));
-
-
-        res.add(new AddTranslation(
-                "6",
-                "dialog_exit_close",
-                "Система буде закрита",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "2",
+//                "button_add_registration",
+//                "Зарегистрировать",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "3",
+//                "dialog_exit_app_msg",
+//                "Приложение будет закрыто. Завершить работу?",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "4",
+//                "access_to_orders",
+//                "доступ к заказам",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "5",
+//                "take_the_training",
+//                "пройти тренинг",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "6",
+//                "dialog_exit_close",
+//                "Система буде закрита",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 //
 //        res.add(new AddTranslation(

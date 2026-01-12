@@ -145,7 +145,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
         onDismiss.invoke()
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+//    Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .statusBarsPadding()
@@ -351,7 +351,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 }
             }
         }
-    }
+//    }
 
     if (showToolTip) {
         MessageDialog(

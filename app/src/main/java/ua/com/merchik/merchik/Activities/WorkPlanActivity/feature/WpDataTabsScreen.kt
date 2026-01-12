@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
@@ -67,6 +67,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedList
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.retrofit.GlobalErrors
 
@@ -96,12 +97,6 @@ fun WpDataTabsScreen() {
     // ✅ чтобы “авто-выбор при старте” сработал ровно один раз
     var initialTabResolved by rememberSaveable { mutableStateOf(false) }
 
-    // ✅ третий сценарий
-//    var emptyScenario by rememberSaveable { mutableStateOf(false) }
-
-//    val user = remember {
-//        RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
-//    }
 
     LaunchedEffect(dataIsReady) {
         if (!dataIsReady || initialTabResolved) return@LaunchedEffect
@@ -138,16 +133,17 @@ fun WpDataTabsScreen() {
 //        }
 //    }
 
-    val tabTitles = if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562) {
-        listOf(
-            stringResource(R.string.title_0),
-            "Доп.Заработок",
-        )
-    } else {
-        listOf(
-            stringResource(R.string.title_0)
-        )
-    }
+    val tabTitles =
+        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562) {
+            listOf(
+                stringResource(R.string.title_0),
+                "Доп.Заработок",
+            )
+        } else {
+            listOf(
+                stringResource(R.string.title_0)
+            )
+        }
 
     // Подпишемся на изменения ids (минимальные правки, без StateFlow)
     val rememberRemoveListener = remember {
@@ -220,6 +216,7 @@ fun WpDataTabsScreen() {
     Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() +")
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
     val green = colorResource(id = R.color.ufmd_accept_t)
 
     val badgeTargets: List<Long?> = remember(ids) {
@@ -279,8 +276,62 @@ fun WpDataTabsScreen() {
                                             if (selectedTabIndex == index) {
                                                 if (!isScrolling.value) {
                                                     isScrolling.value = true
-                                                    viewModel.requestScrollToVisit(targetHash)
-                                                    viewModel.highlightBId(targetHash, green)
+                                                    if (targetHash > 0) {
+                                                        viewModel.requestScrollToVisit(targetHash)
+                                                        viewModel.highlightBId(targetHash, green)
+
+                                                        val items = uiState.items
+                                                        val indexInData =
+                                                            items.indexOfFirst { it.stableId == targetHash }
+                                                        if (indexInData > 0) {
+
+                                                            val item = items[indexInData]
+                                                            // достаём WpData из rawObj (если он там есть)
+                                                            val wpData: WpDataDB? = item.rawObj
+                                                                .firstNotNullOfOrNull { (it as? WpDataDB) }
+
+                                                            wpData?.let {
+                                                                val currentFilter = uiState.filters
+                                                                if (currentFilter != null) {
+                                                                    viewModel.updateFilters(
+                                                                        currentFilter.copy(
+                                                                            searchText = it.addr_txt
+                                                                        )
+                                                                    )
+                                                                    val groupingFieldAdr =
+                                                                        GroupingField(
+                                                                            key = "addr_txt",
+                                                                            title = viewModel.getTranslateString(
+                                                                                "Адреса",
+                                                                                1101
+                                                                            ),
+                                                                            priority = 1,
+                                                                            collapsedByDefault = false
+                                                                        )
+
+                                                                    val groupingFieldDate =
+                                                                        GroupingField(
+                                                                            key = "dt",
+                                                                            title = viewModel.getTranslateString(
+                                                                                "Дата",
+                                                                                1100
+                                                                            ),
+                                                                            priority = 1,
+                                                                            collapsedByDefault = false
+                                                                        )
+
+                                                                    viewModel.updateGrouping(
+                                                                        groupingFieldAdr,
+                                                                        0
+                                                                    )
+                                                                    viewModel.updateGrouping(
+                                                                        groupingFieldDate,
+                                                                        1
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     isScrolling.value = false
                                                 }
                                             } else {

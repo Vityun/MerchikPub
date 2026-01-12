@@ -193,8 +193,10 @@ fun MessageDialog(
                     sizeImage = 25.dp,
                     modifier = Modifier.padding(end = 0.dp),
                     onClick = {
-                        if (onCloseClick != null)
+                        if (onCloseClick != null) {
                             onCloseClick()
+
+                        }
                         else
                             isCompleted = true
                     }

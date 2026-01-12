@@ -233,9 +233,9 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
-        startActivity(new Intent(this, WifiScannerActivity.class));
+//        startActivity(new Intent(this, WifiScannerActivity.class));
 
 
     }

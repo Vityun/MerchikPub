@@ -1,20 +1,31 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +40,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
-import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableDataAdapter
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.ExchangeResponseInterface
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange
@@ -39,26 +49,18 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog
-import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.CardItemsUI
-import ua.com.merchik.merchik.features.main.Main.MainEvent
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 
 @Stable
@@ -84,7 +86,9 @@ data class MessageDialogData(
     val subTitle: String? = "Базовий мерчендайзинг",
     val message: String,
     val status: DialogStatus,
-    val positivText: String? = null
+    val positivText: String? = null,
+    val showButton: Boolean = true,
+    val isCancelable: Boolean = true
 )
 
 data class CardItemsData(
@@ -104,13 +108,16 @@ sealed class ContextMenuAction(val title: String) {
     data object AskMoreMoney : ContextMenuAction("Попросить больше денег")
     data object Feedback : ContextMenuAction("Обратная связь")
     data object ConfirmAcceptOneTime : ContextMenuAction("Выполнить один раз")
-    data object ConfirmAcceptInfinite : ContextMenuAction( "Выполнять регулярно")
-    data object ConfirmAllAcceptOneTime : ContextMenuAction("Выполнить один раз все работы по %s клиента этому адресу")
-    data object ConfirmAllAcceptInfinite : ContextMenuAction( "Выполнять регулярно все работы по %s клиента этому адресу")
+    data object ConfirmAcceptInfinite : ContextMenuAction("Выполнять регулярно")
+    data object ConfirmAllAcceptOneTime :
+        ContextMenuAction("Выполнить один раз все работы по %s клиента этому адресу")
+
+    data object ConfirmAllAcceptInfinite :
+        ContextMenuAction("Выполнять регулярно все работы по %s клиента этому адресу")
+
     data object OpenSMSPlanDirectory : ContextMenuAction("Просмотреть журнал заявок")
     data object Close : ContextMenuAction("Закрити")
 }
-
 
 
 /** Хост: держит состояние и рисует диалог. Возвращает контроллер с open/close. */
@@ -136,11 +143,34 @@ fun rememberContextMenuHost(
                     is MainEvent.ShowMessageDialog -> {
                         // debug log
                         Log.d("MainUI", "Received ShowMessageDialog: ${event.data}")
-                        Globals.writeToMLOG("INFO","MainUI.rememberContextMenuHost","Received ShowMessageDialog: ${event.data}")
+                        Globals.writeToMLOG(
+                            "INFO",
+                            "MainUI.rememberContextMenuHost",
+                            "Received ShowMessageDialog: ${event.data}"
+                        )
                         showMessageDialog = event.data
                     }
 
                     is MainEvent.ShowCardItemsDialog -> showCardItemsDialog = event.cardItemsData
+
+                    is MainEvent.ShowLoading -> {
+
+                        showMessageDialog = MessageDialogData(
+                            subTitle = "Ожидаем ответ от сервера",
+                            status = DialogStatus.LOADING,
+                            message = " ",
+                            showButton = false,
+                            isCancelable = false
+                        )
+                    }
+
+                    is MainEvent.LoadingCompleted -> {
+                        showMessageDialog = null
+                    }
+
+                    is MainEvent.LoadingCanceled -> {
+                        showMessageDialog = null
+                    }
                 }
             }
         }
@@ -156,6 +186,10 @@ fun rememberContextMenuHost(
                 }
 
                 is MainEvent.ShowCardItemsDialog -> event.cardItemsData
+
+                else -> {
+
+                }
             }
         }
     }
@@ -182,6 +216,7 @@ fun rememberContextMenuHost(
                             )
                         }
                     }
+
                     is ContextMenuAction.AcceptAllAtAddress -> {
                         selectedItem = result.wpDataDB?.let {
                             ContextMenuState(
@@ -194,22 +229,27 @@ fun rememberContextMenuHost(
                             )
                         }
                     }
+
                     is ContextMenuAction.ConfirmAcceptOneTime -> {
                         result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
                         selectedItem = null
                     }
+
                     is ContextMenuAction.ConfirmAcceptInfinite -> {
                         result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
                         selectedItem = null
                     }
+
                     is ContextMenuAction.ConfirmAllAcceptOneTime -> {
                         result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
                         selectedItem = null
                     }
+
                     is ContextMenuAction.ConfirmAllAcceptInfinite -> {
                         result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
                         selectedItem = null
                     }
+
                     is ContextMenuAction.OpenVisit -> {
                         result.wpDataDB?.let {
                             val intent = Intent(context, DetailedReportActivity::class.java)
@@ -218,6 +258,7 @@ fun rememberContextMenuHost(
                         }
                         selectedItem = null
                     }
+
                     ContextMenuAction.OpenOrder -> {
                         result.wpDataDB?.let {
 //                            val progress = ProgressViewModel(2)
@@ -278,6 +319,7 @@ fun rememberContextMenuHost(
 
                         selectedItem = null
                     }
+
                     is ContextMenuAction.OpenSMSPlanDirectory -> {
                         val intent = Intent(context, FeaturesActivity::class.java)
                         val bundle = Bundle().apply {
@@ -292,6 +334,7 @@ fun rememberContextMenuHost(
                         context.startActivity(intent)
                         selectedItem = null
                     }
+
                     is ContextMenuAction.Close -> selectedItem = null
 
                     else -> {
@@ -311,7 +354,7 @@ fun rememberContextMenuHost(
     val close: () -> Unit = { selectedItem = null }
 
     showCardItemsDialog?.let {
-        CardItemsUI (
+        CardItemsUI(
             title = it.title,
             item = it.dateItemUI,
             viewModel = viewModel,
@@ -332,16 +375,21 @@ fun rememberContextMenuHost(
                 viewModel.cancelPending()
             },
             okButtonName = d.positivText ?: "Ok",
-            onConfirmAction = {
-                showMessageDialog = null
-                viewModel.performPending()
-            },
+            onConfirmAction = if (d.showButton) {
+                {
+                    showMessageDialog = null
+                    viewModel.performPending()
+                }
+            } else null,
             onCancelAction = if (d.status == DialogStatus.NORMAL) {
                 {
                     showMessageDialog = null
                     viewModel.cancelPending()
                 }
-            } else null
+            } else null,
+            onCloseClick = {
+
+            }
         )
     }
 
@@ -381,28 +429,34 @@ fun ContextMenuDialog(
                         wpDataDB.addr_id,
                         wpDataDB.dt
                     )
+
                 hasInfinite ->
                     WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
                         wpDataDB.addr_id
                     )
+
                 else -> emptyList()
             }
 
             Column(
-                modifier = Modifier.background(
-                    Color(0xFFB1B1B1),
-                    shape = RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                modifier = Modifier
+                    .background(
+                        Color(0xFFB1B1B1),
+                        shape = RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)
+                    )
                     .fillMaxWidth()
             ) {
                 Text(
                     text = if (!isMultiClient) "Виберіть дію для клієнта:" else "Виберіть дію для клієнтів:",
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
                         .padding(top = 16.dp)
                 )
                 Text(
-                    text = if (!isMultiClient) wpDataDB.client_txt else clients.toString().removeSurrounding("[", "]"),
+                    text = if (!isMultiClient) wpDataDB.client_txt else clients.toString()
+                        .removeSurrounding("[", "]"),
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -411,7 +465,8 @@ fun ContextMenuDialog(
                     text = "за адресою: ${wpDataDB.addr_txt}",
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
                         .padding(bottom = 16.dp)
                 )
             }
@@ -450,7 +505,10 @@ fun ContextMenuDialog(
                         Spacer(Modifier.width(12.dp))
 
                         Text(
-                            text = if (!isMultiClient) action.title else String.format(action.title,"${clients.size} "),
+                            text = if (!isMultiClient) action.title else String.format(
+                                action.title,
+                                "${clients.size} "
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                             color = textColor,
                             modifier = Modifier.weight(1f)
@@ -468,7 +526,8 @@ fun ContextMenuDialog(
 
 private fun optionDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
     // Опції
-    val optionsExchange = OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
+    val optionsExchange =
+        OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
     optionsExchange.downloadOptions(object : ExchangeResponseInterface {
         override fun <T> onSuccess(data: List<T>) {
             if (data.isNotEmpty()) {
@@ -485,7 +544,11 @@ private fun optionDownload(codeDad2: Long, datePremiumDownloadFormat: String, cl
 
 private fun reportDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
 
-    val reportPrepareExchange = ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
+    val reportPrepareExchange = ReportPrepareExchange(
+        datePremiumDownloadFormat,
+        datePremiumDownloadFormat,
+        codeDad2.toString()
+    )
     reportPrepareExchange.downloadReportPrepare(object : ExchangeResponseInterface {
         override fun <T> onSuccess(data: List<T>) {
             if (data.isNotEmpty()) {

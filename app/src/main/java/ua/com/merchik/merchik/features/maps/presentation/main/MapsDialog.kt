@@ -2,7 +2,9 @@ package ua.com.merchik.merchik.features.maps.presentation.main
 
 
 import android.annotation.SuppressLint
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,17 +33,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Globals
@@ -48,8 +58,13 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
+import ua.com.merchik.merchik.features.main.Main.FilteringDialog
+import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.SortingField
+import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.domain.stringByKey
@@ -82,8 +97,14 @@ fun MapsDialog(
     // 1) генерим id сессии диалога (константа на время жизни composable)
     val sessionId = remember { System.currentTimeMillis() }
 
-    var showSettingsDialog by remember { mutableStateOf(false) }
     var showToolTip by remember { mutableStateOf(false) }
+
+    var showToolTipKostil by remember { mutableStateOf(false) }
+
+    var showFilteringDialog by remember { mutableStateOf(false) }
+    var filterBtnRect by remember { mutableStateOf<Rect?>(null) }
+
+    var isActiveFiltered by remember { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()  // <-- добавили
 
@@ -137,7 +158,7 @@ fun MapsDialog(
 
             override fun dismissHost() = onDismiss()
         })
-        vm.process(MapIntent.Init(sessionId)) // 👈 важный вызов
+        vm.process(MapIntent.Init(sessionId))
     }
 
     // есть ли на карте точки пользователя 14041 (для FromWPdata)
@@ -169,12 +190,6 @@ fun MapsDialog(
 
 // определяем время
     val startTime = remember {
-//        if (!isRnoUserOnMap) return@remember uiState.filters?.rangeDataByKey?.start?.let {
-//            Instant.ofEpochMilli(it.toEpochDay())
-//                .atZone(ZoneId.systemDefault())
-//                .format(formatterHHdd_DDmmYYYY)
-//        }
-
 
         val startMillis =
             if (wpDataDB != null && wpDataDB.visit_start_dt > 0 && wpDataDB.visit_end_dt > 0) {
@@ -192,11 +207,6 @@ fun MapsDialog(
     }
 
     val endTime = remember {
-//        if (!isRnoUserOnMap) return@remember uiState.filters?.rangeDataByKey?.end?.let {
-//            Instant.ofEpochMilli(it.toEpochDay())
-//                .atZone(ZoneId.systemDefault())
-//                .format(formatterHHdd_DDmmYYYY)
-//        }
 
         val endMillis = if (wpDataDB != null && wpDataDB.visit_end_dt > 0) {
             wpDataDB.visit_end_dt
@@ -328,112 +338,114 @@ fun MapsDialog(
                 search = uiState.filters?.searchText,
                 userLat = Globals.CoordX,
                 userLon = Globals.CoordY,
-                autoCenterOnSetInput = false      // <-- ключевая строчка
+                autoCenterOnSetInput = false
             )
         )
     }
 
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
-        Column(
+//    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(vertical = 40.dp)
+            .background(Color.Transparent)
+    ) {
+        Row(modifier = Modifier.align(Alignment.End)) {
+
+            ImageButton(
+                id = R.drawable.ic_question_1,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 23.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { showToolTip = true }
+            )
+
+            ua.com.merchik.merchik.features.maps.presentation.main.ImageButton (
+                id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 23.dp,
+                modifier = Modifier
+                    .padding(start = 15.dp, bottom = 10.dp)
+                    .captureBoundsInScreen { filterBtnRect = it },
+                onClick = { showFilteringDialog = true }
+            )
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = onDismiss
+            )
+        }
+
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .padding(vertical = 40.dp)
-                .background(Color.Transparent)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White)
+                .padding(16.dp)
         ) {
-            Row(modifier = Modifier.align(Alignment.End)) {
-
-                ImageButton(
-                    id = R.drawable.ic_question_1,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 23.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { showToolTip = true }
+            Column(Modifier.fillMaxWidth()) {
+                Text(
+                    text = mainViewModel.getTranslateString("Карта", 8763),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-
-                ImageButton(
-                    id = R.drawable.ic_settings_empt,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = { showSettingsDialog = true }
-                )
-                ImageButton(
-                    id = R.drawable.ic_letter_x,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
-                    onClick = onDismiss
-                )
-            }
-
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                Column(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
+                ) {
                     Text(
-                        text = mainViewModel.getTranslateString("Карта", 8763),
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Box(
+                        text = mapSubheaderText,
+                        maxLines = maxLinesSubTitle,
+                        overflow = TextOverflow.Ellipsis,
+                        color = if ((mainViewModel.typeWindow ?: "").equals(
+                                "container",
+                                true
+                            )
+                        ) Color.DarkGray else Color.Black,
+                        textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize()
-                    ) {
-                        Text(
-                            text = mapSubheaderText,
-                            maxLines = maxLinesSubTitle,
-                            overflow = TextOverflow.Ellipsis,
-                            color = if ((mainViewModel.typeWindow ?: "").equals(
-                                    "container",
-                                    true
-                                )
-                            ) Color.DarkGray else Color.Black,
-                            textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
-                            modifier = Modifier
-                                .padding(start = 1.dp, bottom = 4.dp, end = 1.dp)
-                                .clickable {
-                                    maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1
-                                }
-                        )
-                    }
+                            .padding(start = 1.dp, bottom = 4.dp, end = 1.dp)
+                            .clickable {
+                                maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1
+                            }
+                    )
+                }
 
 
 //                    CollapsibleSubtitle(text = mapSubheaderText)
-                    Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White)
-                    ) {
-                        StoresMap(
-                            cameraPositionState = cameraController,
-                            vm = vm
-                        )
-                    }
-
-
-                    Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                ) {
+                    StoresMap(
+                        cameraPositionState = cameraController,
+                        vm = vm
+                    )
                 }
+
+
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
+//    }
     // Confirm Dialog (bound to VM state)
     val state by vm.state.collectAsState()
     if (state.pendingWp != null) {
@@ -445,8 +457,26 @@ fun MapsDialog(
                 1
             )
         }
+        val groupingFieldAdr = remember {
+            GroupingField(
+                key = "addr_txt",
+                title = mainViewModel.getTranslateString("Адреса", 1101),
+                priority = 1,
+                collapsedByDefault = false
+            )
+        }
         val sortingFieldDate =
-            remember { SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1) }
+            remember {
+                SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1)
+            }
+        val groupingFieldDate = remember {
+            GroupingField(
+                key = "dt",
+                title = mainViewModel.getTranslateString("Дата", 1100),
+                priority = 1,
+                collapsedByDefault = false
+            )
+        }
         val periodDate = remember(uiState.filters?.rangeDataByKey) {
             uiState.filters?.rangeDataByKey?.let { range ->
                 val start =
@@ -471,37 +501,36 @@ fun MapsDialog(
                     // 1) Сначала отправляем изменения в MainViewModel
                     mainViewModel.updateSorting(sortingFieldAdr, 0)
                     mainViewModel.updateSorting(sortingFieldDate, 1)
-                    // (если нужно, можно подождать кадр)
-//                     yield() // kotlinx.coroutines.yield()
-
-                    // 2) Потом закрываем карту и запускаем подсветку/скролл
+                    mainViewModel.updateGrouping(groupingFieldAdr, 0)
+                    mainViewModel.updateGrouping(groupingFieldDate, 1)
+                    wp?.let {
+                        val updated = uiState.filters?.copy(searchText = it.addr_txt)
+                            ?: Filters(searchText = it.addr_txt)
+                        mainViewModel.updateFilters(updated)
+                    }
                     vm.process(MapIntent.ConfirmJump)
+                    delay(500)
+                    showToolTipKostil = true
+                    mainViewModel.showKostilDialog()
                 }
             },
             onCancelAction = { vm.process(MapIntent.DismissConfirm) }
         )
     }
 
-    if (showSettingsDialog) {
-        if (allUserIs14041)
-            MapRadiusDialog(
-                vm = vm,                          // твой BaseMapViewModel
-                mainViewModel = mainViewModel,    // чтобы использовать переводы/цвета, как в SettingsDialog
-                onDismiss = { showSettingsDialog = false }
-            )
-        else
-            MessageDialog(
-                title = "Не доступно",
-                status = DialogStatus.ALERT,
-                message = "Данный раздел находится в стадии в разработки",
-                onDismiss = {
-                    showSettingsDialog = false
-                },
-                onConfirmAction = {
-                    showSettingsDialog = false
-                }
-            )
-
+    AnchoredAnimatedDialog(
+        visible = showFilteringDialog,
+        anchorRect = filterBtnRect,
+        onDismissRequest = { showFilteringDialog = false }
+    ) { requestClose ->
+        FilteringDialog(
+            mainViewModel,
+            onDismiss = requestClose,
+            onChanged = {
+                mainViewModel.updateFilters(it)
+                showFilteringDialog = false
+            }
+        )
     }
 
 
@@ -517,9 +546,35 @@ fun MapsDialog(
             okButtonName = "Ok",
             onConfirmAction = { showToolTip = false }
         )
-
-
     }
+}
 
 
+@Composable
+fun ImageButton(
+    @DrawableRes id: Int,
+    shape: Shape = CircleShape,
+    colorImage: ColorFilter? = null,
+    sizeButton: Dp = 40.dp,
+    sizeImage: Dp = 25.dp,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .size(sizeButton)          // размер области клика/кнопки
+            .clip(shape)
+            .background(color = Color.White)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id),
+            contentDescription = null,
+            colorFilter = colorImage,
+            modifier = Modifier.requiredSize(sizeImage), // <-- ключевое: фиксируем размер картинки
+            contentScale = ContentScale.Fit,             // без искажений
+            alignment = Alignment.Center
+        )
+    }
 }

@@ -67,6 +67,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -96,6 +97,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
@@ -104,12 +106,14 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
@@ -120,6 +124,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
+import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -141,12 +146,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showAdditionalContent by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var settingsBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showSortingDialog by remember { mutableStateOf(false) }
+    var sortingBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showFilteringDialog by remember { mutableStateOf(false) }
+    var filterBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showMapsDialog by remember { mutableStateOf(false) }
+    val mapsPulse = rememberPulseController()
+    var mapsBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
 
@@ -155,6 +165,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var maxLinesSubTitle by remember { mutableStateOf(1) }
 
     val listState = rememberLazyListState()
+
+    val showKostilDialog by viewModel.kostilDialog.collectAsState()
 
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
@@ -282,7 +294,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     .align(alignment = Alignment.End),
                 onSettings = { showSettingsDialog = true },
                 onRefresh = { viewModel.updateContent() },
-                onClose = { (context as? Activity)?.finish() }
+                onClose = { (context as? Activity)?.finish() },
+                onSettingsBounds = { settingsBtnRect = it } // ✅
             )
         }
 
@@ -307,29 +320,26 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             Column {
 
                 if ((viewModel.typeWindow ?: "").equals("full", true)) {
+                    Spacer(modifier = Modifier.padding(26.dp))
                     TopButton(
                         modifier = Modifier
                             .align(alignment = Alignment.End)
                             .padding(top = 10.dp, end = 10.dp),
                         onSettings = { showSettingsDialog = true },
                         onRefresh = { viewModel.updateContent() },
-                        onClose = { (context as? Activity)?.finish() }
+                        onClose = { (context as? Activity)?.finish() },
+                        onSettingsBounds = { settingsBtnRect = it }
                     )
                     HorizontalDivider()
                 } else if ((viewModel.typeWindow ?: "").equals("container", true)) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
-//                val dataItemsUI = mutableListOf<DataItemUI>()
-//                dataItemsUI.addAll(uiState.itemsHeader)
-//                dataItemsUI.addAll(result.items)
-//                dataItemsUI.addAll(uiState.itemsFooter)
-
                 // 1. Берём шапку/подвал из uiState
                 val headerItems = uiState.itemsHeader
                 val footerItems = uiState.itemsFooter
 
-// 2. Гоним ТОЛЬКО тело в filterAndSortDataItems
+                // 2. Гоним ТОЛЬКО тело в filterAndSortDataItems
                 val result = filterAndSortDataItems(
                     items = uiState.items,                 // <-- только body
                     filters = uiState.filters,
@@ -461,7 +471,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 shape = RoundedCornerShape(4.dp),
                                 sizeButton = 40.dp,
                                 sizeImage = 24.dp,
-                                modifier = Modifier.padding(start = 7.dp),
+                                modifier = Modifier
+                                    .padding(start = 7.dp)
+                                    .pulseOn(mapsPulse)
+                                    .captureBoundsInWindow { mapsBtnRect = it },
                                 onClick = {
                                     showMapsDialog = true
 //                                        Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT).show()
@@ -473,7 +486,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     id = R.drawable.ic_settings_empt,
                                     shape = RoundedCornerShape(4.dp),
                                     sizeButton = 40.dp, sizeImage = 24.dp,
-                                    modifier = Modifier.padding(start = 7.dp),
+                                    modifier = Modifier
+                                        .padding(start = 7.dp)
+                                        .captureBoundsInWindow { settingsBtnRect = it },
                                     onClick = { showSettingsDialog = true }
                                 )
 
@@ -500,7 +515,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             ImageButton(
                                 id = if (isActiveSorted) R.drawable.ic_sort_down_checked else R.drawable.ic_sort_down,
                                 sizeButton = 40.dp, sizeImage = 24.dp,
-                                modifier = Modifier.padding(start = 7.dp),
+                                modifier = Modifier
+                                    .padding(start = 7.dp)
+                                    .captureBoundsInWindow { sortingBtnRect = it },
                                 onClick = { showSortingDialog = true },
                                 shape = RoundedCornerShape(4.dp)
                             )
@@ -508,7 +525,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             ImageButton(
                                 id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
                                 sizeButton = 40.dp, sizeImage = 24.dp,
-                                modifier = Modifier.padding(start = 7.dp),
+                                modifier = Modifier
+                                    .padding(start = 7.dp)
+                                    .captureBoundsInWindow { filterBtnRect = it },
                                 onClick = { showFilteringDialog = true },
                                 shape = RoundedCornerShape(4.dp)
                             )
@@ -1168,18 +1187,48 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 // Как только пришёл pendingId И список обновился — скроллим к индексу
                 LaunchedEffect(pendingId, dataItemsUI) {
                     val target = pendingId ?: return@LaunchedEffect
-                    // Находим индекс по stableId
+
                     val indexInData = dataItemsUI.indexOfFirst { it.stableId == target }
-                    if (indexInData >= 0) {
-                        // ждём один кадр, чтобы LazyColumn промерилась
-                        withFrameNanos { }
-                        val indexToScroll = headerCount + indexInData
-                        // Анимируем скролл
-                        listState.animateScrollToItem(indexToScroll, scrollOffset = topOffsetPx)
-                        // сбрасываем ожидание
-                        pendingId = null
-                    }
+                    if (indexInData < 0) return@LaunchedEffect
+
+//                    val item = dataItemsUI[indexInData]
+//
+//                    // достаём WpData из rawObj (если он там есть)
+//                    val wpData: WpDataDB? = item.rawObj
+//                        .firstNotNullOfOrNull { (it as? WpDataDB) }
+//
+//                    wpData?.let {
+//                        val current = uiState.filters
+//                        if (current != null) {
+//                            viewModel.updateFilters(current.copy(searchText = it.addr_txt))
+//                            FilteringDialogDataHolder.instance().filters = current
+//                        }
+//                    }
+                    // тут wpData уже есть (или null)
+                    // например:
+                    // wpData?.let { ... }
+                    withFrameNanos { }
+                    val indexToScroll = headerCount + indexInData
+                    listState.animateScrollToItem(indexToScroll, scrollOffset = topOffsetPx)
+
+                    pendingId = null
                 }
+
+//                LaunchedEffect(pendingId, dataItemsUI) {
+//                    val target = pendingId ?: return@LaunchedEffect
+//                    // Находим индекс по stableId
+//                    val indexInData = dataItemsUI.indexOfFirst { it.stableId == target }
+//
+//                    if (indexInData >= 0) {
+//                        // ждём один кадр, чтобы LazyColumn промерилась
+//                        withFrameNanos { }
+//                        val indexToScroll = headerCount + indexInData
+//                        // Анимируем скролл
+//                        listState.animateScrollToItem(indexToScroll, scrollOffset = topOffsetPx)
+//                        // сбрасываем ожидание
+//                        pendingId = null
+//                    }
+//                }
 
             }
 // Оверлейная «летающая» копия
@@ -1372,18 +1421,39 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             )
     }
 
-    if (showSettingsDialog) {
-        SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
+    // settings
+    AnchoredAnimatedDialog(
+        visible = showSettingsDialog,
+        anchorRect = settingsBtnRect,
+        onDismissRequest = { showSettingsDialog = false }
+    ) { requestClose ->
+        SettingsDialog(
+            viewModel = viewModel,
+            onDismiss = requestClose
+        )
     }
 
-    if (showSortingDialog) {
-        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
+    // sorting
+    AnchoredAnimatedDialog(
+        visible = showSortingDialog,
+        anchorRect = sortingBtnRect,
+        onDismissRequest = { showSortingDialog = false }
+    ) { requestClose ->
+        SortingDialog(
+            viewModel = viewModel,
+            onDismiss = requestClose
+        )
     }
 
-    if (showFilteringDialog) {
+    // filter
+    AnchoredAnimatedDialog(
+        visible = showFilteringDialog,
+        anchorRect = filterBtnRect,
+        onDismissRequest = { showFilteringDialog = false }
+    ) { requestClose ->
         FilteringDialog(
             viewModel,
-            onDismiss = { showFilteringDialog = false },
+            onDismiss = requestClose,
             onChanged = {
                 viewModel.updateFilters(it)
                 showFilteringDialog = false
@@ -1391,24 +1461,74 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         )
     }
 
-    if (showMapsDialog) {
-        ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog(
+    // maps
+    AnchoredAnimatedDialog(
+        visible = showMapsDialog,
+        anchorRect = mapsBtnRect,
+        onDismissRequest = { showMapsDialog = false },
+        onClosed = { mapsPulse.pulse() }
+    ) { requestClose ->
+        MapsDialog(
             mainViewModel = viewModel,
-            onDismiss = { showMapsDialog = false },
+            onDismiss = requestClose,
             onOpenContextMenu = { wp, ctxUI ->
                 viewModel.openContextMenu(wp, ctxUI)
             }
         )
+    }
 
-//        MapsDialog(
+    if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+        var oneTimeShow by remember { mutableStateOf(true) }
+        LaunchedEffect(oneTimeShow) {
+            oneTimeShow = false
+            delay(50)
+            showMapsDialog = true
+        }
+    }
+
+    if (showKostilDialog) {
+
+        val selectedCount = dataItemsUI_.size
+
+        MessageDialog(
+            title = "Дополнительный заработок",
+            status = DialogStatus.NORMAL,
+            subTitle = "Базовий мерчендайзинг",   // ← заголовок-сабтайтл по сценарию
+            message = "Отобрано $selectedCount посещений. Кликнув на любом из них, вы сможете получить развернутую информацию о нем и подать заявку на выполнение этой работы.",     // ← тело подсказки по сценарию
+            onDismiss = { viewModel.hideKostilDialog() },
+            okButtonName = "Ok",
+            onConfirmAction = { viewModel.hideKostilDialog() }
+        )
+
+    }
+//    if (showSettingsDialog) {
+//        SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
+//    }
+
+//    if (showSortingDialog) {
+//        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
+//    }
+
+//    if (showFilteringDialog) {
+//        FilteringDialog(
 //            viewModel,
+//            onDismiss = { showFilteringDialog = false },
+//            onChanged = {
+//                viewModel.updateFilters(it)
+//                showFilteringDialog = false
+//            }
+//        )
+//    }
+
+//    if (showMapsDialog) {
+//        MapsDialog (
+//            mainViewModel = viewModel,
 //            onDismiss = { showMapsDialog = false },
-//            contextUI = viewModel.contextUI, // откуда у тебя он берётся
 //            onOpenContextMenu = { wp, ctxUI ->
 //                viewModel.openContextMenu(wp, ctxUI)
 //            }
 //        )
-    }
+//    }
 
 }
 
@@ -1989,7 +2109,8 @@ fun TopButton(
     modifier: Modifier,
     onSettings: () -> Unit,
     onRefresh: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onSettingsBounds: (Rect) -> Unit,   // ✅ добавили
 ) {
     Row(
         modifier = modifier
@@ -2001,7 +2122,8 @@ fun TopButton(
             sizeButton = 40.dp,
             sizeImage = 25.dp,
             modifier = Modifier
-                .padding(start = 15.dp, bottom = 10.dp),
+                .padding(start = 15.dp, bottom = 10.dp)
+                .captureBoundsInWindow(onSettingsBounds), // ✅ ВОТ ТУТ
             onClick = { onSettings.invoke() }
         )
 

@@ -8,6 +8,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -42,6 +44,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -51,6 +54,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.SingleSubject;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import kotlin.Unit;
@@ -144,6 +148,7 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
+import ua.com.merchik.merchik.features.main.Main.MainViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -445,8 +450,10 @@ public class TablesLoadingUnloading {
                                     }
                                 });
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
-                            } else
+                            } else {
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
+                                isdownloadWPData = false;
+                            }
 
                         }
                         isdownloadWPData = false;
@@ -455,6 +462,7 @@ public class TablesLoadingUnloading {
                         isdownloadWPData = false;
                         readyWPData = true;
                     }
+                    isdownloadWPData = false;
                 }
 
                 @Override
@@ -569,10 +577,10 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
 //                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-                                for (WpDataDB wpDataDB : wpDataDBList) {
-                                    if (wpDataDB.getUser_id() == 176053)
-                                        Log.e("!!!!!!!!!!", "+++++++++++");
-                                }
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 176053)
+//                                        Log.e("!!!!!!!!!!", "+++++++++++");
+//                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
@@ -766,7 +774,7 @@ public class TablesLoadingUnloading {
 
     private static final AtomicBoolean DOWNLOAD_PLAN_BUDGET_RUNNING = new AtomicBoolean(false);
 
-    public void donwloadPlanBudgetForConfirmDecision(AppCompatActivity context) {
+    public void donwloadPlanBudgetForConfirmDecision(Activity context, Runnable onFinish) {
 
         // Если уже выполняется — выходим
         if (!DOWNLOAD_PLAN_BUDGET_RUNNING.compareAndSet(false, true)) {
@@ -849,8 +857,7 @@ public class TablesLoadingUnloading {
                                             // Если есть confirmedIds — положим их в ScrollDataHolder и вызовем downloadWPData()
                                             if (confirmedCount > 0) {
                                                 List<WPDataAdditional> wpDataAdditionalListConfirmed =
-                                                        SQL_DB.wpDataAdditionalDao().getByIds(confirmedIds.stream()
-                                                                .collect(Collectors.toList())
+                                                        SQL_DB.wpDataAdditionalDao().getByIds(new ArrayList<>(confirmedIds)
                                                         );
                                                 Set<Long> goodIds = new HashSet<>();
 
@@ -867,14 +874,14 @@ public class TablesLoadingUnloading {
                                                         "TablesLoadingUnloading.donwloadPlanBudget",
                                                         "Detected confirmed items: " + confirmedList);
 
-                                                try {
-                                                    downloadWPData();
-                                                } catch (Exception e) {
-                                                    Log.e("donwloadPlanBudget", "downloadWPData() threw", e);
-                                                    Globals.writeToMLOG("ERROR",
-                                                            "TablesLoadingUnloading.donwloadPlanBudget",
-                                                            "downloadWPData() exception: " + e.getMessage());
-                                                }
+//                                                try {
+//                                                    downloadWPData();
+//                                                } catch (Exception e) {
+//                                                    Log.e("donwloadPlanBudget", "downloadWPData() threw", e);
+//                                                    Globals.writeToMLOG("ERROR",
+//                                                            "TablesLoadingUnloading.donwloadPlanBudget",
+//                                                            "downloadWPData() exception: " + e.getMessage());
+//                                                }
                                             }
 
                                             // Возвращаем количество подтверждённых элементов — UI будет реагировать только на >0
@@ -924,10 +931,10 @@ public class TablesLoadingUnloading {
                                 LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(context, progress);
 
                                 try {
-                                    Exchange exchange = new Exchange();
-                                    exchange.setContext(context);
-                                    Exchange.exchangeTime = 0;
-                                    exchange.startExchange();
+//                                    Exchange exchange = new Exchange();
+//                                    exchange.setContext(context);
+//                                    Exchange.exchangeTime = 0;
+//                                    exchange.startExchange();
                                     new TablesLoadingUnloading().downloadAllTables(context);
 
                                     loadingDialog.show();
@@ -940,10 +947,6 @@ public class TablesLoadingUnloading {
                                 }
 
                                 try {
-                                    /**MERCHIK_1
-                                     * Зверни увагу на примусове завантаження цих типів фото
-                                     * А може сюди*/
-                                    // #### TODO
                                     SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                                     List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
                                     if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
@@ -1008,6 +1011,10 @@ public class TablesLoadingUnloading {
                                             .setMessage("Надійшло підтвердження за заявкою, яку ви подали, щоб переглянути нову роботу, натисніть 'Ок'.")
                                             .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
                                             .setOnConfirmAction(() -> {
+
+                                                onFinish.run();
+//                                                mainViewModel.updateContent();
+
 //                                                Intent intent = new Intent(context, WPDataActivity.class);
 //                                                intent.putExtra("initialOpent", false);
 //                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -1038,6 +1045,112 @@ public class TablesLoadingUnloading {
     private final AtomicInteger uploadPending = new AtomicInteger(0);
     private final CompositeDisposable disposables = new CompositeDisposable();
 
+    public static class UploadPlanBudgetResult {
+        public final int updatedCount;
+        public final int autoApprovedCount;
+
+        public UploadPlanBudgetResult(int updatedCount, int autoApprovedCount) {
+            this.updatedCount = updatedCount;
+            this.autoApprovedCount = autoApprovedCount;
+        }
+    }
+
+    private final AtomicReference<SingleSubject<UploadPlanBudgetResult>> inFlight =
+            new AtomicReference<>(null);
+
+    private final CompositeDisposable disposables2 = new CompositeDisposable();
+
+    public Single<UploadPlanBudgetResult> uploadPlanBudgetRx() {
+        SingleSubject<UploadPlanBudgetResult> current = inFlight.get();
+        if (current != null) {
+            return current; // уже выполняется — подписываемся на тот же результат
+        }
+
+        SingleSubject<UploadPlanBudgetResult> subject = SingleSubject.create();
+        if (!inFlight.compareAndSet(null, subject)) {
+            // кто-то успел раньше
+            return inFlight.get();
+        }
+
+        Disposable d = startUploadChainRx()
+                .doFinally(() -> inFlight.set(null))
+                .subscribe(subject::onSuccess, subject::onError);
+
+        disposables.add(d);
+        return subject;
+    }
+
+    private Single<UploadPlanBudgetResult> startUploadChainRx() {
+        WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
+
+        return Single
+                .fromCallable(() -> dao.getUploadToServer())  // список берём в IO
+                .subscribeOn(Schedulers.io())
+                .flatMap(wpDataAdditionals -> {
+                    if (wpDataAdditionals == null || wpDataAdditionals.isEmpty()) {
+                        return Single.just(new UploadPlanBudgetResult(0, 0));
+                    }
+
+                    List<WPDataAdditionalServ> servs =
+                            WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
+
+                    StandartData data = new StandartData();
+                    data.mod = "plan_budget";
+                    data.act = "wp_data_request_add";
+                    data.data = servs;
+
+                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+
+                    return RetrofitBuilder.getRetrofitInterface()
+                            .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
+                            .map(resp -> {
+                                List<Pair<Long, Long>> mapping = new ArrayList<>();
+                                List<Long> autoApprovedServerIds = new ArrayList<>();
+
+                                if (resp != null && resp.data != null) {
+                                    for (UploadResponse.Item it : resp.data) {
+                                        if (it == null || !it.state || it.elementId == null || it.serverId == null) continue;
+
+                                        try {
+                                            long local = Long.parseLong(it.elementId);
+                                            long server = Long.parseLong(it.serverId);
+                                            mapping.add(new Pair<>(local, server));
+
+                                            if (it.autoApproved) {
+                                                autoApprovedServerIds.add(server);
+                                            }
+                                        } catch (NumberFormatException ignore) {}
+                                    }
+                                }
+
+                                return new Object[]{ mapping, autoApprovedServerIds };
+                            })
+                            .flatMap(arr -> {
+                                @SuppressWarnings("unchecked")
+                                List<Pair<Long, Long>> mapping = (List<Pair<Long, Long>>) arr[0];
+                                @SuppressWarnings("unchecked")
+                                List<Long> autoApprovedIds = (List<Long>) arr[1];
+
+                                if (mapping == null || mapping.isEmpty()) {
+                                    return Single.just(new UploadPlanBudgetResult(0, 0));
+                                }
+
+                                return Completable
+                                        .fromAction(() -> {
+                                            dao.replaceLocalIdsWithServerIdsSync(mapping);
+
+                                            // Если хочешь прямо тут отметить auto-approved:
+                                            // dao.markAutoApprovedSync(autoApprovedIds, System.currentTimeMillis());
+                                            // (нужен метод в DAO, см. ниже)
+                                        })
+                                        .subscribeOn(Schedulers.io())
+                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), autoApprovedIds.size())));
+                            });
+                });
+    }
+
+
+
     public void uploadPlanBudget() {
         // Если уже выполняется — пометим, что есть "отложенный" вызов и выйдем
         if (!uploadRunning.compareAndSet(false, true)) {
@@ -1050,7 +1163,6 @@ public class TablesLoadingUnloading {
     }
 
     private void startUploadChain() {
-        // Подкопируем вашу логику (с минимальными правками для Rx и doFinally)
         List<WPDataAdditional> wpDataAdditionals = SQL_DB.wpDataAdditionalDao().getUploadToServer();
         if (wpDataAdditionals.isEmpty()) {
             // ничего не загружать — сразу сбросим флаг и посмотрим pending
@@ -1120,11 +1232,11 @@ public class TablesLoadingUnloading {
                 .subscribe(
                         updatedCount -> {
                             Log.e("UPLOAD", "uploadStatus=0 проставлен для: " + updatedCount);
-                            Globals.writeToMLOG("INFO", "PlanogrammTableExchange.upload",
+                            Globals.writeToMLOG("INFO", "TablesLoading.startUploadChain",
                                     "Updated: " + updatedCount);
                         },
                         throwable -> {
-                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.upload",
+                            Globals.writeToMLOG("ERROR", "TablesLoading.startUploadChain",
                                     "exception: " + throwable.getMessage());
                             Log.e("UPLOAD", "upload exception", throwable);
                         }
@@ -1227,15 +1339,10 @@ public class TablesLoadingUnloading {
 
 
     public void downloadTypeGrp() {
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTypeGrp.START");
-
 
         Log.e("TAG_TEST_S", "RESPONSE_2" + "ЗАШОЛ)))");
         String mod = "data_list";
         String act = "client_group_list_plain";
-//        String act = "client_group_list";
-
-//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Групы товаров");
 
         Call<CustomerGroups> call = RetrofitBuilder.getRetrofitInterface().GROUP_TYPE(mod, act);
         call.enqueue(new Callback<CustomerGroups>() {
@@ -1245,28 +1352,7 @@ public class TablesLoadingUnloading {
                 try {
                     if (response.isSuccessful() && response.body().getState()) {
 
-
-                        if (response.body().getList() != null) {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.TypeGrp.SIZE: " + response.body().getList().size());
-                        } else {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.TypeGrp.SIZE: NuLL");
-                        }
-
                         RealmManager.setGroupTypeV2(response.body().getList());
-//                        if (RealmManager.setGroupTypeV2(response.body().getList())) {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//                        } else {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//                        }
-
-//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Группы товаров с сервера: " + response.body().getList(), 1097, null, null, null, Globals.userId, null, Globals.session, null)));
-
-                        long currentTime = System.currentTimeMillis() / 1000;
-//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
 
                     }
                 } catch (Exception e) {
@@ -1277,17 +1363,11 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(Call<CustomerGroups> call, Throwable t) {
-//                if (pg != null)
-//                    if (pg.isShowing())
-//                        pg.dismiss();
                 readyTypeGrp = false;
                 syncInternetError = true;
-//                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(ошика интернета): " + t, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
                 Log.e("TAG_TEST", "FAILURE_2 E: " + t);
             }
         });
-
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTypeGrp.END");
     }
 
     public void downloadOptionsByDAD2(long dad2, Clicks.click click) {

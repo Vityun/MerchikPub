@@ -74,6 +74,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.Realm;
@@ -135,12 +136,14 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.Main.MainViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.ProgressRequestBody;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
+@AndroidEntryPoint
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     protected CronchikViewModel cronchikViewModel;
 
@@ -1412,7 +1415,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 });
 
                                 // доп заработок
-                                tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(toolbar_menus.this);
+//                                tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(toolbar_menus.this);
 //                        if (!SQL_DB.wpDataAdditionalDao().getNotConfirmDecision().isEmpty())
 //                            tablesLoadingUnloading.donwloadPlanBudget();
 

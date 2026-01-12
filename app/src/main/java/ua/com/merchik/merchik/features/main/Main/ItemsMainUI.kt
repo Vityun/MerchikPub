@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,7 +108,21 @@ fun GroupDeck(
     maxStackSize: Int = 5,
     stackOffset: Dp = 4.dp
 ) {
-    var expanded by remember { mutableStateOf(false) }
+
+    // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
+    val groupId = remember(groupMeta?.groupKey, level) {
+        // groupKey лучше, чем title. Если groupMeta null — хотя бы уровень.
+        "${level}:${groupMeta?.groupKey ?: "noKey"}"
+    }
+
+    // collapsedByDefault=true => свернуто => expanded=false
+    val defaultExpanded = remember(groupingFields, level) {
+        val collapsed = groupingFields.getOrNull(level)?.collapsedByDefault ?: true
+        !collapsed
+    }
+
+    // стартовое состояние теперь учитывает collapsedByDefault при первой отрисовке
+    var expanded by rememberSaveable(groupId) { mutableStateOf(defaultExpanded) }
 
     if (items.isEmpty()) return
 
@@ -209,36 +224,34 @@ fun GroupDeck(
                             repeat(backCount) { add(1f) }
                         }
                     }
-                    var firstRun by remember { mutableStateOf(true) }
+                    var firstRun by remember(groupId) { mutableStateOf(true) } // ✅ привязали к группе
 
                     // анимация последовательного исчезновения/появления подложек
                     LaunchedEffect(expanded, backCount) {
                         if (backCount <= 0) return@LaunchedEffect
 
+
                         if (firstRun) {
-                            for (i in 0 until backCount) backAlphas[i] = 1f
+                            // если по умолчанию expanded=true и заголовка нет,
+                            // подложки должны сразу быть скрыты, иначе будет “колода поверх раскрытого списка”.
+                            val startAlpha = if (expanded && !hasGroupHeader) 0f else 1f
+                            for (i in 0 until backCount) backAlphas[i] = startAlpha
                             firstRun = false
                             return@LaunchedEffect
                         }
 
                         if (expanded && !hasGroupHeader) {
-                            // режим без заголовка: при раскрытии гасим слои
                             for (i in backCount - 1 downTo 0) {
                                 backAlphas[i] = 0f
                                 delay(120)
                             }
                         } else if (!expanded && !hasGroupHeader) {
-                            // сворачиваем обратно (и только в режиме без заголовка)
                             for (i in 0 until backCount) {
                                 backAlphas[i] = 1f
                                 delay(120)
                             }
                         } else {
-                            // если есть заголовок, мы вообще прячем блок при expanded = true,
-                            // так что тут можно просто держать альфы = 1f
-                            for (i in 0 until backCount) {
-                                backAlphas[i] = 1f
-                            }
+                            for (i in 0 until backCount) backAlphas[i] = 1f
                         }
                     }
 
