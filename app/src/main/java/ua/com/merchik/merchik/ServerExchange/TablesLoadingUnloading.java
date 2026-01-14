@@ -1008,7 +1008,7 @@ public class TablesLoadingUnloading {
                                             .setTitle("Зміни в планi робіт")
                                             .setStatus(DialogStatus.NORMAL)
                                             .setSubTitle("Вам підтвердили роботу")
-                                            .setMessage("Надійшло підтвердження за заявкою, яку ви подали, щоб переглянути нову роботу, натисніть 'Ок'.")
+                                            .setMessage("Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.")
                                             .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
                                             .setOnConfirmAction(() -> {
 

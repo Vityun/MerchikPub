@@ -55,6 +55,7 @@ import androidx.lifecycle.Lifecycle
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
@@ -194,16 +195,17 @@ fun FilteringDialog(
                         .padding(horizontal = 10.dp)
                         .height(40.dp)
                 )
-                Spacer(modifier = Modifier.padding(4.dp))
-                DistanceSlider(
-                    viewModel = viewModel,
-                    modifier = Modifier,
-                    meters = savedDistance
-                ) {
-                    localDistance = it
+                if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    DistanceSlider(
+                        viewModel = viewModel,
+                        modifier = Modifier,
+                        meters = savedDistance
+                    ) {
+                        localDistance = it
+                    }
+                    Spacer(modifier = Modifier.padding(2.dp))
                 }
-                Spacer(modifier = Modifier.padding(2.dp))
-
                 uiState.filters?.items?.let {
                     LazyColumnScrollbar(
                         modifier = Modifier

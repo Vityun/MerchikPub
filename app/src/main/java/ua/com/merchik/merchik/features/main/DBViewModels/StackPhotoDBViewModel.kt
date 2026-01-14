@@ -165,7 +165,13 @@ class StackPhotoDBViewModel @Inject constructor(
                     else -> 0 // Резервное значение, не должно использоваться
                 }
 
-                val imagesType =
+                val imagesType = /* времено пока Вова не починит */
+                    if (typePhotoId == 48) {
+                        val im = ImagesTypeListDB()
+                        im.id = 48
+                        im.nm = "Фото Biтрини з Aкційними Цінниками"
+                        im
+                    } else
                     RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",

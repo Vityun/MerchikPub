@@ -1063,7 +1063,7 @@ public class RealmManager {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", codeDad2)
                 .equalTo("photo_type", photoType)
-                .equalTo("dvi", 0)
+//                .equalTo("dvi", 0)
                 .isNotNull("photo_hash").findAll();
         if (realmResults != null && !realmResults.isEmpty()) {
             return INSTANCE.copyFromRealm(realmResults);

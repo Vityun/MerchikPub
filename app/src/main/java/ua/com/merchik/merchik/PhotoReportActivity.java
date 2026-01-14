@@ -1410,6 +1410,7 @@ public class PhotoReportActivity extends toolbar_menus {
                     stackPhotoDB.planogram_img_id = MakePhoto.planogram_img_id;
                     stackPhotoDB.example_id = MakePhoto.example_id;
                     stackPhotoDB.example_img_id = MakePhoto.example_img_id;
+                    stackPhotoDB.setDvi(0); // #### уточнить
 
                     stackPhotoDB.setCode_iza(wp.getCode_iza());   // Вмазал код ИЗА что б не крашился тип 31 фото в своей опции контроля (и всегда был с фоткой)
 

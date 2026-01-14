@@ -47,7 +47,8 @@ public class RoomManager {
                         MIGRATION_67_68,
                         MIGRATION_68_69,
                         MIGRATION_69_70,
-                        MIGRATION_70_71
+                        MIGRATION_70_71,
+                        MIGRATION_71_72
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -823,6 +824,29 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("ALTER TABLE address ADD COLUMN kps INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
+    public static final Migration MIGRATION_71_72 = new Migration(71, 72) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            // date_from
+            db.execSQL(
+                    "ALTER TABLE wp_data_additional " +
+                            "ADD COLUMN date_from INTEGER NOT NULL DEFAULT 0"
+            );
+
+            // date_to
+            db.execSQL(
+                    "ALTER TABLE wp_data_additional " +
+                            "ADD COLUMN date_to INTEGER NOT NULL DEFAULT 0"
+            );
+
+            // route_id
+            db.execSQL(
+                    "ALTER TABLE wp_data_additional " +
+                            "ADD COLUMN route_id INTEGER NOT NULL DEFAULT 0"
+            );
         }
     };
 

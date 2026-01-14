@@ -376,11 +376,13 @@ fun Modifier.pulseOn(controller: PulseController): Modifier {
 
     LaunchedEffect(controller.trigger) {
         // короткий “пульс”
-        scale.snapTo(1f)
-        scale.animateTo(0.85f, tween(110))
-        scale.animateTo(1f, tween(160))
-        scale.animateTo(0.85f, tween(110))
-        scale.animateTo(1f, tween(160))
+        if (controller.trigger != 0) {
+            scale.snapTo(1f)
+            scale.animateTo(0.85f, tween(110))
+            scale.animateTo(1f, tween(160))
+            scale.animateTo(0.85f, tween(110))
+            scale.animateTo(1f, tween(160))
+        }
     }
 
     return this.graphicsLayer {

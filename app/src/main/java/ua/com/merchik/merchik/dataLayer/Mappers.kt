@@ -369,7 +369,7 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_157354,    // Фото ДМП (42)
     SAMPLE_PHOTO_FROM_OPTION_164355,    // Фото планограмы (5)
     SAMPLE_PHOTO_FROM_OPTION_169108,    // фото POS материалов (47) +
-    SAMPLE_PHOTO_FROM_OPTION_172100     // Фото вітрини з акційними цінниками
+    SAMPLE_PHOTO_FROM_OPTION_172100     // Фото вітрини з акційними цінниками (48)
 }
 
 

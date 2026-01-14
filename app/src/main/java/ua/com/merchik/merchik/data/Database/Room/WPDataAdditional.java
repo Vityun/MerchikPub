@@ -86,4 +86,19 @@ public class WPDataAdditional {
 
     @ColumnInfo(name = "uploadStatus")
     public int uploadStatus;
+
+    @SerializedName("date_from")
+    @Expose
+    @ColumnInfo(name = "date_from")
+    public long dateFrom;
+
+    @SerializedName("date_to")
+    @Expose
+    @ColumnInfo(name = "date_to")
+    public long dateTo;
+
+    @SerializedName("route_id")
+    @Expose
+    @ColumnInfo(name = "route_id")
+    public int routeId;         // маршрут
 }

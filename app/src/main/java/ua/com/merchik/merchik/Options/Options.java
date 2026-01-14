@@ -92,6 +92,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoEFFIE;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoPOS;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseAktion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
@@ -2041,6 +2042,10 @@ public class Options {
                 new OptionButtonPhotoShowcaseNear<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
+            case 172100:
+                new OptionButtonPhotoShowcaseAktion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
             case 158604:
                 new OptionButtonPhotoShowcaseCorporateBlock<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
@@ -2085,6 +2090,7 @@ public class Options {
 
             case 157278:
             case 166528:
+            case 172101:
                 OptionControlPhotoPromotion<?> optionControlPhotoPromotion =
                         new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (optionControlPhotoPromotion.isBlockOption()) {

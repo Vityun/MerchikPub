@@ -95,7 +95,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
         val wpDataDB =
             RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong()))
-        val id  = dataJsonObject.get("optionDBId").asString
+        val id = dataJsonObject.get("optionDBId").asString
         val optionDB =
             RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
         if (wpDataDB != null && optionDB != null) {
@@ -108,6 +108,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                 else -> {
                     null
                 }
@@ -150,8 +151,9 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
-                -> {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
+                    -> {
                     typePhotoId?.let {
                         val workPlan = WorkPlan()
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
@@ -192,72 +194,87 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun updateFilters() {
 
-        val typePhotoId = when (contextUI) {
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-            else -> {
-                null
-            }
-        }
-
-        val itemsFilter = mutableListOf<ItemFilter>()
-
-        typePhotoId?.let {
-            val imagesType =
-                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
-            val filterImagesTypeListDB = ItemFilter(
-                "Тип фото",
-                ImagesTypeListDB::class,
-                ImagesTypeListDBViewModel::class,
-                ModeUI.MULTI_SELECT,
-                "title",
-                "subTitle",
-                "photo_tp",
-                "id",
-                mutableListOf(imagesType.id.toString()),
-                mutableListOf(imagesType.nm),
-                true
-            )
-            itemsFilter.add(filterImagesTypeListDB)
-        }
-
         try {
+
+            val typePhotoId = when (contextUI) {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+                else -> {
+                    null
+                }
+            }
+
+            val itemsFilter = mutableListOf<ItemFilter>()
+
+            typePhotoId?.let {
+                /* времено пока Вова не починит */
+                val imagesType =
+                    if (typePhotoId == 48) {
+                        val im = ImagesTypeListDB()
+                        im.id = 48
+                        im.nm = "Фото Biтрини з Aкційними Цінниками"
+                        im
+                    } else
+                        RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
+
+
+                val filterImagesTypeListDB = ItemFilter(
+                    "Тип фото",
+                    ImagesTypeListDB::class,
+                    ImagesTypeListDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "photo_tp",
+                    "id",
+                    mutableListOf(imagesType.id.toString()),
+                    mutableListOf(imagesType.nm),
+                    true
+                )
+                itemsFilter.add(filterImagesTypeListDB)
+            }
+
+            try {
 //                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
 //                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
 //                groupText.setText(tradeMarkDB.getNm());
 
-            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-            val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
-            val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
+                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
+                val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
-            val filterTradeMarkDB = ItemFilter(
-                "Торгова марка",
-                TradeMarkDB::class,
-                TradeMarkDBViewModel::class,
-                ModeUI.MULTI_SELECT,
-                "Торгова марка",
-                "subTitle",
-                "grp_id",
-                "iD",
-                mutableListOf(tradeMarkDB.id.toString(), "0"),
-                mutableListOf(tradeMarkDB.nm, "Все не указанные"),
-                true
+                val filterTradeMarkDB = ItemFilter(
+                    "Торгова марка",
+                    TradeMarkDB::class,
+                    TradeMarkDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Торгова марка",
+                    "subTitle",
+                    "grp_id",
+                    "iD",
+                    mutableListOf(tradeMarkDB.id.toString(), "0"),
+                    mutableListOf(tradeMarkDB.nm, "Все не указанные"),
+                    true
+                )
+                itemsFilter.add(filterTradeMarkDB)
+            } catch (e: Exception) {
+            }
+
+            filters = Filters(
+                rangeDataByKey = null,
+                searchText = "",
+                items = itemsFilter
             )
-            itemsFilter.add(filterTradeMarkDB)
         } catch (e: Exception) {
+            Log.e("!", "error: ${e.message}")
         }
-
-        filters = Filters(
-            rangeDataByKey = null,
-            searchText = "",
-            items = itemsFilter
-        )
     }
 
     override fun getDefaultHideUserFields(): List<String>? {

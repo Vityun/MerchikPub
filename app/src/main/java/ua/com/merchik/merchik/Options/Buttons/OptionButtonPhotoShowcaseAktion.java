@@ -25,13 +25,13 @@ import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 
-public class OptionButtonPhotoShowcaseNear<T> extends OptionControl {
-    public static int OPTION_BUTTON_PhotoShowcaseCorporateBlock_ID = 158309;
+public class OptionButtonPhotoShowcaseAktion<T> extends OptionControl {
+    public static int OPTION_BUTTON_PhotoShowcaseAktion_ID = 172100;
 
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButtonPhotoShowcaseNear(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionButtonPhotoShowcaseAktion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -59,7 +59,7 @@ public class OptionButtonPhotoShowcaseNear<T> extends OptionControl {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
-                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309.toString());
+                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100.toString());
                 JsonObject dataJson = new JsonObject();
                 dataJson.addProperty("tradeMarkDBId", tradeMarkDB != null ? tradeMarkDB.getID() : "0");
                 dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getId()));
@@ -67,7 +67,7 @@ public class OptionButtonPhotoShowcaseNear<T> extends OptionControl {
                 bundle.putString("dataJson", new Gson().toJson(dataJson));
                 bundle.putString("title", R.string.title_samplephotosdb + ", ");
                 bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
-                        "Для того, чтобы изготовить 'Фото витрины наближене' нажмите на соответствующую фотографию. " +
+                        "Для того, чтобы изготовить 'Фото Biтрини з Aкційними Цінниками' нажмите на соответствующую фотографию. " +
                         "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                 intent.putExtras(bundle);
                 context.startActivity(intent);

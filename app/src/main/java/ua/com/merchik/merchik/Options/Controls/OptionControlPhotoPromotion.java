@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
+import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_ACTION_SHOWCASE;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 
 import android.app.Activity;
@@ -98,11 +99,21 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     private void executeOption() {
         long dad2ForGetStackPhotoDB = dad2;
         String[] codeIZAForGetStackPhotoDB = null;
-        int m = Integer.parseInt(optionDB.getAmountMin());
+        int m;
+        try {
+            String s = optionDB.getAmountMin();
+            int v = (s == null || s.trim().isEmpty()) ? 0 : Integer.parseInt(s.trim());
+            m = (v > 0) ? v : 3;
+        } catch (NumberFormatException e) {
+            m = 3;
+        }
         String mainOption = wp.getMain_option_id();
 
 //        int photoType = 28;
-        String optionId = optionDB.getOptionId();
+        String optionId = "157278";
+        if (optionDB.getOptionId().equals("172101") || optionDB.getOptionControlId().equals("172101"))
+            optionId = "172101";
+
         int photoType = switch (optionId) {
             case "172101" -> 48;
             default -> 28;
@@ -150,7 +161,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 optionDB.getOptionId().equals("172101") || optionDB.getOptionControlId().equals("172101")) {
             // Получение Доп. Требований с дополнительными фильтрами.
 
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, photoType, null, wp.getDt(), wp.getDt(), null, null, null, null);
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.valueOf(optionId), null, wp.getDt(), wp.getDt(), null, null, null, null);
 
             for (AdditionalRequirementsDB item : additionalRequirements) {
                 spisTovOSV.add(item.getTovarId());
@@ -176,8 +187,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
 
         // 5.0
+
         List<StackPhotoDB> stackPhotoDBS = new ArrayList<>();
-        stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), PHOTO_PROMOTION_TOV);
+        stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), photoType);
         int size = 0;
 
         // 6.0
@@ -201,7 +213,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             //6.2
             if (optionId.equals("172101")) {
                 //тут ми просто відмічаємо товари у котрих є ОСВ (Акція) та вони присутні на вітрині. Це нам потрібно у подальшому для того, щоб вивести у сповіщенні кількість товарів, котрі контролер повинен побачити на Панорамній Фото Вітрини для опції 172101
-                if (OSV == 1 || Integer.parseInt(item.face) >= 1) {
+                if (OSV == 1 && Integer.parseInt(item.face) >= 1) {
                     kolAkciaTovarNaVitrine = kolAkciaTovarNaVitrine + 1;
                 }
                 continue;
@@ -266,7 +278,8 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             spannableStringBuilder.append("Товарів, по котрим треба виконати світлини 'Акційного товару', не знайдено. Зауважень нема.");
             signalInt = 2;
             signal = false;
-        } else if (kolAkciaTovarNaVitrine > 0 && stackPhotoDBS != null && stackPhotoDBS.isEmpty() && optionId.equals("172101")) {
+        } else if ((kolAkciaTovarNaVitrine > 0 && stackPhotoDBS != null && stackPhotoDBS.isEmpty() && optionId.equals("172101"))
+        || (kolAkciaTovarNaVitrine > 0 && stackPhotoDBS == null && optionId.equals("172101"))) {
             spannableStringBuilder.append("Фото вітрин (з ").append(String.valueOf(kolAkciaTovarNaVitrine)).append(" акційними товарами), НЕ знайдено!");
             signalInt = 1;
             signal = true;

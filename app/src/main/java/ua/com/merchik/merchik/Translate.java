@@ -320,15 +320,15 @@ public class Translate {
                 "all",
                 ""
         ));
-//
-//        res.add(new AddTranslation(
-//                "2",
-//                "button_add_registration",
-//                "Зарегистрировать",
-//                "app",
-//                "all",
-//                ""
-//        ));
+
+        res.add(new AddTranslation(
+                "2",
+                "confirmation_off_additional",
+                "Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.",
+                "app",
+                "all",
+                ""
+        ));
 //
 //        res.add(new AddTranslation(
 //                "3",

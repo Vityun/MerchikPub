@@ -86,6 +86,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -868,16 +869,20 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             SpannableString spannableString172100 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 48));
                             spannableString172100.setSpan(new UnderlineSpan(), 0, spannableString172100.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                             textInteger.setText(spannableString172100);
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4), optionsButtons));
+                            ImagesTypeListDB it = ImagesTypeListRealm.getByID(48);
+                            String name = (it != null && it.getNm() != null && !it.getNm().trim().isEmpty())
+                                    ? it.getNm()
+                                    : "Фото Biтрини з Aкційними Цінниками";
+
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
-                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
                                 bundle.putString("title", "Перелік фото звітів");
-                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(48).getNm());
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + name);
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
@@ -1796,6 +1801,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 photoType = 25;
                 showPhotoLink = true;
                 break;
+
+            case "172100":  // - 48 - Фото вітрини з акційними цінниками
+                photoType = 48;
+                showPhotoLink = true;
+                break;
         }
 
 
@@ -2013,6 +2023,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     }
                 }
             } catch (Exception e) {
+                Log.e("!!!","error: " + e.getMessage());
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "Exception: " + e.getMessage());
             }
         }
