@@ -24,6 +24,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
+import retrofit2.http.Streaming;
 import retrofit2.http.Url;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.EKLExchange;
 import ua.com.merchik.merchik.data.AppData.AppData;
@@ -257,6 +258,32 @@ public interface RetrofitInterface {
                                 @Query("comment") String comment,
                                 @Query("gp") String gp,
                                 @Part MultipartBody.Part photo);
+
+    @Multipart
+    @POST("/mobile_app.php?")
+    @Timeout(key = UPLOAD_PHOTO_KEY)
+    Call<ResponseBody> SEND_PHOTO_2_BODY_re(@Part("mod") RequestBody mod,
+                                       @Part("act") RequestBody act,
+                                       @Part("client_id") RequestBody client_id,
+                                       @Part("addr_id") RequestBody addr_id,
+                                       @Part("date") RequestBody date,
+                                       @Part("img_type_id") RequestBody img_type_id,
+                                       @Part("photo_user_id") RequestBody photo_user_id,
+                                       @Part("client_tovar_group") RequestBody client_tovar_group,
+                                       @Part("doc_num") RequestBody doc_num,
+                                       @Part("theme_id") RequestBody theme_id,
+                                       @Part("comment") RequestBody comment,
+                                       @Part("dvi") RequestBody dvi,
+                                       @Part("code_dad2") RequestBody codeDad2,
+                                       @Part("gp") RequestBody gp,
+                                       @Part("tovar_id") RequestBody tovar_id,
+                                       @Part("img_src_id") RequestBody img_src_id,
+                                       @Part("showcase_id") RequestBody showcase_id,
+                                       @Part("planogram_id") RequestBody planogram_id,
+                                       @Part("planogram_img_id") RequestBody planogram_img_id,
+                                       @Part("example_id") RequestBody example_id,
+                                       @Part("example_img_id") RequestBody example_img_id,
+                                       @Part MultipartBody.Part photo);
 
     @Multipart
     @POST("/mobile_app.php?")

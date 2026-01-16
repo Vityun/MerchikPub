@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,7 +28,9 @@ import kotlin.Unit;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -480,10 +483,65 @@ public class PhotoReports {
 //        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
 
         // Создание вызова выгрузка фото
+
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, img_src_id2, showcase_id2, planogram_id2, planogram_img_id2,
                         example_id2, example_img_id2,
                         photo);
+
+//        Call<ResponseBody> call2 = RetrofitBuilder.getRetrofitInterface()
+//                .SEND_PHOTO_2_BODY_re(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2,
+//                        client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2,
+//                        img_src_id2, showcase_id2, planogram_id2, planogram_img_id2, example_id2, example_img_id2,
+//                        photo);
+
+//        call2.enqueue(new Callback<ResponseBody>() {
+//            @Override
+//            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                Log.e("SEND_PHOTO", "GOOOD" + response.body());
+//                Log.e("SEND_PHOTO", "GOOOD" + response.raw().toString());
+//
+//                if (!response.isSuccessful()) {
+//                    // на всякий случай тоже сохраним errorBody
+//                    saveBodyToFile(response.raw().body(), "send_photo_error.txt");
+//                    return;
+//                }
+//                saveBodyToFile(response.raw().body(), "send_photo_response2.txt");
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                Log.e("SEND_PHOTO", "FAIL", t);
+//            }
+//
+//            private void saveBodyToFile(ResponseBody body, String fileName) {
+//                if (body == null) {
+//                    Log.e("SEND_PHOTO", "Body is null");
+//                    return;
+//                }
+//
+//                File outFile = new File(mContext.getFilesDir(), fileName); // или getExternalFilesDir(null)
+//                try (InputStream in = body.byteStream();
+//                     FileOutputStream out = new FileOutputStream(outFile)) {
+//
+//                    byte[] buffer = new byte[32 * 1024];
+//                    int read;
+//                    long total = 0;
+//
+//                    while ((read = in.read(buffer)) != -1) {
+//                        out.write(buffer, 0, read);
+//                        total += read;
+//                    }
+//                    out.flush();
+//
+//                    Log.e("SEND_PHOTO", "Saved: " + outFile.getAbsolutePath() + " bytes=" + total);
+//
+//                } catch (Exception e) {
+//                    Log.e("SEND_PHOTO", "Save failed", e);
+//                }
+//            }
+//        });
+
 
 
 //        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + new Gson().toJson(call.request().body()));

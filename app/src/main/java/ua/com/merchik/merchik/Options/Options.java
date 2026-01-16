@@ -61,10 +61,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -656,12 +658,12 @@ public class Options {
     /**
      * Запуск нового протокола проверки ОпцийКонтроля
      */
-    int count = 0;
+//    int count = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(View view, List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
-        count = 0;
-        List<OptionsDB> success = new ArrayList<>();
+//        count = 0;
+        Set<OptionsDB> success = new HashSet<>();
         List<OptionsDB> failure = new ArrayList<>();
         int optionId2 = Integer.parseInt(option.getOptionId());
         if (optionsDBList != null && optionsDBList.size() > 0) {
@@ -686,9 +688,9 @@ public class Options {
                     public void onUnlockCodeSuccess() {
 //                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
 //                        click.click(); +84932/+158608/+8299/+157352/+160568/+134583/139577/+158607
-                        count++;
+//                        count++;
                         success.add(item);
-                        if (count == optionsDBList.size() && failure.isEmpty()) {
+                        if (success.size() == optionsDBList.size() && failure.isEmpty()) {
                             click.click();
                             // Обычное выполнение нажатия на кнопку.
                             optControl(view, context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -741,24 +743,24 @@ public class Options {
             if (!Objects.equals(option.getOptionControlId(), "160209"))
                 option.setIsSignal("0");
 
-            List<OptionsDB> testDad2 = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(option.getCodeDad2()));
-
-            Log.e("NNK", "---------------START-----------------");
-            Log.e("NNK", "option.option_id: " + option.getOptionId());
-            Log.e("NNK", "option.getCodeDad2: " + option.getCodeDad2());
-            Log.e("NNK", "option.getCodeDad2 testDad2 SIZE: " + testDad2.size());
-            Log.e("NNK", "option.getCodeDad2 testDad2: " + new Gson().toJson(testDad2));
-            Log.e("NNK", "option.getOptionTxt: " + option.getOptionTxt());
-            Log.e("NNK", "option.option_control_id: " + option.getOptionControlId());
-            Log.e("NNK", "option.option_control_id: " + option.getOptionControlTxt());
-            Log.e("NNK", "START_res: " + res);
-
-            Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
-            Log.e("NNK", "option.getOptionBlock2(): " + option.getOptionBlock2());
-
-            Log.e("NNK", "option.optionList(): " + optionList);
-
-            Log.e("NNK", "-------------BLOCK-------------------");
+//            List<OptionsDB> testDad2 = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(option.getCodeDad2()));
+//
+//            Log.e("NNK", "---------------START-----------------");
+//            Log.e("NNK", "option.option_id: " + option.getOptionId());
+//            Log.e("NNK", "option.getCodeDad2: " + option.getCodeDad2());
+//            Log.e("NNK", "option.getCodeDad2 testDad2 SIZE: " + testDad2.size());
+//            Log.e("NNK", "option.getCodeDad2 testDad2: " + new Gson().toJson(testDad2));
+//            Log.e("NNK", "option.getOptionTxt: " + option.getOptionTxt());
+//            Log.e("NNK", "option.option_control_id: " + option.getOptionControlId());
+//            Log.e("NNK", "option.option_control_id: " + option.getOptionControlTxt());
+//            Log.e("NNK", "START_res: " + res);
+//
+//            Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
+//            Log.e("NNK", "option.getOptionBlock2(): " + option.getOptionBlock2());
+//
+//            Log.e("NNK", "option.optionList(): " + optionList);
+//
+//            Log.e("NNK", "-------------BLOCK-------------------");
 
             boolean existOption = true;
             boolean existOption2 = true;

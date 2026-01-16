@@ -26,6 +26,8 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.database.room.RoomManager.SQL_DB
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import java.io.IOException
+import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.abs
 
 class DownloadImagesWorker(
     context: Context,
@@ -129,7 +131,8 @@ class DownloadImagesWorker(
     }
 
 
-    private val downloadSemaphore = Semaphore(8) // Ограничиваем до 8 одновременных запросов
+    private val maxParallel = if (Runtime.getRuntime().availableProcessors() < 4) 2 else 6
+    private val downloadSemaphore = Semaphore(maxParallel)
 
     private suspend fun downloadPhoto(photo: TovarImgList): Boolean {
         return withContext(Dispatchers.IO) {
@@ -181,11 +184,11 @@ class DownloadImagesWorker(
                     try {
                         // Генерация нового ID
 //                        val newId = PrimaryKeyGenerator.nextId(bgRealm, StackPhotoDB::class.java)
-                        val lastId = bgRealm.where(StackPhotoDB::class.java)
-                            .sort("id", Sort.DESCENDING)
-                            .findFirst()
-                            ?.id ?: 0
-                        val newId = lastId + 1
+//                        val lastId = bgRealm.where(StackPhotoDB::class.java)
+//                            .sort("id", Sort.DESCENDING)
+//                            .findFirst()
+//                            ?.id ?: 0
+                        val newId = generateLocalIntId()
 
                         // Создание объекта StackPhotoDB
                         val stackPhotoDB = StackPhotoDB().apply {
@@ -298,19 +301,18 @@ class DownloadImagesWorker(
     ) {
         withContext(Dispatchers.IO) {
             val realm = Realm.getDefaultInstance()
-            var bitmap: Bitmap? = null
+//            var bitmap: Bitmap? = null
             try {
-                bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
+//                bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
 
-                val path =
-                    Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
-//                    .saveImage1(bitmap, "THUMB_${stackPhoto.photoServerId}")
+//                val path =
+//                    Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
 
-                // Получаем ID из объекта stackPhoto
-//                val photoId = stackPhoto.photoServerId ?: run {
-//                    Log.e("DownloadImagesWorker", "PhotoServerId is null")
-//                    return@withContext
-//                }
+                val path = Globals.savePhotoToPhoneMemoryStream(
+                    "/Manager",
+                    stackPhoto.photoServerId.toString(),
+                    responseBody.byteStream()
+                )
 
 
                 realm.executeTransaction { r ->
@@ -330,9 +332,18 @@ class DownloadImagesWorker(
                 Log.e("DownloadImagesWorker", "Error saving thumbnail", e)
             } finally {
                 realm.close()
-                bitmap?.recycle()
             }
         }
     }
 
+
+    private fun generateLocalIntId(): Int {
+        val sec = (System.currentTimeMillis() / 1000L).toInt()      // ~ 1_700_000_000
+        val rnd = ThreadLocalRandom.current().nextInt(0, 1000)      // 0..999
+        val mixed = sec * 1000 + rnd                                // ~ 1_700_000_000_000 не влезет в Int!
+        // Поэтому НЕ умножаем sec на 1000 в Int. Делаем иначе:
+        val mixed2 = sec xor (rnd shl 20) xor ThreadLocalRandom.current().nextInt()
+        // отрицательный диапазон, чтобы не пересекаться с обычными позитивными id
+        return -abs(mixed2)
+    }
 }

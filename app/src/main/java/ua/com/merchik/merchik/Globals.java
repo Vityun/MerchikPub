@@ -999,14 +999,10 @@ public class Globals {
      * @param image_name Имя файла.
      * @param bitmap     Сама фотка для сохранения
      */
-//    TODO #### сделать сохранение в памяти асинхроным
     public static String savePhotoToPhoneMemory(String folderPath, String image_name, Bitmap bitmap) {
         try {
 
             Log.e("savePhotoToPhoneMemory", "(bitmap.getByteCount()): " + bitmap.getByteCount());
-
-//        String root = Environment.getExternalStorageDirectory().toString() + APP_DIR + folderPath;
-//        File myDir = new File(root);
 
             File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
             myDir.mkdirs(); // Если такой папки не создано - создать
@@ -1023,7 +1019,6 @@ public class Globals {
                     // Если размеры не совпадают, удаляем файл и продолжаем
                     file.delete();
                 }
-
             // Запись в файл фотки.
             // Если удачно сохранило фотку - возвращает её путь, иначе - возвразает пустоту.
             try (FileOutputStream out = new FileOutputStream(file)) {
@@ -1040,17 +1035,42 @@ public class Globals {
             Log.e("savePhotoToPhoneMemory", "Ошибка: Недостаточно памяти", e);
             return null;
         }
-//        try (FileOutputStream out = new FileOutputStream(file)) {
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-//            out.flush();
-//            // Освобождаем память после сохранения
-//            bitmap.recycle(); // Освобождение памяти, занятой изображением
-//            return file.getAbsolutePath();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
     }
+
+    /*
+    16.01.2026 решил убрать вообще BitmapFactory.decodeStream и всю прочую работу с Bitmaр,
+    так как мыи так получаем с сервера готовые фото в том же виде их и сохранять
+     */
+    public static String savePhotoToPhoneMemoryStream(
+            String folderPath,
+            String imageName,
+            InputStream input
+    ) {
+        File dir = MyApplication.getAppContext()
+                .getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
+        if (dir == null) return null;
+        if (!dir.exists()) dir.mkdirs();
+
+        File file = new File(dir, imageName + ".jpg");
+
+        // если файл уже нормальный — возвращаем
+        if (file.exists() && file.length() > 1000) return file.getAbsolutePath();
+        if (file.exists()) file.delete();
+
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            out.flush();
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e("savePhotoToPhoneMemory", "Exception: ", e);
+            return null;
+        }
+    }
+
 
     private static String savePhotoToPhoneMemoryNew(String folderPath, String imageName, Bitmap bitmap) {
         try {
