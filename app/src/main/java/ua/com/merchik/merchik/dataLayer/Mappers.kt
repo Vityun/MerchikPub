@@ -320,6 +320,7 @@ enum class ModeUI {
 
 @DrawableRes
 fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
+    ContextMenuAction.ShowAllVizitInAdress -> R.drawable.ic_37
     ContextMenuAction.AcceptOrder -> R.drawable.ic_37   // твои ресурсы
     ContextMenuAction.AcceptAllAtAddress -> R.drawable.ic_37
     ContextMenuAction.RejectOrder -> null
@@ -357,6 +358,8 @@ enum class ContextUI {
     SHOWCASE_COMPLETED_CHECK,
     WP_DATA_IN_CONTAINER,
     WP_DATA_ADDITIONAL_IN_CONTAINER,
+    WP_DATA_IN_CONTAINER_MULT,
+    WP_DATA_ADDITIONAL_IN_CONTAINER_MULT,
     SMS_PLAN_DEFAULT,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
@@ -459,4 +462,13 @@ sealed interface MainEvent {
     data object LoadingCompleted : MainEvent
     data object LoadingCanceled : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
+}
+
+
+sealed interface PendingAction {
+    data class JumpToAddressVisits(
+        val addrText: String,
+        val addrTitle: String?,      // например wp.addr_txt для subtitle
+        val periodText: String       // уже готовая строка "12.01.2026 по 18.01.2026"
+    ) : PendingAction
 }

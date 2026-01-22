@@ -95,4 +95,26 @@ public interface WPDataAdditionalDao {
         }
     }
 
+    @Transaction
+    default void applyServerResultSync(long serverId, boolean accepted, String comment, long nowSec) {
+        WPDataAdditional item = getByIdSync(serverId);
+        if (item == null) return;
+
+        // 1 = APPROVED, 2 = DECLINED (как у тебя уже используется)
+        item.action = accepted ? 1 : 2;
+
+        item.confirmDecision = item.action;
+
+        item.comment = comment;
+
+        // dt в секундах
+        item.dt = nowSec;
+
+        insertSync(item);
+    }
+
+    @Query("SELECT comment FROM wp_data_additional WHERE code_dad2 = :dad2 ORDER BY dt DESC LIMIT 1")
+    String getLastCommentByDad2Sync(long dad2);
+
+
 }

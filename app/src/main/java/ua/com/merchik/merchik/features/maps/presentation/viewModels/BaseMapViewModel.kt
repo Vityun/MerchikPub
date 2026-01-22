@@ -6,6 +6,7 @@ import io.realm.kotlin.types.geo.Distance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.haversine
@@ -122,13 +123,62 @@ abstract class BaseMapViewModel(
     private fun onMarkerClicked(p: PointUi) {
         val wp = p.point.wp ?: return
         val b = bridge
-        if (p.count == 1 && wp.user_id != 14041 && b != null) {
-            viewModelScope.launch {
-                _effects.emit(MapEffect.OpenContextMenu(wp, b.contextUI))
+        if (wp.user_id != 14041 ) {
+            if (p.count == 1) {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            pendingWp = wp,
+                            pendingStableId = p.point.dataItemsUI?.stableId
+                        )
+                    }
+                    _effects.emit(MapEffect.OpenContextMenu(wp, ContextUI.WP_DATA_IN_CONTAINER))
+                }
+            } else {
+//            _effects.tryEmit(MapEffect.ShowConfirm(wp, p.point.dataItemsUI?.stableId))
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            pendingWp = wp,
+                            pendingStableId = p.point.dataItemsUI?.stableId
+                        )
+                    }
+                    _effects.emit(
+                        MapEffect.OpenContextMenu(
+                            wp,
+                            ContextUI.WP_DATA_IN_CONTAINER_MULT
+                        )
+                    )
+                }
             }
         } else {
-            _state.update { it.copy(pendingWp = wp, pendingStableId = p.point.dataItemsUI?.stableId) }
-            _effects.tryEmit(MapEffect.ShowConfirm(wp, p.point.dataItemsUI?.stableId))
+            if (p.count == 1) {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            pendingWp = wp,
+                            pendingStableId = p.point.dataItemsUI?.stableId
+                        )
+                    }
+                    _effects.emit(MapEffect.OpenContextMenu(wp, ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER))
+                }
+            } else {
+//            _effects.tryEmit(MapEffect.ShowConfirm(wp, p.point.dataItemsUI?.stableId))
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            pendingWp = wp,
+                            pendingStableId = p.point.dataItemsUI?.stableId
+                        )
+                    }
+                    _effects.emit(
+                        MapEffect.OpenContextMenu(
+                            wp,
+                            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
+                        )
+                    )
+                }
+            }
         }
     }
 

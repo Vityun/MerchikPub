@@ -1081,55 +1081,61 @@ public class TablesLoadingUnloading {
     }
 
     private Single<UploadPlanBudgetResult> startUploadChainRx() {
-        WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
+        WPDataAdditionalDao dao = RoomManager.SQL_DB.wpDataAdditionalDao();
 
         return Single
-                .fromCallable(() -> dao.getUploadToServer())  // список берём в IO
+                .fromCallable(dao::getUploadToServer)
                 .subscribeOn(Schedulers.io())
-                .flatMap(wpDataAdditionals -> {
-                    if (wpDataAdditionals == null || wpDataAdditionals.isEmpty()) {
+                .flatMap(list -> {
+                    if (list == null || list.isEmpty()) {
                         return Single.just(new UploadPlanBudgetResult(0, 0));
                     }
 
                     List<WPDataAdditionalServ> servs =
-                            WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
+                            WPDataAdditionalMapper.mapAll(list, Globals.userId);
 
                     StandartData data = new StandartData();
                     data.mod = "plan_budget";
                     data.act = "wp_data_request_add";
                     data.data = servs;
 
-                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+                    JsonObject body = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
                     return RetrofitBuilder.getRetrofitInterface()
-                            .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject)
+                            .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, body)
                             .map(resp -> {
                                 List<Pair<Long, Long>> mapping = new ArrayList<>();
-                                List<Long> autoApprovedServerIds = new ArrayList<>();
+                                List<UploadResponse.ResultItem> results = new ArrayList<>();
 
-                                if (resp != null && resp.data != null) {
-                                    for (UploadResponse.Item it : resp.data) {
-                                        if (it == null || !it.state || it.elementId == null || it.serverId == null) continue;
+                                if (resp != null) {
+                                    if (resp.data != null) {
+                                        for (UploadResponse.Item it : resp.data) {
+                                            if (it == null || !it.state) continue;
+                                            if (it.elementId == null || it.serverId == null) continue;
+                                            try {
+                                                long local = Long.parseLong(it.elementId);
+                                                long server = Long.parseLong(it.serverId);
+                                                mapping.add(new Pair<>(local, server));
+                                            } catch (NumberFormatException ignore) {}
+                                        }
+                                    }
 
-                                        try {
-                                            long local = Long.parseLong(it.elementId);
-                                            long server = Long.parseLong(it.serverId);
-                                            mapping.add(new Pair<>(local, server));
-
-                                            if (it.autoApproved) {
-                                                autoApprovedServerIds.add(server);
+                                    if (resp.result != null) {
+                                        for (UploadResponse.ResultItem r : resp.result) {
+                                            if (r != null && r.id != null) {
+                                                results.add(r);
                                             }
-                                        } catch (NumberFormatException ignore) {}
+                                        }
                                     }
                                 }
 
-                                return new Object[]{ mapping, autoApprovedServerIds };
+                                return new Object[]{ mapping, results };
                             })
                             .flatMap(arr -> {
                                 @SuppressWarnings("unchecked")
                                 List<Pair<Long, Long>> mapping = (List<Pair<Long, Long>>) arr[0];
                                 @SuppressWarnings("unchecked")
-                                List<Long> autoApprovedIds = (List<Long>) arr[1];
+                                List<UploadResponse.ResultItem> results = (List<UploadResponse.ResultItem>) arr[1];
 
                                 if (mapping == null || mapping.isEmpty()) {
                                     return Single.just(new UploadPlanBudgetResult(0, 0));
@@ -1137,17 +1143,30 @@ public class TablesLoadingUnloading {
 
                                 return Completable
                                         .fromAction(() -> {
-                                            dao.replaceLocalIdsWithServerIdsSync(mapping);
+                                            RoomManager.SQL_DB.runInTransaction(() -> {
+                                                // 1) local -> server
+                                                dao.replaceLocalIdsWithServerIdsSync(mapping);
 
-                                            // Если хочешь прямо тут отметить auto-approved:
-                                            // dao.markAutoApprovedSync(autoApprovedIds, System.currentTimeMillis());
-                                            // (нужен метод в DAO, см. ниже)
+                                                // 2) apply server decisions/comments
+                                                long nowSec = System.currentTimeMillis() / 1000L;
+
+                                                if (results != null) {
+                                                    for (UploadResponse.ResultItem r : results) {
+                                                        if (r == null || r.id == null) continue;
+                                                        try {
+                                                            long serverId = Long.parseLong(r.id);
+                                                            dao.applyServerResultSync(serverId, r.state, r.comment, nowSec);
+                                                        } catch (NumberFormatException ignore) {}
+                                                    }
+                                                }
+                                            });
                                         })
                                         .subscribeOn(Schedulers.io())
-                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), autoApprovedIds.size())));
+                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), 0)));
                             });
                 });
     }
+
 
 
 

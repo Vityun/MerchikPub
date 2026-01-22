@@ -61,6 +61,8 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.CardItemsUI
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @Stable
@@ -69,10 +71,31 @@ data class ContextMenuController(
     val close: () -> Unit
 )
 
+@Stable
+class DialogCloseController {
+    private var closeFn: (() -> Unit)? = null
+
+    fun bind(close: () -> Unit) {
+        closeFn = close
+    }
+
+    fun unbind() {
+        closeFn = null
+    }
+
+    fun close() {
+        closeFn?.invoke()
+    }
+}
+
+@Composable
+fun rememberDialogCloseController(): DialogCloseController =
+    remember { DialogCloseController() }
+
 
 data class ContextMenuState(
     val actions: List<ContextMenuAction>,
-    val wpDataDB: WpDataDB               // держим выбранный объект тут
+    val wpDataDB: WpDataDB              // держим выбранный объект тут
 )
 
 
@@ -88,7 +111,8 @@ data class MessageDialogData(
     val status: DialogStatus,
     val positivText: String? = null,
     val showButton: Boolean = true,
-    val isCancelable: Boolean = true
+    val isCancelable: Boolean = true,
+    val filterLogic: Boolean = false
 )
 
 data class CardItemsData(
@@ -97,6 +121,7 @@ data class CardItemsData(
 )
 
 sealed class ContextMenuAction(val title: String) {
+    data object ShowAllVizitInAdress : ContextMenuAction("Показать все визиты по этому адресу")
     data object AcceptOrder : ContextMenuAction("Принять этот заказ")
     data object AcceptAllAtAddress : ContextMenuAction("Принять всех клиентов этого адреса")
     data object RejectOrder : ContextMenuAction("Отказаться от этого заказа")
@@ -124,7 +149,8 @@ sealed class ContextMenuAction(val title: String) {
 @Composable
 fun rememberContextMenuHost(
     viewModel: MainViewModel,
-    context: Context
+    context: Context,
+    closeMapsDialogAnimated: () -> Unit
 ): ContextMenuController {
     var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
     val focusManager = LocalFocusManager.current
@@ -133,6 +159,10 @@ fun rememberContextMenuHost(
     var showCardItemsDialog by remember { mutableStateOf<CardItemsData?>(null) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val formatterDDmmYYYY = DateTimeFormatter
+        .ofPattern("dd MMM yyyy")
+        .withLocale(Locale.getDefault())
 
     LaunchedEffect(lifecycleOwner) {
         // жизненный цикл: подписываемся когда owner в STARTED, отписываемся при stop
@@ -176,23 +206,6 @@ fun rememberContextMenuHost(
         }
     }
 
-    // Подписка на события (как было)
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is MainEvent.ShowContextMenu -> selectedItem = event.menuState
-                is MainEvent.ShowMessageDialog -> { /* твоя логика показ диалога */
-                    showMessageDialog = event.data
-                }
-
-                is MainEvent.ShowCardItemsDialog -> event.cardItemsData
-
-                else -> {
-
-                }
-            }
-        }
-    }
 
     // Рендер самого диалога один раз, когда selectedItem != null
     selectedItem?.let { state ->
@@ -204,6 +217,28 @@ fun rememberContextMenuHost(
             onActionClick = { result ->
                 focusManager.clearFocus(force = true)
                 when (result.action) {
+                    is ContextMenuAction.ShowAllVizitInAdress -> {
+
+                        val wp = result.wpDataDB ?: run {
+                            selectedItem = null
+                            return@ContextMenuDialog
+                        }
+
+                        // periodText должен быть известен MainUI/MapsDialog.
+                        // Самый простой путь: хранить periodText в MainViewModel.state,
+                        // или передать в openContextMenu как параметр.
+                        // Я покажу вариант через ViewModel.state (самый чистый).
+                        val periodText = viewModel.uiState.value.filters?.let { f ->
+                            val range = f.rangeDataByKey
+                            val start = range?.start?.format(formatterDDmmYYYY) ?: "?"
+                            val end = range?.end?.format(formatterDDmmYYYY) ?: "?"
+                            "$start по $end"
+                        } ?: "не определено"
+
+                        viewModel.requestJumpToAddressVisits(wp, periodText)
+                        selectedItem = null
+                    }
+
                     is ContextMenuAction.AcceptOrder -> {
                         selectedItem = result.wpDataDB?.let {
                             ContextMenuState(
@@ -261,62 +296,10 @@ fun rememberContextMenuHost(
 
                     ContextMenuAction.OpenOrder -> {
                         result.wpDataDB?.let {
-//                            val progress = ProgressViewModel(2)
-//                            val loadingDialog = LoadingDialogWithPercent(context as Activity,progress)
-//                            loadingDialog.show()
-//                            progress.onNextEvent("Завантажую опциi")
-//
                             val intent = Intent(context, DetailedReportActivity::class.java)
                             intent.putExtra("WpDataDB_ID", it.id)
                             context.startActivity(intent)
                         }
-//                        result.wpDataDB?.let { wp ->
-//                            // Для текущей даты
-//                            val currentDate = wp.dt
-//                            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-//                            val documentDate = formatter.format(currentDate)
-//
-//                            val progress = ProgressViewModel(2)
-//                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
-//                            loadingDialog.show()
-//
-//                            // 1) уведомление о загрузке опций
-//                            progress.onNextEvent("Завантажую опції")
-//
-//                            // безопасный helper, чтобы выполнять UI-действия на главном потоке
-//                            fun runOnUi(action: () -> Unit) {
-//                                (context as Activity).runOnUiThread { action() }
-//                            }
-//
-//                            // callback-реализация clickVoid (предполагается, что интерфейс clickVoid { fun click() } у тебя есть)
-//                            val afterOptions = object : clickVoid {
-//                                override fun click() {
-//                                    // после загрузки опций — уведомляем и запускаем загрузку товаров
-//                                    runOnUi {
-//                                        progress.onNextEvent("Завантажую товари")
-//                                    }
-//
-//                                    reportDownload(wp.code_dad2, documentDate, object : clickVoid {
-//                                        override fun click() {
-//                                            // по завершении загрузки товаров — закрываем диалог и открываем активити
-//                                            runOnUi {
-//                                                try {
-//                                                    if (loadingDialog.isShowing()) progress.onCompleted()
-//                                                } catch (_: Exception) { /* ignore */ }
-//
-//                                                val intent = Intent(context, DetailedReportActivity::class.java)
-//                                                intent.putExtra("WpDataDB_ID", wp.id)
-//                                                context.startActivity(intent)
-//                                            }
-//                                        }
-//                                    })
-//                                }
-//                            }
-//
-//                            // Запускаем загрузку опций; при любом результате — вызовем afterOptions.click()
-//                            optionDownload(wp.code_dad2, documentDate, afterOptions)
-//                        }
-
                         selectedItem = null
                     }
 
@@ -378,13 +361,23 @@ fun rememberContextMenuHost(
             onConfirmAction = if (d.showButton) {
                 {
                     showMessageDialog = null
-                    viewModel.performPending()
+                    if (d.filterLogic) {
+                        closeMapsDialogAnimated()
+                        viewModel.performPendingK()
+                    }
+                    else
+                        viewModel.performPending()
                 }
             } else null,
             onCancelAction = if (d.status == DialogStatus.NORMAL) {
                 {
                     showMessageDialog = null
-                    viewModel.cancelPending()
+                    if (d.filterLogic) {
+                        closeMapsDialogAnimated()
+                        viewModel.cancelPendingK()
+                    }
+                    else
+                        viewModel.cancelPending()
                 }
             } else null,
             onCloseClick = {
@@ -394,7 +387,6 @@ fun rememberContextMenuHost(
     }
 
     return remember { ContextMenuController(open, close) }
-
 }
 
 @Composable

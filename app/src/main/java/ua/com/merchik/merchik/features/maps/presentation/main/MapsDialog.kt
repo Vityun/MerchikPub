@@ -448,75 +448,75 @@ fun MapsDialog(
 //    }
     // Confirm Dialog (bound to VM state)
     val state by vm.state.collectAsState()
-    if (state.pendingWp != null) {
-        val wp = state.pendingWp
-        val sortingFieldAdr = remember {
-            SortingField(
-                "addr_txt",
-                mainViewModel.getTranslateString("Адреса", 1101),
-                1
-            )
-        }
-        val groupingFieldAdr = remember {
-            GroupingField(
-                key = "addr_txt",
-                title = mainViewModel.getTranslateString("Адреса", 1101),
-                priority = 1,
-                collapsedByDefault = false
-            )
-        }
-        val sortingFieldDate =
-            remember {
-                SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1)
-            }
-        val groupingFieldDate = remember {
-            GroupingField(
-                key = "dt",
-                title = mainViewModel.getTranslateString("Дата", 1100),
-                priority = 1,
-                collapsedByDefault = false
-            )
-        }
-        val periodDate = remember(uiState.filters?.rangeDataByKey) {
-            uiState.filters?.rangeDataByKey?.let { range ->
-                val start =
-                    range.start?.format(formatterDDmmYYYY)
-                        ?: "?"
-                val end =
-                    range.end?.format(formatterDDmmYYYY)
-                        ?: "?"
-                "$start по $end"
-            } ?: "не определено"
-        }
-
-        MessageDialog(
-            title = "Перейти к посещенням",
-            status = DialogStatus.NORMAL,
-            subTitle = wp?.addr_txt,
-            message = "Показать все работы по этому адресу за период с $periodDate?",
-            onDismiss = { vm.process(MapIntent.DismissConfirm) },
-            onConfirmAction = {
-
-                scope.launch {
-                    // 1) Сначала отправляем изменения в MainViewModel
-                    mainViewModel.updateSorting(sortingFieldAdr, 0)
-                    mainViewModel.updateSorting(sortingFieldDate, 1)
-                    mainViewModel.updateGrouping(groupingFieldAdr, 0)
-                    mainViewModel.updateGrouping(groupingFieldDate, 1)
-                    wp?.let {
-                        val updated = uiState.filters?.copy(searchText = it.addr_txt)
-                            ?: Filters(searchText = it.addr_txt)
-                        mainViewModel.updateFilters(updated)
-                    }
-                    vm.process(MapIntent.ConfirmJump)
-                    delay(500)
-                    showToolTipKostil = true
-                    mainViewModel.showKostilDialog()
-                }
-            },
-            onCancelAction = { vm.process(MapIntent.DismissConfirm) }
-        )
-    }
+//    if (state.pendingWp != null) {
+//        val wp = state.pendingWp
+//        val sortingFieldAdr = remember {
+//            SortingField(
+//                "addr_txt",
+//                mainViewModel.getTranslateString("Адреса", 1101),
+//                1
+//            )
+//        }
+//        val groupingFieldAdr = remember {
+//            GroupingField(
+//                key = "addr_txt",
+//                title = mainViewModel.getTranslateString("Адреса", 1101),
+//                priority = 1,
+//                collapsedByDefault = false
+//            )
+//        }
+//        val sortingFieldDate =
+//            remember {
+//                SortingField("dt", mainViewModel.getTranslateString("Дата", 1100), 1)
+//            }
+//        val groupingFieldDate = remember {
+//            GroupingField(
+//                key = "dt",
+//                title = mainViewModel.getTranslateString("Дата", 1100),
+//                priority = 1,
+//                collapsedByDefault = false
+//            )
+//        }
+//        val periodDate = remember(uiState.filters?.rangeDataByKey) {
+//            uiState.filters?.rangeDataByKey?.let { range ->
+//                val start =
+//                    range.start?.format(formatterDDmmYYYY)
+//                        ?: "?"
+//                val end =
+//                    range.end?.format(formatterDDmmYYYY)
+//                        ?: "?"
+//                "$start по $end"
+//            } ?: "не определено"
+//        }
+//
+//        MessageDialog(
+//            title = "Перейти к посещенням",
+//            status = DialogStatus.NORMAL,
+//            subTitle = wp?.addr_txt,
+//            message = "Показать все работы по этому адресу за период с $periodDate?",
+//            onDismiss = { vm.process(MapIntent.DismissConfirm) },
+//            onConfirmAction = {
+//
+//                scope.launch {
+//                    // 1) Сначала отправляем изменения в MainViewModel
+//                    mainViewModel.updateSorting(sortingFieldAdr, 0)
+//                    mainViewModel.updateSorting(sortingFieldDate, 1)
+//                    mainViewModel.updateGrouping(groupingFieldAdr, 0)
+//                    mainViewModel.updateGrouping(groupingFieldDate, 1)
+//                    wp?.let {
+//                        val updated = uiState.filters?.copy(searchText = it.addr_txt)
+//                            ?: Filters(searchText = it.addr_txt)
+//                        mainViewModel.updateFilters(updated)
+//                    }
+//                    vm.process(MapIntent.ConfirmJump)
+//                    delay(500)
+//                    showToolTipKostil = true
+//                    mainViewModel.showKostilDialog()
+//                }
+//            },
+//            onCancelAction = { vm.process(MapIntent.DismissConfirm) }
+//        )
+//    }
 
     AnchoredAnimatedDialog(
         visible = showFilteringDialog,

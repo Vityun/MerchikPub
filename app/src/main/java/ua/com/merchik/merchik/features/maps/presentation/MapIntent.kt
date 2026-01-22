@@ -54,6 +54,7 @@ data class MapState(
     val userLon: Double? = null,
     val pendingWp: WpDataDB? = null,
     val pendingStableId: Long? = null,
+    val activePoint: PointUi? = null,             // активная точка null или id
     val autoBaselineRadiusMeters: Double? = null, // авто «самая дальняя + 50м»
     val customRadiusMeters: Double? = null,       // из меню; может быть null (нет сужения)
     val circleRadiusMeters: Double? = null        // эффективный (рисуем по нему)
@@ -68,7 +69,7 @@ object MapReducer {
         )
 
         is MapIntent.SetInput -> state.copy(isLoading = true, userLat = intent.userLat, userLon = intent.userLon)
-        is MapIntent.MarkerClicked -> state
+        is MapIntent.MarkerClicked -> state.copy(activePoint = intent.point)
         MapIntent.ConfirmJump -> state  // <-- НИЧЕГО НЕ ДЕЛАЕМ!
         MapIntent.DismissConfirm -> state.copy(pendingWp = null, pendingStableId = null)
         is MapIntent.SetCircleRadius -> {
@@ -76,6 +77,7 @@ object MapReducer {
             val eff = effectiveRadius(state.autoBaselineRadiusMeters, newCustom)
             state.copy(customRadiusMeters = newCustom, circleRadiusMeters = eff)
         }
+
     }
 }
 

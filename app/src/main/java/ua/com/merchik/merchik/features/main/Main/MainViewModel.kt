@@ -51,6 +51,7 @@ import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
+import ua.com.merchik.merchik.dataLayer.PendingAction
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
@@ -63,7 +64,6 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
-import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
@@ -1102,10 +1102,16 @@ abstract class MainViewModel(
 
                                         DecisionResult.DECLINED -> {
                                             _events.emit(MainEvent.LoadingCanceled)
+
+                                            val comment = withContext(Dispatchers.IO) {
+                                                RoomManager.SQL_DB.wpDataAdditionalDao().getLastCommentByDad2Sync(dad2)
+                                            }
+
                                             _events.emit(
                                                 MainEvent.ShowMessageDialog(
                                                     MessageDialogData(
-                                                        message = "Заявка отклонена куратором.",
+                                                        subTitle = "Відповідь від сервера",
+                                                        message = comment?.takeIf { it.isNotBlank() } ?: "Заявка отклонена.",
                                                         status = DialogStatus.ALERT
                                                     )
                                                 )
@@ -1290,8 +1296,7 @@ abstract class MainViewModel(
                 MainEvent.ShowContextMenu(
                     menuState = ContextMenuState(
                         wpDataDB = wp,
-                        actions = actions
-                    )
+                        actions = actions)
                 )
             )
         }
@@ -1301,6 +1306,11 @@ abstract class MainViewModel(
         when (contextUI) {
             ContextUI.WP_DATA_IN_CONTAINER -> listOf(
                 ContextMenuAction.OpenVisit,
+                ContextMenuAction.Close
+            )
+
+            ContextUI.WP_DATA_IN_CONTAINER_MULT -> listOf(
+                ContextMenuAction.ShowAllVizitInAdress,
                 ContextMenuAction.Close
             )
 
@@ -1318,6 +1328,20 @@ abstract class MainViewModel(
                 ContextMenuAction.Close
             )
 
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> listOf(
+                ContextMenuAction.ShowAllVizitInAdress,
+                ContextMenuAction.AcceptAllAtAddress,
+//                ContextMenuAction.RejectOrder,
+                ContextMenuAction.RejectAddress,
+//                ContextMenuAction.RejectClient,
+                ContextMenuAction.RejectByType,
+//                ContextMenuAction.OpenOrder,
+                ContextMenuAction.OpenSMSPlanDirectory,
+                ContextMenuAction.AskMoreMoney,
+                ContextMenuAction.Feedback,
+                ContextMenuAction.Close
+            )
+
             else -> emptyList()
         }
 
@@ -1328,6 +1352,78 @@ abstract class MainViewModel(
 
     fun onChangeItemIndex(item: SettingsItemUI, offset: Int) {
 //        repository.getSettingsItemList(table, contextUI)
+    }
+
+    private var pendingAction: PendingAction? = null
+
+    fun requestJumpToAddressVisits(wp: WpDataDB, periodText: String) {
+        // готовим pending
+        pendingAction = PendingAction.JumpToAddressVisits(
+            addrText = wp.addr_txt ?: "",
+            addrTitle = wp.addr_txt,
+            periodText = periodText
+        )
+
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        title = "Перейти к посещенням",
+                        status = DialogStatus.NORMAL,
+                        subTitle = wp.addr_txt,
+                        message = "Показать все работы по этому адресу за период с $periodText?",
+                        filterLogic = true
+                    )
+                )
+            )
+        }
+    }
+
+    fun performPendingK() {
+        when (val p = pendingAction) {
+            is PendingAction.JumpToAddressVisits -> {
+                pendingAction = null
+
+                // 1) sorting/grouping как раньше
+                val sortingFieldAdr = SortingField("addr_txt", getTranslateString("Адреса", 1101), 1)
+                val groupingFieldAdr = GroupingField(
+                    key = "addr_txt",
+                    title = getTranslateString("Адреса", 1101),
+                    priority = 1,
+                    collapsedByDefault = false
+                )
+                val sortingFieldDate = SortingField("dt", getTranslateString("Дата", 1100), 1)
+                val groupingFieldDate = GroupingField(
+                    key = "dt",
+                    title = getTranslateString("Дата", 1100),
+                    priority = 1,
+                    collapsedByDefault = false
+                )
+
+                viewModelScope.launch {
+                    updateSorting(sortingFieldAdr, 0)
+                    updateSorting(sortingFieldDate, 1)
+                    updateGrouping(groupingFieldAdr, 0)
+                    updateGrouping(groupingFieldDate, 1)
+
+                    val updated = (_uiState.value.filters?.copy(searchText = p.addrText) ?: Filters(searchText = p.addrText))
+                    updateFilters(updated)
+
+                    // 2) твои “переходные” штуки
+                    // showToolTipKostil = true — это было локально в MapsDialog,
+                    // поэтому делаем отдельный эвент, чтобы UI показал это.
+//                    _events.emit(MainEvent.ShowCardItemsDialog(/* если надо */)) // или отдельный MainEvent.ShowKostil
+                    showKostilDialog()
+                }
+            }
+
+            null -> Unit
+            else -> { pendingAction = null } // на всякий
+        }
+    }
+
+    fun cancelPendingK() {
+        pendingAction = null
     }
 
 }

@@ -194,7 +194,7 @@ class WpDataDBViewModel @Inject constructor(
                     "addr_txt",
                     dataUniqAdress.map { it.addr_txt.toString() },
                     dataUniqAdress.map { it.addr_txt },
-                    enabled = false
+                    enabled = true
                 )
 
                 val filterClientSDB = ItemFilter(
@@ -253,7 +253,7 @@ class WpDataDBViewModel @Inject constructor(
                     "status",
                     data.map { it.status.toString() }.distinct(),
                     data.map { it.statusComment }.distinct(),
-                    enabled = false
+                    enabled = true
                 )
 
                 filters = Filters(

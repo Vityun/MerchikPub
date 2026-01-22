@@ -21,7 +21,6 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.maps.presentation.MainMapActionsBridge
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent

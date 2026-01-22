@@ -106,14 +106,12 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
@@ -124,6 +122,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
+import ua.com.merchik.merchik.features.main.componentsUI.rememberDialogCloseController
 import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
 import kotlin.math.roundToInt
@@ -173,8 +172,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         listState.scrollToItem(0)
     }
 
+    val mapsCloseController = rememberDialogCloseController()
     // действие по клику
-    val menu = rememberContextMenuHost(viewModel, context)
+    val menu = rememberContextMenuHost(
+        viewModel, context,
+        closeMapsDialogAnimated = { mapsCloseController.close() })
 
     var searchFocused by remember { mutableStateOf(false) }
 
@@ -1468,6 +1470,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         onDismissRequest = { showMapsDialog = false },
         onClosed = { mapsPulse.pulse() }
     ) { requestClose ->
+        // биндим текущий requestClose
+        DisposableEffect(requestClose) {
+            mapsCloseController.bind(requestClose)
+            onDispose { mapsCloseController.unbind() }
+        }
+
         MapsDialog(
             mainViewModel = viewModel,
             onDismiss = requestClose,
