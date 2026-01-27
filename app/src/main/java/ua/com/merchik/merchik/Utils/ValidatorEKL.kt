@@ -163,22 +163,26 @@ object ValidatorEKL {
                 userDocumentCache.getOrPut(user_id) {
                     RoomManager.SQL_DB.usersDao().getUserById(user_id)
                 }
-            var tovarGroupClientSDB =
-                tovarGroupCache.getOrPut(client_id)
-                {
-                    RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(
-                        client_id,
-                        addressSDB?.tpId ?: 0
-                    )
-                }
 
-            if (tovarGroupClientSDB.isNullOrEmpty()) {
-                tovarGroupClientSDB =
-                    tovarGroupCache.getOrPut(client_id)
-                    {
-                        RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(client_id, 0)
-                    }
+            val key = client_id
+
+            var list = tovarGroupCache[key]
+            if (list == null) {
+                list = RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(
+                    key,
+                    addressSDB?.tpId ?: 0
+                )
+                tovarGroupCache[key] = list
             }
+
+            if (list.isNullOrEmpty()) {
+                val fallback = RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(key, 0)
+                list = fallback
+                tovarGroupCache[key] = fallback   // важно: перезаписать кэш
+            }
+
+            val tovarGroupClientSDB = list
+
 
             Log.e("ValidatorEKL", "tovarGroupClientSDB size: ${tovarGroupClientSDB?.size}")
 

@@ -134,7 +134,8 @@ fun WpDataTabsScreen() {
 //    }
 
     val tabTitles =
-        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562) {
+        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
+            || Globals.userId == 130647 || Globals.userId == 249929) {
             listOf(
                 stringResource(R.string.title_0),
                 "Доп.Заработок",

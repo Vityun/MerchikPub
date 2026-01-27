@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
@@ -60,6 +61,7 @@ import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableReques
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -233,8 +235,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        new Translate().uploadNewTranslate();
+//        new Translate().uploadNewTranslate();
 
+        List<TovarGroupClientSDB> l =  RoomManager.SQL_DB.tovarGroupClientDao().getAllBy("9382", 0);
+        Log.e("!!!!!!!!","size: " + l.size());
 //        startActivity(new Intent(this, WifiScannerActivity.class));
 
 

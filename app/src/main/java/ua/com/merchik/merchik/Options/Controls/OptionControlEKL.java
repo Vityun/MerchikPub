@@ -16,8 +16,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.merchik.merchik.Clock;
@@ -286,15 +288,66 @@ public class OptionControlEKL<T> extends OptionControl {
 				КонецЕсли;*/
 
             } else {
-                if (usersSDBPTT == null) {
-                    usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
+//                if (usersSDBPTT == null) {
+//                    usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
+//                }
+//                optionMsg.append("За период с ")
+//                        .append(Clock.getHumanTime3(dateFrom)).append(" по ")
+//                        .append(Clock.getHumanTime3(dateTo))
+//                        .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
+//                        .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
+//                        .append(", ").append(usersSDBPTT.tel2);
+                // eklSDB: List<...> где есть поле sotrId
+// usersSDBPTT: UsersSDB (или как у тебя), может быть null
+
+// 1) сгруппировать ЭКЛ по сотруднику: sotrId -> count
+                Map<Integer, Integer> cntBySotr = new LinkedHashMap<>();
+                for (int i = 0; i < eklSDB.size(); i++) {
+                    int id = eklSDB.get(i).sotrId;
+                    Integer prev = cntBySotr.get(id);
+                    cntBySotr.put(id, prev == null ? 1 : (prev + 1));
                 }
-                optionMsg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom)).append(" по ")
-                        .append(Clock.getHumanTime3(dateTo))
-                        .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
-                        .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
-                        .append(", ").append(usersSDBPTT.tel2);
+
+// 2) если сотрудников 1 — оставляем как было
+                if (cntBySotr.size() == 1) {
+                    int onlyId = cntBySotr.keySet().iterator().next();
+
+                    if (usersSDBPTT == null || usersSDBPTT.id != onlyId) { // подставь правильное поле id
+                        usersSDBPTT = SQL_DB.usersDao().getById(onlyId);
+                    }
+
+                    optionMsg.append("За период с ")
+                            .append(Clock.getHumanTime3(dateFrom)).append(" по ")
+                            .append(Clock.getHumanTime3(dateTo))
+                            .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
+                            .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
+                            .append(", ").append(usersSDBPTT.tel2);
+
+                } else {
+                    // 3) если сотрудников несколько — "ФИО (N), ФИО (N), ..."
+                    optionMsg.append("За период с ")
+                            .append(Clock.getHumanTime3(dateFrom)).append(" по ")
+                            .append(Clock.getHumanTime3(dateTo))
+                            .append(" получено ").append(eklSDB.size()).append(" ЭКЛ:\n");
+
+                    boolean first = true;
+
+                    for (Map.Entry<Integer, Integer> e : cntBySotr.entrySet()) {
+                        int sotrId = e.getKey();
+                        int count = e.getValue();
+
+                        UsersSDB u = SQL_DB.usersDao().getById(sotrId);
+                        if (u == null) continue;
+
+                        if (!first) optionMsg.append(",\n");
+                        first = false;
+
+                        optionMsg.append(u.fio)
+                                .append(" (").append(count).append(")");
+                    }
+                }
+
+
                 signal = false;
 
                 TovarGroupSDB tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);

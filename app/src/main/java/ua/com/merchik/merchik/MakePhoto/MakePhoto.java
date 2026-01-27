@@ -645,49 +645,52 @@ public class MakePhoto {
      */
     boolean isPhotoMake = true;
 
+    /*
+    27.01.2026 убрал контроль местоположения с изготовления фото
+     */
     private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
-        OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
+//        OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
         isPhotoMake = true;
-        optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
-            @Override
-            public void onSuccess(String string) {
+//        optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
+//            @Override
+//            public void onSuccess(String string) {
                 if (isPhotoMake) {
                     makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
                     isPhotoMake = false;
                 }
-            }
-
-            @Override
-            public void onFailure(String error) {
-                String settext2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
-
-                DialogData dialog1 = new DialogData(activity);
-                dialog1.setTitle("Нарушение по Местоположению.");
-                dialog1.setText(error);
-                dialog1.setDialogIco();
-                dialog1.setOk(Html.fromHtml("<font color='#000000'>Всё равно сделать фото</font>"), () -> {
-                    DialogData dialogData2 = new DialogData(activity);
-                    dialogData2.setTitle("ВНИМАНИЕ!");
-                    dialogData2.setText(settext2);
-                    dialogData2.setDialogIco();
-                    dialogData2.setOk(Html.fromHtml("<font color='#000000'>Да</font>"), dialogData2::dismiss);
-                    dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
-                        dialog1.dismiss();
-                        dialogData2.dismiss();
-                        showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                            makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
-                        });
-                    });
-                    dialogData2.setClose(dialogData2::dismiss);
-                    dialogData2.show();
-                });
-                dialog1.setCancel2(Html.fromHtml("<font color='#000000'>Отказаться от изготовления фото</font>"), dialog1::dismiss);
-
-                dialog1.setImgBtnCall(activity);
-                dialog1.setClose(dialog1::dismiss);
-                dialog1.show();
-            }
-        });
+//            }
+//
+//            @Override
+//            public void onFailure(String error) {
+//                String settext2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
+//
+//                DialogData dialog1 = new DialogData(activity);
+//                dialog1.setTitle("Нарушение по Местоположению.");
+//                dialog1.setText(error);
+//                dialog1.setDialogIco();
+//                dialog1.setOk(Html.fromHtml("<font color='#000000'>Всё равно сделать фото</font>"), () -> {
+//                    DialogData dialogData2 = new DialogData(activity);
+//                    dialogData2.setTitle("ВНИМАНИЕ!");
+//                    dialogData2.setText(settext2);
+//                    dialogData2.setDialogIco();
+//                    dialogData2.setOk(Html.fromHtml("<font color='#000000'>Да</font>"), dialogData2::dismiss);
+//                    dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
+//                        dialog1.dismiss();
+//                        dialogData2.dismiss();
+//                        showDialogPass(activity, wpDataObj, optionsDB, () -> {
+//                            makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
+//                        });
+//                    });
+//                    dialogData2.setClose(dialogData2::dismiss);
+//                    dialogData2.show();
+//                });
+//                dialog1.setCancel2(Html.fromHtml("<font color='#000000'>Отказаться от изготовления фото</font>"), dialog1::dismiss);
+//
+//                dialog1.setImgBtnCall(activity);
+//                dialog1.setClose(dialog1::dismiss);
+//                dialog1.show();
+//            }
+//        });
     }
 
 /*

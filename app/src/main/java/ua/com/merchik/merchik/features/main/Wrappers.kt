@@ -492,6 +492,9 @@ object UsersSDBOverride {
 
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         val color = try {
+            val userptt = EKLDataHolder.instance().usersPTTtovarIdList
+            val tovarptt = EKLDataHolder.instance().usersPTTtovarIdList
+
             val otdelId =
                 jsonObject.optInt("otdel_id", -1) // Получаем значение "otdel_id", по умолчанию -1
 //            Log.d(

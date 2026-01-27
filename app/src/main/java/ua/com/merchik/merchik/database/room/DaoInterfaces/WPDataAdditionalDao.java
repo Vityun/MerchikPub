@@ -104,6 +104,9 @@ public interface WPDataAdditionalDao {
         item.action = accepted ? 1 : 2;
 
         item.confirmDecision = item.action;
+        // 27.01.2026 временный костыль всегда выставляю в 0, попадаем в крончик и из него уже меняем на необходимое
+//        item.confirmDecision = 0;
+
 
         item.comment = comment;
 

@@ -295,9 +295,11 @@ fun StoresMap(
                 }
 
                 // Markers
+                var i = 0
                 s.pointsUi.forEach { pUi ->
                     val pos = LatLng(pUi.point.lat, pUi.point.lon)
-                    val key = stableKey(pUi)
+                    val baseKey = stableKey(pUi)
+                    val key = "${baseKey}_$i"
 
                     val iconDesc = when {
                         pUi.insideRadius && pUi.count > 0 -> getBadgePin(pUi.count)
@@ -364,6 +366,7 @@ fun StoresMap(
                             tailOnBottom = true
                         )
                     }
+                    i++
                 }
 
                 // Line + distance label (пока selected != null)

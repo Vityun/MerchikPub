@@ -1098,6 +1098,18 @@ abstract class MainViewModel(
                                         DecisionResult.APPROVED -> {
                                             _events.emit(MainEvent.LoadingCompleted)
                                             // если нужно — можно короткий toast/snack без диалога
+                                            val comment = withContext(Dispatchers.IO) {
+                                                RoomManager.SQL_DB.wpDataAdditionalDao().getLastCommentByDad2Sync(dad2)
+                                            }
+
+                                            MainEvent.ShowMessageDialog(
+                                                MessageDialogData(
+                                                    subTitle = "Відповідь від сервера",
+                                                    message = comment?.takeIf { it.isNotBlank() } ?: "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                                    status = DialogStatus.NORMAL
+                                                )
+                                            )
+
                                         }
 
                                         DecisionResult.DECLINED -> {
