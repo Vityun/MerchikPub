@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.compose.runtime.snapshots.SnapshotStateList;
@@ -21,19 +22,6 @@ public class CronchikViewModel extends ViewModel {
     private final MutableLiveData<Boolean> loadingState = new MutableLiveData<>(false);
     private final WorkManager workManager;
     private final LiveData<List<WorkInfo>> workInfoLiveData;
-
-    //    private TimerCallback callback;
-    private final Handler handler = new Handler(Looper.getMainLooper()); // Handler для UI-потока
-//    private static final long DELAY_MS = 10_000; // 10 секунд в миллисекундах
-//    private final Runnable runnable = new Runnable() {
-//        @Override
-//        public void run() {
-//            if (callback != null) {
-//                callback.onTimerCronchik(); // Вызываем метод Activity
-//            }
-//            handler.postDelayed(this, 10_000); // Повтор каждые 10 сек
-//        }
-//    };
 
     public CronchikViewModel() {
         badgeCounts.add(null); // Для первой вкладки
@@ -73,6 +61,7 @@ public class CronchikViewModel extends ViewModel {
     public void updateBadge(int index, @Nullable Integer count) {
         if (index >= 0 && index < badgeCounts.size()) {
             badgeCounts.set(index, count);
+            Log.e("############","badgeCounts: " + badgeCounts);
         }
     }
 

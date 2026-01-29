@@ -46,6 +46,9 @@ public interface WPDataAdditionalDao {
     @Query("SELECT * FROM wp_data_additional WHERE code_dad2 = :codeDad2")
     Single<List<WPDataAdditional>> getByCodeDad2(long codeDad2);
 
+    @Query("SELECT * FROM wp_data_additional WHERE code_dad2 = :codeDad2")
+    List<WPDataAdditional> getByCodeDad2Sync(long codeDad2);
+
     @Query("SELECT * FROM wp_data_additional WHERE client_id = 0 AND addr_id = :addrId")
     Single<List<WPDataAdditional>> getByAddr(int addrId);
 

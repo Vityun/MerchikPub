@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.features.main.Main
 
-// ui/navigation/ActivityLaunchers.kt
 
 import android.content.Context
 import android.content.Intent

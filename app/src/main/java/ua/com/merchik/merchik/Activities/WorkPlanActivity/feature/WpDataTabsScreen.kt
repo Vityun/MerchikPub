@@ -107,35 +107,25 @@ fun WpDataTabsScreen() {
         val hasSecondTabData =
             RealmManager.getAllWorkPlanForRNO().isNotEmpty()
 
-//        val isEmptyScenario =
-//            !hasFirstTabData &&
-//                    // !hasSecondTabData &&  // если нужно учитывать вторую вкладку — раскомментируй
-//                    (user?.reportCount == 0)
-
         selectedTabIndex = when {
             hasFirstTabData -> 0
             hasSecondTabData -> 1
             else -> 0
         }
 
-//        emptyScenario = isEmptyScenario
         initialTabResolved = true
     }
 
-// 🔥 Стартуем диалоговый сценарий во ViewModel, если нужно
-//    LaunchedEffect(emptyScenario) {
-//        if (emptyScenario) {
-//            dialogViewModel.startRegistrationIfNeeded(
-//                activity = activity,
-//                isEmptyScenario = emptyScenario,
-//                user = user
-//            )
-//        }
-//    }
+    val dossierSotrSDBList =
+        RoomManager.SQL_DB.dossierSotrDao().getData(null, 982L, null)
+    val hasPriznak1 =
+        dossierSotrSDBList?.any { it.priznak == 1L } == false
 
     val tabTitles =
-        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
-            || Globals.userId == 130647 || Globals.userId == 249929) {
+//        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
+//            || Globals.userId == 130647 || Globals.userId == 249929)
+        if (hasPriznak1)
+        {
             listOf(
                 stringResource(R.string.title_0),
                 "Доп.Заработок",
@@ -159,10 +149,14 @@ fun WpDataTabsScreen() {
         onDispose { rememberRemoveListener?.invoke() }
     }
 
-    cronchikViewModel.updateBadgeAdditionalIncome()
 
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
-    val badgeCounts = remember { cronchikViewModel.badgeCounts }
+//    val badgeCounts = remember { cronchikViewModel.badgeCounts }
+    val badgeCounts = cronchikViewModel.badgeCounts
+
+    if (badgeCounts[1] == null || badgeCounts[1] == 0)
+        cronchikViewModel.updateBadgeAdditionalIncome()
+
 
     // -----------------------------
     // ✅ ОБЩАЯ ЛОГИКА ГОТОВНОСТИ ДАННЫХ
@@ -268,7 +262,9 @@ fun WpDataTabsScreen() {
                                     CounterBadge(
                                         count = count,
                                         modifier = Modifier.clickable {
-                                            val targetHash = badgeTargets.getOrNull(index)
+//                                            val targetHash = badgeTargets.getOrNull(index)
+                                            val targetHash = if (index == 0) ScrollDataHolder.instance().getNext() else null
+
                                             if (targetHash == null) {
                                                 selectedTabIndex = index
                                                 return@clickable

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -11,6 +12,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
+import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
@@ -29,7 +32,11 @@ fun OtherComposeTab(dataIsReady: Boolean) {
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val context = LocalContext.current
-    val activity = LocalActivity.current
+    val activity = context as ComponentActivity
+
+
+    val cronchikViewModel =
+        ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
 
 
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
@@ -79,7 +86,7 @@ fun OtherComposeTab(dataIsReady: Boolean) {
     }
 
     activity?.let {
-        viewModel.startPlanBudgetPolling(it)
+//        viewModel.startPlanBudgetPolling(it)
     }
 }
 

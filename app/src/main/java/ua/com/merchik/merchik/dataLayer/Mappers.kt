@@ -462,6 +462,8 @@ sealed interface MainEvent {
     data object LoadingCompleted : MainEvent
     data object LoadingCanceled : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
+    data object JumpToVizitAndCloseMaps : MainEvent
+
 }
 
 

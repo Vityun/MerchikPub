@@ -201,6 +201,13 @@ fun rememberContextMenuHost(
                     is MainEvent.LoadingCanceled -> {
                         showMessageDialog = null
                     }
+
+
+                    is MainEvent.JumpToVizitAndCloseMaps -> {
+                        closeMapsDialogAnimated()
+                        viewModel.performPendingK()
+                    }
+
                 }
             }
         }

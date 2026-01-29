@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import android.view.View
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -94,6 +95,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.coroutineScope
@@ -102,6 +104,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
@@ -280,6 +283,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var isCollapsed by rememberSaveable { mutableStateOf(true) }
 
+    val activity = context as ComponentActivity
+    val cronchikViewModel: CronchikViewModel =
+        remember(activity) { ViewModelProvider(activity)[CronchikViewModel::class.java] }
 
     Column(
         modifier = modifier
@@ -1184,7 +1190,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             )
                         }
                     }
+
                 }
+
+                if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+                    LaunchedEffect(dataItemsUI.size) {
+                        cronchikViewModel.updateBadge(1, dataItemsUI.size)
+                    }
 
                 // Как только пришёл pendingId И список обновился — скроллим к индексу
                 LaunchedEffect(pendingId, dataItemsUI) {

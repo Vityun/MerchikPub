@@ -43,6 +43,7 @@ import ua.com.merchik.merchik.Globals.APP_OFFSET_DISTANCE_METERS
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
+import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -160,7 +161,6 @@ data class GroupMeta(
     val startIndex: Int,            // индекс первого элемента группы в result.items
     val endIndexExclusive: Int      // индекс после последнего (как в subList)
 )
-
 
 
 abstract class MainViewModel(
@@ -405,9 +405,11 @@ abstract class MainViewModel(
     fun showKostilDialog() {
         _kostilDialog.value = true
     }
+
     fun hideKostilDialog() {
         _kostilDialog.value = false
     }
+
     private var planBudgetPollingJob: Job? = null
     private var loadingUnloading: TablesLoadingUnloading = TablesLoadingUnloading()
 
@@ -418,7 +420,7 @@ abstract class MainViewModel(
     }
 
     /** Запустить polling (если уже запущен — ничего не делает) */
-    fun startPlanBudgetPolling(context: Activity) {
+    fun startPlanBudgetPolling(context: Context) {
         if (planBudgetPollingJob?.isActive == true) return
 
         planBudgetPollingJob = viewModelScope.launch(Dispatchers.IO) {
@@ -429,9 +431,12 @@ abstract class MainViewModel(
                 try {
                     // защита от зависаний (по желанию)
                     withTimeout(15_000) {
-                        loadingUnloading.donwloadPlanBudgetForConfirmDecision(context, kotlinx.coroutines.Runnable {
-                            updateContent()
-                        })
+                        loadingUnloading.donwloadPlanBudgetForConfirmDecision(
+                            context as Activity,
+                            kotlinx.coroutines.Runnable {
+                                updateContent()
+                            }
+                        )
                     }
                 } catch (ce: CancellationException) {
                     throw ce
@@ -447,7 +452,16 @@ abstract class MainViewModel(
         }
     }
 
-    private fun loadPreferences() {
+    fun startPlanBudgetPollingSecond(wpDataAdditional: List<WPDataAdditional>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(context as Activity, wpDataAdditional) {
+                updateContent()
+            }
+        }
+    }
+
+
+        private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
         _offsetDistanceMeters.value = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 5_000f)
     }
@@ -595,6 +609,7 @@ abstract class MainViewModel(
             }
         }
     }
+
     fun updateGrouping(newGroupingField: GroupingField?, position: Int) {
         viewModelScope.launch {
             val newGroupingFields = mutableListOf<GroupingField>()
@@ -1080,7 +1095,14 @@ abstract class MainViewModel(
                     }
 
                     // новая логика: вместо диалога показываем лоадер и реально ждём ответ
-                    viewModelScope.launch { _events.emit(MainEvent.ShowLoading("Ожидаем ответ от сервера", 28_700L)) }
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowLoading(
+                                "Ожидаем ответ от сервера",
+                                28_700L
+                            )
+                        )
+                    }
 
                     // 1) обмен
                     val uploadDisp = tablesLoadingUnloading
@@ -1098,17 +1120,23 @@ abstract class MainViewModel(
                                         DecisionResult.APPROVED -> {
                                             _events.emit(MainEvent.LoadingCompleted)
                                             // если нужно — можно короткий toast/snack без диалога
-                                            val comment = withContext(Dispatchers.IO) {
-                                                RoomManager.SQL_DB.wpDataAdditionalDao().getLastCommentByDad2Sync(dad2)
+                                            val wpDataAdditional = withContext(Dispatchers.IO) {
+                                                RoomManager.SQL_DB.wpDataAdditionalDao()
+                                                    .getByCodeDad2Sync(dad2)
                                             }
 
-                                            MainEvent.ShowMessageDialog(
-                                                MessageDialogData(
-                                                    subTitle = "Відповідь від сервера",
-                                                    message = comment?.takeIf { it.isNotBlank() } ?: "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
-                                                    status = DialogStatus.NORMAL
-                                                )
-                                            )
+                                            context?.let { startPlanBudgetPollingSecond(wpDataAdditional) }
+
+//                                            _events.emit(
+//                                                MainEvent.ShowMessageDialog(
+//                                                    MessageDialogData(
+//                                                        subTitle = "Відповідь від сервера",
+//                                                        message = wpDataAdditional.first().comment.takeIf { it.isNotBlank() }
+//                                                            ?: "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+//                                                        status = DialogStatus.NORMAL
+//                                                    )
+//                                                )
+//                                            )
 
                                         }
 
@@ -1116,14 +1144,16 @@ abstract class MainViewModel(
                                             _events.emit(MainEvent.LoadingCanceled)
 
                                             val comment = withContext(Dispatchers.IO) {
-                                                RoomManager.SQL_DB.wpDataAdditionalDao().getLastCommentByDad2Sync(dad2)
+                                                RoomManager.SQL_DB.wpDataAdditionalDao()
+                                                    .getLastCommentByDad2Sync(dad2)
                                             }
 
                                             _events.emit(
                                                 MainEvent.ShowMessageDialog(
                                                     MessageDialogData(
                                                         subTitle = "Відповідь від сервера",
-                                                        message = comment?.takeIf { it.isNotBlank() } ?: "Заявка отклонена.",
+                                                        message = comment?.takeIf { it.isNotBlank() }
+                                                            ?: "Заявка отклонена.",
                                                         status = DialogStatus.ALERT
                                                     )
                                                 )
@@ -1308,7 +1338,8 @@ abstract class MainViewModel(
                 MainEvent.ShowContextMenu(
                     menuState = ContextMenuState(
                         wpDataDB = wp,
-                        actions = actions)
+                        actions = actions
+                    )
                 )
             )
         }
@@ -1377,16 +1408,19 @@ abstract class MainViewModel(
         )
 
         viewModelScope.launch {
+
+            performPendingK()
             _events.emit(
-                MainEvent.ShowMessageDialog(
-                    MessageDialogData(
-                        title = "Перейти к посещенням",
-                        status = DialogStatus.NORMAL,
-                        subTitle = wp.addr_txt,
-                        message = "Показать все работы по этому адресу за период с $periodText?",
-                        filterLogic = true
-                    )
-                )
+                MainEvent.JumpToVizitAndCloseMaps
+//                MainEvent.ShowMessageDialog(
+//                    MessageDialogData(
+//                        title = "Перейти к посещенням",
+//                        status = DialogStatus.NORMAL,
+//                        subTitle = wp.addr_txt,
+//                        message = "Показать все работы по этому адресу за период с $periodText?",
+//                        filterLogic = true
+//                    )
+//                )
             )
         }
     }
@@ -1397,7 +1431,8 @@ abstract class MainViewModel(
                 pendingAction = null
 
                 // 1) sorting/grouping как раньше
-                val sortingFieldAdr = SortingField("addr_txt", getTranslateString("Адреса", 1101), 1)
+                val sortingFieldAdr =
+                    SortingField("addr_txt", getTranslateString("Адреса", 1101), 1)
                 val groupingFieldAdr = GroupingField(
                     key = "addr_txt",
                     title = getTranslateString("Адреса", 1101),
@@ -1418,7 +1453,9 @@ abstract class MainViewModel(
                     updateGrouping(groupingFieldAdr, 0)
                     updateGrouping(groupingFieldDate, 1)
 
-                    val updated = (_uiState.value.filters?.copy(searchText = p.addrText) ?: Filters(searchText = p.addrText))
+                    val updated = (_uiState.value.filters?.copy(searchText = p.addrText) ?: Filters(
+                        searchText = p.addrText
+                    ))
                     updateFilters(updated)
 
                     // 2) твои “переходные” штуки
@@ -1430,7 +1467,9 @@ abstract class MainViewModel(
             }
 
             null -> Unit
-            else -> { pendingAction = null } // на всякий
+            else -> {
+                pendingAction = null
+            } // на всякий
         }
     }
 

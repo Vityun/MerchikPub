@@ -84,7 +84,7 @@ fun WpDataContentTab(dataIsReady: Boolean) {
             )
         }
         activity?.let {
-            viewModel.startPlanBudgetPolling(it)
+//            viewModel.startPlanBudgetPolling(it)
         }
     }
 }
