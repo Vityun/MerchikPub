@@ -35,18 +35,46 @@ public class TovarGroupSDB {
     public Long dtUpdate;
 
     public String getNmFromList(List<TovarGroupSDB> list) {
-        StringBuilder res = new StringBuilder();
-        if (list != null && !list.isEmpty()) {
+        if (list == null || list.isEmpty()) return "";
+
+        int size = list.size();
+
+        // <= 4: выводим всё
+        if (size <= 4) {
+            StringBuilder res = new StringBuilder();
             for (TovarGroupSDB item : list) {
-                res.append(item.nm).append(", ");
+                if (item == null || item.nm == null || item.nm.trim().isEmpty()) continue;
+                if (res.length() > 0) res.append(", ");
+                res.append(item.nm.trim());
             }
-            res = new StringBuilder(res.substring(0, res.length() - 2));
+            return res.toString();
+        }
+
+        // > 4: первые 3 + "и еще N отделов"
+        StringBuilder res = new StringBuilder();
+        int shown = 0;
+
+        for (TovarGroupSDB item : list) {
+            if (item == null || item.nm == null || item.nm.trim().isEmpty()) continue;
+
+            if (shown > 0) res.append(", ");
+            res.append(item.nm.trim());
+            shown++;
+
+            if (shown == 3) break;
+        }
+
+        int remaining = size - 3; // по ТЗ считаем от исходного размера
+        if (res.length() > 0) {
+            res.append(" и еще ").append(remaining).append(" отделов.");
         } else {
-            return "";
+            // на случай если первые 3 были пустые по nm
+            return "и еще " + size + " отделов.";
         }
 
         return res.toString();
     }
+
 
     public String getIdFromList(List<TovarGroupSDB> list) {
         StringBuilder res = new StringBuilder();

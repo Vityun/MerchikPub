@@ -11,15 +11,22 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.merchik.merchik.Clock;
@@ -30,6 +37,7 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
@@ -410,37 +418,71 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 8");
         }
 
+
+        int bonus = -32;
+        CharSequence valBonus = "";
+        float shtraf = 0.308f;
+        long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
+        long ekl_date = -1L;
+
+        if (documentUser.last_ekl_date != null) {
+            ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
+            if (ekl_date != -1 && ekl_date > countDay) {
+                shtraf = 0.154f;
+                bonus = -16;
+            }
+        }
+        valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
+        valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
+
         // "подводим итог"
+        if (signal) {
+            List<DossierSotrSDB> dossierSotrSDBS = SQL_DB.dossierSotrDao().getDataByClientAddress(982L, (long) wpDataDB.getAddr_id(), wpDataDB.getClient_id());
+
+            LocalDate newest = findNewestDossierDate(dossierSotrSDBS);
+            LocalDate dat = wpDataDB.getDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (newest == null) {
+                // ПустоеЗначение(ДатПерОИ)=1
+                signal = false;
+                optionMsg.append("\n\nАле виконавець ");
+                optionMsg.append(wpDataDB.getUser_txt());
+                optionMsg.append(" на поточний момент ще не провів жодного ЗВ по Клієнту ");
+                optionMsg.append(wpDataDB.getClient_txt());
+                optionMsg.append(" за цією адресою, тож на перший раз для нього робимо виняток.");
+            } else {
+                // ДатПерОИ > Дат-15
+                LocalDate border = dat.minusDays(15);
+                if (newest.isAfter(border)) {
+                    signal = false;
+                    optionMsg.append("\n\nАле виконавець ");
+                    optionMsg.append(wpDataDB.getUser_txt());
+                    optionMsg.append(" ще працює за цією Адресою i з цім Клієнтом менше 14 діб. Робимо для нього виняток.");
+                }
+            }
+        }
+
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
         if (signal && (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
-            spannableStringBuilder.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
+            optionMsg.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
 
-//        Calendar compareDate = Calendar.getInstance();
-//        compareDate.set(2025, Calendar.MARCH, 1); // 1 марта 2025 года
-//        if (signal && documentUser.reportCount >= 2000 && wpDataDB.getDt().before(compareDate.getTime())) {
-//            signal = false;
-//            optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.");
-//        } else {
-//            compareDate.set(2025, Calendar.APRIL, 1); // 1 апрель 2025 года
-//            if (signal && documentUser.reportCount >= 3000 && wpDataDB.getDt().before(compareDate.getTime())) {
-//                signal = false;
-//                optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025.");
-//            }
-//        } else {
-//            compareDate.set(2025, Calendar.MAY, 1); // 1 мая 2025 года
-//            if (signal && documentUser.reportCount >= 4000 && wpDataDB.getDt().before(compareDate.getTime())) {
-//                signal = false;
-//                optionMsg.append(", но сотрудник провел более 4000 отчетов и эту блокировку пропускаем до 01.05.2025.");
-//            }
-//        } else {
-//            compareDate.set(2025, Calendar.JUNE, 1); // 1 июня 2025 года
-//            if (signal && documentUser.reportCount >= 5000 && wpDataDB.getDt().before(compareDate.getTime())) {
-//                signal = false;
-//                optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025.");
-//            }
-//        }
+        // 07.03.25 добавил штрафы/премии в экл
+        if (signal)
+            optionMsg
+                    .append("\n\n")
+                    .append("Останній раз ви отримували ЕКЛ - ")
+                    .append(documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
+                    .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
+                    .append(DAYS + " днів, тому ваші преміальні ")
+                    .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
+                    .append(bonus == -32 ? "подвiйну суму, що становитиме " : "")
+                    .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
+                    .append("\n")
+                    .append((ekl_date != -1 && ekl_date > countDay) ? "" : "Якщо ви отримаєте ЕКЛ по будь-яким клієнту, то відсоток поточних відрахувань буде зменшено вдвічі.")
+                    .append("");
+
 
         if (signal) {
             int[] reportThresholds = {2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
@@ -488,53 +530,11 @@ public class OptionControlEKL<T> extends OptionControl {
                     break;
                 }
             }
-
-//            Calendar dateThreshold1 = Calendar.getInstance();
-//            dateThreshold1.set(2025, Calendar.MARCH, 1);
-//            if (documentUser.reportCount >= 2000 && wpDataDB.getDt().before(dateThreshold1.getTime())) {
-//                signal = false;
-//                optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025");
-//            } else {
-//                Calendar dateThreshold2 = Calendar.getInstance();
-//                dateThreshold2.set(2025, Calendar.MARCH, 31);
-//                if (documentUser.reportCount >= 3000 && !wpDataDB.getDt().after(dateThreshold2.getTime())) {
-//                    signal = false;
-//                    optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025");
-//                } else {
-//                    Calendar dateThreshold3 = Calendar.getInstance();
-//                    dateThreshold3.set(2025, Calendar.APRIL, 30);
-//                    if (documentUser.reportCount >= 4000 && !wpDataDB.getDt().after(dateThreshold3.getTime())) {
-//                        signal = false;
-//                        optionMsg.append(", но сотрудник провел более 4000 отчетов и эту блокировку пропускаем до 01.05.2025");
-//                    } else {
-//                        Calendar dateThreshold4 = Calendar.getInstance();
-//                        dateThreshold4.set(2025, Calendar.MAY, 31);
-//                        if (documentUser.reportCount >= 5000 && !wpDataDB.getDt().after(dateThreshold4.getTime())) {
-//                            signal = false;
-//                            optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025");
-//                        } else {
-//                            Calendar dateThreshold5 = Calendar.getInstance();
-//                            dateThreshold5.set(2025, Calendar.JUNE, 30);
-//                            if (documentUser.reportCount >= 6000 && !wpDataDB.getDt().after(dateThreshold5.getTime())) {
-//                                signal = false;
-//                                optionMsg.append(", но сотрудник провел более 6000 отчетов и эту блокировку пропускаем до 01.07.2025");
-//                            } else {
-//                                Calendar dateThreshold6 = Calendar.getInstance();
-//                                dateThreshold6.set(2025, Calendar.JULY, 31);
-//                                if (documentUser.reportCount >= 7000 && !wpDataDB.getDt().after(dateThreshold6.getTime())) {
-//                                    signal = false;
-//                                    optionMsg.append(", но сотрудник провел более 7000 отчетов и эту блокировку пропускаем до 01.08.2025");
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         }
 
 
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");
         spannableStringBuilder.append(optionMsg);
+
 
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
@@ -544,42 +544,6 @@ public class OptionControlEKL<T> extends OptionControl {
                 spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
             }
         }
-
-        int bonus = -32;
-        CharSequence valBonus = "";
-        float shtraf = 0.308f;
-        long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
-        long ekl_date = -1L;
-
-        if (documentUser.last_ekl_date != null) {
-            ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
-            if (ekl_date != -1 && ekl_date > countDay) {
-                shtraf = 0.154f;
-                bonus = -16;
-            }
-        }
-        valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-        valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
-
-        // 07.03.25 добавил штрафы/премии в экл
-        spannableStringBuilder
-                .append("\n\n")
-                .append("Останній раз ви отримували ЕКЛ - ")
-                .append(documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
-                .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
-                .append(DAYS + " днів, тому ваші преміальні ")
-                .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
-                .append(bonus == -32 ? "подвiйну суму, що становитиме " : "")
-//                .append(" на ")
-//                .append(bonus >= 0 ? Html.fromHtml("<font color=green>~" + Math.abs(bonus) + "%</font>") : Html.fromHtml("<font color=red>~" + Math.abs(bonus) + "%</font>"))
-//                .append(", що становитиме ")
-                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
-                .append("\n")
-                .append((ekl_date != -1 && ekl_date > countDay) ? "" : "Якщо ви отримаєте ЕКЛ по будь-яким клієнту, то відсоток поточних відрахувань буде зменшено вдвічі.")
-                .append("");
-
-
-        spannableStringBuilder.append("");
 
         // сохраняем сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -658,6 +622,70 @@ public class OptionControlEKL<T> extends OptionControl {
             return -1; // В случае ошибки возвращаем -1
         }
     }
+
+
+    private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ISO_LOCAL_DATE; // yyyy-MM-dd
+
+    // 1) парс даты из dt (yyyy-MM-dd)
+    private static LocalDate parseDtOrNull(String dt) {
+        if (dt == null || dt.trim().isEmpty()) return null;
+        try {
+            return LocalDate.parse(dt.trim(), DT_FMT);
+        } catch (DateTimeParseException e) {
+            return null; // если внезапно мусор в dt
+        }
+    }
+
+    // 2) самая свежая дата из списка по полю dt
+    public static LocalDate findNewestDossierDate(List<DossierSotrSDB> list) {
+        if (list == null || list.isEmpty()) return null;
+
+        Optional<LocalDate> newest = list.stream()
+                .map(x -> parseDtOrNull(x.dt))
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder());
+
+        return newest.orElse(null);
+    }
+
+    /**
+     * Повтор логики 1С (в упрощённом виде, как в фрагменте):
+     * - если записи нет -> signal=false + текст
+     * - else if newest > (dat - 15) -> signal=false + текст
+     *
+     * @param dat текущая "Дат" из 1С (дата документа/проверки)
+     */
+    public static boolean apply1CLogic(
+            boolean signal,
+            LocalDate dat,
+            List<DossierSotrSDB> dossierList,
+            StringBuilder text // или SpannableStringBuilder
+    ) {
+        if (!signal) return false; // уже сброшен ранее
+
+        LocalDate newest = findNewestDossierDate(dossierList);
+
+        if (newest == null) {
+            // ПустоеЗначение(ДатПерОИ)=1
+            signal = false;
+            if (text != null) {
+                text.append("\nАле виконавець ще не провів жодного ЗВ по цій Співробітник/Клієнто/Адресі і, на перший раз, для нього робимо виключення.");
+            }
+            return false;
+        }
+
+        // ДатПерОИ > Дат-15
+        LocalDate border = dat.minusDays(15);
+        if (newest.isAfter(border)) {
+            signal = false;
+            if (text != null) {
+                text.append("\nАле виконавець ще працює цій Адресі з цім Клієнтом менше 14 діб. Робимо для нього виключення.");
+            }
+        }
+
+        return signal;
+    }
+
 }
 
 

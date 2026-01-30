@@ -659,7 +659,6 @@ public class Options {
      * Запуск нового протокола проверки ОпцийКонтроля
      */
 //    int count = 0;
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(View view, List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
 //        count = 0;
@@ -1423,6 +1422,19 @@ public class Options {
                                                 new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
                                                 new TablesLoadingUnloading().uploadReportPrepareToServer();
                                                 new Exchange().startExchange();
+                                                Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
+                                                            @Override
+                                                            public <T> void onSuccess(T data) {
+
+                                                            }
+
+                                                            @Override
+                                                            public void onFailure(String error) {
+
+                                                            }
+                                                        }
+                                                );
+
                                                 return Unit.INSTANCE;
                                             }
                                     )

@@ -490,6 +490,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 //        ScrollDataHolder.Companion.instance().removeByCodeDad2(wpDataDB.getCode_dad2());
         ScrollDataHolder.Companion.instance().removeByCodeWpDataId(wpDataDB.getId());
+        Log.e("!!!!!!!!!!!!","dad2: " + wpDataDB.getCode_dad2());
 
         // Получаем ViewModel и передаем туда данные
         commentViewModel = new ViewModelProvider(this).get(CommentViewModel.class);
