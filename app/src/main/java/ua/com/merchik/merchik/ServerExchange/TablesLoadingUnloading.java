@@ -573,19 +573,19 @@ public class TablesLoadingUnloading {
 
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
 
-            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
-            test.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    JsonObject object = response.body();
-                    Log.e("Result", "result: " + object);
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-
-                }
-            });
+//            Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject);
+//            test.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    JsonObject object = response.body();
+//                    Log.e("Result", "result: " + object);
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                }
+//            });
 
             Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<WpDataServer>() {

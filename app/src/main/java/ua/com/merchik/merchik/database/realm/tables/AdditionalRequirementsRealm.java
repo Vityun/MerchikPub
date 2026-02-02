@@ -242,6 +242,10 @@ public class AdditionalRequirementsRealm {
                         .findAll();
             }
 
+            RealmResults res0 = res.where()
+                    .equalTo("grpId", "320")
+                    .findAll();
+            List<AdditionalRequirementsDB> result1 = INSTANCE.copyFromRealm(res0);
             // --------------------
             if (tovExist) {
                 res = res.where()
@@ -256,28 +260,44 @@ public class AdditionalRequirementsRealm {
             // --------------------
             if (dateStartFrom != null) {
                 res = res.where()
-                        .greaterThanOrEqualTo("dtStart", dateStartFrom)
+                        .beginGroup()
+                        .lessThanOrEqualTo("dtStart", dateStartFrom)
+                        .or()
+                        .isNull("dtStart")
+                        .endGroup()
                         .findAll();
             }
 
             // --------------------
             if (dateStartTo != null) {
                 res = res.where()
+                        .beginGroup()
                         .lessThanOrEqualTo("dtStart", dateStartTo)
+                        .or()
+                        .isNull("dtStart")
+                        .endGroup()
                         .findAll();
             }
 
             // --------------------
             if (dateEndFrom != null) {
                 res = res.where()
+                        .beginGroup()
                         .greaterThanOrEqualTo("dtEnd", dateEndFrom)
+                        .or()
+                        .isNull("dtEnd")
+                        .endGroup()
                         .findAll();
             }
 
             // --------------------
             if (dateEndTo != null) {
                 res = res.where()
-                        .lessThanOrEqualTo("dtEnd", dateEndTo)
+                        .beginGroup()
+                        .greaterThanOrEqualTo("dtEnd", dateEndTo)
+                        .or()
+                        .isNull("dtEnd")
+                        .endGroup()
                         .findAll();
             }
 
