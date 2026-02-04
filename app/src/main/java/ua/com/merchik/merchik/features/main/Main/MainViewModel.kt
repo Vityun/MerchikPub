@@ -632,6 +632,11 @@ abstract class MainViewModel(
 
     fun updateContent() {
         viewModelScope.launch {
+            Log.e("FILTERS_APPLY",
+                "search=${filters?.searchText}, itemsSelected=${
+                    filters?.items?.sumOf { it.rightValuesRaw.size } ?: 0
+                }"
+            )
 
             val list = getDefaultHideUserFields()
             val settingsItems = repository.getSettingsItemList(table, contextUI, list)
@@ -764,14 +769,14 @@ abstract class MainViewModel(
 
     fun updateFilters(filters: Filters) {
         this.filters = filters
-        viewModelScope.launch {
+//        viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     filters = filters,
                     lastUpdate = System.currentTimeMillis()
                 )
             }
-        }
+//        }
     }
 
     fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {

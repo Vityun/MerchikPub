@@ -455,7 +455,7 @@ public class TablesLoadingUnloading {
                                     new MessageDialogBuilder((Activity) context)
                                             .setTitle("Дополнительный заработок")
                                             .setStatus(DialogStatus.ERROR)
-                                            .setSubTitle("## Сообщенеи для отладки")
+                                            .setSubTitle("## Сообщение для отладки")
                                             .setMessage("Не были получены следующие dad2: " + dad2
                                             + "\nЯкщо побачите це повідомлення, відправте скріншот з ним вашому керівнику.")
                                             .show();

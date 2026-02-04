@@ -74,7 +74,6 @@ fun FilteringDialog(
 
     val selectedFilterDateStart by viewModel.rangeDataStart.collectAsState()
     val selectedFilterDateEnd by viewModel.rangeDataEnd.collectAsState()
-    var searchText = remember { viewModel.filters?.searchText ?: "" }
 
     var showToolTip by remember { mutableStateOf(false) }
 
@@ -91,11 +90,11 @@ fun FilteringDialog(
                 FilteringDialogDataHolder.instance().filters = uiState.filters?.copy()
             }
 
-            Lifecycle.Event.ON_RESUME -> {
-                FilteringDialogDataHolder.instance().filters?.let {
-                    viewModel.updateFilters(it)
-                }
-            }
+//            Lifecycle.Event.ON_RESUME -> {
+//                FilteringDialogDataHolder.instance().filters?.let {
+//                    viewModel.updateFilters(it)
+//                }
+//            }
 
             else -> {}
         }
@@ -178,18 +177,9 @@ fun FilteringDialog(
                     viewModel = viewModel,
                     value = uiState.filters?.searchText ?: "",
                     onValueChange = {
-                        searchText = it
-                        val current = uiState.filters
-                        if (current != null) {
-                            viewModel.updateFilters(current.copy(searchText = it))
-                            FilteringDialogDataHolder.instance().filters = current
-                        } else {
-                            val filters = Filters(
-                                searchText = it
-                            )
-                            viewModel.updateFilters(filters)
-                            FilteringDialogDataHolder.instance().filters = filters
-                        }
+                        val updated = (uiState.filters ?: Filters()).copy(searchText = it)
+                        viewModel.updateFilters(updated)
+                        FilteringDialogDataHolder.instance().filters = updated
                     },
                     modifier = Modifier
                         .padding(horizontal = 10.dp)
@@ -264,11 +254,17 @@ fun FilteringDialog(
                 Row {
                     Button(
                         onClick = {
+                            val filters = uiState.filters ?: return@Button
+
+                            viewModel.updateFilters(filters)      // <-- КОММИТ В VM
+                            onChanged(filters)                    // опционально, если надо наружу
+                            viewModel.updateContent()
+
                             viewModel.updateOffsetDistanceMeters(localDistance)
                             FilteringDialogDataHolder.instance().filters?.let {
                                 onChanged.invoke(it)
                             }
-                            viewModel.updateContent()
+//                            viewModel.updateContent()
                         },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),

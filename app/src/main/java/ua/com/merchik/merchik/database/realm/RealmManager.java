@@ -1124,6 +1124,15 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getStackPhotoTest() {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photo_type", 4)
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_num")
+                .findAll();
+    }
+
     public static RealmResults<StackPhotoDB> getStackPhotoLogByDad2(long dad2) {
         return INSTANCE.where(StackPhotoDB.class)
 //                .notEqualTo("photo_type", 18)
@@ -1355,7 +1364,11 @@ public class RealmManager {
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetRatingToUpload() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("markUpload", true).findAll());
+        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class)
+                .isNotNull("photoServerId")
+                .notEqualTo("photoServerId", "")
+                .equalTo("markUpload", true)
+                .findAll());
     }
 
     //==============================================================================================

@@ -1978,9 +1978,9 @@ fun ItemUI(
                         ?: R.drawable.merchik
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+//                            .weight(1f)
                             .padding(end = 5.dp)
-                            .border(1.dp, Color.LightGray)
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(4.dp))
                             .background(Color.White)
                             .align(alignment = Alignment.Top)
                             .clipToBounds(),
@@ -2008,7 +2008,7 @@ fun ItemUI(
                                     .padding(2.dp)
                                     .size(100.dp)
                                     .clickable { onClickItemImage(item) },
-                                contentScale = ContentScale.Fit,
+                                contentScale = ContentScale.FillWidth,
                                 contentDescription = null
                             )
                         } else {

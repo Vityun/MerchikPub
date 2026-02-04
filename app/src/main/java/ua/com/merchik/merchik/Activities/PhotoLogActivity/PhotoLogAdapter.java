@@ -41,7 +41,10 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
@@ -394,7 +397,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
             } catch (Exception e) {
-                globals.writeToMLOG( "PhotoLogAdapter.bind.ErrorException e: " + e + "\n");
+                globals.writeToMLOG("PhotoLogAdapter.bind.ErrorException e: " + e + "\n");
             }
         }
 
@@ -563,8 +566,8 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         long l = Long.parseLong(timeMls);
         @SuppressLint("SimpleDateFormat") String time = new SimpleDateFormat("HH:mm:ss").format(l);
         if (data.getErrorTime() == 0) {
-            time = "-";
-            timeMls = "-";
+            time = "";
+            timeMls = "Немає помилок";
         }
 
         long createLong = data.getCreate_time();
@@ -597,11 +600,52 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             phototype.append("Не удалось определить");
         }
 
+        String clientTxt;
+        String adresTxt;
+        String userTxt;
+
+// CLIENT
+        if (data.client_id != null) {
+            CustomerSDB c = SQL_DB.customerDao().getById(data.client_id);
+            clientTxt = (c != null && c.nm != null && !c.nm.trim().isEmpty())
+                    ? c.nm
+                    : "Клієнт не визначений";
+        } else {
+            clientTxt = "Клієнт не визначений";
+        }
+
+// ADDRESS
+        if (data.addr_id != null) {
+            AddressSDB a = SQL_DB.addressDao().getById(data.addr_id);
+            adresTxt = (a != null && a.nm != null && !a.nm.trim().isEmpty())
+                    ? a.nm
+                    : "Адрес не визначений";
+        } else {
+            adresTxt = "Адрес не визначений";
+        }
+
+// USER
+        if (data.user_id != null) {
+            UsersSDB u = SQL_DB.usersDao().getById(data.user_id);
+            userTxt = (u != null && u.fio != null && !u.fio.trim().isEmpty())
+                    ? u.fio
+                    : "Автор не визначений";
+        } else {
+            userTxt = "Автор не визначений";
+        }
+
+        String error;
+        if (data.getErrorTxt() == null)
+            error = "Немає помилок";
+        else
+            error = data.getErrorTxt();
+
+
         res = Html.fromHtml("<b>ID: </b>" + data.getId() + " / " + data.photoServerId + "<br>"
-                + "<b>Дата: </b>" + data.getTime_event() + "<br>"
-                + "<b>Пользователь: </b>" + data.getUserTxt() + "<br>"
-                + "<b>Клиент: </b>" + data.getCustomerTxt() + "<br>"
-                + "<b>Адрес: </b>" + data.getAddressTxt() + "<br>"
+//                + "<b>Дата: </b>" + data.getTime_event() + "<br>"
+                + "<b>Пользователь: </b>" + userTxt + "<br>"
+                + "<b>Клиент: </b>" + clientTxt + "<br>"
+                + "<b>Адрес: </b>" + adresTxt + "<br>"
                 + "<b>Тип фото: </b>" + phototype + "<br>"
                 + "<b>dad2: </b>" + data.getCode_dad2() + "<br>"
                 + "<b>hash: </b>" + data.getPhoto_hash() + "<br><br>"
@@ -609,7 +653,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 + "<b>Время отправки: </b><font color='#FFBB1F'>" + upload + "</font><br>"
                 + "<b>Время получения: </b><font color='#00FF00'>" + server + "</font><br><br>"
                 + "<b>Время ошибки: </b>" + time + "(" + timeMls + ")<br>"
-                + "<b>Текст ошибки: </b>" + data.getErrorTxt() + "<br>");
+                + "<b>Текст ошибки: </b>" + error + "<br>");
 
 //        return String.format("id: %s\ndate: %s\nuser: %s\nclient: %s\naddress: %s\nphotoType: %s\ndad2: %s\nhash: %s\n\nВремя создания: %s\nВремя отправки: %s\nВремя получения: %s\n\nВремя ошибки: %s(%s)\nТекст ошибки: %s",
 //                data.getAddrId(), data.getTime_event(), data.getUserTxt(), data.getCustomerTxt(), data.getAddressTxt(), data.getPhoto_type(), data.getCode_dad2(), data.getPhoto_hash(), create, upload, server, time, timeMls, data.getErrorTxt());

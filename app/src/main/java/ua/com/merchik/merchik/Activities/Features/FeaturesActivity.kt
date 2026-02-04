@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel
@@ -87,6 +88,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     PlanogrammVizitShowcaseViewModel::class -> viewModel() as PlanogrammVizitShowcaseViewModel
                                     ShowcaseDBViewModel::class -> viewModel() as ShowcaseDBViewModel
                                     SMSPlanSDBViewModel::class -> viewModel() as SMSPlanSDBViewModel
+                                    JournalPhotoSDBViewModel::class -> viewModel() as JournalPhotoSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")

@@ -7,6 +7,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.CommentViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionAndCommentView
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.TovarTabs
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.JournalPhotoScreen
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreen
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 
@@ -41,5 +42,14 @@ fun setContentTovarData(
     composeView.setContent {
         TovarTabs(wpDataDB)
 
+    }
+}
+
+
+fun setContentJournalPhoto(
+    composeView: ComposeView
+) {
+    composeView.setContent {
+        JournalPhotoScreen()
     }
 }

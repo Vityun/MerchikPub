@@ -586,7 +586,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public String getHidedFieldsOnUI() {
 //        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
         return "dviUpload, markUpload, object_id, photo_num, status, " +
-                "premiyaUpload, specialCol, upload_time, photoServerURL, time_event";
+                "premiyaUpload, specialCol, upload_time, photoServerURL, time_event, gp, premiya";
     }
 
     @Nullable
@@ -604,13 +604,13 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+        return StackPhotoDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
     }
 
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return StackPhotoDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
@@ -634,7 +634,8 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public List<String> getFieldsForOrderOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+        return StackPhotoDBOverride.INSTANCE.getFieldsForOrderOnUI();
+//        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 
     @NonNull

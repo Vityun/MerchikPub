@@ -80,8 +80,11 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         long planDayEndSec = planDay.plusDays(1).atStartOfDay(zone).toEpochSecond() - 1;
 
         // 1С: ДельтаА = 3600 * КолМИН, ДельтаБ = 3600 * КолМАКС
-        long deltaA = 3600L * getColMinHours(); // часы ДО начала дня
-        long deltaB = 3600L * getColMaxHours(); // часы ПОСЛЕ конца дня
+        int balabaFix = 1;
+        if (wpDataDB.getUser_id() == 143565) // исключения для одного пользователя Балаба
+            balabaFix = 2;
+        long deltaA = 3600L * getColMinHours() * balabaFix; // часы ДО начала дня
+        long deltaB = 3600L * getColMaxHours() * balabaFix; // часы ПОСЛЕ конца дня
 
         // 1С: override из ОСВ (если есть) — оставляю хук, чтобы ты подключил свою БД
         long[] deltas = applyOsvOverrides(deltaA, deltaB, wpDataDB.getDt());

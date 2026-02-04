@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.compose.ui.platform.ComposeView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
@@ -100,12 +102,15 @@ public class PhotoLogActivity extends toolbar_menus {
     private void setContent() {
         try {
             setBaseContent();
+            ComposeView composeView = findViewById(R.id.compose_photo_journal_container);
+            ComposeFunctions.setContentJournalPhoto(composeView);
 
-            if (getChoice()) {
-                setRecycler();
-            } else {
-                setRecycler();
-            }
+
+//            if (getChoice()) {
+//                setRecycler();
+//            } else {
+//                setRecycler();
+//            }
         } catch (Exception e) {
             Log.e("ERROR_setContent", "Exception e: " + e);
             e.printStackTrace();
@@ -124,11 +129,11 @@ public class PhotoLogActivity extends toolbar_menus {
         activity_title = (TextView) findViewById(R.id.activity_title);
         activity_title.setText(getResources().getString(R.string.activity_photo_log_title));
 
-        editText = (EditText) findViewById(R.id.searchViewPhotoLog);
-        filter = findViewById(R.id.filter);
-        imageView = findViewById(R.id.imageView);
+//        editText = (EditText) findViewById(R.id.searchViewPhotoLog);
+//        filter = findViewById(R.id.filter);
+//        imageView = findViewById(R.id.imageView);
 
-        setFilter();
+//        setFilter();
     }
 
 

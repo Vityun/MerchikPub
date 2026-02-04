@@ -16,82 +16,93 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_editor_absoluteX="0dp" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
-        app:backgroundTint="#FFFFFF"
-        app:elevation="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_question_1" />
-
-    <EditText
-        android:id="@+id/searchViewPhotoLog"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_photo_journal_container"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:background="#00CA1A1A"
-        android:drawableStart="@android:drawable/ic_menu_search"
-        android:drawableLeft="@android:drawable/ic_menu_search"
-        android:hint="@string/Search"
-        android:inputType="text"
-        android:visibility="visible"
-        app:actionViewClass="android.widget.SearchView"
-        app:layout_constraintEnd_toStartOf="@+id/imageView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include"
-        tools:visibility="visible"></EditText>
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:background="@drawable/selector_rounded_button"
-        android:elevation="100dp"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/filter"
-        app:layout_constraintEnd_toStartOf="@+id/filter"
-        app:layout_constraintTop_toTopOf="@+id/filter"
-        app:srcCompat="@drawable/ic_letter_x" />
-
-    <ImageButton
-        android:id="@+id/filter"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-
-        android:elevation="10dp"
-        android:scaleType="centerInside"
-
-        app:layout_constraintBottom_toTopOf="@+id/recyclerViewPhotoLog"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include"
-        app:srcCompat="@drawable/ic_filter" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewPhotoLog"
-        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:background="@color/main_form"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/searchViewPhotoLog"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/include"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--        android:id="@+id/fab"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_gravity="bottom|end"-->
+<!--        android:layout_margin="@dimen/fab_margin"-->
+<!--        android:layout_marginEnd="16dp"-->
+<!--        android:layout_marginRight="16dp"-->
+<!--        android:layout_marginBottom="16dp"-->
+<!--        app:backgroundTint="#FFFFFF"-->
+<!--        app:elevation="20dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:srcCompat="@drawable/ic_question_1" />-->
+
+<!--    <EditText-->
+<!--        android:id="@+id/searchViewPhotoLog"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginStart="8dp"-->
+<!--        android:layout_marginLeft="8dp"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        android:layout_marginEnd="8dp"-->
+<!--        android:layout_marginRight="8dp"-->
+<!--        android:background="#00CA1A1A"-->
+<!--        android:drawableStart="@android:drawable/ic_menu_search"-->
+<!--        android:drawableLeft="@android:drawable/ic_menu_search"-->
+<!--        android:hint="@string/Search"-->
+<!--        android:inputType="text"-->
+<!--        android:visibility="visible"-->
+<!--        app:actionViewClass="android.widget.SearchView"-->
+<!--        app:layout_constraintEnd_toStartOf="@+id/imageView"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/include"-->
+<!--        tools:visibility="visible"></EditText>-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/imageView"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginEnd="8dp"-->
+<!--        android:layout_marginRight="8dp"-->
+<!--        android:background="@drawable/selector_rounded_button"-->
+<!--        android:elevation="100dp"-->
+<!--        android:padding="8dp"-->
+<!--        android:visibility="gone"-->
+<!--        app:layout_constraintBottom_toBottomOf="@+id/filter"-->
+<!--        app:layout_constraintEnd_toStartOf="@+id/filter"-->
+<!--        app:layout_constraintTop_toTopOf="@+id/filter"-->
+<!--        app:srcCompat="@drawable/ic_letter_x" />-->
+
+<!--    <ImageButton-->
+<!--        android:id="@+id/filter"-->
+<!--        android:layout_width="40dp"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:layout_marginEnd="16dp"-->
+<!--        android:layout_marginRight="16dp"-->
+
+<!--        android:elevation="10dp"-->
+<!--        android:scaleType="centerInside"-->
+
+<!--        app:layout_constraintBottom_toTopOf="@+id/recyclerViewPhotoLog"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/include"-->
+<!--        app:srcCompat="@drawable/ic_filter" />-->
+
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/recyclerViewPhotoLog"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/searchViewPhotoLog"-->
+<!--        app:layout_constraintVertical_bias="0.0" />-->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

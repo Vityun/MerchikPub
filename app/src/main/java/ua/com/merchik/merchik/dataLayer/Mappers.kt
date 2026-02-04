@@ -361,6 +361,7 @@ enum class ContextUI {
     WP_DATA_IN_CONTAINER_MULT,
     WP_DATA_ADDITIONAL_IN_CONTAINER_MULT,
     SMS_PLAN_DEFAULT,
+    JOURNAL_PHOTO_DEFAULT,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +

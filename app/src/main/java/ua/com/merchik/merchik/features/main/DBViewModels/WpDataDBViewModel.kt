@@ -198,7 +198,7 @@ class WpDataDBViewModel @Inject constructor(
                 )
 
                 val filterClientSDB = ItemFilter(
-                    "Клиент",
+                    "Клієнт",
                     CustomerSDB::class,
                     CustomerSDBViewModel::class,
                     ModeUI.MULTI_SELECT,

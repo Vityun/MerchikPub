@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI

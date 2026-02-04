@@ -13,11 +13,10 @@ import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
-import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
-import ua.com.merchik.merchik.features.main.LogMPDBOverride.formatLocationUniqueToDms
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -492,19 +491,10 @@ object UsersSDBOverride {
 
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         val color = try {
-            val userptt = EKLDataHolder.instance().usersPTTtovarIdList
-            val tovarptt = EKLDataHolder.instance().usersPTTtovarIdList
 
             val otdelId =
                 jsonObject.optInt("otdel_id", -1) // Получаем значение "otdel_id", по умолчанию -1
-//            Log.d(
-//                "getContainerModifier",
-//                "otdel_id: $otdelId usersPTTtovarIdList: ${EKLDataHolder.instance().usersPTTtovarIdList}"
-//            )
-//            Log.d(
-//                "getContainerModifier",
-//                "JSONObject: $jsonObject"
-//            )
+
             if (otdelId == 0 || otdelId == -1) {
                 Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
             } else
@@ -615,6 +605,16 @@ object StackPhotoDBOverride {
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
             if (specialCol == 1)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77")))
+            val error = jsonObject.optString("error")
+            val hasError = jsonObject.has("error") && !jsonObject.isNull("error")
+            if (hasError)
+                return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
+
+            val uploadTime = jsonObject.optInt("upload_to_server",0)
+            return if (uploadTime > 0)
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
+            else
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFBB1F")))
 
 
         } catch (_: Exception) {
@@ -623,11 +623,26 @@ object StackPhotoDBOverride {
         return MerchModifier()
     }
 
+    fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+
+        else -> null
+    }
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+
+        else -> null
+    }
+
+
     fun getTranslateId(key: String): Long? = when (key) {
         "dt" -> 1100
+        "create_time" -> 1100
         "user_txt" -> 1103
+        "user_id" -> 1103
         "addr_txt" -> 1101
+        "addr_id" -> 1101
         "client_txt" -> 1102
+        "client_id" -> 1102
         "theme_id" -> 8724
         "status" -> 3167
         "main_option_id" -> 8725
@@ -647,14 +662,64 @@ object StackPhotoDBOverride {
         "doc_num_otchet" -> 9155
 
         "comment" -> 5911
+        "photo_type" -> 5981
 
         else -> null
     }
 
     fun getValueUI(key: String, value: Any): String = when (key) {
 
+        "client_id" -> {
+            try {
+                val client = RoomManager.SQL_DB.customerDao().getById(value.toString())
+                client.nm
+            } catch (e: Exception) {
+                "Клієнт ($value) не визначений"
+            }
+        }
+
+        "addr_id" -> {
+            try {
+                val adres = RoomManager.SQL_DB.addressDao().getById(value as Int)
+                adres.nm
+            } catch (e: Exception) {
+                "Адреса ($value) не визначена"
+            }
+        }
+
+        "photo_type" -> try {
+            val type = PhotoTypeRealm.getPhotoTypeById(value as Int)
+            type.nm
+        } catch (e: Exception) {
+            "Тип фото ($value) не визначено"
+        }
+
+        "user_id" -> {
+            try {
+                val user = RoomManager.SQL_DB.usersDao().getUserById(value as Int)
+                user.fio
+            } catch (e: Exception) {
+                "Користувач ($value) не визначений"
+            }
+        }
+
+        "dt" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochSecond(millis)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter)
+                } catch (e: Exception) {
+                    "Час не визначено"
+                }
+        }
+
         "create_time" -> {
-            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy",  Locale.getDefault())
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
             if (value.toString() == "0")
                 "-"
             else
@@ -667,12 +732,13 @@ object StackPhotoDBOverride {
                     "Робота не розпочата"
                 }
         }
-        "" -> {""}
 
         else -> value.toString()
     }
 
-//
+    fun getFieldsForOrderOnUI(): List<String> =
+        "create_time, addr_id".split(",").map { it.trim() }
+
 }
 
 
@@ -704,7 +770,7 @@ object WPDataBDOverride {
         }
 
         "client_start_dt" -> {
-            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm",  Locale.getDefault())
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
             if (value.toString() == "0")
                 "-"
             else
@@ -827,12 +893,14 @@ object WPDataBDOverride {
                             textColor = Color.Red
                         )
                 }
+
                 "1" -> {
                     MerchModifier(
                         textColor = Color(android.graphics.Color.parseColor("#00FF00"))
                     )
                 }
-                else ->          MerchModifier(
+
+                else -> MerchModifier(
                     textColor = Color(android.graphics.Color.parseColor("#FF6D00"))
                 )
             }
