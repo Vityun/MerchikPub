@@ -265,10 +265,10 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
                 val dialog = DialogARMark(context)
 
-                dialog.setTitle("Доп. Требование (" + data.getId() + "/" + data.getSiteId() + ")")
+                dialog.setTitle("Дод. Вимога(" + data.getId() + "/" + data.getSiteId() + ")")
 
                 val bId = StringBuilder()
-                val id = "<b>Идентификатор: </b>"
+                val id = "<b>Ідентифікатор: </b>"
                 bId.append(id)
                 try {
                     val id2 = String.format("%s", data.getId())
@@ -341,7 +341,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
 
                 val bEnd = StringBuilder()
-                val dEnd = "<b>Дата окончания: </b>"
+                val dEnd = "<b>Дата закінчення: </b>"
                 bEnd.append(dEnd)
                 try {
 //                Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
@@ -375,13 +375,13 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                         )
                     bAuthor.append(author2)
                 } catch (e: Exception) {
-                    bAuthor.append("Автор не определён")
+                    bAuthor.append("Автор не визначений")
                 }
                 val endbAuthor: CharSequence = Html.fromHtml(bAuthor.toString())
 
 
                 val bCust = StringBuilder()
-                val customer = "<b>Клиент: </b>"
+                val customer = "<b>Клієнт: </b>"
                 bCust.append(customer)
                 try {
                     val customer2 =
@@ -393,7 +393,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
 
                 val bMark = StringBuilder()
-                val mark = "<b>Оценка: </b>"
+                val mark = "<b>Оцінка: </b>"
                 bMark.append(mark)
                 try {
                     val mark2 = String.format("%s", "")

@@ -128,7 +128,7 @@ fun WpDataTabsScreen() {
         {
             listOf(
                 stringResource(R.string.title_0),
-                "Доп.Заработок",
+                "Доп.заробіток",
             )
         } else {
             listOf(

@@ -177,11 +177,11 @@ fun StoresMap(
     fun buildSubtitle(pUi: PointUi, distance: String?): String = buildString {
         if (pUi.count > 0) {
             append("${pUi.count} кпс")
-            append("\nпремия: ${formatSum(pUi.sum)}")
+            append("\nПремія: ${formatSum(pUi.sum)}")
         }
         if (!distance.isNullOrBlank()) {
             if (isNotEmpty()) append('\n')
-            append("расстояние: ")
+            append("Відстань: ")
             append(distance)
         }
     }

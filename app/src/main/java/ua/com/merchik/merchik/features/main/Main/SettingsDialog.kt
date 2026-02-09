@@ -217,9 +217,9 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     if (showToolTip) {
 
         MessageDialog(
-            title = "Не доступно",
+            title = "Недоступно",
             status = DialogStatus.ALERT,
-            message = "Данный раздел находится в стадии в разработки",
+            message = "Цей розділ перебуває у стадії розробки",
             okButtonName = "Ок",
             onDismiss = {
                 showToolTip = false

@@ -159,7 +159,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 SiteUrlSDB.class,
                 SiteAccountSDB.class,
                 SynchronizationTimeTable.class,
-                WPDataAdditional.class,      // дополнительный заработок
+                WPDataAdditional.class,      // Додатковий заробіток
                 InitStateEntity.class
         },
         version = 74

@@ -314,8 +314,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "еhe_number_of_visits_has_been_selected",
-                "Отобрано %s посещений. Кликнув на любом из них, вы сможете получить развернутую информацию о нем и подать заявку на выполнение этой работы.",
+                "clue_dialog",
+                "Подсказка",
                 "app",
                 "all",
                 ""
@@ -323,49 +323,137 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "2",
-                "confirmation_off_additional",
-                "Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.",
+                "cancel_button_dialog",
+                "Отмена",
                 "app",
                 "all",
                 ""
         ));
-//
-//        res.add(new AddTranslation(
-//                "3",
-//                "dialog_exit_app_msg",
-//                "Приложение будет закрыто. Завершить работу?",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//
-//        res.add(new AddTranslation(
-//                "4",
-//                "access_to_orders",
-//                "доступ к заказам",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//
-//        res.add(new AddTranslation(
-//                "5",
-//                "take_the_training",
-//                "пройти тренинг",
-//                "app",
-//                "all",
-//                ""
-//        ));
-//
-//
-//        res.add(new AddTranslation(
-//                "6",
-//                "dialog_exit_close",
-//                "Система буде закрита",
-//                "app",
-//                "all",
-//                ""
-//        ));
+
+        res.add(new AddTranslation(
+                "3",
+                "dialog_exit_msg",
+                "Приложение будет закрыто. Завершить работу?",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "4",
+                "access_to_orders_",
+                "доступ к заказам",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "5",
+                "distance_map_sub",
+                "Расстояние",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "6",
+                "premia_map",
+                "Премия",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "7",
+                "read_more_map",
+                "Подробнее",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "8",
+                "premia_map_title",
+                "Премия",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "9",
+                "filter_dialog_sub_title",
+                "В этой форме Вы можете настроить фильтры для ограничения списка элементов",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "10",
+                "not_available_dialog",
+                "Не доступно",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "11",
+                "not_available_dialog_msg",
+                "Данный раздел находится в стадии в разработки",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "12",
+                "you_get_discounts",
+                "Вы получаете снижения по следущим опциям:",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "12",
+                "not_available_coords",
+                "Не определены координаты адреса",
+                "app",
+                "all",
+                ""
+        ));
+
+
+        res.add(new AddTranslation(
+                "13",
+                "not_available_coords_tilte_dialog",
+                "Нарушение по Местоположению.",
+                "app",
+                "all",
+                ""
+        ));
+
+        res.add(new AddTranslation(
+                "14",
+                "male_photo_button",
+                "Всё равно сделать фото",
+                "app",
+                "all",
+                ""
+        ));
+
+
 
 //
 //        res.add(new AddTranslation(

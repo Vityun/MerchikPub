@@ -1423,9 +1423,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
         if ((viewModel.typeWindow ?: "").equals("full", true))
             MessageDialog(
-                title = "Не доступно",
+                title = "Недоступно",
                 status = DialogStatus.ALERT,
-                message = "Данный раздел находится в стадии в разработки",
+                message = "Цей розділ перебуває у стадії розробки",
                 onDismiss = {
                     showMapsDialog = false
                 },
@@ -1511,7 +1511,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         val selectedCount = dataItemsUI_.size
 
         MessageDialog(
-            title = "Дополнительный заработок",
+            title = "Додатковий заробіток",
             status = DialogStatus.NORMAL,
             subTitle = "Базовий мерчендайзинг",   // ← заголовок-сабтайтл по сценарию
             message = "Отобрано $selectedCount посещений. Кликнув на любом из них, вы сможете получить развернутую информацию о нем и подать заявку на выполнение этой работы.",     // ← тело подсказки по сценарию

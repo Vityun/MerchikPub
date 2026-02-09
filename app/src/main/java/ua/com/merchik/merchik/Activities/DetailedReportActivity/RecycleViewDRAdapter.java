@@ -465,8 +465,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
                                 bundle.putString("dataJson", new Gson().toJson(wp));
                                 bundle.putString("title", "Історія місцеположення");
-                                bundle.putString("subTitle", "Данные местоположения по ТТ" + ": " + wp.getAddr_txt() +
-                                        " за период с " + Clock.getHumanTime2(startT) + " по " + Clock.getHumanTime2(endT));
+                                bundle.putString("subTitle", "Дані розташування по ТТ" + ": " + wp.getAddr_txt() +
+                                        " за період з " + Clock.getHumanTime2(startT) + " по " + Clock.getHumanTime2(endT));
                                 intent.putExtras(bundle);
                                 mContext.startActivity(intent);
                             });

@@ -103,7 +103,7 @@ public class DialogARMark {
         help.setOnClickListener(v -> {
             if (data != null) {
                 DialogData dialogLesson = new DialogData(context);
-                dialogLesson.setTitle("Подсказка");
+                dialogLesson.setTitle("Підказка");
                 dialogLesson.setText(data.getComments());
                 dialogLesson.show();
             } else {
@@ -283,7 +283,7 @@ public class DialogARMark {
                 dialogData.setOk("Ok", () -> {
                     if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10) {
                         saveNewARMark(db, rate, dialogData.getOperationResult());
-                        Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(context, "Внесіть коментар більший за 10 символів.", Toast.LENGTH_LONG).show();
                     }
@@ -294,7 +294,7 @@ public class DialogARMark {
 
                 saveNewARMark(db, rate, "");
 
-                Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
             }
 
             clickListener.clicked();
@@ -400,7 +400,7 @@ public class DialogARMark {
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             int rate = (int) rating;
             ratingBar.setRating(rate);
-            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
 
 
             AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();

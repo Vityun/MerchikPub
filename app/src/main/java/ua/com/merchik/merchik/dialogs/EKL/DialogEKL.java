@@ -189,7 +189,7 @@ public class DialogEKL {
         help.setOnClickListener(v -> {
             if (data != null) {
                 DialogData dialogLesson = new DialogData(context);
-                dialogLesson.setTitle("Подсказка");
+                dialogLesson.setTitle("Підказка");
                 dialogLesson.setText(data.getComments());
                 dialogLesson.show();
             } else {

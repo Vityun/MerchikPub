@@ -355,9 +355,9 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     if (showToolTip) {
         MessageDialog(
-            title = "Не доступно",
+            title = "Недоступно",
             status = DialogStatus.ALERT,
-            message = "Данный раздел находится в стадии в разработки",
+            message = "Цей розділ перебуває у стадії розробки",
             okButtonName = "Ок",
             onDismiss = {
                 showToolTip = false
@@ -433,7 +433,7 @@ fun DropDownSortingList(
             Spacer(modifier = Modifier.width(40.dp))
 
             Text(
-                text = "Группировка",
+                text = "Групування",
                 color = Color.DarkGray,
                 modifier = Modifier
                     .weight(1f)

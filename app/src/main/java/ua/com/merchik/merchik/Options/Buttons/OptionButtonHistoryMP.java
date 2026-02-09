@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
+import android.Manifest;
 import android.content.Context;
 
+import androidx.annotation.RequiresPermission;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,12 +19,14 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
+import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.trecker;
@@ -130,9 +134,35 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                     Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "clicked, logMPDB " + logMPDB);
                     OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, Options.NNKMode.MAKE, unlockCodeResultListener);
                     optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
+                        @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
                         @Override
                         public void onSuccess(String data) {
-                            if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())
+                            if (workStatusMessage.isEmpty() && workStatusSub.isEmpty()) {
+                                int tema_id = 1383;
+                                if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
+                                        || Globals.userId == 130647 || Globals.userId == 249929)
+                                    WorkStartNetworkSnapshot.captureAndLog(
+                                            context,
+                                            wpDataDB,
+                                            tema_id,
+                                            trecker::coordinatesDistanse,
+                                            result -> {
+                                                String msg;
+                                                if (result.isOk()) {
+                                                    msg = "Добавлено записей:\n" +
+                                                            "WiFi: " + result.wifiAdded + "\n" +
+                                                            "Bluetooth: " + result.btAdded;
+                                                } else {
+                                                    msg = result.error;
+                                                }
+
+                                                // если вызывается не с UI-потока, оберни в runOnUiThread
+                                                new InfoDialogBuilder(context)
+                                                        .setTitle("Детальна інформація")
+                                                        .setMessage(msg)
+                                                        .show();
+                                            }
+                                    );
                                 new MessageDialogBuilder(Globals.unwrap(context))
                                         .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
                                         .setSubTitle(String.format("Запис %s додано до бази даних з поточними координатами %s", id, time))
@@ -144,7 +174,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                                             return Unit.INSTANCE;
                                         })
                                         .show();
-                            else
+                            } else
                                 new MessageDialogBuilder(Globals.unwrap(context))
                                         .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
                                         .setSubTitle(workStatusSub)
@@ -159,6 +189,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
                         }
 
+                        @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
                         @Override
                         public void onFailure(String error) {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())

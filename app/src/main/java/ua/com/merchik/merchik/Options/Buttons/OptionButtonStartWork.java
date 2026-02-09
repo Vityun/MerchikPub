@@ -2,14 +2,18 @@ package ua.com.merchik.merchik.Options.Buttons;
 
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
+import android.Manifest;
 import android.content.Context;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresPermission;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -18,6 +22,8 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder;
+import ua.com.merchik.merchik.trecker;
 
 public class OptionButtonStartWork<T> extends OptionControl {
     public int OPTION_BUTTON_PHOTO_BEFORE_START_WORK_ID = 135809;
@@ -108,7 +114,8 @@ public class OptionButtonStartWork<T> extends OptionControl {
     }
 
 
-    private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, Options.NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+    @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
+    private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, Options.NNKMode mode, UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
         Globals.fixMP(wpDataDB, null);
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
@@ -118,6 +125,32 @@ public class OptionButtonStartWork<T> extends OptionControl {
             result = true;
         } else {
             try {
+                int tema_id = 1383;
+                if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
+                        || Globals.userId == 130647 || Globals.userId == 249929)
+                    WorkStartNetworkSnapshot.captureAndLog(
+                        context,
+                        wpDataDB,
+                        tema_id,
+                        trecker::coordinatesDistanse,
+                        result1 -> {
+                            String msg;
+                            if (result1.isOk()) {
+                                msg = "Добавлено записей:\n" +
+                                        "WiFi: " + result1.wifiAdded + "\n" +
+                                        "Bluetooth: " + result1.btAdded;
+                            } else {
+                                msg = result1.error;
+                            }
+
+                            // если вызывается не с UI-потока, оберни в runOnUiThread
+                            new InfoDialogBuilder(context)
+                                    .setTitle("Детальна інформація")
+                                    .setMessage(msg)
+                                    .show();
+                        }
+                );
+
                 long startTime = System.currentTimeMillis() / 1000;
                 wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
                 wpDataDB.setVisit_start_dt(startTime);

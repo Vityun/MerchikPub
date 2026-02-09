@@ -260,7 +260,7 @@ fun FilteringDialog(
                             onChanged(filters)                    // опционально, если надо наружу
                             viewModel.updateContent()
 
-                            viewModel.updateOffsetDistanceMeters(localDistance)
+                            viewModel.updateOffsetDistanceMeters(localDistance * 1000)
                             FilteringDialogDataHolder.instance().filters?.let {
                                 onChanged.invoke(it)
                             }
@@ -325,9 +325,9 @@ fun FilteringDialog(
     if (showToolTip) {
 
         MessageDialog(
-            title = "Не доступно",
+            title = "Недоступно",
             status = DialogStatus.ALERT,
-            message = "Данный раздел находится в стадии в разработки",
+            message = "Цей розділ перебуває у стадії розробки",
             okButtonName = "Ок",
             onDismiss = {
                 showToolTip = false
@@ -382,8 +382,8 @@ private fun ItemFilterUI(
             Text(
                 modifier = Modifier
                     .clickable { if (itemFilter.rightValuesUI.size > 3) isExpanded = !isExpanded },
-                text = if (isExpanded) "${itemFilter.rightValuesUI.size} элементов"
-                else "${if (itemFilter.rightValuesUI.size >= 3) 3 else itemFilter.rightValuesUI.size} элемента из ${itemFilter.rightValuesUI.size}",
+                text = if (isExpanded) "${itemFilter.rightValuesUI.size} елементів"
+                else "${if (itemFilter.rightValuesUI.size >= 3) 3 else itemFilter.rightValuesUI.size} елемента з ${itemFilter.rightValuesUI.size}",
                 style = TextStyle(
                     color = colorResource(id = R.color.blue),
                     textDecoration = TextDecoration.Underline

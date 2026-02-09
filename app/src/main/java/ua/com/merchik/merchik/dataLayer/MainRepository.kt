@@ -233,7 +233,7 @@ class MainRepository(
                             it.getFieldTranslateId(key)
                         )
                     } ?: key,
-                    order = 1
+                    order = if (key.equals("create_time", ignoreCase = true)) -1 else 1
                 )
             }
     }

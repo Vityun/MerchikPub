@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
-import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.util.Log
@@ -14,6 +13,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
+import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -26,12 +26,9 @@ import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.InfoDialog
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.RangeDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -53,16 +50,37 @@ class JournalPhotoSDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
-        val imageFields = itemUI.rawObj[0].getFieldsImageOnUI().split(",")
-        val jsonObject = JSONObject(Gson().toJson(itemUI.rawObj[0]))
+
+        val obj = itemUI.rawObj.firstOrNull() ?: return
+        val imageFields = obj.getFieldsImageOnUI()
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        val jsonObject = JSONObject(Gson().toJson(obj))
+
+        fun optStr(key: String): String =
+            jsonObject.opt(key)?.toString()?.trim().orEmpty()
+
+        // 1) Пытаемся найти по serverId (или любому первому ключу из getFieldsImageOnUI)
+        val idKey = imageFields.getOrNull(0)
+        val photoId = idKey?.let { optStr(it) }.orEmpty()
+
         var photoLogData: StackPhotoDB? = null
 
-        imageFields.getOrNull(0)?.takeIf { it.isNotEmpty() }?.let { fieldKey ->
-            RealmManager.getPhotoById(null, jsonObject.get(fieldKey.trim()).toString())
-                ?.let { photo ->
-                    photoLogData = photo
-                }
+        if (photoId.isNotEmpty() && photoId != "0" && photoId != "null") {
+            // как у тебя, только безопаснее
+            photoLogData = RealmManager.getPhotoById(null, photoId)
         }
+
+        // 2) Если не найдено — пробуем по hash (твой кейс: photo_hash всегда есть)
+        if (photoLogData == null) {
+            val hash = optStr("photo_hash") // <-- ключ хэша
+            if (hash.length > 12 && hash != "0" && hash != "null") {
+                photoLogData = RealmManager.getPhotoByHash(hash)
+            }
+        }
+
         InfoDialogBuilder(context)
             .setTitle("Детальна інформація")
             .setMessage(PhotoLogAdapter.photoData(photoLogData))
@@ -184,8 +202,18 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 "img_src_id").split(",")
     }
 
+    override fun getDefaultSortUserFields(): List<String>? {
+        return "create_time".split(",")
+    }
+
     override suspend fun getItems(): List<DataItemUI> {
         val data = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhoto())
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, null)
+    }
+
+    fun logWiFi() {
+
+
+        LogDB()
     }
 }

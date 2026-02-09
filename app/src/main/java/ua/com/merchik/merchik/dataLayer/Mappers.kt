@@ -85,7 +85,7 @@ fun DataObjectUI.toItemUI(
     nameUIRepository: NameUIRepository,
     hideUserFields: String?,
     typePhoto: Int?,
-    groupingKeys: List<String> = emptyList()    // 👈 НОВОЕ, по умолчанию пусто
+    groupingKeys: List<String> = emptyList()
 ): DataItemUI {
     val gson = Gson()
     val jsonObject = try {
@@ -165,24 +165,35 @@ fun DataObjectUI.toItemUI(
         .filter { it.isNotEmpty() }
 
     for (key in imageKeys) {
-        val photoId = jsonObject.optString(key, "0")
-        when {
-            photoId != "0" -> {
-                RealmManager.getPhotoByPhotoId(photoId)?.getPhoto_num()?.let { images.add(it) }
-            }
-
-            key == "photo_do_id" -> {
-                val hash = jsonObject.optString("photo_do_hash", "0")
-                if (hash.length > 12) {
-                    RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { images.add(it) }
-                } else {
-                    idResImage?.let { images.add(it.toString()) }
-                }
-            }
-
-            else -> idResImage?.let { images.add(it.toString()) }
+        resolvePhotoNum(jsonObject, key, idResImage)?.let { num ->
+            if (!images.contains(num)) images.add(num)
         }
     }
+
+//    val imageKeys = this.getFieldsImageOnUI()
+//        .split(",")
+//        .map { it.trim() }
+//        .filter { it.isNotEmpty() }
+//
+//    for (key in imageKeys) {
+//        val photoId = jsonObject.optString(key, "0")
+//        when {
+//            photoId != "0" -> {
+//                RealmManager.getPhotoByPhotoId(photoId)?.getPhoto_num()?.let { images.add(it) }
+//            }
+//
+//            key == "photo_do_id" -> {
+//                val hash = jsonObject.optString("photo_do_hash", "0")
+//                if (hash.length > 12) {
+//                    RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { images.add(it) }
+//                } else {
+//                    idResImage?.let { images.add(it.toString()) }
+//                }
+//            }
+//
+//            else -> idResImage?.let { images.add(it.toString()) }
+//        }
+//    }
 
     fun updateFields(key: String) {
         val valueRaw = jsonObject.opt(key) ?: return
@@ -266,6 +277,34 @@ fun DataObjectUI.toItemUI(
         stableId = stableIdFromSource ?: DataItemIdGenerator.nextId()
     )
 }
+
+private fun resolvePhotoNum(
+    json: JSONObject,
+    idKey: String,
+    idResImage: Int?
+): String? {
+
+    fun norm(s: String) = s.trim().takeIf { it.isNotEmpty() && it != "0" && it != "null" }
+
+    // 1) пробуем по idKey (photoServerId)
+    val id = norm(json.optString(idKey, ""))
+    if (id != null) {
+        RealmManager.getPhotoByPhotoId(id)?.getPhoto_num()?.let { return it }
+        RealmManager.getPhotoById(null, id)?.getPhoto_num()?.let { return it } // если ты используешь именно getPhotoById
+    }
+
+    // 2) fallback по hash ТОЛЬКО для этого кейса
+    if (idKey == "photoServerId") {
+        val hash = norm(json.optString("photo_hash", ""))
+        if (hash != null && hash.length > 12) {
+            RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { return it }
+        }
+    }
+
+    // 3) fallback на ресурс (логотип) — только если реально ничего не найдено
+    return idResImage?.toString()
+}
+
 
 fun DataItemUI.withGroupingOnTop(groupingKeys: List<String>): DataItemUI {
     if (groupingKeys.isEmpty()) return this

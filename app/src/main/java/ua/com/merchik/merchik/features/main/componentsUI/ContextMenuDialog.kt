@@ -105,7 +105,7 @@ data class ContextMenuResult(
 )
 
 data class MessageDialogData(
-    val title: String = "Дополнительный заработок",
+    val title: String = "Додатковий заробіток",
     val subTitle: String? = "Базовий мерчендайзинг",
     val message: String,
     val status: DialogStatus,
@@ -121,27 +121,57 @@ data class CardItemsData(
 )
 
 sealed class ContextMenuAction(val title: String) {
-    data object ShowAllVizitInAdress : ContextMenuAction("Показать все визиты по этому адресу")
-    data object AcceptOrder : ContextMenuAction("Принять этот заказ")
-    data object AcceptAllAtAddress : ContextMenuAction("Принять всех клиентов этого адреса")
-    data object RejectOrder : ContextMenuAction("Отказаться от этого заказа")
-    data object RejectAddress : ContextMenuAction("Отказаться от этого адреса")
-    data object RejectClient : ContextMenuAction("Отказаться от этого клиента")
-    data object RejectByType : ContextMenuAction("Отказаться от такого типа работ")
-    data object OpenVisit : ContextMenuAction("Відкрити відвідування")
-    data object OpenOrder : ContextMenuAction("Информация об этом заказе")
-    data object AskMoreMoney : ContextMenuAction("Попросить больше денег")
-    data object Feedback : ContextMenuAction("Обратная связь")
-    data object ConfirmAcceptOneTime : ContextMenuAction("Выполнить один раз")
-    data object ConfirmAcceptInfinite : ContextMenuAction("Выполнять регулярно")
+    data object ShowAllVizitInAdress :
+        ContextMenuAction("Показати всі відвідування за цією адресою")
+
+    data object AcceptOrder :
+        ContextMenuAction("Прийняти це замовлення")
+
+    data object AcceptAllAtAddress :
+        ContextMenuAction("Прийняти всіх клієнтів за цією адресою")
+
+    data object RejectOrder :
+        ContextMenuAction("Відмовитися від цього замовлення")
+
+    data object RejectAddress :
+        ContextMenuAction("Відмовитися від цієї адреси")
+
+    data object RejectClient :
+        ContextMenuAction("Відмовитися від цього клієнта")
+
+    data object RejectByType :
+        ContextMenuAction("Відмовитися від цього типу робіт")
+
+    data object OpenVisit :
+        ContextMenuAction("Відкрити відвідування")
+
+    data object OpenOrder :
+        ContextMenuAction("Інформація про це замовлення")
+
+    data object AskMoreMoney :
+        ContextMenuAction("Запросити більшу оплату")
+
+    data object Feedback :
+        ContextMenuAction("Зворотний зв’язок")
+
+    data object ConfirmAcceptOneTime :
+        ContextMenuAction("Виконати один раз")
+
+    data object ConfirmAcceptInfinite :
+        ContextMenuAction("Виконувати регулярно")
+
     data object ConfirmAllAcceptOneTime :
-        ContextMenuAction("Выполнить один раз все работы по %s клиента этому адресу")
+        ContextMenuAction("Виконати один раз усі роботи по %s клієнта за цією адресою")
 
     data object ConfirmAllAcceptInfinite :
-        ContextMenuAction("Выполнять регулярно все работы по %s клиента этому адресу")
+        ContextMenuAction("Виконувати регулярно всі роботи по %s клієнта за цією адресою")
 
-    data object OpenSMSPlanDirectory : ContextMenuAction("Просмотреть журнал заявок")
-    data object Close : ContextMenuAction("Закрити")
+    data object OpenSMSPlanDirectory :
+        ContextMenuAction("Переглянути журнал заявок")
+
+    data object Close :
+        ContextMenuAction("Закрити")
+
 }
 
 
@@ -186,7 +216,7 @@ fun rememberContextMenuHost(
                     is MainEvent.ShowLoading -> {
 
                         showMessageDialog = MessageDialogData(
-                            subTitle = "Ожидаем ответ от сервера",
+                            subTitle = "Чекаємо на відповідь від сервера",
                             status = DialogStatus.LOADING,
                             message = " ",
                             showButton = false,
@@ -240,7 +270,7 @@ fun rememberContextMenuHost(
                             val start = range?.start?.format(formatterDDmmYYYY) ?: "?"
                             val end = range?.end?.format(formatterDDmmYYYY) ?: "?"
                             "$start по $end"
-                        } ?: "не определено"
+                        } ?: "не визначено"
 
                         viewModel.requestJumpToAddressVisits(wp, periodText)
                         selectedItem = null

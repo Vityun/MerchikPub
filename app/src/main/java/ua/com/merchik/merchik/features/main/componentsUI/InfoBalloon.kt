@@ -148,7 +148,7 @@ fun InfoBalloonText(
                         append(" ")
                         withStyle(
                             SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
-                        ) { append("\nподробнее..") }
+                        ) { append("\nДокладніше..") }
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )

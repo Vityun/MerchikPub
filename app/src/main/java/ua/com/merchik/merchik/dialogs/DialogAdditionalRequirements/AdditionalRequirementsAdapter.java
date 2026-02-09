@@ -257,7 +257,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
 
             StringBuilder bMark = new StringBuilder();
-            String mark = "<b>Оценка: </b>";
+            String mark = "<b>Оцінка: </b>";
             bMark.append(mark);
             try {
                 String mark2 = String.format("%s", "");
@@ -372,7 +372,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             }
 
             try {
-                String mark = String.format("<b>Оценка: </b>%s<br>", "---");
+                String mark = String.format("<b>Оцінка: </b>%s<br>", "---");
                 builder.append(mark);
             } catch (Exception e) {
             }
@@ -529,7 +529,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
 
         StringBuilder bMark = new StringBuilder();
-        String mark = "<b>Оценка: </b>";
+        String mark = "<b>Оцінка: </b>";
         bMark.append(mark);
         try {
             String mark2 = String.format("%s", "");

@@ -1348,13 +1348,13 @@ public class Options {
             switch (mode) {
                 case SALARY_CUT:
                     dialog.setDialogIco();
-                    dialog.setTitle("Вы получаете снижения по следущим опциям: ");
+                    dialog.setTitle("Ви отримуєте зниження за такими опціями: ");
 
                     SpannableStringBuilder salaryCutText = new SpannableStringBuilder();
                     salaryCutText.append(optionsSum);
-                    salaryCutText.append("\n\nВы можете ещё получить: " + "~")
+                    salaryCutText.append("\n\nВи можете отримати ще: " + "~")
                             .append(String.format("%.2f", optionSumRes))
-                            .append("грн, если выполните опции выше.");
+                            .append("грн, якщо виконаєте опції вище.");
 
                     dialog.setText(salaryCutText, () -> {
                     });
@@ -1367,7 +1367,7 @@ public class Options {
                         // Не все опции(действия) выполнены
                         // Не выполнены:
                         dialog.setDialogIco();
-                        dialog.setTitle("Не все опции(действия) выполнены.\n\nВаш отчёт не будет проведён и не будет начислена за него оплата!");
+                        dialog.setTitle("Не всі опції (дії) виконані.\n\nВаш звіт не буде проведено і не буде нараховано за нього оплату!");
 
                         SpannableStringBuilder resStr = new SpannableStringBuilder();
                         resStr.append("Не выполнены: \n\n");
@@ -1381,8 +1381,8 @@ public class Options {
                             Log.e("optionNotConduct", "------------------------------END----------------------------------");
                         }
                         resStr.append(optionsSum);
-                        resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
-                                .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
+                        resStr.append("\n\nУсуньте зазначені помилки та повторіть спробу проведення." + "\n\nВи можете отримати ще: " + "~")
+                                .append(String.format("%.2f", optionSumRes)).append("грн, якщо виконаєте опції вище.");
 
                         dialog.setText(resStr, () -> {
                         });
@@ -1409,16 +1409,16 @@ public class Options {
                         }
                         if (!existing.isEmpty()) {
                             new MessageDialogBuilder(unwrap(context))
-                                    .setTitle("## Данные не выгружены на сервер")
+                                    .setTitle("## Дані не вивантажені на сервер")
                                     .setStatus(DialogStatus.ALERT)
                                     .setMessage("## " +
-                                            "Внимание! Перед проведением документа, рекомендуем выполнить процедуру выгрузки Фото отчетов (" + res.size() + " шт.) на Сервер. \n" +
-                                            "Пока Вы не выполните эту процедуру, сервер не сможет проверить и провести Ваш отчет.\n" +
-                                            "Для того, чтобы выполнить обмен данными с Сервером, нажмите кнопку \"Синхронизация\" на текущей форме, или воспользуйтесь стандартным пунктом в меню.\n" +
-                                            "Если связь плохая, найдите место с лучшим приёмом и повторите попытку." +
-                                            "")
+                                            "Увага! Перед проведенням документа рекомендуємо виконати процедуру вивантаження фото-звітів (" + res.size() + "шт.) на Сервер.\n" +
+                                            "Поки ця процедура не буде виконана, сервер не зможе перевірити та провести ваш звіт.\n" +
+                                            "\n" +
+                                            "Щоб виконати обмін даними з Сервером, натисніть кнопку «Синхронізація» на поточній формі або скористайтеся стандартним пунктом меню.\n" +
+                                            "Якщо зв’язок нестабільний, знайдіть місце з кращим прийомом сигналу та повторіть спробу.")
                                     .setOnCancelAction(() -> Unit.INSTANCE)
-                                    .setOnConfirmAction("Cинхронизация", () -> {
+                                    .setOnConfirmAction("Синхронізація", () -> {
                                                 new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
                                                 new TablesLoadingUnloading().uploadReportPrepareToServer();
                                                 new Exchange().startExchange();

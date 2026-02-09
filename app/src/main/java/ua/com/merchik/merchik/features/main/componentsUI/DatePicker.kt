@@ -76,7 +76,7 @@ fun DatePicker(
                         fontWeight = FontWeight.Black) // зелёный OK
                 )
                 negativeButton(
-                    text = "Отмена",
+                    text = "Скасувати",
                     textStyle = TextStyle(color = colorResource(R.color.orange),
                         fontWeight = FontWeight.Black) // красный Cancel
                 )

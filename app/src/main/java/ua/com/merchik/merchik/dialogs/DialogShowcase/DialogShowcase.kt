@@ -71,7 +71,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
         help!!.setOnClickListener { v: View? ->
             if (data != null) {
                 val dialogLesson = DialogData(context)
-                dialogLesson.setTitle("Подсказка")
+                dialogLesson.setTitle("Підказка")
                 dialogLesson.setText(data.comments)
                 dialogLesson.show()
             } else {

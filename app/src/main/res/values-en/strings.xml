@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Activity titles -->
+    <string name="title_activity_premium">Premium</string>
+    <string name="title_activity_menu_main">Dashboard</string>
+    <string name="activity_title_photo_report">Photo Report</string>
+    <string name="login_info">Enter your login and password:</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+
+    <string name="title_tab_0">Home</string>
+    <string name="title_tab_1">Options</string>
+    <string name="title_tab_2">Messages</string>
+    <string name="title_tab_3">ZIR</string>
+
+    <string name="title_0">Work Plan</string>
+    <string name="title_1">Map</string>
+
+    <string name="title_task">Tasks</string>
+    <string name="title_reclamation">Claims</string>
+
+    <string name="title_tab_tar_0">Home</string>
+    <string name="title_tab_tar_1">Options</string>
+    <string name="title_tab_tar_2">Messages</string>
+    <string name="title_tab_tar_3">Products</string>
+
+    <string name="edit_text_login">Login</string>
+    <string name="edit_text_password">Password</string>
+
+    <string name="ok">OK</string>
+
+    <string name="object_891">Hint</string>
+    <string name="object_890">Help</string>
+    <string name="object_893">Current app version</string>
+    <string name="object_894">You have the latest app version</string>
+    <string name="object_895">We recommend installing a new app version:</string>
+
+    <string name="gps_info_button">Pressing the button will get your current location</string>
+    <string name="gps_button">Get GPS</string>
+    <string name="button_make_photo">Take photo</string>
+    <string name="button_make_new_photo">Take another photo</string>
+    <string name="button_upload_photo">Upload current photo to server</string>
+    <string name="button_comment_photo">Add comment</string>
+    <string name="button_close">Save / Close</string>
+
+    <string name="complete_work">Submit report</string>
+
+    <!-- Toolbar -->
+    <string name="go_to_main">Go to Home</string>
+    <string name="go_to_wpdata">Work Plan</string>
+    <string name="info">Information</string>
+    <string name="settings">Send log</string>
+
+    <string name="t_check_sever">Server</string>
+    <string name="txt_sever">Server</string>
+    <string name="t_check_online">Connection</string>
+    <string name="t_check_Provider">Provider</string>
+    <string name="t_check_GPS">GPS</string>
+    <string name="t_check_NET">NET</string>
+    <string name="t_check_MP">Location request</string>
+    <string name="t_check_version">Version</string>
+    <string name="autosend">Auto sync</string>
+    <string name="txt_online">Online</string>
+    <string name="txt_offline">Offline</string>
+
+    <!-- Version update -->
+    <string name="t_ad_update_app_old">You are using an outdated app version</string>
+    <string name="t_ad_update_app_vold">You cannot continue until you install the new app version</string>
+    <string name="ad_update_app">Update</string>
+    <string name="ad_update_app_close">Close</string>
+
+    <!-- Exchange -->
+    <string name="t_ad_exchange">Select what you want to sync:</string>
+    <string name="b_ad_exchange_tables">Sync tables</string>
+    <string name="b_ad_exchange_photos">Upload photo reports</string>
+    <string name="b_ad_exchange_close">Close</string>
+
+    <!-- Detailed report -->
+    <string name="title_detailed_report">Detailed report №</string>
+
+    <!-- Common -->
+    <string name="date">Date:</string>
+    <string name="address">Address:</string>
+    <string name="customer">Customer:</string>
+    <string name="performer">Performer:</string>
+    <string name="options">Options:</string>
+    <string name="t_photo_log">Photo log</string>
+    <string name="Search">Search…</string>
+    <string name="network">Network:</string>
+    <string name="theme">Theme:</string>
+    <string name="main_option">Main option:</string>
+
+    <!-- Photo report -->
+    <string name="title_photo_report">Photo Report</string>
+
+    <string name="photo_report_tvDate">Date:&#160;</string>
+    <string name="photo_report_tvAddr">Address:&#160;</string>
+    <string name="photo_report_tvClient">Client:&#160;</string>
+    <string name="photo_report_tvTovGroup">Product group:&#160;</string>
+    <string name="photo_report_tvPhotoType">Photo type:&#160;</string>
+    <string name="photo_report_tvComment">Comment:&#160;</string>
+
+    <string name="photo_report_bMakePhoto">Take photo</string>
+    <string name="photo_report_bSaveAndClose">Save and Close</string>
+    <string name="photo_report_bMakeMorePhoto">Take another photo</string>
+    <string name="photo_report_bAddComent">Add comment</string>
+
+    <string name="menu_main_main_text">
+To receive tasks, go to the Work Plan section.
+Open the menu (≡) in the top-left corner and select Work Plan.
+</string>
+
+    <string name="hamburger_menu_main">Home</string>
+    <string name="hamburger_menu_work_plan">Work Plan</string>
+    <string name="hamburger_menu_detailed_report">Detailed Report</string>
+    <string name="hamburger_menu_photo_report">Photo Report</string>
+    <string name="hamburger_menu_photo_log">Photo Log</string>
+    <string name="hamburger_menu_exit">Logout</string>
+
+    <string name="hamburger_menu_language">Language</string>
+
+    <string name="menu_login_help">Help</string>
+    <string name="prompt">Hint</string>
+    <string name="close">Close</string>
+    <string name="video_prompt">Video hint</string>
+    <string name="telephone_call">Phone call</string>
+    <string name="title">Title</string>
+    <string name="save">Save</string>
+
+    <!-- Internet -->
+    <string name="internet_connection_error_code_not_200">
+Failed to retrieve data. Server is not responding. Check your internet connection and try again later.
+</string>
+
+    <string name="internet_connection_error_body_is_null">
+Requested data not found. Please try again or contact your supervisor.
+</string>
+
+    <string name="executor">Performer</string>
+
+    <string name="forgot_password">Forgot password?</string>
+    <string name="regisration">Registration</string>
+    <string name="distance">Distance</string>
+
+    <!-- HELP: PHOTO -->
+    <string name="text_help_photo">
+To upload photos to the website, please read the instructions!\n\n
+0. Allow the app to use location data.\n
+1. We recommend opening this app from the mobile version of the website.\n
+2. Tap the \"Take photo\" button below and take a photo.\n
+2.1. To take a photo, GPS must be enabled on your phone.\n
+2.2. If the camera does not open, try enabling GPS and restarting the app.\n
+3. Add a comment (optional).\n
+4. Tap \"Upload to server\".\n\n
+To take a series of photos, use the \"Take another photo\" button. Save the last photo in the series for sending by tapping \"Save / Close\".\n\n
+SAVING PHOTOS\n
+Photos are saved for uploading to the website when you tap \"Take another photo\" or \"Save / Close\".\n
+After the photo is saved, you can start uploading; otherwise, unsaved photos will not appear on the website.\n\n
+COORDINATES. Provider. GPS. NET. Location.\n
+To check whether the coordinates are up to date, open the \"Traffic light\" menu and look at the \"Provider\" indicator color.\n
+If it is green, fresh coordinates have been obtained and you can continue working.\n
+If it is yellow, there is an issue with GPS coordinates. This means your location may be determined inaccurately, which can cause location-related issues.\n
+To fix this, tap \"Provider\", then tap \"GPS\" (it should be red). If it turns green and you see a message that GPS data is up to date, you can continue.\n
+If the color does not change and you see a message that the data is outdated, you need to obtain fresh GPS data. Go outside or stand near a window and wait about a minute until the phone gets a new fix.\n
+If it is red or gray, the data could not be obtained. First try tapping \"Go to Home\" in the three-dot menu. If that does not help, go outside or stand near a window and wait about a minute until the phone gets a new fix.\n
+</string>
+
+    <!-- TEST / ONBOARDING -->
+    <string name="start_app_test">
+Attention!\n
+This is a test version of the app. For testing, you do not have to be at the retail location. You may receive a bonus for working with it!\n\n
+To do this, follow the instructions below and leave feedback in MVS (on the testing day) in the \"i\" section, item №4.\n
+IMPORTANT: In your feedback, specify the Version number and Date!\n\n
+List of required actions to test:\n\n
+</string>
+    <string name="start_app_test_instructions">The developer forgot to write the list.</string>
+
+    <!-- NAV DRAWER ACCESSIBILITY TEXTS -->
+    <string name="navigation_drawer_open">Description when opened</string>
+    <string name="navigation_drawer_close">Description when closed</string>
+
+    <!-- LOGIN HELP -->
+    <string name="menu_login_help_text_offline">
+Sorry, I can’t load the hint. Please check the server connection (internet access) and sign in again.
+</string>
+
+    <!-- RE-QUESTIONING MESSAGES -->
+    <string name="re_questioning_wpdata_first_msg">
+Topic of this visit: Marketing research!\n\nDo you need to do product shelving for this visit?
+</string>
+    <string name="re_questioning_wpdata_second_msg">
+Will you shelf products during this visit?
+</string>
+    <string name="re_questioning_wpdata_err_msg">
+This is an incorrect answer! You MUST NOT do product shelving for this visit!!
+</string>
+
+    <!-- SHORT COMMENTS / VALIDATION -->
+    <string name="tar_server_error_short_comment">
+The comment must be at least 20 characters long (excluding punctuation and spaces).
+</string>
+
+    <!-- USER MESSAGE -->
+    <string name="msg_try_sync">
+Perform data synchronization with the server and repeat the action after syncing.
+</string>
+
+    <!-- OPTION CONTROL 135329 -->
+    <string name="option_control_135329_no_need_reply">You do NOT need to reply to this task.</string>
+    <string name="option_control_135329_not_write_tar_comment">You did not write a reply for the active task.</string>
+    <string name="option_control_135329_so_short_tar_comment">You wrote a reply that is too short for the active task.</string>
+    <string name="option_control_135329_no_photo">In addition to the reply, you must upload a Photo Report.</string>
+    <string name="option_control_135329_no_detailed_report">In addition to the reply, you must update the Detailed Report.</string>
+    <string name="option_control_135329_msg_what_must_do">
+You must review the specified tasks, complete them, and provide your responses.
+</string>
+
+    <!-- OPTION CONTROL 135330 -->
+    <string name="option_control_135330_no_need_reply">You do NOT need to reply to this claim.</string>
+    <string name="option_control_135330_not_write_tar_comment">You did not write a reply for the active claim.</string>
+    <string name="option_control_135330_so_short_tar_comment">You wrote a reply that is too short for the active claim.</string>
+    <string name="option_control_135330_no_photo">In addition to the reply, you must upload a Photo Report.</string>
+    <string name="option_control_135330_no_detailed_report">In addition to the reply, you must update the Detailed Report.</string>
+    <string name="option_control_135330_msg_what_must_do">
+You must review the specified claims, complete them, and provide your responses.
+</string>
+
+    <!-- DOWNLOAD / STATUS -->
+    <string name="data_download_200">Data downloaded successfully</string>
+    <string name="data_download_error">Failed to download data</string>
+    <string name="data_download_wait">Please wait, information is being downloaded</string>
+
+    <!-- COUNTS -->
+    <string name="total_number_selected">Total selected items: %s</string>
+    <string name="total_number_marked">Total marked items: %s</string>
+
+    <!-- UI SETTINGS -->
+    <string name="ui_setting_table">Table settings</string>
+    <string name="ui_setting_column_visibility_desc">To hide columns, tap the field</string>
+    <string name="ui_column_name">Column name</string>
+    <string name="ui_visibility">Visibility</string>
+    <string name="ui_cancel">Cancel</string>
+    <string name="ui_apply">Apply</string>
+    <string name="ui_clear">Clear</string>
+    <string name="ui_choice">Select</string>
+    <string name="ui_synhronize">Synchronization</string>
+
+    <string name="ui_filter_not_available_edit">This filter is not available for editing</string>
+    <string name="ui_font_size">Font size</string>
+    <string name="ui_text_add">Add…</string>
+    <string name="ui_option_in_progress">This option is currently under development</string>
+    <string name="ui_text_find">Search</string>
+
+    <!-- ACHIEVEMENTS / PICKERS -->
+    <string name="title_themedb_from_achievement">Achievement type</string>
+    <string name="sub_title_themedb_from_achievement">Select the type of achievement you completed</string>
+    <string name="title_trademarkdb_from_achievement">Brands</string>
+    <string name="sub_title_trademarkdb_from_achievement">Select brands</string>
+    <string name="title_tovardb_from_achievement">Products</string>
+    <string name="sub_title_tovardb_from_achievement">Select a product</string>
+    <string name="title_additionalrequirementsdb_from_achievement">Offer</string>
+    <string name="sub_title_additionalrequirementsdb_from_achievement">
+A customer offer that must be completed to receive additional bonuses
+</string>
+
+    <!-- SAMPLE PHOTOS -->
+    <string name="title_samplephotosdb">Sample photo reports</string>
+    <string name="sub_title_samplephotosdb">
+The list contains sample photo reports. To create %s, tap the corresponding photo. Then zoom it to full screen and take a photo by tapping the camera button in the bottom-right corner.
+</string>
+
+    <!-- INPUTS / ACTIONS -->
+    <string name="input_text_or">Enter the product name (or barcode)</string>
+    <string name="open_visit">Open visit</string>
+
+    <!-- MISC -->
+    <string name="end_work">End of work</string>
+    <string name="your_click">You tapped</string>
+    <string name="test_ping">Server connection speed test</string>
+    <string name="connection_time">
+Connecting to the server took: %.3f seconds, which is an excellent result
+</string>
+    <string name="export_photo">Export all photos</string>
+    <string name="main_exchange">Synchronize data with the server</string>
+    <string name="not_photo_title">All photos have been uploaded to the server</string>
+    <string name="not_photo">No photos to export to the server</string>
+    <string name="not_show_again">Do not show this notification again</string>
+
+    <!-- LINKS (оставил как есть, только текст) -->
+    <string name="merchik_linl_pm">push <a href="https://play.google.com/store/apps/details?addrId=ua.com.merchik.merchik">Play Market</a></string>
+
+
+</resources>

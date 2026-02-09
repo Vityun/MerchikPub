@@ -296,34 +296,65 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                 val fieldsForCustomResult = getFieldsForCustomResult()
                 val photoDBWithComments = HashMap<StackPhotoDB, String>()
                 val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
-                uiState.value.items.map { dataItemUI ->
-                    val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
+
+                uiState.value.items.forEach { dataItemUI ->
+                    val obj = dataItemUI.rawObj.firstOrNull() ?: return@forEach
+                    val jsonObject = JSONObject(Gson().toJson(obj))
+
                     var comments = ""
-                    fieldsForCommentsImage?.forEach {
-                        comments += "${jsonObject.get(it)} \n\n"
+                    fieldsForCommentsImage?.forEach { k ->
+                        comments += "${jsonObject.opt(k)} \n\n"
                     }
+
                     if (clickedDataItemUI == dataItemUI) {
-                        fieldsForCustomResult?.forEach {
-                            valueForCustomResult.value[it] = jsonObject.get(it)
+                        fieldsForCustomResult?.forEach { k ->
+                            valueForCustomResult.value[k] = jsonObject.opt(k)
                         }
                     }
-                    val imageFields = dataItemUI.rawObj[0].getFieldsImageOnUI().split(",")
-                    imageFields.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { fieldKey ->
-                        RealmManager.getPhotoById(null, jsonObject.get(fieldKey.trim()).toString())
-                            ?.let { photo ->
-                                photoDBWithComments[photo] = comments
-                                photoDBWithRawObj[photo] = dataItemUI.rawObj[0]
-                                photoLogData.add(photo)
 
-                                if (clickedDataItemUI == dataItemUI) {
-                                    selectedIndex = photoLogData.size - 1
-                                }
-                            }
+                    val imageFields = obj.getFieldsImageOnUI()
+                        .split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+
+                    fun optStr(key: String): String =
+                        jsonObject.opt(key)?.toString()?.trim().orEmpty()
+
+                    // ✅ Берём ключ по index как было
+                    val idKey = imageFields.getOrNull(index)
+                    val photoId = idKey?.let { optStr(it) }.orEmpty()
+
+                    var photo: StackPhotoDB? = null
+
+                    // 1) По photoServerId (или любому id-полю)
+                    if (photoId.isNotEmpty() && photoId != "0" && photoId != "null") {
+                        photo = RealmManager.getPhotoById(null, photoId)
+                    }
+
+                    // 2) Fallback по hash, если id ещё нет или фото не найдено
+                    if (photo == null) {
+                        // если у некоторых моделей hash хранится в другом поле — добавь сюда альтернативы
+                        val hash = optStr("photo_hash").ifEmpty { optStr("photo_do_hash") }
+                        if (hash.length > 12 && hash != "0" && hash != "null") {
+                            photo = RealmManager.getPhotoByHash(hash)
+                        }
+                    }
+
+                    photo?.let { p ->
+                        photoDBWithComments[p] = comments
+                        photoDBWithRawObj[p] = obj
+                        photoLogData.add(p)
+
+                        if (clickedDataItemUI == dataItemUI) {
+                            selectedIndex = photoLogData.size - 1
+                        }
                     }
                 }
 
                 if (selectedIndex > -1) {
-                    dialog?.setPhotos(selectedIndex, photoLogData,
+                    dialog?.setPhotos(
+                        selectedIndex,
+                        photoLogData,
                         { _, photoDB ->
                             onClickFullImage(photoDB, photoDBWithComments[photoDB])
                             dialog?.dismiss()
@@ -333,13 +364,11 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                     )
 
                     val id =
-                        (clickedDataItemUI.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB } as? PlanogrammVizitShowcaseSDB)?.planogram_photo_id
+                        (clickedDataItemUI.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB } as? PlanogrammVizitShowcaseSDB)
+                            ?.planogram_photo_id
+
                     id?.let {
-                        val vote = SQL_DB.votesDao().getVote(
-                            code_dad2.value,
-                            id.toLong(),
-                            5
-                        )
+                        val vote = SQL_DB.votesDao().getVote(code_dad2.value, id.toLong(), 5)
                         dialog?.ratingType = DialogFullPhoto.RatingType.PLANOGRAM
                         dialog?.setVote(vote)
                         val wpDataDB = RealmManager.INSTANCE.copyFromRealm(

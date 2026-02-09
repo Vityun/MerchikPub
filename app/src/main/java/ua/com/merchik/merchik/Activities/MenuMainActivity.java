@@ -235,10 +235,8 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
-        List<TovarGroupClientSDB> l =  RoomManager.SQL_DB.tovarGroupClientDao().getAllBy("9382", 0);
-        Log.e("!!!!!!!!","size: " + l.size());
 //        startActivity(new Intent(this, WifiScannerActivity.class));
 
 

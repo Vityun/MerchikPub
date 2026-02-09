@@ -428,7 +428,7 @@ public class DialogFullPhoto {
                         indicatorRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
                             int rate = (int) rating;
                             indicatorRatingBar.setRating(rate);
-                            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
                             StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
 
                             if (rate > 5) {
@@ -596,7 +596,7 @@ public class DialogFullPhoto {
 //        indicatorRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
 //            int rate = (int) rating;
 //            indicatorRatingBar.setRating(rate);
-//            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+//            Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
 //        });
     }
 

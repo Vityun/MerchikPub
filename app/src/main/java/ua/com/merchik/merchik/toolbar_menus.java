@@ -96,6 +96,7 @@ import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
+import ua.com.merchik.merchik.Activities.WifiScannerActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
@@ -316,7 +317,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             String finalStr = str;
             fab.setOnClickListener(view -> {
                 DialogData dialog = new DialogData(context);
-                dialog.setTitle("Подсказка");
+                dialog.setTitle("Підказка");
                 dialog.setText(finalStr);
                 dialog.setMerchikIco(context);
                 dialog.setImgBtnCall(context);
@@ -944,7 +945,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // ... "На главную"
         if (id == R.id.action_to_main) {
-            Intent intent = new Intent(this, MenuMainActivity.class);
+//            Intent intent = new Intent(this, MenuMainActivity.class);
+            Intent intent = new Intent(this, WifiScannerActivity.class);
             startActivity(intent);
         }
 
@@ -956,7 +958,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // ... Отобразить подсказку
         if (id == R.id.action_info) {
-            Toast.makeText(this, "Подсказка не доступна в этом меню. Попробуйте вызвать её с активности Фотоотчётов.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Підказка недоступна у цьому меню. Спробуйте викликати її з активності Фотозвітів.", Toast.LENGTH_LONG).show();
         }
 
         // ... Журнал фото
@@ -1097,7 +1099,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // Светофор
         if (id == R.id.action_check) {
-            dialogMap();
+//            dialogMap();
             return true;
         }
 

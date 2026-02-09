@@ -529,7 +529,7 @@ public class PhotoReportActivity extends toolbar_menus {
                         .setItems(result, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Toast t = Toast.makeText(PhotoReportActivity.this, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
+                                Toast t = Toast.makeText(PhotoReportActivity.this, "Вибрано групу товару: " + result[which], Toast.LENGTH_LONG);
                                 t.show();
                                 wpDataObj.setCustomerTypeGrpS(globals.getKeyForValue(result[which], wpDataObj.getCustomerTypeGrp()));
                                 //customerTypeGrp = globals.getKeyForValue(result[which], wpDataObj.getCustomerTypeGrp());
@@ -540,7 +540,7 @@ public class PhotoReportActivity extends toolbar_menus {
             } else if (wpDataObj.getCustomerTypeGrp().size() == 1) {
                 wpDataObj.setCustomerTypeGrpS(globals.getKeyForValue(result[0], wpDataObj.getCustomerTypeGrp()));
                 //customerTypeGrp = globals.getKeyForValue(result[0], wpDataObj.getCustomerTypeGrp());
-                Toast.makeText(this, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Вибрано групу товару: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
             } else {
                 globals.alertDialogMsg(this, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
@@ -564,10 +564,10 @@ public class PhotoReportActivity extends toolbar_menus {
                         if (Globals.CoordX > 0 && Globals.CoordY > 0) {
                             double d = ua.com.merchik.merchik.trecker.coordinatesDistanse(wpDataObj.getLatitude(), wpDataObj.getLongitude(), Globals.CoordX, Globals.CoordY);
                             if (d > 500) {
-                                String title = "Нарушение по Местоположению.";
+                                String title = "Порушення за місцезнаходженням.";
                                 String msg = String.format("По данным системы вы находитесь на расстоянии %.1f метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете использовать фото которые выполните в таком состоянии системы.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь к своему руководителю за помощью.", d, wpDataObj.getAddressIdTxt());
-                                String trueButton = "<font color='#000000'>Всё равно сделать фото</font>";
-                                String falseButton = "<font color='#000000'>Отказаться от изготовления фото</font>";
+                                String trueButton = "<font color='#000000'>Все одно зробити фото</font>";
+                                String falseButton = "<font color='#000000'>Пропустити створення фото</font>";
                                 String title2 = "ВНИМАНИЕ!";
                                 String msg2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
                                 String trueButton2 = "<font color='#000000'>Да</font>";
@@ -585,8 +585,8 @@ public class PhotoReportActivity extends toolbar_menus {
                                         "Нашем сервере:\t\t %s \n\n" +
                                         "Разница во времени больше %s секунд\n\n" +
                                         "Установите на своём телефоне время аналогичное с сервером и повторите попытку.", timeStamp, timeStamp2, timeDifference);
-                                String bt1 = "<font color='#000000'>Всё равно сделать фото</font>";
-                                String bf1 = "<font color='#000000'>Отказаться от изготовления фото</font>";
+                                String bt1 = "<font color='#000000'>Все одно зробити фото</font>";
+                                String bf1 = "<font color='#000000'>Пропустити створення фото</font>";
                                 String t2 = "ВНИМАНИЕ!";
                                 String m2 = "Фотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
                                 String bt2 = "<font color='#000000'>Да</font>";

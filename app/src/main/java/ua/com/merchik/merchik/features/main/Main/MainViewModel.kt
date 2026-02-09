@@ -90,7 +90,7 @@ data class StateUI(
 
 data class Filters(
     val title: String = "Фільтри",
-    val subTitle: String? = "В этой форме Вы можете настроить фильтры для ограничения списка элементов",
+    val subTitle: String? = "У цій формі Ви можете налаштувати фільтри для обмеження списку елементів",
     val rangeDataByKey: RangeDate? = null,
     val searchText: String = "",
     var items: List<ItemFilter> = emptyList()
@@ -263,71 +263,99 @@ abstract class MainViewModel(
     }
 
     open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
-        if (index == 0) {
-            dialog = DialogFullPhoto(context)
-            val photoLogData = mutableListOf<StackPhotoDB>()
-            var selectedIndex = -1
-            val fieldsForCommentsImage = getFieldsForCommentsImage()
-            val fieldsForCustomResult = getFieldsForCustomResult()
-            val photoDBWithComments = HashMap<StackPhotoDB, String>()
-            val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
-            _uiState.value.items.map { dataItemUI ->
-                val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
-                var comments = ""
-                fieldsForCommentsImage?.forEach {
-                    comments += "${jsonObject.get(it)} \n\n"
-                }
-                if (clickedDataItemUI == dataItemUI) {
-                    fieldsForCustomResult?.forEach {
-                        _valueForCustomResult.value[it] = jsonObject.get(it)
-                    }
-                }
-                val imageFields = dataItemUI.rawObj[0].getFieldsImageOnUI().split(",")
-                imageFields.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { fieldKey ->
-                    RealmManager.getPhotoById(null, jsonObject.get(fieldKey.trim()).toString())
-                        ?.let { photo ->
-                            photoDBWithComments[photo] = comments
-                            photoDBWithRawObj[photo] = dataItemUI.rawObj[0]
-                            photoLogData.add(photo)
+        if (index != 0) return
 
-                            if (clickedDataItemUI == dataItemUI) {
-                                selectedIndex = photoLogData.size - 1
-                            }
-                        }
-                }
-//            dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
-//                if (it.isNotEmpty()) {
-//                    RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
-//                        ?.let {
-//                            photoDBWithComments[it] = comments
-//                            photoDBWithRawObj[it] = dataItemUI.rawObj[0]
-//                            photoLogData.add(it)
-//                            if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
-//                        }
-//                }
-//            }
+        dialog = DialogFullPhoto(context)
+
+        val photoLogData = mutableListOf<StackPhotoDB>()
+        var selectedIndex = -1
+
+        val fieldsForCommentsImage = getFieldsForCommentsImage()
+        val fieldsForCustomResult = getFieldsForCustomResult()
+
+        val photoDBWithComments = HashMap<StackPhotoDB, String>()
+        val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
+
+        _uiState.value.items.forEach { dataItemUI ->
+            val obj = dataItemUI.rawObj.firstOrNull() ?: return@forEach
+            val jsonObject = JSONObject(Gson().toJson(obj))
+
+            var comments = ""
+            fieldsForCommentsImage?.forEach { k ->
+                comments += "${jsonObject.opt(k)} \n\n"
             }
 
-            if (selectedIndex > -1) {
-                dialog?.setPhotos(
-                    selectedIndex, photoLogData,
-                    { _, photoDB ->
-                        onClickFullImage(photoDB, photoDBWithComments[photoDB])
-                        dialog?.dismiss()
-                        dialog = null
-                    },
-                    { }
-                )
+            if (clickedDataItemUI == dataItemUI) {
+                fieldsForCustomResult?.forEach { k ->
+                    _valueForCustomResult.value[k] = jsonObject.opt(k)
+                }
+            }
 
-                dialog?.setClose {
+            val photo = resolvePhotoDbForItem(obj, index) ?: return@forEach
+
+            photoDBWithComments[photo] = comments
+            photoDBWithRawObj[photo] = obj
+            photoLogData.add(photo)
+
+            if (clickedDataItemUI == dataItemUI) {
+                selectedIndex = photoLogData.size - 1
+            }
+        }
+
+        if (selectedIndex > -1) {
+            Log.e("!!!!!!!!!!!","+++++++++++++++")
+            dialog?.setPhotos(
+                selectedIndex,
+                photoLogData,
+                { _, photoDB ->
+                    onClickFullImage(photoDB, photoDBWithComments[photoDB])
                     dialog?.dismiss()
                     dialog = null
-                }
-                dialog?.show()
+                },
+                { /* updateContent если надо */ }
+            )
+
+            dialog?.setClose {
+                dialog?.dismiss()
+                dialog = null
             }
 
+            dialog?.show()
         }
     }
+
+    private fun resolvePhotoDbForItem(obj: Any, index: Int): StackPhotoDB? {
+        // если это уже StackPhotoDB (частый кейс для журнала фото) — просто вернём его
+        if (obj is StackPhotoDB) return obj
+
+        val json = JSONObject(Gson().toJson(obj))
+
+        val imageKeys = (obj as? DataObjectUI)?.getFieldsImageOnUI()
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            .orEmpty()
+
+        // 1) основной id по индексу
+        val idKey = imageKeys.getOrNull(index)
+        val photoId = idKey?.let { json.opt(it)?.toString()?.trim() }.orEmpty()
+
+        var photo: StackPhotoDB? = null
+        if (photoId.isNotEmpty() && photoId != "0" && photoId != "null") {
+            photo = RealmManager.getPhotoById(null, photoId)
+        }
+
+        // 2) fallback по hash (если id ещё нет)
+        if (photo == null) {
+            val hash = json.opt("photo_hash")?.toString()?.trim().orEmpty()
+            if (hash.length > 12 && hash != "0" && hash != "null") {
+                photo = RealmManager.getPhotoByHash(hash)
+            }
+        }
+
+        return photo
+    }
+
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState
@@ -840,25 +868,15 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-//                        message = "Выполнить текущую работу\n" +
-//                                "<font color='gray'>Посещение от</font> ${
-//                                    Clock.getHumanTime_dd_MMMM(
-//                                        wp.dt.time
-//                                    )
-//                                }" +
-//                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
-//                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}" +
-//                                "\n<font color='gray'>Премiя (план):</font> ${wp.cash_ispolnitel} грн." +
-//                                "\n<font color='gray'>СКЮ (количество товарных позиций):</font> ${wp.sku_plan}" +
-//                                "\n<font color='gray'>Середній час роботи:</font> ${wp.duration} хв",
+
                         message = String.format(
-                            "Выполнить текущую работу<br>" +
-                                    "<font color='gray'>Посещение от</font> %s" +
-                                    "<br><font color='gray'>Клиент:</font> %s" +
-                                    "<br><font color='gray'>Адрес:</font> %s" +
-                                    "<br><font color='gray'>Премiя (план):</font> %s грн." +
-                                    "<br><font color='gray'>СКЮ (количество товарных позиций):</font> %s" +
-                                    "<br><font color='gray'>Середній час роботи:</font> %s хв",
+                            "\"Виконати поточну роботу<br>\" +\n" +
+                                    "\"<font color='gray'>Відвідування від</font> %s\" +\n" +
+                                    "\"<br><font color='gray'>Клієнт:</font> %s\" +\n" +
+                                    "\"<br><font color='gray'>Адреса:</font> %s\" +\n" +
+                                    "\"<br><font color='gray'>Премія (план):</font> %s грн.\" +\n" +
+                                    "\"<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\" +\n" +
+                                    "\"<br><font color='gray'>Середній час роботи:</font> %s хв\"\n",
                             Clock.getHumanTime_dd_MMMM(wp.dt.time),
                             wp.client_txt,
                             wp.addr_txt,
@@ -880,7 +898,7 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Выполнять все всегда работы этого клиента по этому адресу\n" +
+                        message = "Виконувати всі роботи цього клієнта за цією адресою\n" +
                                 "<font color='gray'>Посещение от</font> ${
                                     Clock.getHumanTime_dd_MMMM(
                                         wp.dt.time
@@ -902,7 +920,7 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Выполнить текущие работы за сегодня\n" +
+                        message = "Виконати поточні роботи за сьогодні\n" +
                                 "<font color='gray'>Посещение от</font> ${
                                     Clock.getHumanTime_dd_MMMM(
                                         wp.dt.time
@@ -929,7 +947,7 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Выполнять все всегда работы доступные по этому адресу\n" +
+                        message = "Виконувати всі роботи доступні за цією адресою\n" +
                                 "<font color='gray'>Посещение от</font> ${
                                     Clock.getHumanTime_dd_MMMM(
                                         wp.dt.time
@@ -1090,7 +1108,7 @@ abstract class MainViewModel(
                             _events.emit(
                                 MainEvent.ShowMessageDialog(
                                     MessageDialogData(
-                                        message = "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                        message = "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
                                         status = DialogStatus.ALERT,
                                     )
                                 )
@@ -1103,7 +1121,7 @@ abstract class MainViewModel(
                     viewModelScope.launch {
                         _events.emit(
                             MainEvent.ShowLoading(
-                                "Ожидаем ответ от сервера",
+                                "Чекаємо на відповідь від сервера",
                                 28_700L
                             )
                         )
@@ -1158,7 +1176,7 @@ abstract class MainViewModel(
                                                     MessageDialogData(
                                                         subTitle = "Відповідь від сервера",
                                                         message = comment?.takeIf { it.isNotBlank() }
-                                                            ?: "Заявка отклонена.",
+                                                            ?: "Заявка відхилена.",
                                                         status = DialogStatus.ALERT
                                                     )
                                                 )
@@ -1180,9 +1198,9 @@ abstract class MainViewModel(
                                     _events.emit(
                                         MainEvent.ShowMessageDialog(
                                             MessageDialogData(
-                                                message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                                message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
                                                 status = DialogStatus.ALERT,
-                                                positivText = "Синхронизация"
+                                                positivText = "Синхронізація"
                                             )
                                         )
                                     )
@@ -1198,9 +1216,9 @@ abstract class MainViewModel(
                         _events.emit(
                             MainEvent.ShowMessageDialog(
                                 MessageDialogData(
-                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
                                     status = DialogStatus.ALERT,
-                                    positivText = "Синхронизация"
+                                    positivText = "Синхронізація"
                                 )
                             )
                         )
@@ -1310,8 +1328,8 @@ abstract class MainViewModel(
                         _events.emit(
                             MainEvent.ShowMessageDialog(
                                 MessageDialogData(
-                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
-                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                                    message = if (inserted) "Заявка на виконання робіт створена та передана куратору, протягом декількох хвилин ви отримаєте відповідь. Якщо відповідь буде позитивною, це відвідування буде перенесено до плану робіт."
+                                    else "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
                                     status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
                                 )
                             )
@@ -1324,9 +1342,9 @@ abstract class MainViewModel(
                         _events.emit(
                             MainEvent.ShowMessageDialog(
                                 MessageDialogData(
-                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                                    message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
                                     status = DialogStatus.ALERT,
-                                    positivText = "Синхронизация"
+                                    positivText = "Синхронізація"
                                 )
                             )
                         )

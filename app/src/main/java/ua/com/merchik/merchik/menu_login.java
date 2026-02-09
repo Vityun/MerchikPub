@@ -545,109 +545,133 @@ public class menu_login extends AppCompatActivity {
 
 
     private boolean checkPermission() {
-        int result = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
-        int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA);
-        int result2 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
-        int result3 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int result4 = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
+        int fine = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+        int camera = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA);
+        int call = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            return result == PackageManager.PERMISSION_GRANTED &&
-                    result1 == PackageManager.PERMISSION_GRANTED &&
-                    result3 == PackageManager.PERMISSION_GRANTED &&
-                    result4 == PackageManager.PERMISSION_GRANTED;
-        else
-            return result == PackageManager.PERMISSION_GRANTED &&
-                    result1 == PackageManager.PERMISSION_GRANTED &&
-                    result2 == PackageManager.PERMISSION_GRANTED &&
-                    result3 == PackageManager.PERMISSION_GRANTED &&
-                    result4 == PackageManager.PERMISSION_GRANTED;
+        // Storage
+        int readExt = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+        int writeExt = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        // Android 13 media
+        int readImages = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_IMAGES);
+        int readVideo  = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_VIDEO);
+        int readAudio  = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_AUDIO);
+
+        // Bluetooth (Android 12+)
+        int btScan = PackageManager.PERMISSION_GRANTED;
+        int btConnect = PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            btScan = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_SCAN);
+            btConnect = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT);
+        }
+
+        // Nearby Wi-Fi (Android 13+)
+        int nearbyWifi = PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            nearbyWifi = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.NEARBY_WIFI_DEVICES);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return fine == PackageManager.PERMISSION_GRANTED &&
+                    camera == PackageManager.PERMISSION_GRANTED &&
+                    call == PackageManager.PERMISSION_GRANTED &&
+
+                    // media perms
+                    readImages == PackageManager.PERMISSION_GRANTED &&
+                    readVideo == PackageManager.PERMISSION_GRANTED &&
+                    readAudio == PackageManager.PERMISSION_GRANTED &&
+
+                    // Wi-Fi scan on 13+
+                    nearbyWifi == PackageManager.PERMISSION_GRANTED &&
+
+                    // BT on 12+
+                    btScan == PackageManager.PERMISSION_GRANTED &&
+                    btConnect == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return fine == PackageManager.PERMISSION_GRANTED &&
+                    camera == PackageManager.PERMISSION_GRANTED &&
+                    call == PackageManager.PERMISSION_GRANTED &&
+                    readExt == PackageManager.PERMISSION_GRANTED &&
+                    writeExt == PackageManager.PERMISSION_GRANTED &&
+
+                    // BT on 12+
+                    btScan == PackageManager.PERMISSION_GRANTED &&
+                    btConnect == PackageManager.PERMISSION_GRANTED;
+        }
     }
 
     private void requestPermission() {
+        ArrayList<String> perms = new ArrayList<>();
+
+        perms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        perms.add(Manifest.permission.CAMERA);
+        perms.add(Manifest.permission.CALL_PHONE);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.READ_MEDIA_IMAGES,
-                    Manifest.permission.READ_MEDIA_VIDEO,
-                    Manifest.permission.READ_MEDIA_AUDIO,
-                    Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
-        } else
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
+            perms.add(Manifest.permission.READ_MEDIA_IMAGES);
+            perms.add(Manifest.permission.READ_MEDIA_VIDEO);
+            perms.add(Manifest.permission.READ_MEDIA_AUDIO);
+
+            // Wi-Fi scan permission for 13+
+            perms.add(Manifest.permission.NEARBY_WIFI_DEVICES);
+        } else {
+            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+
+        // Bluetooth for 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            perms.add(Manifest.permission.BLUETOOTH_SCAN);
+            perms.add(Manifest.permission.BLUETOOTH_CONNECT);
+        }
+
+        ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), PERMISSION_REQUEST_CODE);
     }
+
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        try {
-            switch (requestCode) {
-                case PERMISSION_REQUEST_CODE:
-                    if (grantResults.length > 0) {
 
-                        boolean locationAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                        boolean cameraAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
-                        boolean readStorage = grantResults[2] == PackageManager.PERMISSION_GRANTED;
-                        boolean writeStorage = grantResults[3] == PackageManager.PERMISSION_GRANTED;
-                        boolean call = grantResults[4] == PackageManager.PERMISSION_GRANTED;
+        if (requestCode != PERMISSION_REQUEST_CODE) return;
 
+        // проверка по имени, а не по индексу
+        boolean ok = true;
+        for (int i = 0; i < permissions.length; i++) {
+            if (grantResults.length <= i) continue;
+            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                ok = false;
+                break;
+            }
+        }
 
-                        if (locationAccepted && cameraAccepted && readStorage && writeStorage) {
-                            if (trecker.switchedOff) {
-                                trecker.SetUpLocationListener(this);
-                            }
+        if (ok) {
+            if (trecker.switchedOff) {
+                trecker.SetUpLocationListener(this);
+            }
+            return;
+        }
 
-                        } else {
-                            if (Build.VERSION.SDK_INT >= 33) {
-                                if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) &&
-                                        shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
-                                        shouldShowRequestPermissionRationale(Manifest.permission.CALL_PHONE)
-                                ) {
-                                    requestPermissions(new String[]{
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.CAMERA,
-                                            Manifest.permission.CALL_PHONE
-                                    }, PERMISSION_REQUEST_CODE);
-                                    if (trecker.switchedOff) {
-                                        trecker.SetUpLocationListener(this);
-                                    }
-                                    return;
-                                }
-                            } else {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) &&
-                                            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
-                                            shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) &&
-                                            shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) &&
-                                            shouldShowRequestPermissionRationale(Manifest.permission.CALL_PHONE)
-                                    ) {
-                                        requestPermissions(new String[]{
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.CAMERA,
-                                                Manifest.permission.READ_EXTERNAL_STORAGE,
-                                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                                Manifest.permission.CALL_PHONE
-                                        }, PERMISSION_REQUEST_CODE);
-                                        if (trecker.switchedOff) {
-                                            trecker.SetUpLocationListener(this);
-                                        }
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    break;
+        // если не все дали — пробуем ещё раз через rationale (как у тебя), но тоже по списку
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            ArrayList<String> needRationale = new ArrayList<>();
+            for (String p : permissions) {
+                if (shouldShowRequestPermissionRationale(p)) {
+                    needRationale.add(p);
+                }
             }
 
-        } catch (Exception e) {
+            if (!needRationale.isEmpty()) {
+                requestPermissions(needRationale.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+                if (trecker.switchedOff) {
+                    trecker.SetUpLocationListener(this);
+                }
+            }
         }
     }
+
 
 //---------------------------------------------------------------------------------------------
 

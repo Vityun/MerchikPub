@@ -505,10 +505,13 @@ public class DetailedReportActivity extends toolbar_menus {
     // Основное сообщение
     private void setDialogAddCoordinate() {
         DialogData dialog = new DialogData(this);
-        dialog.setTitle("Не определены координаты адреса");
+        dialog.setTitle("Не визначено координати адреси");
         dialog.setDialogIco();
-        dialog.setText("Внимание. У адреса " + wpDataDB.getAddr_txt() + " не определены гео координаты местоположения! \nДля того что бы определить эти координаты: \n 1. Приедьте по указанному адресу; \n 2. Убедитесь что приложение ПОДКЛЮЧЕНО к серверу; \n 3. Откройте текущую форму и нажмите кнопку \"Определить координаты адреса\"");
-        dialog.setOk("Определить координаты адреса", () -> {
+        dialog.setText("Увага! У адреси " + wpDataDB.getAddr_txt() + " не визначено гео координати розташування! \nДля того щоб визначити ці координати: " +
+                "\n 1. Приїдьте на вказану адресу;" +
+                "\n 2. Переконайтеся, що програма ПІДКЛЮЧЕНА до сервера; " +
+                "\n 3. Відкрийте поточну форму та натисніть кнопку 'Визначити координати адреси'");
+        dialog.setOk("Визначити координати адреси", () -> {
             setDialogAddCoordinateQuestion();
             dialog.dismiss();
         });
@@ -520,16 +523,16 @@ public class DetailedReportActivity extends toolbar_menus {
     private void setDialogAddCoordinateQuestion() {
         DialogData dialog = new DialogData(this);
         dialog.setDialogIco();
-        dialog.setText("Вы сейчас НЕ находитесь по адресу " + wpDataDB.getAddr_txt() + " ?");
+        dialog.setText("Ви зараз НЕ знаходитесь за адресою " + wpDataDB.getAddr_txt() + " ?");
         dialog.setOk("Да", () -> {
             DialogData dialogData = new DialogData(dialog.context);
             dialogData.setDialogIco();
-            dialogData.setText("Тогда приедьте, пожалуйста, по адресу и повторите процедуру.");
+            dialogData.setText("Тоді приїдьте, будь ласка, за адресою та повторіть процедуру.");
             dialogData.setClose(dialogData::dismiss);
             dialogData.show();
             dialog.dismiss();
         });
-        dialog.setCancel("Нет", () -> {
+        dialog.setCancel("Ні", () -> {
             setDialogAddCoordinateReQuestion();
             dialog.dismiss();
         });
@@ -541,12 +544,12 @@ public class DetailedReportActivity extends toolbar_menus {
     private void setDialogAddCoordinateReQuestion() {
         DialogData dialog = new DialogData(this);
         dialog.setDialogIco();
-        dialog.setText("Вы находитесь по адресу " + wpDataDB.getAddr_txt() + " ?");
+        dialog.setText("Ви знаходитесь за адресою " + wpDataDB.getAddr_txt() + " ?");
         dialog.setOk("Да", () -> {
             sendNewAddressCoordinate();
             dialog.dismiss();
         });
-        dialog.setCancel("Нет", () -> {
+        dialog.setCancel("Ні", () -> {
             setDialogAddCoordinateQuestion();
             dialog.dismiss();
         });

@@ -453,7 +453,7 @@ public class TablesLoadingUnloading {
                                     ScrollDataHolder.Companion.instance().addIds(confirmedGoodIds);
                                 else {
                                     new MessageDialogBuilder((Activity) context)
-                                            .setTitle("Дополнительный заработок")
+                                            .setTitle("Додатковий заробіток")
                                             .setStatus(DialogStatus.ERROR)
                                             .setSubTitle("## Сообщение для отладки")
                                             .setMessage("Не были получены следующие dad2: " + dad2
@@ -556,12 +556,16 @@ public class TablesLoadingUnloading {
                 coordY = Globals.CoordY;
             }
 
-            if (coordX == 0)
+            if (coordX == 0) {
                 data.additional_works_location_x = "50.454698130193506";
+//                data.additional_works_location_x = "49.855865";
+            }
             else
                 data.additional_works_location_x = String.valueOf(coordX);
-            if (coordY == 0)
+            if (coordY == 0) {
                 data.additional_works_location_y = "30.593419371718536";
+//                data.additional_works_location_y = "30.749019";
+            }
             else
                 data.additional_works_location_y = String.valueOf(coordY);
 
@@ -598,10 +602,10 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
 //                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-//                                for (WpDataDB wpDataDB : wpDataDBList) {
-//                                    if (wpDataDB.getUser_id() == 176053)
-//                                        Log.e("!!!!!!!!!!", "+++++++++++");
-//                                }
+                                for (WpDataDB wpDataDB : wpDataDBList) {
+                                    if (wpDataDB.getUser_id() == 14041)
+                                        Log.e("!!!!!!!!!!", "+++++++++++");
+                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
@@ -611,15 +615,18 @@ public class TablesLoadingUnloading {
                                 downloadOptionTableByHash(dad2Map);
                                 downloadReportPrepearByHash(dad2Map);
 
-                                List<String> clientId = new ArrayList<>(clientMap.size());
-                                List<String> dad2 = new ArrayList<>(dad2Map.size());
-                                for (Map.Entry<String, String> e : clientMap.entrySet()) {
-                                    clientId.add(e.getKey());
+//                                List<String> clientId = new ArrayList<>(clientMap.size());
+//                                for (Map.Entry<String, String> e : clientMap.entrySet()) {
+//                                    clientId.add(e.getKey());
+//                                }
+                                if (dad2Map != null) {
+                                    List<String> dad2 = new ArrayList<>(dad2Map.size());
+
+                                    for (Map.Entry<String, String> e : dad2Map.entrySet()) {
+                                        dad2.add(e.getKey());
+                                    }
+                                    downloadTovarTableDad2(dad2);
                                 }
-                                for (Map.Entry<String, String> e : dad2Map.entrySet()) {
-                                    dad2.add(e.getKey());
-                                }
-                                downloadTovarTableDad2(dad2);
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -635,6 +642,7 @@ public class TablesLoadingUnloading {
                             }
                         }
                     } catch (Exception e) {
+                        Log.e("Exception","");
                     }
                 }
 

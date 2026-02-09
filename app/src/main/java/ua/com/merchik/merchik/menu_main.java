@@ -1049,9 +1049,9 @@ public class menu_main extends AppCompatActivity {
                 if (CoordX > 0 && CoordY > 0) {
                     double d = trecker.coordinatesDistanse(lat, lon, CoordX, CoordY);
                     if (d > 500) {
-                        String title = "Нарушение по Местоположению.";
+                        String title = "Порушення за місцезнаходженням.";
                         String msg = String.format("По данным системы вы находитесь на расстоянии %.1f метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете использовать фото которые выполните в таком состоянии системы.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь к своему руководителю за помощью.", d, address_id_txt);
-                        String trueButton = "<font color='#000000'>Всё равно сделать фото</font>";
+                        String trueButton = "<font color='#000000'>Все одно зробити фото</font>";
                         String falseButton = "<font color='#000000'>Отказаться от изготовления фото</font>";
                         String title2 = "ВНИМАНИЕ!";
                         String msg2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
@@ -1070,7 +1070,7 @@ public class menu_main extends AppCompatActivity {
                                 "Нашем сервере:\t\t %s \n\n" +
                                 "Разница во времени больше %s секунд\n\n" +
                                 "Установите на своём телефоне время аналогичное с сервером и повторите попытку.", timeStamp, timeStamp2, timeDifference);
-                        String bt1 = "<font color='#000000'>Всё равно сделать фото</font>";
+                        String bt1 = "<font color='#000000'>Все одно зробити фото</font>";
                         String bf1 = "<font color='#000000'>Отказаться от изготовления фото</font>";
                         String t2 = "ВНИМАНИЕ!";
                         String m2 = "Фотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
@@ -1244,6 +1244,7 @@ public class menu_main extends AppCompatActivity {
                 // Запись в Лог
                 try {
                     Log.e("TAG_REALM_LOG", "ЗАПИСЬ 5");
+
                     RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на кнопку \"выгрузка фото\"", 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, date)));
                 } catch (Exception e) {
                     Log.e("TAG_REALM_LOG", "Ошибка(5): " + e);
@@ -1495,7 +1496,7 @@ public class menu_main extends AppCompatActivity {
                         .setItems(result, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Toast t = Toast.makeText(menu_main.this, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
+                                Toast t = Toast.makeText(menu_main.this, "Вибрано групу товару: " + result[which], Toast.LENGTH_LONG);
                                 t.show();
                                 customerTypeGrp = globals.getKeyForValue(result[which], customerTypeGrpArr);
                                 takePhoto();
@@ -1504,7 +1505,7 @@ public class menu_main extends AppCompatActivity {
                         .show();
             } else if (customerTypeGrpArr.size() == 1) {
                 customerTypeGrp = globals.getKeyForValue(result[0], customerTypeGrpArr);
-                Toast.makeText(this, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Вибрано групу товару: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
             } else {
                 globals.alertDialogMsg(this, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
@@ -1705,7 +1706,7 @@ public class menu_main extends AppCompatActivity {
             int destHeight = origHeight / (origWidth / destWidth);
             Bitmap b2 = Bitmap.createScaledBitmap(readyToDecode, destWidth, destHeight, false);
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            b2.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
+            b2.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
             res = b2;
 
             try {

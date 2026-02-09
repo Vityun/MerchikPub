@@ -597,7 +597,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
-            phototype.append("Не удалось определить");
+            phototype.append("Не вдалося визначити");
         }
 
         String clientTxt;
@@ -643,17 +643,17 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
         res = Html.fromHtml("<b>ID: </b>" + data.getId() + " / " + data.photoServerId + "<br>"
 //                + "<b>Дата: </b>" + data.getTime_event() + "<br>"
-                + "<b>Пользователь: </b>" + userTxt + "<br>"
-                + "<b>Клиент: </b>" + clientTxt + "<br>"
+                + "<b>Користувач: </b>" + userTxt + "<br>"
+                + "<b>Клієнт: </b>" + clientTxt + "<br>"
                 + "<b>Адрес: </b>" + adresTxt + "<br>"
                 + "<b>Тип фото: </b>" + phototype + "<br>"
                 + "<b>dad2: </b>" + data.getCode_dad2() + "<br>"
                 + "<b>hash: </b>" + data.getPhoto_hash() + "<br><br>"
-                + "<b>Время создания: </b>" + create + "<br>"
-                + "<b>Время отправки: </b><font color='#FFBB1F'>" + upload + "</font><br>"
-                + "<b>Время получения: </b><font color='#00FF00'>" + server + "</font><br><br>"
-                + "<b>Время ошибки: </b>" + time + "(" + timeMls + ")<br>"
-                + "<b>Текст ошибки: </b>" + error + "<br>");
+                + "<b>Час створення: </b>" + create + "<br>"
+                + "<b>Час відправлення: </b><font color='#FFBB1F'>" + upload + "</font><br>"
+                + "<b>Час отримання: </b><font color='#00FF00'>" + server + "</font><br><br>"
+                + "<b>Час помилки: </b>" + time + "(" + timeMls + ")<br>"
+                + "<b>Текст помилки: </b>" + error + "<br>");
 
 //        return String.format("id: %s\ndate: %s\nuser: %s\nclient: %s\naddress: %s\nphotoType: %s\ndad2: %s\nhash: %s\n\nВремя создания: %s\nВремя отправки: %s\nВремя получения: %s\n\nВремя ошибки: %s(%s)\nТекст ошибки: %s",
 //                data.getAddrId(), data.getTime_event(), data.getUserTxt(), data.getCustomerTxt(), data.getAddressTxt(), data.getPhoto_type(), data.getCode_dad2(), data.getPhoto_hash(), create, upload, server, time, timeMls, data.getErrorTxt());

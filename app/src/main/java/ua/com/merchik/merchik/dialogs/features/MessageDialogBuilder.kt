@@ -22,7 +22,7 @@ class MessageDialogBuilder(private val context: Activity) {
     private var status: DialogStatus = DialogStatus.NORMAL
     private var okButtonName: String = "OK"
     private var onConfirmAction: (() -> Unit)? = null
-    private var cancelButtonName: String = "Отмена"
+    private var cancelButtonName: String = "Скасувати"
     private var onCancelAction: (() -> Unit?)? = null
     private var showCheckbox: Boolean = false
     private var checkboxPrefKey: String = "not_show_again"
@@ -103,7 +103,7 @@ class MessageDialogBuilder(private val context: Activity) {
             .setOnConfirmAction("Да") {
                 context.finishAffinity()
             }
-            .setOnCancelAction("Отмена") { }
+            .setOnCancelAction("Скасувати") { }
             .show()
     }
 

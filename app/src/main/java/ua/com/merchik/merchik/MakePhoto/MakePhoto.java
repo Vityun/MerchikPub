@@ -100,9 +100,9 @@ public class MakePhoto {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
             if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")) {
                 new AlertDialog.Builder(mContext)
-                        .setTitle("Выберите группу товара для следующего фото: ")
+                        .setTitle("Виберіть групу товару для наступного фото: ")
                         .setItems(result, (dialog, which) -> {
-                            Toast t = Toast.makeText(mContext, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
+                            Toast t = Toast.makeText(mContext, "Вибрано групу товару: " + result[which], Toast.LENGTH_LONG);
                             t.show();
                             wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
                             takePhoto();
@@ -110,7 +110,7 @@ public class MakePhoto {
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
                 wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
-                Toast.makeText(mContext, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, "Вибрано групу товару: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
             } else {
                 if (!wp.getPhotoType().equals("5")) {
@@ -244,7 +244,7 @@ public class MakePhoto {
                 String title2 = "ВНИМАНИЕ!";
                 String msg2 = "Система не обнаружила GPS. \n\n" +
                         "Фотографии выполненные в этом режиме могут быть признаны не действительными.\n\n" +
-                        "Отказаться от изготовления фото?";
+                        "Пропустити створення фото?";
                 String trueButton2 = "<font color='#000000'>Да</font>";
                 String falseButton2 = "<font color='#000000'>Нет</font>";
 
@@ -602,7 +602,7 @@ public class MakePhoto {
                 new AlertDialog.Builder(activity)
                         .setTitle("Выберите группу товара для следующего фото: ")
                         .setItems(result, (dialog, which) -> {
-                            Toast t = Toast.makeText(activity, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
+                            Toast t = Toast.makeText(activity, "Вибрано групу товару: " + result[which], Toast.LENGTH_LONG);
                             t.show();
                             wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
 
@@ -620,7 +620,7 @@ public class MakePhoto {
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
                 wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
-                Toast.makeText(activity, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Вибрано групу товару: " + result[0], Toast.LENGTH_LONG).show();
 //                photoDialogs(activity, wp, data, optionsDB);
                 photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
             } else {

@@ -28,8 +28,8 @@ public class trecker implements LocationListener {
     public static Location imHereNET; // Network coordinates
     public static boolean enabledGPS;
     static boolean enabledNET;
-    static boolean isMockGPS;
-    static boolean isMockNET;
+    public static boolean isMockGPS;
+    public static boolean isMockNET;
     //static boolean isMock;
 
     public static String locationUniqueStringGPS = "";

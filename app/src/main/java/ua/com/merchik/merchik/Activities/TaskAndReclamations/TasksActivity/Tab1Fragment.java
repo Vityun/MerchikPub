@@ -483,7 +483,7 @@ public class Tab1Fragment extends Fragment {
 
 /*            if (rate > 5){
                 saveRatingTAR(rate);
-                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ratingBar.getContext(), "Оцінка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
             }else {
                 DialogData dialog = new DialogData(getContext());
                 dialog.setTitle("Низкая оценка");
@@ -517,19 +517,19 @@ public class Tab1Fragment extends Fragment {
 
             if (rate > 5) {
                 saveRatingTARVote(rate, null);
-                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ratingBar.getContext(), "Оцінка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
             } else {
                 DialogData dialog = new DialogData(getContext());
-                dialog.setTitle("Низкая оценка");
-                dialog.setText("Прокомментируйте причину низкой оценки.");
-                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, () -> {
+                dialog.setTitle("Низька оцінка");
+                dialog.setText("Прокоментуйте причину низької оцінки.");
+                dialog.setOperation(DialogData.Operations.TEXT, "Ваш коментар", null, () -> {
                 });
-                dialog.setCancel("Сохранить", () -> {
+                dialog.setCancel("Зберегти", () -> {
                     String comment = dialog.getOperationResult();
 
                     if (comment != null && comment.length() > 1) {
                         // Сохранение коммента
-                        Toast.makeText(ratingBar.getContext(), "Комментарий: " + comment + " сохранён.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ratingBar.getContext(), "Коментар: " + comment + " збережений.", Toast.LENGTH_SHORT).show();
 
                         saveRatingTARVote(rate, comment);
                         dialog.dismiss();
