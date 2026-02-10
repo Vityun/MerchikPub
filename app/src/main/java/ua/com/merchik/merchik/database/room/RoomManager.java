@@ -48,7 +48,8 @@ public class RoomManager {
                         MIGRATION_68_69,
                         MIGRATION_69_70,
                         MIGRATION_70_71,
-                        MIGRATION_71_72
+                        MIGRATION_71_72,
+                        MIGRATION_72_73
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -846,6 +847,40 @@ public class RoomManager {
             db.execSQL(
                     "ALTER TABLE wp_data_additional " +
                             "ADD COLUMN route_id INTEGER NOT NULL DEFAULT 0"
+            );
+        }
+    };
+
+
+    public static final Migration MIGRATION_72_73 = new Migration(72, 73) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `LocationDevices` (" +
+                            "`id` INTEGER NOT NULL, " +
+                            "`dtCreate` INTEGER, " +
+                            "`authorIdCreate` INTEGER, " +
+                            "`addrId` INTEGER, " +
+                            "`clientId` TEXT, " +
+                            "`clientIdNumeric` INTEGER, " +
+                            "`themeId` INTEGER, " +
+                            "`mac` TEXT, " +
+                            "`macNumeric` INTEGER, " +
+                            "`platformId` INTEGER, " +
+                            "`active` INTEGER, " +
+                            "`dtUpdateActive` INTEGER, " +
+                            "`authorIdActive` INTEGER, " +
+                            "`lat` REAL, " +
+                            "`lon` REAL, " +
+                            "`dtUpdateVpi` INTEGER, " +
+                            "`authorIdUpdateVpi` INTEGER, " +
+                            "`objectId` INTEGER, " +
+                            "`objectThemeId` INTEGER, " +
+                            "`srcType` TEXT, " +
+                            "`srcName` TEXT, " +
+                            "`notes` TEXT, " +
+                            "PRIMARY KEY(`id`)" +
+                            ")"
             );
         }
     };

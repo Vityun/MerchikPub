@@ -165,7 +165,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
             try {
-                percentValue = Math.round((float) (100 * list.size()) / showcaseSDBList.size());
+                percentValue = Math.round((float) (100 * list.size()) / stackPhotoDBSList.size());
             } catch (Exception e) {
                 percentValue = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);

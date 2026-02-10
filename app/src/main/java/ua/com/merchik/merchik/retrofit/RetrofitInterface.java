@@ -92,6 +92,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CustomerResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.EKL.EKLResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.LanguagesResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.LocationDevicesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OblastResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
@@ -726,6 +727,12 @@ public interface RetrofitInterface {
     Single<AdditionalWorksCountResponse> GET_ADDITIONAL_WORK_COUNT(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Single<LocationDevicesResponse> GET_LOCATION_DEVICES_RX(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
 
     @Multipart
     @POST("mobile_app.php?")

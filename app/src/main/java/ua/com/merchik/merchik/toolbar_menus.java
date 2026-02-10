@@ -945,8 +945,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // ... "На главную"
         if (id == R.id.action_to_main) {
-//            Intent intent = new Intent(this, MenuMainActivity.class);
-            Intent intent = new Intent(this, WifiScannerActivity.class);
+            Intent intent = new Intent(this, MenuMainActivity.class);
+//            Intent intent = new Intent(this, WifiScannerActivity.class);
             startActivity(intent);
         }
 

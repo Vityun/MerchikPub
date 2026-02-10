@@ -38,6 +38,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
@@ -235,9 +237,45 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        new Translate().uploadNewTranslate();
+//        new Translate().uploadNewTranslate();
 
-//        startActivity(new Intent(this, WifiScannerActivity.class));
+
+        downloadWiFi(this);
+
+    }
+
+    public void downloadWiFi(Context context) {
+        StandartData data = new StandartData();
+
+        data.mod = "location";
+        data.act = "device_list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_LOCATION_DEVICES_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+
+                    if (result != null && result.state
+                            && result.list != null && !result.list.isEmpty()) {
+                        Log.e("!!!!!!!!!!!!!", "result: " + result);
+
+                        SQL_DB.locationDevicesDao().upsertAll(result.list);
+
+//                        if (cronchikViewModel != null)
+//                            cronchikViewModel.updateBadge(1, result.count);
+
+//                        SQL_DB.wpDataAdditionalDao().insertAll(result.list);
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "Data inserted successfully. Size: " + "result.list.size()");
+                    } else
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange.donwloadPlanBudget", "data is empty");
+
+                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange.donwloadPlanBudget", "exeption: " + throwable.getMessage()));
+
 
 
     }

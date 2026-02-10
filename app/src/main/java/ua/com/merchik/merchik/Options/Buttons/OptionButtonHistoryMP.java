@@ -139,8 +139,6 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                         public void onSuccess(String data) {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty()) {
                                 int tema_id = 1383;
-                                if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
-                                        || Globals.userId == 130647 || Globals.userId == 249929)
                                     WorkStartNetworkSnapshot.captureAndLog(
                                             context,
                                             wpDataDB,

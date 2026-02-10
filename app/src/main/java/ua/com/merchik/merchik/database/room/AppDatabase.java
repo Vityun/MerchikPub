@@ -25,6 +25,7 @@ import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.InitStateEntity;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
+import ua.com.merchik.merchik.data.Database.Room.LocationDevices;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
@@ -75,6 +76,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.InitStateDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LanguagesDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.LocationDevicesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
@@ -160,9 +162,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 SiteAccountSDB.class,
                 SynchronizationTimeTable.class,
                 WPDataAdditional.class,      // Додатковий заробіток
-                InitStateEntity.class
+                InitStateEntity.class,
+                LocationDevices.class
         },
-        version = 74
+        version = 75
 )
 
 
@@ -266,6 +269,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract WPDataAdditionalDao wpDataAdditionalDao();
 
     public abstract InitStateDao initStateDao();
+
+    public abstract LocationDevicesDao locationDevicesDao();
 
     public class MyAutoMigration {
     }

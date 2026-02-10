@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Utils;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -16,6 +18,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
 import androidx.core.content.ContextCompat;
@@ -25,12 +28,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.LocationDevicesDao;
 import ua.com.merchik.merchik.trecker;
 
 /**
@@ -39,7 +42,8 @@ import ua.com.merchik.merchik.trecker;
  */
 public final class WorkStartNetworkSnapshot {
 
-    private WorkStartNetworkSnapshot() {}
+    private WorkStartNetworkSnapshot() {
+    }
 
     private static final long WIFI_TIMEOUT_MS = 6_000;
     private static final long BT_SCAN_MS = 6_000;
@@ -65,7 +69,9 @@ public final class WorkStartNetworkSnapshot {
             this.error = error;
         }
 
-        public boolean isOk() { return error == null; }
+        public boolean isOk() {
+            return error == null;
+        }
     }
 
     @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
@@ -91,7 +97,8 @@ public final class WorkStartNetworkSnapshot {
         float dist = distanceFn.distanceMeters(curLat, curLng, shopLat, shopLng);
 
         // ✅ если дальше 100м — НИ ОДНОЙ записи, но диалог покажем причину
-        if (dist > 100f) {
+        Log.e("@@@@@@@@@@@","dist: " + dist);
+        if (dist > 250f) {
             callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина"));
             return;
         }
@@ -138,6 +145,8 @@ public final class WorkStartNetworkSnapshot {
 
         private Runnable wifiTimeout;
         private Runnable btStop;
+        private LocationDevicesDao locationDevicesDao;
+        private final int addrId;
 
         SnapshotSession(Context app, WpDataDB wp, int temaId, ResultCallback callback) {
             this.app = app;
@@ -149,6 +158,8 @@ public final class WorkStartNetworkSnapshot {
 
             BluetoothManager bm = (BluetoothManager) app.getSystemService(Context.BLUETOOTH_SERVICE);
             this.btAdapter = bm != null ? bm.getAdapter() : null;
+            locationDevicesDao = SQL_DB.locationDevicesDao();
+            this.addrId = wp.getAddr_id();
         }
 
         @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION})
@@ -161,7 +172,11 @@ public final class WorkStartNetworkSnapshot {
         // ---- WIFI ----
         @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         private void startWifiOnce() {
-            if (wifiManager == null) { wifiDone = true; return; }
+            if (wifiManager == null) {
+                wifiDone = true;
+                return;
+            }
+
             if (!wifiManager.isWifiEnabled()) {
                 // ничего в лог не пишем, просто причина в диалог
                 wifiLines.clear();
@@ -174,7 +189,10 @@ public final class WorkStartNetworkSnapshot {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     try {
-                        wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager, WIFI_LIMIT));
+                        wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
+                                WIFI_LIMIT,
+                                locationDevicesDao,
+                                addrId));
                     } finally {
                         safeUnregisterWifi();
                         wifiDone = true;
@@ -191,19 +209,28 @@ public final class WorkStartNetworkSnapshot {
             }
 
             boolean started;
-            try { started = wifiManager.startScan(); }
-            catch (Exception e) { started = false; }
+            try {
+                started = wifiManager.startScan();
+            } catch (Exception e) {
+                started = false;
+            }
 
             if (!started) {
                 // читаем кеш и завершаем
-                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager, WIFI_LIMIT));
+                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
+                        WIFI_LIMIT,
+                        locationDevicesDao,
+                        addrId));
                 safeUnregisterWifi();
                 wifiDone = true;
                 return;
             }
 
             wifiTimeout = () -> {
-                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager, WIFI_LIMIT));
+                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
+                        WIFI_LIMIT,
+                        locationDevicesDao,
+                        addrId));
                 safeUnregisterWifi();
                 wifiDone = true;
                 tryFinish();
@@ -217,7 +244,10 @@ public final class WorkStartNetworkSnapshot {
                 wifiTimeout = null;
             }
             if (wifiReceiver != null) {
-                try { app.unregisterReceiver(wifiReceiver); } catch (Exception ignored) {}
+                try {
+                    app.unregisterReceiver(wifiReceiver);
+                } catch (Exception ignored) {
+                }
                 wifiReceiver = null;
             }
         }
@@ -252,9 +282,15 @@ public final class WorkStartNetworkSnapshot {
                     }
                     if (addr == null || addr.isEmpty()) return;
 
+                    // ✅ фильтр по таблице
+                    if (locationDevicesDao != null && locationDevicesDao.existsByMacAndAddrIdNoCase(addr, addrId)) {
+                        return;
+                    }
+
                     btUnique.put(addr, new BtItem(name, addr, result.getRssi()));
                 }
             };
+
 
             try {
                 bleScanner.startScan(bleCallback);
@@ -278,7 +314,10 @@ public final class WorkStartNetworkSnapshot {
                 btStop = null;
             }
             if (bleScanner != null && bleCallback != null) {
-                try { bleScanner.stopScan(bleCallback); } catch (Exception ignored) {}
+                try {
+                    bleScanner.stopScan(bleCallback);
+                } catch (Exception ignored) {
+                }
             }
             bleCallback = null;
             bleScanner = null;
@@ -319,13 +358,24 @@ public final class WorkStartNetworkSnapshot {
     // ---------------- Builders / Format ----------------
 
     @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION})
-    private static List<String> buildWifiLinesFromScanResults(WifiManager wifiManager, int limit) {
+    private static List<String> buildWifiLinesFromScanResults(
+            WifiManager wifiManager,
+            int limit,
+            LocationDevicesDao dao,
+            long addrId
+    ) {
         ArrayList<String> lines = new ArrayList<>();
         List<android.net.wifi.ScanResult> results;
-        try { results = wifiManager.getScanResults(); }
-        catch (Exception e) { return lines; }
+
+        try {
+            results = wifiManager.getScanResults();
+        } catch (Exception e) {
+            return lines;
+        }
+
         if (results == null || results.isEmpty()) return lines;
 
+        // unique by BSSID внутри одного скана
         HashMap<String, android.net.wifi.ScanResult> uniq = new HashMap<>();
         for (android.net.wifi.ScanResult r : results) {
             if (r == null) continue;
@@ -336,18 +386,27 @@ public final class WorkStartNetworkSnapshot {
         }
 
         ArrayList<android.net.wifi.ScanResult> uniqList = new ArrayList<>(uniq.values());
-        Collections.sort(uniqList, (a, b) -> Integer.compare(b.level, a.level));
+        uniqList.sort((a, b) -> Integer.compare(b.level, a.level));
 
         int realLimit = (limit <= 0) ? uniqList.size() : Math.min(limit, uniqList.size());
         for (int i = 0; i < realLimit; i++) {
             android.net.wifi.ScanResult r = uniqList.get(i);
+
+            String mac = r.BSSID; // MAC точки доступа
+            // ✅ фильтр по таблице: если уже есть — не добавляем
+            if (dao != null && dao.existsByMacAndAddrIdNoCase(mac, addrId)) {
+                continue;
+            }
+
             lines.add("WiFi | SSID=" + safe(r.SSID) +
                     " | BSSID=" + safe(r.BSSID) +
                     " | level=" + r.level + "dBm" +
                     " | freq=" + r.frequency + "MHz");
         }
+
         return lines;
     }
+
 
     private static List<String> buildBluetoothLines(LinkedHashMap<String, BtItem> uniq) {
         ArrayList<String> out = new ArrayList<>();
@@ -361,12 +420,15 @@ public final class WorkStartNetworkSnapshot {
         return out;
     }
 
-    private static String safe(String s) { return s == null ? "" : s; }
+    private static String safe(String s) {
+        return s == null ? "" : s;
+    }
 
     private static final class BtItem {
         final String name;
         final String addr;
         final int rssi;
+
         BtItem(String name, String addr, int rssi) {
             this.name = name;
             this.addr = addr;
@@ -433,8 +495,11 @@ public final class WorkStartNetworkSnapshot {
 
     private static double parseDoubleSafe(String s) {
         if (s == null) return Double.NaN;
-        try { return Double.parseDouble(s.trim().replace(',', '.')); }
-        catch (Exception e) { return Double.NaN; }
+        try {
+            return Double.parseDouble(s.trim().replace(',', '.'));
+        } catch (Exception e) {
+            return Double.NaN;
+        }
     }
 }
 
