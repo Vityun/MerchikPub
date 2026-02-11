@@ -21,6 +21,10 @@ public interface LocationDevicesDao {
     @Query("SELECT * FROM location_devices WHERE id = :id LIMIT 1")
     LocationDevices getById(long id);
 
+    @Query("SELECT * FROM location_devices WHERE addrId = :addrId ORDER BY dtCreate DESC")
+    List<LocationDevices> getByAddress(int addrId);
+
+
     // Есть ли запись с таким MAC + addr_id
     @Query("SELECT EXISTS(SELECT 1 FROM location_devices WHERE mac = :mac AND addrId = :addrId LIMIT 1)")
     boolean existsByMacAndAddrId(String mac, long addrId);

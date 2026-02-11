@@ -14,8 +14,6 @@
     </queries>
 
     <!--Разрешения для фотографий-->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-feature android:name="android.hardware.camera"
@@ -39,7 +37,24 @@
     <!--For API 33 Android 13-->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Wi-Fi -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Location for Wi-Fi scan results and pre-Android12 BT scan -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Android 13+ Wi-Fi nearby -->
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+
+    <!-- Bluetooth legacy (<=30) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+
+    <!-- Bluetooth runtime (31+) -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
 
     <!--    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />-->
 <!--    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />-->
@@ -80,8 +95,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2026021000"
-        android:versionName="2026021000"
+        android:versionCode="2026021100"
+        android:versionName="2026021100"
         tools:targetApi="31">
 
 <!--        <meta-data-->

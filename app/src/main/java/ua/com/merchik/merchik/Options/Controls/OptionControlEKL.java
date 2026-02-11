@@ -357,8 +357,11 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
                 signal = false;
-
-                TovarGroupSDB tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);
+                TovarGroupSDB tovarGroupSDB1;
+                if (usersSDBPTT == null) {
+                    tovarGroupSDB1 = null;
+                } else
+                    tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);
 
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {

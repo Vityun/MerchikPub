@@ -192,6 +192,7 @@ public class TablesLoadingUnloading {
 
 
     private Context context;
+
     /**
      * 18.08.2020
      * <p>
@@ -315,6 +316,7 @@ public class TablesLoadingUnloading {
 
             downloadtovar_grp_client();
 
+            downloadWiFi();
 
             downloadTovarGroupTable(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -457,7 +459,7 @@ public class TablesLoadingUnloading {
                                             .setStatus(DialogStatus.ERROR)
                                             .setSubTitle("## Сообщение для отладки")
                                             .setMessage("Не были получены следующие dad2: " + dad2
-                                            + "\nЯкщо побачите це повідомлення, відправте скріншот з ним вашому керівнику.")
+                                                    + "\nЯкщо побачите це повідомлення, відправте скріншот з ним вашому керівнику.")
                                             .show();
                                 }
 
@@ -559,14 +561,12 @@ public class TablesLoadingUnloading {
             if (coordX == 0) {
                 data.additional_works_location_x = "50.454698130193506";
 //                data.additional_works_location_x = "49.855865";
-            }
-            else
+            } else
                 data.additional_works_location_x = String.valueOf(coordX);
             if (coordY == 0) {
                 data.additional_works_location_y = "30.593419371718536";
 //                data.additional_works_location_y = "30.749019";
-            }
-            else
+            } else
                 data.additional_works_location_y = String.valueOf(coordY);
 
 //            data.additional_works_location_x = "50.454698130193506";
@@ -642,7 +642,7 @@ public class TablesLoadingUnloading {
                             }
                         }
                     } catch (Exception e) {
-                        Log.e("Exception","");
+                        Log.e("Exception", "");
                     }
                 }
 
@@ -658,98 +658,51 @@ public class TablesLoadingUnloading {
 
     }
 
-    public void downloadWPDataWithCordsMy() {
-
+    public void downloadWiFi() {
         StandartData data = new StandartData();
 
-        data.mod = "plan";
-        data.act = "list";
-        data.date_from = Clock.getDatePeriod(-1);
-        data.date_to = Clock.getDatePeriod(1);
+        data.mod = "location";
+        data.act = "device_list";
 
+        long vpi;
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wifi_mac_location");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWiFi/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
+            vpi = 0;
 
-        try {
+        data.dt_change_from = String.valueOf(vpi);
 
-            double coordX, coordY;
-            // X (широта)
-            if (Globals.CoordX == 0) {
-                if (imHereGPS != null) {
-                    coordX = imHereGPS.getLatitude();
-                } else if (imHereNET != null) {
-                    coordX = imHereNET.getLatitude();
-                } else {
-                    coordX = 0; // fallback если нет координат
-                }
-            } else {
-                coordX = Globals.CoordX;
-            }
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-// Y (долгота или высота — уточни!)
-            if (Globals.CoordY == 0) {
-                if (imHereGPS != null) {
-                    coordY = imHereGPS.getLongitude(); // ⚠️ лучше использовать getLongitude()
-                } else if (imHereNET != null) {
-                    coordY = imHereNET.getLongitude();
-                } else {
-                    coordY = 0;
-                }
-            } else {
-                coordY = Globals.CoordY;
-            }
+        RetrofitBuilder.getRetrofitInterface()
+                .GET_LOCATION_DEVICES_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
 
-//            data.additional_works_location_x = String.valueOf(coordX);
-//            data.additional_works_location_y = String.valueOf(coordY);
-            data.additional_works_location_x = "50.45478805335162";
-            data.additional_works_location_y = "30.593345204219315";
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+                    if (result != null && result.state
+                            && result.list != null && !result.list.isEmpty()) {
 
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "convertedObject: " + convertedObject);
+                        SQL_DB.locationDevicesDao().upsertAll(result.list);
 
-            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<WpDataServer>() {
-                @Override
-                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
-                    try {
-                        if (response.isSuccessful() && response.body() != null) {
-
-                            if (response.body().getState() && response.body().getList() != null
-                                    && !response.body().getList().isEmpty()) {
-                                List<WpDataDB> wpDataDBList = response.body().getList();
-//                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-//                                for (WpDataDB wpDataDB : wpDataDBList) {
-//                                    if (wpDataDB.getUser_id() == 14041)
-//                                        wpDataDBListRNO.add(wpDataDB);
-//                                }
-
-                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
-//                            RealmManager.setWpDataAuto2(wpDataDBList);
-//                            RealmManager.setWpData(wpDataDBList);
-                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                                downloadTovarTable(null, wpDataDBList);
-//                                RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                    if (sTable != null) {
-//                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
-//                                        realm.copyToRealmOrUpdate(sTable);
-//                                    }
-//                                });
-
+                        INSTANCE.executeTransaction(realm -> {
+                            if (sTable != null) {
+                                sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
+                                realm.copyToRealmOrUpdate(sTable);
                             }
-                        }
-                    } catch (Exception e) {
-                    }
-                }
+                        });
 
-                @Override
-                public void onFailure(Call<WpDataServer> call, Throwable t) {
+                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.downloadWiFi", "Data inserted successfully. Size: " + result.list.size());
+                    } else
+                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.downloadWiFi", "data is empty");
 
-                }
-            });
-        } catch (Exception e) {
-        }
+                }, throwable -> Globals.writeToMLOG("ERROR", "TablesLoadingUnloading.downloadWiFi", "exeption: " + throwable.getMessage()));
 
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
 
     }
 

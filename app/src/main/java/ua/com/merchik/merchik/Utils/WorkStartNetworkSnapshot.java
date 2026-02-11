@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
@@ -25,14 +26,17 @@ import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LocationDevicesDao;
 import ua.com.merchik.merchik.trecker;
 
@@ -82,10 +86,6 @@ public final class WorkStartNetworkSnapshot {
             DistanceFn distanceFn,
             ResultCallback callback
     ) {
-        // 1) coords
-        double curLat = Globals.CoordX;
-        double curLng = Globals.CoordY;
-
         double shopLat = parseDoubleSafe(wpDataDB.getAddr_location_xd());
         double shopLng = parseDoubleSafe(wpDataDB.getAddr_location_yd());
 
@@ -94,31 +94,62 @@ public final class WorkStartNetworkSnapshot {
             return;
         }
 
-        float dist = distanceFn.distanceMeters(curLat, curLng, shopLat, shopLng);
-
-        // ✅ если дальше 100м — НИ ОДНОЙ записи, но диалог покажем причину
-        Log.e("@@@@@@@@@@@","dist: " + dist);
-        if (dist > 250f) {
-            callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина"));
-            return;
-        }
+        // mocking (как у тебя)
         boolean isMocking = (trecker.isMockGPS || trecker.isMockNET);
         if (isMocking) {
-            callback.onDone(new Result(0, 0, "Запись не выполнена: включенно фиктивное местоположение"));
+            callback.onDone(new Result(0, 0, "Запись не выполнена: включено фиктивное местоположение"));
             return;
         }
 
         // perms
-        if (!hasWifiPerms(context) || !hasBtPerms(context)) {
-            callback.onDone(new Result(0, 0, "Ошибка: нет разрешений (Wi-Fi/Bluetooth/Location)"));
+        if (!hasWifiPerms(context)) {
+            callback.onDone(new Result(0, 0, "Ошибка: нет разрешений (Wi-Fi/Location)\n" +
+                    "Щоб визначити місцезнаходження за Wi-Fi, увімкніть Wi-Fi у налаштуваннях телефону." +
+                    "Після цього повторіть дію."));
             return;
         }
 
+        // 1) текущие координаты
+        double curLat = Globals.CoordX;
+        double curLng = Globals.CoordY;
+
+        float distNow = distanceFn.distanceMeters(curLat, curLng, shopLat, shopLng);
+
+        // 2) если текущие не "на месте" — пробуем MP
+        double snapX = curLat;
+        double snapY = curLng;
+        long snapTime = System.currentTimeMillis(); // время “клика/слепка”
+
+        if (distNow > 350f) {
+            long endSec = System.currentTimeMillis() / 1000L;
+            long startSec = endSec - 10 * 60L;
+
+            LogMPDB nearest = getNearestMpPointSorted(shopLat, shopLng, startSec, endSec);
+            if (nearest == null) {
+                callback.onDone(new Result(0, 0, "Запись не выполнена: нет координат за последние 10 минут"));
+                return;
+            }
+
+            if (nearest.distance > 200) {
+                callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина, nearest: " + nearest.distance));
+                return;
+            }
+
+            // ✅ вот эти координаты и время считаем “актуальными”
+            snapX = nearest.CoordX;
+            snapY = nearest.CoordY;
+            snapTime = nearest.CoordTime; // у тебя есть поле в LogMPDB
+        }
+
+        // 3) запускаем слепок Wi-Fi/BT
         SnapshotSession session = new SnapshotSession(
-                context.getApplicationContext(), wpDataDB, tema_id, callback
+                context.getApplicationContext(), wpDataDB, tema_id, callback,
+                snapX, snapY, snapTime
         );
         session.start();
+
     }
+
 
     // ---------------- Session ----------------
 
@@ -148,11 +179,21 @@ public final class WorkStartNetworkSnapshot {
         private LocationDevicesDao locationDevicesDao;
         private final int addrId;
 
-        SnapshotSession(Context app, WpDataDB wp, int temaId, ResultCallback callback) {
+        private final double snapX;
+        private final double snapY;
+        private final long snapTime;
+
+
+        SnapshotSession(Context app, WpDataDB wp, int temaId, ResultCallback callback,
+                        double snapX, double snapY, long snapTime){
             this.app = app;
             this.wp = wp;
             this.temaId = temaId;
             this.callback = callback;
+
+            this.snapX = snapX;
+            this.snapY = snapY;
+            this.snapTime = snapTime;
 
             this.wifiManager = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
 
@@ -192,7 +233,10 @@ public final class WorkStartNetworkSnapshot {
                         wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
                                 WIFI_LIMIT,
                                 locationDevicesDao,
-                                addrId));
+                                addrId,
+                                snapX,
+                                snapY,
+                                snapTime));
                     } finally {
                         safeUnregisterWifi();
                         wifiDone = true;
@@ -220,7 +264,10 @@ public final class WorkStartNetworkSnapshot {
                 wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
                         WIFI_LIMIT,
                         locationDevicesDao,
-                        addrId));
+                        addrId,
+                        snapX,
+                        snapY,
+                        snapTime));
                 safeUnregisterWifi();
                 wifiDone = true;
                 return;
@@ -230,7 +277,10 @@ public final class WorkStartNetworkSnapshot {
                 wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
                         WIFI_LIMIT,
                         locationDevicesDao,
-                        addrId));
+                        addrId,
+                        snapX,
+                        snapY,
+                        snapTime));
                 safeUnregisterWifi();
                 wifiDone = true;
                 tryFinish();
@@ -362,7 +412,10 @@ public final class WorkStartNetworkSnapshot {
             WifiManager wifiManager,
             int limit,
             LocationDevicesDao dao,
-            long addrId
+            long addrId,
+            double x,
+            double y,
+            long time
     ) {
         ArrayList<String> lines = new ArrayList<>();
         List<android.net.wifi.ScanResult> results;
@@ -401,7 +454,10 @@ public final class WorkStartNetworkSnapshot {
             lines.add("WiFi | SSID=" + safe(r.SSID) +
                     " | BSSID=" + safe(r.BSSID) +
                     " | level=" + r.level + "dBm" +
-                    " | freq=" + r.frequency + "MHz");
+                    " | freq=" + r.frequency + "MHz" +
+                    " | DX=" + x +
+                    " | DY=" + y +
+                    " | time=" + time);
         }
 
         return lines;
@@ -468,7 +524,7 @@ public final class WorkStartNetworkSnapshot {
 
     // ---------------- Permissions / Utils ----------------
 
-    private static boolean hasWifiPerms(Context ctx) {
+    public static boolean hasWifiPerms(Context ctx) {
         boolean fine = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
 
@@ -501,6 +557,57 @@ public final class WorkStartNetworkSnapshot {
             return Double.NaN;
         }
     }
+
+    private static LogMPDB getNearestMpPointSorted(
+            double coordAddrX, double coordAddrY,
+            long startTimeSec, long endTimeSec
+    ) {
+        List<LogMPDB> logMPList = LogMPRealm.getLogMPTime(startTimeSec * 1000, endTimeSec * 1000);
+
+        if (logMPList != null && logMPList.size() > 0) {
+            for (LogMPDB item : logMPList) {
+                // как у тебя: считаем distance и пишем в item.distance
+                double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);
+                item.distance = (int) distance;
+            }
+
+            LogMPRealm.setLogMP(logMPList);
+
+            // сортируем по distance
+            Collections.sort(logMPList, new Comparator<LogMPDB>() {
+                @Override
+                public int compare(LogMPDB o1, LogMPDB o2) {
+                    return Integer.compare(o1.distance, o2.distance);
+                }
+            });
+
+            return logMPList.get(0); // ближайший
+        }
+
+        return null;
+    }
+
+    public static float coordinatesDistanse(double latA, double lngA, double latB, double lngB) {
+
+        float res;
+
+        Location locationA = new Location("point A");
+
+        locationA.setLatitude(latA);
+        locationA.setLongitude(lngA);
+
+        Location locationB = new Location("point B");
+
+        locationB.setLatitude(latB);
+        locationB.setLongitude(lngB);
+
+        res = locationA.distanceTo(locationB);
+
+        //System.out.println("TEST.DISTANCE: " + res);
+
+        return res;
+    }
+
 }
 
 

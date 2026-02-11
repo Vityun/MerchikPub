@@ -99,14 +99,6 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
     }
 
     private void executeOption() {
-//        Intent intent = new Intent(context, FeaturesActivity.class);
-//        Bundle bundle = new Bundle();
-//        bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
-//        bundle.putString("dataJson", new Gson().toJson(wpDataDB));
-//        bundle.putString("title", "Історія місцерозташування");
-//        intent.putExtras(bundle);
-//        context.startActivity(intent);
-
 
         if (wpDataDB.getClient_end_dt() > 0) {
             workStatusSub = "Роботи з поточного відвідування закінчені у " + Clock.getHumanTime2(wpDataDB.getClient_end_dt() * 1000);
@@ -150,8 +142,11 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                                                     msg = "Добавлено записей:\n" +
                                                             "WiFi: " + result.wifiAdded + "\n" +
                                                             "Bluetooth: " + result.btAdded;
+                                                    Globals.writeToMLOG("INFO","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
+
                                                 } else {
                                                     msg = result.error;
+                                                    Globals.writeToMLOG("ERROR","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
                                                 }
 
                                                 // если вызывается не с UI-потока, оберни в runOnUiThread

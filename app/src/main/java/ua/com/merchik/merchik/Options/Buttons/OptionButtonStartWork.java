@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
-import static ua.com.merchik.merchik.trecker.enabledGPS;
-
 import android.Manifest;
 import android.content.Context;
 import android.widget.Toast;
@@ -18,9 +16,7 @@ import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder;
 import ua.com.merchik.merchik.trecker;
@@ -49,7 +45,6 @@ public class OptionButtonStartWork<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
             optionStartWork_138518(context, wpDataDB, optionDB, msgType, nnkMode, unlockCodeResultListener);
 //            WPDataObj wpDataObj = new WorkPlan().getKPS(wpDataDB.getId());
@@ -117,7 +112,7 @@ public class OptionButtonStartWork<T> extends OptionControl {
     @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
     private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, Options.NNKMode mode, UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
-        Globals.fixMP(wpDataDB, null);
+        Globals.fixMP(wpDataDB, context);
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
@@ -126,26 +121,24 @@ public class OptionButtonStartWork<T> extends OptionControl {
         } else {
             try {
                 int tema_id = 1383;
-                    WorkStartNetworkSnapshot.captureAndLog(
+                WorkStartNetworkSnapshot.captureAndLog(
                         context,
                         wpDataDB,
                         tema_id,
                         trecker::coordinatesDistanse,
-                        result1 -> {
+                        resultCat -> {
                             String msg;
-                            if (result1.isOk()) {
+                            if (resultCat.isOk()) {
                                 msg = "Добавлено записей:\n" +
-                                        "WiFi: " + result1.wifiAdded + "\n" +
-                                        "Bluetooth: " + result1.btAdded;
-                            } else {
-                                msg = result1.error;
-                            }
+                                        "WiFi: " + resultCat.wifiAdded + "\n" +
+                                        "Bluetooth: " + resultCat.btAdded;
+                                Globals.writeToMLOG("INFO","OptionButtonStartWork.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
 
-                            // если вызывается не с UI-потока, оберни в runOnUiThread
-                            new InfoDialogBuilder(context)
-                                    .setTitle("Детальна інформація")
-                                    .setMessage(msg)
-                                    .show();
+                            } else {
+                                msg = resultCat.error;
+                                Globals.writeToMLOG("ERROR","OptionButtonStartWork.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                         }
                 );
 

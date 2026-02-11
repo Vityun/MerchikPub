@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik;
 
 import static io.realm.Realm.getApplicationContext;
+import static ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot.hasWifiPerms;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
@@ -28,6 +29,7 @@ import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -41,6 +43,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
@@ -67,7 +70,9 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -81,6 +86,7 @@ import ua.com.merchik.merchik.data.AppData.Browser;
 import ua.com.merchik.merchik.data.AppData.Device;
 import ua.com.merchik.merchik.data.AppData.Os;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.LocationDevices;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -89,6 +95,7 @@ import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.LocationDevicesDao;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -1404,7 +1411,17 @@ public class Globals {
                     Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
                             ", GPS_time: " + log.CoordTime
                             + ", systemTime: " + System.currentTimeMillis());
+
                     String mock;
+                    RealmManager.setLogMpRow(log);
+                    if (wpDataDB != null && context != null) {
+                        String wifiMatch = buildWifiStatsUniqueString(context, wpDataDB.getAddr_id());
+                        if (wifiMatch != null) {
+                            log.locationUniqueString = wifiMatch;
+                            RealmManager.setLogMpRow(log);
+                        }
+                    }
+
                     if (isMockGPS)
                         mock = "ФИКТИВНОЕ МП ВКЛЮЧЕННО!";
                     else
@@ -1492,6 +1509,13 @@ public class Globals {
                     logNET.gp = POST_10(logNET);
 
                     RealmManager.setLogMpRow(logNET);
+                    if (wpDataDB != null && context != null) {
+                        String wifiMatch = buildWifiStatsUniqueString(context, wpDataDB.getAddr_id());
+                        if (wifiMatch != null) {
+                            logNET.locationUniqueString = wifiMatch;
+                            RealmManager.setLogMpRow(logNET);
+                        }
+                    }
                     locationUniqueStringGSM = locationUniqueStringNETThis;
                     return logNET;
                 }
@@ -1502,6 +1526,73 @@ public class Globals {
             Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
         }
         return null;
+    }
+
+
+    @Nullable
+    private static String buildWifiStatsUniqueString(Context context, int addrId) {
+        // 1) Разрешения/сервисы — если чего-то нет, возвращаем null (и просто не создаём вторую запись)
+        try {
+            if (context == null) return null;
+
+            // обязательно в Manifest: ACCESS_WIFI_STATE
+            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wifiManager == null || !wifiManager.isWifiEnabled()) return null;
+
+            // runtime: location (и на 33+ nearby wifi) — иначе getScanResults может дать SecurityException/empty
+            if (!hasWifiPerms(context)) return null;
+
+            // 2) Wi-Fi scan results (кеш)
+            List<android.net.wifi.ScanResult> results = wifiManager.getScanResults();
+            if (results == null) results = Collections.emptyList();
+
+            // уникальные BSSID из результатов
+            HashSet<String> wifiSet = new HashSet<>();
+            for (android.net.wifi.ScanResult r : results) {
+                if (r == null) continue;
+                String bssid = r.BSSID;
+                if (bssid == null || bssid.isEmpty()) continue;
+                wifiSet.add(bssid.toLowerCase(Locale.US)); // сравнение case-insensitive
+            }
+            int wifiFound = wifiSet.size();
+
+            // 3) MAC из Room по адресу
+            LocationDevicesDao dao = SQL_DB.locationDevicesDao();
+            List<LocationDevices> db = dao.getByAddress(addrId);
+            if (db == null || db.isEmpty()) return null;
+
+            HashSet<String> dbSet = new HashSet<>();
+            for (LocationDevices d : db) {
+                if (d == null || d.mac == null || d.mac.trim().isEmpty()) continue;
+                dbSet.add(d.mac.trim().toLowerCase(Locale.US)); // сравнение case-insensitive
+            }
+            int dbCount = dbSet.size();
+
+            // 4) совпадения
+            int matched = 0;
+            if (!wifiSet.isEmpty() && !dbSet.isEmpty()) {
+                // пересечение
+                for (String mac : wifiSet) {
+                    if (dbSet.contains(mac)) matched++;
+                }
+            }
+
+            // % совпадений. Я считаю от DB (сколько "из базы" увидели). Если хочешь от найденных — скажи.
+            double pct = 0.0;
+            if (dbCount > 0) pct = (matched * 100.0) / dbCount;
+
+            // 5) строка-идентификатор (короткая и стабильная)
+            // пример: WIFI_STAT|found=37|db=12|match=8|pct=66.7
+            return String.format(Locale.US,
+                    "maps_wifi | now=%d| fromDB=%d | match=%d | pct=%.1f",
+                    wifiFound, dbCount, matched, pct
+            );
+        } catch (SecurityException se) {
+            // permissions/политики Wi-Fi
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
