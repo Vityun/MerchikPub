@@ -139,21 +139,34 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                                             result -> {
                                                 String msg;
                                                 if (result.isOk()) {
-                                                    msg = "Добавлено записей:\n" +
-                                                            "WiFi: " + result.wifiAdded + "\n" +
-                                                            "Bluetooth: " + result.btAdded;
+                                                    msg = "Определено " + result.wifiAdded + " Мак-адресов WiFi и\n" +
+                                                            result.btAdded + " Мак-адресов Bluetooth\n" +
+                                                            "Они будут переданы на сервер для формирования Карты Мак-адресов данной ТТ";
                                                     Globals.writeToMLOG("INFO","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
-
+                                                    new MessageDialogBuilder(Globals.unwrap(context))
+                                                            .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+                                                            .setStatus(DialogStatus.ALERT)
+                                                            .setSubTitle(String.format("Запис за допомогою WiFi додано до бази даних з поточними координатами %s", time))
+                                                            .setMessage(msg)
+                                                            .setOnConfirmAction(() -> null)
+                                                            .show();
+//                                                    new InfoDialogBuilder(context)
+//                                                            .setTitle("Детальна інформація")
+//                                                            .setMessage(msg)
+//                                                            .show();
                                                 } else {
                                                     msg = result.error;
                                                     Globals.writeToMLOG("ERROR","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
+                                                    new MessageDialogBuilder(Globals.unwrap(context))
+                                                            .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+                                                            .setStatus(DialogStatus.ALERT)
+                                                            .setSubTitle("Запис до бази даних з поточними координатами за допомогою WiFi НЕ ДОДАНО")
+                                                            .setMessage(msg)
+                                                            .setOnConfirmAction(() -> null)
+                                                            .show();
                                                 }
 
                                                 // если вызывается не с UI-потока, оберни в runOnUiThread
-                                                new InfoDialogBuilder(context)
-                                                        .setTitle("Детальна інформація")
-                                                        .setMessage(msg)
-                                                        .show();
                                             }
                                     );
                                 new MessageDialogBuilder(Globals.unwrap(context))

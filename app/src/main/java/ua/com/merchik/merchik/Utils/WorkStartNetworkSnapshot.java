@@ -103,9 +103,9 @@ public final class WorkStartNetworkSnapshot {
 
         // perms
         if (!hasWifiPerms(context)) {
-            callback.onDone(new Result(0, 0, "Ошибка: нет разрешений (Wi-Fi/Location)\n" +
-                    "Щоб визначити місцезнаходження за Wi-Fi, увімкніть Wi-Fi у налаштуваннях телефону." +
-                    "Після цього повторіть дію."));
+            callback.onDone(new Result(0, 0, "У Вашего телефона выключен Wi-Fi и система не может использовать эту " +
+                    "технологию, для определения вашего местоположения в ТТ. " +
+                    "Включите Wi-Fi ы повторите попытку."));
             return;
         }
 
@@ -393,14 +393,18 @@ public final class WorkStartNetworkSnapshot {
             if (wifiAdded == 0 && btAdded == 0) {
                 // максимально коротко, без лишних данных
                 if (wifiManager != null && !wifiManager.isWifiEnabled()) {
-                    error = "Wi-Fi выключен";
+                    error = "У Вашего телефона выключен Wi-Fi и система не может использовать эту " +
+                            "технологию, для определения вашего местоположения в ТТ. " +
+                            "Включите Wi-Fi ы повторите попытку.";
                 } else if (btAdapter != null && !btAdapter.isEnabled()) {
-                    error = "Bluetooth выключен";
+                    error = "У Вашего телефона выключен Bluetooth и система не может использовать эту " +
+                            "технологию, для определения вашего местоположения в ТТ. " +
+                            "Включите Bluetooth ы повторите попытку.";
                 } else {
-                    error = "Не удалось получить данные Wi-Fi/Bluetooth";
+                    error = "Не найдено ни одного устройства Wi-Fi/Bluetooth. " +
+                            "Попробуйте подойти ближе к кассе или другой кассе и повторить попытку.";
                 }
             }
-
             callback.onDone(new Result(wifiAdded, btAdded, error));
         }
     }

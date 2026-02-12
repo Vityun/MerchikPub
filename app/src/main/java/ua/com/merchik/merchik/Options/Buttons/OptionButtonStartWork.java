@@ -115,7 +115,7 @@ public class OptionButtonStartWork<T> extends OptionControl {
         Globals.fixMP(wpDataDB, context);
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
-            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Работа уже была начата!", Toast.LENGTH_SHORT).show();
             unlockCodeResultListener.onUnlockCodeSuccess();
             result = true;
         } else {

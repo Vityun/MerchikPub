@@ -90,7 +90,7 @@ public class DetailedReportButtons {
             case 158309:
             case 158308:
             case 132968: // Фото витрины
-                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
@@ -125,7 +125,7 @@ public class DetailedReportButtons {
 
 
             case 141360: // Фото товара на складе
-                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
                 wpDataObj.setPhotoType("31");
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
@@ -158,7 +158,7 @@ public class DetailedReportButtons {
                 break;
 
             case 141885: // Фото Документов
-                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
                 wpDataObj.setPhotoType("3");
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
@@ -172,7 +172,7 @@ public class DetailedReportButtons {
                 break;
 
             case 138518: // Button Начало работы
-                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
                 // Начало работы.
                 // Тут делать запись в БД начала работы
 //                Log.e("OPTION_BUTTON", "Начало работы");
@@ -181,7 +181,7 @@ public class DetailedReportButtons {
                 break;
 
             case 138520: // Button окончания работы
-                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
                 // окончания работы.
                 // Тут делать запись в БД окончания работы
 //                Log.e("OPTION_BUTTON", "Окончания работы");
@@ -401,7 +401,7 @@ public class DetailedReportButtons {
     private void pressStartWork(Context context, WpDataDB wp) {
 //        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
 //        if (wp.getVisit_start_dt() > 0) {
-//            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Работа уже была начата!", Toast.LENGTH_SHORT).show();
 //        } else {
 //            try {
 //                long startTime = System.currentTimeMillis() / 1000;

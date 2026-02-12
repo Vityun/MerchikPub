@@ -1378,23 +1378,20 @@ public class Globals {
                     } else {
                         log.mocking = imHereGPS.isFromMockProvider();
                     }
-
+                    float coordAddrX = 0, coordAddrY = 0;
 
                     if (wpDataDB != null) {
                         log.codeDad2 = wpDataDB.getCode_dad2();
                         log.address = wpDataDB.getAddr_id();
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                        float coordAddrX = 0, coordAddrY = 0;
                         if (addressSDB != null) {
                             coordAddrX = addressSDB.locationXd;
                             coordAddrY = addressSDB.locationYd;
                         } else {
                             try {
-                                if (wpDataDB != null) {
-                                    coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
-                                    coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
-                                }
+                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                             } catch (Exception e) {
                             }
                         }
@@ -1415,10 +1412,22 @@ public class Globals {
                     String mock;
                     RealmManager.setLogMpRow(log);
                     if (wpDataDB != null && context != null) {
-                        String wifiMatch = buildWifiStatsUniqueString(context, wpDataDB.getAddr_id());
-                        if (wifiMatch != null) {
-                            log.locationUniqueString = wifiMatch;
-                            RealmManager.setLogMpRow(log);
+                        WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
+                        if (res != null) {
+                            String wifiMatch = res.text;
+                            if (wifiMatch != null) {
+                                log.id = RealmManager.logMPGetLastId() + 1;;
+                                log.provider = 22;
+                                if (res.pct > 10.0) {
+                                    log.CoordX = coordAddrX;
+                                    log.CoordY = coordAddrY;
+                                } else {
+                                    log.CoordX = 0;
+                                    log.CoordY = 0;
+                                }
+                                log.locationUniqueString = wifiMatch;
+                                RealmManager.setLogMpRow(log);
+                            }
                         }
                     }
 
@@ -1439,19 +1448,6 @@ public class Globals {
                                 null,
                                 Globals.session,
                                 null)));
-//                    else if (isMockGPS)
-//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
-//                                System.currentTimeMillis() / 1000,
-//                                "Координаты " + mock + " res: GPS," + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " TimeGPS: " + CoordTime +
-//                                ", Высота: " + imHereGPS.getAltitude() + ", Скорость: " + imHereGPS.getSpeed() + ", Точость: " + imHereGPS.getAccuracy(),
-//                                1347,
-//                                null,
-//                                null,
-//                                null,
-//                                null,
-//                                null,
-//                                Globals.session,
-//                                null)));
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;
                     return log;
@@ -1483,12 +1479,13 @@ public class Globals {
                     } else {
                         logNET.mocking = imHereNET.isFromMockProvider();
                     }
+                    float coordAddrX = 0, coordAddrY = 0;
+
                     if (wpDataDB != null) {
                         logNET.codeDad2 = wpDataDB.getCode_dad2();
                         logNET.address = wpDataDB.getAddr_id();
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                        float coordAddrX = 0, coordAddrY = 0;
                         if (addressSDB != null) {
                             coordAddrX = addressSDB.locationXd;
                             coordAddrY = addressSDB.locationYd;
@@ -1510,10 +1507,22 @@ public class Globals {
 
                     RealmManager.setLogMpRow(logNET);
                     if (wpDataDB != null && context != null) {
-                        String wifiMatch = buildWifiStatsUniqueString(context, wpDataDB.getAddr_id());
-                        if (wifiMatch != null) {
-                            logNET.locationUniqueString = wifiMatch;
-                            RealmManager.setLogMpRow(logNET);
+                        WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
+                        if (res != null) {
+                            String wifiMatch = res.text;
+                            if (wifiMatch != null) {
+                                logNET.id = RealmManager.logMPGetLastId() + 1;;
+                                logNET.provider = 22;
+                                if (res.pct > 10.0) {
+                                    logNET.CoordX = coordAddrX;
+                                    logNET.CoordY = coordAddrY;
+                                } else {
+                                    logNET.CoordX = 0;
+                                    logNET.CoordY = 0;
+                                }
+                                logNET.locationUniqueString = wifiMatch;
+                                RealmManager.setLogMpRow(logNET);
+                            }
                         }
                     }
                     locationUniqueStringGSM = locationUniqueStringNETThis;
@@ -1528,35 +1537,39 @@ public class Globals {
         return null;
     }
 
+    private static final class WifiMatchResult {
+        final String text;   // то, что пишем в locationUniqueString
+        final double pct;    // процент совпадения
+
+        WifiMatchResult(String text, double pct) {
+            this.text = text;
+            this.pct = pct;
+        }
+    }
+
 
     @Nullable
-    private static String buildWifiStatsUniqueString(Context context, int addrId) {
-        // 1) Разрешения/сервисы — если чего-то нет, возвращаем null (и просто не создаём вторую запись)
+    private static WifiMatchResult buildWifiStatsMatch(Context context, int addrId) {
         try {
             if (context == null) return null;
 
-            // обязательно в Manifest: ACCESS_WIFI_STATE
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager == null || !wifiManager.isWifiEnabled()) return null;
 
-            // runtime: location (и на 33+ nearby wifi) — иначе getScanResults может дать SecurityException/empty
             if (!hasWifiPerms(context)) return null;
 
-            // 2) Wi-Fi scan results (кеш)
             List<android.net.wifi.ScanResult> results = wifiManager.getScanResults();
             if (results == null) results = Collections.emptyList();
 
-            // уникальные BSSID из результатов
             HashSet<String> wifiSet = new HashSet<>();
             for (android.net.wifi.ScanResult r : results) {
                 if (r == null) continue;
                 String bssid = r.BSSID;
                 if (bssid == null || bssid.isEmpty()) continue;
-                wifiSet.add(bssid.toLowerCase(Locale.US)); // сравнение case-insensitive
+                wifiSet.add(bssid.toLowerCase(Locale.US));
             }
             int wifiFound = wifiSet.size();
 
-            // 3) MAC из Room по адресу
             LocationDevicesDao dao = SQL_DB.locationDevicesDao();
             List<LocationDevices> db = dao.getByAddress(addrId);
             if (db == null || db.isEmpty()) return null;
@@ -1564,36 +1577,34 @@ public class Globals {
             HashSet<String> dbSet = new HashSet<>();
             for (LocationDevices d : db) {
                 if (d == null || d.mac == null || d.mac.trim().isEmpty()) continue;
-                dbSet.add(d.mac.trim().toLowerCase(Locale.US)); // сравнение case-insensitive
+                dbSet.add(d.mac.trim().toLowerCase(Locale.US));
             }
             int dbCount = dbSet.size();
 
-            // 4) совпадения
             int matched = 0;
             if (!wifiSet.isEmpty() && !dbSet.isEmpty()) {
-                // пересечение
                 for (String mac : wifiSet) {
                     if (dbSet.contains(mac)) matched++;
                 }
             }
 
-            // % совпадений. Я считаю от DB (сколько "из базы" увидели). Если хочешь от найденных — скажи.
             double pct = 0.0;
             if (dbCount > 0) pct = (matched * 100.0) / dbCount;
 
-            // 5) строка-идентификатор (короткая и стабильная)
-            // пример: WIFI_STAT|found=37|db=12|match=8|pct=66.7
-            return String.format(Locale.US,
-                    "maps_wifi | now=%d| fromDB=%d | match=%d | pct=%.1f",
+            String text = String.format(Locale.US,
+                    "maps_wifi: countFoundNow=%d | countMapWiFiDB=%d | match=%d | pct=%.1f",
                     wifiFound, dbCount, matched, pct
             );
+
+            return new WifiMatchResult(text, pct);
+
         } catch (SecurityException se) {
-            // permissions/политики Wi-Fi
             return null;
         } catch (Exception e) {
             return null;
         }
     }
+
 
 
     public static String getAppInfoToSession(Context context) {

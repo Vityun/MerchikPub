@@ -211,7 +211,7 @@ public class OptionControlMP<T> extends OptionControl {
                                 stringBuilder.append("Поточне розташування присторою станом на ")
                                         .append(Clock.getHumanTime2(latestVpiLog.vpi))
                                         .append(" визначено на вiдстанi ")
-                                        .append(distance)
+                                        .append((int) distance)
                                         .append(" метрiв вiд ТТ");
                             }
                             click.onSuccess(stringBuilder.toString());

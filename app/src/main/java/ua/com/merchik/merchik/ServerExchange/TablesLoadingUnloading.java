@@ -602,10 +602,10 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
 //                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-                                for (WpDataDB wpDataDB : wpDataDBList) {
-                                    if (wpDataDB.getUser_id() == 14041)
-                                        Log.e("!!!!!!!!!!", "+++++++++++");
-                                }
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 14041)
+//                                        Log.e("!!!!!!!!!!", "+++++++++++");
+//                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
