@@ -1281,7 +1281,7 @@ public class PhotoReportActivity extends toolbar_menus {
 
             Globals.writeToMLOG("INFO", "savePhoto", "wp 1: " + wp);
             Globals.writeToMLOG("INFO", "savePhoto", "wp 2: " + new Gson().toJson(wp));
-            LogMPDB log = Globals.fixMP(wp, context);
+            LogMPDB log = Globals.fixMP(wp, null);
 
             Gson gson = new Gson();
 

@@ -78,9 +78,7 @@ import java.util.Set;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.MyApplication;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
 import ua.com.merchik.merchik.data.AppData.Device;
@@ -88,7 +86,6 @@ import ua.com.merchik.merchik.data.AppData.Os;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.LocationDevices;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
-import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
@@ -1202,7 +1199,6 @@ public class Globals {
             }
 
 
-
 //            DialogData dialog = new DialogData(context);
 //            dialog.setTitle("Внимание!");
 //            dialog.setDialogIco();
@@ -1301,6 +1297,7 @@ public class Globals {
      */
     public static long delayGPSTime = 0;
     private static final long retryTime = 1200000; // 20 мин
+
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
@@ -1414,10 +1411,16 @@ public class Globals {
                     if (wpDataDB != null && context != null) {
                         WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
                         if (res != null) {
+                            log.id = RealmManager.logMPGetLastId() + 1;
+                            log.provider = 22;
+
+                            log.CoordAltitude = 0;
+                            log.CoordSpeed = 0;
+                            log.CoordAccuracy = 1;
+
                             String wifiMatch = res.text;
                             if (wifiMatch != null) {
-                                log.id = RealmManager.logMPGetLastId() + 1;;
-                                log.provider = 22;
+
                                 if (res.pct > 10.0) {
                                     log.CoordX = coordAddrX;
                                     log.CoordY = coordAddrY;
@@ -1425,9 +1428,11 @@ public class Globals {
                                     log.CoordX = 0;
                                     log.CoordY = 0;
                                 }
-                                log.locationUniqueString = wifiMatch;
-                                RealmManager.setLogMpRow(log);
                             }
+                            log.gp = POST_10(log);
+                            log.locationUniqueString = wifiMatch;
+                            RealmManager.setLogMpRow(log);
+
                         }
                     }
 
@@ -1509,10 +1514,16 @@ public class Globals {
                     if (wpDataDB != null && context != null) {
                         WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
                         if (res != null) {
+                            logNET.id = RealmManager.logMPGetLastId() + 1;
+                            logNET.provider = 22;
+
+                            logNET.CoordAltitude = 0;
+                            logNET.CoordSpeed = 0;
+                            logNET.CoordAccuracy = 1;
+
                             String wifiMatch = res.text;
                             if (wifiMatch != null) {
-                                logNET.id = RealmManager.logMPGetLastId() + 1;;
-                                logNET.provider = 22;
+
                                 if (res.pct > 10.0) {
                                     logNET.CoordX = coordAddrX;
                                     logNET.CoordY = coordAddrY;
@@ -1520,6 +1531,7 @@ public class Globals {
                                     logNET.CoordX = 0;
                                     logNET.CoordY = 0;
                                 }
+                                logNET.gp = POST_10(logNET);
                                 logNET.locationUniqueString = wifiMatch;
                                 RealmManager.setLogMpRow(logNET);
                             }
@@ -1556,7 +1568,7 @@ public class Globals {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiManager == null || !wifiManager.isWifiEnabled()) return null;
 
-            if (!hasWifiPerms(context)) return null;
+            if (!hasWifiPerms(context)) return new WifiMatchResult( "WiFi is OFF", 0);
 
             List<android.net.wifi.ScanResult> results = wifiManager.getScanResults();
             if (results == null) results = Collections.emptyList();
@@ -1572,7 +1584,8 @@ public class Globals {
 
             LocationDevicesDao dao = SQL_DB.locationDevicesDao();
             List<LocationDevices> db = dao.getByAddress(addrId);
-            if (db == null || db.isEmpty()) return null;
+            if (db == null || db.isEmpty())
+                return new WifiMatchResult("No address in MAPS_WIFI_DB", 0);
 
             HashSet<String> dbSet = new HashSet<>();
             for (LocationDevices d : db) {
@@ -1598,13 +1611,10 @@ public class Globals {
 
             return new WifiMatchResult(text, pct);
 
-        } catch (SecurityException se) {
-            return null;
         } catch (Exception e) {
-            return null;
+            return new WifiMatchResult( "Exception: " + e.getMessage(), 0);
         }
     }
-
 
 
     public static String getAppInfoToSession(Context context) {
@@ -1744,7 +1754,7 @@ public class Globals {
      */
 //    TODO сделать не в основном потоке
     public static void writeToMLOG(String type, String place, String msg) {
-        Log.e("writeToMLOG",type + ", " + place + ", " + msg);
+        Log.e("writeToMLOG", type + ", " + place + ", " + msg);
         try {
             File root = MyApplication.getAppContext().getCacheDir();
             if (!root.exists()) {

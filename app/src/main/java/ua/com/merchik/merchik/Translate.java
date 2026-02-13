@@ -314,8 +314,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "1",
-                "clue_dialog",
-                "Подсказка",
+                "map_wifi_no_x_y_tt",
+                "Запись не выполнена: координаты магазина не указаны",
                 "app",
                 "all",
                 ""
@@ -323,8 +323,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "2",
-                "cancel_button_dialog",
-                "Отмена",
+                "map_wifi_fake_mp",
+                "Запись не выполнена: включено фиктивное местоположение",
                 "app",
                 "all",
                 ""
@@ -332,8 +332,10 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "3",
-                "dialog_exit_msg",
-                "Приложение будет закрыто. Завершить работу?",
+                "map_wifi_wifi_off",
+                "У Вашего телефона выключен Wi-Fi и система не может использовать эту " +
+                        "технологию, для определения вашего местоположения в ТТ. " +
+                        "Включите Wi-Fi ы повторите попытку.",
                 "app",
                 "all",
                 ""
@@ -341,8 +343,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "4",
-                "access_to_orders_",
-                "доступ к заказам",
+                "map_wifi_no_x_y",
+                "Запись не выполнена: нет координат за последние 10 минут",
                 "app",
                 "all",
                 ""
@@ -350,8 +352,8 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "5",
-                "distance_map_sub",
-                "Расстояние",
+                "map_wifi_out_100m",
+                "Запись не выполнена: вы дальше 100м от магазина, расстояние: ",
                 "app",
                 "all",
                 ""
@@ -360,8 +362,10 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "6",
-                "premia_map",
-                "Премия",
+                "map_wifi_bluetooth_off",
+                "У Вашего телефона выключен Bluetooth и система не может использовать эту " +
+                        "технологию, для определения вашего местоположения в ТТ. " +
+                        "Включите Bluetooth ы повторите попытку.",
                 "app",
                 "all",
                 ""
@@ -369,89 +373,90 @@ public class Translate {
 
         res.add(new AddTranslation(
                 "7",
-                "read_more_map",
-                "Подробнее",
+                "map_wifi_no_devices",
+                "Не найдено ни одного устройства Wi-Fi/Bluetooth. " +
+                        "Попробуйте подойти ближе к кассе или другой кассе и повторить попытку.",
                 "app",
                 "all",
                 ""
         ));
 
 
-        res.add(new AddTranslation(
-                "8",
-                "premia_map_title",
-                "Премия",
-                "app",
-                "all",
-                ""
-        ));
-
-
-        res.add(new AddTranslation(
-                "9",
-                "filter_dialog_sub_title",
-                "В этой форме Вы можете настроить фильтры для ограничения списка элементов",
-                "app",
-                "all",
-                ""
-        ));
-
-
-        res.add(new AddTranslation(
-                "10",
-                "not_available_dialog",
-                "Не доступно",
-                "app",
-                "all",
-                ""
-        ));
-
-
-        res.add(new AddTranslation(
-                "11",
-                "not_available_dialog_msg",
-                "Данный раздел находится в стадии в разработки",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "12",
-                "you_get_discounts",
-                "Вы получаете снижения по следущим опциям:",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "12",
-                "not_available_coords",
-                "Не определены координаты адреса",
-                "app",
-                "all",
-                ""
-        ));
-
-
-        res.add(new AddTranslation(
-                "13",
-                "not_available_coords_tilte_dialog",
-                "Нарушение по Местоположению.",
-                "app",
-                "all",
-                ""
-        ));
-
-        res.add(new AddTranslation(
-                "14",
-                "male_photo_button",
-                "Всё равно сделать фото",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "8",
+//                "premia_map_title",
+//                "Премия",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "9",
+//                "filter_dialog_sub_title",
+//                "В этой форме Вы можете настроить фильтры для ограничения списка элементов",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "10",
+//                "not_available_dialog",
+//                "Не доступно",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "11",
+//                "not_available_dialog_msg",
+//                "Данный раздел находится в стадии в разработки",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "12",
+//                "you_get_discounts",
+//                "Вы получаете снижения по следущим опциям:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "12",
+//                "not_available_coords",
+//                "Не определены координаты адреса",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//
+//        res.add(new AddTranslation(
+//                "13",
+//                "not_available_coords_tilte_dialog",
+//                "Нарушение по Местоположению.",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//
+//        res.add(new AddTranslation(
+//                "14",
+//                "male_photo_button",
+//                "Всё равно сделать фото",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 
 

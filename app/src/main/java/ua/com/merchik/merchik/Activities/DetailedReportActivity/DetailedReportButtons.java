@@ -90,7 +90,7 @@ public class DetailedReportButtons {
             case 158309:
             case 158308:
             case 132968: // Фото витрины
-                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
@@ -125,7 +125,7 @@ public class DetailedReportButtons {
 
 
             case 141360: // Фото товара на складе
-                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
                 wpDataObj.setPhotoType("31");
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
@@ -158,7 +158,7 @@ public class DetailedReportButtons {
                 break;
 
             case 141885: // Фото Документов
-                globals.fixMP(wpDataDB, context); // Фиксация Местоположения в таблице ЛогМп
+                globals.fixMP(wpDataDB, null); // Фиксация Местоположения в таблице ЛогМп
                 wpDataObj.setPhotoType("3");
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);

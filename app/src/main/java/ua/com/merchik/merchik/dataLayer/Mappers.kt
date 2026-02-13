@@ -159,16 +159,32 @@ fun DataObjectUI.toItemUI(
     }
 
     // Обработка изображений — пропускаем ключи, которые скрыты
-    val imageKeys = this.getFieldsImageOnUI()
-        .split(",")
-        .map { it.trim() }
-        .filter { it.isNotEmpty() }
+    val imageKeys = getFieldsImageOnUI()
+        .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
+// мапа "id-key -> hash-key"
+    val hashByIdKey = mapOf(
+        "photoServerId" to "photo_hash",
+        "photo_do_id" to "photo_do_hash",
+        // добавь остальные пары при необходимости:
+        // "photo_posle_id" to "photo_posle_hash",
+    )
 
     for (key in imageKeys) {
-        resolvePhotoNum(jsonObject, key, idResImage)?.let { num ->
-            if (!images.contains(num)) images.add(num)
-        }
+        val num = resolvePhotoNum(jsonObject, key, hashByIdKey[key], idResImage)
+        if (num != null) images.add(num)   // без дедупа, как раньше по смыслу
     }
+
+//    val imageKeys = this.getFieldsImageOnUI()
+//        .split(",")
+//        .map { it.trim() }
+//        .filter { it.isNotEmpty() }
+//
+//    for (key in imageKeys) {
+//        resolvePhotoNum(jsonObject, key, idResImage)?.let { num ->
+//            if (!images.contains(num)) images.add(num)
+//        }
+//    }
 
 //    val imageKeys = this.getFieldsImageOnUI()
 //        .split(",")
@@ -277,6 +293,32 @@ fun DataObjectUI.toItemUI(
         stableId = stableIdFromSource ?: DataItemIdGenerator.nextId()
     )
 }
+
+private fun resolvePhotoNum(
+    json: JSONObject,
+    idKey: String,
+    hashKey: String?,
+    idResImage: Int?
+): String? {
+    fun norm(s: String) = s.trim().takeIf { it.isNotEmpty() && it != "0" && it != "null" }
+
+    // 1) по id
+    val id = norm(json.optString(idKey, ""))
+    if (id != null) {
+        RealmManager.getPhotoByPhotoId(id)?.getPhoto_num()?.let { return it }
+        RealmManager.getPhotoById(null, id)?.getPhoto_num()?.let { return it }
+    }
+
+    // 2) по hash (если задан)
+    val hash = hashKey?.let { norm(json.optString(it, "")) }
+    if (hash != null && hash.length > 12) {
+        RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { return it }
+    }
+
+    // 3) плейсхолдер
+    return idResImage?.toString()
+}
+
 
 private fun resolvePhotoNum(
     json: JSONObject,

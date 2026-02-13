@@ -90,7 +90,7 @@ public final class WorkStartNetworkSnapshot {
         double shopLng = parseDoubleSafe(wpDataDB.getAddr_location_yd());
 
         if (Double.isNaN(shopLat) || Double.isNaN(shopLng)) {
-            callback.onDone(new Result(0, 0, "Ошибка: координаты магазина невалидны"));
+            callback.onDone(new Result(0, 0, "Запись не выполнена: координаты магазина не указаны"));
             return;
         }
 
@@ -105,7 +105,7 @@ public final class WorkStartNetworkSnapshot {
         if (!hasWifiPerms(context)) {
             callback.onDone(new Result(0, 0, "У Вашего телефона выключен Wi-Fi и система не может использовать эту " +
                     "технологию, для определения вашего местоположения в ТТ. " +
-                    "Включите Wi-Fi ы повторите попытку."));
+                    "Включите Wi-Fi и повторите попытку."));
             return;
         }
 
@@ -131,7 +131,7 @@ public final class WorkStartNetworkSnapshot {
             }
 
             if (nearest.distance > 200) {
-                callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина, nearest: " + nearest.distance));
+                callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина, расстояние: " + nearest.distance));
                 return;
             }
 

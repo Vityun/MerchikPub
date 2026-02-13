@@ -41,7 +41,7 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP(wpDataDB, context);// Фиксация Местоположения в таблице ЛогМп
+        new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
 
 //            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");

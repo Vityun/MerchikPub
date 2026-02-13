@@ -870,13 +870,13 @@ abstract class MainViewModel(
                     MessageDialogData(
 
                         message = String.format(
-                            "\"Виконати поточну роботу<br>\" +\n" +
-                                    "\"<font color='gray'>Відвідування від</font> %s\" +\n" +
-                                    "\"<br><font color='gray'>Клієнт:</font> %s\" +\n" +
-                                    "\"<br><font color='gray'>Адреса:</font> %s\" +\n" +
-                                    "\"<br><font color='gray'>Премія (план):</font> %s грн.\" +\n" +
-                                    "\"<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\" +\n" +
-                                    "\"<br><font color='gray'>Середній час роботи:</font> %s хв\"\n",
+                            "\"Виконати поточну роботу\n" +
+                                    "\"<font color='gray'>Відвідування від</font> %s\n" +
+                                    "\"<br><font color='gray'>Клієнт:</font> %s\n" +
+                                    "\"<br><font color='gray'>Адреса:</font> %s\n" +
+                                    "\"<br><font color='gray'>Премія (план):</font> %s грн.\n" +
+                                    "\"<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\n" +
+                                    "\"<br><font color='gray'>Середній час роботи:</font> %s хв\n",
                             Clock.getHumanTime_dd_MMMM(wp.dt.time),
                             wp.client_txt,
                             wp.addr_txt,
