@@ -408,6 +408,8 @@ public class DialogData {
                                     null,
                                     null,
                                     Globals.session,
+                                    null,
+                                    null,
                                     null)));
 
                     try {

@@ -98,7 +98,47 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
         }
     }
 
+    @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
     private void executeOption() {
+
+//        WorkStartNetworkSnapshot.captureAndLog(
+//                context,
+//                wpDataDB,
+//                1383,
+//                trecker::coordinatesDistanse,
+//                result -> {
+//                    String msg;
+//                    if (result.isOk()) {
+//                        msg = "Определено " + result.wifiAdded + " Мак-адресов WiFi и\n" +
+//                                result.btAdded + " Мак-адресов Bluetooth\n" +
+//                                "Они будут переданы на сервер для формирования Карты Мак-адресов данной ТТ";
+//                        Globals.writeToMLOG("INFO","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
+//                        new MessageDialogBuilder(Globals.unwrap(context))
+//                                .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+//                                .setStatus(DialogStatus.ALERT)
+//                                .setSubTitle(String.format("Запис за допомогою WiFi додано до бази даних з поточними координатами %s", time))
+//                                .setMessage(msg)
+//                                .setOnConfirmAction(() -> null)
+//                                .show();
+////                                                    new InfoDialogBuilder(context)
+////                                                            .setTitle("Детальна інформація")
+////                                                            .setMessage(msg)
+////                                                            .show();
+//                    } else {
+//                        msg = result.error;
+//                        Globals.writeToMLOG("ERROR","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
+//                        new MessageDialogBuilder(Globals.unwrap(context))
+//                                .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
+//                                .setStatus(DialogStatus.ALERT)
+//                                .setSubTitle("Запис до бази даних з поточними координатами за допомогою WiFi НЕ ДОДАНО")
+//                                .setMessage(msg)
+//                                .setOnConfirmAction(() -> null)
+//                                .show();
+//                    }
+//
+//                    // если вызывается не с UI-потока, оберни в runOnUiThread
+//                }
+//        );
 
         if (wpDataDB.getClient_end_dt() > 0) {
             workStatusSub = "Роботи з поточного відвідування закінчені у " + Clock.getHumanTime2(wpDataDB.getClient_end_dt() * 1000);
@@ -126,7 +166,6 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                     Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "clicked, logMPDB " + logMPDB);
                     OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, Options.NNKMode.MAKE, unlockCodeResultListener);
                     optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
-                        @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
                         @Override
                         public void onSuccess(String data) {
                             if (workStatusMessage.isEmpty() && workStatusSub.isEmpty()) {

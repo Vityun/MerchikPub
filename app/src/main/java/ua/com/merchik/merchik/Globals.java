@@ -1452,6 +1452,8 @@ public class Globals {
                                 null,
                                 null,
                                 Globals.session,
+                                null,
+                                null,
                                 null)));
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;

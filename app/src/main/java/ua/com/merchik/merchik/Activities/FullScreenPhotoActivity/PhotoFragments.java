@@ -157,7 +157,9 @@ public class PhotoFragments {
                             null,
                             null,
                             Globals.session,
-                            String.valueOf(stackPhotoDB.dt))));
+                            String.valueOf(stackPhotoDB.dt),
+                            null,
+                            null)));
         } else {
             Log.d("Coordinates", "-");
         }

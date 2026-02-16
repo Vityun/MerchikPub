@@ -882,7 +882,9 @@ public class MakePhoto {
                                 user_id,
                                 null,
                                 Globals.session,
-                                String.valueOf(wpDate))));
+                                String.valueOf(wpDate),
+                                null,
+                                null)));
 
                 click.click();
                 dialog.dismiss();

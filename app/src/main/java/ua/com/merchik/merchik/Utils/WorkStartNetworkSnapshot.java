@@ -46,6 +46,17 @@ import ua.com.merchik.merchik.trecker;
  */
 public final class WorkStartNetworkSnapshot {
 
+    private static final class WifiLine {
+        final String line;
+        final String bssid; // hex "AA:BB:.."
+
+        WifiLine(String line, String bssid) {
+            this.line = line;
+            this.bssid = bssid;
+        }
+    }
+
+
     private WorkStartNetworkSnapshot() {
     }
 
@@ -164,7 +175,7 @@ public final class WorkStartNetworkSnapshot {
         private final WifiManager wifiManager;
         private final BluetoothAdapter btAdapter;
 
-        private final ArrayList<String> wifiLines = new ArrayList<>();
+        private final ArrayList<WifiLine> wifiLines = new ArrayList<>();
         private final LinkedHashMap<String, BtItem> btUnique = new LinkedHashMap<>();
 
         private boolean wifiDone = false;
@@ -379,13 +390,13 @@ public final class WorkStartNetworkSnapshot {
 
             // Пишем ТОЛЬКО WiFi/Bluetooth строки
             int wifiAdded = 0;
-            for (String line : wifiLines) {
-                if (writeOneLineLog(wp, temaId, line)) wifiAdded++;
+            for (WifiLine it : wifiLines) {
+                if (writeOneLineLog(wp, temaId, it.line, it.bssid)) wifiAdded++;
             }
 
             int btAdded = 0;
-            for (String line : buildBluetoothLines(btUnique)) {
-                if (writeOneLineLog(wp, temaId, line)) btAdded++;
+            for (WifiLine it : buildBluetoothLines(btUnique)) {
+                if (writeOneLineLog(wp, temaId, it.line, it.bssid)) btAdded++;
             }
 
             // Если ничего не записали — дадим внятную причину
@@ -412,7 +423,7 @@ public final class WorkStartNetworkSnapshot {
     // ---------------- Builders / Format ----------------
 
     @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION})
-    private static List<String> buildWifiLinesFromScanResults(
+    private static List<WifiLine> buildWifiLinesFromScanResults(
             WifiManager wifiManager,
             int limit,
             LocationDevicesDao dao,
@@ -421,7 +432,7 @@ public final class WorkStartNetworkSnapshot {
             double y,
             long time
     ) {
-        ArrayList<String> lines = new ArrayList<>();
+        ArrayList<WifiLine> lines = new ArrayList<>();
         List<android.net.wifi.ScanResult> results;
 
         try {
@@ -455,27 +466,31 @@ public final class WorkStartNetworkSnapshot {
                 continue;
             }
 
-            lines.add("WiFi | SSID=" + safe(r.SSID) +
-                    " | BSSID=" + safe(r.BSSID) +
-                    " | level=" + r.level + "dBm" +
-                    " | freq=" + r.frequency + "MHz" +
-                    " | DX=" + x +
-                    " | DY=" + y +
-                    " | time=" + time);
+            String line =
+                    "WiFi | SSID=" + safe(r.SSID) +
+                            " | BSSID=" + safe(r.BSSID) +
+                            " | level=" + r.level + "dBm" +
+                            " | freq=" + r.frequency + "MHz" +
+                            " | DX=" + x +
+                            " | DY=" + y +
+                            " | time=" + time;
+
+            lines.add(new WifiLine(line, mac));
         }
+
 
         return lines;
     }
 
 
-    private static List<String> buildBluetoothLines(LinkedHashMap<String, BtItem> uniq) {
-        ArrayList<String> out = new ArrayList<>();
+    private static List<WifiLine> buildBluetoothLines(LinkedHashMap<String, BtItem> uniq) {
+        ArrayList<WifiLine> out = new ArrayList<>();
         if (uniq == null || uniq.isEmpty()) return out;
 
         for (BtItem it : uniq.values()) {
-            out.add("Bluetooth | name=" + safe(it.name) +
+            out.add(new WifiLine("Bluetooth | name=" + safe(it.name) +
                     " | addr=" + safe(it.addr) +
-                    " | level=" + it.rssi + "dBm");
+                    " | level=" + it.rssi + "dBm",it.addr));
         }
         return out;
     }
@@ -499,7 +514,7 @@ public final class WorkStartNetworkSnapshot {
     // ---------------- Realm log writer ----------------
 
     /** @return true если реально добавили запись */
-    private static boolean writeOneLineLog(WpDataDB wpDataDB, int tema_id, String commentLine) {
+    private static boolean writeOneLineLog(WpDataDB wpDataDB, int tema_id, String commentLine, String macWiFi16f) {
         if (commentLine == null || commentLine.trim().isEmpty()) return false;
 
         int addr_id = wpDataDB.getAddr_id();
@@ -507,6 +522,7 @@ public final class WorkStartNetworkSnapshot {
         long dad2 = wpDataDB.getCode_dad2();
         String client_id = wpDataDB.getClient_id();
         java.util.Date wpDate = wpDataDB.getDt();
+        String macWiFiNumeric = macToFixedDecimalKey(macWiFi16f);
 
         RealmManager.setRowToLog(Collections.singletonList(
                 new LogDB(
@@ -520,7 +536,9 @@ public final class WorkStartNetworkSnapshot {
                         user_id,
                         null,
                         Globals.session,
-                        String.valueOf(wpDate)
+                        String.valueOf(wpDate),
+                        macWiFiNumeric,
+                        String.valueOf(tema_id)
                 )
         ));
         return true;
@@ -611,6 +629,28 @@ public final class WorkStartNetworkSnapshot {
 
         return res;
     }
+
+    public static String macToFixedDecimalKey(String mac) {
+        if (mac == null) return null;
+
+        String[] parts = mac.trim().toUpperCase().split(":");
+        if (parts.length != 6) return "1000000000000000000";
+
+        StringBuilder sb = new StringBuilder(19);
+        sb.append('1');
+        for (String p : parts) {
+            if (p.length() != 2) return "1000000000000000000";
+            int v;
+            try {
+                v = Integer.parseInt(p, 16);
+            } catch (NumberFormatException e) {
+                return "1000000000000000000";
+            }
+            sb.append(String.format(java.util.Locale.US, "%03d", v));
+        }
+        return sb.toString();
+    }
+
 
 }
 

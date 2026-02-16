@@ -27,6 +27,8 @@ public class LogDB extends RealmObject implements DataObjectUI{
     private Long dt;
     private String session;
     private String obj_date;
+    private String obj_id2;
+    private String obj_id2_theme_id;
 
     public LogDB() {
     }
@@ -43,6 +45,22 @@ public class LogDB extends RealmObject implements DataObjectUI{
         this.dt = dt;
         this.session = session;
         this.obj_date = obj_date;
+    }
+
+    public LogDB(Integer id, Long dt_action, String comments, Integer tp, String client_id, Integer addr_id, Long obj_id, Integer author, Long dt, String session, String obj_date, String objId2, String objId2ThemeId) {
+        this.id = id;
+        this.dt_action = dt_action;
+        this.comments = comments;
+        this.tp = tp;
+        this.client_id = client_id;
+        this.addr_id = addr_id;
+        this.obj_id = obj_id;
+        this.author = author;
+        this.dt = dt;
+        this.session = session;
+        this.obj_date = obj_date;
+        this.obj_id2 = objId2;
+        this.obj_id2_theme_id = objId2ThemeId;
     }
 
     public Integer getId() {
@@ -133,6 +151,24 @@ public class LogDB extends RealmObject implements DataObjectUI{
         this.obj_date = obj_date;
     }
 
+
+    public String getObj_id2_theme_id() {
+        return obj_id2_theme_id;
+    }
+
+    public void setObj_id2_theme_id(String obj_id2_theme_id) {
+        this.obj_id2_theme_id = obj_id2_theme_id;
+    }
+
+    public String getObj_id2() {
+        return obj_id2;
+    }
+
+    public void setObj_id2(String obj_id2) {
+        this.obj_id2 = obj_id2;
+    }
+
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
@@ -192,4 +228,5 @@ public class LogDB extends RealmObject implements DataObjectUI{
     public List<String> getPreferredFieldOrder() {
         return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
     }
+
 }

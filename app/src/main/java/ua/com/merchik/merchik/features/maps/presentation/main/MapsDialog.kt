@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
@@ -173,11 +174,21 @@ fun MapsDialog(
         } ?: "не визначено"
     }
 
-    val periodEnd = remember(uiState.filters?.rangeDataByKey) {
-        uiState.filters?.rangeDataByKey?.let { range ->
-            range.end?.format(formatterDDmmYYYY)
-        } ?: "не визначено"
-    }
+//    val end by mainViewModel.rangeDataEnd.collectAsState()
+//    val periodEnd = end?.format(formatterDDmmYYYY) ?: "не визначено"
+
+    val periodEnd = mainViewModel.rangeDataEnd.value
+        ?.format(formatterDDmmYYYY)
+        ?: "не визначено"
+
+//    val periodEnd = remember { mainViewModel.rangeDataEnd.value?.let {
+//        it.format(formatterDDmmYYYY) ?:  "не визначено"}
+//    } ?: "не визначено"
+//    val periodEnd = remember(uiState.filters?.rangeDataByKey) {
+//        uiState.filters?.rangeDataByKey?.let { range ->
+//            range.end?.format(formatterDDmmYYYY)
+//        } ?: "не визначено"
+//    }
 
     // время для fromMaps
     val validTime = 1_800_000L // 30 минут в миллисекундах
@@ -243,7 +254,7 @@ fun MapsDialog(
                         translateId = 9069
                     ), periodStrt, periodEnd
                 ),
-
+//9056
                 "На карті зеленими маркерами позначено адреси, за якими є можливість виконувати роботи за окрему (додаткову) оплату.\n" +
                         "Цифри всередині маркерів відображають кількість доступних робіт за відповідною адресою.\n" +
                         "Синім маркером позначено ваше поточне місцезнаходження (МП).\n" +

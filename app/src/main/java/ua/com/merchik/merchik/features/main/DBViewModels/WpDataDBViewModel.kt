@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
 import ua.com.merchik.merchik.trecker
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -255,6 +256,10 @@ class WpDataDBViewModel @Inject constructor(
                     data.map { it.statusComment }.distinct(),
                     enabled = true
                 )
+//                if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+//                    if (rangeDataEnd.value != null)
+//                        setEndDate(LocalDate.now().plusDays(3))
+//                }
 
                 filters = Filters(
                     items =
@@ -272,7 +277,6 @@ class WpDataDBViewModel @Inject constructor(
                         enabled = true
                     )
                 )
-//                filters = null
             }
 
             else -> {

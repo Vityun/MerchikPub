@@ -72,7 +72,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-                .schemaVersion(22)
+                .schemaVersion(26)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -1430,7 +1430,18 @@ public class RealmManager {
 
         if (list != null) {
             for (LogDB l : list) {
-                logList.add(new LogUploadToServ(String.valueOf(l.getId()), String.valueOf(l.getDt_action()), l.getComments(), String.valueOf(l.getTp()), l.getClient_id(), String.valueOf(l.getAddr_id()), String.valueOf(l.getObj_id()), String.valueOf(System.currentTimeMillis() / 1000)));
+                logList.add(new LogUploadToServ(
+                        String.valueOf(l.getId()),
+                        String.valueOf(l.getDt_action()),
+                        l.getComments(),
+                        String.valueOf(l.getTp()),
+                        l.getClient_id(),
+                        String.valueOf(l.getAddr_id()),
+                        String.valueOf(l.getObj_id()),
+                        String.valueOf(System.currentTimeMillis() / 1000),
+                        String.valueOf(l.getObj_id2()),
+                        String.valueOf(l.getObj_id2_theme_id())
+                ));
 
             }
         } else {

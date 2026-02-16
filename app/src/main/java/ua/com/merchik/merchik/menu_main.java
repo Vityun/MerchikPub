@@ -1245,7 +1245,16 @@ public class menu_main extends AppCompatActivity {
                 try {
                     Log.e("TAG_REALM_LOG", "ЗАПИСЬ 5");
 
-                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на кнопку \"выгрузка фото\"", 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, date)));
+                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                            System.currentTimeMillis() / 1000, "Нажатие на кнопку \"выгрузка фото\"",
+                            1088, customer_id, Integer.parseInt(address_id),
+                            null,
+                            Integer.parseInt(user_id),
+                            null,
+                            Globals.session,
+                            date,
+                            null,
+                            null)));
                 } catch (Exception e) {
                     Log.e("TAG_REALM_LOG", "Ошибка(5): " + e);
                 }
@@ -1465,7 +1474,17 @@ public class menu_main extends AppCompatActivity {
                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                     try {
                         Log.e("TAG_REALM_LOG", "ЗАПИСЬ 3");
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Успешное сохранение фото в БД", 1087, customer_id, addrId, null, Integer.parseInt(user_id), null, Globals.session, date)));
+                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                                System.currentTimeMillis() / 1000, "Успешное сохранение фото в БД", 1087,
+                                customer_id,
+                                addrId,
+                                null,
+                                Integer.parseInt(user_id),
+                                null,
+                                Globals.session,
+                                date,
+                                null,
+                                null)));
                     } catch (Exception e) {
                         Log.e("TAG_REALM_LOG", "Ошибка(3): " + e);
                     }
@@ -2023,7 +2042,19 @@ public class menu_main extends AppCompatActivity {
         }
 
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Координаты " + "res:" + res + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " Time: " + CoordTime, 1126, null, null, null, null, null, Globals.session, null)));
+        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                System.currentTimeMillis() / 1000,
+                "Координаты " + "res:" + res + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " Time: " + CoordTime,
+                1126,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Globals.session,
+                null,
+                null,
+                null)));
 
         return res;
     }
@@ -2261,7 +2292,18 @@ public class menu_main extends AppCompatActivity {
                 + "\n gp:" + null
                 + "\n photo:" + photo;
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Данные(" + RealmManager.getStackPhotoPhotoToUpload().size() + "): " + data, 1088, null, null, null, null, null, Globals.session, null)));
+        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                System.currentTimeMillis() / 1000, "Данные(" + RealmManager.getStackPhotoPhotoToUpload().size() + "): " + data,
+                1088,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Globals.session,
+                null,
+                null,
+                null)));
 
 
         // РУЧНАЯ ВЫГРУЗКА
@@ -2276,7 +2318,19 @@ public class menu_main extends AppCompatActivity {
             String finalDate1 = date;
 
             try {
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Попытка выгрузки фото." + call, 1088, null, null, null, null, null, Globals.session, null)));
+                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                        System.currentTimeMillis() / 1000,
+                        "Попытка выгрузки фото." + call,
+                        1088,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Globals.session,
+                        null,
+                        null,
+                        null)));
 
                 call.enqueue(new retrofit2.Callback<JsonObject>() {
                     @Override
@@ -2289,7 +2343,19 @@ public class menu_main extends AppCompatActivity {
                         if (response.isSuccessful() && response.body() != null) {
                             try {
                                 if (jsonR != null) {
-                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ответ от сервера: " + jsonR, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
+                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
+                                            System.currentTimeMillis() / 1000,
+                                            "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ответ от сервера: " + jsonR,
+                                            1088,
+                                            customer_id,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            Globals.session,
+                                            finalDate,
+                                            null,
+                                            null)));
                                     if (!jsonR.get("state").isJsonNull() && jsonR.get("state").getAsBoolean()) {
                                         try {
                                             RealmManager.INSTANCE.executeTransaction(realm -> photoDB.setUpload_to_server(System.currentTimeMillis()));
@@ -2314,7 +2380,18 @@ public class menu_main extends AppCompatActivity {
                                     globals.alertDialogMsg(menu_main.this, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.");//Toast toast = Toast.makeText(this, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.", Toast.LENGTH_SHORT);toast.show();
                                 }
                             } catch (Exception e) {
-                                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ошибка при разборе ответа с сервера: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate1)));
+                                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000,
+                                        "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ошибка при разборе ответа с сервера: " + e,
+                                        1088,
+                                        customer_id,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        Globals.session,
+                                        finalDate1,
+                                        null,
+                                        null)));
                                 globals.alertDialogMsg(menu_main.this, "Ошибка при выгрузке фото - повторите попытку позже или обратитесь к Вашему руководителю. \nОшибка: " + e);
                             }
                         }
@@ -2328,7 +2405,10 @@ public class menu_main extends AppCompatActivity {
 
                         try {
                             Log.e("TAG_REALM_LOG", "ЗАПИСЬ 5");
-                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при выгрузке фото(FAILURE): " + t, 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, finalDate1)));
+                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при выгрузке фото(FAILURE): " + t, 1088, customer_id,
+                                    Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, finalDate1,
+                                    null,
+                                    null)));
                         } catch (Exception e) {
                             Log.e("TAG_REALM_LOG", "Ошибка(5): " + e);
                         }
@@ -2338,7 +2418,11 @@ public class menu_main extends AppCompatActivity {
                     }
                 });
             } catch (Exception e) {
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при выгрузке фото: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
+                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000,
+                        "Ошибка при выгрузке фото: " + e, 1088, customer_id, null, null, null, null, Globals.session,
+                        finalDate,
+                        null,
+                        null)));
             }
 
         }

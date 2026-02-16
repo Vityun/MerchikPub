@@ -230,6 +230,51 @@ public class MyMigration implements RealmMigration {
             oldVersion++; // Увеличиваем версию схемы
         }
 
+        if (oldVersion == 24) {
+            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
+
+            // 1️⃣ Добавляем новое поле double
+            wpDataSchema.addField("visit_per_week_tmp", double.class);
+
+            // 2️⃣ Переносим данные из int в double
+            wpDataSchema.transform(obj -> {
+                int oldValue = obj.getInt("visit_per_week");
+                obj.setDouble("visit_per_week_tmp", (double) oldValue);
+            });
+
+            // 3️⃣ Удаляем старое поле
+            wpDataSchema.removeField("visit_per_week");
+
+            // 4️⃣ Переименовываем новое поле обратно
+            wpDataSchema.renameField("visit_per_week_tmp", "visit_per_week");
+
+            oldVersion++; // Увеличиваем версию схемы
+        }
+        if (oldVersion == 25) {
+            RealmObjectSchema log = schema.get("LogDB");
+            if (log != null) {
+                if (!log.hasField("obj_id2")) {
+                    log.addField("obj_id2", String.class)
+                            .setNullable("obj_id2", true);
+                }
+                if (!log.hasField("obj_id2_theme_id")) {
+                    log.addField("obj_id2_theme_id", String.class)
+                            .setNullable("obj_id2_theme_id", true);
+                }
+            }
+            oldVersion++;
+        }
+
+        if (oldVersion == 26) {
+            RealmObjectSchema wp = schema.get("WpDataDB");
+            if (wp != null && !wp.hasField("duration_plan")) {
+                wp.addField("duration_plan", String.class)
+                        .setNullable("duration_plan", true);
+            }
+            oldVersion++;
+        }
+
+
     }
 }
 

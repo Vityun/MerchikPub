@@ -369,7 +369,7 @@ abstract class MainViewModel(
         get() = _rangeDataStart.asStateFlow()
 
 
-    private val _rangeDataEnd = MutableStateFlow<LocalDate?>(LocalDate.now().plusDays(7))
+    private val _rangeDataEnd = MutableStateFlow<LocalDate?>(LocalDate.now().plusDays(4))
     val rangeDataEnd
             : StateFlow<LocalDate?>
         get() = _rangeDataEnd.asStateFlow()

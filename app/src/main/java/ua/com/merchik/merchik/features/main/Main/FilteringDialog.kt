@@ -260,7 +260,7 @@ fun FilteringDialog(
                             onChanged(filters)                    // опционально, если надо наружу
                             viewModel.updateContent()
 
-                            viewModel.updateOffsetDistanceMeters(localDistance * 1000)
+                            viewModel.updateOffsetDistanceMeters(localDistance)
                             FilteringDialogDataHolder.instance().filters?.let {
                                 onChanged.invoke(it)
                             }

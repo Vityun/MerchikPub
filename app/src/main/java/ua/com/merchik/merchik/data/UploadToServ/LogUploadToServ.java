@@ -10,11 +10,14 @@ public class LogUploadToServ {
     private String addr_id;         //
     private String obj_id;          //
     private String upload_date;     //
+    private String obj_id2;
+    private String obj_id2_theme_id;
+
 
     public LogUploadToServ() {
     }
 
-    public LogUploadToServ(String element_id, String dt_action, String comments, String tp, String client_id, String addr_id, String obj_id, String upload_date) {
+    public LogUploadToServ(String element_id, String dt_action, String comments, String tp, String client_id, String addr_id, String obj_id, String upload_date, String objId2, String objId2ThemeId) {
         this.element_id = element_id;
         this.dt_action = dt_action;
         this.comments = comments;
@@ -23,6 +26,8 @@ public class LogUploadToServ {
         this.addr_id = addr_id;
         this.obj_id = obj_id;
         this.upload_date = upload_date;
+        this.obj_id2 = objId2;
+        this.obj_id2_theme_id = objId2ThemeId;
     }
 
     public String getElement_id() {
@@ -87,5 +92,21 @@ public class LogUploadToServ {
 
     public void setUpload_date(String upload_date) {
         this.upload_date = upload_date;
+    }
+
+    public String getObj_id2() {
+        return obj_id2;
+    }
+
+    public void setObj_id2(String obj_id2) {
+        this.obj_id2 = obj_id2;
+    }
+
+    public String getObj_id2_theme_id() {
+        return obj_id2_theme_id;
+    }
+
+    public void setObj_id2_theme_id(String obj_id2_theme_id) {
+        this.obj_id2_theme_id = obj_id2_theme_id;
     }
 }
