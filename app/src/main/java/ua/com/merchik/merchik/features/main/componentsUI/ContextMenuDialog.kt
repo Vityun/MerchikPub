@@ -38,6 +38,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.gson.Gson
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
@@ -59,8 +60,10 @@ import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.CardItemsUI
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -121,6 +124,10 @@ data class CardItemsData(
 )
 
 sealed class ContextMenuAction(val title: String) {
+
+    data object OpenUFMDWPDataSelector :
+        ContextMenuAction("-")
+
     data object ShowAllVizitInAdress :
         ContextMenuAction("Показати всі відвідування за цією адресою")
 
@@ -237,6 +244,30 @@ fun rememberContextMenuHost(
                         closeMapsDialogAnimated()
                         viewModel.performPendingK()
                     }
+
+                    is MainEvent.OpenUFMDWPDataSelector -> {
+
+
+                        viewModel.launcher?.let {
+                            launchFeaturesActivity(
+                                launcher = it,
+                                context = context,
+                                viewModelClass = WpDataDBViewModel::class,
+                                dataJson = Gson().toJson(
+                                    mapOf("addressId" to event.wp.addr_id)
+                                ),
+                                modeUI = ModeUI.MULTI_SELECT,
+                                contextUI = ContextUI.WP_DATA,
+                                title = "Додатковий заробіток",
+                                subTitle = viewModel.getTranslateString(
+                                    "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
+                                    9070
+                                )
+                            )
+                        }
+
+                    }
+
 
                 }
             }
@@ -401,8 +432,7 @@ fun rememberContextMenuHost(
                     if (d.filterLogic) {
                         closeMapsDialogAnimated()
                         viewModel.performPendingK()
-                    }
-                    else
+                    } else
                         viewModel.performPending()
                 }
             } else null,
@@ -412,8 +442,7 @@ fun rememberContextMenuHost(
                     if (d.filterLogic) {
                         closeMapsDialogAnimated()
                         viewModel.cancelPendingK()
-                    }
-                    else
+                    } else
                         viewModel.cancelPending()
                 }
             } else null,

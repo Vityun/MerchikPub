@@ -1355,8 +1355,14 @@ abstract class MainViewModel(
     }
 
     fun openContextMenu(wp: WpDataDB, contextUI: ContextUI) {
-        val actions = buildActions(contextUI)
         viewModelScope.launch {
+            if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
+                // ✅ вместо меню — открываем новый экран
+                _events.emit(MainEvent.OpenUFMDWPDataSelector(wp))
+                return@launch
+            }
+
+            val actions = buildActions(contextUI)
             _events.emit(
                 MainEvent.ShowContextMenu(
                     menuState = ContextMenuState(

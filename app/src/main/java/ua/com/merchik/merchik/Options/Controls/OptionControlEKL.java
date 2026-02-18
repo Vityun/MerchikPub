@@ -455,12 +455,12 @@ public class OptionControlEKL<T> extends OptionControl {
                 optionMsg.append(" за цією адресою, тож на перший раз для нього робимо виняток.");
             } else {
                 // ДатПерОИ > Дат-15
-                LocalDate border = dat.minusDays(15);
+                LocalDate border = dat.minusDays(10);
                 if (newest.isAfter(border)) {
                     signal = false;
                     optionMsg.append("\n\nАле виконавець ");
                     optionMsg.append(wpDataDB.getUser_txt());
-                    optionMsg.append(" ще працює за цією Адресою i з цім Клієнтом менше 14 діб. Робимо для нього виняток.");
+                    optionMsg.append(" працює за цією Адресою i з цім Клієнтом менше 14 діб. Робимо для нього виняток.");
                 }
             }
         }

@@ -181,6 +181,7 @@
     <string name="option_control_135329_no_need_reply">Відповідь на це завдання давати НЕ потрібно.</string>
     <string name="option_control_135329_not_write_tar_comment">Ви не написали відповідь по активному завданню </string>
     <string name="option_control_135329_so_short_tar_comment"> написав занадто коротку відповідь по активному завданню </string>
+    <string name="option_control_135329_two_space_tar_comment">у відповідь за активним завданням має бути мінімум дві пробіли</string>
     <string name="option_control_135329_no_photo">Крім відповіді з цієї теми, ви повинні розмістити ФотоЗвіт </string>
     <string name="option_control_135329_no_detailed_report">Крім відповіді з цієї теми, ви повинні внести зміни до Дет.Звіту </string>
     <string name="option_control_135329_msg_what_must_do">Ви повинні ознайомитися з вказаними завданнями, Виконати та Відписати їх.</string>
@@ -189,6 +190,7 @@
     <string name="option_control_135330_no_need_reply">Відповідь на цю рекламацію давати НЕ потрібно.</string>
     <string name="option_control_135330_not_write_tar_comment">Ви не написали відповідь по активній рекламації </string>
     <string name="option_control_135330_so_short_tar_comment"> написав занадто коротку відповідь по активній рекламації </string>
+    <string name="option_control_135330_two_space_tar_comment">у відповідь по активній рекламації має бути мінімум дві пробіли</string>
     <string name="option_control_135330_no_photo">Крім відповіді з цієї теми, ви повинні розмістити ФотоЗвіт </string>
     <string name="option_control_135330_no_detailed_report">Окрім відповіді за цією темою, ви повинні внести зміни в Деталізований звіт</string>
     <string name="option_control_135330_msg_what_must_do">Ви повинні ознайомитися із зазначеними рекламаціями, виконати їх і відписатися.</string>

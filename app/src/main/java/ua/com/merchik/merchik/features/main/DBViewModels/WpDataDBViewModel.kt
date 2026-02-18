@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -15,6 +16,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -35,7 +37,6 @@ import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
 import ua.com.merchik.merchik.trecker
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -51,12 +52,16 @@ class WpDataDBViewModel @Inject constructor(
         get() = WpDataDB::class
 // РНО 14041
 
-    override fun getDefaultGroupUserFields(): List<String> =
-        listOf(
-            "dt",        // 1-й уровень группировки
-            "addr_txt",  // 2-й уровень (если включишь вторую группировку)
-//            "client_txt" // 3-й уровень (опционально)
-        )
+    override fun getDefaultGroupUserFields(): List<String> {
+        return if (contextUI == ContextUI.WP_DATA)
+            emptyList()
+        else
+            listOf(
+                "dt",        // 1-й уровень группировки
+                "addr_txt",  // 2-й уровень (если включишь вторую группировку)
+    //            "client_txt" // 3-й уровень (опционально)
+            )
+    }
 
     override fun getDefaultSortUserFields(): List<String>? {
         return "dt, addr_txt, client_txt".split(",")
@@ -127,7 +132,7 @@ class WpDataDBViewModel @Inject constructor(
     override fun updateFilters() {
         when (contextUI) {
             ContextUI.WP_DATA_IN_CONTAINER,
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER,
                 -> {
 
 
@@ -256,6 +261,7 @@ class WpDataDBViewModel @Inject constructor(
                     data.map { it.statusComment }.distinct(),
                     enabled = true
                 )
+
 //                if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
 //                    if (rangeDataEnd.value != null)
 //                        setEndDate(LocalDate.now().plusDays(3))
@@ -279,26 +285,93 @@ class WpDataDBViewModel @Inject constructor(
                 )
             }
 
+            ContextUI.WP_DATA -> {
+
+                val root = Gson().fromJson(dataJson, JsonObject::class.java)
+
+                val addrId = (
+                        root.get("addressId")
+                            ?: root.getAsJsonObject("nameValuePairs")?.get("addressId")
+                        ).let { el ->
+                        if (el == null || el.isJsonNull) null else el.asInt
+                    } ?: error("addressId missing in dataJson: $root")
+
+                val data = RealmManager.getAllWorkPlanByAddressForRNO(addrId)
+
+
+                val dataUniqUser = data.distinctBy { it.user_id }
+
+                val filterUsersSDB = ItemFilter(
+                    "Виконавець",
+                    UsersSDB::class,
+                    UsersSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## USER",
+                    "## sub title",
+                    "user_txt",
+                    "user_txt",
+                    dataUniqUser.map { it.user_txt.toString() },
+                    dataUniqUser.map { it.user_txt },
+                    false
+                )
+
+                val dataUniqAdress =
+                   data.distinctBy { it.addr_id }
+                val client =
+                    data.distinctBy { it.client_id }
+//                     RoomManager.SQL_DB.customerDao().all
+
+
+                val filterAddressSDB = ItemFilter(
+                    "Адреса",
+                    AddressSDB::class,
+                    AddressSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## ADRESS",
+                    "## sub title",
+                    "addr_txt",
+                    "addr_txt",
+                    dataUniqAdress.map { it.addr_txt.toString() },
+                    dataUniqAdress.map { it.addr_txt },
+                    enabled = false
+                )
+
+                val filterClientSDB = ItemFilter(
+                    "Клієнт",
+                    CustomerSDB::class,
+                    CustomerSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Додати Клієнта",
+                    "## sub title",
+                    "client_txt",
+                    "client_txt",
+                    client.map { it.client_txt},
+                    client.map { it.client_txt },
+                    enabled = true
+                )
+                filters = Filters(
+                    items =
+                        mutableListOf(
+                            filterUsersSDB,
+                            filterAddressSDB,
+                            filterClientSDB,
+//                            filterWPDataStatus
+                        ),
+//                    rangeDataByKey = null
+                    rangeDataByKey = RangeDate(
+                        key = "dt",
+                        start = rangeDataStart.value,
+                        end = rangeDataEnd.value,
+                        enabled = true
+                    )
+                )
+            }
+
             else -> {
                 super.updateFilters()
             }
         }
     }
-
-
-//    override suspend fun getItemsHeader(): List<DataItemUI> {
-//        if (getItems().isEmpty()) {
-//            val wpDataDB = SamplePhotoSDB()
-//            wpDataDB.nm = "test"
-//            return repository.toItemUIList(
-//                SamplePhotoSDB::class,
-//                mutableListOf(wpDataDB),
-//                contextUI,
-//                null
-//            )
-//        } else return emptyList()
-//    }
-
 
     override suspend fun getItems(): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!", "getItems: start")
@@ -330,6 +403,20 @@ class WpDataDBViewModel @Inject constructor(
                 else
                     data
 
+            }
+
+            ContextUI.WP_DATA -> {
+                val root = Gson().fromJson(dataJson, JsonObject::class.java)
+
+                val addrId = (
+                        root.get("addressId")
+                            ?: root.getAsJsonObject("nameValuePairs")?.get("addressId")
+                        ).let { el ->
+                        if (el == null || el.isJsonNull) null else el.asInt
+                    } ?: error("addressId missing in dataJson: $root")
+
+                val data = RealmManager.getAllWorkPlanByAddressForRNO(addrId)
+                data
             }
 
             else -> {
@@ -388,6 +475,25 @@ class WpDataDBViewModel @Inject constructor(
         // 3) Тяжёлое преобразование тоже на IO
         Globals.writeToMLOG("INFO", "WpDataDBViewModel.getItems", "raw size: ${raw.size}")
         return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
+            .map {
+                when (contextUI) {
+
+                    ContextUI.WP_DATA -> {
+                        val selected = true
+                            FilteringDialogDataHolder.instance()
+                            .filters
+                            ?.items
+                            ?.firstOrNull { it.clazz == table }
+                            ?.rightValuesRaw
+                            ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+                        it.copy(selected = selected == true)
+                    }
+
+                    else -> {
+                        it
+                    }
+                }
+            }
 
     }
 

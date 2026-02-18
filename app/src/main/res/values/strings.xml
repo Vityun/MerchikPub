@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">021600</string>
+    <string name="ver" translatable="false">021800</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-02-16</string>
+    <string name="debug_date" translatable="false">2026-02-18</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -227,6 +227,7 @@
     <string name="option_control_135329_no_need_reply">Ответ на эту задачу давать НЕ нужно.</string>
     <string name="option_control_135329_not_write_tar_comment">Вы не написали ответ по активной задаче </string>
     <string name="option_control_135329_so_short_tar_comment"> написал слишком короткий ответ по активной задаче </string>
+    <string name="option_control_135329_two_space_tar_comment"> в ответ по активной задаче должно быть минимум два пробела </string>
     <string name="option_control_135329_no_photo">Кроме ответа по данной теме Вы должны разместить ФотоОтчет </string>
     <string name="option_control_135329_no_detailed_report">Кроме ответа по данной теме Вы должны внести изменения в Дет.Отчет </string>
     <string name="option_control_135329_msg_what_must_do">Вы должны ознакомиться с указанными задачами, Выполнить и Отписать их.</string>
@@ -235,6 +236,7 @@
     <string name="option_control_135330_no_need_reply">Ответ на эту рекламацию давать НЕ нужно.</string>
     <string name="option_control_135330_not_write_tar_comment">Вы не написали ответ по активной рекламации </string>
     <string name="option_control_135330_so_short_tar_comment"> написал слишком короткий ответ по активной рекламации </string>
+    <string name="option_control_135330_two_space_tar_comment"> в ответ по активной рекламации должно быть минимум два пробела </string>
     <string name="option_control_135330_no_photo">Кроме ответа по данной теме Вы должны разместить ФотоОтчет </string>
     <string name="option_control_135330_no_detailed_report">Кроме ответа по данной теме Вы должны внести изменения в Дет.Отчет </string>
     <string name="option_control_135330_msg_what_must_do">Вы должны ознакомиться с указанными рекламациями, Выполнить и Отписать их.</string>

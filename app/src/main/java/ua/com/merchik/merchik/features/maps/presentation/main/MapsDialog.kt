@@ -45,14 +45,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -61,10 +58,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
 import ua.com.merchik.merchik.features.main.Main.FilteringDialog
-import ua.com.merchik.merchik.features.main.Main.Filters
-import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.SortingField
 import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
@@ -254,11 +248,14 @@ fun MapsDialog(
                         translateId = 9069
                     ), periodStrt, periodEnd
                 ),
-//9056
-                "На карті зеленими маркерами позначено адреси, за якими є можливість виконувати роботи за окрему (додаткову) оплату.\n" +
-                        "Цифри всередині маркерів відображають кількість доступних робіт за відповідною адресою.\n" +
-                        "Синім маркером позначено ваше поточне місцезнаходження (МП).\n" +
-                        "Щоб дізнатися детальнішу інформацію про роботи та оплату за їх виконання за конкретною адресою, натисніть на відповідний маркер."
+
+                mainViewModel.getTranslateString(
+                    "На карті зеленими маркерами позначено адреси, за якими є можливість виконувати роботи за окрему (додаткову) оплату.\n" +
+                            "Цифри всередині маркерів відображають кількість доступних робіт за відповідною адресою.\n" +
+                            "Синім маркером позначено ваше поточне місцезнаходження (МП).\n" +
+                            "Щоб дізнатися детальнішу інформацію про роботи та оплату за їх виконання за конкретною адресою, натисніть на відповідний маркер.",
+                    9056
+                )
             )
 
             // 2) FromMaps — “Опція МП та Відвідування (Головна)”
@@ -380,7 +377,7 @@ fun MapsDialog(
                 onClick = { showToolTip = true }
             )
 
-            ua.com.merchik.merchik.features.maps.presentation.main.ImageButton (
+            ua.com.merchik.merchik.features.maps.presentation.main.ImageButton(
                 id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
                 shape = CircleShape,
                 colorImage = ColorFilter.tint(Color.Gray),

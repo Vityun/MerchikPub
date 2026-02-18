@@ -74,7 +74,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 executeOption();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer", "Exception e: " + e);
         }
     }
@@ -188,16 +188,21 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                         result.add(item);
 
-                    } else if (!item.author.equals(item.lastAnswerUserId) && item.lastAnswer.length() < 20) {
-                        String msg = context.getString(R.string.option_control_135329_so_short_tar_comment);
-                        // todo создать и заполнить данные для сообщения пользователю
-                        // Признак ошибки = 1
-                        // Номер задачи
+                    } else if ((!item.author.equals(item.lastAnswerUserId) && item.lastAnswer.length() < 10)
+                            || (!item.author.equals(item.lastAnswerUserId) && countChar(item.lastAnswer, ' ') < 2)) {
+                        String answer = item.lastAnswer == null ? "" : item.lastAnswer;
 
-                        massageToUser = msg;
-                        spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
-
-                        result.add(item);
+                        if (answer.length() < 10) {
+                            String msg = context.getString(R.string.option_control_135329_so_short_tar_comment);
+                            massageToUser = msg;
+                            spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
+                            result.add(item);
+                        } else if (countChar(answer, ' ') < 2) {
+                            String msg = context.getString(R.string.option_control_135329_two_space_tar_comment);
+                            massageToUser = msg;
+                            spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
+                            result.add(item);
+                        }
 
                     } else if (theme.need_photo == 1) {
                         String msg = context.getString(R.string.option_control_135329_no_photo);
@@ -279,7 +284,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
                 signal = false;
             } else {
-                spannableStringBuilder.append("\n").append("Отсутствует ответ на ").append(String.valueOf(result.size())).append(" активных задач. Вы должны сперва исправить " +
+                spannableStringBuilder.append("\n").append("Есть замечание по ответам на ").append(String.valueOf(result.size())).append(" активных задач. Вы должны сперва исправить " +
                         "замечания, затем написать ответ на указанные задачи, а потом проводить данный документ!");
                 signal = true;
             }
@@ -313,7 +318,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
     private boolean checkHavePhoto(TARCommentsDB comment) {
         boolean res = false;
 
-        if (comment.photo != null && !comment.photo.equals("")) {
+        if (comment.photo != null && !comment.photo.equals("0")) {
             res = true;
         }
 
@@ -352,5 +357,14 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/createLinkedString/Exception", "Exception e: " + e);
         }
         return res;
+    }
+
+    // helper
+    public static int countChar(String s, char ch) {
+        int count = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == ch) count++;
+        }
+        return count;
     }
 }

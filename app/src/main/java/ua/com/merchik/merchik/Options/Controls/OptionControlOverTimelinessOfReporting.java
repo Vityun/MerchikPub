@@ -82,7 +82,7 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         // 1С: ДельтаА = 3600 * КолМИН, ДельтаБ = 3600 * КолМАКС
         int balabaFix = 1;
         if (wpDataDB.getUser_id() == 143565) // исключения для одного пользователя Балаба
-            balabaFix = 2;
+            balabaFix = 3;
         long deltaA = 3600L * getColMinHours() * balabaFix; // часы ДО начала дня
         long deltaB = 3600L * getColMaxHours() * balabaFix; // часы ПОСЛЕ конца дня
 

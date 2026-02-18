@@ -811,6 +811,17 @@ public class RealmManager {
         }
     }
 
+    public static List<WpDataDB> getAllWorkPlanByAddressForRNO(int addrId) {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            RealmResults<WpDataDB> res = realm.where(WpDataDB.class)
+                    .equalTo("addr_id", addrId)
+                    .equalTo("user_id", 14041)
+                    .sort("dt_start", Sort.ASCENDING)
+                    .findAll();
+            return realm.copyFromRealm(res);
+        }
+    }
+
     public static RealmResults<WpDataDB> getAllWorkPlanMAP() {
         return INSTANCE.where(WpDataDB.class).sort("dt_start", Sort.ASCENDING).distinct("addr_id").findAll();
     }

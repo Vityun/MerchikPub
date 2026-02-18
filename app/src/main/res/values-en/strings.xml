@@ -210,6 +210,7 @@ Perform data synchronization with the server and repeat the action after syncing
     <string name="option_control_135329_no_need_reply">You do NOT need to reply to this task.</string>
     <string name="option_control_135329_not_write_tar_comment">You did not write a reply for the active task.</string>
     <string name="option_control_135329_so_short_tar_comment">You wrote a reply that is too short for the active task.</string>
+    <string name="option_control_135329_two_space_tar_comment">the answer to an active task must contain at least two spaces</string>
     <string name="option_control_135329_no_photo">In addition to the reply, you must upload a Photo Report.</string>
     <string name="option_control_135329_no_detailed_report">In addition to the reply, you must update the Detailed Report.</string>
     <string name="option_control_135329_msg_what_must_do">
@@ -220,6 +221,7 @@ You must review the specified tasks, complete them, and provide your responses.
     <string name="option_control_135330_no_need_reply">You do NOT need to reply to this claim.</string>
     <string name="option_control_135330_not_write_tar_comment">You did not write a reply for the active claim.</string>
     <string name="option_control_135330_so_short_tar_comment">You wrote a reply that is too short for the active claim.</string>
+    <string name="option_control_135330_two_space_tar_comment">there must be at least two spaces in the response to an active complaint.</string>
     <string name="option_control_135330_no_photo">In addition to the reply, you must upload a Photo Report.</string>
     <string name="option_control_135330_no_detailed_report">In addition to the reply, you must update the Detailed Report.</string>
     <string name="option_control_135330_msg_what_must_do">

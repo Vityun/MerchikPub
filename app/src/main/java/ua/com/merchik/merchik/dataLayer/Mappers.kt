@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
@@ -401,6 +402,7 @@ enum class ModeUI {
 
 @DrawableRes
 fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
+    ContextMenuAction.OpenUFMDWPDataSelector -> null
     ContextMenuAction.ShowAllVizitInAdress -> R.drawable.ic_37
     ContextMenuAction.AcceptOrder -> R.drawable.ic_37   // твои ресурсы
     ContextMenuAction.AcceptAllAtAddress -> R.drawable.ic_37
@@ -437,6 +439,7 @@ enum class ContextUI {
     PLANOGRAMM_VIZIT_SHOWCASE,
     SHOWCASE,
     SHOWCASE_COMPLETED_CHECK,
+    WP_DATA,
     WP_DATA_IN_CONTAINER,
     WP_DATA_ADDITIONAL_IN_CONTAINER,
     WP_DATA_IN_CONTAINER_MULT,
@@ -545,6 +548,8 @@ sealed interface MainEvent {
     data object LoadingCanceled : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
     data object JumpToVizitAndCloseMaps : MainEvent
+
+    data class OpenUFMDWPDataSelector(val wp: WpDataDB) : MainEvent  // ✅ новый
 
 }
 
