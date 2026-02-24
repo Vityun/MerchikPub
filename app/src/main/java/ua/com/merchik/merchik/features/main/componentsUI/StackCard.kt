@@ -72,6 +72,10 @@ fun StackCard(
                         onExpand()
                         viewModel.onClickItem(it, context)
                     },
+                    onLongClickItem = {
+                        onExpand()
+                        viewModel.onLongClickItem(it, context)
+                    },
                     onClickItemImage = { viewModel.onClickItemImage(it, context) },
                     onMultipleClickItemImage = { dataItem, idx ->
                         viewModel.onClickItemImage(dataItem, context, idx)

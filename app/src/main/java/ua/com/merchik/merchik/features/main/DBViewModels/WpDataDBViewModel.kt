@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
@@ -29,12 +30,15 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
+import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
+import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
 import ua.com.merchik.merchik.trecker
 import javax.inject.Inject
@@ -68,9 +72,12 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(
-            ","
-        )
+        return if  (contextUI == ContextUI.WP_DATA)
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta, status".split(
+            ",")
+        else
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(
+                ",")
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
@@ -147,20 +154,20 @@ class WpDataDBViewModel @Inject constructor(
                     RealmManager.INSTANCE.copyFromRealm(rawData)
                 }
 
-                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
-                    subTitle =
-                        CustomString.createTitleMsg(
-                            data,
-                            CustomString.TitleMode.MIX
-                        )
-                            .toString()
-                    subTitleLong =
-                        CustomString.createTitleMsg(
-                            data,
-                            CustomString.TitleMode.FULL
-                        )
-                            .toString()
-                }
+//                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+//                    subTitle =
+//                        CustomString.createTitleMsg(
+//                            data,
+//                            CustomString.TitleMode.MIX
+//                        )
+//                            .toString()
+//                    subTitleLong =
+//                        CustomString.createTitleMsg(
+//                            data,
+//                            CustomString.TitleMode.FULL
+//                        )
+//                            .toString()
+//                }
 
                 val dataUniqUser = data.distinctBy { it.user_id }
                     .let { list ->
@@ -287,6 +294,7 @@ class WpDataDBViewModel @Inject constructor(
 
             ContextUI.WP_DATA -> {
 
+
                 val root = Gson().fromJson(dataJson, JsonObject::class.java)
 
                 val addrId = (
@@ -300,6 +308,19 @@ class WpDataDBViewModel @Inject constructor(
 
 
                 val dataUniqUser = data.distinctBy { it.user_id }
+
+//                subTitle =
+//                    CustomString.createTitleMsg(
+//                        data,
+//                        CustomString.TitleMode.MIX
+//                    )
+//                        .toString()
+//                subTitleLong =
+//                    CustomString.createTitleMsg(
+//                        data,
+//                        CustomString.TitleMode.FULL
+//                    )
+//                        .toString()
 
                 val filterUsersSDB = ItemFilter(
                     "Виконавець",
@@ -499,6 +520,7 @@ class WpDataDBViewModel @Inject constructor(
 
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+
         FilteringDialogDataHolder.instance().filters.apply {
             this?.let { filters ->
                 filters.items = filters.items.map { itemFilter ->
@@ -521,5 +543,21 @@ class WpDataDBViewModel @Inject constructor(
                 }
             }
         }
+
+        val selectedWp = itemsUI.mapNotNull { ui ->
+            when (val ro = ui.rawObj) {
+                is WpDataDB -> ro
+                is List<*> -> ro.firstOrNull() as? WpDataDB
+                else -> null
+            }
+        }.distinctBy { it.id }
+
+        WpSelectionDataHolder.instance().set(selectedWp)
+
     }
+
+//    override fun onLongClickItem(itemUI: DataItemUI, context: Context) {
+//        Toast.makeText(context, "##################", Toast.LENGTH_LONG).show()
+//        super.onLongClickItem(itemUI, context)
+//    }
 }

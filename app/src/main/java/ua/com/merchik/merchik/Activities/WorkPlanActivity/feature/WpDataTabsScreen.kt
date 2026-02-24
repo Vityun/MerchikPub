@@ -212,7 +212,7 @@ fun WpDataTabsScreen() {
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
-    val green = colorResource(id = R.color.ufmd_accept_t)
+    val green = colorResource(id = R.color.selected_item)
 
     val badgeTargets: List<Long?> = remember(ids) {
         List(tabTitles.size) { idx -> ids.getOrNull(idx) }
@@ -261,6 +261,8 @@ fun WpDataTabsScreen() {
                                 ) {
                                     CounterBadge(
                                         count = count,
+                                        background = if (index == 0) green else Color.Red,
+                                        borderAndTextColor = if (index == 0) Color.Black else Color.White,
                                         modifier = Modifier.clickable {
 //                                            val targetHash = badgeTargets.getOrNull(index)
                                             val targetHash = if (index == 0) ScrollDataHolder.instance().getNext() else null

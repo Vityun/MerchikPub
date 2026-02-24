@@ -101,6 +101,9 @@ fun ItemRow(
                 onClickItem = {
                     viewModel.onClickItem(it, context)
                 },
+                onLongClickItem = {
+                    viewModel.onLongClickItem(it, context)
+                },
                 onClickItemImage = {
                     viewModel.onClickItemImage(it, context)
                 },

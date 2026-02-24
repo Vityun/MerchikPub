@@ -213,6 +213,7 @@
     <string name="ui_choice">Вибрати</string>
 
     <string name="ui_synhronize">Синхронізація</string>
+    <string name="ui_add_job">Подати заявку</string>
     <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
     <string name="ui_font_size">Розмір шрифту</string>
     <string name="ui_text_add">Додати...</string>

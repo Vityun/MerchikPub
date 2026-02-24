@@ -610,7 +610,7 @@ object StackPhotoDBOverride {
             if (hasError)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
 
-            val uploadTime = jsonObject.optInt("upload_to_server",0)
+            val uploadTime = jsonObject.optLong("upload_to_server",0)
             return if (uploadTime > 0)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
             else

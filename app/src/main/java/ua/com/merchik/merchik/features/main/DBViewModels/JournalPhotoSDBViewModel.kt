@@ -3,18 +3,22 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.json.JSONObject
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogAdapter
+import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
-import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -211,9 +215,30 @@ class JournalPhotoSDBViewModel @Inject constructor(
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, null)
     }
 
-    fun logWiFi() {
+    override fun onLongClickItem(itemUI: DataItemUI, context: Context) {
 
+        val stackPhotoDB: StackPhotoDB? =
+            itemUI.rawObj.filterIsInstance<StackPhotoDB>().firstOrNull()
+        stackPhotoDB?.let {
+            PhotoLog().sendPhotoOnServer(context, it, object : UploadPhotoReports {
+                override fun onSuccess(photoDB: StackPhotoDB, s: String) {
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("photoDB: ").append("{").append(photoDB.id).append("|")
+                        .append(photoDB.getPhotoServerId()).append("}").append("s: ").append(s)
 
-        LogDB()
+                    Globals.writeToMLOG("INFO", "долгий клик по фото/onSuccess", "" + stringBuilder)
+                }
+
+                override fun onFailure(photoDB: StackPhotoDB, error: String) {
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("photoDB: ").append("{").append(photoDB.id).append("|")
+                        .append(photoDB.getPhotoServerId()).append("}").append("error: ")
+                        .append(error)
+
+                    Globals.writeToMLOG("INFO", "долгий клик по фото/onFailure", "" + stringBuilder)
+                }
+            })
+            Toast.makeText(context, "Починаю вивантаження фото.", Toast.LENGTH_SHORT).show()
+        }
     }
 }

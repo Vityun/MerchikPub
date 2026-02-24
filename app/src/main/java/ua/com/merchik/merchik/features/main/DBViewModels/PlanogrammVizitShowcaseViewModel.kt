@@ -535,6 +535,8 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
 
+        Globals.writeToMLOG("INFO", "PlanogrammVizitShowcaseViewModel.getItems", "dataJsonObject: $dataJsonObject" )
+
 //        val clientId = dataJsonObject.get("clientId").asString
 //        val addressId = dataJsonObject.get("addressId").asInt
         code_dad2.value = dataJsonObject.get("wpDataDBId").asString.toLong()

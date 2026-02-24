@@ -65,6 +65,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
             .asSequence()
             .filter { !it.key.equals("column_name", true) }      // служебную колонку исключаем
             .filter { !it.key.equals("group_header", true) }
+            .filter { !it.key.equals("filter_select", true) }
             .filter { setting ->
                 val hiddenByUser = setting.isEnabled
                 hiddenByUser
@@ -587,4 +588,6 @@ fun DropDownSortingList(
         }
     }
 }
+
+
 

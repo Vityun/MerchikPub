@@ -24,14 +24,14 @@ fun CounterBadge(
     modifier: Modifier = Modifier,
     diameter: Dp = 22.dp,                 // подберите под ваш шрифт (20–24.dp обычно ок)
     background: Color = Color.Red,
-    borderColor: Color = Color.White,
+    borderAndTextColor: Color = Color.White,
     fontSize: TextUnit = 11.sp
 ) {
     Surface(
         modifier = modifier.size(diameter),
         shape = CircleShape,
         color = background,
-        border = BorderStroke(1.dp, borderColor)
+        border = BorderStroke(1.dp, borderAndTextColor)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -39,7 +39,7 @@ fun CounterBadge(
         ) {
             Text(
                 text = if (count > 9) "9+" else count.toString(),
-                color = Color.White,
+                color = borderAndTextColor,
                 fontSize = fontSize,
                 maxLines = 1,
                 textAlign = TextAlign.Center

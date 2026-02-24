@@ -38,7 +38,7 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 
 public class CustomString {
 
-    public enum TitleMode {SHORT, FULL, MIX}
+    public enum TitleMode {SHORT, FULL, MIX, RNO, SHORT_RNO}
 
 
     public static SpannableString underlineString(String text) {
@@ -129,12 +129,25 @@ public class CustomString {
                     res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");
                 } else if (mode.equals(TitleMode.SHORT)) {
                     res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)");
+                } else if (mode.equals(TitleMode.SHORT_RNO)) {
+                    res.append("Пр: ")
+                            .append("" + wp.size())
+                            .append(" (")
+                            .append("" + wpSum)
+                            .append("гр) з ")
+                            .append(Clock.getHumanTimeDDMMYYYY(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeDDMMYYYY(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n");
                 } else if (mode.equals(TitleMode.MIX)) {
                     res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)\n");
                     res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeDDMMYYYY(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeDDMMYYYY(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n");
                     res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n");
                     res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append("" + wpStatus1Size).append(" (").append("" + percentWpStatus1).append("%), на суму ").append("" + wpStatus1Sum).append(" грн.").append("\n");
                     res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");      }
+                else if (mode.equals(TitleMode.RNO)) {
+                    res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)\n");
+                    res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeDDMMYYYY(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeDDMMYYYY(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n");
+                    res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n");
+                }
+
             } else {
                 res.append("План робіт пустий.");
             }
@@ -285,6 +298,16 @@ public class CustomString {
                             .append("%), на суму ")
                             .append(String.valueOf(wpStatus0Sum))
                             .append(" грн.");
+                } else if (mode.equals(TitleMode.SHORT_RNO)) {
+                    res.append("План: ")
+                            .append("" + wp.size())
+                            .append(" (")
+                            .append("" + wpSum)
+                            .append("гр) з ")
+                            .append(Clock.getHumanTimeDDMMYYYY(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeDDMMYYYY(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n");
+                } else if (mode.equals(TitleMode.RNO)) {
+                    res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeDDMMYYYY(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeDDMMYYYY(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n");
+                    res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.");
                 }
             } else {
                 res.append("План робіт пустий.");

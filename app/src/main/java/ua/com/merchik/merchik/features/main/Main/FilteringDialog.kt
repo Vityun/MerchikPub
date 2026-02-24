@@ -510,7 +510,7 @@ fun DistanceSlider(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
     meters: Float,                // текущее значение в метрах
-    maxMeters: Float = 10_000f,   // максимум (по умолчанию 10 км)
+    maxMeters: Float = 5_000f,   // максимум (по умолчанию 10 км)
     onChanged: (Float) -> Unit
 ) {
     var distance by remember { mutableFloatStateOf(meters) }

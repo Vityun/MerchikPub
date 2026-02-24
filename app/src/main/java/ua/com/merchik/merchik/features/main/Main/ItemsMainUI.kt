@@ -83,6 +83,9 @@ fun ItemRowCard(
             settingsItemUI = uiState.settingsItems,
             contextUI = viewModel.modeUI,
             onClickItem = { viewModel.onClickItem(it, context) },
+            onLongClickItem = {
+                viewModel.onLongClickItem(it, context)
+            },
             onClickItemImage = { viewModel.onClickItemImage(it, context) },
             onMultipleClickItemImage = { dataItem, index ->
                 viewModel.onClickItemImage(dataItem, context, index)
@@ -109,6 +112,11 @@ fun GroupDeck(
     stackOffset: Dp = 4.dp
 ) {
 
+    val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
+    val anySelected = remember(items) { items.any { it.selected } }
+    val indeterminate = anySelected && !allSelected
+
+
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
         // groupKey лучше, чем title. Если groupMeta null — хотя бы уровень.
@@ -130,8 +138,9 @@ fun GroupDeck(
 
     val topItemRaw = remember(items) { buildGroupSummaryItem(items) }
     // 👇 сводная карточка БЕЗ кастомных UI-модификаторов
-    val topItem = remember(topItemRaw, level) {
-        topItemRaw.witBackgroundUiModifiers(level)
+    val topItem = remember(topItemRaw, level, allSelected) {
+        topItemRaw.copy(selected = allSelected)
+            .witBackgroundUiModifiers(level)
     }
 
     val stackSize = min(maxStackSize, items.size)
@@ -158,6 +167,7 @@ fun GroupDeck(
         animationSpec = tween(250),
         label = "cardBottomPadding"
     )
+
 
     Column(
         modifier = Modifier
@@ -265,18 +275,41 @@ fun GroupDeck(
                             )
                     ) {
                         // подложки (стек)
-                        for (i in (stackSize) downTo 1) {
+                        val selectedBackColor = colorResource(R.color.selected_item)
+                        val normalBackColor = Color.White
+
+// какие элементы отображаем как подложки
+                        val deckItems = remember(items, stackSize) { items.take(stackSize) }
+// если хочешь наоборот (самые “нижние” = последние):
+// val deckItems = remember(items, stackSize) { items.takeLast(stackSize) }
+
+                        for (i in stackSize downTo 1) {
                             val idx0 = i - 1
                             val alpha = backAlphas.getOrNull(idx0) ?: 1f
 
+                            val isSelected = deckItems.getOrNull(idx0)?.selected == true
+                            val bg = if (isSelected) selectedBackColor else normalBackColor
+
                             DeckCardBack(
-                                backgroundColor = Color.White,
+                                backgroundColor = bg,
                                 index = i,
                                 offsetStep = stackOffset,
                                 alpha = alpha,
                                 shadow = shadow
                             )
                         }
+//                        for (i in (stackSize) downTo 1) {
+//                            val idx0 = i - 1
+//                            val alpha = backAlphas.getOrNull(idx0) ?: 1f
+//
+//                            DeckCardBack(
+//                                backgroundColor = Color.White,
+//                                index = i,
+//                                offsetStep = stackOffset,
+//                                alpha = alpha,
+//                                shadow = shadow
+//                            )
+//                        }
 
                         // верхняя агрегированная карточка
                         Box(
@@ -301,6 +334,9 @@ fun GroupDeck(
                                     // клик по карте действует как по заголовку
                                     expanded = !expanded
                                 },
+                                onLongClickItem = {
+                                    expanded = !expanded
+                                },
                                 onClickItemImage = {
                                     viewModel.onClickItemImage(it, context)
                                 },
@@ -308,7 +344,11 @@ fun GroupDeck(
                                     viewModel.onClickItemImage(dataItem, context, indexImg)
                                 },
                                 onCheckItem = { checked, it ->
-                                    viewModel.updateItemSelect(checked, it)
+                                    viewModel.updateItemsSelect(
+                                        ids = items.map { it.stableId },
+                                        checked = checked
+                                    )
+//                                    viewModel.updateItemSelect(checked, it)
                                 }
                             )
                         }
@@ -334,6 +374,9 @@ fun GroupDeck(
                             onClickItem = {
                                 expanded = !expanded
                             },
+                            onLongClickItem = {
+
+                            },
                             onClickItemImage = {
                                 viewModel.onClickItemImage(it, context)
                             },
@@ -341,7 +384,11 @@ fun GroupDeck(
                                 viewModel.onClickItemImage(dataItem, context, indexImg)
                             },
                             onCheckItem = { checked, it ->
-                                viewModel.updateItemSelect(checked, it)
+                                viewModel.updateItemsSelect(
+                                    ids = items.map { it.stableId },
+                                    checked = checked
+                                )
+//                                viewModel.updateItemSelect(checked, it)
                             },
                         )
                     }
@@ -389,6 +436,9 @@ fun GroupDeck(
                                         contextUI = viewModel.modeUI,
                                         onClickItem = {
                                             viewModel.onClickItem(it, context)
+                                        },
+                                        onLongClickItem = {
+                                            viewModel.onLongClickItem(it, context)
                                         },
                                         onClickItemImage = {
                                             viewModel.onClickItemImage(it, context)

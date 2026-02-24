@@ -2819,7 +2819,7 @@ public class Options {
      * Проверка на Начало работы ( 138519 )
      */
     private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "++");
+        Globals.writeToMLOG("INFO", "Option.optionControlStartWork_138519", "++");
         boolean res;
         long dad2, startWork;
         if (dataDB instanceof WpDataDB) {
@@ -2842,7 +2842,7 @@ public class Options {
         }
 
 
-        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "startWork: " + startWork);
+        Globals.writeToMLOG("INFO", "Option.optionControlStartWork_138519", "startWork: " + startWork);
         if (startWork > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -2863,7 +2863,7 @@ public class Options {
             res = false;
         }
 
-        Globals.writeToMLOG("ERROR", "Option.optionControlStartWork_138519", "mode: " + mode.name());
+        Globals.writeToMLOG("INFO", "Option.optionControlStartWork_138519", "mode: " + mode.name());
 
         // Обработка режима который вернулся
         switch (mode) {

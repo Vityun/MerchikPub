@@ -57,6 +57,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
@@ -64,6 +65,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.CardItemsUI
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
+import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -201,6 +203,7 @@ fun rememberContextMenuHost(
         .ofPattern("dd MMM yyyy")
         .withLocale(Locale.getDefault())
 
+
     LaunchedEffect(lifecycleOwner) {
         // жизненный цикл: подписываемся когда owner в STARTED, отписываемся при stop
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -247,8 +250,9 @@ fun rememberContextMenuHost(
 
                     is MainEvent.OpenUFMDWPDataSelector -> {
 
-
                         viewModel.launcher?.let {
+
+                            WpSelectionDataHolder.instance().init()
                             launchFeaturesActivity(
                                 launcher = it,
                                 context = context,
@@ -258,11 +262,7 @@ fun rememberContextMenuHost(
                                 ),
                                 modeUI = ModeUI.MULTI_SELECT,
                                 contextUI = ContextUI.WP_DATA,
-                                title = "Додатковий заробіток",
-                                subTitle = viewModel.getTranslateString(
-                                    "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",
-                                    9070
-                                )
+                                title = "Додатковий заробіток"
                             )
                         }
 

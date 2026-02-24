@@ -24,7 +24,6 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
-import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -74,7 +73,8 @@ class MainRepository(
     fun <T : DataObjectUI> getSettingsItemList(
         klass: KClass<T>,
         contextUI: ContextUI?,
-        defaultHideUserFields: List<String>?
+        defaultHideUserFields: List<String>?,
+        modeUI: ModeUI
     ): List<SettingsItemUI> {
 
         val item = (klass.java.newInstance() as? RealmObject)?.let {
@@ -109,6 +109,8 @@ class MainRepository(
             val fields = mutableListOf<String>()
             fields.add("column_name")
             fields.add("group_header")
+            if (modeUI == ModeUI.DEFAULT || modeUI == ModeUI.FILTER_SELECT)
+                fields.add("filter_select")
             obj.getIdResImage()?.let {
                 fields.add("id_res_image")
             }
@@ -130,7 +132,9 @@ class MainRepository(
                             "group_header",
                             ignoreCase = true
                         )
-                    } // <- убираем из скрытых
+                    }
+                    .plus("filter_select")
+//                    .distinctBy { it.lowercase() }
                     .map { it.trim() }
             } else {
                 baseHide
@@ -151,6 +155,7 @@ class MainRepository(
                             "column_name" -> "Назва реквізитів"
                             "id_res_image" -> "Зображення"
                             "group_header" -> "Заголовок групи"
+                            "filter_select" -> "Возможность выбора элемента"
                             else -> nameUIRepository.getTranslateString(
                                 key,
                                 obj.getFieldTranslateId(key)

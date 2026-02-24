@@ -248,6 +248,7 @@ You must review the specified claims, complete them, and provide your responses.
     <string name="ui_choice">Select</string>
     <string name="ui_synhronize">Synchronization</string>
 
+    <string name="ui_add_job">Аpply for a job</string>
     <string name="ui_filter_not_available_edit">This filter is not available for editing</string>
     <string name="ui_font_size">Font size</string>
     <string name="ui_text_add">Add…</string>

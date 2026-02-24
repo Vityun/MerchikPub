@@ -227,6 +227,8 @@ abstract class MainViewModel(
 
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
+    open fun onLongClickItem(itemUI: DataItemUI, context: Context) {}
+
     open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
@@ -667,7 +669,7 @@ abstract class MainViewModel(
             )
 
             val list = getDefaultHideUserFields()
-            val settingsItems = repository.getSettingsItemList(table, contextUI, list)
+            val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
 
             val defaultSort = getDefaultSortUserFields()
 
@@ -676,7 +678,7 @@ abstract class MainViewModel(
 
             val hideFieldsForCards = getDefaultHideFieldsForCards()
             val settingsForCardsItems =
-                repository.getSettingsItemList(table, contextUI, hideFieldsForCards)
+                repository.getSettingsItemList(table, contextUI, hideFieldsForCards, modeUI)
 
             // 1) Берём сортировки
             val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
@@ -785,6 +787,11 @@ abstract class MainViewModel(
         }
     }
 
+    fun updateSubtitle(short: String?, long: String?) {
+        _uiState.update { it.copy(subTitle = short, subTitleLong = long) }
+    }
+
+
     // ViewModel
     private val _flyRequests = MutableSharedFlow<Long>(replay = 0, extraBufferCapacity = 10)
     val flyRequests = _flyRequests.asSharedFlow()
@@ -807,29 +814,64 @@ abstract class MainViewModel(
 //        }
     }
 
-    fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {
+    fun updateItemsSelect(ids: List<Long>, checked: Boolean) {
+        val set = ids.toHashSet()
+
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    itemsHeader = it.itemsHeader.map { oldItemUI ->
-                        oldItemUI.copy(
+            _uiState.update { state ->
+                state.copy(
+                    itemsHeader = state.itemsHeader.map { old ->
+                        old.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (old.stableId in set) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
-                    items = it.items.map { oldItemUI ->
-                        oldItemUI.copy(
+                    items = state.items.map { old ->
+                        old.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (old.stableId in set) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
-                    itemsFooter = it.itemsFooter.map { oldItemUI ->
-                        oldItemUI.copy(
+                    itemsFooter = state.itemsFooter.map { old ->
+                        old.copy(
                             selected =
-                                if (itemUI === oldItemUI) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                                if (old.stableId in set) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+
+    fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {
+        val targetId = itemUI.stableId
+
+        viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    itemsHeader = state.itemsHeader.map { old ->
+                        old.copy(
+                            selected =
+                                if (old.stableId == targetId) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                        )
+                    },
+                    items = state.items.map { old ->
+                        old.copy(
+                            selected =
+                                if (old.stableId == targetId) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                        )
+                    },
+                    itemsFooter = state.itemsFooter.map { old ->
+                        old.copy(
+                            selected =
+                                if (old.stableId == targetId) checked
+                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                 )
@@ -1083,7 +1125,7 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
-    private fun doAcceptOneTime(wp: WpDataDB) {
+     fun doAcceptOneTime(wp: WpDataDB) {
         val dad2 = wp.code_dad2
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 

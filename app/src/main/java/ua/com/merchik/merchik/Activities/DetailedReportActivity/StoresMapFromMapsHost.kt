@@ -41,7 +41,7 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
     val camera = rememberCameraPositionState()
 
     // 3) Цвет/контекст
-    val highlightColor = colorResource(id = R.color.ufmd_accept_t)
+    val highlightColor = colorResource(id = R.color.selected_item)
     val contextUI = mainVm.contextUI
 
     // 4) Локальный стейт диалога

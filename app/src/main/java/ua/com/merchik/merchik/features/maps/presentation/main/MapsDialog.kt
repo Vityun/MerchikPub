@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.features.maps.presentation.main
 
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -26,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,10 +53,13 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.collectLatest
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
@@ -61,6 +67,7 @@ import ua.com.merchik.merchik.features.main.Main.FilteringDialog
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.domain.stringByKey
 import ua.com.merchik.merchik.features.maps.presentation.MapActionsBridge
@@ -93,6 +100,7 @@ fun MapsDialog(
     val sessionId = remember { System.currentTimeMillis() }
 
     var showToolTip by remember { mutableStateOf(false) }
+    var notReadyMenu by remember { mutableStateOf(false) }
 
     var showToolTipKostil by remember { mutableStateOf(false) }
 
@@ -140,6 +148,79 @@ fun MapsDialog(
             pts.isNotEmpty() && pts.all { it.point.wp?.user_id == 14041 }
         }
     }
+
+    val holder = WpSelectionDataHolder.instance()
+    val version = holder.version
+    val wpDataList = remember { mutableStateListOf<WpDataDB>() }
+
+
+    LaunchedEffect(version) {
+        val wpList = holder.consumePendingSelected()
+        if (wpList.isNotEmpty()) {
+            wpDataList.clear()
+            wpDataList.addAll(wpList)
+
+            Toast.makeText(
+                mainViewModel.context,
+                "Знайдено результатів: ${wpDataList.size}",
+                Toast.LENGTH_LONG
+            ).show()
+
+            if (wpDataList.size == 1)
+                MessageDialogBuilder(mainViewModel.context as Activity)
+                    .setTitle("Додатковий заробіток")
+                    .setStatus(DialogStatus.NORMAL)
+                    .setSubTitle(wpDataList.first().addr_txt)
+                    .setMessage(String.format(
+                        "Подать заявку на выполнение этих работ\n" +
+                                "<font color='gray'>Відвідування від</font> %s" +
+                                "<br><font color='gray'>Клієнт:</font> %s" +
+                                "<br><font color='gray'>Адреса:</font> %s" +
+                                "<br><font color='gray'>Премія (план):</font> %s грн." +
+                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
+                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
+                        Clock.getHumanTime_dd_MMMM(wpDataList.first().dt.time),
+                        wpDataList.first().client_txt,
+                        wpDataList.first().addr_txt,
+                        wpDataList.first().cash_ispolnitel,
+                        wpDataList.first().sku,
+                        wpDataList.first().duration
+                    ))
+                    .setOnConfirmAction("Выполнять всегда") {
+                        notReadyMenu = true
+                    }
+                    .setOnCancelAction("Выполнить один раз") {
+                        mainViewModel.doAcceptOneTime(wp = wpDataList.first())
+                    }
+                    .show()
+            else
+                MessageDialogBuilder(mainViewModel.context as Activity)
+                    .setTitle("Додатковий заробіток")
+                    .setStatus(DialogStatus.NORMAL)
+                    .setSubTitle(wpDataList.first().addr_txt)
+                    .setMessage( "Подати заявку на виконання обранних ${wpDataList.size} робiт за цією адресою?"
+                    )
+                    .setOnConfirmAction("Выполнять всегда") {
+                        notReadyMenu = true
+                    }
+                    .setOnCancelAction("Выполнить один раз") {
+                        notReadyMenu = true
+                    }
+                    .show()
+        }
+    }
+
+    if (notReadyMenu) {
+        MessageDialog(
+            title = "Додатковий заробіток",
+            status = DialogStatus.NORMAL,
+            message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
+            okButtonName = "Ок",
+            onDismiss = { notReadyMenu = false },
+            onConfirmAction = { notReadyMenu = false }
+        )
+    }
+
 
     LaunchedEffect(vm, onDismiss, contextUI, highlightColor, sessionId) {
         vm.attachBridge(object : MapActionsBridge {

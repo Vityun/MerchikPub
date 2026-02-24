@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">021800</string>
+    <string name="ver" translatable="false">022400</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-02-18</string>
+    <string name="debug_date" translatable="false">2026-02-24</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -258,6 +258,7 @@
     <string name="ui_clear">Очистити</string>
     <string name="ui_choice">Вибрати</string>
     <string name="ui_synhronize">Синхронизация</string>
+    <string name="ui_add_job">Подать заявку</string>
 
     <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
     <string name="ui_font_size">Розмір шрифтів</string>

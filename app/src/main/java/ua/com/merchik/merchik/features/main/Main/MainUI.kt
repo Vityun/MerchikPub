@@ -25,6 +25,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -105,10 +106,13 @@ import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.Activities.CronchikViewModel
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
@@ -156,6 +160,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showFilteringDialog by remember { mutableStateOf(false) }
     var filterBtnRect by remember { mutableStateOf<Rect?>(null) }
 
+    var showToolTipDialog by remember { mutableStateOf(false) }
+
     var showMapsDialog by remember { mutableStateOf(false) }
     val mapsPulse = rememberPulseController()
     var mapsBtnRect by remember { mutableStateOf<Rect?>(null) }
@@ -192,7 +198,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
 //        ## проверим, как будет работать без него
     val dataItemsUI_ by viewModel.dataItems.collectAsState()
-
 
     var flying by remember { mutableStateOf<Flying<DataItemUI>?>(null) }
     // === 2) Новый режим: призрак для перетаскивания + сжатие при отпускании ===
@@ -303,7 +308,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 onSettings = { showSettingsDialog = true },
                 onRefresh = { viewModel.updateContent() },
                 onClose = { (context as? Activity)?.finish() },
-                onSettingsBounds = { settingsBtnRect = it } // ✅
+                onSettingsBounds = { settingsBtnRect = it },
+                onShowToolTipDialog = if (viewModel.contextUI == ContextUI.WP_DATA) {
+                    { showToolTipDialog = true }
+                } else null
             )
         }
 
@@ -325,6 +333,21 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             val visibilityHeaderGroupName =
                 uiState.settingsItems.firstOrNull { it.key == "group_header" }?.isEnabled == true
 
+            val filterSelectMode =
+                uiState.settingsItems.firstOrNull { it.key == "filter_select" }?.isEnabled == true
+
+            LaunchedEffect(filterSelectMode) {
+                if (viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT) {
+                    return@LaunchedEffect
+                }
+
+                viewModel.modeUI = if (!filterSelectMode) {
+                    ModeUI.DEFAULT
+                } else {
+                    ModeUI.FILTER_SELECT
+                }
+            }
+
             Column {
 
                 if ((viewModel.typeWindow ?: "").equals("full", true)) {
@@ -336,7 +359,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         onSettings = { showSettingsDialog = true },
                         onRefresh = { viewModel.updateContent() },
                         onClose = { (context as? Activity)?.finish() },
-                        onSettingsBounds = { settingsBtnRect = it }
+                        onSettingsBounds = { settingsBtnRect = it },
+                        onShowToolTipDialog = if (viewModel.contextUI == ContextUI.WP_DATA) {
+                            { showToolTipDialog = true }
+                        } else null
                     )
                     HorizontalDivider()
                 } else if ((viewModel.typeWindow ?: "").equals("container", true)) {
@@ -382,6 +408,29 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     }
                 }
 
+                if (viewModel.contextUI == ContextUI.WP_DATA ||
+                    viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
+                ) {
+                    val data: List<WpDataDB> = dataItemsUI.flatMap { it.rawObj }
+                        .mapNotNull { it as? WpDataDB }
+
+                    val shortMode = if (viewModel.contextUI == ContextUI.WP_DATA)
+                        CustomString.TitleMode.SHORT_RNO
+                    else
+                        CustomString.TitleMode.SHORT
+
+                    val short =
+                        CustomString.createTitleMsg(data, shortMode).toString()
+
+                    val longMode = if (viewModel.contextUI == ContextUI.WP_DATA)
+                        CustomString.TitleMode.RNO
+                    else
+                        CustomString.TitleMode.FULL
+
+                    val long = CustomString.createTitleMsg(data, longMode).toString()
+
+                    viewModel.updateSubtitle(short, long)
+                }
 
                 uiState.title?.let {
                     Text(
@@ -413,10 +462,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             .animateContentSize()
                     ) {
                         Text(
-                            text = if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
+                            text = if ((viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER || viewModel.contextUI == ContextUI.WP_DATA)
                                 && maxLinesSubTitle == 99
                             ) uiState.subTitleLong ?: it else it,
-
 
                             maxLines = maxLinesSubTitle,
                             overflow = TextOverflow.Ellipsis,
@@ -474,6 +522,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut()
                     ) {
                         Row {
+
                             ImageButton(
                                 id = R.drawable.ic_maps,
                                 shape = RoundedCornerShape(4.dp),
@@ -795,8 +844,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 )
                             )
                         ) {
+                            val selectedCount = dataItemsUI.filter { it.selected }.size
                             Text(
-                                text = "\u2207 ${0}",
+                                text = "\u2207 ${selectedCount}",
                                 fontSize = 16.sp,
                                 textDecoration = TextDecoration.Underline,
                                 modifier = Modifier
@@ -1180,12 +1230,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
                             Text(
-                                "${
+                                if (viewModel.contextUI != ContextUI.WP_DATA) "${
                                     viewModel.getTranslateString(
                                         stringResource(id = R.string.ui_choice),
                                         5997
                                     )
-                                } " +
+                                } " else "${stringResource(id = R.string.ui_add_job)} " +
                                         if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                             )
                         }
@@ -1197,6 +1247,26 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     LaunchedEffect(dataItemsUI.size) {
                         cronchikViewModel.updateBadge(1, dataItemsUI.size)
                     }
+
+                if (viewModel.modeUI == ModeUI.FILTER_SELECT) {
+                    LaunchedEffect(dataItemsUI) {
+                        val selectedCount = dataItemsUI.count { it.selected }
+                        if (selectedCount == 0)
+                            cronchikViewModel.updateBadge(0, selectedCount)
+
+                        val confirmedList: List<Long> =
+                            dataItemsUI
+                                .asSequence()
+                                .filter { it.selected }
+                                .flatMap { it.rawObj.asSequence() }
+                                .mapNotNull { it as? WpDataDB }
+                                .map { wp -> wp.id }
+                                .distinct()
+                                .toList()
+
+                        ScrollDataHolder.instance().addIdsWithClear(confirmedList)
+                    }
+                }
 
                 // Как только пришёл pendingId И список обновился — скроллим к индексу
                 LaunchedEffect(pendingId, dataItemsUI) {
@@ -1326,6 +1396,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         settingsItemUI = uiState.settingsItems,
                         contextUI = viewModel.modeUI,
                         onClickItem = {},
+                        onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
                         onCheckItem = { _, _ -> }
@@ -1362,6 +1433,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         settingsItemUI = uiState.settingsItems,
                         contextUI = viewModel.modeUI,
                         onClickItem = {},
+                        onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
                         onCheckItem = { _, _ -> }
@@ -1402,6 +1474,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         settingsItemUI = uiState.settingsItems,
                         contextUI = viewModel.modeUI,
                         onClickItem = {},
+                        onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
                         onCheckItem = { _, _ -> }
@@ -1520,6 +1593,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             onConfirmAction = { viewModel.hideKostilDialog() }
         )
 
+    }
+    if (showToolTipDialog) {
+        MessageDialog(
+            title = "Довідка",
+            status = DialogStatus.NORMAL,
+            subTitle = "Додатковий заробіток",   // ← заголовок-сабтайтл по сценарию
+            message = "У цьому розділі, ви можете обрати (позначити) ті візити, роботу з котрими ви хочете виконати. За замовчуванням позначені усі візити. Натиснувши кнопку \"Подати замовлення\" ви ініціюєте процес передачі цих робіт з розділу \"Додатковий заробіток\" до розділу \"План робіт\". Потім, почати їх виконувати, і отримати за це гроші.",
+            onDismiss = { showToolTipDialog = false },
+            okButtonName = "Ok",
+            onConfirmAction = { showToolTipDialog = false }
+        )
     }
 //    if (showSettingsDialog) {
 //        SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
@@ -1826,6 +1910,7 @@ fun ItemUI(
     visibilityColumName: Int,
     contextUI: ModeUI,
     onClickItem: (DataItemUI) -> Unit,
+    onLongClickItem: (DataItemUI) -> Unit,
     onClickItemImage: (DataItemUI) -> Unit,
     onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
     onCheckItem: (Boolean, DataItemUI) -> Unit
@@ -1843,7 +1928,10 @@ fun ItemUI(
 
     Box(
         modifier = Modifier
-            .clickable { onClickItem(item) }
+            .combinedClickable(
+                onClick = { onClickItem(item) },
+                onLongClick = { onLongClickItem(item) }
+            )
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
@@ -2084,7 +2172,9 @@ fun ItemUI(
 
         Column(modifier = Modifier.align(Alignment.TopEnd)) {
 
-            if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT) {
+            if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT
+                || contextUI == ModeUI.FILTER_SELECT
+            ) {
                 RoundCheckbox(
                     modifier = Modifier.padding(
                         top = 3.dp,
@@ -2130,11 +2220,23 @@ fun TopButton(
     onSettings: () -> Unit,
     onRefresh: () -> Unit,
     onClose: () -> Unit,
-    onSettingsBounds: (Rect) -> Unit,   // ✅ добавили
+    onSettingsBounds: (Rect) -> Unit,
+    onShowToolTipDialog: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
     ) {
+        onShowToolTipDialog?.let {
+            ImageButton(
+                id = R.drawable.ic_question_1,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 23.dp,
+                modifier = Modifier.padding(start = 15.dp, bottom = 10.dp),
+                onClick = { onShowToolTipDialog.invoke() }
+            )
+        }
         ImageButton(
             id = R.drawable.ic_settings,
             shape = CircleShape,

@@ -489,6 +489,8 @@ public class PlanogrammTableExchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "convertedObject: " + convertedObject);
+
         RetrofitBuilder.getRetrofitInterface()
                 .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())

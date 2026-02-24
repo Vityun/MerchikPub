@@ -69,7 +69,6 @@ import java.util.List;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
@@ -490,7 +489,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 //        ScrollDataHolder.Companion.instance().removeByCodeDad2(wpDataDB.getCode_dad2());
         ScrollDataHolder.Companion.instance().removeByCodeWpDataId(wpDataDB.getId());
-        Log.e("!!!!!!!!!!!!","dad2: " + wpDataDB.getCode_dad2());
+        Log.e("!!!!!!!!!!!!", "dad2: " + wpDataDB.getCode_dad2());
 
         // Получаем ViewModel и передаем туда данные
         commentViewModel = new ViewModelProvider(this).get(CommentViewModel.class);
@@ -879,6 +878,13 @@ public class DetailedReportActivity extends toolbar_menus {
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("photo_saved", true); // Передайте информацию о сохраненном фото
                         setResult(Activity.RESULT_OK, resultIntent);
+                        if (wpDataDB != null) {
+                            if (photoType == 4 || photoType == 31 || photoType == 10 || photoType == 0
+                                    || photoType == 5 || photoType == 45 || photoType == 47 || photoType == 48
+                                    || photoType == 42 || photoType == 36 || photoType == 40 || photoType == 41
+                                    || photoType == 14 || photoType == 28 || photoType == 30)
+                                Globals.fixMP(wpDataDB, this);
+                        }
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);

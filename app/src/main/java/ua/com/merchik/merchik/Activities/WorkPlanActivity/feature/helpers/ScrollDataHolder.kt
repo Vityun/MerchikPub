@@ -100,6 +100,15 @@ class ScrollDataHolder private constructor() {
         }
     }
 
+
+    fun addIdsWithClear(newIds: Collection<Long>) {
+        if (newIds.isNotEmpty()) {
+            ids.clear()
+            ids.addAll(newIds)
+            notifyListeners()
+        }
+    }
+
     fun removeId(id: Long) {
         val index = ids.indexOf(id)
         if (index >= 0) {

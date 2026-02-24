@@ -26,13 +26,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.formatSum
@@ -40,6 +44,7 @@ import ua.com.merchik.merchik.features.maps.domain.haversine
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
+import java.time.ZoneId
 
 @Composable
 fun StoresMap(
@@ -47,6 +52,8 @@ fun StoresMap(
     vm: BaseMapViewModel
 ) {
     val s by vm.state.collectAsState()
+
+    val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
 
     val userLat = s.userLat
     val userLon = s.userLon
@@ -176,7 +183,21 @@ fun StoresMap(
 
     fun buildSubtitle(pUi: PointUi, distance: String?): String = buildString {
         if (pUi.count > 0) {
-            append("${pUi.count} кпс")
+            append(
+                "${pUi.count} кпс за период с ${
+                    Clock.getHumanTime_dd_MMMM(
+                        mainVm.rangeDataStart.value?.atStartOfDay(ZoneId.systemDefault())  // или ZoneId.of("Europe/Kyiv")
+                            ?.toInstant()
+                            ?.toEpochMilli()
+                    )
+                } по ${
+                    Clock.getHumanTime_dd_MMMM(
+                        mainVm.rangeDataEnd.value?.atStartOfDay(ZoneId.systemDefault())  // или ZoneId.of("Europe/Kyiv")
+                            ?.toInstant()
+                            ?.toEpochMilli()
+                    )
+                }"
+            )
             append("\nПремія: ${formatSum(pUi.sum)}")
         }
         if (!distance.isNullOrBlank()) {
@@ -382,7 +403,8 @@ fun StoresMap(
 
                     // текст на середине линии — используем уже готовую distance строку из selected.subtitle
                     // (если хочешь отдельно — можно достать dist из selected.subtitle, но проще посчитать тут быстро)
-                    val meters = haversine(you.latitude, you.longitude, target.latitude, target.longitude)
+                    val meters =
+                        haversine(you.latitude, you.longitude, target.latitude, target.longitude)
                     val dist = formatDistanceKmM(meters)
 
                     val mid = LatLng(

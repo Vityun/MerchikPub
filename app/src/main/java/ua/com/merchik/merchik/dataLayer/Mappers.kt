@@ -397,7 +397,7 @@ fun DataItemUI.addrIdOrNull(): String? =
 
 
 enum class ModeUI {
-    DEFAULT, ONE_SELECT, MULTI_SELECT
+    DEFAULT, ONE_SELECT, MULTI_SELECT, FILTER_SELECT
 }
 
 @DrawableRes
@@ -448,7 +448,7 @@ enum class ContextUI {
     JOURNAL_PHOTO_DEFAULT,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
-    SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +
+    SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе + (31)
     SAMPLE_PHOTO_FROM_OPTION_132969,    // Фото Тележка с Товаром (ФТТ) (10) +
     SAMPLE_PHOTO_FROM_OPTION_135809,    // Фото витрины до начала работ (14) +
     SAMPLE_PHOTO_FROM_OPTION_158309,    // Фото витрины наближене (39) +

@@ -60,7 +60,8 @@
     <color name="background_item_filter">#EAE8E8</color>
     <color name="background_item_filter_button">#B8B7B7</color>
     <color name="scrollbar">#9E9D9D</color>
-    <color name="selected_item">#A3B2FF</color>
+    <color name="selected_item">#FAF7BB</color>
+    <color name="selected_item_old">#A3B2FF</color>
     <color name="borderContextMenu">#CAC8C8</color>
     <color name="borderToolTip">#FF9900</color>
     <color name="backgroundToolTip">#FAF8DB</color>

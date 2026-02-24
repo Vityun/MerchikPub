@@ -95,6 +95,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
             try {
                 planogrammVizitShowcaseSDBList = SQL_DB.planogrammVizitShowcaseDao().getByCodeDad2(wpDataDB.getCode_dad2());
             } catch (Exception e) {
+                Globals.writeToMLOG("ERROR","OptionControlPlanorammVizit.executeOption","Exception: " + e.getMessage());
                 planogrammVizitShowcaseSDBList = List.of();
             }
 
@@ -218,6 +219,12 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
     }
 
     private void openFeatureActivity(int planogramId) {
+        Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.openFeatureActivity","clientId: " + String.valueOf(wpDataDB.getClient_id()) +
+                " addressId: " + wpDataDB.getAddr_id() +
+                " wpDataDBId: " + wpDataDB.getCode_dad2() +
+                " optionDBId: " + optionDB.getID() +
+                " colorUiContainer: " + planogramId);
+
         VizitShowcaseDataHolder.Companion.getInstance().clear();
 
         Intent intent = new Intent(context, FeaturesActivity.class);

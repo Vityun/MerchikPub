@@ -1136,7 +1136,7 @@ public class Exchange {
                                                     Log.e("ShowcaseExchange", "Throwable e: " + e);
                                                 }
                                             });
-                                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onSuccess", "data: " + data.size());
+                                    Globals.writeToMLOG("INFO", "startExchange/ShowcaseExchange/downloadShowcaseTable/onSuccess", "data: " + data.size());
                                 }
 
                                 @Override

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -153,9 +154,26 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         )
                         HorizontalDivider(thickness = 1.dp)
 
+                        val items = uiState.settingsItems
+
+// индекс последнего элемента из HEADER_KEYS (учитывая что id_res_image может отсутствовать)
+                        val lastHeaderIndex = remember(items) {
+                            items.indexOfLast { it.key in HEADER_KEYS }
+                        }
+
                         LazyColumn {
-                            items(uiState.settingsItems) { itemSettingsUI ->
+                            itemsIndexed(
+                                items = items,
+                                key = { _, it -> it.key } // ключ стабильный
+                            ) { index, itemSettingsUI ->
+
                                 SettingsItemView(item = itemSettingsUI)
+
+                                if (index == lastHeaderIndex && lastHeaderIndex != -1 && index != items.lastIndex) {
+                                    HorizontalDivider(thickness = 1.dp,
+                                        color = Color.LightGray,
+                                        modifier = Modifier.padding(vertical = 2.dp))
+                                }
                             }
                         }
                     }
@@ -230,3 +248,10 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
         )
     }
 }
+
+private val HEADER_KEYS = setOf(
+    "column_name",
+    "group_header",
+    "filter_select",
+    "id_res_image",
+)
