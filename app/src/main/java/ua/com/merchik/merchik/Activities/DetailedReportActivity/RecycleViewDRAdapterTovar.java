@@ -66,7 +66,6 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -100,8 +99,6 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
-import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -175,10 +172,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                             optionsList2 = (List<OptionsDB>) list;
 
-                            }
-                        } else {
-//                            errorMessage(String.valueOf(data));
                         }
+                    } else {
+//                            errorMessage(String.valueOf(data));
+                    }
                 }
             });
         }
@@ -721,7 +718,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
 
                 // TODO Обрати внимание что тут по опциям
+
+                Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.bind_7", "optionsList2.size: " + optionsList2.size()
+                + " is reportPrepareTovar == null: " + (reportPrepareTovar2 == null));
+
                 String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
+                Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.bind_8", "s: " + s);
 
                 try {
                     ReportPrepareDB finalReportPrepareTovar1;

@@ -131,7 +131,7 @@ fun filterAndSortDataItems(
             filtered
         }
 
-        return FilterAndSortResult(
+          return FilterAndSortResult(
             items = sorted,
             groups = emptyList(),
             isActiveFiltered = isActiveFiltered,
@@ -219,88 +219,69 @@ fun filterAndSortDataItems(
  *
  * Возвращает null, если не удалось распарсить.
  */
+
 fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
     if (raw == null) return null
     try {
         when (raw) {
-            is Long -> return raw
-            is Int -> return raw.toLong()
-            is Double -> return raw.toLong()
-            is Float -> return raw.toLong()
-            is Number -> return raw.toLong()
             is Date -> return raw.time
+
+            is Long -> return normalizeEpochToMillis(raw) ?: raw
+            is Int -> return normalizeEpochToMillis(raw.toLong()) ?: raw.toLong()
+            is Double -> return normalizeEpochToMillis(raw.toLong()) ?: raw.toLong()
+            is Float -> return normalizeEpochToMillis(raw.toLong()) ?: raw.toLong()
+            is Number -> return normalizeEpochToMillis(raw.toLong()) ?: raw.toLong()
+
             is String -> {
                 val s = raw.trim()
                 if (s.isEmpty()) return null
 
-                // 1) numeric timestamp string (seconds or millis)
-                if (s.matches(Regex("^\\d{10,}$"))) {
+                // numeric timestamp string
+                if (s.matches(Regex("^\\d+$"))) {
                     val v = s.toLongOrNull() ?: return null
-                    return if (s.length == 10) v * 1000L else v
+                    return normalizeEpochToMillis(v) ?: v
                 }
 
-                // 2) ISO instant or offset date-time (e.g. 2025-09-17T12:34:56Z / ...+03:00)
-                try {
-                    val inst = Instant.parse(s)
-                    return inst.toEpochMilli()
-                } catch (_: DateTimeParseException) { /* ignore */ }
+                // ISO instant / offset / zoned
+                try { return Instant.parse(s).toEpochMilli() } catch (_: DateTimeParseException) {}
+                try { return OffsetDateTime.parse(s).toInstant().toEpochMilli() } catch (_: DateTimeParseException) {}
+                try { return ZonedDateTime.parse(s).toInstant().toEpochMilli() } catch (_: DateTimeParseException) {}
 
-                // 3) Try ZonedDateTime/OffsetDateTime parsing (common ISO with offset)
-                try {
-                    val odt = OffsetDateTime.parse(s)
-                    return odt.toInstant().toEpochMilli()
-                } catch (_: DateTimeParseException) { /* ignore */ }
-
-                try {
-                    val zdt = ZonedDateTime.parse(s)
-                    return zdt.toInstant().toEpochMilli()
-                } catch (_: DateTimeParseException) { /* ignore */ }
-
-                // 4) Patterns — 24h first (defaults), 12h 'a' as fallback, date-only as last
                 val patterns = listOf(
-                    "MMM d, yyyy HH:mm:ss",    // Sep 11, 2025 00:00:00  <- твой 24h пример
+                    "MMM d, yyyy HH:mm:ss",
                     "MMM dd, yyyy HH:mm:ss",
                     "yyyy-MM-dd HH:mm:ss",
-                    "yyyy-MM-dd'T'HH:mm:ss",   // without offset
+                    "yyyy-MM-dd'T'HH:mm:ss",
                     "d MMM yyyy HH:mm:ss",
-                    "d MMM yyyy",              // date-only
-                    // fallback 12-hour with AM/PM
+                    "d MMM yyyy",
                     "MMM d, yyyy hh:mm:ss a",
                     "MMM dd, yyyy hh:mm:ss a"
                 )
 
-                // try each pattern with both default locale and US (covers localized month names)
                 for (pat in patterns) {
-                    listOf(Locale.getDefault(), Locale.US).forEach { loc ->
+                    for (loc in listOf(Locale.getDefault(), Locale.US)) {
                         try {
                             val fmt = DateTimeFormatter.ofPattern(pat, loc)
-                            // For patterns including time
-                            if (pat.contains("H") || pat.contains("h")) {
-                                val ldt = LocalDateTime.parse(s, fmt)
-                                return ldt.atZone(zoneId).toInstant().toEpochMilli()
+                            return if (pat.contains("H") || pat.contains("h")) {
+                                LocalDateTime.parse(s, fmt).atZone(zoneId).toInstant().toEpochMilli()
                             } else {
-                                // date-only pattern -> treat as start of day
-                                val ld = LocalDate.parse(s, fmt)
-                                return ld.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                                LocalDate.parse(s, fmt).atStartOfDay(zoneId).toInstant().toEpochMilli()
                             }
                         } catch (_: DateTimeParseException) {
-                            // try next
                         } catch (e: Exception) {
-                            // safety net for unexpected
                             Log.d("PARSE_DATE_ERR", "pattern fail pat=$pat locale=$loc s='$s' : ${e.message}")
                         }
                     }
                 }
 
-                // 5) last resort: try parse as LocalDateTime with relaxed ISO formats
                 try {
-                    val ldt = LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                    return ldt.atZone(zoneId).toInstant().toEpochMilli()
-                } catch (_: Exception) { /* ignore */ }
+                    return LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        .atZone(zoneId).toInstant().toEpochMilli()
+                } catch (_: Exception) {}
 
-                // nothing matched
                 return null
             }
+
             else -> return null
         }
     } catch (e: Throwable) {
@@ -308,7 +289,121 @@ fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
         return null
     }
 }
+//fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
+//    if (raw == null) return null
+//    try {
+//        when (raw) {
+//            is Long -> return raw
+//            is Int -> return raw.toLong()
+//            is Double -> return raw.toLong()
+//            is Float -> return raw.toLong()
+//            is Number -> return raw.toLong()
+//            is Date -> return raw.time
+//            is String -> {
+//                val s = raw.trim()
+//                if (s.isEmpty()) return null
+//
+//                // 1) numeric timestamp string (seconds or millis)
+//                if (s.matches(Regex("^\\d{10,}$"))) {
+//                    val v = s.toLongOrNull() ?: return null
+//                    return if (s.length < 12)
+//                        v * 1000L else v
+//                }
+//
+//
+//                // 2) ISO instant or offset date-time (e.g. 2025-09-17T12:34:56Z / ...+03:00)
+//                try {
+//                    val inst = Instant.parse(s)
+//                    return inst.toEpochMilli()
+//                } catch (_: DateTimeParseException) { /* ignore */ }
+//
+//                // 3) Try ZonedDateTime/OffsetDateTime parsing (common ISO with offset)
+//                try {
+//                    val odt = OffsetDateTime.parse(s)
+//                    return odt.toInstant().toEpochMilli()
+//                } catch (_: DateTimeParseException) { /* ignore */ }
+//
+//                try {
+//                    val zdt = ZonedDateTime.parse(s)
+//                    return zdt.toInstant().toEpochMilli()
+//                } catch (_: DateTimeParseException) { /* ignore */ }
+//
+//                // 4) Patterns — 24h first (defaults), 12h 'a' as fallback, date-only as last
+//                val patterns = listOf(
+//                    "MMM d, yyyy HH:mm:ss",    // Sep 11, 2025 00:00:00  <- твой 24h пример
+//                    "MMM dd, yyyy HH:mm:ss",
+//                    "yyyy-MM-dd HH:mm:ss",
+//                    "yyyy-MM-dd'T'HH:mm:ss",   // without offset
+//                    "d MMM yyyy HH:mm:ss",
+//                    "d MMM yyyy",              // date-only
+//                    // fallback 12-hour with AM/PM
+//                    "MMM d, yyyy hh:mm:ss a",
+//                    "MMM dd, yyyy hh:mm:ss a"
+//                )
+//
+//                // try each pattern with both default locale and US (covers localized month names)
+//                for (pat in patterns) {
+//                    listOf(Locale.getDefault(), Locale.US).forEach { loc ->
+//                        try {
+//                            val fmt = DateTimeFormatter.ofPattern(pat, loc)
+//                            // For patterns including time
+//                            if (pat.contains("H") || pat.contains("h")) {
+//                                val ldt = LocalDateTime.parse(s, fmt)
+//                                return ldt.atZone(zoneId).toInstant().toEpochMilli()
+//                            } else {
+//                                // date-only pattern -> treat as start of day
+//                                val ld = LocalDate.parse(s, fmt)
+//                                return ld.atStartOfDay(zoneId).toInstant().toEpochMilli()
+//                            }
+//                        } catch (_: DateTimeParseException) {
+//                            // try next
+//                        } catch (e: Exception) {
+//                            // safety net for unexpected
+//                            Log.d("PARSE_DATE_ERR", "pattern fail pat=$pat locale=$loc s='$s' : ${e.message}")
+//                        }
+//                    }
+//                }
+//
+//                // 5) last resort: try parse as LocalDateTime with relaxed ISO formats
+//                try {
+//                    val ldt = LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+//                    return ldt.atZone(zoneId).toInstant().toEpochMilli()
+//                } catch (_: Exception) { /* ignore */ }
+//
+//                // nothing matched
+//                return null
+//            }
+//            else -> return null
+//        }
+//    } catch (e: Throwable) {
+//        Log.e("PARSE_DATE_ERR", "parseToMillis error for value=$raw class=${raw::class.java.name}", e)
+//        return null
+//    }
+//}
 
+private fun normalizeEpochToMillis(v: Long): Long? {
+    val abs = kotlin.math.abs(v)
+
+    return when {
+        // seconds (10 digits-ish) -> millis
+        abs in 1_000_000_000L..9_999_999_999L -> v * 1000L
+
+        // millis (13 digits-ish)
+        abs in 1_000_000_000_000L..9_999_999_999_999L -> v
+
+        // micros (16 digits-ish) -> millis
+        abs in 1_000_000_000_000_000L..9_999_999_999_999_999L -> v / 1000L
+
+        // nanos (19 digits-ish) -> millis
+        abs >= 1_000_000_000_000_000_000L -> v / 1_000_000L
+
+        else -> {
+            // слишком маленькое число: это может быть не timestamp
+            // если хочешь — можно вернуть v как есть, но обычно безопаснее null
+            null
+        }
+    }
+}
 
 private fun parseNum(raw: Any?): Double? = when (raw) {
     null -> null

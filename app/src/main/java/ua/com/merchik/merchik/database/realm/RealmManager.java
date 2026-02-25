@@ -1137,6 +1137,18 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getStackPhotoWithDate(Long start, Long end) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .greaterThanOrEqualTo("dt", start)
+                .lessThanOrEqualTo("dt", end)
+                .notEqualTo("photo_type", 29)
+                .notEqualTo("photo_type", 35)
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_num")
+                .findAll();
+    }
+
     public static RealmResults<StackPhotoDB> getStackPhotoTest() {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_type", 4)

@@ -105,7 +105,6 @@ public class OptionControlMP<T> extends OptionControl {
     private void executeOption() {
         try {
 
-
 //            15.07 .2025 изменил по указанию Петрова теперь сигнал расчитывается ИСКЛЮЧИТЕЛЬНО за последние 30 минут если работа не окончена!
             long startTime =
                     (wpDataDB != null &&
@@ -115,6 +114,9 @@ public class OptionControlMP<T> extends OptionControl {
             long endTime = (wpDataDB.getVisit_end_dt() > 0) ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
             logMPList = LogMPRealm.getLogMPTime(startTime * 1000, endTime * 1000);
+
+            Globals.writeToMLOG("INFO", "OptionControlMP/executeOption", "startTime: " + startTime +
+                    " | endTime: " + endTime + " | logMPList.size: " + logMPList.size());
 
             if (logMPList != null && logMPList.size() > 0) {
                 for (LogMPDB item : logMPList) {

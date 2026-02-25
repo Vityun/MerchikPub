@@ -18,7 +18,6 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -33,6 +32,9 @@ import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.RangeDate
+import java.time.LocalTime
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -175,20 +177,21 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 contextUI == ContextUI.WP_DATA_IN_CONTAINER
             )
 
-
             filters = Filters(
                 searchText = "",
-                items = mutableListOf(typePhotoFilter,
+                items = mutableListOf(
+                    typePhotoFilter,
                     clientFilter,
                     adressFilter,
-                    userFilter),
-                rangeDataByKey = null
-//                    RangeDate(
-//                    key = "dt",
-//                    start = rangeDataStart.value,
-//                    end = rangeDataEnd.value,
-//                    enabled = true
-//                )
+                    userFilter
+                ),
+                rangeDataByKey =
+                    RangeDate(
+                        key = "----",
+                        start = rangeDataStart.value,
+                        end = rangeDataEnd.value,
+                        enabled = true
+                    )
             )
         } catch (e: Exception) {
             Log.e("!", "error: ${e.message}")
@@ -207,11 +210,30 @@ class JournalPhotoSDBViewModel @Inject constructor(
     }
 
     override fun getDefaultSortUserFields(): List<String>? {
-        return "create_time".split(",")
+        return "dt".split(",")
     }
 
     override suspend fun getItems(): List<DataItemUI> {
-        val data = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhoto())
+        val startMillis: Long = rangeDataStart.value
+            ?.atStartOfDay(ZoneId.systemDefault())
+            ?.toInstant()
+            ?.toEpochMilli()
+            ?: Long.MIN_VALUE
+
+        val endMillis: Long = rangeDataEnd.value
+            ?.atTime(LocalTime.MAX)
+            ?.atZone(ZoneId.systemDefault())
+            ?.toInstant()
+            ?.toEpochMilli()
+            ?: Long.MAX_VALUE
+
+        Log.e("%%%%%%%%%%%%%%%%%%", "start: $startMillis | end: $endMillis")
+
+        val data = RealmManager.INSTANCE.copyFromRealm(
+            RealmManager.getStackPhotoWithDate(
+                startMillis / 1000, endMillis / 1000
+            )
+        )
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, null)
     }
 
