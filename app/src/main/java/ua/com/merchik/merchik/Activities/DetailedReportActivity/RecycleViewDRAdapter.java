@@ -108,6 +108,7 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
@@ -738,16 +739,37 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case 151139:
+                            SpannableString spannableString151139 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5));
+                            spannableString151139.setSpan(new UnderlineSpan(), 0, spannableString151139.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString151139);
+
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                JsonObject dataJson = new JsonObject();
+                                dataJson.addProperty("clientId", String.valueOf(wp.getClient_id()));
+                                dataJson.addProperty("addressId", wp.getAddr_id());
+                                dataJson.addProperty("wpDataDBId", String.valueOf(wp.getCode_dad2()));
+                                dataJson.addProperty("optionDBId", String.valueOf(optionsButtons.getID()));
+                                bundle.putString("dataJson", new Gson().toJson(dataJson));
+                                bundle.putString("title", "Планограма > Вітрина");
+                                bundle.putString(
+                                        "subTitle",
+                                        "Для кожної Планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
+                                );
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+                            break;
                         case 164355:
 
                             SpannableString spannableString164355 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5));
                             spannableString164355.setSpan(new UnderlineSpan(), 0, spannableString164355.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-
-//                            textInteger.setText(
-//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
-//                                    TextView.BufferType.SPANNABLE
-//                            );
                             textInteger.setText(spannableString164355);
 
                             textInteger.setOnClickListener(v -> {

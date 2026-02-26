@@ -620,6 +620,9 @@ public class OptionControlPhoto<T> extends OptionControl {
             } else if (addressSDB.tpId == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
                 signal = false;
                 spannableStringBuilder.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
+            } else if (addressSDB.tpId == 3838) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
+                signal = false;
+                spannableStringBuilder.append(", але для Лоток, наявність ФЗ ФТС не перевіряємо.");
             } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
                     Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
                     Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко

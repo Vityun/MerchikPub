@@ -8,9 +8,9 @@ public class WpDataUpdateResponseList {
     @Expose
     public Long elementId;
 
-    @SerializedName("state")
-    @Expose
-    public boolean state;
+//    @SerializedName("state")
+//    @Expose
+//    public boolean state;
 
     @SerializedName("data")
     @Expose
