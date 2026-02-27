@@ -248,7 +248,14 @@ class JournalPhotoSDBViewModel @Inject constructor(
                     stringBuilder.append("photoDB: ").append("{").append(photoDB.id).append("|")
                         .append(photoDB.getPhotoServerId()).append("}").append("s: ").append(s)
 
+                    photoDB.setError(null)
+                    photoDB.setUpload_to_server(System.currentTimeMillis())
+                    RealmManager.stackPhotoSavePhoto(photoDB);
+                    updateContent()
+
                     Globals.writeToMLOG("INFO", "долгий клик по фото/onSuccess", "" + stringBuilder)
+                    Toast.makeText(context, "Фото вивантаженно.", Toast.LENGTH_SHORT).show()
+
                 }
 
                 override fun onFailure(photoDB: StackPhotoDB, error: String) {
@@ -258,6 +265,8 @@ class JournalPhotoSDBViewModel @Inject constructor(
                         .append(error)
 
                     Globals.writeToMLOG("INFO", "долгий клик по фото/onFailure", "" + stringBuilder)
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+
                 }
             })
             Toast.makeText(context, "Починаю вивантаження фото.", Toast.LENGTH_SHORT).show()

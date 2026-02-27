@@ -152,16 +152,18 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
         Calendar limitCal = Calendar.getInstance();
-        limitCal.set(2026, Calendar.MARCH, 1, 0, 0, 0);
+        limitCal.set(2026, Calendar.JUNE, 1, 0, 0, 0);
         limitCal.set(Calendar.MILLISECOND, 0);
 
         Date limitDate = limitCal.getTime();
 
         // 02.09.2025 поменял на 01.03.2026
-        if ((addressSDB.tpId == 434 || addressSDB.tpId == 6767)
+        if ((addressSDB.tpId == 434
+//                || addressSDB.tpId == 6767
+        )
                 && !optionDB.getOptionControlId().equals("132629")
                 && wpDataDB.getDt().before(limitDate)) { //  434 = АТБ или 676 = Акварель
-            optionMsg.append("Не проверяем для АТБ или Акварель до 01.03.2026");
+            optionMsg.append("Не проверяем для АТБ до 01.06.2026");
             signal = false;
         } else {
             // Определем Группу Товаров

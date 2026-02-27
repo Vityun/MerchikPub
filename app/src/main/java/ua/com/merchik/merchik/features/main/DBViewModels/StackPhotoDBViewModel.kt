@@ -10,8 +10,10 @@ import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
@@ -172,7 +174,11 @@ class StackPhotoDBViewModel @Inject constructor(
                         im.nm = "Фото Biтрини з Aкційними Цінниками"
                         im
                     } else
-                    RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
+                        RealmManager.INSTANCE.copyFromRealm(
+                            PhotoTypeRealm.getPhotoTypeById(
+                                typePhotoId
+                            )
+                        )
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",
                     ImagesTypeListDB::class,
@@ -396,6 +402,43 @@ class StackPhotoDBViewModel @Inject constructor(
                 "get_on_server, id, markUpload, object_id, photo_hash, photo_num, photo_type, " +
                 "premiyaUpload, specialCol, commentUpload, upload_time, upload_to_server, vpi, " +
                 "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt, code_iza, " +
-                "example_id, example_img_id, planogram_id, planogram_img_id").split(",")
+                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId").split(",")
     }
+
+    override fun onLongClickItem(itemUI: DataItemUI, context: Context) {
+
+        val stackPhotoDB: StackPhotoDB? =
+            itemUI.rawObj.filterIsInstance<StackPhotoDB>().firstOrNull()
+        stackPhotoDB?.let {
+            PhotoLog().sendPhotoOnServer(context, it, object : UploadPhotoReports {
+                override fun onSuccess(photoDB: StackPhotoDB, s: String) {
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("photoDB: ").append("{").append(photoDB.id).append("|")
+                        .append(photoDB.getPhotoServerId()).append("}").append("s: ").append(s)
+
+                    photoDB.setError(null)
+                    photoDB.setUpload_to_server(System.currentTimeMillis())
+                    RealmManager.stackPhotoSavePhoto(photoDB);
+                    updateContent()
+
+                    Globals.writeToMLOG("INFO", "долгий клик по фото/onSuccess", "" + stringBuilder)
+                    Toast.makeText(context, "Фото вивантаженно.", Toast.LENGTH_SHORT).show()
+
+                }
+
+                override fun onFailure(photoDB: StackPhotoDB, error: String) {
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("photoDB: ").append("{").append(photoDB.id).append("|")
+                        .append(photoDB.getPhotoServerId()).append("}").append("error: ")
+                        .append(error)
+
+                    Globals.writeToMLOG("INFO", "долгий клик по фото/onFailure", "" + stringBuilder)
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+
+                }
+            })
+            Toast.makeText(context, "Починаю вивантаження фото.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }

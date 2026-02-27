@@ -2508,19 +2508,6 @@ public class Exchange {
         Log.e("sendARMark", "convertedObject: " + convertedObject);
         Globals.writeToMLOG("INFO", "sendARMark", "convertedObject: " + convertedObject);
 
-//        retrofit2.Call<JsonObject> testCall = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        testCall.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("sendARMarktestCall", "response: " + response);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("sendARMarktestCall", "Throwable: " + t);
-//            }
-//        });
-
         Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<AdditionalRequirementsSendMarksServerData>() {
             @Override

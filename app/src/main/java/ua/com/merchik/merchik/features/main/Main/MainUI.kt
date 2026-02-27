@@ -178,7 +178,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
-        listState.scrollToItem(0)
+        if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS)
+            listState.scrollToItem(0)
     }
 
     val mapsCloseController = rememberDialogCloseController()

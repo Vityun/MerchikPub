@@ -279,30 +279,30 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
 
                 val bAddr = StringBuilder()
-                val addr = "<b>Адрес: </b>"
+                val addr = "<b>Адреса: </b>"
                 bAddr.append(addr)
                 try {
                     val addr2 = String.format("%s", AddressRealm.getAddressById(data.getId()).nm)
                     bAddr.append(addr2)
                 } catch (e: Exception) {
-                    bAddr.append("Для всех адресов")
+                    bAddr.append("Для всіх адрес")
                 }
                 val endbAddr: CharSequence = Html.fromHtml(bAddr.toString())
 
 
                 val bGrp = StringBuilder()
-                val grp = "<b>Сеть: </b>"
+                val grp = "<b>Мережа: </b>"
                 bGrp.append(grp)
                 try {
                     Log.e("AdditionalRequirements", "Сеть: " + data.getGrpId())
                     if (data.getGrpId() == "0") {
-                        bGrp.append("Для всех сетей")
+                        bGrp.append("Для всіх мереж")
                     } else {
                         val grp2 = String.format("%s", data.getGrpId())
                         bGrp.append(grp2)
                     }
                 } catch (e: Exception) {
-                    bGrp.append("Для всех сетей")
+                    bGrp.append("Для всіх мереж")
                 }
                 val endbGrp: CharSequence = Html.fromHtml(bGrp.toString())
 
@@ -320,7 +320,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
 
                 val bStart = StringBuilder()
-                val dStart = "<b>Дата начала: </b>"
+                val dStart = "<b>Дата початку: </b>"
                 bStart.append(dStart)
                 try {
 //                Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
