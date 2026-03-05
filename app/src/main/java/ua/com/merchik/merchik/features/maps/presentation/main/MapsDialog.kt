@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
@@ -204,7 +205,7 @@ fun MapsDialog(
                         notReadyMenu = true
                     }
                     .setOnCancelAction("Выполнить один раз") {
-                        notReadyMenu = true
+//                        mainViewModel.doAcceptOneTime(wp = wpDataList)
                     }
                     .show()
         }

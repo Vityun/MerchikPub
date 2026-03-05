@@ -1159,7 +1159,162 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
-     fun doAcceptOneTime(wp: WpDataDB) {
+//    fun doAcceptOneTime(wp: List<WpDataDB>) {
+//        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+//
+//        val dad2List: List<Long> = wp
+//             .map { it.code_dad2 }
+//            .distinct()
+//
+//        if (dad2List.isEmpty()) {
+//            // нечего запрашивать
+//            return
+//        }
+//
+//        val d = dao.getByCodeDad2List(dad2List)
+//            .subscribeOn(Schedulers.io())
+//            .flatMap { list ->
+//                if (list.isEmpty()) {
+//                    dao.insertAll(WPDataAdditionalFactory.blankWithDad2(wp))
+//                        .andThen(Single.just(true))
+//                } else {
+//                    Single.just(false)
+//                }
+//            }
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe(
+//                { inserted ->
+//                    pending = null
+//
+//                    if (!inserted) {
+//                        // было и остаётся: заявка уже подана
+//                        viewModelScope.launch {
+//                            _events.emit(
+//                                MainEvent.ShowMessageDialog(
+//                                    MessageDialogData(
+//                                        message = "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
+//                                        status = DialogStatus.ALERT,
+//                                    )
+//                                )
+//                            )
+//                        }
+//                        return@subscribe
+//                    }
+//
+//                    // новая логика: вместо диалога показываем лоадер и реально ждём ответ
+//                    viewModelScope.launch {
+//                        _events.emit(
+//                            MainEvent.ShowLoading(
+//                                "Чекаємо на відповідь від сервера",
+//                                28_700L
+//                            )
+//                        )
+//                    }
+//
+//                    // 1) обмен
+//                    val uploadDisp = tablesLoadingUnloading
+//                        .uploadPlanBudgetRx()  // новая Rx-версия (ниже)
+//                        .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
+//                        .subscribeOn(Schedulers.io())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe(
+//                            { _ ->
+//                                // 2) ожидание решения в БД до 28.7 сек
+//                                viewModelScope.launch {
+//                                    val result = waitDecisionByDad2(dad2, timeoutMs = 28_700L)
+//
+//                                    when (result) {
+//                                        DecisionResult.APPROVED -> {
+//                                            _events.emit(MainEvent.LoadingCompleted)
+//                                            // если нужно — можно короткий toast/snack без диалога
+//                                            val wpDataAdditional = withContext(Dispatchers.IO) {
+//                                                RoomManager.SQL_DB.wpDataAdditionalDao()
+//                                                    .getByCodeDad2Sync(dad2)
+//                                            }
+//
+//                                            context?.let { startPlanBudgetPollingSecond(wpDataAdditional) }
+//
+////                                            _events.emit(
+////                                                MainEvent.ShowMessageDialog(
+////                                                    MessageDialogData(
+////                                                        subTitle = "Відповідь від сервера",
+////                                                        message = wpDataAdditional.first().comment.takeIf { it.isNotBlank() }
+////                                                            ?: "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+////                                                        status = DialogStatus.NORMAL
+////                                                    )
+////                                                )
+////                                            )
+//
+//                                        }
+//
+//                                        DecisionResult.DECLINED -> {
+//                                            _events.emit(MainEvent.LoadingCanceled)
+//
+//                                            val comment = withContext(Dispatchers.IO) {
+//                                                RoomManager.SQL_DB.wpDataAdditionalDao()
+//                                                    .getLastCommentByDad2Sync(dad2)
+//                                            }
+//
+//                                            _events.emit(
+//                                                MainEvent.ShowMessageDialog(
+//                                                    MessageDialogData(
+//                                                        subTitle = "Відповідь від сервера",
+//                                                        message = comment?.takeIf { it.isNotBlank() }
+//                                                            ?: "Заявка відхилена.",
+//                                                        status = DialogStatus.ALERT
+//                                                    )
+//                                                )
+//                                            )
+//                                        }
+//
+//                                        DecisionResult.PENDING_TIMEOUT -> {
+//                                            // ответа пока нет — но заявка отправлена
+//                                            _events.emit(MainEvent.LoadingCompleted)
+//                                            // при желании можно показать мягкое сообщение:
+//                                            // _events.emit(MainEvent.ShowMessageDialog(...))
+//                                        }
+//                                    }
+//                                }
+//                            },
+//                            { err ->
+//                                viewModelScope.launch {
+//                                    _events.emit(MainEvent.LoadingCanceled)
+//                                    _events.emit(
+//                                        MainEvent.ShowMessageDialog(
+//                                            MessageDialogData(
+//                                                message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
+//                                                status = DialogStatus.ALERT,
+//                                                positivText = "Синхронізація"
+//                                            )
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        )
+//
+//                    disposables.add(uploadDisp)
+//                },
+//                { _ ->
+//                    pending = null
+//                    viewModelScope.launch {
+//                        _events.emit(
+//                            MainEvent.ShowMessageDialog(
+//                                MessageDialogData(
+//                                    message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
+//                                    status = DialogStatus.ALERT,
+//                                    positivText = "Синхронізація"
+//                                )
+//                            )
+//                        )
+//                    }
+//                }
+//            )
+//
+//        disposables.add(d)
+//    }
+
+
+    fun doAcceptOneTime(wp: WpDataDB) {
         val dad2 = wp.code_dad2
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 

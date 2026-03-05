@@ -46,6 +46,20 @@ public final class WPDataAdditionalFactory {
         return e;
     }
 
+    public static List<WPDataAdditional> blankWithDad2(List<WpDataDB> wpDataList) {
+        List<WPDataAdditional> result = new ArrayList<>();
+
+        if (wpDataList == null || wpDataList.isEmpty()) {
+            return result;
+        }
+
+        for (WpDataDB wp : wpDataList) {
+            result.add(blankWithDad2(wp)); // используем существующий метод
+        }
+
+        return result;
+    }
+
     public static WPDataAdditional withClientAndAddress(WpDataDB wpDataDB) {
         WPDataAdditional e = new WPDataAdditional();
         e.ID = newLocalId();

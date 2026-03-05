@@ -11,10 +11,12 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -225,6 +227,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(-1): " + new Gson().toJson(eklSDB));
 
+            //2.5
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
@@ -271,7 +274,7 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 6");
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(3): " + new Gson().toJson(eklSDB));
 
-            // Проверка ЭКЛов
+            // 3.0 Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
                 if (addressSDB.tpId == 383) {   // АШАН
                     if (wpDataDB.getDot_user_id() != 0 || wpDataDB.getFot_user_id() != 0) {
@@ -440,31 +443,34 @@ public class OptionControlEKL<T> extends OptionControl {
         valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
         valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
 
-        // "подводим итог"
+
+        // 4.1
         if (signal) {
             List<DossierSotrSDB> dossierSotrSDBS = SQL_DB.dossierSotrDao().getDataByClientAddress(982L, (long) wpDataDB.getAddr_id(), wpDataDB.getClient_id());
 
             LocalDate newest = findNewestDossierDate(dossierSotrSDBS);
             LocalDate dat = wpDataDB.getDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-            if (newest == null) {
-                // ПустоеЗначение(ДатПерОИ)=1
-                signal = false;
-                optionMsg.append("\n\nАле виконавець ");
-                optionMsg.append(wpDataDB.getUser_txt());
-                optionMsg.append(" на поточний момент ще не провів жодного ЗВ по Клієнту ");
-                optionMsg.append(wpDataDB.getClient_txt());
-                optionMsg.append(" за цією адресою, тож на перший раз для нього робимо виняток.");
-            } else {
-                // ДатПерОИ > Дат-15
-                LocalDate border = dat.minusDays(10);
-                if (newest.isAfter(border)) {
+            boolean isNewClient = condition(wpDataDB.getDt(), customerSDB.workStartDate, customerSDB.workRestartDate);
+            if (!isNewClient)
+                if (newest == null) {
+                    // ПустоеЗначение(ДатПерОИ)=1
                     signal = false;
                     optionMsg.append("\n\nАле виконавець ");
                     optionMsg.append(wpDataDB.getUser_txt());
-                    optionMsg.append(" працює за цією Адресою i з цім Клієнтом менше 14 діб. Робимо для нього виняток.");
+                    optionMsg.append(" на поточний момент ще не провів жодного ЗВ по Клієнту ");
+                    optionMsg.append(wpDataDB.getClient_txt());
+                    optionMsg.append(" за цією адресою, тож на перший раз для нього робимо виняток.");
+                } else {
+                    // ДатПерОИ > Дат-15
+                    LocalDate border = dat.minusDays(10);
+                    if (newest.isAfter(border)) {
+                        signal = false;
+                        optionMsg.append("\n\nАле виконавець ");
+                        optionMsg.append(wpDataDB.getUser_txt());
+                        optionMsg.append(" працює за цією Адресою i з цім Клієнтом менше 14 діб. Робимо для нього виняток.");
+                    }
                 }
-            }
         }
 
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
@@ -691,6 +697,22 @@ public class OptionControlEKL<T> extends OptionControl {
         return signal;
     }
 
+    private static LocalDate startOfMonth(Date d, ZoneId zone) {
+        return Instant.ofEpochMilli(d.getTime())
+                .atZone(zone)
+                .toLocalDate()
+                .with(TemporalAdjusters.firstDayOfMonth());
+    }
+
+    public static boolean condition(Date dat, Date workStartDate, Date workRestartDate) {
+        ZoneId zone = ZoneId.systemDefault(); // или нужная зона
+
+        LocalDate datMonth = startOfMonth(dat, zone);
+        LocalDate startMonth = startOfMonth(workStartDate, zone);
+        LocalDate restartMonth = startOfMonth(workRestartDate, zone);
+
+        return startMonth.isBefore(datMonth) && restartMonth.isBefore(datMonth);
+    }
 }
 
 
