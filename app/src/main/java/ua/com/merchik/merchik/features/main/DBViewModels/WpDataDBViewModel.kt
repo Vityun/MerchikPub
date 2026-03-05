@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.LocationServices
@@ -14,10 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import ua.com.merchik.merchik.Globals
-import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -30,18 +27,18 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
-import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
 import ua.com.merchik.merchik.trecker
+import java.time.LocalDate
 import javax.inject.Inject
+import kotlin.random.Random
 import kotlin.reflect.KClass
 
 @HiltViewModel
@@ -63,7 +60,7 @@ class WpDataDBViewModel @Inject constructor(
             listOf(
                 "dt",        // 1-й уровень группировки
                 "addr_txt",  // 2-й уровень (если включишь вторую группировку)
-    //            "client_txt" // 3-й уровень (опционально)
+                //            "client_txt" // 3-й уровень (опционально)
             )
     }
 
@@ -72,12 +69,14 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return if  (contextUI == ContextUI.WP_DATA)
+        return if (contextUI == ContextUI.WP_DATA)
             "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta, status".split(
-            ",")
+                ","
+            )
         else
             "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(
-                ",")
+                ","
+            )
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
@@ -137,6 +136,8 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun updateFilters() {
+        val prev = uiState.value.filters ?: Filters()
+
         when (contextUI) {
             ContextUI.WP_DATA_IN_CONTAINER,
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER,
@@ -186,8 +187,8 @@ class WpDataDBViewModel @Inject constructor(
                     UsersSDB::class,
                     UsersSDBViewModel::class,
                     ModeUI.MULTI_SELECT,
-                    "## USER",
-                    "## sub title",
+                    "Виконавець",
+                    "Додати Виконавеця",
                     "user_txt",
                     "user_txt",
                     dataUniqUser.map { it.user_txt.toString() },
@@ -274,7 +275,7 @@ class WpDataDBViewModel @Inject constructor(
 //                        setEndDate(LocalDate.now().plusDays(3))
 //                }
 
-                filters = Filters(
+                val newFilters = prev.copy(
                     items =
                         mutableListOf(
                             filterUsersSDB,
@@ -282,7 +283,6 @@ class WpDataDBViewModel @Inject constructor(
                             filterClientSDB,
                             filterWPDataStatus
                         ),
-//                    rangeDataByKey = null
                     rangeDataByKey = RangeDate(
                         key = "dt",
                         start = rangeDataStart.value,
@@ -290,6 +290,7 @@ class WpDataDBViewModel @Inject constructor(
                         enabled = true
                     )
                 )
+                updateFilters(newFilters)
             }
 
             ContextUI.WP_DATA -> {
@@ -337,7 +338,7 @@ class WpDataDBViewModel @Inject constructor(
                 )
 
                 val dataUniqAdress =
-                   data.distinctBy { it.addr_id }
+                    data.distinctBy { it.addr_id }
                 val client =
                     data.distinctBy { it.client_id }
 //                     RoomManager.SQL_DB.customerDao().all
@@ -366,11 +367,11 @@ class WpDataDBViewModel @Inject constructor(
                     "## sub title",
                     "client_txt",
                     "client_txt",
-                    client.map { it.client_txt},
+                    client.map { it.client_txt },
                     client.map { it.client_txt },
                     enabled = true
                 )
-                filters = Filters(
+                val newFilters = prev.copy(
                     items =
                         mutableListOf(
                             filterUsersSDB,
@@ -386,6 +387,7 @@ class WpDataDBViewModel @Inject constructor(
                         enabled = true
                     )
                 )
+                updateFilters(newFilters)
             }
 
             else -> {
@@ -495,23 +497,30 @@ class WpDataDBViewModel @Inject constructor(
 
         // 3) Тяжёлое преобразование тоже на IO
         Globals.writeToMLOG("INFO", "WpDataDBViewModel.getItems", "raw size: ${raw.size}")
+        val filter = FilteringDialogDataHolder.instance().filters
+
         return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
             .map {
                 when (contextUI) {
-
                     ContextUI.WP_DATA -> {
-                        val selected = true
-                            FilteringDialogDataHolder.instance()
+                        val selected = Random.nextBoolean()
+                        FilteringDialogDataHolder.instance()
                             .filters
+//                        val selected = filter
+                            ?.items
+                            ?.firstOrNull { it.clazz == table }
+                            ?.rightValuesRaw
+                            ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
+                        it.copy(selected = true)
+                    }
+
+                    else -> {
+                        val selected = filter
                             ?.items
                             ?.firstOrNull { it.clazz == table }
                             ?.rightValuesRaw
                             ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
                         it.copy(selected = selected == true)
-                    }
-
-                    else -> {
-                        it
                     }
                 }
             }

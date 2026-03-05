@@ -400,6 +400,8 @@ enum class ModeUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT, FILTER_SELECT
 }
 
+enum class SelectedMode { ALL, ONLY_SELECTED, ONLY_UNSELECTED }
+
 @DrawableRes
 fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
     ContextMenuAction.OpenUFMDWPDataSelector -> null

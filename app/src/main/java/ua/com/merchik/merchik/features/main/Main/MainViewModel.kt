@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
@@ -53,6 +54,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.PendingAction
+import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
@@ -93,7 +95,8 @@ data class Filters(
     val subTitle: String? = "У цій формі Ви можете налаштувати фільтри для обмеження списку елементів",
     val rangeDataByKey: RangeDate? = null,
     val searchText: String = "",
-    var items: List<ItemFilter> = emptyList()
+    var items: List<ItemFilter> = emptyList(),
+    val selectedMode: SelectedMode = SelectedMode.ALL
 )
 
 data class ItemFilter(
@@ -365,7 +368,7 @@ abstract class MainViewModel(
         get() = _uiState.asStateFlow()
 
 
-    private val _rangeDataStart = MutableStateFlow<LocalDate?>(LocalDate.now())
+    private val _rangeDataStart = MutableStateFlow<LocalDate?>(LocalDate.now().minusDays(1))
     val rangeDataStart
             : StateFlow<LocalDate?>
         get() = _rangeDataStart.asStateFlow()
@@ -747,16 +750,40 @@ abstract class MainViewModel(
                 } ?: title
 
                 val dataItemUIS = getItems()
-//                Globals.writeToMLOG(
-//                    "INFO",
-//                    "MainViewModel.updateContent",
-//                    "getItems() size: ${dataItemUIS.size}"
-//                )
+
+                val selectedIds: Set<Long> = buildSet {
+                    addAll(old.items.filter { it.selected }.map { it.stableId })
+                    addAll(old.itemsHeader.filter { it.selected }.map { it.stableId })
+                    addAll(old.itemsFooter.filter { it.selected }.map { it.stableId })
+                }
+
+                val dataWithRestoredSelected =
+                    if (selectedIds.isEmpty()) {
+                        dataItemUIS
+                    } else {
+                        dataItemUIS.map { item ->
+                            item.copy(selected = item.stableId in selectedIds)
+                        }
+                    }
+
+                val selectedMode = old.filters?.selectedMode ?: SelectedMode.ALL
+                val shouldApply = (modeUI == ModeUI.FILTER_SELECT || modeUI == ModeUI.MULTI_SELECT)
+
+                val filteredSelectedItems = if (!shouldApply) {
+                    dataWithRestoredSelected
+                } else {
+                    when (selectedMode) {
+                        SelectedMode.ALL -> dataWithRestoredSelected
+                        SelectedMode.ONLY_SELECTED -> dataWithRestoredSelected.filter { it.selected }
+                        SelectedMode.ONLY_UNSELECTED -> dataWithRestoredSelected.filter { !it.selected }
+                    }
+                }
+
 
                 val finalItems = if (groupingKeys.isEmpty()) {
-                    dataItemUIS
+                    filteredSelectedItems
                 } else {
-                    dataItemUIS.map { it.withGroupingOnTop(groupingKeys) }
+                    filteredSelectedItems.map { it.withGroupingOnTop(groupingKeys) }
                 }
 
                 android.util.Log.e(
@@ -802,12 +829,12 @@ abstract class MainViewModel(
         }
     }
 
-    fun updateFilters(filters: Filters) {
-        this.filters = filters
+    fun updateFilters(filter: Filters) {
+        this.filters = filter
 //        viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    filters = filters,
+                    filters = filter,
                     lastUpdate = System.currentTimeMillis()
                 )
             }
@@ -876,6 +903,13 @@ abstract class MainViewModel(
                     },
                 )
             }
+        }
+    }
+
+    fun updateSelectedModeFilter(mode: SelectedMode) {
+        _uiState.update { state ->
+            val f = state.filters ?: Filters()
+            state.copy(filters = f.copy(selectedMode = mode))
         }
     }
 

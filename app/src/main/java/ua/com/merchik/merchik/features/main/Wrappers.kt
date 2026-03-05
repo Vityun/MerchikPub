@@ -605,7 +605,6 @@ object StackPhotoDBOverride {
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
             if (specialCol == 1)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77")))
-            val error = jsonObject.optString("error")
             val hasError = jsonObject.has("error") && !jsonObject.isNull("error")
             if (hasError)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
@@ -614,7 +613,7 @@ object StackPhotoDBOverride {
             return if (uploadTime > 0)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
             else
-                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFBB1F")))
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFBB1F"))) //FAF7BB
 
 
         } catch (_: Exception) {

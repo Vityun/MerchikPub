@@ -48,6 +48,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -1179,19 +1180,26 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Log.e("R_TOVAR", "ФОТО ЕСТЬ(" + stackPhotoDB.getObject_id() + "/" + tovId + ")");
 
                     if (stackPhotoDB.getPhoto_num() != null && !stackPhotoDB.getPhoto_num().equals("")) {
-                        File file = new File(stackPhotoDB.getPhoto_num());
-                        Log.e("R_TOVAR", "PATH: " + file.getPath());
-
-                        if (file.length() > 0) {
-                            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                            if (b != null) {
-                                imageView.setImageBitmap(b);
-                            } else {
-                                imageView.setImageResource(R.mipmap.merchik);
-                            }
-                            return true;
-                        }
-
+                        String src = stackPhotoDB.getPhoto_num();
+                        Glide.with(imageView)
+                                .load(src) // может быть file path или content://
+                                .placeholder(R.mipmap.merchik)
+                                .error(R.mipmap.merchik)
+                                .override(200, 200) // если хочешь миниатюру
+                                .into(imageView);
+//                        File file = new File(stackPhotoDB.getPhoto_num());
+//                        Log.e("R_TOVAR", "PATH: " + file.getPath());
+//
+//                        if (file.length() > 0) {
+//                            imageView.setImageURI();
+////                            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+////                            if (b != null) {
+////                                imageView.setImageBitmap(b);
+////                            } else {
+////                                imageView.setImageResource(R.mipmap.merchik);
+////                            }
+//                        }
+                        return true;
                     }
 
                 }

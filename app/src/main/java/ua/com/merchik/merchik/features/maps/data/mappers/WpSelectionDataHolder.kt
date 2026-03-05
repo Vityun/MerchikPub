@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 
 class WpSelectionDataHolder private constructor() {
 
-    var selected: List<WpDataDB> by mutableStateOf(emptyList())
+    var selected: Set<WpDataDB> by mutableStateOf(emptySet())
         private set
 
     var version: Long by mutableLongStateOf(0L)
@@ -29,18 +29,18 @@ class WpSelectionDataHolder private constructor() {
     }
 
     fun init() {
-        selected = emptyList()
+        selected = emptySet()
         // version НЕ сбрасывай, иначе LaunchedEffect может не отработать как ожидаешь
     }
 
     fun set(items: List<WpDataDB>) {
-        selected = items
+        selected = items.toSet()
         version += 1 // ✅ только тут
     }
 
     fun consumePendingSelected(): List<WpDataDB> {
         val res = selected
-        selected = emptyList()
-        return res
+        selected = emptySet()
+        return res.toList()
     }
 }

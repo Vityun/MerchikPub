@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -56,9 +57,12 @@ import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
@@ -79,6 +83,12 @@ fun FilteringDialog(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    val initialSelectedMode = remember(uiState.filters?.selectedMode) {
+        uiState.filters?.selectedMode ?: SelectedMode.ALL
+    }
+    var localSelectedMode by remember(initialSelectedMode) {
+        mutableStateOf(initialSelectedMode)
+    }
     val listState = rememberLazyListState()
 
     val savedDistance = viewModel.offsetDistanceMeters.collectAsState().value
@@ -88,13 +98,8 @@ fun FilteringDialog(
         when (event) {
             Lifecycle.Event.ON_CREATE -> {
                 FilteringDialogDataHolder.instance().filters = uiState.filters?.copy()
+                localSelectedMode = uiState.filters?.selectedMode ?: SelectedMode.ALL
             }
-
-//            Lifecycle.Event.ON_RESUME -> {
-//                FilteringDialogDataHolder.instance().filters?.let {
-//                    viewModel.updateFilters(it)
-//                }
-//            }
 
             else -> {}
         }
@@ -196,6 +201,18 @@ fun FilteringDialog(
                     }
                     Spacer(modifier = Modifier.padding(2.dp))
                 }
+                val mode = viewModel.modeUI
+                if (mode == ModeUI.FILTER_SELECT || mode == ModeUI.MULTI_SELECT) {
+                    SelectedModeDropDown(
+                        modifier = Modifier
+                            .padding(start = 10.dp, top = 10.dp, bottom = 2.dp),
+                        selectedMode = localSelectedMode,
+                        onSelectedMode = { newMode ->
+                            localSelectedMode = newMode
+                        }
+                    )
+                    Spacer(modifier = Modifier.padding(2.dp))
+                }
                 uiState.filters?.items?.let {
                     LazyColumnScrollbar(
                         modifier = Modifier
@@ -254,17 +271,20 @@ fun FilteringDialog(
                 Row {
                     Button(
                         onClick = {
-                            val filters = uiState.filters ?: return@Button
+                            val base = uiState.filters ?: Filters()
 
-                            viewModel.updateFilters(filters)      // <-- КОММИТ В VM
-                            onChanged(filters)                    // опционально, если надо наружу
+                            val committed = base.copy(
+                                selectedMode = localSelectedMode
+                            )
+
+                            viewModel.updateFilters(committed)   // ✅ коммит только тут
+                            onChanged(committed)                 // опционально, если надо наружу
                             viewModel.updateContent()
 
                             viewModel.updateOffsetDistanceMeters(localDistance)
                             FilteringDialogDataHolder.instance().filters?.let {
                                 onChanged.invoke(it)
                             }
-//                            viewModel.updateContent()
                         },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
@@ -504,6 +524,75 @@ private fun ItemFilterUI(
     }
 }
 
+@Composable
+fun SelectedModeDropDown(
+    modifier: Modifier = Modifier,
+    selectedMode: SelectedMode,
+    onSelectedMode: (SelectedMode) -> Unit
+) {
+    val options = listOf(
+        "Все",   // ALL
+        "Показать отмеченные", // ONLY_SELECTED
+        "Показать не отмеченные" // ONLY_UNSELECTED
+    )
+
+    // чтобы текст соответствовал текущему режиму
+    val currentTitle = when (selectedMode) {
+        SelectedMode.ALL -> options[0]
+        SelectedMode.ONLY_SELECTED -> options[1]
+        SelectedMode.ONLY_UNSELECTED -> options[2]
+    }
+
+    Column(modifier = modifier) {
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text (
+            text = "Отбор",
+//            color = Color.DarkGray
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row(
+            modifier = Modifier
+                .height(40.dp)
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(8.dp))
+                .background(Color.White, RoundedCornerShape(8.dp)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ContextMenu(
+                onSelectedMenu = { index ->
+                    val mode = when (index) {
+                        1 -> SelectedMode.ONLY_SELECTED
+                        2 -> SelectedMode.ONLY_UNSELECTED
+                        else -> SelectedMode.ALL
+                    }
+                    onSelectedMode(mode)
+                },
+                itemsMenu = options
+            ) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = currentTitle,
+                        modifier = Modifier
+                            .padding(7.dp)
+                            .weight(1f)
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.ic_arrow_down_1),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(end = 7.dp)
+                            .align(Alignment.CenterVertically),
+                        contentScale = ContentScale.Inside,
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun DistanceSlider(

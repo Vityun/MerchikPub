@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 35
         //noinspection HighAppVersionCode
-        versionCode  2026022700
-        versionName "2026022700"
+        versionCode  2026030400
+        versionName "2026030400"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -123,8 +123,10 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
-    debugImplementation "com.github.chuckerteam.chucker:library:4.0.0"
-    releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0"
+//    debugImplementation "com.github.chuckerteam.chucker:library:4.0.0"
+//    releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0"
+
+    implementation 'com.github.bumptech.glide:glide:5.0.5'
 
 //    implementation 'ru.egslava:MaskedEditText:1.0.5'
 
