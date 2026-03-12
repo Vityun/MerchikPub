@@ -5,9 +5,12 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverter;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Date;
 
 @Entity(tableName = "wp_data_additional")
 public class WPDataAdditional {
@@ -90,15 +93,16 @@ public class WPDataAdditional {
     @SerializedName("date_from")
     @Expose
     @ColumnInfo(name = "date_from")
-    public long dateFrom;
+    public Date dateFrom;
 
     @SerializedName("date_to")
     @Expose
     @ColumnInfo(name = "date_to")
-    public long dateTo;
+    public Date dateTo;
 
     @SerializedName("route_id")
     @Expose
     @ColumnInfo(name = "route_id")
     public int routeId;         // маршрут
 }
+

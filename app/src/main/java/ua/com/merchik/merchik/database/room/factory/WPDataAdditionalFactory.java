@@ -45,6 +45,26 @@ public final class WPDataAdditionalFactory {
         e.uploadStatus = 1;
         return e;
     }
+    public static WPDataAdditional blankWithDad2Now(WpDataDB wpDataDB) {
+        WPDataAdditional e = new WPDataAdditional();
+        e.ID = newLocalId();
+        e.dt = System.currentTimeMillis() / 1000;
+        e.clientId = Integer.parseInt(wpDataDB.getClient_id());
+        e.isp = "";
+        e.addrId = wpDataDB.getAddr_id();
+        e.codeDad2 = wpDataDB.getCode_dad2();
+        e.themeId = wpDataDB.getTheme_id();
+        e.userDecision = 1;
+        e.confirmDt = 0L;
+        e.confirmDecision = 0;
+        e.confirmAuto = 0;
+        e.comment = null;
+        e.kps = 0;
+        e.uploadStatus = 1;
+        e.dateTo = wpDataDB.getDt();
+        e.dateFrom = wpDataDB.getDt();
+        return e;
+    }
 
     public static List<WPDataAdditional> blankWithDad2(List<WpDataDB> wpDataList) {
         List<WPDataAdditional> result = new ArrayList<>();

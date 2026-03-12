@@ -207,16 +207,16 @@ fun WpDataTabsScreen() {
     // ✅ BADGE + SCROLL LOGIC (как было)
     // -----------------------------
     Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() -")
-    val ids = ScrollDataHolder.instance().getIds()
+//    val ids = ScrollDataHolder.instance().getIds()
     Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() +")
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val green = colorResource(id = R.color.selected_item)
-
-    val badgeTargets: List<Long?> = remember(ids) {
-        List(tabTitles.size) { idx -> ids.getOrNull(idx) }
-    }
+//
+//    val badgeTargets: List<Long?> = remember(ids) {
+//        List(tabTitles.size) { idx -> ids.getOrNull(idx) }
+//    }
 
     val pendingScrollHash = remember { mutableStateOf<Long?>(null) }
     val isScrolling = remember { mutableStateOf(false) }
@@ -265,7 +265,7 @@ fun WpDataTabsScreen() {
                                         borderAndTextColor = if (index == 0) Color.Black else Color.White,
                                         modifier = Modifier.clickable {
 //                                            val targetHash = badgeTargets.getOrNull(index)
-                                            val targetHash = if (index == 0) ScrollDataHolder.instance().getNext() else null
+                                            val targetHash = if (index == 0) ScrollDataHolder.instance().getAll() else null
 
                                             if (targetHash == null) {
                                                 selectedTabIndex = index
@@ -275,68 +275,72 @@ fun WpDataTabsScreen() {
                                             if (selectedTabIndex == index) {
                                                 if (!isScrolling.value) {
                                                     isScrolling.value = true
-                                                    if (targetHash > 0) {
-                                                        viewModel.requestScrollToVisit(targetHash)
-                                                        viewModel.highlightBId(targetHash, green)
-
-                                                        val items = uiState.items
-                                                        val indexInData =
-                                                            items.indexOfFirst { it.stableId == targetHash }
-                                                        if (indexInData > 0) {
-
-                                                            val item = items[indexInData]
-                                                            // достаём WpData из rawObj (если он там есть)
-                                                            val wpData: WpDataDB? = item.rawObj
-                                                                .firstNotNullOfOrNull { (it as? WpDataDB) }
-
-                                                            wpData?.let {
-                                                                val currentFilter = uiState.filters
-                                                                if (currentFilter != null) {
-                                                                    viewModel.updateFilters(
-                                                                        currentFilter.copy(
-                                                                            searchText = it.addr_txt
-                                                                        )
-                                                                    )
-                                                                    val groupingFieldAdr =
-                                                                        GroupingField(
-                                                                            key = "addr_txt",
-                                                                            title = viewModel.getTranslateString(
-                                                                                "Адреса",
-                                                                                1101
-                                                                            ),
-                                                                            priority = 1,
-                                                                            collapsedByDefault = false
-                                                                        )
-
-                                                                    val groupingFieldDate =
-                                                                        GroupingField(
-                                                                            key = "dt",
-                                                                            title = viewModel.getTranslateString(
-                                                                                "Дата",
-                                                                                1100
-                                                                            ),
-                                                                            priority = 1,
-                                                                            collapsedByDefault = false
-                                                                        )
-
-                                                                    viewModel.updateGrouping(
-                                                                        groupingFieldAdr,
-                                                                        0
-                                                                    )
-                                                                    viewModel.updateGrouping(
-                                                                        groupingFieldDate,
-                                                                        1
-                                                                    )
-                                                                }
-                                                            }
+                                                    if (targetHash.isNotEmpty()) {
+                                                        targetHash.forEach {
+                                                            viewModel.highlightBId(it, green)
                                                         }
+                                                        viewModel.selectOnlyItemsByStableIds(targetHash)
+                                                        viewModel.updateContent()
+//                                                        val items = uiState.items
+//                                                        val indexInData =
+//                                                            items.indexOfFirst { it.stableId == targetHash }
+//                                                        if (indexInData > 0) {
+//
+//                                                            val item = items[indexInData]
+//
+//                                                            // достаём WpData из rawObj (если он там есть)
+//                                                            val wpData: WpDataDB? = item.rawObj
+//                                                                .firstNotNullOfOrNull { (it as? WpDataDB) }
+//
+//                                                            wpData?.let {
+//                                                                val currentFilter = uiState.filters
+//                                                                if (currentFilter != null) {
+//                                                                    viewModel.updateFilters(
+//                                                                        currentFilter.copy(
+//                                                                            searchText = it.addr_txt
+//                                                                        )
+//                                                                    )
+//                                                                    val groupingFieldAdr =
+//                                                                        GroupingField(
+//                                                                            key = "addr_txt",
+//                                                                            title = viewModel.getTranslateString(
+//                                                                                "Адреса",
+//                                                                                1101
+//                                                                            ),
+//                                                                            priority = 1,
+//                                                                            collapsedByDefault = false
+//                                                                        )
+//
+//                                                                    val groupingFieldDate =
+//                                                                        GroupingField(
+//                                                                            key = "dt",
+//                                                                            title = viewModel.getTranslateString(
+//                                                                                "Дата",
+//                                                                                1100
+//                                                                            ),
+//                                                                            priority = 1,
+//                                                                            collapsedByDefault = false
+//                                                                        )
+//
+//                                                                    viewModel.updateGrouping(
+//                                                                        groupingFieldAdr,
+//                                                                        0
+//                                                                    )
+//                                                                    viewModel.updateGrouping(
+//                                                                        groupingFieldDate,
+//                                                                        1
+//                                                                    )
+//                                                                }
+//                                                            }
+//                                                        }
                                                     }
                                                     isScrolling.value = false
                                                 }
-                                            } else {
-                                                pendingScrollHash.value = targetHash
-                                                selectedTabIndex = index
                                             }
+//                                            else {
+//                                                pendingScrollHash.value = targetHash
+//                                                selectedTabIndex = index
+//                                            }
                                         }
                                     )
                                 }

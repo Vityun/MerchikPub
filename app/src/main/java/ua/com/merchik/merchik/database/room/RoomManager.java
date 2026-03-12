@@ -49,7 +49,8 @@ public class RoomManager {
                         MIGRATION_69_70,
                         MIGRATION_70_71,
                         MIGRATION_71_72,
-                        MIGRATION_72_73
+                        MIGRATION_72_73,
+                        MIGRATION_73_74
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -885,4 +886,13 @@ public class RoomManager {
         }
     };
 
+
+    public static final Migration MIGRATION_73_74 = new Migration(73, 74) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Ничего не делаем.
+            // Поля date_from и date_to уже хранятся как INTEGER timestamp,
+            // меняется только маппинг в Java: long -> Date через TypeConverter.
+        }
+    };
 }

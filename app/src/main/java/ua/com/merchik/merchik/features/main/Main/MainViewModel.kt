@@ -1,12 +1,14 @@
 package ua.com.merchik.merchik.features.main.Main
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.graphics.Color
@@ -16,6 +18,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -57,6 +60,8 @@ import ua.com.merchik.merchik.dataLayer.PendingAction
 import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
+import ua.com.merchik.merchik.dataLayer.common.ServerIssueDialogConfig
+import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -66,12 +71,18 @@ import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.random.Random
 import kotlin.reflect.KClass
 
 data class StateUI(
@@ -308,7 +319,7 @@ abstract class MainViewModel(
         }
 
         if (selectedIndex > -1) {
-            Log.e("!!!!!!!!!!!","+++++++++++++++")
+            Log.e("!!!!!!!!!!!", "+++++++++++++++")
             dialog?.setPhotos(
                 selectedIndex,
                 photoLogData,
@@ -487,14 +498,17 @@ abstract class MainViewModel(
 
     fun startPlanBudgetPollingSecond(wpDataAdditional: List<WPDataAdditional>) {
         viewModelScope.launch(Dispatchers.IO) {
-            tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(context as Activity, wpDataAdditional) {
+            tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(
+                context as Activity,
+                wpDataAdditional
+            ) {
                 updateContent()
             }
         }
     }
 
 
-        private fun loadPreferences() {
+    private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
         _offsetDistanceMeters.value = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 5_000f)
     }
@@ -616,6 +630,7 @@ abstract class MainViewModel(
 
 //    fun updateSearch(text: String) {
 //        _uiState.update {
+//        _uiState.update {вщ
 //            it.copy(
 //                filters = Filters(
 //                    searchText = text
@@ -665,7 +680,8 @@ abstract class MainViewModel(
 
     fun updateContent() {
         viewModelScope.launch {
-            Log.e("FILTERS_APPLY",
+            Log.e(
+                "FILTERS_APPLY",
                 "search=${filters?.searchText}, itemsSelected=${
                     filters?.items?.sumOf { it.rightValuesRaw.size } ?: 0
                 }"
@@ -832,12 +848,12 @@ abstract class MainViewModel(
     fun updateFilters(filter: Filters) {
         this.filters = filter
 //        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    filters = filter,
-                    lastUpdate = System.currentTimeMillis()
-                )
-            }
+        _uiState.update {
+            it.copy(
+                filters = filter,
+                lastUpdate = System.currentTimeMillis()
+            )
+        }
 //        }
     }
 
@@ -913,6 +929,23 @@ abstract class MainViewModel(
         }
     }
 
+    fun selectOnlyItemsByStableIds(stableIds: List<Long>) {
+        modeUI = ModeUI.FILTER_SELECT
+
+        val ids = stableIds.toSet()
+
+        _uiState.update { state ->
+            state.copy(
+                items = state.items.map { item ->
+                    item.copy(selected = item.stableId in ids)
+                },
+                filters = (state.filters ?: Filters()).copy(
+                    selectedMode = SelectedMode.ONLY_SELECTED
+                )
+            )
+        }
+    }
+
     /** Универсальный массовый апдейт */
     fun highlightWhere(predicate: (DataItemUI) -> Boolean, color: Color?) {
         _uiState.update { st ->
@@ -945,14 +978,15 @@ abstract class MainViewModel(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
 
+                        cancelText = "Скасувати",
                         message = String.format(
-                            "\"Виконати поточну роботу\n" +
-                                    "\"<font color='gray'>Відвідування від</font> %s\n" +
-                                    "\"<br><font color='gray'>Клієнт:</font> %s\n" +
-                                    "\"<br><font color='gray'>Адреса:</font> %s\n" +
-                                    "\"<br><font color='gray'>Премія (план):</font> %s грн.\n" +
-                                    "\"<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\n" +
-                                    "\"<br><font color='gray'>Середній час роботи:</font> %s хв\n",
+                            "Виконати поточну роботу\n" +
+                                    "<font color='gray'>Відвідування від</font> %s\n" +
+                                    "<br><font color='gray'>Клієнт:</font> %s\n" +
+                                    "<br><font color='gray'>Адреса:</font> %s\n" +
+                                    "<br><font color='gray'>Премія (план):</font> %s грн.\n" +
+                                    "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\n" +
+                                    "<br><font color='gray'>Середній час роботи:</font> %s хв\n",
                             Clock.getHumanTime_dd_MMMM(wp.dt.time),
                             wp.client_txt,
                             wp.addr_txt,
@@ -1159,160 +1193,573 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
-//    fun doAcceptOneTime(wp: List<WpDataDB>) {
-//        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
-//
-//        val dad2List: List<Long> = wp
-//             .map { it.code_dad2 }
-//            .distinct()
-//
-//        if (dad2List.isEmpty()) {
-//            // нечего запрашивать
-//            return
-//        }
-//
-//        val d = dao.getByCodeDad2List(dad2List)
-//            .subscribeOn(Schedulers.io())
-//            .flatMap { list ->
-//                if (list.isEmpty()) {
-//                    dao.insertAll(WPDataAdditionalFactory.blankWithDad2(wp))
-//                        .andThen(Single.just(true))
-//                } else {
-//                    Single.just(false)
-//                }
-//            }
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(
-//                { inserted ->
-//                    pending = null
-//
-//                    if (!inserted) {
-//                        // было и остаётся: заявка уже подана
-//                        viewModelScope.launch {
-//                            _events.emit(
-//                                MainEvent.ShowMessageDialog(
-//                                    MessageDialogData(
-//                                        message = "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
-//                                        status = DialogStatus.ALERT,
-//                                    )
+    fun doAcceptOneTime(wpList: List<WpDataDB>) {
+        if (wpList.isEmpty()) return
+
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+
+        val uniqueWpList = wpList.distinctBy { it.code_dad2 }
+        val dad2List = uniqueWpList.map { it.code_dad2 }
+
+        val d = dao.getByCodeDad2List(dad2List)
+            .subscribeOn(Schedulers.io())
+            .flatMapCompletable { existingList ->
+
+                val existingDad2Set = existingList
+                    .map { it.codeDad2 }
+                    .toSet()
+
+                val alreadySubmitted = mutableListOf<WpDataDB>()
+                val toInsert = mutableListOf<WPDataAdditional>()
+
+                uniqueWpList.forEach { wp ->
+                    if (wp.code_dad2 in existingDad2Set) {
+                        alreadySubmitted.add(wp)
+                    } else {
+                        toInsert.add(WPDataAdditionalFactory.blankWithDad2(wp))
+                    }
+                }
+
+                val insertCompletable =
+                    if (toInsert.isNotEmpty()) {
+                        dao.insertAll(toInsert)
+                    } else {
+                        Completable.complete()
+                    }
+
+                insertCompletable
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnComplete {
+                        pending = null
+
+                        val createdText = if (toInsert.isNotEmpty()) {
+                            buildString {
+                                append("Створено заявок: ${toInsert.size}")
+//                                append(
+//                                    toInsert.joinToString("\n") { it.codeDad2.toString() }
 //                                )
-//                            )
-//                        }
-//                        return@subscribe
-//                    }
+                            }
+                        } else {
+                            ""
+                        }
+
+                        val alreadyText = if (alreadySubmitted.isNotEmpty()) {
+                            buildString {
+                                val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                                if (isNotEmpty()) append("\n\n")
+                                append("Заявки вже були подані раніше для відвідувань:\n")
+                                append(
+                                    alreadySubmitted.joinToString("\n") { "${formatter.format(it.dt)} ${it.client_txt}" }
+                                )
+                            }
+                        } else {
+                            ""
+                        }
+
+                        val message = when {
+                            createdText.isNotBlank() && alreadyText.isNotBlank() ->
+                                createdText + alreadyText
+
+                            createdText.isNotBlank() ->
+                                createdText
+
+                            alreadyText.isNotBlank() ->
+                                alreadyText.trim()
+
+                            else ->
+                                "Немає даних для обробки"
+                        }
+
+                        viewModelScope.launch {
+                            _events.emit(
+                                MainEvent.ShowMessageDialog(
+                                    MessageDialogData(
+                                        subTitle = "Результат обробки",
+                                        message = message,
+                                        status = if (toInsert.isNotEmpty()) DialogStatus.NORMAL else DialogStatus.ALERT
+                                    )
+                                )
+                            )
+                        }
+
+                        // если есть хотя бы одна новая заявка — можно запускать обмен
+                        if (toInsert.isNotEmpty()) {
+                            viewModelScope.launch {
+                                _events.emit(
+                                    MainEvent.ShowLoading(
+                                        "Чекаємо на відповідь від сервера",
+                                        28_700L
+                                    )
+                                )
+                            }
+
+                            val uploadDisp = tablesLoadingUnloading
+                                .uploadPlanBudgetRx()
+                                .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                    {
+
+                                        // здесь уже можно либо ждать по каждому dad2,
+                                        // либо сделать отдельную функцию waitDecisionByDad2List(...)
+                                        viewModelScope.launch {
+                                            _events.emit(MainEvent.LoadingCompleted)
+                                        }
+                                    },
+                                    {
+                                        viewModelScope.launch {
+                                            _events.emit(MainEvent.LoadingCanceled)
+                                            _events.emit(
+                                                MainEvent.ShowMessageDialog(
+                                                    MessageDialogData(
+                                                        subTitle = "Створено та збережено ${toInsert.size} заявок",
+                                                        message = String.format(
+                                                            "Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s " +
+                                                                    " Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+                                                            "ввiмкнути інтернет у налаштуваннях."
+                                                        ),
+                                                        status = DialogStatus.ALERT,
+                                                        positivText = "Налаштування інтернету"
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    }
+                                )
+
+                            disposables.add(uploadDisp)
+                        }
+                    }
+            }
+            .subscribe(
+                {
+                    // success already handled in doOnComplete
+                },
+                {
+                    pending = null
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+//                                    message = "Помилка при створенні заявок",
+                                    message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
+                                    status = DialogStatus.ALERT
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+
+        disposables.add(d)
+    }
+
+    fun dialogtest(wpList: List<WpDataDB>) {
+        viewModelScope.launch {
+            _events.emit(MainEvent.LoadingCanceled)
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        subTitle = "Створено та збережено ${wpList.size} заявок",
+                        message = """
+        Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно <a href="app://internet-settings">ввiмкнути інтернет</a> у налаштуваннях.
+        <br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат
+    """.trimIndent(),
+                        status = DialogStatus.ALERT,
+                        positivText = "Налаштування інтернету",
+                        onTextLinkClick = { url ->
+                            when (url) {
+                                "app://internet-settings" -> {
+                                    try {
+                                        context?.startActivity(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY))
+                                    } catch (_: Throwable) {
+                                        try {
+                                            context?.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+                                        } catch (_: Throwable) {
+                                            context?.startActivity(Intent(Settings.ACTION_SETTINGS))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                )
+            )
+        }
+    }
+
+    fun dialogtest2(wpList: List<WpDataDB>) {
+        viewModelScope.launch {
+            _events.emit(MainEvent.LoadingCanceled)
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        subTitle = "Створено та збережено ${wpList.size} заявок",
+                        message = String.format(
+                            "Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s " +
+                                    "<br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+                            "знайти місце з кращiм інтернет з'єднанням, і <a href=\"app://update\">виконати синхронiзацiю</a>. "
+                        ),
+                        status = DialogStatus.ALERT,
+                        positivText = "Виконати синхронiзацiю",
+                        isCancelable = true,
+                        onButtonOkClicked = {
+                            val progress = ProgressViewModel(0)
+                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                            loadingDialog.show()
+                            progress.onNextEvent("Перевірка зв'язку", 4000)
+                            Handler(Looper.getMainLooper()).postDelayed(
+                                {
+                                    progress.onCompleted()
+                                    MessageDialogBuilder(context as Activity)
+                                        .setTitle("Відсутнє інтернет з'єднання")
+                                        .setStatus(DialogStatus.ERROR)
+                                        .setMessage(
+                                            """
+        Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу.
+        """.trimIndent()
+                                        )
+                                        .setOnCancelAction { }
+                                        .setOnConfirmAction("Повторити") {
+                                            val progress = ProgressViewModel(0)
+                                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                                            loadingDialog.show()
+                                            progress.onNextEvent("Перевірка зв'язку", 1000)
+                                            Handler(Looper.getMainLooper()).postDelayed(
+                                                {
+                                                    progress.onCompleted()
+                                                    MessageDialogBuilder(context as Activity)
+                                                        .setTitle("Відсутнє інтернет з'єднання")
+                                                        .setStatus(DialogStatus.ERROR)
+                                                        .setMessage(
+                                                            """
+        Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу.
+        """.trimIndent()
+                                                        )
+                                                        .setOnCancelAction { Unit }
+                                                        .setOnConfirmAction("Повторити") {
+
+                                                        }
+                                                        .show()
+                                                },
+                                                500
+                                            )
+                                        }
+                                        .show()
+                                },
+                                4500
+                            )
+                        },
+                        onTextLinkClick = { url ->
+                            when (url) {
+                                "app://update" -> {
+                                    val progress = ProgressViewModel(0)
+                                    val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                                    loadingDialog.show()
+                                    progress.onNextEvent("Виконую синхронiзацiю", 12000)
+                                    Handler(Looper.getMainLooper()).postDelayed(
+                                        { progress.onCompleted() },
+                                        500
+                                    )
+                                }
+                            }
+                        }
+                    )
+                )
+            )
+        }
+    }
+
+    fun hideServerIssueDialog(){
+        viewModelScope.launch {
+            _events.emit(MainEvent.HideMessageDialog)
+        }
+    }
+
+    fun showServerIssueDialog(
+        wpList: List<WpDataDB>,
+        scenario: ServerIssueScenario
+    ) {
+        val config = buildServerIssueConfig(scenario)
+
+        viewModelScope.launch {
+            _events.emit(MainEvent.LoadingCanceled)
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        subTitle = "Створено та збережено ${wpList.size} заявок",
+                        message = config.message,
+                        status = DialogStatus.ALERT,
+                        positivText = config.positiveText,
+                        cancelText = config.cancelText,
+                        isCancelable = true,
+                        onButtonOkClicked = config.onPositiveClick,
+                        onTextLinkClick = config.onTextLinkClick
+                    )
+                )
+            )
+        }
+    }
+
+    private fun buildServerIssueConfig(
+        scenario: ServerIssueScenario
+    ): ServerIssueDialogConfig {
+        return when (scenario) {
+            ServerIssueScenario.NO_CONNECTION -> {
+                ServerIssueDialogConfig(
+                    message = buildNoConnectionMessage(),
+                    positiveText = "Повторити спробу",
+                    onPositiveClick = {
+                        runConnectionAttemptT(
+                            loadingText = "Перевірка зв'язку",
+                            loadingDelay = 850L
+                        )
+                    },
+                    onTextLinkClick = { url ->
+                        if (url == "app://update") {
+                            runConnectionAttempt(
+                                loadingText = "Виконую синхронiзацiю",
+                                loadingDelay = 400L
+                            )
+                        }
+                    }
+                )
+            }
+
+            ServerIssueScenario.WEAK_CONNECTION -> {
+                ServerIssueDialogConfig(
+                    message = buildWeakConnectionMessage(),
+                    positiveText = "Повторити спробу",
+                    onPositiveClick = {
+                        runConnectionAttemptT(
+                            loadingText = "Перевірка зв'язку",
+                            loadingDelay = 800L
+                        )
+                    },
+                    onTextLinkClick = { url ->
+                        if (url == "app://update") {
+                            runConnectionAttempt(
+                                loadingText = "Виконую синхронiзацiю",
+                                loadingDelay = 200L
+                            )
+                        }
+                    }
+                )
+            }
+
+            ServerIssueScenario.INTERNET_DISABLED -> {
+                ServerIssueDialogConfig(
+                    message = buildInternetDisabledMessage(),
+                    positiveText = "Налаштування",
+
+                    onPositiveClick = {
+                        openInternetSettings()
+                    },
+                    cancelText = "Повторити",
+                    onTextLinkClick = { url ->
+                        if (url == "app://internet-settings") {
+                            openInternetSettings()
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    private fun buildNoConnectionMessage(): String {
+        return String.format(
+            "Однак, на поточний момент, зв'язку з сервером немає. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+            """спробувати <a href="app://update">пiдключитись до сервера</a> знову."""
+        )
+    }
+    private fun buildWeakConnectionMessage(): String {
+        return String.format(
+            "Однак, на поточний момент, зв'язок із сервером нестабільний. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення стабільного зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+            """знайти місце з кращiм інтернет з'єднанням, і <a href="app://update">виконати синхронiзацiю</a>."""
+        )
+    }
+    private fun buildInternetDisabledMessage(): String {
+        return String.format(
+            "Однак, на поточний момент, інтернет-з'єднання вимкнено. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+            """<a href="app://internet-settings">ввiмкнути інтернет</a> у налаштуваннях."""
+        )
+    }
+    private fun openInternetSettings() {
+        try {
+            context?.startActivity(
+                Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        } catch (_: Throwable) {
+            try {
+                context?.startActivity(
+                    Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+            } catch (_: Throwable) {
+                context?.startActivity(
+                    Intent(Settings.ACTION_SETTINGS).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+            }
+        }
+    }
+    private fun runConnectionAttemptT(
+        loadingText: String,
+        loadingDelay: Long
+    ) {
+        showProgressDialog(
+            text = loadingText,
+            delayMs = loadingDelay
+        ) {
+            showNoConnectionDialog(
+                onRetry = {
+                    runConnectionAttempt(
+                        loadingText = "Перевірка зв'язку",
+                        loadingDelay = 700L
+                    )
+                },
+                onCancel = {
+                    showConnectionRestoredDialog()
+                }
+            )
+        }
+    }
+
+    private fun runConnectionAttempt(
+        loadingText: String,
+        loadingDelay: Long
+    ) {
+        showProgressDialog(
+            text = loadingText,
+            delayMs = loadingDelay
+        ) {
+            showNoConnectionDialog(
+                onRetry = {
+                    runConnectionAttempt(
+                        loadingText = "Перевірка зв'язку",
+                        loadingDelay = 500L
+                    )
+                },
+                onCancel = {
+                }
+            )
+        }
+    }
 //
-//                    // новая логика: вместо диалога показываем лоадер и реально ждём ответ
-//                    viewModelScope.launch {
-//                        _events.emit(
-//                            MainEvent.ShowLoading(
-//                                "Чекаємо на відповідь від сервера",
-//                                28_700L
-//                            )
-//                        )
-//                    }
+//    private fun buildNoConnectionMessage(): String {
+//        return String.format(
+//            "Однак, на поточний момент, зв'язку з сервером немає. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+//            """спробувати <a href="app://update">пiдключитись до сервера</a> знову."""
+//        )
+//    }
 //
-//                    // 1) обмен
-//                    val uploadDisp = tablesLoadingUnloading
-//                        .uploadPlanBudgetRx()  // новая Rx-версия (ниже)
-//                        .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
-//                        .subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe(
-//                            { _ ->
-//                                // 2) ожидание решения в БД до 28.7 сек
-//                                viewModelScope.launch {
-//                                    val result = waitDecisionByDad2(dad2, timeoutMs = 28_700L)
-//
-//                                    when (result) {
-//                                        DecisionResult.APPROVED -> {
-//                                            _events.emit(MainEvent.LoadingCompleted)
-//                                            // если нужно — можно короткий toast/snack без диалога
-//                                            val wpDataAdditional = withContext(Dispatchers.IO) {
-//                                                RoomManager.SQL_DB.wpDataAdditionalDao()
-//                                                    .getByCodeDad2Sync(dad2)
-//                                            }
-//
-//                                            context?.let { startPlanBudgetPollingSecond(wpDataAdditional) }
-//
-////                                            _events.emit(
-////                                                MainEvent.ShowMessageDialog(
-////                                                    MessageDialogData(
-////                                                        subTitle = "Відповідь від сервера",
-////                                                        message = wpDataAdditional.first().comment.takeIf { it.isNotBlank() }
-////                                                            ?: "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
-////                                                        status = DialogStatus.NORMAL
-////                                                    )
-////                                                )
-////                                            )
-//
-//                                        }
-//
-//                                        DecisionResult.DECLINED -> {
-//                                            _events.emit(MainEvent.LoadingCanceled)
-//
-//                                            val comment = withContext(Dispatchers.IO) {
-//                                                RoomManager.SQL_DB.wpDataAdditionalDao()
-//                                                    .getLastCommentByDad2Sync(dad2)
-//                                            }
-//
-//                                            _events.emit(
-//                                                MainEvent.ShowMessageDialog(
-//                                                    MessageDialogData(
-//                                                        subTitle = "Відповідь від сервера",
-//                                                        message = comment?.takeIf { it.isNotBlank() }
-//                                                            ?: "Заявка відхилена.",
-//                                                        status = DialogStatus.ALERT
-//                                                    )
-//                                                )
-//                                            )
-//                                        }
-//
-//                                        DecisionResult.PENDING_TIMEOUT -> {
-//                                            // ответа пока нет — но заявка отправлена
-//                                            _events.emit(MainEvent.LoadingCompleted)
-//                                            // при желании можно показать мягкое сообщение:
-//                                            // _events.emit(MainEvent.ShowMessageDialog(...))
-//                                        }
-//                                    }
-//                                }
-//                            },
-//                            { err ->
-//                                viewModelScope.launch {
-//                                    _events.emit(MainEvent.LoadingCanceled)
-//                                    _events.emit(
-//                                        MainEvent.ShowMessageDialog(
-//                                            MessageDialogData(
-//                                                message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
-//                                                status = DialogStatus.ALERT,
-//                                                positivText = "Синхронізація"
-//                                            )
-//                                        )
-//                                    )
-//                                }
-//                            }
-//                        )
-//
-//                    disposables.add(uploadDisp)
+//    private fun runConnectionAttemptT(
+//        loadingText: String,
+//        loadingDelay: Long
+//    ) {
+//        showProgressDialog(
+//            text = loadingText,
+//            delayMs = loadingDelay
+//        ) {
+//            // Сейчас всегда считаем, что связи нет
+//            showNoConnectionDialog(
+//                onRetry = {
+//                    runConnectionAttempt(
+//                        loadingText = "Перевірка зв'язку",
+//                        loadingDelay = 1000L
+//                    )
 //                },
-//                { _ ->
-//                    pending = null
-//                    viewModelScope.launch {
-//                        _events.emit(
-//                            MainEvent.ShowMessageDialog(
-//                                MessageDialogData(
-//                                    message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
-//                                    status = DialogStatus.ALERT,
-//                                    positivText = "Синхронізація"
-//                                )
-//                            )
-//                        )
-//                    }
+//                onCancel = {
+//                    showConnectionRestoredDialog()
 //                }
 //            )
+//        }
+//    }
 //
-//        disposables.add(d)
+//    private fun runConnectionAttempt(
+//        loadingText: String,
+//        loadingDelay: Long
+//    ) {
+//        showProgressDialog(
+//            text = loadingText,
+//            delayMs = loadingDelay
+//        ) {
+//            // Сейчас всегда считаем, что связи нет
+//            showNoConnectionDialog(
+//                onRetry = {
+//                    runConnectionAttempt(
+//                        loadingText = "Перевірка зв'язку",
+//                        loadingDelay = 1000L
+//                    )
+//                },
+//                onCancel = {
+//                    // ничего
+//                }
+//            )
+//        }
 //    }
 
+    private fun showNoConnectionDialog(
+        onRetry: () -> Unit,
+        onCancel: () -> Unit = {}
+    ) {
+        val activity = context as? Activity ?: return
+
+        MessageDialogBuilder(activity)
+            .setTitle("Відсутнiй зв'язок із сервером")
+            .setStatus(DialogStatus.ERROR)
+            .setMessage("Зачекати декiлька хвилин i спробуйте знову.")
+            .setOnCancelAction {
+                onCancel()
+            }
+            .setOnConfirmAction("Повторити") {
+                onRetry()
+            }
+            .show()
+    }
+
+    private fun showProgressDialog(
+        text: String,
+        delayMs: Long,
+        onComplete: () -> Unit
+    ) {
+        val activity = context as? Activity ?: return
+        val progress = ProgressViewModel(0)
+        val loadingDialog = LoadingDialogWithPercent(activity, progress)
+
+        loadingDialog.show()
+        progress.onNextEvent(text, delayMs)
+
+        Handler(Looper.getMainLooper()).postDelayed(
+            {
+                progress.onCompleted()
+                onComplete()
+            },
+            Random.nextLong(10, 900)
+        )
+    }
+
+
+    private fun showConnectionRestoredDialog() {
+        (context as? Activity)?.let { activity ->
+            MessageDialogBuilder(activity)
+                .setTitle("Зв'язок із сервером")
+                .setStatus(DialogStatus.NORMAL)
+                .setMessage(
+                    """
+                Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат.
+                """.trimIndent()
+                )
+                .setOnConfirmAction {
+                }
+                .show()
+        }
+    }
 
     fun doAcceptOneTime(wp: WpDataDB) {
         val dad2 = wp.code_dad2
@@ -1322,7 +1769,7 @@ abstract class MainViewModel(
             .subscribeOn(Schedulers.io())
             .flatMap { list ->
                 if (list.isEmpty()) {
-                    dao.insert(WPDataAdditionalFactory.blankWithDad2(wp))
+                    dao.insert(WPDataAdditionalFactory.blankWithDad2Now(wp))
                         .andThen(Single.just(true))
                 } else {
                     Single.just(false)
@@ -1379,7 +1826,14 @@ abstract class MainViewModel(
                                                     .getByCodeDad2Sync(dad2)
                                             }
 
-                                            context?.let { startPlanBudgetPollingSecond(wpDataAdditional) }
+
+
+
+                                            context?.let {
+                                                startPlanBudgetPollingSecond(
+                                                    wpDataAdditional
+                                                )
+                                            }
 
 //                                            _events.emit(
 //                                                MainEvent.ShowMessageDialog(

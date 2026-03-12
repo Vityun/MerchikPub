@@ -11,6 +11,8 @@ public class UploadResponse {
     // mapping localId -> serverId
     public List<Item> data;
 
+    public String notice;
+
     // решение сервера по заявке (по serverId)
     public List<ResultItem> result;
 

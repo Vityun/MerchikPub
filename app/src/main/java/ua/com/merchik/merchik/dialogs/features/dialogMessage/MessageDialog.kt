@@ -3,7 +3,9 @@ package ua.com.merchik.merchik.dialogs.features.dialogMessage
 import android.content.Intent
 import android.net.Uri
 import android.text.SpannedString
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -38,12 +41,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
@@ -81,7 +87,8 @@ fun MessageDialog(
     showCheckbox: Boolean = false,
     onCheckboxChanged: ((Boolean) -> Unit)? = null,
     dismissOnBackPress: Boolean = true,
-    dismissOnClickOutside: Boolean = true
+    dismissOnClickOutside: Boolean = true,
+    onTextLinkClick: ((String) -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -110,10 +117,13 @@ fun MessageDialog(
 //            }
 //        }
 //    }
-    val styledAnnotatedString: AnnotatedString = remember(message) {
 
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+
+    val styledAnnotatedString: AnnotatedString = remember(message) {
         val pattern = Pattern.compile("\\{([^}]*)\\}")
         val matcher = pattern.matcher(message)
+
         if (matcher.find()) {
             parseAndReplaceVisitText(message) { codeDad2 ->
                 try {
@@ -123,18 +133,58 @@ fun MessageDialog(
                 }
             }
         } else {
-
             AnnotatedString.fromHtml(
-                htmlString = message.replace("\n", "<br>").replace("/n", "<br>"),
+                htmlString = message.replace(Regex("\\s*\n\\s*"), " "),
                 linkStyles = TextLinkStyles(
                     style = SpanStyle(
                         color = Color.Blue,
                         textDecoration = TextDecoration.Underline
                     )
-                )
+                ),
+                linkInteractionListener = { link ->
+                    val url = (link as? LinkAnnotation.Url)?.url ?: return@fromHtml
+                    onTextLinkClick?.invoke(url)
+                }
             )
+//            AnnotatedString.fromHtml(
+//                htmlString = message
+//                    .replace("\n", "<br>")
+//                    .replace("/n", "<br>"),
+//                linkStyles = TextLinkStyles(
+//                    style = SpanStyle(
+//                        color = Color.Blue,
+//                        textDecoration = TextDecoration.Underline
+//                    )
+//                )
+//            )
         }
     }
+
+//    val styledAnnotatedString: AnnotatedString = remember(message) {
+//
+//        val pattern = Pattern.compile("\\{([^}]*)\\}")
+//        val matcher = pattern.matcher(message)
+//        if (matcher.find()) {
+//            parseAndReplaceVisitText(message) { codeDad2 ->
+//                try {
+//                    RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong())
+//                } catch (t: Throwable) {
+//                    null
+//                }
+//            }
+//        } else {
+//
+//            AnnotatedString.fromHtml(
+//                htmlString = message.replace("\n", "<br>").replace("/n", "<br>"),
+//                linkStyles = TextLinkStyles(
+//                    style = SpanStyle(
+//                        color = Color.Blue,
+//                        textDecoration = TextDecoration.Underline
+//                    )
+//                )
+//            )
+//        }
+//    }
 
 
     // чекбокс сохраняем при пересоздании конфигурации
@@ -268,17 +318,38 @@ fun MessageDialog(
                         )
                     }
 
-                    Text(
+                    BasicText(
                         text = styledAnnotatedString,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color(0xCC1E201D),
-                        textAlign = TextAlign.Justify,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            color = Color(0xCC1E201D),
+                            textAlign = TextAlign.Justify
+                        ),
                         modifier = Modifier
                             .padding(vertical = 4.dp)
                             .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp)
                             .padding(bottom = 2.dp)
-                    )
+                            .pointerInput(styledAnnotatedString) {
+                                detectTapGestures { pos ->
+                                    val layout = textLayoutResult ?: return@detectTapGestures
+                                    val offset = layout.getOffsetForPosition(pos)
 
+                                    val links = styledAnnotatedString.getLinkAnnotations(offset, offset)
+                                    val link = links.firstOrNull() ?: return@detectTapGestures
+
+                                    when (val item = link.item) {
+                                        is LinkAnnotation.Url -> {
+                                            onTextLinkClick?.invoke(item.url)
+                                        }
+                                        is LinkAnnotation.Clickable -> {
+                                            onTextLinkClick?.invoke(item.tag)
+                                        }
+                                    }
+                                }
+                            },
+                        onTextLayout = {
+                            textLayoutResult = it
+                        }
+                    )
 
                     // Checkbox
                     if (showCheckbox) {

@@ -10,6 +10,7 @@ import static ua.com.merchik.merchik.trecker.imHereNET;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -55,11 +56,14 @@ import io.reactivex.rxjava3.subjects.SingleSubject;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -192,6 +196,8 @@ public class TablesLoadingUnloading {
 
 
     private Context context;
+
+    private static String notice = "";
 
     /**
      * 18.08.2020
@@ -751,7 +757,6 @@ public class TablesLoadingUnloading {
                                     "exception: " + throwable.getMessage());
                         }
                 );
-
     }
 
     private static final AtomicBoolean DOWNLOAD_PLAN_BUDGET_RUNNING = new AtomicBoolean(false);
@@ -1054,6 +1059,7 @@ public class TablesLoadingUnloading {
         }
 
         final List<Long> beforeIds = new ArrayList<>(beforeIdsSet);
+        String notice = "";
 
         // Сетевой запрос: wp_data_request_list
         StandartData data = new StandartData();
@@ -1073,6 +1079,7 @@ public class TablesLoadingUnloading {
                     if (!ok) {
                         return Single.error(new NoSuchElementException("Empty/invalid data"));
                     }
+
 
                     // 1) сохраняем пришедшее
                     return SQL_DB.wpDataAdditionalDao()
@@ -1156,7 +1163,10 @@ public class TablesLoadingUnloading {
 
         try {
             // ⚠️ лучше не делать new каждый раз, но оставляю как у тебя
-            new TablesLoadingUnloading().downloadAllTables(context);
+            downloadAllTables(context);
+            Exchange exchange = new Exchange();
+            exchange.chatExchange();
+            exchange.chatGroupExchange();
 
             loadingDialog.show();
             progress.onNextEvent("Виконую Синхронізацію з сервером", 7_700);
@@ -1219,17 +1229,32 @@ public class TablesLoadingUnloading {
         }
 
         // по закрытию лоадинга — показываем сообщение и дергаем onFinish
-        loadingDialog.setOnDismissListener(() -> new MessageDialogBuilder(context)
-                .setTitle("Зміни в планi робіт")
-                .setStatus(DialogStatus.NORMAL)
-                .setSubTitle("Вам підтвердили роботу")
-                .setMessage("Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.")
-                .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
-                .setOnConfirmAction(() -> {
-                    if (onFinish != null) onFinish.run();
-                    return Unit.INSTANCE;
-                })
-                .show());
+        loadingDialog.setOnDismissListener(() -> {
+            String msg = "Сервер получил и обработал 1 заявок на дополнительный заработок. Все они подтверждены и Вы можете приступить к их выполнению. Для этого перейдите в ";
+//            String msg = "Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.";
+//            if (!notice.isEmpty())
+//                msg = notice + " <a href=\"app://click\">посешение</a>";
+            msg = msg + " <a href=\"app://click\">посешение</a>";
+            // перейти в план работ -> посмотреть
+            new MessageDialogBuilder(context)
+                    .setTitle("Зміни в планi робіт")
+                    .setStatus(DialogStatus.NORMAL)
+                    .setSubTitle("Відповідь від сервера")
+                    .setMessage(msg)
+                    .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
+                    .setOnConfirmAction(() -> {
+                        if (onFinish != null) onFinish.run();
+                        notice = "";
+                        return Unit.INSTANCE;
+                    })
+                    .setOnTextLinkClick(() -> {
+                        Intent intent = new Intent(context, WPDataActivity.class);
+                        context.startActivity(intent);
+                        return Unit.INSTANCE;
+                    })
+                    .show();
+
+        });
     }
 
 
@@ -1322,6 +1347,8 @@ public class TablesLoadingUnloading {
                                             }
                                         }
                                     }
+
+                                    notice = resp.notice;
                                 }
 
                                 return new Object[]{mapping, results};

@@ -212,6 +212,11 @@ class ScrollDataHolder private constructor() {
         return id
     }
 
+    fun getAll(): List<Long> {
+        if (ids.isEmpty()) return emptyList()
+        return ids
+    }
+
 }
 
 

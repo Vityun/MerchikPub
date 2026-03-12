@@ -1756,7 +1756,7 @@ public class Exchange {
             @Override
             public void onResponse(Call<DossierSotrResponse> call, Response<DossierSotrResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().state
-                && response.body().list != null && !response.body().list.isEmpty()) {
+                        && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<DossierSotrSDB> dossierSotrSDBList = new ArrayList<>();
                     for (DossierSotrItemResponse item : response.body().list) {
                         dossierSotrSDBList.add(new DossierSotrSDB(item));
@@ -2565,22 +2565,20 @@ public class Exchange {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 Log.e("chatExchange", "response: " + response);
-                if (response.isSuccessful() && response.body().state
-                        && response.body().list != null && !response.body().list.isEmpty())
-//                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/chatExchange/onResponse", "(response.body().list: " + response.body().list.size());
-                SQL_DB.chatDao().insertData(response.body().list)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.e("chatExchange", "onComplete()");
-                            }
+                if (response.isSuccessful() && response.body().state && response.body().list != null && !response.body().list.isEmpty())
+                    SQL_DB.chatDao().insertData(response.body().list)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Log.e("chatExchange", "onComplete()");
+                                }
 
-                            @Override
-                            public void onError(@NonNull Throwable e) {
-                                Log.e("chatExchange", "Throwable e: " + e);
-                            }
-                        });
+                                @Override
+                                public void onError(@NonNull Throwable e) {
+                                    Log.e("chatExchange", "Throwable e: " + e);
+                                }
+                            });
             }
 
             @Override

@@ -78,7 +78,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.Realm;
-import io.realm.RealmResults;
 import kotlin.Unit;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -88,6 +87,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -96,7 +96,6 @@ import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
-import ua.com.merchik.merchik.Activities.WifiScannerActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
@@ -137,7 +136,6 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
-import ua.com.merchik.merchik.features.main.Main.MainViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.ProgressRequestBody;
@@ -1204,7 +1202,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     private void alertErrorNoInternet() {
         new AlertDialogMessage(this,
-                "Нема інтернет з'єднання",
+                "Немає інтернет з'єднання",
                 "Зв`язок з сервером на поточний момент встановити не вдалось! Файл не був вiдправлений. " +
                         "Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу",
                 DialogStatus.ERROR).show();
@@ -1742,13 +1740,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                }
 //            }
 //
-////        } else if (internetStatus == 2) {// inet-
-////            if (!Globals.autoSend)
-////                Toast.makeText(this, "Приложение ").show();
-//////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: нет данных о сервере. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
-////        } else {
-////            if (!Globals.autoSend)
-//////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: проверьте состояние интернета. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
+    ////        } else if (internetStatus == 2) {// inet-
+    ////            if (!Globals.autoSend)
+    ////                Toast.makeText(this, "Приложение ").show();
+    //////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: нет данных о сервере. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
+    ////        } else {
+    ////            if (!Globals.autoSend)
+    //////                globals.alertDialogMsg(this, "Ошибка при выгрузке фото: проверьте состояние интернета. Перезапустите интернет и повторите попытку. Если проблема повторится - обратитесь к Вашему руководителю.");
 //        }
 //    }
 

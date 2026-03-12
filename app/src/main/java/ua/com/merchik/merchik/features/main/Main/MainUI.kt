@@ -194,9 +194,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val imeVisible by rememberImeVisible()
 
-//    val dataItemsUI = remember { mutableStateListOf<DataItemUI>() }
-//                val dataItemsUI = mutableListOf<DataItemUI>()
-
 //        ## проверим, как будет работать без него
     val dataItemsUI_ by viewModel.dataItems.collectAsState()
 

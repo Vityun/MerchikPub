@@ -164,15 +164,19 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             }
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
+            //3.3.1 расчет % кол-во общих фотографий / на колво у которых указаны витрины
             try {
-                percentValue = Math.round((float) (100 * uniqueExampleIds.size()) / list.size());
+//                percentValue = Math.round((float) (100 * uniqueExampleIds.size()) / list.size());
+                percentValue = Math.round((float) (100 * list.size()) / stackPhotoDBSList.size());
             } catch (Exception e) {
                 percentValue = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);
             }
 
+            //3.3.2 расчет % витрин
             try {
-                perShowcase = (int) 100 * filledShowcaseIdsCount / showcaseSDBList.size();
+                perShowcase = (int) 100 * uniqueExampleIds.size() / showcaseSDBList.size();
+//                perShowcase = (int) 100 * filledShowcaseIdsCount / showcaseSDBList.size();
             } catch (Exception e) {
                 perShowcase = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
@@ -206,9 +210,9 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append(String.valueOf(percentValue)).append("%), що МЕНШЕ плану в ")
                         .append(String.valueOf(colMin)).append("%")
                         .append(" Загальна кількість вітрин на ТТ: ")
-                        .append(String.valueOf(showcaseSDBList.size()))
-                        .append(", з них фото зроблено ").append(String.valueOf(list.size()))
-                        .append("(").append(String.valueOf(perShowcase)).append("%)");
+                        .append(String.valueOf(showcaseSDBList.size()));
+//                        .append(", з них фото зроблено ").append(String.valueOf(list.size()))
+//                        .append("(").append(String.valueOf(perShowcase)).append("%)");
                 signal = true;
             } else if (!showcaseSDBList.isEmpty() && list.size() < showcaseSDBList.size() * colMin / 100) {
                 spannableStringBuilder.append("При виготовленні світлин, Ви сфотографували лише у ")

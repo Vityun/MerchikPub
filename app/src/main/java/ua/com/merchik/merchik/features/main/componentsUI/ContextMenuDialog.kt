@@ -57,7 +57,6 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
@@ -115,9 +114,13 @@ data class MessageDialogData(
     val message: String,
     val status: DialogStatus,
     val positivText: String? = null,
+    val cancelText: String? = null,
     val showButton: Boolean = true,
     val isCancelable: Boolean = true,
-    val filterLogic: Boolean = false
+    val filterLogic: Boolean = false,
+    val onButtonOkClicked: (() -> Unit)? = null,
+    val onButtonCancelClicked: (() -> Unit)? = null,
+    val onTextLinkClick: ((String) -> Unit)? = null
 )
 
 data class CardItemsData(
@@ -266,6 +269,10 @@ fun rememberContextMenuHost(
                             )
                         }
 
+                    }
+
+                    is MainEvent.HideMessageDialog -> {
+                        showMessageDialog = null
                     }
 
 
@@ -426,8 +433,10 @@ fun rememberContextMenuHost(
                 viewModel.cancelPending()
             },
             okButtonName = d.positivText ?: "Ok",
+            cancelButtonName = d.cancelText?: "",
             onConfirmAction = if (d.showButton) {
                 {
+                    d.onButtonOkClicked?.invoke()
                     showMessageDialog = null
                     if (d.filterLogic) {
                         closeMapsDialogAnimated()
@@ -445,9 +454,15 @@ fun rememberContextMenuHost(
                     } else
                         viewModel.cancelPending()
                 }
-            } else null,
-            onCloseClick = {
+            } else if (d.cancelText != null) {
+                {
 
+                }
+            } else null,
+//            onCloseClick = {
+//            },
+            onTextLinkClick = {
+                d.onTextLinkClick?.invoke(it)
             }
         )
     }

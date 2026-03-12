@@ -613,7 +613,7 @@ object StackPhotoDBOverride {
             return if (uploadTime > 0)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
             else
-                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFBB1F"))) //FAF7BB
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#FAF7BB"))) //FAF7BB
 
 
         } catch (_: Exception) {

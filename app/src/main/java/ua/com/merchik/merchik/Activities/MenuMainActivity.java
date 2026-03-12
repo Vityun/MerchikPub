@@ -237,7 +237,9 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        new Translate().uploadNewTranslate();
+//        new Translate().uploadNewTranslate();
+
+        new TablesLoadingUnloading().donwloadPlanBudget();
 
 
 //        new TablesLoadingUnloading().downloadWiFi();

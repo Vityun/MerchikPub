@@ -165,7 +165,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 InitStateEntity.class,
                 LocationDevices.class
         },
-        version = 75
+        version = 76
 )
 
 

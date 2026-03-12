@@ -549,6 +549,7 @@ sealed interface MainEvent {
     data object LoadingCompleted : MainEvent
     data object LoadingCanceled : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
+    data object HideMessageDialog : MainEvent
     data object JumpToVizitAndCloseMaps : MainEvent
 
     data class OpenUFMDWPDataSelector(val wp: WpDataDB) : MainEvent  // ✅ новый

@@ -560,6 +560,7 @@ public class Options {
                     optionControlStockBalanceTovar.showOptionMassage("");
                     break;
 
+                case 135448:
                 case 2243:
                     OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlStockTovarLeft.showOptionMassage("");
@@ -2320,6 +2321,7 @@ public class Options {
 
                 return optionControlStockBalanceTovar.isBlockOption2() ? 1 : 0;
 
+            case 135448:
             case 2243:
                 OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlStockTovarLeft.isBlockOption()))

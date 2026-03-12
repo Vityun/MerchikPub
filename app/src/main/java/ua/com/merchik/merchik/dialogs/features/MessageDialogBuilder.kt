@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.AnnotatedString
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.ViewHolders.Clicks
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 
@@ -33,6 +34,8 @@ class MessageDialogBuilder(private val context: Activity) {
     private var cancelable: Boolean = true
     private var exitConfirmMessage: String =
         "Приложение будет закрыто. Завершить работу?"
+
+    private var onTextLinkClick: (() -> Unit?)? = null
 
     fun setTitle(title: String?) = apply { this.title = title }
     fun setSubTitle(subTitle: String?) = apply { this.subTitle = subTitle }
@@ -88,6 +91,10 @@ class MessageDialogBuilder(private val context: Activity) {
     fun setOnDismissListener(listener: DialogDismissListener?) = apply {
         this.onDismissListener = { listener?.onDismiss() }
     }
+
+    fun setOnTextLinkClick(onTextClicked: (() -> Unit)?) =
+        apply { this.onTextLinkClick = onTextClicked }
+
 
     private fun internalDismiss() {
         if (!isDialogVisible.value) return
@@ -159,7 +166,12 @@ class MessageDialogBuilder(private val context: Activity) {
                                 sharedPref.edit().putBoolean(checkboxPrefKey, checked).apply()
                             },
                             dismissOnBackPress = cancelable,
-                            dismissOnClickOutside = cancelable
+                            dismissOnClickOutside = cancelable,
+                            onTextLinkClick = if (onTextLinkClick == null) null else {
+                                {
+                                    onTextLinkClick?.invoke()
+                                }
+                            }
                         )
                     }
                 }
