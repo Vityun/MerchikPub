@@ -92,6 +92,8 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, addrId, clientId, null, PHOTO_TOV_LEFT, null);
+        Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeftClient", "stackPhoto size: " + stackPhoto.size() +
+                " | dateFrom: " + dateFrom + " | dateTo: " + dateTo + " | addrId and client: " + addrId + ", " + clientId + " | tpId: " + tpId);
 
         if (tpId == 8923 && (usersSDB.reportDate01 != null || usersSDB.reportDate05.getTime() >= documentDate)) {
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");

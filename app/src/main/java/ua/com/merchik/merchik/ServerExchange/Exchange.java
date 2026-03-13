@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -2326,18 +2327,20 @@ public class Exchange {
      * 27.01.22
      * Нужно перекотиться на неё
      */
-    private static boolean isdownloadWPData = false;
+    private final AtomicBoolean isdownloadWPData = new AtomicBoolean(false);
 
     public void sendWpDataToServer(Click result) {
 
         List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
+        final List<StartEndData> sentSnapshot = new ArrayList<>(wpdataStartEnd);
         if (wpdataStartEnd.isEmpty()) {
             result.onFailure("Нет даных");
             return;
         }
 
-        if (isdownloadWPData) return;
-        isdownloadWPData = true;
+        if (!isdownloadWPData.compareAndSet(false, true)) {
+            return;
+        }
 
 
         UploadDataSEWork data = new UploadDataSEWork();
@@ -2373,61 +2376,65 @@ public class Exchange {
                             if (response.body() != null) {
                                 if (response.body().state) {
                                     if (response.body().data != null && !response.body().data.isEmpty()) {
-                                        saveWpDataResult(response.body().data);
-                                        isdownloadWPData = false;
+                                        saveWpDataResult(response.body().data, sentSnapshot);
+                                        isdownloadWPData.set(false);
                                         result.onSuccess("Данные о проведении обработаны успешно.");
                                     } else if (response.body().error != null && !response.body().error.equals("")) {
                                         Globals.writeToMLOG("ERROR", "Exchange.sendWpDataToServer.onResponse.response.body().error", "Error: " + response.body().error);
-                                        isdownloadWPData = false;
+                                        isdownloadWPData.set(false);
                                         result.onFailure("Возникла проблемма с обработкой данных на сервере по причине: " + response.body().error);
                                     } else if (response.body().data == null) {
-                                        isdownloadWPData = false;
+                                        isdownloadWPData.set(false);
                                         result.onSuccess("Запрос на проведение прошел успешно, но данных для обработки сервер не вернул.");
                                     } else {
-                                        isdownloadWPData = false;
+                                        isdownloadWPData.set(false);
                                         result.onSuccess("Запрос на проведение прошел успешно.");
                                     }
                                 } else {
-                                    isdownloadWPData = false;
+                                    isdownloadWPData.set(false);
                                     result.onFailure("Данных для обработки с сервера не вернулось. Повторите попытку позже или обратитесь к своему руководителю.");
                                 }
                             } else {
-                                isdownloadWPData = false;
+                                isdownloadWPData.set(false);
                                 result.onFailure("Данных для обработки с сервера не вернулось. Повторите попытку позже или обратитесь к своему руководителю.");
                             }
                         } else {
-                            isdownloadWPData = false;
+                            isdownloadWPData.set(false);
                             result.onFailure("Ошибка сервера. Повторите попытку позже или обратитесь к руководителю. \nОшибка: " + response.code());
                         }
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "Exchange.sendWpDataToServer.onResponse", "Exception e: " + e);
-                        isdownloadWPData = false;
+                        isdownloadWPData.set(false);
                         result.onFailure("Произошла ошибка в анализе данных. \nОшибка: " + e);
                     }
-                    isdownloadWPData = false;
+                    isdownloadWPData.set(false);
                 }
 
                 @Override
                 public void onFailure(Call<WpDataUpdateResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
-                    isdownloadWPData = false;
+                    isdownloadWPData.set(false);
                     result.onFailure("Возникла ошибка связи. Проверьте состояние интернета и повторите попытку позже. \nОшибка: " + t);
                 }
             });
         } else
-            isdownloadWPData = false;
+            isdownloadWPData.set(false);
     }
 
     /**
      * 27.01.22.
      * Сохранение обновлённых данных в БД
      */
-    public void saveWpDataResult(List<WpDataUpdateResponseList> data) {
+    public void saveWpDataResult(List<WpDataUpdateResponseList> data, List<StartEndData> sentSnapshot) {
         try {
             Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data size: " + data.size());
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonOutput = gson.toJson(data);
             Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data result: " + jsonOutput);
+
+            if (data == null || data.isEmpty()) {
+                return;
+            }
 
             Long[] ids = new Long[data.size()];
             int count = 0;
@@ -2439,25 +2446,141 @@ public class Exchange {
             List<WpDataDB> saveWp = new ArrayList<>();
 
             for (WpDataDB item : wp) {
-                for (WpDataUpdateResponseList itm : data) {
-                    if (itm.elementId.equals(item.getId()) && itm.data != null) {
-                        if (itm.data.visitStartDt || itm.data.visitEndDt || itm.data.clientStartDt || itm.data.clientEndDt
-                                || itm.data.userComment || itm.data.user_opinion_id) {
-                            item.startUpdate = false;
-                        }
-//                        else {
-//                            item.setSetStatus(0);
-//                        }
-                        saveWp.add(item);
+                for (WpDataUpdateResponseList respItem : data) {
+
+                    if (!respItem.elementId.equals(item.getId()) || respItem.data == null) {
+                        continue;
                     }
+
+                    // Ищем snapshot именно той записи, которая была отправлена
+                    StartEndData sentItem = findSentSnapshot(sentSnapshot, item.getId());
+
+                    if (sentItem == null) {
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "Exchange.saveWpDataResult",
+                                "sent snapshot not found for item id = " + item.getId()
+                        );
+                        continue;
+                    }
+
+                    // Сервер подтвердил, что обработал данные по этой записи
+                    if (respItem.data.visitStartDt
+                            || respItem.data.visitEndDt
+                            || respItem.data.clientStartDt
+                            || respItem.data.clientEndDt
+                            || respItem.data.userComment
+                            || respItem.data.user_opinion_id) {
+
+                        // Снимаем startUpdate ТОЛЬКО если запись локально не изменилась
+                        // после того, как этот snapshot был отправлен
+                        if (isSameAsSentSnapshot(item, sentItem)) {
+                            item.startUpdate = false;
+
+                            Globals.writeToMLOG(
+                                    "INFO",
+                                    "Exchange.saveWpDataResult",
+                                    "startUpdate=false for item id = " + item.getId()
+                            );
+                        } else {
+                            item.startUpdate = true;
+
+                            Globals.writeToMLOG(
+                                    "INFO",
+                                    "Exchange.saveWpDataResult",
+                                    "local data changed after send, keep startUpdate=true for item id = " + item.getId()
+                            );
+                        }
+                    }
+
+                    saveWp.add(item);
+                    break;
                 }
             }
+
             WpDataRealm.setWpData(saveWp);
+
         } catch (Exception e) {
-            // Exchange.saveWpDataResult.ERROR Exception e: java.lang.IllegalArgumentException: Invalid query: field 'id' not found in class 'WpDataDB'.
             Globals.writeToMLOG("ERROR", "Exchange.saveWpDataResult.ERROR", "Exception e: " + e);
         }
     }
+    private StartEndData findSentSnapshot(List<StartEndData> sentSnapshot, Long itemId) {
+        if (sentSnapshot == null || itemId == null) return null;
+
+        for (StartEndData item : sentSnapshot) {
+            if (item != null && item.element_id != null) {
+                try {
+                    if (Long.parseLong(item.element_id) == itemId) {
+                        return item;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+    private boolean isSameAsSentSnapshot(WpDataDB db, StartEndData sent) {
+        if (db == null || sent == null) return false;
+
+        return safeEquals(String.valueOf(db.getVisit_start_dt()), sent.visit_start_dt)
+                && safeEquals(String.valueOf(db.getVisit_end_dt()), sent.visit_end_dt)
+                && safeEquals(String.valueOf(db.getClient_start_dt()), sent.client_start_dt)
+                && safeEquals(String.valueOf(db.getClient_end_dt()), sent.client_end_dt)
+                && safeEquals(String.valueOf(db.client_work_duration), sent.client_work_duration)
+                && safeEquals(String.valueOf(db.getSetStatus()), sent.status_set)
+
+                && safeEquals(db.user_comment, sent.user_comment)
+                && safeEquals(db.user_comment_author_id, sent.user_comment_author_id)
+                && safeEquals(db.user_comment_dt_update, sent.user_comment_dt_update)
+
+                && safeEquals(String.valueOf(db.getUser_opinion_id()), sent.user_opinion_id)
+                && safeEquals(String.valueOf(db.getUser_opinion_author_id()), sent.user_opinion_author_id)
+                && safeEquals(db.getUser_opinion_dt_update(), sent.user_opinion_dt_update);
+    }
+    private boolean safeEquals(Object a, Object b) {
+        return java.util.Objects.equals(
+                a == null ? null : String.valueOf(a),
+                b == null ? null : String.valueOf(b)
+        );
+    }
+//    public void saveWpDataResult(List<WpDataUpdateResponseList> data) {
+//        try {
+//            Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data size: " + data.size());
+//            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//            String jsonOutput = gson.toJson(data);
+//            Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data result: " + jsonOutput);
+//
+//            Long[] ids = new Long[data.size()];
+//            int count = 0;
+//            for (WpDataUpdateResponseList item : data) {
+//                ids[count++] = item.elementId;
+//            }
+//
+//            List<WpDataDB> wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByIds(ids));
+//            List<WpDataDB> saveWp = new ArrayList<>();
+//
+//            for (WpDataDB item : wp) {
+//                for (WpDataUpdateResponseList itm : data) {
+//                    if (itm.elementId.equals(item.getId()) && itm.data != null) {
+//                        if (itm.data.visitStartDt || itm.data.visitEndDt || itm.data.clientStartDt || itm.data.clientEndDt
+//                                || itm.data.userComment || itm.data.user_opinion_id) {
+//                            item.startUpdate = false;
+//                        }
+////                        else {
+////                            item.setSetStatus(0);
+////                        }
+//                        saveWp.add(item);
+//                    }
+//                }
+//            }
+//            WpDataRealm.setWpData(saveWp);
+//        } catch (Exception e) {
+//            // Exchange.saveWpDataResult.ERROR Exception e: java.lang.IllegalArgumentException: Invalid query: field 'id' not found in class 'WpDataDB'.
+//            Globals.writeToMLOG("ERROR", "Exchange.saveWpDataResult.ERROR", "Exception e: " + e);
+//        }
+//    }
+
+
 
     /**
      * 20.04.2021
