@@ -1,9 +1,12 @@
 package ua.com.merchik.merchik.database.realm;
 
 import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
+import static ua.com.merchik.merchik.Utils.GPSUtils.distanceMeters;
+import static ua.com.merchik.merchik.features.maps.domain.UtilitiesKt.parseWpPoint;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -11,6 +14,7 @@ import androidx.preference.PreferenceManager;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +23,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -58,6 +64,7 @@ import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.features.maps.domain.GeoPoint;
 
 public class RealmManager {
 
@@ -790,6 +797,42 @@ public class RealmManager {
         }
     }
 
+    public static List<WpDataDB> getAllWorkPlanForRNOWithDate() {
+        try (Realm realm = Realm.getDefaultInstance()) {
+
+            Calendar calStart = Calendar.getInstance();
+            calStart.set(Calendar.HOUR_OF_DAY, 0);
+            calStart.set(Calendar.MINUTE, 0);
+            calStart.set(Calendar.SECOND, 0);
+            calStart.set(Calendar.MILLISECOND, 0);
+            Date startDate = calStart.getTime();
+
+            Calendar calEnd = Calendar.getInstance();
+            calEnd.set(Calendar.HOUR_OF_DAY, 0);
+            calEnd.set(Calendar.MINUTE, 0);
+            calEnd.set(Calendar.SECOND, 0);
+            calEnd.set(Calendar.MILLISECOND, 0);
+            calEnd.add(Calendar.DAY_OF_MONTH, 5); // < start of day+5 == today + 4 days inclusive
+            Date endDateExclusive = calEnd.getTime();
+
+            RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
+                    .equalTo("user_id", 14041)
+                    .greaterThanOrEqualTo("dt", startDate)
+                    .lessThan("dt", endDateExclusive)
+                    .sort(
+                            new String[]{"dt_start", "addr_id"},
+                            new Sort[]{Sort.ASCENDING, Sort.ASCENDING}
+                    )
+                    .findAll();
+
+            return realm.copyFromRealm(results);
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "WpDataRealm.getAllWorkPlanForRNO", "Exception: " + e);
+            return new ArrayList<>();
+        }
+    }
+
     public static RealmResults<WpDataDB> getAllWorkPlanWithOutRNO() {
         try (Realm realm = Realm.getDefaultInstance()) {
             return realm.where(WpDataDB.class)
@@ -797,6 +840,44 @@ public class RealmManager {
                     .sort(new String[]{"dt_start", "addr_id"},
                             new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
                     .findAll(); // <- unmanaged
+        }
+    }
+
+    public static int getAllWorkPlanForRNOCountByDistance(
+            @Nullable Location current,
+            float maxDistanceMeters
+    ) {
+        try {
+            List<WpDataDB> data = RealmManager.getAllWorkPlanForRNOWithDate();
+
+            if (current == null) {
+                return data.size();
+            }
+
+            int count = 0;
+            double currentLat = current.getLatitude();
+            double currentLon = current.getLongitude();
+
+            for (WpDataDB wp : data) {
+                GeoPoint point = parseWpPoint(wp);
+                if (point == null) continue;
+
+                double distance = distanceMeters(
+                        currentLat,
+                        currentLon,
+                        point.getLat(),
+                        point.getLon()
+                );
+
+                if (distance <= maxDistanceMeters) {
+                    count++;
+                }
+            }
+
+            return count;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager.getAllWorkPlanForRNOCountByDistance", "Exception: " + e);
+            return 0;
         }
     }
 

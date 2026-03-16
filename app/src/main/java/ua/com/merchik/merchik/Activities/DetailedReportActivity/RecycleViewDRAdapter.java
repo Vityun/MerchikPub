@@ -2011,6 +2011,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 min = "0";
             else if (option.getOptionId().equals("132969"))
                 min = "1";
+            else if (option.getOptionId().equals("135158"))
+                min = "1";
             else if (option.getOptionId().equals("141360")) {
                 RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
                 long count = stackPhotoDB.where()

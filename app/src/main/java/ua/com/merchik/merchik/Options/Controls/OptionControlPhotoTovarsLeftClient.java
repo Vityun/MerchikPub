@@ -85,6 +85,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
 
             tpId = addressSDB.tpId;
 
+            // 1.3
             calculateDateSpan();    // Получение dateFrom/dateTo
         }
     }
@@ -159,7 +160,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
         }
 
         dateFrom = Clock.getDatePeriodLong(documentDate, -dayFrom);
-        dateTo = Clock.getDatePeriodLong(documentDate, 4);  // дадим возможность ребятам ЗАВТРА внести ФОТ (12.01.23. изменил от балды на 4. Теоретически это Сегодня +3 дня)
+        dateTo = Clock.getDatePeriodLong(documentDate, 1);  // 16.03.2026 поменял на 1 день
     }
 
     /**

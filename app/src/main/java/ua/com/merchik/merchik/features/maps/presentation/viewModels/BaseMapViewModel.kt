@@ -152,17 +152,17 @@ abstract class BaseMapViewModel(
                 }
             }
         } else {
-            if (p.count == 1) {
-                viewModelScope.launch {
-                    _state.update {
-                        it.copy(
-                            pendingWp = wp,
-                            pendingStableId = p.point.dataItemsUI?.stableId
-                        )
-                    }
-                    _effects.emit(MapEffect.OpenContextMenu(wp, ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER))
-                }
-            } else {
+//            if (p.count == 1) {
+//                viewModelScope.launch {
+//                    _state.update {
+//                        it.copy(
+//                            pendingWp = wp,
+//                            pendingStableId = p.point.dataItemsUI?.stableId
+//                        )
+//                    }
+//                    _effects.emit(MapEffect.OpenContextMenu(wp, ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER))
+//                }
+//            } else {
 //            _effects.tryEmit(MapEffect.ShowConfirm(wp, p.point.dataItemsUI?.stableId))
                 viewModelScope.launch {
                     _state.update {
@@ -177,7 +177,7 @@ abstract class BaseMapViewModel(
                             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
                         )
                     )
-                }
+//                }
             }
         }
     }

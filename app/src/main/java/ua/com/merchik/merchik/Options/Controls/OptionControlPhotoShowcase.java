@@ -144,7 +144,9 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     if (isShowcaseIdPresent) {
                         String exampleId = stackPhotoDB.getExample_img_id();
                         // Проверяем example_id на уникальность и непустоту
-                        if (exampleId != null && !exampleId.isEmpty() && uniqueExampleIds.add(exampleId)) {
+                        if (exampleId != null && !exampleId.isEmpty()
+//                                && uniqueExampleIds.add(exampleId)
+                        ) {
                             list.add(stackPhotoDB);
                         }
                     }

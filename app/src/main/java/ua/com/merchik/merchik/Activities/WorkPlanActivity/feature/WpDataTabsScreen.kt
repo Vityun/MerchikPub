@@ -155,7 +155,7 @@ fun WpDataTabsScreen() {
     val badgeCounts = cronchikViewModel.badgeCounts
 
     if (badgeCounts[1] == null || badgeCounts[1] == 0)
-        cronchikViewModel.updateBadgeAdditionalIncome()
+        cronchikViewModel.updateBadgeAdditionalIncome(5000f)
 
 
     // -----------------------------
@@ -171,7 +171,7 @@ fun WpDataTabsScreen() {
                 delay(800)
                 dataIsReady = true
                 progressModel.onCompleted()
-                cronchikViewModel.updateBadgeAdditionalIncome()
+                cronchikViewModel.updateBadgeAdditionalIncome(5000f)
                 break
             }
 

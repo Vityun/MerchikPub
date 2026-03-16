@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.Activities;
 
-import android.os.Handler;
+import android.location.Location;
 import android.os.Looper;
 import android.util.Log;
 
@@ -14,8 +14,10 @@ import androidx.work.WorkManager;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.trecker;
 
 public class CronchikViewModel extends ViewModel {
 
@@ -61,12 +63,31 @@ public class CronchikViewModel extends ViewModel {
     public void updateBadge(int index, @Nullable Integer count) {
         if (index >= 0 && index < badgeCounts.size()) {
             badgeCounts.set(index, count);
-            Log.e("############","badgeCounts: " + badgeCounts);
+            Log.e("############", "badgeCounts: " + badgeCounts);
         }
     }
 
-    public void updateBadgeAdditionalIncome() {
-        badgeCounts.set(1, RealmManager.getAllWorkPlanForRNO().size());
+//    public void updateBadgeAdditionalIncome() {
+//        badgeCounts.set(1, RealmManager.getAllWorkPlanForRNO().size());
+//    }
+
+    public void updateBadgeAdditionalIncome(float maxDistanceMeters) {
+        try {
+            Location location = null;
+
+            if (ua.com.merchik.merchik.trecker.imHereGPS != null) {
+                location = trecker.imHereGPS;
+            } else if (trecker.imHereNET != null) {
+                location = trecker.imHereNET;
+            }
+
+            int count = RealmManager.getAllWorkPlanForRNOCountByDistance(location, maxDistanceMeters);
+            badgeCounts.set(1, count);
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "updateBadgeAdditionalIncome", "Exception: " + e);
+            badgeCounts.set(1, 0);
+        }
     }
 
     public void clearBadge(int index) {
