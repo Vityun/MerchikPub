@@ -457,7 +457,7 @@ public class TablesLoadingUnloading {
 
                                     Log.e("!!!!!!!!!!", "+++++++++++");
                                 }
-                                if (dad2.size() == confirmedGoodIds.size())
+                                if (dad2.size() == confirmedGoodIds.size()) // это место под вопросом, а если не прилит одна работа?
                                     ScrollDataHolder.Companion.instance().addIds(confirmedGoodIds);
                                 else {
                                     new MessageDialogBuilder((Activity) context)

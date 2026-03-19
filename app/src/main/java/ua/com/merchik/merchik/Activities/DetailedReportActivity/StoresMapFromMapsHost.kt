@@ -32,47 +32,47 @@ import androidx.compose.runtime.collectAsState
 
 @Composable
 private fun StoresMapFromMapsHost(wpData: WpDataDB) {
-    // 1) Вьюмодели
     val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
     mainVm.dataJson = Gson().toJson(wpData)
     val mapVm: MapFromMapsViewModel = hiltViewModel()
 
-    // 2) Камера
     val camera = rememberCameraPositionState()
 
-    // 3) Цвет/контекст
     val highlightColor = colorResource(id = R.color.selected_item)
     val contextUI = mainVm.contextUI
 
-    // 4) Локальный стейт диалога
     var showMapsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { mainVm.updateContent() }
 
-    // 5) Мост
     LaunchedEffect(mapVm, mainVm, highlightColor, contextUI) {
         mapVm.attachBridge(
             MainMapActionsBridge(
                 mainVm = mainVm,
-                onDismiss = { /* ничего, диалог здесь отдельный */ },
+                onDismiss = { },
                 contextUI = contextUI,
                 highlightColor = highlightColor
             )
         )
     }
 
-    // 6) Подкидываем входные данные
     val uiState by mainVm.uiState.collectAsState()
+    val rangeStart by mainVm.rangeDataStart.collectAsState()
+    val rangeEnd by mainVm.rangeDataEnd.collectAsState()
+    val distance by mainVm.offsetDistanceMeters.collectAsState()
+
     LaunchedEffect(
         uiState.items,
         uiState.filters,
         uiState.sortingFields,
-        mainVm.rangeDataStart.collectAsState().value,
-        mainVm.rangeDataEnd.collectAsState().value,
+        uiState.groupingFields,
+        rangeStart,
+        rangeEnd,
         uiState.filters?.searchText,
         Globals.CoordX,
         Globals.CoordY,
-        mapVm
+        mapVm,
+        distance
     ) {
         mapVm.process(
             MapIntent.SetInput(
@@ -80,24 +80,23 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
                 filters = uiState.filters,
                 sorting = uiState.sortingFields,
                 grouping = uiState.groupingFields,
-                rangeStartLocalDate = mainVm.rangeDataStart.value,
-                rangeEndLocalDate = mainVm.rangeDataEnd.value,
+                rangeStartLocalDate = rangeStart,
+                rangeEndLocalDate = rangeEnd,
                 search = uiState.filters?.searchText,
                 userLat = Globals.CoordX,
                 userLon = Globals.CoordY,
+                distanceMeters = distance,
                 autoCenterOnSetInput = false
             )
         )
     }
 
-    // 7) Карта + прозрачный клик-оверлей
     Box(modifier = Modifier.fillMaxSize()) {
         StoresMap(
             cameraPositionState = camera,
             vm = mapVm as BaseMapViewModel
         )
 
-        // Прозрачный слой поверх карты: любой тап => открыть диалог
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -107,7 +106,6 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
                             showMapsDialog = true
                         },
                         onPress = {
-                            // тоже можем открыть по любому "press"
                             showMapsDialog = true
                         }
                     )
@@ -115,7 +113,6 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         )
     }
 
-    // 8) Собственно MapsDialog, когда нужно
     if (showMapsDialog) {
         MapsDialog(
             mainViewModel = mainVm,
@@ -126,7 +123,6 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         )
     }
 }
-
 
 /** Расширение для удобного вызова из Java. */
 @JvmOverloads

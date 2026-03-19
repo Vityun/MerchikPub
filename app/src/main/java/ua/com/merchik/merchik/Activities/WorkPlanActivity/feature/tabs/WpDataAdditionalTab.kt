@@ -40,7 +40,7 @@ fun OtherComposeTab(dataIsReady: Boolean) {
 
 
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
-    viewModel.modeUI = ModeUI.DEFAULT
+    viewModel.modeUI = ModeUI.MULTI_SELECT
     viewModel.typeWindow = "container"
     viewModel.subTitle = viewModel.getTranslateString(
         "Этот раздел предназначен для внештатных исполнителей. В нем отображаются работы которые может взять на исполнение любой пользователь. Для этого кликните по интересующему вас визиту и выберите из контекстного меню нужный вам",

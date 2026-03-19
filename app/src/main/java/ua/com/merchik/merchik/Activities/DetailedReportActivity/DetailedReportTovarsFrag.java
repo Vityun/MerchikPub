@@ -322,10 +322,19 @@ public class DetailedReportTovarsFrag extends Fragment {
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
 
-            ProgressViewModel progress = new ProgressViewModel(1);
-            LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
-            loadingDialog.show();
-            progress.onNextEvent("Завантажую усі товари цього клієнта", 2500);
+//            ProgressViewModel progress = new ProgressViewModel(1);
+//            LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
+//            loadingDialog.show();
+//            progress.onNextEvent("Завантажую усі товари цього клієнта", 2500);
+
+            new MessageDialogBuilder(requireActivity())
+                    .setTitle("Товари")
+                    .setStatus(DialogStatus.NORMAL)
+                    .setSubTitle("Iде процес завантаження")
+                    .setMessage("Перелік товарів (для поточного відвідування) зараз завантажується з серверу. " +
+                            "Зачекайте і поверніться до поточного розділу через хвилинку.")
+                    .setOnConfirmAction(() -> null)
+                    .show();
 
             List<WpDataDB> dataList = new ArrayList<>();
             dataList.add(wpDataDB);
@@ -345,7 +354,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
                             addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
                             updateTov = false;
-                            progress.onCompleted();
+//                            progress.onCompleted();
                         }
 
                         @Override
@@ -353,14 +362,14 @@ public class DetailedReportTovarsFrag extends Fragment {
                             Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
                             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
                             updateTov = false;
-                            progress.onCompleted();
+//                            progress.onCompleted();
                         }
                     });
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    progress.onCanceled();
+//                    progress.onCanceled();
 
                     new MessageDialogBuilder(requireActivity())
                             .setTitle("Сталася помилка")

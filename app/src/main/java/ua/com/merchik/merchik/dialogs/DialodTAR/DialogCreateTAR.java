@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class DialogCreateTAR extends DialogData {
@@ -381,7 +382,7 @@ public class DialogCreateTAR extends DialogData {
                 if (customer != null) {
                     res.customerList = Collections.singletonList(customer);
                 } else {
-                    res.customerList = CustomerRealm.getAll();
+                    res.customerList = RoomManager.SQL_DB.customerDao().getAll();
                 }
 
                 return res;

@@ -65,7 +65,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
         when (contextUI) {
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
-                val client = CustomerRealm.getCustomerById(wpDataDB.client_id)
+                val client = RoomManager.SQL_DB.customerDao().getById(wpDataDB.client_id)
                 val filterCustomerSDB = ItemFilter(
                     "Клиент",
                     CustomerSDB::class,

@@ -89,6 +89,23 @@ class WpDataDBViewModel @Inject constructor(
         } ?: return
 
         when (contextUI) {
+
+            ContextUI.WP_DATA-> {
+                viewModelScope.launch {
+                    _events.emit(
+                        MainEvent.ShowContextMenu(
+                            menuState = ContextMenuState(
+                                wpDataDB = wp,
+                                actions = listOf(
+                                    ContextMenuAction.OpenOrder,
+                                    ContextMenuAction.Close
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+
             ContextUI.WP_DATA_IN_CONTAINER -> {
                 viewModelScope.launch {
                     _events.emit(
@@ -112,16 +129,7 @@ class WpDataDBViewModel @Inject constructor(
                             menuState = ContextMenuState(
                                 wpDataDB = wp,
                                 actions = listOf(
-                                    ContextMenuAction.AcceptOrder,
-                                    ContextMenuAction.AcceptAllAtAddress,
-                                    ContextMenuAction.RejectOrder,
-                                    ContextMenuAction.RejectAddress,
-                                    ContextMenuAction.RejectClient,
-                                    ContextMenuAction.RejectByType,
                                     ContextMenuAction.OpenOrder,
-                                    ContextMenuAction.OpenSMSPlanDirectory,
-                                    ContextMenuAction.AskMoreMoney,
-                                    ContextMenuAction.Feedback,
                                     ContextMenuAction.Close
                                 )
                             )
@@ -384,7 +392,7 @@ class WpDataDBViewModel @Inject constructor(
                         key = "dt",
                         start = rangeDataStart.value,
                         end = rangeDataEnd.value,
-                        enabled = true
+                        enabled = true,
                     )
                 )
                 updateFilters(newFilters)

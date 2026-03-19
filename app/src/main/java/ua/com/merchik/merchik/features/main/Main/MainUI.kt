@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -57,10 +58,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -107,18 +108,22 @@ import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.CustomString
+import ua.com.merchik.merchik.Utils.observeInternetState
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
@@ -130,6 +135,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
 import ua.com.merchik.merchik.features.main.componentsUI.rememberDialogCloseController
+import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
 import kotlin.math.roundToInt
@@ -161,6 +167,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var filterBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showToolTipDialog by remember { mutableStateOf(false) }
+
+    var showAditionalWorkDialog by remember { mutableStateOf(false) }
 
     var showMapsDialog by remember { mutableStateOf(false) }
     val mapsPulse = rememberPulseController()
@@ -283,10 +291,173 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
+    val holder = WpSelectionDataHolder.instance()
+    val version = holder.version
+    val wpDataList = remember { mutableStateListOf<WpDataDB>() }
 
-    var isCollapsed by rememberSaveable { mutableStateOf(true) }
+    var hasInternet by remember { mutableStateOf(true) }
+    var pendingMainDialog by remember { mutableStateOf(false) }
+    var notReadyMenu by remember { mutableStateOf(false) }
+
 
     val activity = context as ComponentActivity
+
+    fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
+        if (wpList.isEmpty()) return
+
+        if (wpList.size == 1) {
+            val wp = wpList.first()
+
+            MessageDialogBuilder(activity)
+                .setTitle("Додатковий заробіток")
+                .setStatus(DialogStatus.NORMAL)
+                .setSubTitle(wp.addr_txt)
+                .setMessage(
+                    String.format(
+                        "Подать заявку на выполнение этих работ\n" +
+                                "<font color='gray'>Відвідування від</font> %s" +
+                                "<br><font color='gray'>Клієнт:</font> %s" +
+                                "<br><font color='gray'>Адреса:</font> %s" +
+                                "<br><font color='gray'>Премія (план):</font> %s грн." +
+                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
+                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
+                        Clock.getHumanTime_dd_MMMM(wp.dt.time),
+                        wp.client_txt,
+                        wp.addr_txt,
+                        wp.cash_ispolnitel,
+                        wp.sku,
+                        wp.duration
+                    )
+                )
+                .setOnConfirmAction("Выполнять всегда") {
+                    if (!hasInternet) {
+                        pendingMainDialog = true
+
+                    } else {
+                        viewModel.doAcceptOneTime(wp = wp, true)
+                    }
+                }
+                .setOnCancelAction("Выполнить один раз") {
+                    if (!hasInternet) {
+                        pendingMainDialog = true
+                        viewModel.showServerIssueDialog(
+                            wpDataList,
+                            ServerIssueScenario.INTERNET_DISABLED
+                        )
+                    } else {
+                        viewModel.doAcceptOneTime(wp = wp)
+                    }
+                }
+                .show()
+        } else {
+            MessageDialogBuilder(activity)
+                .setTitle("Додатковий заробіток")
+                .setStatus(DialogStatus.NORMAL)
+                .setSubTitle(wpList.first().addr_txt)
+                .setMessage(
+                    "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
+                )
+                .setOnConfirmAction("Выполнять всегда") {
+                    if (!hasInternet) {
+                        pendingMainDialog = true
+                        viewModel.showServerIssueDialog(
+                            wpDataList,
+                            ServerIssueScenario.INTERNET_DISABLED
+                        )
+                    } else {
+//                        notReadyMenu = true
+                        viewModel.doAcceptOneTime(wpList = wpDataList, true)
+
+                    }
+                }
+                .setOnCancelAction("Выполнить один раз") {
+                    if (!hasInternet) {
+                        pendingMainDialog = true
+                        viewModel.showServerIssueDialog(
+                            wpDataList,
+                            ServerIssueScenario.INTERNET_DISABLED
+                        )
+                    } else {
+                        viewModel.doAcceptOneTime(wpList = wpDataList)
+//                        mainViewModel.showServerIssueDialog(
+//                            wpDataList,
+//                            ServerIssueScenario.WEAK_CONNECTION
+//                        )
+                    }
+                }
+                .show()
+        }
+    }
+
+   fun restoreSelected(
+        items: List<DataItemUI>,
+        selectedIds: Set<Long>
+    ): List<DataItemUI> {
+        return items.map { item ->
+            item.copy(
+                selected = item.selected || (item.stableId in selectedIds)
+            )
+        }
+    }
+
+    var selectedIds by remember {
+        mutableStateOf(ScrollDataHolder.instance().getAllSnapshot())
+    }
+
+    DisposableEffect(Unit) {
+        val removeListener = ScrollDataHolder.instance().addOnIdsChangedListener { ids ->
+            selectedIds = ids.toSet()
+        }
+        onDispose { removeListener() }
+    }
+
+    LaunchedEffect(Unit) {
+        context.let { ctx ->
+            observeInternetState(ctx).collect { isConnected ->
+                Log.d("InternetStateWatcher", "Internet changed: $isConnected")
+                hasInternet = isConnected
+
+                if (!isConnected && wpDataList.isNotEmpty()) {
+                    pendingMainDialog = true
+                    viewModel.showServerIssueDialog(
+                        wpDataList,
+                        ServerIssueScenario.INTERNET_DISABLED
+                    )
+                } else if (isConnected && pendingMainDialog && wpDataList.isNotEmpty()) {
+                    pendingMainDialog = false
+                    viewModel.hideServerIssueDialog()
+                    showMainAdditionalEarningsDialog(wpDataList)
+
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(version) {
+        val wpList = holder.consumePendingSelected()
+        if (wpList.isNotEmpty()) {
+            wpDataList.clear()
+            wpDataList.addAll(wpList)
+
+            Toast.makeText(
+                viewModel.context,
+                "Знайдено результатів: ${wpDataList.size}",
+                Toast.LENGTH_LONG
+            ).show()
+
+            if (hasInternet) {
+                pendingMainDialog = false
+                showMainAdditionalEarningsDialog(wpDataList)
+            } else {
+                pendingMainDialog = true
+                viewModel.showServerIssueDialog(
+                    wpDataList,
+                    ServerIssueScenario.INTERNET_DISABLED
+                )
+            }
+        }
+    }
+
     val cronchikViewModel: CronchikViewModel =
         remember(activity) { ViewModelProvider(activity)[CronchikViewModel::class.java] }
 
@@ -331,8 +502,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             val visibilityHeaderGroupName =
                 uiState.settingsItems.firstOrNull { it.key == "group_header" }?.isEnabled == true
 
-            val filterSelectMode =
+            var filterSelectMode =
                 uiState.settingsItems.firstOrNull { it.key == "filter_select" }?.isEnabled == true
+            if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+                filterSelectMode = !filterSelectMode
 
             LaunchedEffect(filterSelectMode) {
                 if (viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT) {
@@ -367,37 +540,57 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     Spacer(modifier = Modifier.padding(4.dp))
                 }
 
-                // 1. Берём шапку/подвал из uiState
+                // TODO убрать пересчет из MainUI
                 val headerItems = uiState.itemsHeader
                 val footerItems = uiState.itemsFooter
 
-                // 2. Гоним ТОЛЬКО тело в filterAndSortDataItems
-                val result = filterAndSortDataItems(
-                    items = uiState.items,                 // <-- только body
-                    filters = uiState.filters,
-                    sortingFields = uiState.sortingFields,
-                    groupingFields = uiState.groupingFields,
-                    rangeStart = viewModel.rangeDataStart.value,
-                    rangeEnd = viewModel.rangeDataEnd.value,
-                    searchText = uiState.filters?.searchText
-                )
+
+                val restoredHeaderItems = remember(headerItems, selectedIds) {
+                    restoreSelected(headerItems, selectedIds)
+                }
+
+                val restoredBodyItems = remember(uiState.items, selectedIds) {
+                    restoreSelected(uiState.items, selectedIds)
+                }
+
+                val restoredFooterItems = remember(footerItems, selectedIds) {
+                    restoreSelected(footerItems, selectedIds)
+                }
+
+                val result = remember(
+                    restoredBodyItems,
+                    uiState.filters,
+                    uiState.sortingFields,
+                    uiState.groupingFields,
+                    viewModel.rangeDataStart.value,
+                    viewModel.rangeDataEnd.value,
+                    uiState.filters?.searchText
+                ) {
+                    filterAndSortDataItems(
+                        items = restoredBodyItems,
+                        filters = uiState.filters,
+                        sortingFields = uiState.sortingFields,
+                        groupingFields = uiState.groupingFields,
+                        rangeStart = viewModel.rangeDataStart.value,
+                        rangeEnd = viewModel.rangeDataEnd.value,
+                        searchText = uiState.filters?.searchText
+                    )
+                }
 
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
                 isActiveGrouped = result.isActiveGrouped
 
-// 3. Собираем итоговый список для LazyColumn: header + сгруппированное тело + footer
-                val dataItemsUI = remember(headerItems, result.items, footerItems) {
+                val dataItemsUI = remember(restoredHeaderItems, result.items, restoredFooterItems) {
                     buildList {
-                        addAll(headerItems)
+                        addAll(restoredHeaderItems)
                         addAll(result.items)
-                        addAll(footerItems)
+                        addAll(restoredFooterItems)
                     }
                 }
 
-// 4. Сдвигаем индексы групп на размер header
-                val groups: List<GroupMeta> = remember(result.groups, headerItems.size) {
-                    val headerSize = headerItems.size
+                val groups: List<GroupMeta> = remember(result.groups, restoredHeaderItems.size) {
+                    val headerSize = restoredHeaderItems.size
                     result.groups.map { g ->
                         g.copy(
                             startIndex = g.startIndex + headerSize,
@@ -1190,31 +1383,40 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                 if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
                     Row {
-                        Button(
-                            onClick = {
-                                (context as? Activity)?.finish()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                        ) {
-                            Text(
-                                viewModel.getTranslateString(
-                                    stringResource(id = R.string.ui_cancel),
-                                    5994
+                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+                            Button(
+                                onClick = {
+                                    (context as? Activity)?.finish()
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(
+                                        id = R.color.blue
+                                    )
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                            ) {
+                                Text(
+                                    viewModel.getTranslateString(
+                                        stringResource(id = R.string.ui_cancel),
+                                        5994
+                                    )
                                 )
-                            )
-                        }
+                            }
 
                         val selectedItems = dataItemsUI.filter { it.selected }
                         Button(
                             onClick = {
                                 if (selectedItems.isNotEmpty()) {
                                     viewModel.onSelectedItemsUI(selectedItems)
-                                    (context as? Activity)?.setResult(Activity.RESULT_OK)
-                                    (context as? Activity)?.finish()
+                                    if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+                                        (context as? Activity)?.setResult(Activity.RESULT_OK)
+                                        (context as? Activity)?.finish()
+                                    }
+                                } else {
+                                    showAditionalWorkDialog = true
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -1222,13 +1424,22 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 if (selectedItems.isNotEmpty())
                                     ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
                                 else
-                                    ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                                    ButtonDefaults.buttonColors(
+                                        containerColor =
+                                            if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) Color.Gray
+                                            else
+                                                colorResource(
+                                                    id = R.color.blue
+                                                )
+                                    ),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
                             Text(
-                                if (viewModel.contextUI != ContextUI.WP_DATA) "${
+                                if (viewModel.contextUI != ContextUI.WP_DATA
+                                    && viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                                ) "${
                                     viewModel.getTranslateString(
                                         stringResource(id = R.string.ui_choice),
                                         5997
@@ -1246,7 +1457,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         cronchikViewModel.updateBadge(1, dataItemsUI.size)
                     }
 
-                if (viewModel.modeUI == ModeUI.FILTER_SELECT) {
+                if (viewModel.modeUI == ModeUI.FILTER_SELECT && viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
                     LaunchedEffect(dataItemsUI) {
                         val selectedCount = dataItemsUI.count { it.selected }
                         if (selectedCount == 0)
@@ -1584,7 +1795,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         MessageDialog(
             title = "Додатковий заробіток",
             status = DialogStatus.NORMAL,
-            subTitle = "Базовий мерчендайзинг",   // ← заголовок-сабтайтл по сценарию
+            subTitle = "Базовий мерчендайзинг",
             message = "Отобрано $selectedCount посещений. Кликнув на любом из них, вы сможете получить развернутую информацию о нем и подать заявку на выполнение этой работы.",     // ← тело подсказки по сценарию
             onDismiss = { viewModel.hideKostilDialog() },
             okButtonName = "Ok",
@@ -1596,42 +1807,25 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         MessageDialog(
             title = "Довідка",
             status = DialogStatus.NORMAL,
-            subTitle = "Додатковий заробіток",   // ← заголовок-сабтайтл по сценарию
+            subTitle = "Додатковий заробіток",
             message = "У цьому розділі, ви можете обрати (позначити) ті візити, роботу з котрими ви хочете виконати. За замовчуванням позначені усі візити. Натиснувши кнопку 'Подати замовлення' ви ініціюєте процес передачі цих робіт з розділу 'Додатковий заробіток' до розділу 'План робіт'. Потім, у родiлi розділу 'План робіт', Ви зможете почати їх виконувати, і отримати за це гроші.",
             onDismiss = { showToolTipDialog = false },
             okButtonName = "Ok",
             onConfirmAction = { showToolTipDialog = false }
         )
     }
-//    if (showSettingsDialog) {
-//        SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
-//    }
 
-//    if (showSortingDialog) {
-//        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
-//    }
-
-//    if (showFilteringDialog) {
-//        FilteringDialog(
-//            viewModel,
-//            onDismiss = { showFilteringDialog = false },
-//            onChanged = {
-//                viewModel.updateFilters(it)
-//                showFilteringDialog = false
-//            }
-//        )
-//    }
-
-//    if (showMapsDialog) {
-//        MapsDialog (
-//            mainViewModel = viewModel,
-//            onDismiss = { showMapsDialog = false },
-//            onOpenContextMenu = { wp, ctxUI ->
-//                viewModel.openContextMenu(wp, ctxUI)
-//            }
-//        )
-//    }
-
+    if (showAditionalWorkDialog) {
+        MessageDialog(
+            title = "Додатковий заробіток",
+            status = DialogStatus.NORMAL,
+            subTitle = "Оберіть візити",
+            message = "Спочатку встановіть позначки на тих відвідуваннях, роботи по котрим хочете виконати. Для цього клікніть у кружечках розташованих у правому верхньому куті кожного відвідування",
+            onDismiss = { showAditionalWorkDialog = false },
+            okButtonName = "Ok",
+            onConfirmAction = { showAditionalWorkDialog = false }
+        )
+    }
 }
 
 var index = 0

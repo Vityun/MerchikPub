@@ -99,7 +99,7 @@ fun MapsDialog(
     val uiState by mainViewModel.uiState.collectAsState()
     val contextUI = mainViewModel.contextUI
 
-    val distance = mainViewModel.offsetDistanceMeters.value
+    val distance by mainViewModel.offsetDistanceMeters.collectAsState()
 
     val highlightColor: Color = colorResource(id = R.color.ufmd_accept_t)
 
@@ -142,8 +142,11 @@ fun MapsDialog(
     val vm: BaseMapViewModel =
         if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>() else hiltViewModel<MapFromWPdataViewModel>()
 
-    if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
-        vm.setDistance(distance)
+//    LaunchedEffect(vm, distance, mainViewModel.contextUI) {
+//        if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+//            vm.setDistance(distance)
+//        }
+//    }
 
     // 1) Подписываемся на состояние карты
     val mapState by vm.state.collectAsState()
@@ -158,12 +161,12 @@ fun MapsDialog(
 
 
 
-    val holder = WpSelectionDataHolder.instance()
-    val version = holder.version
-    val wpDataList = remember { mutableStateListOf<WpDataDB>() }
-
-    var hasInternet by remember { mutableStateOf(true) }
-    var pendingMainDialog by remember { mutableStateOf(false) }
+//    val holder = WpSelectionDataHolder.instance()
+//    val version = holder.version
+//    val wpDataList = remember { mutableStateListOf<WpDataDB>() }
+//
+//    var hasInternet by remember { mutableStateOf(true) }
+//    var pendingMainDialog by remember { mutableStateOf(false) }
 
 //    LaunchedEffect(version) {
 //        val wpList = holder.consumePendingSelected()
@@ -236,142 +239,142 @@ fun MapsDialog(
 //        }
 //    }
 
-    fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
-        if (wpList.isEmpty()) return
-
-        if (wpList.size == 1) {
-            val wp = wpList.first()
-
-            MessageDialogBuilder(mainViewModel.context as Activity)
-                .setTitle("Додатковий заробіток")
-                .setStatus(DialogStatus.NORMAL)
-                .setSubTitle(wp.addr_txt)
-                .setMessage(
-                    String.format(
-                        "Подать заявку на выполнение этих работ\n" +
-                                "<font color='gray'>Відвідування від</font> %s" +
-                                "<br><font color='gray'>Клієнт:</font> %s" +
-                                "<br><font color='gray'>Адреса:</font> %s" +
-                                "<br><font color='gray'>Премія (план):</font> %s грн." +
-                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
-                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
-                        Clock.getHumanTime_dd_MMMM(wp.dt.time),
-                        wp.client_txt,
-                        wp.addr_txt,
-                        wp.cash_ispolnitel,
-                        wp.sku,
-                        wp.duration
-                    )
-                )
-                .setOnConfirmAction("Выполнять всегда") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        mainViewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-                        notReadyMenu = true
-                    }
-                }
-                .setOnCancelAction("Выполнить один раз") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        mainViewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-                        mainViewModel.doAcceptOneTime(wp = wp)
-                    }
-                }
-                .show()
-        } else {
-            MessageDialogBuilder(mainViewModel.context as Activity)
-                .setTitle("Додатковий заробіток")
-                .setStatus(DialogStatus.NORMAL)
-                .setSubTitle(wpList.first().addr_txt)
-                .setMessage(
-                    "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
-                )
-                .setOnConfirmAction("Выполнять всегда") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        mainViewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-//                        notReadyMenu = true
-                        mainViewModel.doAcceptOneTime(wpList = wpDataList)
-
-                    }
-                }
-                .setOnCancelAction("Выполнить один раз") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        mainViewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-                        mainViewModel.doAcceptOneTime(wp = wpDataList.first())
+//    fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
+//        if (wpList.isEmpty()) return
+//
+//        if (wpList.size == 1) {
+//            val wp = wpList.first()
+//
+//            MessageDialogBuilder(mainViewModel.context as Activity)
+//                .setTitle("Додатковий заробіток")
+//                .setStatus(DialogStatus.NORMAL)
+//                .setSubTitle(wp.addr_txt)
+//                .setMessage(
+//                    String.format(
+//                        "Подать заявку на выполнение этих работ\n" +
+//                                "<font color='gray'>Відвідування від</font> %s" +
+//                                "<br><font color='gray'>Клієнт:</font> %s" +
+//                                "<br><font color='gray'>Адреса:</font> %s" +
+//                                "<br><font color='gray'>Премія (план):</font> %s грн." +
+//                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
+//                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
+//                        Clock.getHumanTime_dd_MMMM(wp.dt.time),
+//                        wp.client_txt,
+//                        wp.addr_txt,
+//                        wp.cash_ispolnitel,
+//                        wp.sku,
+//                        wp.duration
+//                    )
+//                )
+//                .setOnConfirmAction("Выполнять всегда") {
+//                    if (!hasInternet) {
+//                        pendingMainDialog = true
 //                        mainViewModel.showServerIssueDialog(
 //                            wpDataList,
-//                            ServerIssueScenario.WEAK_CONNECTION
+//                            ServerIssueScenario.INTERNET_DISABLED
 //                        )
-                    }
-                }
-                .show()
-        }
-    }
+//                    } else {
+//                        notReadyMenu = true
+//                    }
+//                }
+//                .setOnCancelAction("Выполнить один раз") {
+//                    if (!hasInternet) {
+//                        pendingMainDialog = true
+//                        mainViewModel.showServerIssueDialog(
+//                            wpDataList,
+//                            ServerIssueScenario.INTERNET_DISABLED
+//                        )
+//                    } else {
+//                        mainViewModel.doAcceptOneTime(wp = wp)
+//                    }
+//                }
+//                .show()
+//        } else {
+//            MessageDialogBuilder(mainViewModel.context as Activity)
+//                .setTitle("Додатковий заробіток")
+//                .setStatus(DialogStatus.NORMAL)
+//                .setSubTitle(wpList.first().addr_txt)
+//                .setMessage(
+//                    "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
+//                )
+//                .setOnConfirmAction("Выполнять всегда") {
+//                    if (!hasInternet) {
+//                        pendingMainDialog = true
+//                        mainViewModel.showServerIssueDialog(
+//                            wpDataList,
+//                            ServerIssueScenario.INTERNET_DISABLED
+//                        )
+//                    } else {
+////                        notReadyMenu = true
+//                        mainViewModel.doAcceptOneTime(wpList = wpDataList)
+//
+//                    }
+//                }
+//                .setOnCancelAction("Выполнить один раз") {
+//                    if (!hasInternet) {
+//                        pendingMainDialog = true
+//                        mainViewModel.showServerIssueDialog(
+//                            wpDataList,
+//                            ServerIssueScenario.INTERNET_DISABLED
+//                        )
+//                    } else {
+//                        mainViewModel.doAcceptOneTime(wp = wpDataList.first())
+////                        mainViewModel.showServerIssueDialog(
+////                            wpDataList,
+////                            ServerIssueScenario.WEAK_CONNECTION
+////                        )
+//                    }
+//                }
+//                .show()
+//        }
+//    }
 
-    LaunchedEffect(Unit) {
-        mainViewModel.context?.let { ctx ->
-            observeInternetState(ctx).collect { isConnected ->
-                Log.d("InternetStateWatcher", "Internet changed: $isConnected")
-                hasInternet = isConnected
+//    LaunchedEffect(Unit) {
+//        mainViewModel.context?.let { ctx ->
+//            observeInternetState(ctx).collect { isConnected ->
+//                Log.d("InternetStateWatcher", "Internet changed: $isConnected")
+//                hasInternet = isConnected
+//
+//                if (!isConnected && wpDataList.isNotEmpty()) {
+//                    pendingMainDialog = true
+//                    mainViewModel.showServerIssueDialog(
+//                        wpDataList,
+//                        ServerIssueScenario.INTERNET_DISABLED
+//                    )
+//                } else if (isConnected && pendingMainDialog && wpDataList.isNotEmpty()) {
+//                    pendingMainDialog = false
+//                    mainViewModel.hideServerIssueDialog()
+//                    showMainAdditionalEarningsDialog(wpDataList)
+//
+//                }
+//            }
+//        }
+//    }
 
-                if (!isConnected && wpDataList.isNotEmpty()) {
-                    pendingMainDialog = true
-                    mainViewModel.showServerIssueDialog(
-                        wpDataList,
-                        ServerIssueScenario.INTERNET_DISABLED
-                    )
-                } else if (isConnected && pendingMainDialog && wpDataList.isNotEmpty()) {
-                    pendingMainDialog = false
-                    mainViewModel.hideServerIssueDialog()
-                    showMainAdditionalEarningsDialog(wpDataList)
-
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(version) {
-        val wpList = holder.consumePendingSelected()
-        if (wpList.isNotEmpty()) {
-            wpDataList.clear()
-            wpDataList.addAll(wpList)
-
-            Toast.makeText(
-                mainViewModel.context,
-                "Знайдено результатів: ${wpDataList.size}",
-                Toast.LENGTH_LONG
-            ).show()
-
-            if (hasInternet) {
-                pendingMainDialog = false
-                showMainAdditionalEarningsDialog(wpDataList)
-            } else {
-                pendingMainDialog = true
-                mainViewModel.showServerIssueDialog(
-                    wpDataList,
-                    ServerIssueScenario.INTERNET_DISABLED
-                )
-            }
-        }
-    }
+//    LaunchedEffect(version) {
+//        val wpList = holder.consumePendingSelected()
+//        if (wpList.isNotEmpty()) {
+//            wpDataList.clear()
+//            wpDataList.addAll(wpList)
+//
+//            Toast.makeText(
+//                mainViewModel.context,
+//                "Знайдено результатів: ${wpDataList.size}",
+//                Toast.LENGTH_LONG
+//            ).show()
+//
+//            if (hasInternet) {
+//                pendingMainDialog = false
+//                showMainAdditionalEarningsDialog(wpDataList)
+//            } else {
+//                pendingMainDialog = true
+//                mainViewModel.showServerIssueDialog(
+//                    wpDataList,
+//                    ServerIssueScenario.INTERNET_DISABLED
+//                )
+//            }
+//        }
+//    }
 //    LaunchedEffect(Unit) {
 //        mainViewModel.context?.let {
 //            observeInternetState(it).collect { isConnected ->
@@ -593,7 +596,8 @@ fun MapsDialog(
         Globals.CoordX,
         Globals.CoordY,
         vm,
-        sessionId
+        sessionId,
+        distance
     ) {
         vm.process(
             MapIntent.SetInput(
@@ -606,6 +610,11 @@ fun MapsDialog(
                 search = uiState.filters?.searchText,
                 userLat = Globals.CoordX,
                 userLon = Globals.CoordY,
+                distanceMeters = if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+                    distance
+                } else {
+                    null
+                },
                 autoCenterOnSetInput = false
             )
         )
@@ -725,6 +734,8 @@ fun MapsDialog(
             onChanged = {
                 mainViewModel.updateFilters(it)
                 showFilteringDialog = false
+                mainViewModel.updateContent()
+
             }
         )
     }

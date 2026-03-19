@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -41,6 +42,7 @@ import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Globals.APP_OFFSET_DISTANCE_METERS
@@ -515,85 +517,195 @@ abstract class MainViewModel(
 
     private fun observeSourcesForItems() {
         viewModelScope.launch {
-            // комбинируем источники: uiState, range start/end
             combine(
                 _uiState,
                 _rangeDataStart,
-                _rangeDataEnd
-            ) { uiState, start, end ->
-                Triple(uiState, start, end)
-            }.collect { (uiState, start, end) ->
-                // делаем пересчёт в фоне
-                recomputeDataItems(uiState, start, end)
+                _rangeDataEnd,
+                _offsetDistanceMeters
+            ) { uiState, start, end, distance ->
+                RecomputeParams(
+                    uiState = uiState,
+                    rangeStart = start,
+                    rangeEnd = end,
+                    distanceMeters = distance
+                )
+            }.collectLatest { params ->
+                recomputeDataItems(
+                    uiState = params.uiState,
+                    rangeStart = params.rangeStart,
+                    rangeEnd = params.rangeEnd,
+                    distanceMeters = params.distanceMeters
+                )
             }
         }
     }
 
-    private fun recomputeDataItems(
+    private data class RecomputeParams(
+        val uiState: StateUI,
+        val rangeStart: LocalDate?,
+        val rangeEnd: LocalDate?,
+        val distanceMeters: Float
+    )
+
+    private fun restoreSelected(
+        items: List<DataItemUI>,
+        selectedIds: Set<Long>
+    ): List<DataItemUI> {
+        return items.map { item ->
+            val isSelected = item.rawObj.any { raw ->
+                (raw as? WpDataDB)?.id in selectedIds
+            }
+            item.copy(selected = isSelected)
+        }
+    }
+
+    private suspend fun recomputeDataItems(
         uiState: StateUI,
         rangeStart: LocalDate?,
-        rangeEnd: LocalDate?
+        rangeEnd: LocalDate?,
+        distanceMeters: Float
     ) {
-        viewModelScope.launch {
-            val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
-                val header = uiState.itemsHeader
-                val footer = uiState.itemsFooter
+        val selectedIdsSnapshot = ScrollDataHolder.instance().getAllSnapshot()
 
-                val result: FilterAndSortResult = try {
-                    filterAndSortDataItems(
-                        items = uiState.items,
-                        filters = uiState.filters,
-                        sortingFields = uiState.sortingFields,
-                        groupingFields = uiState.groupingFields,
-                        rangeStart = rangeStart,
-                        rangeEnd = rangeEnd,
-                        searchText = uiState.filters?.searchText
-                    )
-                } catch (e: Throwable) {
-                    Globals.writeToMLOG(
-                        "ERROR",
-                        "MainViewModel.recomputeDataItems",
-                        "filterAndSortDataItems failed: $e"
-                    )
-                    FilterAndSortResult(
-                        items = emptyList(),
-                        groups = emptyList(),
-                        isActiveFiltered = false,
-                        isActiveSorted = false,
-                        isActiveGrouped = false
-                    )
-                }
+        val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
+            val header = uiState.itemsHeader
+            val footer = uiState.itemsFooter
 
-                // 👉 сдвигаем индексы групп на размер header
-                val headerSize = header.size
-                val groupsWithOffset: List<GroupMeta> = result.groups.map { g ->
-                    g.copy(
-                        startIndex = g.startIndex + headerSize,
-                        endIndexExclusive = g.endIndexExclusive + headerSize
-                    )
-                }
+            val restoredSourceItems = restoreSelected(
+                items = uiState.items,
+                selectedIds = selectedIdsSnapshot
+            )
 
-                // Собираем итоговый список для UI
-                val combinedList = buildList {
-                    addAll(header)
-                    addAll(result.items)
-                    addAll(footer)
-                }
-
-                combinedList to groupsWithOffset
+            val result: FilterAndSortResult = try {
+                filterAndSortDataItems(
+                    items = restoredSourceItems,
+                    filters = uiState.filters,
+                    sortingFields = uiState.sortingFields,
+                    groupingFields = uiState.groupingFields,
+                    rangeStart = rangeStart,
+                    rangeEnd = rangeEnd,
+                    searchText = uiState.filters?.searchText
+                )
+            } catch (e: Throwable) {
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "MainViewModel.recomputeDataItems",
+                    "filterAndSortDataItems failed: $e"
+                )
+                FilterAndSortResult(
+                    items = emptyList(),
+                    groups = emptyList(),
+                    isActiveFiltered = false,
+                    isActiveSorted = false,
+                    isActiveGrouped = false
+                )
             }
 
-            // обновляем элементы
-            if (_dataItems.value != combined) {
-                _dataItems.value = combined
+            val headerSize = header.size
+            val groupsWithOffset: List<GroupMeta> = result.groups.map { g ->
+                g.copy(
+                    startIndex = g.startIndex + headerSize,
+                    endIndexExclusive = g.endIndexExclusive + headerSize
+                )
             }
 
-            // обновляем группы (для GroupDeck / отрисовки)
-            if (_groups.value != shiftedGroups) {
-                _groups.value = shiftedGroups
+            val combinedList = buildList {
+                addAll(header)
+                addAll(result.items)
+                addAll(footer)
             }
+
+            combinedList to groupsWithOffset
         }
-    }
+
+        if (_dataItems.value != combined) {
+            _dataItems.value = combined
+        }
+
+        if (_groups.value != shiftedGroups) {
+            _groups.value = shiftedGroups
+        }
+    }//    private fun observeSourcesForItems() {
+//        viewModelScope.launch {
+//            // комбинируем источники: uiState, range start/end
+//            combine(
+//                _uiState,
+//                _rangeDataStart,
+//                _rangeDataEnd
+//            ) { uiState, start, end ->
+//                Triple(uiState, start, end)
+//            }.collect { (uiState, start, end) ->
+//                // делаем пересчёт в фоне
+//                recomputeDataItems(uiState, start, end)
+//            }
+//        }
+//    }
+//
+//    private fun recomputeDataItems(
+//        uiState: StateUI,
+//        rangeStart: LocalDate?,
+//        rangeEnd: LocalDate?
+//    ) {
+//        viewModelScope.launch {
+//            val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
+//                val header = uiState.itemsHeader
+//                val footer = uiState.itemsFooter
+//
+//                val result: FilterAndSortResult = try {
+//                    filterAndSortDataItems(
+//                        items = uiState.items,
+//                        filters = uiState.filters,
+//                        sortingFields = uiState.sortingFields,
+//                        groupingFields = uiState.groupingFields,
+//                        rangeStart = rangeStart,
+//                        rangeEnd = rangeEnd,
+//                        searchText = uiState.filters?.searchText
+//                    )
+//                } catch (e: Throwable) {
+//                    Globals.writeToMLOG(
+//                        "ERROR",
+//                        "MainViewModel.recomputeDataItems",
+//                        "filterAndSortDataItems failed: $e"
+//                    )
+//                    FilterAndSortResult(
+//                        items = emptyList(),
+//                        groups = emptyList(),
+//                        isActiveFiltered = false,
+//                        isActiveSorted = false,
+//                        isActiveGrouped = false
+//                    )
+//                }
+//
+//                // 👉 сдвигаем индексы групп на размер header
+//                val headerSize = header.size
+//                val groupsWithOffset: List<GroupMeta> = result.groups.map { g ->
+//                    g.copy(
+//                        startIndex = g.startIndex + headerSize,
+//                        endIndexExclusive = g.endIndexExclusive + headerSize
+//                    )
+//                }
+//
+//                // Собираем итоговый список для UI
+//                val combinedList = buildList {
+//                    addAll(header)
+//                    addAll(result.items)
+//                    addAll(footer)
+//                }
+//
+//                combinedList to groupsWithOffset
+//            }
+//
+//            // обновляем элементы
+//            if (_dataItems.value != combined) {
+//                _dataItems.value = combined
+//            }
+//
+//            // обновляем группы (для GroupDeck / отрисовки)
+//            if (_groups.value != shiftedGroups) {
+//                _groups.value = shiftedGroups
+//            }
+//        }
+//    }
 
 
     fun updateOffsetSizeFonts(offsetSizeFont: Float) {
@@ -680,12 +792,6 @@ abstract class MainViewModel(
 
     fun updateContent() {
         viewModelScope.launch {
-            Log.e(
-                "FILTERS_APPLY",
-                "search=${filters?.searchText}, itemsSelected=${
-                    filters?.items?.sumOf { it.rightValuesRaw.size } ?: 0
-                }"
-            )
 
             val list = getDefaultHideUserFields()
             val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
@@ -790,7 +896,10 @@ abstract class MainViewModel(
                 } else {
                     when (selectedMode) {
                         SelectedMode.ALL -> dataWithRestoredSelected
-                        SelectedMode.ONLY_SELECTED -> dataWithRestoredSelected.filter { it.selected }
+                        SelectedMode.ONLY_SELECTED -> dataWithRestoredSelected
+                            .filter { it.selected }
+                            .takeIf { it.isNotEmpty() }
+                            ?: dataWithRestoredSelected
                         SelectedMode.ONLY_UNSELECTED -> dataWithRestoredSelected.filter { !it.selected }
                     }
                 }
@@ -858,9 +967,26 @@ abstract class MainViewModel(
     }
 
     fun updateItemsSelect(ids: List<Long>, checked: Boolean) {
-        val set = ids.toHashSet()
+        val set = ids.toSet()
+        if (set.isEmpty()) return
 
         viewModelScope.launch {
+            val holder = ScrollDataHolder.instance()
+
+            if (modeUI == ModeUI.ONE_SELECT) {
+                if (checked) {
+                    holder.setIds(listOf(set.first()))
+                } else {
+                    holder.removeIds(set)
+                }
+            } else {
+                if (checked) {
+                    holder.addIds(set)
+                } else {
+                    holder.removeIds(set)
+                }
+            }
+
             _uiState.update { state ->
                 state.copy(
                     itemsHeader = state.itemsHeader.map { old ->
@@ -889,11 +1015,26 @@ abstract class MainViewModel(
         }
     }
 
-
     fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {
-        val targetId = itemUI.stableId
+        val targetId = itemUI.stableId ?: return
 
         viewModelScope.launch {
+            val holder = ScrollDataHolder.instance()
+
+            if (modeUI == ModeUI.ONE_SELECT) {
+                if (checked) {
+                    holder.setIds(listOf(targetId))
+                } else {
+                    holder.removeId(targetId)
+                }
+            } else {
+                if (checked) {
+                    holder.addId(targetId)
+                } else {
+                    holder.removeId(targetId)
+                }
+            }
+
             _uiState.update { state ->
                 state.copy(
                     itemsHeader = state.itemsHeader.map { old ->
@@ -1193,7 +1334,7 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
-    fun doAcceptOneTime(wpList: List<WpDataDB>) {
+    fun doAcceptOneTime(wpList: List<WpDataDB>, forever: Boolean = false) {
         if (wpList.isEmpty()) return
 
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
@@ -1216,7 +1357,10 @@ abstract class MainViewModel(
                     if (wp.code_dad2 in existingDad2Set) {
                         alreadySubmitted.add(wp)
                     } else {
-                        toInsert.add(WPDataAdditionalFactory.blankWithDad2(wp))
+                        if (forever)
+                            toInsert.add(WPDataAdditionalFactory.blankWithDad2Forever(wp))
+                        else
+                            toInsert.add(WPDataAdditionalFactory.blankWithDad2Now(wp))
                     }
                 }
 
@@ -1406,7 +1550,8 @@ abstract class MainViewModel(
                         isCancelable = true,
                         onButtonOkClicked = {
                             val progress = ProgressViewModel(0)
-                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                            val loadingDialog =
+                                LoadingDialogWithPercent(context as Activity, progress)
                             loadingDialog.show()
                             progress.onNextEvent("Перевірка зв'язку", 4000)
                             Handler(Looper.getMainLooper()).postDelayed(
@@ -1423,7 +1568,10 @@ abstract class MainViewModel(
                                         .setOnCancelAction { }
                                         .setOnConfirmAction("Повторити") {
                                             val progress = ProgressViewModel(0)
-                                            val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                                            val loadingDialog = LoadingDialogWithPercent(
+                                                context as Activity,
+                                                progress
+                                            )
                                             loadingDialog.show()
                                             progress.onNextEvent("Перевірка зв'язку", 1000)
                                             Handler(Looper.getMainLooper()).postDelayed(
@@ -1455,7 +1603,8 @@ abstract class MainViewModel(
                             when (url) {
                                 "app://update" -> {
                                     val progress = ProgressViewModel(0)
-                                    val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
+                                    val loadingDialog =
+                                        LoadingDialogWithPercent(context as Activity, progress)
                                     loadingDialog.show()
                                     progress.onNextEvent("Виконую синхронiзацiю", 12000)
                                     Handler(Looper.getMainLooper()).postDelayed(
@@ -1471,7 +1620,7 @@ abstract class MainViewModel(
         }
     }
 
-    fun hideServerIssueDialog(){
+    fun hideServerIssueDialog() {
         viewModelScope.launch {
             _events.emit(MainEvent.HideMessageDialog)
         }
@@ -1573,18 +1722,21 @@ abstract class MainViewModel(
             """спробувати <a href="app://update">пiдключитись до сервера</a> знову."""
         )
     }
+
     private fun buildWeakConnectionMessage(): String {
         return String.format(
             "Однак, на поточний момент, зв'язок із сервером нестабільний. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення стабільного зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
             """знайти місце з кращiм інтернет з'єднанням, і <a href="app://update">виконати синхронiзацiю</a>."""
         )
     }
+
     private fun buildInternetDisabledMessage(): String {
         return String.format(
             "Однак, на поточний момент, інтернет-з'єднання вимкнено. Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s <br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
             """<a href="app://internet-settings">ввiмкнути інтернет</a> у налаштуваннях."""
         )
     }
+
     private fun openInternetSettings() {
         try {
             context?.startActivity(
@@ -1608,6 +1760,7 @@ abstract class MainViewModel(
             }
         }
     }
+
     private fun runConnectionAttemptT(
         loadingText: String,
         loadingDelay: Long
@@ -1761,7 +1914,7 @@ abstract class MainViewModel(
         }
     }
 
-    fun doAcceptOneTime(wp: WpDataDB) {
+    fun doAcceptOneTime(wp: WpDataDB, forever: Boolean = false) {
         val dad2 = wp.code_dad2
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
@@ -1769,8 +1922,12 @@ abstract class MainViewModel(
             .subscribeOn(Schedulers.io())
             .flatMap { list ->
                 if (list.isEmpty()) {
-                    dao.insert(WPDataAdditionalFactory.blankWithDad2Now(wp))
-                        .andThen(Single.just(true))
+                    if (forever)
+                        dao.insert(WPDataAdditionalFactory.blankWithDad2Forever(wp))
+                            .andThen(Single.just(true))
+                    else
+                        dao.insert(WPDataAdditionalFactory.blankWithDad2Now(wp))
+                            .andThen(Single.just(true))
                 } else {
                     Single.just(false)
                 }
@@ -2066,36 +2223,44 @@ abstract class MainViewModel(
                 ContextMenuAction.Close
             )
 
-            ContextUI.WP_DATA_IN_CONTAINER_MULT -> listOf(
-                ContextMenuAction.ShowAllVizitInAdress,
+            ContextUI.WP_DATA -> listOf(
+                ContextMenuAction.OpenOrder,
                 ContextMenuAction.Close
             )
 
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
-                ContextMenuAction.AcceptOrder,
-                ContextMenuAction.AcceptAllAtAddress,
-                ContextMenuAction.RejectOrder,
-                ContextMenuAction.RejectAddress,
-                ContextMenuAction.RejectClient,
-                ContextMenuAction.RejectByType,
+            ContextUI.WP_DATA_IN_CONTAINER_MULT -> listOf(
+//                ContextMenuAction.ShowAllVizitInAdress,
                 ContextMenuAction.OpenOrder,
-                ContextMenuAction.OpenSMSPlanDirectory,
-                ContextMenuAction.AskMoreMoney,
-                ContextMenuAction.Feedback,
+                ContextMenuAction.Close
+
+            )
+
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
+//                ContextMenuAction.AcceptOrder,
+//                ContextMenuAction.AcceptAllAtAddress,
+//                ContextMenuAction.RejectOrder,
+//                ContextMenuAction.RejectAddress,
+//                ContextMenuAction.RejectClient,
+//                ContextMenuAction.RejectByType,
+                ContextMenuAction.OpenOrder,
+//                ContextMenuAction.OpenSMSPlanDirectory,
+//                ContextMenuAction.AskMoreMoney,
+//                ContextMenuAction.Feedback,
                 ContextMenuAction.Close
             )
 
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> listOf(
-                ContextMenuAction.ShowAllVizitInAdress,
-                ContextMenuAction.AcceptAllAtAddress,
-//                ContextMenuAction.RejectOrder,
-                ContextMenuAction.RejectAddress,
-//                ContextMenuAction.RejectClient,
-                ContextMenuAction.RejectByType,
-//                ContextMenuAction.OpenOrder,
-                ContextMenuAction.OpenSMSPlanDirectory,
-                ContextMenuAction.AskMoreMoney,
-                ContextMenuAction.Feedback,
+//                ContextMenuAction.ShowAllVizitInAdress,
+//                ContextMenuAction.AcceptAllAtAddress,
+////                ContextMenuAction.RejectOrder,
+//                ContextMenuAction.RejectAddress,
+////                ContextMenuAction.RejectClient,
+//                ContextMenuAction.RejectByType,
+////                ContextMenuAction.OpenOrder,
+//                ContextMenuAction.OpenSMSPlanDirectory,
+//                ContextMenuAction.AskMoreMoney,
+//                ContextMenuAction.Feedback,
+                ContextMenuAction.OpenOrder,
                 ContextMenuAction.Close
             )
 

@@ -62,6 +62,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.realm.RealmResults;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Clock;
@@ -100,6 +102,7 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -161,6 +164,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
         if (optionsList2.isEmpty()) {
+
+//            new MessageDialogBuilder(Globals.unwrap(context))
+//                    .setTitle("Товари")
+//                    .setStatus(DialogStatus.NORMAL)
+//                    .setSubTitle("Iде процес завантаження")
+//                    .setMessage("Перелік товарів (для поточного відвідування) зараз завантажується з серверу. " +
+//                            "Зачекайте і поверніться до поточного розділу через хвилинку.")
+//                    .setOnConfirmAction(() -> null)
+//                    .show();
 
             TablesLoadingUnloading tlu = new TablesLoadingUnloading();
             tlu.downloadOptionsByDAD2(codeDad2, new Clicks.click() {

@@ -92,7 +92,7 @@ fun FilteringDialog(
     val listState = rememberLazyListState()
 
     val savedDistance = viewModel.offsetDistanceMeters.collectAsState().value
-    var localDistance by remember { mutableStateOf(5_000f) }
+    var localDistance by remember { mutableStateOf(savedDistance) }
 
     ComposableLifecycle { source, event ->
         when (event) {
@@ -599,7 +599,7 @@ fun DistanceSlider(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
     meters: Float,                // текущее значение в метрах
-    maxMeters: Float = 5_000f,   // максимум (по умолчанию 10 км)
+    maxMeters: Float = 9_000f,   // максимум (по умолчанию 10 км)
     onChanged: (Float) -> Unit
 ) {
     var distance by remember { mutableFloatStateOf(meters) }

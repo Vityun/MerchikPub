@@ -8,7 +8,7 @@ import ua.com.merchik.merchik.database.room.RoomManager.SQL_DB
 import java.util.concurrent.CopyOnWriteArrayList
 
 class ScrollDataHolder private constructor() {
-    private val ids: MutableList<Long> = mutableListOf()
+    private val ids: MutableSet<Long> = mutableSetOf()
     private val dad2: MutableList<Long> = mutableListOf()
     private var currentIndex = 0
 
@@ -109,54 +109,86 @@ class ScrollDataHolder private constructor() {
         }
     }
 
+//    fun removeId(id: Long) {
+//        val index = ids.indexOf(id)
+//        if (index >= 0) {
+//            ids.removeAt(index)
+//            if (currentIndex > index) {
+//                currentIndex-- // сдвигаем указатель назад, чтобы не пропустить следующий элемент
+//            }
+//            if (currentIndex >= ids.size) {
+//                currentIndex = 0 // защита от выхода за границу
+//            }
+//            notifyListeners()
+//        }
+//    }
+
+    @Synchronized
+    fun removeIds(idsToRemove: Collection<Long>) {
+        if (idsToRemove.isEmpty()) return
+        ids.removeAll(idsToRemove.toSet())
+        if (currentIndex >= ids.size) currentIndex = 0
+        notifyListeners()
+    }
+
+    @Synchronized
     fun removeId(id: Long) {
-        val index = ids.indexOf(id)
-        if (index >= 0) {
-            ids.removeAt(index)
-            if (currentIndex > index) {
-                currentIndex-- // сдвигаем указатель назад, чтобы не пропустить следующий элемент
-            }
-            if (currentIndex >= ids.size) {
-                currentIndex = 0 // защита от выхода за границу
-            }
-            notifyListeners()
+        val removed = ids.remove(id)
+        if (!removed) return
+
+        if (currentIndex >= ids.size) {
+            currentIndex = 0
         }
+
+        notifyListeners()
+    }
+
+    @Synchronized
+    fun clearIds() {
+        ids.clear()
+        currentIndex = 0
+        notifyListeners()
     }
 
     fun removeByCodeWpDataId(id: Long) {
         ids.remove(id)
     }
 
-    fun removeByCodeDad2(codeDad2: Long) {
-        // Получаем все WPDataAdditional с заданным codeDad2
-        val items = SQL_DB.wpDataAdditionalDao().getByCodeDad2(codeDad2)
-            .blockingGet() // для Single в RxJava
-
-        if (items.isEmpty()) return
-
-        var removedSomething = false
-        items.forEach { wpDataAdditional ->
-            val index = ids.indexOf(wpDataAdditional.ID)
-            if (index >= 0) {
-                ids.removeAt(index)
-                removedSomething = true
-                // корректируем currentIndex
-                if (currentIndex > index) {
-                    currentIndex--
-                }
-            } else {
-
-            }
-        }
-
-        if (currentIndex >= ids.size) {
-            currentIndex = 0
-        }
-
-        if (removedSomething) {
-            notifyListeners()
-        }
+    @Synchronized
+    fun getAllSnapshot(): Set<Long> {
+        return ids.toSet()
     }
+
+//    fun removeByCodeDad2(codeDad2: Long) {
+//        // Получаем все WPDataAdditional с заданным codeDad2
+//        val items = SQL_DB.wpDataAdditionalDao().getByCodeDad2(codeDad2)
+//            .blockingGet() // для Single в RxJava
+//
+//        if (items.isEmpty()) return
+//
+//        var removedSomething = false
+//        items.forEach { wpDataAdditional ->
+//            val index = ids.indexOf(wpDataAdditional.ID)
+//            if (index >= 0) {
+//                ids.removeAt(index)
+//                removedSomething = true
+//                // корректируем currentIndex
+//                if (currentIndex > index) {
+//                    currentIndex--
+//                }
+//            } else {
+//
+//            }
+//        }
+//
+//        if (currentIndex >= ids.size) {
+//            currentIndex = 0
+//        }
+//
+//        if (removedSomething) {
+//            notifyListeners()
+//        }
+//    }
 
 
     /**
@@ -169,18 +201,18 @@ class ScrollDataHolder private constructor() {
         notifyListeners()
     }
 
-    fun getIds(): List<Long> {
-        if (ids.isEmpty()) return emptyList()
-        val wpDataAdditionalList = SQL_DB.wpDataAdditionalDao().getByIds(ids)
-        val listIdAdditionalCode2: MutableList<Long> = mutableListOf()
-        for (item in wpDataAdditionalList) {
-            if (item.codeDad2 != 0L)
-                listIdAdditionalCode2.add(item.codeDad2)
-        }
-        val listId: MutableList<Long> =
-            RealmManager.getWpDataIdsByAdditionalIds(listIdAdditionalCode2)
-        return listId.toList()
-    }
+//    fun getIds(): List<Long> {
+//        if (ids.isEmpty()) return emptyList()
+//        val wpDataAdditionalList = SQL_DB.wpDataAdditionalDao().getByIds(ids)
+//        val listIdAdditionalCode2: MutableList<Long> = mutableListOf()
+//        for (item in wpDataAdditionalList) {
+//            if (item.codeDad2 != 0L)
+//                listIdAdditionalCode2.add(item.codeDad2)
+//        }
+//        val listId: MutableList<Long> =
+//            RealmManager.getWpDataIdsByAdditionalIds(listIdAdditionalCode2)
+//        return listId.toList()
+//    }
 
     fun getDad2(): List<Long> {
         return dad2
@@ -203,18 +235,18 @@ class ScrollDataHolder private constructor() {
 //        // По codeDad2 получаем WpDataDB
 //        return RealmManager.getWorkPlanRowByCodeDad2(wpDataAdditional.codeDad2).id
 //    }
-    fun getNext(): Long? {
-        if (ids.isEmpty()) return null
-
-        // Берем следующий ID
-        val id = ids[currentIndex]
-        currentIndex = (currentIndex + 1) % ids.size
-        return id
-    }
+//    fun getNext(): Long? {
+//        if (ids.isEmpty()) return null
+//
+//        // Берем следующий ID
+//        val id = ids[currentIndex]
+//        currentIndex = (currentIndex + 1) % ids.size
+//        return id
+//    }
 
     fun getAll(): List<Long> {
         if (ids.isEmpty()) return emptyList()
-        return ids
+        return ids.toList()
     }
 
 }

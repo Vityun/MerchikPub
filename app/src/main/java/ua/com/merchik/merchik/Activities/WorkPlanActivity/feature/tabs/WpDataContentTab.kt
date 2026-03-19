@@ -64,7 +64,7 @@ fun WpDataContentTab(dataIsReady: Boolean) {
 
 
         viewModel.contextUI = ContextUI.WP_DATA_IN_CONTAINER
-        viewModel.modeUI = ModeUI.DEFAULT
+        viewModel.modeUI = ModeUI.FILTER_SELECT
         viewModel.typeWindow = "container"
         viewModel.subTitle = ""
         viewModel.context = context

@@ -252,9 +252,7 @@ fun rememberContextMenuHost(
                     }
 
                     is MainEvent.OpenUFMDWPDataSelector -> {
-
                         viewModel.launcher?.let {
-
                             WpSelectionDataHolder.instance().init()
                             launchFeaturesActivity(
                                 launcher = it,
@@ -268,7 +266,6 @@ fun rememberContextMenuHost(
                                 title = "Додатковий заробіток"
                             )
                         }
-
                     }
 
                     is MainEvent.HideMessageDialog -> {

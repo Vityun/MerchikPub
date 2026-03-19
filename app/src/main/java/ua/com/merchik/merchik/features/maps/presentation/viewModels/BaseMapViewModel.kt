@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.maps.presentation.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.realm.kotlin.types.geo.Distance
@@ -27,10 +28,6 @@ abstract class BaseMapViewModel(
     private val _state = MutableStateFlow(MapState())
     val state: StateFlow<MapState> = _state
 
-    private val _radiusMeters = MutableStateFlow(5_000.0f)
-    val radiusMeters: StateFlow<Float> = _radiusMeters
-
-
     // ❗️Без буфера и без реплея, чтобы не тянуть старые эффекты
     private val _effects = MutableSharedFlow<MapEffect>(
         replay = 0,
@@ -46,9 +43,6 @@ abstract class BaseMapViewModel(
     private var didAutoCenter = false
     private var currentSessionId: Long = 0L     // 👈 текущая сессия
 
-    fun setDistance(distance: Float){
-        _radiusMeters.value = distance
-    }
 
     fun process(intent: MapIntent) {
         _state.update { MapReducer.reduce(it, intent) }
@@ -62,7 +56,7 @@ abstract class BaseMapViewModel(
             is MapIntent.MarkerClicked -> onMarkerClicked(intent.point)
             MapIntent.ConfirmJump -> onConfirm()
             MapIntent.DismissConfirm -> Unit
-            is MapIntent.SetCircleRadius -> {}
+//            is MapIntent.SetCircleRadius -> {}
         }
     }
 
@@ -71,8 +65,9 @@ abstract class BaseMapViewModel(
         val filtered =
             filterUC(i.items, i.filters, i.sorting, i.grouping, i.rangeStartLocalDate, i.rangeEndLocalDate, i.search).items
         val (center, points, badges) = buildUC(filtered)
-        val pointsUi = makeUiUC(center, points, badges, radiusMeters.value.toDouble())
-
+        val effectiveDistance = i.distanceMeters?.toDouble() ?: 5_000.0
+        val pointsUi = makeUiUC(center, points, badges, effectiveDistance)
+        Log.d("MAP_DEBUG", "distance=${i.distanceMeters}, pointsUi.size=${pointsUi.size}")
 
         _state.update {
             it.copy(
@@ -97,9 +92,11 @@ abstract class BaseMapViewModel(
 
         _state.update { st ->
             val newAuto = if (center != null) null else baseline
-            val eff = effectiveRadius(newAuto, st.customRadiusMeters)
+            val newCustom = i.distanceMeters?.toDouble()
+            val eff = effectiveRadius(newAuto, newCustom)
             st.copy(
                 autoBaselineRadiusMeters = newAuto,
+                customRadiusMeters = newCustom,
                 circleRadiusMeters = eff
             )
         }

@@ -113,9 +113,6 @@ fun GroupDeck(
 ) {
 
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
-    val anySelected = remember(items) { items.any { it.selected } }
-    val indeterminate = anySelected && !allSelected
-
 
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
@@ -168,6 +165,14 @@ fun GroupDeck(
         label = "cardBottomPadding"
     )
 
+    val deckItems = remember(items, stackSize) { items.take(stackSize) }
+
+    val hasHiddenSelected = remember(items, stackSize) {
+        items.drop(stackSize).any { it.selected }
+    }
+    val selectedBackColor = colorResource(R.color.selected_item)
+    val hiddenSelectedBackColor = Color.Yellow
+    val normalBackColor = Color.White
 
     Column(
         modifier = Modifier
@@ -280,15 +285,19 @@ fun GroupDeck(
 
 // какие элементы отображаем как подложки
                         val deckItems = remember(items, stackSize) { items.take(stackSize) }
-// если хочешь наоборот (самые “нижние” = последние):
-// val deckItems = remember(items, stackSize) { items.takeLast(stackSize) }
 
                         for (i in stackSize downTo 1) {
                             val idx0 = i - 1
                             val alpha = backAlphas.getOrNull(idx0) ?: 1f
 
                             val isSelected = deckItems.getOrNull(idx0)?.selected == true
-                            val bg = if (isSelected) selectedBackColor else normalBackColor
+                            val isBottomVisibleBack = i == stackSize
+
+                            val bg = when {
+                                isSelected -> selectedBackColor
+                                hasHiddenSelected && isBottomVisibleBack -> Color(0xFFFFF59D)
+                                else -> normalBackColor
+                            }
 
                             DeckCardBack(
                                 backgroundColor = bg,
@@ -298,18 +307,6 @@ fun GroupDeck(
                                 shadow = shadow
                             )
                         }
-//                        for (i in (stackSize) downTo 1) {
-//                            val idx0 = i - 1
-//                            val alpha = backAlphas.getOrNull(idx0) ?: 1f
-//
-//                            DeckCardBack(
-//                                backgroundColor = Color.White,
-//                                index = i,
-//                                offsetStep = stackOffset,
-//                                alpha = alpha,
-//                                shadow = shadow
-//                            )
-//                        }
 
                         // верхняя агрегированная карточка
                         Box(

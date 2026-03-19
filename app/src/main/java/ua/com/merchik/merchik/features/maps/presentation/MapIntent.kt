@@ -23,13 +23,14 @@ sealed interface MapIntent {
         val search: String?,
         val userLat: Double?,
         val userLon: Double?,
+        val distanceMeters: Float?,
         val autoCenterOnSetInput: Boolean = true
     ) : MapIntent
 
     data class MarkerClicked(val point: PointUi) : MapIntent
     data object ConfirmJump : MapIntent
     data object DismissConfirm : MapIntent
-    data class SetCircleRadius(val meters: Double?) : MapIntent
+//    data class SetCircleRadius(val meters: Double?) : MapIntent
 
 }
 
@@ -72,11 +73,6 @@ object MapReducer {
         is MapIntent.MarkerClicked -> state.copy(activePoint = intent.point)
         MapIntent.ConfirmJump -> state  // <-- НИЧЕГО НЕ ДЕЛАЕМ!
         MapIntent.DismissConfirm -> state.copy(pendingWp = null, pendingStableId = null)
-        is MapIntent.SetCircleRadius -> {
-            val newCustom = intent.meters
-            val eff = effectiveRadius(state.autoBaselineRadiusMeters, newCustom)
-            state.copy(customRadiusMeters = newCustom, circleRadiusMeters = eff)
-        }
 
     }
 }
