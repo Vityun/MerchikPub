@@ -77,6 +77,7 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
@@ -415,6 +416,9 @@ abstract class MainViewModel(
     private val _kostilDialog = MutableStateFlow<Boolean>(false)
     val kostilDialog: StateFlow<Boolean> get() = _kostilDialog
 
+    private val _showEmptyDataDialog = MutableStateFlow<Boolean>(false)
+    val showEmptyDataDialog: StateFlow<Boolean> get() = _showEmptyDataDialog
+
     fun requestExpandGroup(groupId: String) {
         _expandGroup.tryEmit(groupId)
     }
@@ -455,6 +459,11 @@ abstract class MainViewModel(
     fun hideKostilDialog() {
         _kostilDialog.value = false
     }
+
+    fun hideShowEmptyDataDialog() {
+        _showEmptyDataDialog.value = false
+    }
+
 
     private var planBudgetPollingJob: Job? = null
     private var loadingUnloading: TablesLoadingUnloading = TablesLoadingUnloading()
@@ -512,7 +521,17 @@ abstract class MainViewModel(
 
     private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
-        _offsetDistanceMeters.value = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 5_000f)
+        val savedDistance = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 0f)
+        if (savedDistance == 0f) {
+            val dossierSotrSDBList =
+                RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
+            val sotrudnikDistance = (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
+                .let { if (it == 0f || it == 1f) 3000f else it }
+            _offsetDistanceMeters.value = sotrudnikDistance
+        } else {
+            _offsetDistanceMeters.value = savedDistance
+        }
+
     }
 
     private fun observeSourcesForItems() {
@@ -918,6 +937,10 @@ abstract class MainViewModel(
 
                 finalItems.forEach {
                     android.util.Log.e("TEST_BAG", "value ${it.fields.first().field}")
+                }
+
+                if (finalItems.isEmpty()){
+                    _showEmptyDataDialog.value = true
                 }
 
                 old.copy(

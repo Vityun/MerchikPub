@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.SelectedMode
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
@@ -192,10 +193,15 @@ fun FilteringDialog(
                 )
                 if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
                     Spacer(modifier = Modifier.padding(4.dp))
+                    val dossierSotrSDBList =
+                        RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
+                    val sotrudnikDistance = (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
+                        .let { if (it == 0f || it == 1f) 3000f else it }
                     DistanceSlider(
                         viewModel = viewModel,
                         modifier = Modifier,
-                        meters = savedDistance
+                        meters = savedDistance,
+                        maxMeters = sotrudnikDistance.toString().toFloat()
                     ) {
                         localDistance = it
                     }
@@ -599,7 +605,7 @@ fun DistanceSlider(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
     meters: Float,                // текущее значение в метрах
-    maxMeters: Float = 9_000f,   // максимум (по умолчанию 10 км)
+    maxMeters: Float = 5_000f,   // максимум (по умолчанию 10 км)
     onChanged: (Float) -> Unit
 ) {
     var distance by remember { mutableFloatStateOf(meters) }
@@ -627,7 +633,7 @@ fun DistanceSlider(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "500 м",
+                    text = "1 м",
                     style = TextStyle(fontSize = 14.sp)
                 )
 
@@ -651,7 +657,7 @@ fun DistanceSlider(
 
             Slider(
                 modifier = Modifier.padding(top = 18.dp),
-                value = distance.coerceIn(500f, maxMeters),
+                value = distance.coerceIn(0f, maxMeters),
                 colors = SliderDefaults.colors(
                     activeTrackColor = colorResource(id = R.color.blue),   // выбранная слева
                     inactiveTrackColor = Color.LightGray,                       // справа
@@ -662,10 +668,10 @@ fun DistanceSlider(
                 onValueChange = {
                     // шаг 100м, чтобы не прыгало по 1 метру (можешь убрать если не надо)
                     val stepped = (it / 100f).toInt() * 100f
-                    distance = stepped.coerceIn(500f, maxMeters)
+                    distance = stepped.coerceIn(0f, maxMeters)
                     onChanged(distance)
                 },
-                valueRange = 500f..maxMeters
+                valueRange = 0f..maxMeters
             )
         }
     }

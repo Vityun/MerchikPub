@@ -176,6 +176,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
 
+    var showEmptyDataDialogLocal by remember { mutableStateOf(false) }
+    val showEmptyDataDialog by viewModel.showEmptyDataDialog.collectAsState()
+
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
     var maxLinesSubTitle by remember { mutableStateOf(1) }
@@ -389,7 +392,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
-   fun restoreSelected(
+    fun restoreSelected(
         items: List<DataItemUI>,
         selectedIds: Set<Long>
     ): List<DataItemUI> {
@@ -577,6 +580,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     )
                 }
 
+
                 isActiveFiltered = result.isActiveFiltered
                 isActiveSorted = result.isActiveSorted
                 isActiveGrouped = result.isActiveGrouped
@@ -588,6 +592,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         addAll(restoredFooterItems)
                     }
                 }
+
+                LaunchedEffect(restoredBodyItems, dataItemsUI) {
+                    if (restoredBodyItems.isNotEmpty() && dataItemsUI.isEmpty())
+                        showEmptyDataDialogLocal = true
+                }
+
 
                 val groups: List<GroupMeta> = remember(result.groups, restoredHeaderItems.size) {
                     val headerSize = restoredHeaderItems.size
@@ -1803,6 +1813,42 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         )
 
     }
+
+    if (showEmptyDataDialog || showEmptyDataDialogLocal) {
+        if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+            || viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
+            || viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER_MULT
+            || viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
+            var clickEmulator = true
+            MessageDialog(
+                title = "Відсутні дані",
+                status = DialogStatus.NORMAL,
+                subTitle = "Cповіщення системи",
+                message = "На жаль нема даних (елементів) котрі б задовільнили поточним налаштуванням фільтрів. Спробуйте змінити такі обмеження (у формі 'фільтри'), або зверніться до свого <a href=\"app://click\">керівника</a>, чи оператора <a href=\"app://click\">служби підтримки</a>",
+                onDismiss = {
+                    viewModel.hideShowEmptyDataDialog()
+                    showEmptyDataDialogLocal = false
+                },
+                okButtonName = "Ok",
+                onTextLinkClick = {
+//                val intent = Intent(Intent.ACTION_DIAL).apply {
+                    val tel = if (clickEmulator)
+                        "0674492161" else "0672261895"
+                    clickEmulator = !clickEmulator
+                    Globals.telephoneCall(context, tel)
+//                    data = Uri.parse("tel:${Globals.HELPDESK_PHONE_NUMBER}")
+//                    data = Uri.parse("tel:${Globals.HELPDESK_PHONE_NUMBER}")
+//                }
+//                activity.startActivity(intent)
+                },
+                onConfirmAction = {
+                    viewModel.hideShowEmptyDataDialog()
+                    showEmptyDataDialogLocal = false
+                }
+            )
+        }
+    }
+
     if (showToolTipDialog) {
         MessageDialog(
             title = "Довідка",

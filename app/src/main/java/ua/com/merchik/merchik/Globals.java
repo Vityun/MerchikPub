@@ -1787,9 +1787,9 @@ public class Globals {
      */
     public static void telephoneCall(Context context, String tel) {
         DialogData d = new DialogData(context);
-        d.setTitle("Звонок оператору");
-        d.setText("Сейчас будет набран номер: " + tel);
-        d.setOk("Позвонить", () -> {
+        d.setTitle("Дзвінок оператору");
+        d.setText("Зараз буде набрано номер: " + tel);
+        d.setOk("Зателефонувати", () -> {
             Intent intent = new Intent(Intent.ACTION_CALL);
             intent.setData(Uri.parse("tel:" + tel));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

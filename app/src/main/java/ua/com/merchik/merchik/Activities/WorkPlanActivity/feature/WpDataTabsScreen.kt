@@ -86,9 +86,6 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    // VM для диалогов
-//    val dialogViewModel: WpDataTabsDialogViewModel = viewModel()
-
     // ✅ общий флаг готовности
     var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
 
@@ -116,7 +113,7 @@ fun WpDataTabsScreen() {
 
         initialTabResolved = true
     }
-
+        // 1367 - кол-во метров - код экзамена
     val dossierSotrSDBList =
         RoomManager.SQL_DB.dossierSotrDao().getData(null, 982L, null)
     val hasPriznak1 =
@@ -154,9 +151,6 @@ fun WpDataTabsScreen() {
     // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
 //    val badgeCounts = remember { cronchikViewModel.badgeCounts }
     val badgeCounts = cronchikViewModel.badgeCounts
-
-    if (badgeCounts[1] == null || badgeCounts[1] == 0)
-        cronchikViewModel.updateBadgeAdditionalIncome(5000f)
 
 
     // -----------------------------
@@ -212,12 +206,11 @@ fun WpDataTabsScreen() {
     Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() +")
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
     val green = colorResource(id = R.color.selected_item)
-//
-//    val badgeTargets: List<Long?> = remember(ids) {
-//        List(tabTitles.size) { idx -> ids.getOrNull(idx) }
-//    }
+    val distance by viewModel.offsetDistanceMeters.collectAsState()
+
+    if (badgeCounts[1] == null || badgeCounts[1] == 0)
+        cronchikViewModel.updateBadgeAdditionalIncome(distance)
 
     val pendingScrollHash = remember { mutableStateOf<Long?>(null) }
     val isScrolling = remember { mutableStateOf(false) }
