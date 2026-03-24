@@ -1059,7 +1059,6 @@ public class TablesLoadingUnloading {
         }
 
         final List<Long> beforeIds = new ArrayList<>(beforeIdsSet);
-        String notice = "";
 
         // Сетевой запрос: wp_data_request_list
         StandartData data = new StandartData();
@@ -1164,9 +1163,8 @@ public class TablesLoadingUnloading {
         try {
             // ⚠️ лучше не делать new каждый раз, но оставляю как у тебя
             downloadAllTables(context);
-            Exchange exchange = new Exchange();
-            exchange.chatExchange();
-            exchange.chatGroupExchange();
+            Exchange.chatExchange();
+            Exchange.chatGroupExchange();
 
             loadingDialog.show();
             progress.onNextEvent("Виконую Синхронізацію з сервером", 7_700);
@@ -1228,20 +1226,21 @@ public class TablesLoadingUnloading {
                     "Stack: " + Arrays.toString(e.getStackTrace()));
         }
 
+
         // по закрытию лоадинга — показываем сообщение и дергаем onFinish
         loadingDialog.setOnDismissListener(() -> {
             String msg = "Сервер получил и обработал 1 заявок на дополнительный заработок. Все они подтверждены и Вы можете приступить к их выполнению. Для этого перейдите в ";
 //            String msg = "Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.";
-//            if (!notice.isEmpty())
-//                msg = notice + " <a href=\"app://click\">посешение</a>";
-            msg = msg + " <a href=\"app://click\">посешение</a>";
+            if (!notice.isEmpty())
+                msg = notice + " <a href=\"app://click\">план работ</a>";
+//            msg = msg + " <a href=\"app://click\">посешение</a>";
             // перейти в план работ -> посмотреть
             new MessageDialogBuilder(context)
                     .setTitle("Зміни в планi робіт")
                     .setStatus(DialogStatus.NORMAL)
                     .setSubTitle("Відповідь від сервера")
                     .setMessage(msg)
-                    .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
+//                    .setOnCancelAction(context.getText(R.string.ui_cancel).toString(), () -> Unit.INSTANCE)
                     .setOnConfirmAction(() -> {
                         if (onFinish != null) onFinish.run();
                         notice = "";
@@ -1249,6 +1248,7 @@ public class TablesLoadingUnloading {
                     })
                     .setOnTextLinkClick(() -> {
                         Intent intent = new Intent(context, WPDataActivity.class);
+                        intent.putExtra("showWPDataWithFilters", true);
                         context.startActivity(intent);
                         return Unit.INSTANCE;
                     })
@@ -1266,10 +1266,19 @@ public class TablesLoadingUnloading {
     public static class UploadPlanBudgetResult {
         public final int updatedCount;
         public final int autoApprovedCount;
+        public final List<Long> dad2List;
+        public final String notice;
 
-        public UploadPlanBudgetResult(int updatedCount, int autoApprovedCount) {
+        public UploadPlanBudgetResult(
+                int updatedCount,
+                int autoApprovedCount,
+                List<Long> dad2List,
+                String notice
+        ) {
             this.updatedCount = updatedCount;
             this.autoApprovedCount = autoApprovedCount;
+            this.dad2List = dad2List;
+            this.notice = notice;
         }
     }
 
@@ -1306,7 +1315,7 @@ public class TablesLoadingUnloading {
                 .subscribeOn(Schedulers.io())
                 .flatMap(list -> {
                     if (list == null || list.isEmpty()) {
-                        return Single.just(new UploadPlanBudgetResult(0, 0));
+                        return Single.just(new UploadPlanBudgetResult(0, 0, null, null));
                     }
 
                     List<WPDataAdditionalServ> servs =
@@ -1360,9 +1369,9 @@ public class TablesLoadingUnloading {
                                 List<UploadResponse.ResultItem> results = (List<UploadResponse.ResultItem>) arr[1];
 
                                 if (mapping == null || mapping.isEmpty()) {
-                                    return Single.just(new UploadPlanBudgetResult(0, 0));
+                                    return Single.just(new UploadPlanBudgetResult(0, 0, null, null));
                                 }
-
+                                List<Long> dad2List = new ArrayList<Long>();
                                 return Completable
                                         .fromAction(() -> {
                                             RoomManager.SQL_DB.runInTransaction(() -> {
@@ -1378,6 +1387,7 @@ public class TablesLoadingUnloading {
                                                         try {
                                                             long serverId = Long.parseLong(r.id);
                                                             dao.applyServerResultSync(serverId, r.state, r.comment, nowSec);
+                                                            dad2List.add(dao.getByIdSync(serverId).codeDad2);
                                                         } catch (NumberFormatException ignore) {
                                                         }
                                                     }
@@ -1385,7 +1395,7 @@ public class TablesLoadingUnloading {
                                             });
                                         })
                                         .subscribeOn(Schedulers.io())
-                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), 0)));
+                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), 0, dad2List, notice)));
                             });
                 });
     }

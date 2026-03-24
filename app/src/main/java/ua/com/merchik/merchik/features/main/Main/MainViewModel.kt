@@ -412,6 +412,8 @@ abstract class MainViewModel(
     private val _groups = MutableStateFlow<List<GroupMeta>>(emptyList())
     val groups: StateFlow<List<GroupMeta>> get() = _groups
 
+    private val _showActivityFilter = MutableStateFlow<Boolean>(true)
+    val showActivityFilter: StateFlow<Boolean> get() = _showActivityFilter
 
     private val _kostilDialog = MutableStateFlow<Boolean>(false)
     val kostilDialog: StateFlow<Boolean> get() = _kostilDialog
@@ -452,6 +454,9 @@ abstract class MainViewModel(
         }
     }
 
+    fun setShowActivityFilter() {
+        _showActivityFilter.value = false
+    }
     fun showKostilDialog() {
         _kostilDialog.value = true
     }
@@ -472,39 +477,6 @@ abstract class MainViewModel(
     init {
         loadPreferences()
         observeSourcesForItems()
-    }
-
-    /** Запустить polling (если уже запущен — ничего не делает) */
-    fun startPlanBudgetPolling(context: Context) {
-        if (planBudgetPollingJob?.isActive == true) return
-
-        planBudgetPollingJob = viewModelScope.launch(Dispatchers.IO) {
-            // можно сразу сделать первый запрос без ожидания
-            while (isActive) {
-                val startedAt = System.currentTimeMillis()
-
-                try {
-                    // защита от зависаний (по желанию)
-                    withTimeout(15_000) {
-                        loadingUnloading.donwloadPlanBudgetForConfirmDecision(
-                            context as Activity,
-                            kotlinx.coroutines.Runnable {
-                                updateContent()
-                            }
-                        )
-                    }
-                } catch (ce: CancellationException) {
-                    throw ce
-                } catch (t: Throwable) {
-                    Log.e("PlanBudgetPolling", "poll error", t)
-                }
-
-                // держим период ~10с с учётом времени запроса
-                val elapsed = System.currentTimeMillis() - startedAt
-                val delayMs = (10_000 - elapsed).coerceAtLeast(0)
-                delay(delayMs)
-            }
-        }
     }
 
     fun startPlanBudgetPollingSecond(wpDataAdditional: List<WPDataAdditional>) {
@@ -644,88 +616,7 @@ abstract class MainViewModel(
         if (_groups.value != shiftedGroups) {
             _groups.value = shiftedGroups
         }
-    }//    private fun observeSourcesForItems() {
-//        viewModelScope.launch {
-//            // комбинируем источники: uiState, range start/end
-//            combine(
-//                _uiState,
-//                _rangeDataStart,
-//                _rangeDataEnd
-//            ) { uiState, start, end ->
-//                Triple(uiState, start, end)
-//            }.collect { (uiState, start, end) ->
-//                // делаем пересчёт в фоне
-//                recomputeDataItems(uiState, start, end)
-//            }
-//        }
-//    }
-//
-//    private fun recomputeDataItems(
-//        uiState: StateUI,
-//        rangeStart: LocalDate?,
-//        rangeEnd: LocalDate?
-//    ) {
-//        viewModelScope.launch {
-//            val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
-//                val header = uiState.itemsHeader
-//                val footer = uiState.itemsFooter
-//
-//                val result: FilterAndSortResult = try {
-//                    filterAndSortDataItems(
-//                        items = uiState.items,
-//                        filters = uiState.filters,
-//                        sortingFields = uiState.sortingFields,
-//                        groupingFields = uiState.groupingFields,
-//                        rangeStart = rangeStart,
-//                        rangeEnd = rangeEnd,
-//                        searchText = uiState.filters?.searchText
-//                    )
-//                } catch (e: Throwable) {
-//                    Globals.writeToMLOG(
-//                        "ERROR",
-//                        "MainViewModel.recomputeDataItems",
-//                        "filterAndSortDataItems failed: $e"
-//                    )
-//                    FilterAndSortResult(
-//                        items = emptyList(),
-//                        groups = emptyList(),
-//                        isActiveFiltered = false,
-//                        isActiveSorted = false,
-//                        isActiveGrouped = false
-//                    )
-//                }
-//
-//                // 👉 сдвигаем индексы групп на размер header
-//                val headerSize = header.size
-//                val groupsWithOffset: List<GroupMeta> = result.groups.map { g ->
-//                    g.copy(
-//                        startIndex = g.startIndex + headerSize,
-//                        endIndexExclusive = g.endIndexExclusive + headerSize
-//                    )
-//                }
-//
-//                // Собираем итоговый список для UI
-//                val combinedList = buildList {
-//                    addAll(header)
-//                    addAll(result.items)
-//                    addAll(footer)
-//                }
-//
-//                combinedList to groupsWithOffset
-//            }
-//
-//            // обновляем элементы
-//            if (_dataItems.value != combined) {
-//                _dataItems.value = combined
-//            }
-//
-//            // обновляем группы (для GroupDeck / отрисовки)
-//            if (_groups.value != shiftedGroups) {
-//                _groups.value = shiftedGroups
-//            }
-//        }
-//    }
-
+    }
 
     fun updateOffsetSizeFonts(offsetSizeFont: Float) {
         viewModelScope.launch {
@@ -1470,9 +1361,43 @@ abstract class MainViewModel(
 
                                         // здесь уже можно либо ждать по каждому dad2,
                                         // либо сделать отдельную функцию waitDecisionByDad2List(...)
+
                                         viewModelScope.launch {
+                                            val dad2ListFromResult = it.dad2List
+//                                            val result = waitDecisionByLisgtDad2(dad2List, timeoutMs = 28_700L)
                                             _events.emit(MainEvent.LoadingCompleted)
+//                                            when (result) {
+//                                                DecisionResult.APPROVED -> {
+//                                                    _events.emit(MainEvent.LoadingCompleted)
+//                                                    // если нужно — можно короткий toast/snack без диалога
+                                            if (dad2List.isNotEmpty()) {
+                                                val wpDataAdditional = withContext(Dispatchers.IO) {
+                                                    RoomManager.SQL_DB.wpDataAdditionalDao()
+                                                        .getByCodeDad2ListSync(dad2List)
+                                                }
+//
+                                                context?.let {
+                                                    startPlanBudgetPollingSecond(
+                                                        wpDataAdditional
+                                                    )
+                                                }
+//                                                }
+                                            }
+//
+//                                                DecisionResult.DECLINED -> {
+//                                                    _events.emit(MainEvent.LoadingCanceled)
+//
+//                                                }
+//
+//                                                DecisionResult.PENDING_TIMEOUT -> {
+//                                                    // ответа пока нет — но заявка отправлена
+//                                                    _events.emit(MainEvent.LoadingCompleted)
+//                                                    // при желании можно показать мягкое сообщение:
+//                                                    // _events.emit(MainEvent.ShowMessageDialog(...))
+//                                                }
+//                                            }
                                         }
+
                                     },
                                     {
                                         viewModelScope.launch {
@@ -1481,13 +1406,9 @@ abstract class MainViewModel(
                                                 MainEvent.ShowMessageDialog(
                                                     MessageDialogData(
                                                         subTitle = "Створено та збережено ${toInsert.size} заявок",
-                                                        message = String.format(
-                                                            "Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s " +
-                                                                    " Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
-                                                            "ввiмкнути інтернет у налаштуваннях."
-                                                        ),
+                                                        message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
                                                         status = DialogStatus.ALERT,
-                                                        positivText = "Налаштування інтернету"
+                                                        positivText = "Ok"
                                                     )
                                                 )
                                             )
@@ -2106,7 +2027,25 @@ abstract class MainViewModel(
                 when (dao.getLastActionByDad2(dad2) ?: 0) {
                     1 -> out = DecisionResult.APPROVED
                     2 -> out = DecisionResult.DECLINED
-                    else -> kotlinx.coroutines.delay(1200)
+                    else -> kotlinx.coroutines.delay(500)
+                }
+            }
+            out // <-- последняя строка лямбды, точно DecisionResult
+        }
+        return res ?: DecisionResult.PENDING_TIMEOUT
+    }
+
+    private suspend fun waitDecisionByLisgtDad2(listDad2: List<Long>, timeoutMs: Long): DecisionResult {
+        val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
+
+        val res: DecisionResult? = kotlinx.coroutines.withTimeoutOrNull(timeoutMs) {
+            var out: DecisionResult? = null
+
+            while (out == null) {
+                when (dao.getByCodeDad2List(listDad2) ?: 0) {
+                    1 -> out = DecisionResult.APPROVED
+                    2 -> out = DecisionResult.DECLINED
+                    else -> kotlinx.coroutines.delay(500)
                 }
             }
             out // <-- последняя строка лямбды, точно DecisionResult

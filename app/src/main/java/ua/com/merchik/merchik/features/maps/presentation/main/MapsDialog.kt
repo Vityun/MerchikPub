@@ -2,9 +2,6 @@ package ua.com.merchik.merchik.features.maps.presentation.main
 
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.util.Log
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -29,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,23 +45,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.Utils.observeInternetState
-import ua.com.merchik.merchik.Utils.showInternetStateNotification
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
-import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
@@ -73,7 +61,6 @@ import ua.com.merchik.merchik.features.main.Main.FilteringDialog
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
-import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.domain.stringByKey
 import ua.com.merchik.merchik.features.maps.presentation.MapActionsBridge
@@ -82,7 +69,6 @@ import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromWPdataViewModel
-import ua.com.merchik.merchik.server
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -736,7 +722,8 @@ fun MapsDialog(
                 showFilteringDialog = false
                 mainViewModel.updateContent()
 
-            }
+            },
+            true
         )
     }
 

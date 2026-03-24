@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.features.main.Main
 
 import android.app.Activity
 import android.content.Context
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -41,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -74,7 +78,8 @@ import java.time.LocalDate
 fun FilteringDialog(
     viewModel: MainViewModel,
     onDismiss: () -> Unit,
-    onChanged: (Filters) -> Unit
+    onChanged: (Filters) -> Unit,
+    filtredElementAnimation: Boolean = false
 ) {
 
     val selectedFilterDateStart by viewModel.rangeDataStart.collectAsState()
@@ -106,6 +111,22 @@ fun FilteringDialog(
         }
     }
 
+    val pulseScale = remember { Animatable(1f) }
+
+    LaunchedEffect(filtredElementAnimation) {
+        if (filtredElementAnimation) {
+            val endTime = System.currentTimeMillis() + 5_000L
+
+            while (System.currentTimeMillis() < endTime) {
+                pulseScale.animateTo(1.06f, tween(500))
+                pulseScale.animateTo(1f, tween(500))
+            }
+
+            pulseScale.snapTo(1f)
+        } else {
+            pulseScale.snapTo(1f)
+        }
+    }
 //    Dialog(onDismissRequest = onDismiss) {
     Column(
         modifier = Modifier
@@ -211,7 +232,11 @@ fun FilteringDialog(
                 if (mode == ModeUI.FILTER_SELECT || mode == ModeUI.MULTI_SELECT) {
                     SelectedModeDropDown(
                         modifier = Modifier
-                            .padding(start = 10.dp, top = 10.dp, bottom = 2.dp),
+                            .padding(start = 10.dp, top = 10.dp, bottom = 2.dp)
+                            .graphicsLayer {
+                                scaleX = pulseScale.value
+                                scaleY = pulseScale.value
+                            },
                         selectedMode = localSelectedMode,
                         onSelectedMode = { newMode ->
                             localSelectedMode = newMode
@@ -289,7 +314,10 @@ fun FilteringDialog(
 
                             viewModel.updateOffsetDistanceMeters(localDistance)
                             FilteringDialogDataHolder.instance().filters?.let {
-                                onChanged.invoke(it)
+                                onChanged.invoke(
+                                    it.copy(
+                                        selectedMode = localSelectedMode)
+                                )
                             }
                         },
                         shape = RoundedCornerShape(8.dp),

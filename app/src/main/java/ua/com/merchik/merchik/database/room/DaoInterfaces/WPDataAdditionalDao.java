@@ -49,6 +49,10 @@ public interface WPDataAdditionalDao {
     @Query("SELECT * FROM wp_data_additional WHERE code_dad2 IN (:codeDad2List)")
     Single<List<WPDataAdditional>> getByCodeDad2List(List<Long> codeDad2List);
 
+
+    @Query("SELECT * FROM wp_data_additional WHERE code_dad2 IN (:codeDad2List)")
+    List<WPDataAdditional> getByCodeDad2ListSync(List<Long> codeDad2List);
+
     @Query("SELECT * FROM wp_data_additional WHERE code_dad2 = :codeDad2")
     List<WPDataAdditional> getByCodeDad2Sync(long codeDad2);
 

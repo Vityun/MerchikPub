@@ -118,11 +118,13 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
@@ -178,6 +180,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var showEmptyDataDialogLocal by remember { mutableStateOf(false) }
     val showEmptyDataDialog by viewModel.showEmptyDataDialog.collectAsState()
+    var showSortingDataDialogLocal by remember { mutableStateOf(false) }
+    var filtredElementAnimation by remember { mutableStateOf(false) }
+    val showActivityFilter by viewModel.showActivityFilter.collectAsState()
 
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
@@ -263,6 +268,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     // Слушаем запросы на полёт от ViewModel
     val lifecycleOwner = LocalLifecycleOwner.current
+
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             // Collect fly requests from ViewModel
@@ -304,6 +310,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
 
     val activity = context as ComponentActivity
+    LaunchedEffect(Unit) {
+        val shouldShow = activity.intent?.getBooleanExtra("showWPDataWithFilters", false) == true
+        if (shouldShow && showActivityFilter) {
+            showSortingDataDialogLocal = true
+            val updated = (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
+            viewModel.updateFilters(updated)
+            FilteringDialogDataHolder.instance().filters = updated
+        }
+    }
 
     fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
         if (wpList.isEmpty()) return
@@ -1755,7 +1770,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     AnchoredAnimatedDialog(
         visible = showFilteringDialog,
         anchorRect = filterBtnRect,
-        onDismissRequest = { showFilteringDialog = false }
+        onDismissRequest = {
+            showFilteringDialog = false
+            filtredElementAnimation = false
+        }
     ) { requestClose ->
         FilteringDialog(
             viewModel,
@@ -1763,7 +1781,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             onChanged = {
                 viewModel.updateFilters(it)
                 showFilteringDialog = false
-            }
+                filtredElementAnimation = false
+            },
+            filtredElementAnimation = filtredElementAnimation
         )
     }
 
@@ -1818,7 +1838,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         if (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
             || viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER
             || viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER_MULT
-            || viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
+            || viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
+        ) {
             var clickEmulator = true
             MessageDialog(
                 title = "Відсутні дані",
@@ -1849,6 +1870,31 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
+
+    if (showSortingDataDialogLocal) {
+        viewModel.setShowActivityFilter()
+        val sharedPref = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
+        val isChecked = sharedPref.getBoolean("checkboxPrefKey", false);
+        if (!isChecked)
+            MessageDialog(
+                title = stringResource(R.string.title_0),
+                status = DialogStatus.NORMAL,
+                subTitle = "Новые работы",
+                message = "Сейчас в плане работ Вы видите (отмечены желтым) те новые работы, которые Вам переданы после обработки Вашей заявки. Для того, чтобы посмотреть все работы, установите <a href=\"app://click\">фильтр</a> \"отмеченные\" в положение \"<a href=\"app://click\">все</a>\".",
+                onDismiss = { showSortingDataDialogLocal = false },
+                okButtonName = "Ok",
+                showCheckbox = true,
+                onCheckboxChanged = { checked ->
+                    sharedPref.edit().putBoolean("checkboxPrefKey", checked).apply()
+                },
+                onTextLinkClick = {
+                    showFilteringDialog = true
+                    filtredElementAnimation = true
+                    showSortingDataDialogLocal = false
+                },
+                onConfirmAction = { showSortingDataDialogLocal = false }
+            )
+    }
     if (showToolTipDialog) {
         MessageDialog(
             title = "Довідка",
