@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.util.TypedValue
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
@@ -23,15 +24,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.MapEffect
+import com.google.maps.android.compose.MapsComposeExperimentalApi
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
@@ -42,10 +47,12 @@ import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.formatSum
 import ua.com.merchik.merchik.features.maps.domain.haversine
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
+import ua.com.merchik.merchik.features.maps.domain.latLngToLaunchOrigin
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import java.time.ZoneId
 
+@OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun StoresMap(
     cameraPositionState: com.google.maps.android.compose.CameraPositionState,
@@ -53,6 +60,8 @@ fun StoresMap(
 ) {
     val s by vm.state.collectAsState()
 
+    val anchorView = LocalView.current
+    var googleMapRef by remember { mutableStateOf<GoogleMap?>(null) }
     val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
 
     val userLat = s.userLat
@@ -236,6 +245,10 @@ fun StoresMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState
         ) {
+            MapEffect(Unit) { map ->
+                googleMapRef = map
+            }
+
             // === YOU marker ===
             userLatLng?.let { youPos ->
                 com.google.maps.android.compose.MarkerInfoWindow(
@@ -373,7 +386,17 @@ fun StoresMap(
                             false
                         },
                         onInfoWindowClick = {
-                            vm.process(MapIntent.MarkerClicked(pUi))
+                            markerState.hideInfoWindow()
+
+                            val origin = googleMapRef?.latLngToLaunchOrigin(
+                                latLng = pos,
+                                anchorView = anchorView,
+                                widthPx = 64,
+                                heightPx = 64,
+                                yOffsetPx = 42
+                            )
+
+                            vm.process(MapIntent.MarkerClicked(pUi, origin))
                             if (selected?.key == key) selected = null
                         },
                         onInfoWindowClose = {

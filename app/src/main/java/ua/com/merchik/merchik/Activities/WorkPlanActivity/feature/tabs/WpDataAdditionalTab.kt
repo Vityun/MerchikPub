@@ -1,7 +1,8 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -18,10 +19,14 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.isDataReadyCompat
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogCloseReason
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 
@@ -33,11 +38,6 @@ fun OtherComposeTab(dataIsReady: Boolean) {
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val context = LocalContext.current
     val activity = context as ComponentActivity
-
-
-    val cronchikViewModel =
-        ViewModelProvider(activity).get<CronchikViewModel>(CronchikViewModel::class.java)
-
 
     viewModel.contextUI = ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
     viewModel.modeUI = ModeUI.MULTI_SELECT
@@ -85,8 +85,41 @@ fun OtherComposeTab(dataIsReady: Boolean) {
         }
     }
 
-    activity?.let {
-//        viewModel.startPlanBudgetPolling(it)
-    }
+//    val dossierSotrSDB = RoomManager.SQL_DB.dossierSotrDao().getData(null, 949L, null)
+//    val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+//    var di by remember { mutableStateOf(true) }
+//    if (di)
+//        MessageDialog(
+//            title = "Додатковий заробіток",
+//            status = DialogStatus.NORMAL,
+//            subTitle = "Базовий мерчендайзинг",
+//            message = "Прием заявок от ${user.fio} запрещен. Обратитесь за помощью к супервайзеру или в службу поддержки по телефону +380674491265",     // ← тело подсказки по сценарию
+//            onDismiss = { di = false },
+//            onConfirmAction = {
+//                di = false
+//            },
+//            onDialogClosed = { reason ->
+//                Toast.makeText(context, "dfvdgfb", Toast.LENGTH_LONG).show()
+//                when (reason) {
+//                    DialogCloseReason.DISMISS -> {
+//                        Log.d("MessageDialog", "Закрыт по back/outside")
+//                    }
+//
+//                    DialogCloseReason.CLOSE_BUTTON -> {
+//                        Log.d("MessageDialog", "Закрыт по крестику")
+//                    }
+//
+//                    DialogCloseReason.CONFIRM -> {
+//                        Log.d("MessageDialog", "Закрыт после подтверждения")
+//                    }
+//
+//                    DialogCloseReason.CANCEL -> {
+//                        Log.d("MessageDialog", "Закрыт после отмены")
+//                    }
+//                }
+//            }
+//        )
+
+
 }
 

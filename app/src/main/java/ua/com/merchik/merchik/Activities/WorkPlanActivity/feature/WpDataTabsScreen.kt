@@ -67,6 +67,7 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
@@ -86,55 +87,50 @@ fun WpDataTabsScreen() {
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
 
-    // ✅ общий флаг готовности
     var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
-
-    // ✅ выбранный таб
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-
-    // ✅ чтобы “авто-выбор при старте” сработал ровно один раз
     var initialTabResolved by rememberSaveable { mutableStateOf(false) }
 
+    val dossierSotrSDBList = remember {
+        RoomManager.SQL_DB.dossierSotrDao().getData(null, 949L, null).orEmpty()
+    }
 
-    LaunchedEffect(dataIsReady) {
+    val hasAdditionalIncomeAccess = remember(dossierSotrSDBList) {
+        dossierSotrSDBList.any { it.priznak == 1L }
+    }
+
+    var showAdditionalIncomeDeniedDialog by rememberSaveable { mutableStateOf(false) }
+
+    val tabTitles = listOf(
+        stringResource(R.string.title_0),
+        "Доп.заробіток"
+    )
+
+    LaunchedEffect(dataIsReady, hasAdditionalIncomeAccess) {
         if (!dataIsReady || initialTabResolved) return@LaunchedEffect
 
-        val hasFirstTabData =
-            RealmManager.getAllWorkPlanWithOutRNO().isNotEmpty()
-
-        val hasSecondTabData =
-            RealmManager.getAllWorkPlanForRNO().isNotEmpty()
+        val hasFirstTabData = RealmManager.getAllWorkPlanWithOutRNO().isNotEmpty()
+        val hasSecondTabData = RealmManager.getAllWorkPlanForRNO().isNotEmpty()
 
         selectedTabIndex = when {
             hasFirstTabData -> 0
-            hasSecondTabData -> 1
+            hasSecondTabData && hasAdditionalIncomeAccess -> 1
             else -> 0
         }
 
         initialTabResolved = true
     }
-        // 1367 - кол-во метров - код экзамена
-    val dossierSotrSDBList =
-        RoomManager.SQL_DB.dossierSotrDao().getData(null, 982L, null)
-    val hasPriznak1 =
-        dossierSotrSDBList?.any { it.priznak == 1L } == false
 
-    val tabTitles =
-//        if (Globals.userId == 176053 || Globals.userId == 255212 || Globals.userId == 241562
-//            || Globals.userId == 130647 || Globals.userId == 249929)
-        if (hasPriznak1)
-        {
-            listOf(
-                stringResource(R.string.title_0),
-                "Доп.заробіток",
-            )
-        } else {
-            listOf(
-                stringResource(R.string.title_0)
-            )
+    LaunchedEffect(selectedTabIndex, hasAdditionalIncomeAccess) {
+        if (selectedTabIndex == 1 && !hasAdditionalIncomeAccess) {
+            showAdditionalIncomeDeniedDialog = true
         }
+    }
 
-    // Подпишемся на изменения ids (минимальные правки, без StateFlow)
+    val selectTab: (Int) -> Unit = { index ->
+        selectedTabIndex = index
+    }
+
     val rememberRemoveListener = remember {
         var remove: (() -> Unit)? = null
         remove = ScrollDataHolder.instance().addOnIdsChangedListener { list ->
@@ -147,19 +143,11 @@ fun WpDataTabsScreen() {
         onDispose { rememberRemoveListener?.invoke() }
     }
 
-
-    // Кол-во уведомлений на вкладках. null или 0 — не отображаем.
-//    val badgeCounts = remember { cronchikViewModel.badgeCounts }
     val badgeCounts = cronchikViewModel.badgeCounts
 
-
-    // -----------------------------
-    // ✅ ОБЩАЯ ЛОГИКА ГОТОВНОСТИ ДАННЫХ
-    // -----------------------------
     var isLoading by remember { mutableStateOf(false) }
     val progressModel = remember { ProgressViewModel(1) }
 
-    // ✅ Проверка каждую ~1 сек
     LaunchedEffect(Unit) {
         while (!dataIsReady) {
             if (isDataReadyCompat()) {
@@ -170,7 +158,6 @@ fun WpDataTabsScreen() {
                 break
             }
 
-            // исключения
             if (Globals.userId == 172906 || Globals.userId == 19653) {
                 dataIsReady = true
                 progressModel.onCompleted()
@@ -181,7 +168,6 @@ fun WpDataTabsScreen() {
         }
     }
 
-    // ✅ Показ общего лоадинг-диалога
     LaunchedEffect(isLoading, dataIsReady) {
         if (!dataIsReady && !isLoading) {
             isLoading = true
@@ -197,13 +183,6 @@ fun WpDataTabsScreen() {
             progressModel.onNextEvent("Отримання даних вiд сервера", 23_500)
         }
     }
-
-    // -----------------------------
-    // ✅ BADGE + SCROLL LOGIC (как было)
-    // -----------------------------
-    Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() -")
-//    val ids = ScrollDataHolder.instance().getIds()
-    Log.e("WpDataTabsScreen", "ScrollDataHolder.instance().getIds() +")
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
     val green = colorResource(id = R.color.selected_item)
@@ -227,7 +206,7 @@ fun WpDataTabsScreen() {
             tabTitles.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
+                    onClick = { selectTab(index) },
                     modifier = Modifier
                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                         .background(if (selectedTabIndex == index) selectedColor else Color.Transparent),
@@ -243,7 +222,7 @@ fun WpDataTabsScreen() {
                                 color = if (selectedTabIndex == index) textSelectedColor else textUnselectedColor,
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .clickable { selectedTabIndex = index }
+                                    .clickable { selectTab(index) }
                             )
 
                             val count = badgeCounts.getOrNull(index)
@@ -258,12 +237,17 @@ fun WpDataTabsScreen() {
                                         background = if (index == 0) green else Color.Red,
                                         borderAndTextColor = if (index == 0) Color.Black else Color.White,
                                         modifier = Modifier.clickable {
-//                                            val targetHash = badgeTargets.getOrNull(index)
-                                            Toast.makeText(context, "Фільтри до плану робіт застосовані. Відібрано ${count ?: 0} візитів", Toast.LENGTH_LONG).show()
-                                            val targetHash = if (index == 0) ScrollDataHolder.instance().getAll() else null
+                                            Toast.makeText(
+                                                context,
+                                                "Фільтри до плану робіт застосовані. Відібрано ${count ?: 0} візитів",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                            val targetHash =
+                                                if (index == 0) ScrollDataHolder.instance().getAll() else null
 
                                             if (targetHash == null) {
-                                                selectedTabIndex = index
+                                                selectTab(index)
                                                 return@clickable
                                             }
 
@@ -290,7 +274,6 @@ fun WpDataTabsScreen() {
             }
         }
 
-        // При смене выбранного таба, если есть pendingScrollHash — пытаемся проскроллить
         LaunchedEffect(selectedTabIndex, pendingScrollHash.value) {
             val pending = pendingScrollHash.value ?: return@LaunchedEffect
             if (isScrolling.value) return@LaunchedEffect
@@ -320,17 +303,43 @@ fun WpDataTabsScreen() {
             isScrolling.value = false
         }
 
-        // Контент выбранной вкладки
-//        if (Globals.userId == 176053 || Globals.userId == 2)
-
-        if (Globals.userId == 255247)
+        if (Globals.userId == 255247) {
             WpDataContentTab(dataIsReady = dataIsReady)
-        else
-
+        } else {
             when (selectedTabIndex) {
                 0 -> WpDataContentTab(dataIsReady = dataIsReady)
                 1 -> OtherComposeTab(dataIsReady = dataIsReady)
             }
+        }
+    }
+
+    if (showAdditionalIncomeDeniedDialog) {
+        viewModel.setBlockMapsForAdditionalWork()
+        val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+
+        MessageDialog(
+            title = "Додатковий заробіток",
+            status = DialogStatus.NORMAL,
+            subTitle = "Базовий мерчендайзинг",
+            message = "Прием заявок от ${user.fio} запрещен. Обратитесь за помощью к <a href=\"app://click\">супервайзеру</a> или в <a href=\"app://click\">службу поддержки</a>",
+            onDismiss = {
+                showAdditionalIncomeDeniedDialog = false
+                selectedTabIndex = 0
+            },
+            onTextLinkClick = {
+                Globals.telephoneCall(context, "+380674491265")
+            },
+            okButtonName = "Ok",
+            onConfirmAction = {
+                showAdditionalIncomeDeniedDialog = false
+                selectedTabIndex = 0
+            },
+            onDialogClosed = {
+                showAdditionalIncomeDeniedDialog = false
+                selectedTabIndex = 0
+
+            }
+        )
     }
 
     GlobalErrorMsg()

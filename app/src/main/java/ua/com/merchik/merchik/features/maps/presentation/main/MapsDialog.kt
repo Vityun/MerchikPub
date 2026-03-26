@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
@@ -80,7 +81,7 @@ import java.util.Locale
 fun MapsDialog(
     mainViewModel: MainViewModel,
     onDismiss: () -> Unit,
-    onOpenContextMenu: (WpDataDB, ContextUI) -> Unit
+    onOpenContextMenu: (WpDataDB, ContextUI, LaunchOrigin?) -> Unit
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
     val contextUI = mainViewModel.contextUI
@@ -563,7 +564,7 @@ fun MapsDialog(
                     }
                 }
 
-                is MapEffect.OpenContextMenu -> onOpenContextMenu(e.wp, e.contextUI)
+                is MapEffect.OpenContextMenu -> onOpenContextMenu(e.wp, e.contextUI, e.option)
                 is MapEffect.ShowConfirm -> {
 // confirm dialog is drawn below from state; nothing to do here
                 }

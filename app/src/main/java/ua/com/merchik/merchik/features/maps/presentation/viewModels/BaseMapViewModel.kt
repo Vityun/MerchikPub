@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.haversine
@@ -53,7 +54,7 @@ abstract class BaseMapViewModel(
             }
 
             is MapIntent.SetInput -> onSetInput(intent)
-            is MapIntent.MarkerClicked -> onMarkerClicked(intent.point)
+            is MapIntent.MarkerClicked -> onMarkerClicked(intent.point, intent.positionOptions)
             MapIntent.ConfirmJump -> onConfirm()
             MapIntent.DismissConfirm -> Unit
 //            is MapIntent.SetCircleRadius -> {}
@@ -117,7 +118,7 @@ abstract class BaseMapViewModel(
     }
 
 
-    private fun onMarkerClicked(p: PointUi) {
+    private fun onMarkerClicked(p: PointUi, positionOptions: LaunchOrigin? = null) {
         val wp = p.point.wp ?: return
         val b = bridge
         if (wp.user_id != 14041 ) {
@@ -143,7 +144,8 @@ abstract class BaseMapViewModel(
                     _effects.emit(
                         MapEffect.OpenContextMenu(
                             wp,
-                            ContextUI.WP_DATA_IN_CONTAINER_MULT
+                            ContextUI.WP_DATA_IN_CONTAINER_MULT,
+                            positionOptions
                         )
                     )
                 }
@@ -171,7 +173,8 @@ abstract class BaseMapViewModel(
                     _effects.emit(
                         MapEffect.OpenContextMenu(
                             wp,
-                            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
+                            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT,
+                            positionOptions
                         )
                     )
 //                }

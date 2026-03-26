@@ -31,10 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -50,6 +52,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
@@ -99,7 +102,8 @@ fun rememberDialogCloseController(): DialogCloseController =
 
 data class ContextMenuState(
     val actions: List<ContextMenuAction>,
-    val wpDataDB: WpDataDB              // держим выбранный объект тут
+    val wpDataDB: WpDataDB,
+    val origin: LaunchOrigin? = null
 )
 
 
@@ -197,6 +201,8 @@ fun rememberContextMenuHost(
     var selectedItem by remember { mutableStateOf<ContextMenuState?>(null) }
     val focusManager = LocalFocusManager.current
 
+    val view = LocalView.current
+
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
     var showCardItemsDialog by remember { mutableStateOf<CardItemsData?>(null) }
 
@@ -254,6 +260,15 @@ fun rememberContextMenuHost(
                     is MainEvent.OpenUFMDWPDataSelector -> {
                         viewModel.launcher?.let {
                             WpSelectionDataHolder.instance().init()
+//                            val options = event.origin?.let { origin ->
+//                                ActivityOptionsCompat.makeScaleUpAnimation(
+//                                    view,
+//                                    origin.x,
+//                                    origin.y,
+//                                    origin.width,
+//                                    origin.height
+//                                )
+//                            }
                             launchFeaturesActivity(
                                 launcher = it,
                                 context = context,
@@ -263,7 +278,9 @@ fun rememberContextMenuHost(
                                 ),
                                 modeUI = ModeUI.MULTI_SELECT,
                                 contextUI = ContextUI.WP_DATA,
-                                title = "Додатковий заробіток"
+                                title = "Додатковий заробіток",
+//                                options = options
+                                origin = event.origin
                             )
                         }
                     }

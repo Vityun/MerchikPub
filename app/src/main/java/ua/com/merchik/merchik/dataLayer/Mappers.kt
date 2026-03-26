@@ -552,7 +552,8 @@ sealed interface MainEvent {
     data object HideMessageDialog : MainEvent
     data object JumpToVizitAndCloseMaps : MainEvent
 
-    data class OpenUFMDWPDataSelector(val wp: WpDataDB) : MainEvent  // ✅ новый
+    data class OpenUFMDWPDataSelector(val wp: WpDataDB,
+                                      val origin: LaunchOrigin? = null) : MainEvent
 
 }
 
@@ -564,3 +565,11 @@ sealed interface PendingAction {
         val periodText: String       // уже готовая строка "12.01.2026 по 18.01.2026"
     ) : PendingAction
 }
+
+
+data class LaunchOrigin(
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int
+)

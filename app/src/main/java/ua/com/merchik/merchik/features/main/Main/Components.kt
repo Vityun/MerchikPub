@@ -60,9 +60,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.database.room.RoomManager
 
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
@@ -221,6 +223,13 @@ fun AnchoredAnimatedDialog(
         scope.launch { playClose() }
     }
 
+    val user: UsersSDB = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+    val animationTime = when {
+        user.reportDate05 == null -> 2650
+        user.reportDate20 == null -> 1550
+        else -> 850
+    }
+
     LaunchedEffect(visible) {
         if (visible) {
             hostVisible = true
@@ -232,7 +241,10 @@ fun AnchoredAnimatedDialog(
                 .filter { it.first != null && it.second != null }
                 .first()
 
-            p.animateTo(1f, tween(850, easing = FastOutSlowInEasing))
+            // 2550 - скорость до 5й отчетности
+            // 1550 - до 20й
+            // 850 - по умолчанию
+            p.animateTo(1f, tween(animationTime, easing = FastOutSlowInEasing))
         } else if (hostVisible) {
             playClose()
         }

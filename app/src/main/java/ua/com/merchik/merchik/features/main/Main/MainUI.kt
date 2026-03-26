@@ -160,12 +160,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showAdditionalContent by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+    val settingPulse = rememberPulseController()
     var settingsBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showSortingDialog by remember { mutableStateOf(false) }
+    val sortingPulse = rememberPulseController()
     var sortingBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showFilteringDialog by remember { mutableStateOf(false) }
+    val filterPulse = rememberPulseController()
     var filterBtnRect by remember { mutableStateOf<Rect?>(null) }
 
     var showToolTipDialog by remember { mutableStateOf(false) }
@@ -314,7 +317,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         val shouldShow = activity.intent?.getBooleanExtra("showWPDataWithFilters", false) == true
         if (shouldShow && showActivityFilter) {
             showSortingDataDialogLocal = true
-            val updated = (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
+            val updated =
+                (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
             viewModel.updateFilters(updated)
             FilteringDialogDataHolder.instance().filters = updated
         }
@@ -761,6 +765,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     sizeButton = 40.dp, sizeImage = 24.dp,
                                     modifier = Modifier
                                         .padding(start = 7.dp)
+                                        .pulseOn(settingPulse)
                                         .captureBoundsInWindow { settingsBtnRect = it },
                                     onClick = { showSettingsDialog = true }
                                 )
@@ -790,6 +795,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 sizeButton = 40.dp, sizeImage = 24.dp,
                                 modifier = Modifier
                                     .padding(start = 7.dp)
+                                    .pulseOn(sortingPulse)
                                     .captureBoundsInWindow { sortingBtnRect = it },
                                 onClick = { showSortingDialog = true },
                                 shape = RoundedCornerShape(4.dp)
@@ -800,6 +806,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 sizeButton = 40.dp, sizeImage = 24.dp,
                                 modifier = Modifier
                                     .padding(start = 7.dp)
+                                    .pulseOn(filterPulse)
                                     .captureBoundsInWindow { filterBtnRect = it },
                                 onClick = { showFilteringDialog = true },
                                 shape = RoundedCornerShape(4.dp)
@@ -1746,6 +1753,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     AnchoredAnimatedDialog(
         visible = showSettingsDialog,
         anchorRect = settingsBtnRect,
+        onClosed = { settingPulse.pulse() },
         onDismissRequest = { showSettingsDialog = false }
     ) { requestClose ->
         SettingsDialog(
@@ -1758,6 +1766,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     AnchoredAnimatedDialog(
         visible = showSortingDialog,
         anchorRect = sortingBtnRect,
+        onClosed = { sortingPulse.pulse() },
         onDismissRequest = { showSortingDialog = false }
     ) { requestClose ->
         SortingDialog(
@@ -1770,6 +1779,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     AnchoredAnimatedDialog(
         visible = showFilteringDialog,
         anchorRect = filterBtnRect,
+        onClosed = { filterPulse.pulse() },
         onDismissRequest = {
             showFilteringDialog = false
             filtredElementAnimation = false
@@ -1803,8 +1813,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         MapsDialog(
             mainViewModel = viewModel,
             onDismiss = requestClose,
-            onOpenContextMenu = { wp, ctxUI ->
-                viewModel.openContextMenu(wp, ctxUI)
+            onOpenContextMenu = { wp, ctxUI, option ->
+                viewModel.openContextMenu(wp, ctxUI, option)
             }
         )
     }
@@ -1814,7 +1824,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         LaunchedEffect(oneTimeShow) {
             oneTimeShow = false
             delay(50)
-            showMapsDialog = true
+            if (!viewModel.blockMapsForAdditionalWork.value)
+                showMapsDialog = true
         }
     }
 

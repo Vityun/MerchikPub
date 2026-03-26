@@ -113,15 +113,15 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         )
     }
 
-    if (showMapsDialog) {
-        MapsDialog(
-            mainViewModel = mainVm,
-            onDismiss = { showMapsDialog = false },
-            onOpenContextMenu = { wp, ctxUI ->
-                mainVm.openContextMenu(wp, ctxUI)
-            }
-        )
-    }
+//    if (showMapsDialog) {
+//        MapsDialog(
+//            mainViewModel = mainVm,
+//            onDismiss = { showMapsDialog = false },
+//            onOpenContextMenu = { wp, ctxUI, _ ->
+//                mainVm.openContextMenu(wp, ctxUI)
+//            }
+//        )
+//    }
 }
 
 /** Расширение для удобного вызова из Java. */

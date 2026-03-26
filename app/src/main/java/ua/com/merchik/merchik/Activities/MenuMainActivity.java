@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -239,7 +240,7 @@ public class MenuMainActivity extends toolbar_menus {
 
 //        new Translate().uploadNewTranslate();
 
-        new TablesLoadingUnloading().donwloadPlanBudget();
+//        new TablesLoadingUnloading().donwloadPlanBudget();
 
 
 //        new TablesLoadingUnloading().downloadWiFi();

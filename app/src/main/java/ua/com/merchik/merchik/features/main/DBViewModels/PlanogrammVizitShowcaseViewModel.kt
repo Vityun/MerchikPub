@@ -455,7 +455,7 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                         dataJson = Gson().toJson(wpDataDB),
                         contextUI = ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS,
                         title = "Доп. требования",
-                        subTitle = "Список дополнительных требований, которые должен выполнить исполнитель во время посещения"
+                        subTitle = "Список дополнительных требований, которые должен выполнить исполнитель во время посещения",
                     )
                 }
 

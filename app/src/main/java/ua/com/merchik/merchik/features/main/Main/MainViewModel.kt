@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -421,6 +422,9 @@ abstract class MainViewModel(
     private val _showEmptyDataDialog = MutableStateFlow<Boolean>(false)
     val showEmptyDataDialog: StateFlow<Boolean> get() = _showEmptyDataDialog
 
+    private val _blockMapsForAdditionalWork = MutableStateFlow<Boolean>(false)
+    val blockMapsForAdditionalWork: StateFlow<Boolean> get() = _blockMapsForAdditionalWork
+
     fun requestExpandGroup(groupId: String) {
         _expandGroup.tryEmit(groupId)
     }
@@ -469,6 +473,9 @@ abstract class MainViewModel(
         _showEmptyDataDialog.value = false
     }
 
+    fun setBlockMapsForAdditionalWork() {
+        _blockMapsForAdditionalWork.value = true
+    }
 
     private var planBudgetPollingJob: Job? = null
     private var loadingUnloading: TablesLoadingUnloading = TablesLoadingUnloading()
@@ -1303,11 +1310,11 @@ abstract class MainViewModel(
 
                         val alreadyText = if (alreadySubmitted.isNotEmpty()) {
                             buildString {
-                                val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                                if (isNotEmpty()) append("\n\n")
-                                append("Заявки вже були подані раніше для відвідувань:\n")
+                                val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
+                                if (isNotEmpty()) append("\n")
+                                append("Заявки вже були подані раніше для відвідувань:</b>")
                                 append(
-                                    alreadySubmitted.joinToString("\n") { "${formatter.format(it.dt)} ${it.client_txt}" }
+                                    alreadySubmitted.joinToString("</b>") { "${formatter.format(it.dt)} ${it.client_txt}," }
                                 )
                             }
                         } else {
@@ -2158,11 +2165,11 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
-    fun openContextMenu(wp: WpDataDB, contextUI: ContextUI) {
+    fun openContextMenu(wp: WpDataDB, contextUI: ContextUI, origin: LaunchOrigin? = null) {
         viewModelScope.launch {
             if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
                 // ✅ вместо меню — открываем новый экран
-                _events.emit(MainEvent.OpenUFMDWPDataSelector(wp))
+                _events.emit(MainEvent.OpenUFMDWPDataSelector(wp, origin))
                 return@launch
             }
 
@@ -2171,7 +2178,9 @@ abstract class MainViewModel(
                 MainEvent.ShowContextMenu(
                     menuState = ContextMenuState(
                         wpDataDB = wp,
-                        actions = actions
+                        actions = actions,
+                        origin = origin
+
                     )
                 )
             )

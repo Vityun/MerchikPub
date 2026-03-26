@@ -2070,8 +2070,18 @@ public class Options {
                 break;
 
             case 157277:
-                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                break;
+//                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                break;
+                OptionControlPhotoPromotion<?> optionControlPhotoPromotionB =
+                        new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (optionControlPhotoPromotionB.isBlockOption()) {
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoPromotionB.isBlockOption()))
+                        optionControlPhotoPromotionB.showOptionMassage(block);
+                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoPromotionB.signal && optionControlPhotoPromotionB.isBlockOption()) {
+                        optionControlPhotoPromotionB.showOptionMassage(block);
+                    }
+                }
+                return optionControlPhotoPromotionB.isBlockOption2() ? 1 : 0;
 
             case 157354:
                 new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);

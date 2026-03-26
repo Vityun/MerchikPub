@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.maps.presentation
 import com.google.android.gms.maps.model.LatLng
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.GroupingField
@@ -27,7 +28,7 @@ sealed interface MapIntent {
         val autoCenterOnSetInput: Boolean = true
     ) : MapIntent
 
-    data class MarkerClicked(val point: PointUi) : MapIntent
+    data class MarkerClicked(val point: PointUi, val positionOptions: LaunchOrigin? = null) : MapIntent
     data object ConfirmJump : MapIntent
     data object DismissConfirm : MapIntent
 //    data class SetCircleRadius(val meters: Double?) : MapIntent
@@ -36,7 +37,7 @@ sealed interface MapIntent {
 
 
 sealed interface MapEffect {
-    data class OpenContextMenu(val wp: WpDataDB, val contextUI: ContextUI) : MapEffect
+    data class OpenContextMenu(val wp: WpDataDB, val contextUI: ContextUI, val option: LaunchOrigin? = null) : MapEffect
     data class ShowConfirm(val wp: WpDataDB, val stableId: Long?) : MapEffect
     data class MoveCamera(
         val sessionId: Long,                  // 👈 добавили
@@ -58,7 +59,8 @@ data class MapState(
     val activePoint: PointUi? = null,             // активная точка null или id
     val autoBaselineRadiusMeters: Double? = null, // авто «самая дальняя + 50м»
     val customRadiusMeters: Double? = null,       // из меню; может быть null (нет сужения)
-    val circleRadiusMeters: Double? = null        // эффективный (рисуем по нему)
+    val circleRadiusMeters: Double? = null,        // эффективный (рисуем по нему)
+    val positionOptions: LaunchOrigin? = null
 )
 
 
@@ -70,7 +72,7 @@ object MapReducer {
         )
 
         is MapIntent.SetInput -> state.copy(isLoading = true, userLat = intent.userLat, userLon = intent.userLon)
-        is MapIntent.MarkerClicked -> state.copy(activePoint = intent.point)
+        is MapIntent.MarkerClicked -> state.copy(activePoint = intent.point, positionOptions = intent.positionOptions)
         MapIntent.ConfirmJump -> state  // <-- НИЧЕГО НЕ ДЕЛАЕМ!
         MapIntent.DismissConfirm -> state.copy(pendingWp = null, pendingStableId = null)
 
