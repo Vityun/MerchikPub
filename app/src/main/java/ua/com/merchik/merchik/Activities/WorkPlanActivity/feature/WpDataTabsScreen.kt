@@ -317,29 +317,31 @@ fun WpDataTabsScreen() {
         viewModel.setBlockMapsForAdditionalWork()
         val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
 
-        MessageDialog(
-            title = "Додатковий заробіток",
-            status = DialogStatus.NORMAL,
-            subTitle = "Базовий мерчендайзинг",
-            message = "Прием заявок от ${user.fio} запрещен. Обратитесь за помощью к <a href=\"app://click\">супервайзеру</a> или в <a href=\"app://click\">службу поддержки</a>",
-            onDismiss = {
-                showAdditionalIncomeDeniedDialog = false
-                selectedTabIndex = 0
-            },
-            onTextLinkClick = {
-                Globals.telephoneCall(context, "+380674491265")
-            },
-            okButtonName = "Ok",
-            onConfirmAction = {
-                showAdditionalIncomeDeniedDialog = false
-                selectedTabIndex = 0
-            },
-            onDialogClosed = {
-                showAdditionalIncomeDeniedDialog = false
-                selectedTabIndex = 0
+        user?.let {
+            MessageDialog(
+                title = "Додатковий заробіток",
+                status = DialogStatus.NORMAL,
+                subTitle = "Базовий мерчендайзинг",
+                message = "Прием заявок от ${user.fio} запрещен. Обратитесь за помощью к <a href=\"app://click\">супервайзеру</a> или в <a href=\"app://click\">службу поддержки</a>",
+                onDismiss = {
+                    showAdditionalIncomeDeniedDialog = false
+                    selectedTabIndex = 0
+                },
+                onTextLinkClick = {
+                    Globals.telephoneCall(context, "+380674491265")
+                },
+                okButtonName = "Ok",
+                onConfirmAction = {
+                    showAdditionalIncomeDeniedDialog = false
+                    selectedTabIndex = 0
+                },
+                onDialogClosed = {
+                    showAdditionalIncomeDeniedDialog = false
+                    selectedTabIndex = 0
 
-            }
-        )
+                }
+            )
+        }
     }
 
     GlobalErrorMsg()

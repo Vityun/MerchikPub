@@ -160,7 +160,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
         }
 
         dateFrom = Clock.getDatePeriodLong(documentDate, -dayFrom);
-        dateTo = Clock.getDatePeriodLong(documentDate, 1);  // 16.03.2026 поменял на 1 день
+        dateTo = Clock.getDatePeriodLong(documentDate, 2);  // 16.03.2026 поменял на 1 день
     }
 
     /**

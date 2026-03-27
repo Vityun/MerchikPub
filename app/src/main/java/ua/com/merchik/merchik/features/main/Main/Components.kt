@@ -223,8 +223,9 @@ fun AnchoredAnimatedDialog(
         scope.launch { playClose() }
     }
 
-    val user: UsersSDB = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+    val user: UsersSDB? = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
     val animationTime = when {
+        user == null -> 850
         user.reportDate05 == null -> 2650
         user.reportDate20 == null -> 1550
         else -> 850
