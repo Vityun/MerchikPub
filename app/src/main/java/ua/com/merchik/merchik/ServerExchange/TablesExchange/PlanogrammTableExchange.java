@@ -497,6 +497,11 @@ public class PlanogrammTableExchange {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(planogrammVizitShowcaseResponse -> {
                             if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null) {
+                                for (PlanogrammVizitShowcaseSDB visit: planogrammVizitShowcaseResponse.list) {
+                                    if (visit.code_dad2 == 1300326021525059942L){
+                                        Log.e("!!!!!!!!!!!","+++++++++++");
+                                    }
+                                }
                                 SQL_DB.planogrammVizitShowcaseDao()
                                         .insertAll(planogrammVizitShowcaseResponse.list)
                                         .subscribeOn(Schedulers.io())

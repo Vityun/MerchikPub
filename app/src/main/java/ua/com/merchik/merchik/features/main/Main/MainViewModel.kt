@@ -461,6 +461,7 @@ abstract class MainViewModel(
     fun setShowActivityFilter() {
         _showActivityFilter.value = false
     }
+
     fun showKostilDialog() {
         _kostilDialog.value = true
     }
@@ -504,8 +505,9 @@ abstract class MainViewModel(
         if (savedDistance == 0f) {
             val dossierSotrSDBList =
                 RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
-            val sotrudnikDistance = (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
-                .let { if (it == 0f || it == 1f) 3000f else it }
+            val sotrudnikDistance =
+                (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
+                    .let { if (it == 0f || it == 1f) 3000f else it }
             _offsetDistanceMeters.value = sotrudnikDistance
         } else {
             _offsetDistanceMeters.value = savedDistance
@@ -817,6 +819,7 @@ abstract class MainViewModel(
                             .filter { it.selected }
                             .takeIf { it.isNotEmpty() }
                             ?: dataWithRestoredSelected
+
                         SelectedMode.ONLY_UNSELECTED -> dataWithRestoredSelected.filter { !it.selected }
                     }
                 }
@@ -837,7 +840,7 @@ abstract class MainViewModel(
                     android.util.Log.e("TEST_BAG", "value ${it.fields.first().field}")
                 }
 
-                if (finalItems.isEmpty()){
+                if (finalItems.isEmpty()) {
                     _showEmptyDataDialog.value = true
                 }
 
@@ -894,19 +897,35 @@ abstract class MainViewModel(
         viewModelScope.launch {
             val holder = ScrollDataHolder.instance()
 
-            if (modeUI == ModeUI.ONE_SELECT) {
-                if (checked) {
-                    holder.setIds(listOf(set.first()))
+            if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+                if (modeUI == ModeUI.ONE_SELECT) {
+                    if (checked) {
+                        holder.setIds(listOf(set.first()))
+                    } else {
+                        holder.removeIds(set)
+                    }
                 } else {
-                    holder.removeIds(set)
+                    if (checked) {
+                        holder.addIds(set)
+                    } else {
+                        holder.removeIds(set)
+                    }
                 }
-            } else {
-                if (checked) {
-                    holder.addIds(set)
+            else
+                if (modeUI == ModeUI.ONE_SELECT) {
+                    if (checked) {
+                        holder.setIdsWithOutNotif(listOf(set.first()))
+                    } else {
+                        holder.removeIdsWithOutNotif(set)
+                    }
                 } else {
-                    holder.removeIds(set)
+                    if (checked) {
+                        holder.addIdsWithOutNotif(set)
+
+                    } else {
+                        holder.removeIdsWithOutNotif(set)
+                    }
                 }
-            }
 
             _uiState.update { state ->
                 state.copy(
@@ -2042,7 +2061,10 @@ abstract class MainViewModel(
         return res ?: DecisionResult.PENDING_TIMEOUT
     }
 
-    private suspend fun waitDecisionByLisgtDad2(listDad2: List<Long>, timeoutMs: Long): DecisionResult {
+    private suspend fun waitDecisionByLisgtDad2(
+        listDad2: List<Long>,
+        timeoutMs: Long
+    ): DecisionResult {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
         val res: DecisionResult? = kotlinx.coroutines.withTimeoutOrNull(timeoutMs) {

@@ -38,6 +38,19 @@ public class  CustomerExchange <T>{
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+//            RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA_JSON(RetrofitBuilder.contentType, convertedObject)
+//                    .enqueue(new Callback<JsonObject>() {
+//                        @Override
+//                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                            Log.e("!!!!!!!!","+++++++++");
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                        }
+//                    });
+
             retrofit2.Call<T> call = (Call<T>) RetrofitBuilder.getRetrofitInterface().GET_CUSTOMER_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<T>() {
                 @Override

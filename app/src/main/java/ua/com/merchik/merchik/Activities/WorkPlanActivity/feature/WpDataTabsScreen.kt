@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import ua.com.merchik.merchik.Activities.CronchikViewModel
@@ -69,7 +70,6 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
-import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.retrofit.GlobalErrors
 
@@ -91,11 +91,16 @@ fun WpDataTabsScreen() {
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     var initialTabResolved by rememberSaveable { mutableStateOf(false) }
 
-    val dossierSotrSDBList = remember {
-        RoomManager.SQL_DB.dossierSotrDao().getData(null, 949L, null).orEmpty()
+    val dossierFlow = remember {
+        RoomManager.SQL_DB.dossierSotrDao().observeData(null, 949L, null)
     }
 
+    val dossierSotrSDBList by dossierFlow.collectAsStateWithLifecycle(
+        initialValue = emptyList()
+    )
+
     val hasAdditionalIncomeAccess = remember(dossierSotrSDBList) {
+        if (!dataIsReady) null
         dossierSotrSDBList.any { it.priznak == 1L }
     }
 
@@ -122,7 +127,7 @@ fun WpDataTabsScreen() {
     }
 
     LaunchedEffect(selectedTabIndex, hasAdditionalIncomeAccess) {
-        if (selectedTabIndex == 1 && !hasAdditionalIncomeAccess) {
+        if (selectedTabIndex == 1 && !hasAdditionalIncomeAccess && dataIsReady) {
             showAdditionalIncomeDeniedDialog = true
         }
     }
@@ -244,7 +249,8 @@ fun WpDataTabsScreen() {
                                             ).show()
 
                                             val targetHash =
-                                                if (index == 0) ScrollDataHolder.instance().getAll() else null
+                                                if (index == 0) ScrollDataHolder.instance()
+                                                    .getAll() else null
 
                                             if (targetHash == null) {
                                                 selectTab(index)
@@ -258,7 +264,9 @@ fun WpDataTabsScreen() {
                                                         targetHash.forEach {
                                                             viewModel.highlightBId(it, green)
                                                         }
-                                                        viewModel.selectOnlyItemsByStableIds(targetHash)
+                                                        viewModel.selectOnlyItemsByStableIds(
+                                                            targetHash
+                                                        )
                                                         viewModel.updateContent()
                                                     }
                                                     isScrolling.value = false
