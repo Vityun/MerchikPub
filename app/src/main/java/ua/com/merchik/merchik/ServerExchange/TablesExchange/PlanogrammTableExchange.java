@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -26,11 +27,13 @@ import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -468,22 +471,31 @@ public class PlanogrammTableExchange {
     // Загрузка таблицы визитов планоргам
     public void planogrammVisitShowcase() {
 
-        Set<Integer> uniquePlanogrammId = new HashSet<>();
+//        Set<Integer> uniquePlanogrammId = new HashSet<>();
+//        List<PlanogrammVizitShowcaseSDB> planogrammList = SQL_DB.planogrammVizitShowcaseDao().getAll();
+//        if (!planogrammList.isEmpty())
+//            for (PlanogrammVizitShowcaseSDB p : planogrammList) {
+//                uniquePlanogrammId.add(p.planogram_id);
+//            }
 
-        List<PlanogrammVizitShowcaseSDB> planogrammList = SQL_DB.planogrammVizitShowcaseDao().getAll();
-        if (!planogrammList.isEmpty())
-            for (PlanogrammVizitShowcaseSDB p : planogrammList) {
-                uniquePlanogrammId.add(p.planogram_id);
-            }
 //test
 //        uniquePlanogrammId.remove(606);
 //        uniquePlanogrammId.remove(182);
+
+        long vpi;
+        final SynchronizationTimetableDB realmResult = RealmManager.getSynchronizationTimetableRowByTable("planogramm_vizit_showcase");
+        if (realmResult != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + realmResult);
+            vpi = realmResult.getVpi_app();
+        } else
+            vpi = 0;
 
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "vizit_showcase_list";
         data.nolimit = "1";
-        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
+        data.dt_change_from = String.valueOf(vpi);
+//        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -491,6 +503,18 @@ public class PlanogrammTableExchange {
 
         Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "convertedObject: " + convertedObject);
 
+//        RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType,convertedObject)
+//                        .enqueue(new Callback<JsonObject>() {
+//                            @Override
+//                            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                                Log.e("!!!!!!!!!!!","+++++++++++");
+//                            }
+//
+//                            @Override
+//                            public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                            }
+//                        });
         RetrofitBuilder.getRetrofitInterface()
                 .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
@@ -509,6 +533,12 @@ public class PlanogrammTableExchange {
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
+                                                INSTANCE.executeTransaction(realm -> {
+                                                    if (realmResult != null) {
+                                                        realmResult.setVpi_app(System.currentTimeMillis() / 1000);
+                                                        realm.copyToRealmOrUpdate(realmResult);
+                                                    }
+                                                });
                                                 Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
 
                                             }

@@ -79,6 +79,7 @@ class WpDataDBViewModel @Inject constructor(
             )
     }
 
+
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
         val wp = try {

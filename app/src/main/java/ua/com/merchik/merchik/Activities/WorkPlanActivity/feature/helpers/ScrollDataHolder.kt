@@ -84,6 +84,9 @@ class ScrollDataHolder private constructor() {
         ids.add(id)
         notifyListeners()
     }
+    fun addIdWithOutNotif(id: Long) {
+        ids.add(id)
+    }
 
     fun addDad2(newDad2: Collection<Long>) {
         if (newDad2.isNotEmpty()) {

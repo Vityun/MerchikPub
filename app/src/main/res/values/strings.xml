@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">032601</string>
+    <string name="ver" translatable="false">033100</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-03-26</string>
+    <string name="debug_date" translatable="false">2026-03-31</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 

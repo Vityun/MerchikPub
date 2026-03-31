@@ -25,7 +25,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,10 +34,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -78,14 +75,12 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Locale
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
@@ -961,19 +956,34 @@ abstract class MainViewModel(
         viewModelScope.launch {
             val holder = ScrollDataHolder.instance()
 
-            if (modeUI == ModeUI.ONE_SELECT) {
-                if (checked) {
-                    holder.setIds(listOf(targetId))
+            if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+                if (modeUI == ModeUI.ONE_SELECT) {
+                    if (checked) {
+                        holder.setIds(listOf(targetId))
+                    } else {
+                        holder.removeId(targetId)
+                    }
                 } else {
-                    holder.removeId(targetId)
+                    if (checked) {
+                        holder.addId(targetId)
+                    } else {
+                        holder.removeId(targetId)
+                    }
                 }
-            } else {
-                if (checked) {
-                    holder.addId(targetId)
+            else
+                if (modeUI == ModeUI.ONE_SELECT) {
+                    if (checked) {
+                        holder.setIdsWithOutNotif(listOf(targetId))
+                    } else {
+                        holder.removeIdWithOutNotif(targetId)
+                    }
                 } else {
-                    holder.removeId(targetId)
+                    if (checked) {
+                        holder.addIdWithOutNotif(targetId)
+                    } else {
+                        holder.removeIdWithOutNotif(targetId)
+                    }
                 }
-            }
 
             _uiState.update { state ->
                 state.copy(

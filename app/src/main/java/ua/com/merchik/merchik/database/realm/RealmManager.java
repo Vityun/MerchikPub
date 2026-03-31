@@ -160,6 +160,7 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(44, "additional_requirements", 86400, 0, 0, 0, 0, "Tаблиці AdditionalRequirementsDB", 0));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(45, "tovar_list", 86400, 0, 0, 0, 0, "Tаблиці TovarDB", 0));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(46, "wifi_mac_location", 86400, 0, 0, 0, 0, "Tаблиці WiFi mac адресов", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(47, "planogramm_vizit_showcase", 86400, 0, 0, 0, 0, "Tаблиці WiFi mac адресов", 0));
 
 
         INSTANCE.commitTransaction();
