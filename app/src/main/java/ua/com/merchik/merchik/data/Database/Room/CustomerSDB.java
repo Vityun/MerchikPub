@@ -11,6 +11,7 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+//import java.util.Date;
 import java.sql.Date;
 import java.util.List;
 
@@ -59,6 +60,9 @@ public class CustomerSDB implements DataObjectUI {
     @ColumnInfo(name = "ppa_auto")
     public Integer ppaAuto;
 
+    /**
+    Важно!!! У нас workStartDate и workRestartDate лежат - день, это связано с тем что 00.00.00 по гринвичу в нашем часом поясе - 2 часа и минус день, соотетственно
+    **/
     @SerializedName("work_start_date")
     @Expose
     @ColumnInfo(name = "work_start_date")

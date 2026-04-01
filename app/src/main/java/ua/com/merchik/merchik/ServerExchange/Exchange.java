@@ -350,6 +350,7 @@ public class Exchange {
 
 //                    tablesLoadingUnloading.downloadTovarTable(context, null);
                             tablesLoadingUnloading.downloadWPData();
+//                            tablesLoadingUnloading.downloadTheme();
                             tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                                 @Override
                                 public void onSuccess(String ok) {

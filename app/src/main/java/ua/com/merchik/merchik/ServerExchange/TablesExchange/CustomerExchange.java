@@ -33,6 +33,7 @@ public class  CustomerExchange <T>{
             }else {
                 data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
             }
+            data.dt_change_from = "0";
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

@@ -450,9 +450,18 @@ public class OptionControlEKL<T> extends OptionControl {
 
             LocalDate newest = findNewestDossierDate(dossierSotrSDBS);
             LocalDate dat = wpDataDB.getDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate dnr;
 
-            boolean isNewClient = condition(wpDataDB.getDt(), customerSDB.workStartDate, customerSDB.workRestartDate);
-            if (!isNewClient)
+//            if (customerSDB.workRestartDate > wpDataDB.getDt())
+//                dnr = customerSDB.workRestartDate;
+//            else
+//                dnr = customerSDB.workStartDate;
+//
+//
+//            if (dnr < wpDataDB.getDt() -30)
+//            boolean isOldClient = condition(wpDataDB.getDt(), addOneDay(customerSDB.workStartDate), addOneDay(customerSDB.workRestartDate));
+            boolean isOldClient = isOldClient(customerSDB, wpDataDB);
+            if (isOldClient)
                 if (newest == null) {
                     // ПустоеЗначение(ДатПерОИ)=1
                     signal = false;
@@ -463,7 +472,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     optionMsg.append(" за цією адресою, тож на перший раз для нього робимо виняток.");
                 } else {
                     // ДатПерОИ > Дат-15
-                    LocalDate border = dat.minusDays(10);
+                    LocalDate border = dat.minusDays(15);
                     if (newest.isAfter(border)) {
                         signal = false;
                         optionMsg.append("\n\nАле виконавець ");
@@ -697,6 +706,35 @@ public class OptionControlEKL<T> extends OptionControl {
         return signal;
     }
 
+    public static boolean isOldClient(CustomerSDB customerSDB, WpDataDB wpDataDB) {
+        if (customerSDB == null || wpDataDB == null || wpDataDB.getDt() == null) {
+            return false;
+        }
+
+        java.util.Date dnr;
+
+        if (customerSDB.workRestartDate != null
+                && customerSDB.workRestartDate.after(wpDataDB.getDt())) {
+            dnr = customerSDB.workRestartDate;
+        } else {
+            dnr = customerSDB.workStartDate;
+        }
+
+        if (dnr == null) {
+            return false;
+        }
+
+        LocalDate dnrDate = dnr.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        LocalDate docDate = wpDataDB.getDt().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        return dnrDate.isBefore(docDate.minusDays(30));
+    }
+
     private static LocalDate startOfMonth(Date d, ZoneId zone) {
         return Instant.ofEpochMilli(d.getTime())
                 .atZone(zone)
@@ -705,13 +743,25 @@ public class OptionControlEKL<T> extends OptionControl {
     }
 
     public static boolean condition(Date dat, Date workStartDate, Date workRestartDate) {
-        ZoneId zone = ZoneId.systemDefault(); // или нужная зона
+        ZoneId zone = ZoneId.systemDefault();
 
         LocalDate datMonth = startOfMonth(dat, zone);
         LocalDate startMonth = startOfMonth(workStartDate, zone);
         LocalDate restartMonth = startOfMonth(workRestartDate, zone);
 
         return startMonth.isBefore(datMonth) && restartMonth.isBefore(datMonth);
+    }
+
+    private static Date addOneDay(Date date) {
+        if (date == null) return null;
+        return Date.from(
+                date.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                        .plusDays(1)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
     }
 }
 
