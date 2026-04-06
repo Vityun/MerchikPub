@@ -63,7 +63,9 @@ import ua.com.merchik.merchik.dataLayer.common.FilterAndSortResult
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueDialogConfig
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
+import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.withContainerBackground
 import ua.com.merchik.merchik.dataLayer.withGroupingOnTop
@@ -76,7 +78,9 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuEntry
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
+import ua.com.merchik.merchik.features.main.componentsUI.MenuLeading
 import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -240,7 +244,86 @@ abstract class MainViewModel(
 
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
-    open fun onLongClickItem(itemUI: DataItemUI, context: Context) {}
+    open fun onLongClickItem(itemUI: DataItemUI, context: Context) {
+        if (false)
+            viewModelScope.launch(Dispatchers.IO) {
+                _events.emit(
+                    MainEvent.ShowContextMenu(
+                        menuState = ContextMenuState(
+                            wpDataDB = itemUI.rawObj.first() as WpDataDB,
+                            entries = listOf(
+                                ContextMenuEntry.Item(
+                                    title = "Додати",
+                                    action = null,
+                                    enabled = false,
+                                    leading = MenuLeading.Text("+")
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Змінити",
+                                    action = null,
+                                    enabled = false,
+                                    leading = MenuLeading.Text("✎")
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Видалити",
+                                    action = null,
+                                    enabled = false,
+                                    leading = MenuLeading.Text("🗑")
+                                ),
+
+                                ContextMenuEntry.Divider,
+
+                                ContextMenuEntry.Item(
+                                    title = "Позначити",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Checkbox(true)
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Позначити усі",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Checkbox(true)
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Зняти позначку",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Checkbox(false)
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Зняти всi позначки",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Checkbox(false)
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Інвертувати",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Text("■")
+                                ),
+
+                                ContextMenuEntry.Divider,
+
+                                ContextMenuEntry.Item(
+                                    title = "Згорнути",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Text("✓")
+                                ),
+                                ContextMenuEntry.Item(
+                                    title = "Інша дія",
+                                    action = null,
+                                    enabled = true,
+                                    leading = MenuLeading.Text("○")
+                                )
+                            )
+                        )
+                    )
+                )
+            }
+    }
 
     open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
 
@@ -272,6 +355,31 @@ abstract class MainViewModel(
 
     protected var dialog: DialogFullPhoto? = null
 
+
+    open fun onClickProductCode(
+        itemUI: DataItemUI,
+        fieldValue: FieldValue,
+        action: ClickTextAction,
+        context: Context
+    ) {
+        when (fieldValue.key.lowercase()) {
+            "feed_fl_code" -> {
+                // обработка шифра ФЛ
+            }
+
+            "feed_fo_code" -> {
+                // обработка другого шифра
+            }
+
+            "nomenclature_code" -> {
+                // обработка кода номенклатуры
+            }
+
+            else -> {
+                // fallback
+            }
+        }
+    }
 
     open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
         onClickItemImage(clickedDataItemUI, context, 0) // Делегируем вызов новому методу

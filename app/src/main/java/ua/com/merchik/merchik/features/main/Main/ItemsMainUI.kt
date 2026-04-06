@@ -92,6 +92,14 @@ fun ItemRowCard(
             },
             onCheckItem = { checked, it ->
                 viewModel.updateItemSelect(checked, it)
+            },
+            onClickProductCode = { clickedItem, fieldValue, action ->
+                viewModel.onClickProductCode(
+                    itemUI = clickedItem,
+                    fieldValue = fieldValue,
+                    action = action,
+                    context = context
+                )
             }
         )
     }
@@ -346,6 +354,14 @@ fun GroupDeck(
                                         checked = checked
                                     )
 //                                    viewModel.updateItemSelect(checked, it)
+                                },
+                                onClickProductCode = { clickedItem, fieldValue, action ->
+                                    viewModel.onClickProductCode(
+                                        itemUI = clickedItem,
+                                        fieldValue = fieldValue,
+                                        action = action,
+                                        context = context
+                                    )
                                 }
                             )
                         }
@@ -387,6 +403,14 @@ fun GroupDeck(
                                 )
 //                                viewModel.updateItemSelect(checked, it)
                             },
+                            onClickProductCode = { clickedItem, fieldValue, action ->
+                                viewModel.onClickProductCode(
+                                    itemUI = clickedItem,
+                                    fieldValue = fieldValue,
+                                    action = action,
+                                    context = context
+                                )
+                            }
                         )
                     }
                 }
@@ -450,6 +474,14 @@ fun GroupDeck(
                                         onCheckItem = { checked, it ->
                                             viewModel.updateItemSelect(checked, it)
                                         },
+                                        onClickProductCode = { clickedItem, fieldValue, action ->
+                                            viewModel.onClickProductCode(
+                                                itemUI = clickedItem,
+                                                fieldValue = fieldValue,
+                                                action = action,
+                                                context = context
+                                            )
+                                        }
                                     )
                                 }
                             }

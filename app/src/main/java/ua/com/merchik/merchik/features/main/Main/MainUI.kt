@@ -122,7 +122,9 @@ import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.common.rememberImeVisible
+import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
@@ -1413,9 +1415,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                    }
 //                }
 
-                if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
+                if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT ||
+                    viewModel.modeUI == ModeUI.FILTER_SELECT) {
+                    if (viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) // вернулся к старому функционалу, убрать
                     Row {
-                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER &&
+                            viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER)
                             Button(
                                 onClick = {
                                     (context as? Activity)?.finish()
@@ -1468,17 +1473,24 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
-                            Text(
-                                if (viewModel.contextUI != ContextUI.WP_DATA
-                                    && viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
-                                ) "${
-                                    viewModel.getTranslateString(
-                                        stringResource(id = R.string.ui_choice),
-                                        5997
-                                    )
-                                } " else "${stringResource(id = R.string.ui_add_job)} " +
+                            val titleText = if (
+                                viewModel.contextUI != ContextUI.WP_DATA &&
+                                viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                            ) {
+                                val textRes =
+                                    if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                                    "${stringResource(id = R.string.ui_choice_action)} "
+                                } else
+                                {
+                                    "${stringResource(id = R.string.ui_choice)} "
+                                }
+                                textRes + if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
+                            } else {
+                                "${stringResource(id = R.string.ui_add_job)} " +
                                         if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
-                            )
+                            }
+
+                            Text(text = titleText)
                         }
                     }
 
@@ -1640,7 +1652,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
-                        onCheckItem = { _, _ -> }
+                        onCheckItem = { _, _ -> },
+                        onClickProductCode = { clickedItem, fieldValue, action ->
+                            viewModel.onClickProductCode(
+                                itemUI = clickedItem,
+                                fieldValue = fieldValue,
+                                action = action,
+                                context = context
+                            )
+                        }
                     )
                 }
                 disappearingKey = f.item.stableId
@@ -1677,7 +1697,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
-                        onCheckItem = { _, _ -> }
+                        onCheckItem = { _, _ -> },
+                        onClickProductCode = { clickedItem, fieldValue, action ->
+                            viewModel.onClickProductCode(
+                                itemUI = clickedItem,
+                                fieldValue = fieldValue,
+                                action = action,
+                                context = context
+                            )
+                        }
                     )
                 }
             }
@@ -1718,7 +1746,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         onLongClickItem = {},
                         onClickItemImage = {},
                         onMultipleClickItemImage = { _, _ -> },
-                        onCheckItem = { _, _ -> }
+                        onCheckItem = { _, _ -> },
+                        onClickProductCode = { clickedItem, fieldValue, action ->
+                            viewModel.onClickProductCode(
+                                itemUI = clickedItem,
+                                fieldValue = fieldValue,
+                                action = action,
+                                context = context
+                            )
+                        }
                     )
                 }
             }
@@ -2208,13 +2244,15 @@ fun ItemUI(
     onLongClickItem: (DataItemUI) -> Unit,
     onClickItemImage: (DataItemUI) -> Unit,
     onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
-    onCheckItem: (Boolean, DataItemUI) -> Unit
+    onCheckItem: (Boolean, DataItemUI) -> Unit,
+    onClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit
 ) {
     index++
     Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
 
     // ✅ всегда считаем актуальный список видимых полей
     val visibleFields = item.fields.filter { field ->
+        if (field.key == "option_code") return@filter true
         val setting = settingsItemUI.firstOrNull {
             it.key.equals(field.key, ignoreCase = true)
         }
@@ -2426,7 +2464,13 @@ fun ItemUI(
                                 }?.isEnabled == false) {
                             } else {
                                 if (!field.key.equals("id_res_image", true)) {
-                                    ItemFieldValue(field, visibilityColumName)
+//                                    ItemFieldValue(field, visibilityColumName)
+                                    ItemFieldValue(
+                                        item = item,
+                                        fieldValue = field,
+                                        visibilityField = visibilityColumName,
+                                        onClickProductCode = onClickProductCode
+                                    )
                                     if (index < visibleFields.size - 1) {
                                         val bg = item.modifierContainer?.background
                                         val color = when {
@@ -2447,7 +2491,13 @@ fun ItemUI(
                     else
                         visibleFields.forEachIndexed { index, field ->
                             if (!field.key.equals("id_res_image", true)) {
-                                ItemFieldValue(field, visibilityColumName)
+//                                ItemFieldValue(field, visibilityColumName)
+                                ItemFieldValue(
+                                    item = item,
+                                    fieldValue = field,
+                                    visibilityField = visibilityColumName,
+                                    onClickProductCode = onClickProductCode
+                                )
                                 if (index < visibleFields.lastIndex) {
                                     val bg = item.modifierContainer?.background
                                     val color = when {

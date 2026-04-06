@@ -4030,21 +4030,6 @@ public class Options {
         // Пробегаемся по всем опциям данного документа
         for (OptionsDB option : optionsDB) {
             int optionId = Integer.parseInt(option.getOptionId()); // Получаем ID опции
-//            int optionControlId = Integer.parseInt(option.getOptionControlId()); // Получаем ID опции
-
-//            Log.e("getOptionString", "------------------------------------------");
-//            Log.e("getOptionString", "optionId: " + optionId);
-//            Log.e("getOptionString", "optionControlId: " + optionControlId);
-//            Log.e("getOptionString", "option so: " + option.getSo());
-//            Log.e("getOptionString", "option: " + option.getOptionTxt());
-
-            // Есть ли данная опция среди Опций ТПЛ-ов (та что захардкожена)
-            // todo нельзя ли использовать сейчас listTovOpt?
-            /*19.10.21 -- Внезапно оказалось что Ф.Ц.К.. могут не только в optionId находиться, но
-             * и в optionControlId. На данный момент ситуация выглядит следущим образом: Есть опции
-             * по типу "Начало работы" и тп.., а есть опции Фейс, Цена, Кол-во и тп..
-             * Ф.Ц.К.. должны отображаться как и из "прихардкоженного" второго варианта, так и из
-             * опции контроля из первого типа опций*/
             // TODO НОРМАЛЬНО НАПИСАТЬ ЭТОТ МОМЕНТ
             if (ids.contains(optionId)) {
                 // Получаю подробную инфу о текущей ТПЛке
@@ -4064,33 +4049,6 @@ public class Options {
                     }
                 }
             }
-
-            // 14830 Петрикор Вайн
-            // 77643 Си Джи Трейд ООО
-            // 78230 Триумф
-            // 91166 Міні мелст Україна ООО
-            // 9382 Витмарк
-            // менять парралельно с getRequiredOptionsTPL
-/*            if (!option.getClientId().equals("14830") &&
-                    !option.getClientId().equals("77643") &&
-                    !option.getClientId().equals("78230") &&
-                    !option.getClientId().equals("91166")){
-                if (ids.contains(optionControlId)) {
-                    TovarOptions temp = listTovOpt.get(listTovOpt.indexOf(new TovarOptions(optionControlId)));
-
-                    Log.e("getOptionString", "tempC: " + new Gson().toJson(temp));
-
-                    if (!containsName(temps, temp.getOrderField())) {
-                        if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
-                            // ничего не делаю
-                        } else {
-                            Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                            tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
-                            temps.add(temp);
-                        }
-                    }
-                }
-            }*/
         }
 
         // После пробега по опциям данного документа (они являются обязательными), я должен

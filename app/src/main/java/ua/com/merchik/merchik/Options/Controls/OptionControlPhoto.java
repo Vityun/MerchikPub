@@ -623,7 +623,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             } else if (addressSDB.tpId == 3838) {   // Для Лоток ФЗ ФТС НЕ проверяем
                 signal = false;
                 spannableStringBuilder.append(", але для Лоток, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 8968) {   // Для Ева ФЗ ФТС НЕ проверяем
+            } else if (addressSDB.tpId == 1012) {   // Для Ева ФЗ ФТС НЕ проверяем
                 signal = false;
                 spannableStringBuilder.append(", але для Ева, наявність ФЗ ФТС не перевіряємо.");
             } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви

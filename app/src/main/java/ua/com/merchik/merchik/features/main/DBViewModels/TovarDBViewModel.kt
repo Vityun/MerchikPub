@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
+import ua.com.merchik.merchik.Options.Options
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -19,7 +20,11 @@ import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
+import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.addOrReplaceField
+import ua.com.merchik.merchik.dataLayer.model.buildOptionCodeField
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
@@ -32,6 +37,9 @@ import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
+
+private const val FIELD_OPTION_CODE = "option_code"
+
 @HiltViewModel
 class TovarDBViewModel @Inject constructor(
     application: Application,
@@ -43,6 +51,16 @@ class TovarDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = TovarDB::class
 
+
+    override fun onClickProductCode(
+        itemUI: DataItemUI,
+        fieldValue: FieldValue,
+        action: ClickTextAction,
+        context: Context
+    ) {
+        super.onClickProductCode(itemUI, fieldValue, action, context)
+        Log.e("!!!!!!!!!!!!","++++++++++++++++++++")
+    }
     override fun getFieldsForCommentsImage(): List<String>? {
         return when (contextUI) {
             ContextUI.TOVAR_FROM_TOVAR_TABS -> ("nm, barcode" +
@@ -156,17 +174,109 @@ class TovarDBViewModel @Inject constructor(
 
     }
 
+//    override suspend fun getItems(): List<DataItemUI> {
+//        return try {
+//            val codeDad2 =
+//                Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
+//            val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
+//            repository.toItemUIList(TovarDB::class, data, contextUI, 18)
+//                .map {
+//                    when (contextUI) {
+//                        ContextUI.TOVAR_FROM_ACHIEVEMENT -> {
+//                            val selected =
+//                                (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
+//                                    ?.toIntOrNull() == AchievementDataHolder.instance().tovarId
+//                            it.copy(selected = selected)
+//                        }
+//
+//                        ContextUI.DEFAULT -> {
+//                            val selected = FilteringDialogDataHolder.instance()
+//                                .filters
+//                                ?.items
+//                                ?.firstOrNull { it.clazz == table }
+//                                ?.rightValuesRaw
+//                                ?.contains((it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
+//                                    .toString())
+//                            it.copy(selected = selected == true)
+//                        }
+//
+//                        else -> {
+//                            it
+//                        }
+//                    }
+//                }
+//        } catch (e: Exception) {
+//            emptyList()
+//        }
+//    }
+
     override suspend fun getItems(): List<DataItemUI> {
         return try {
             val codeDad2 =
-                Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
-            val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
-            repository.toItemUIList(TovarDB::class, data, contextUI, 18)
+                Gson().fromJson(dataJson, JSONObject::class.java)
+                    .getString("codeDad2")
+                    .toLong()
+
+            val tovarList = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
+
+            // Базовые item'ы как и раньше
+            val baseItems = repository.toItemUIList(
+                TovarDB::class,
+                tovarList,
+                contextUI,
+                18
+            )
+
+            // optionsList у тебя сейчас выбирается только по dad2, без tovarId
+            // значит грузим один раз
+            val optionsList = RealmManager.getTovarOptionInReportPrepare(
+                codeDad2.toString(),
+                ""
+            )
+
+            val deletePromoOption = false // подставь своё реальное значение
+
+            baseItems
+                .map { item ->
+                    val tovar = item.rawObj.firstOrNull { it is TovarDB } as? TovarDB
+                        ?: return@map item
+
+                    val tovarId = tovar.getiD()
+
+                    val reportPrepare = RealmManager.getTovarReportPrepare(
+                        codeDad2.toString(),
+                        tovarId
+                    )
+
+                    val optionString = if (reportPrepare != null) {
+                        Options().getOptionString(
+                            optionsList,
+                            reportPrepare,
+                            deletePromoOption
+                        )
+                    } else {
+                        ""
+                    }
+
+                    if (optionString.isBlank()) {
+                        item
+                    } else {
+                        val optionField = buildOptionCodeField(
+                            optionHtmlOrText = optionString,
+                            key = FIELD_OPTION_CODE,
+                            title = "Шифр",
+                            actionId = "open_option_code"
+                        )
+
+                        item.addOrReplaceField(optionField)
+                    }
+                }
                 .map {
                     when (contextUI) {
                         ContextUI.TOVAR_FROM_ACHIEVEMENT -> {
                             val selected =
-                                (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
+                                (it.rawObj.firstOrNull { raw -> raw is TovarDB } as? TovarDB)
+                                    ?.getiD()
                                     ?.toIntOrNull() == AchievementDataHolder.instance().tovarId
                             it.copy(selected = selected)
                         }
@@ -175,16 +285,17 @@ class TovarDBViewModel @Inject constructor(
                             val selected = FilteringDialogDataHolder.instance()
                                 .filters
                                 ?.items
-                                ?.firstOrNull { it.clazz == table }
+                                ?.firstOrNull { filterItem -> filterItem.clazz == table }
                                 ?.rightValuesRaw
-                                ?.contains((it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()
-                                    .toString())
+                                ?.contains(
+                                    (it.rawObj.firstOrNull { raw -> raw is TovarDB } as? TovarDB)
+                                        ?.getiD()
+                                        .toString()
+                                )
                             it.copy(selected = selected == true)
                         }
 
-                        else -> {
-                            it
-                        }
+                        else -> it
                     }
                 }
         } catch (e: Exception) {
@@ -231,3 +342,5 @@ class TovarDBViewModel @Inject constructor(
     }
 
 }
+
+

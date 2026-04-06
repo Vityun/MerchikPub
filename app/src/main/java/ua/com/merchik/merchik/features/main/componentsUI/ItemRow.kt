@@ -112,6 +112,14 @@ fun ItemRow(
                 },
                 onCheckItem = { checked, dataItem ->
                     viewModel.updateItemSelect(checked, dataItem)
+                },
+                onClickProductCode = { clickedItem, fieldValue, action ->
+                    viewModel.onClickProductCode(
+                        itemUI = clickedItem,
+                        fieldValue = fieldValue,
+                        action = action,
+                        context = context
+                    )
                 }
             )
         }

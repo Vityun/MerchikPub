@@ -245,6 +245,7 @@ You must review the specified claims, complete them, and provide your responses.
     <string name="ui_cancel">Cancel</string>
     <string name="ui_apply">Apply</string>
     <string name="ui_clear">Clear</string>
+    <string name="ui_choice_action">Select an action</string>
     <string name="ui_choice">Select</string>
     <string name="ui_synhronize">Synchronization</string>
 

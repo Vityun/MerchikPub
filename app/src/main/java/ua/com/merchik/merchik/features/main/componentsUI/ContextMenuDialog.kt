@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -14,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,8 +40,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -44,12 +49,6 @@ import com.google.gson.Gson
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
-import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.ExchangeResponseInterface
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange
-import ua.com.merchik.merchik.ViewHolders.Clicks.clickVoid
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
@@ -57,8 +56,6 @@ import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.iconResOrNull
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.room.factory.WPDataAdditionalFactory
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
@@ -75,6 +72,7 @@ import java.util.Locale
 @Stable
 data class ContextMenuController(
     val open: (wp: WpDataDB, actions: List<ContextMenuAction>) -> Unit,
+    val openState: (ContextMenuState) -> Unit,
     val close: () -> Unit
 )
 
@@ -101,11 +99,34 @@ fun rememberDialogCloseController(): DialogCloseController =
 
 
 data class ContextMenuState(
-    val actions: List<ContextMenuAction>,
     val wpDataDB: WpDataDB,
+    val actions: List<ContextMenuAction> = emptyList(),
+    val entries: List<ContextMenuEntry> = emptyList(),
     val origin: LaunchOrigin? = null
 )
 
+sealed interface ContextMenuEntry {
+    data class Item(
+        val title: String,
+        val action: ContextMenuAction? = null,
+        val enabled: Boolean = true,
+        val leading: MenuLeading = MenuLeading.ActionIcon,
+    ) : ContextMenuEntry
+
+    data object Divider : ContextMenuEntry
+}
+
+sealed interface MenuLeading {
+    data object None : MenuLeading
+
+    /** взять иконку из action.iconResOrNull() */
+    data object ActionIcon : MenuLeading
+
+    data class Checkbox(val checked: Boolean) : MenuLeading
+    data class Text(val value: String) : MenuLeading
+
+    data class DrawableIcon(@DrawableRes val resId: Int) : MenuLeading
+}
 
 data class ContextMenuResult(
     val action: ContextMenuAction,
@@ -298,131 +319,269 @@ fun rememberContextMenuHost(
 
     // Рендер самого диалога один раз, когда selectedItem != null
     selectedItem?.let { state ->
-        ContextMenuDialog(
-            visible = true,
-            wpDataDB = state.wpDataDB,
-            actions = state.actions,
-            onDismiss = { selectedItem = null },
-            onActionClick = { result ->
-                focusManager.clearFocus(force = true)
-                when (result.action) {
-                    is ContextMenuAction.ShowAllVizitInAdress -> {
+        val dismissMenu = { selectedItem = null }
 
-                        val wp = result.wpDataDB ?: run {
-                            selectedItem = null
-                            return@ContextMenuDialog
-                        }
-
-                        // periodText должен быть известен MainUI/MapsDialog.
-                        // Самый простой путь: хранить periodText в MainViewModel.state,
-                        // или передать в openContextMenu как параметр.
-                        // Я покажу вариант через ViewModel.state (самый чистый).
-                        val periodText = viewModel.uiState.value.filters?.let { f ->
-                            val range = f.rangeDataByKey
-                            val start = range?.start?.format(formatterDDmmYYYY) ?: "?"
-                            val end = range?.end?.format(formatterDDmmYYYY) ?: "?"
-                            "$start по $end"
-                        } ?: "не визначено"
-
-                        viewModel.requestJumpToAddressVisits(wp, periodText)
+        val handleAction: (ContextMenuResult) -> Unit = { result ->
+            focusManager.clearFocus(force = true)
+            when (result.action) {
+                is ContextMenuAction.ShowAllVizitInAdress -> {
+                    val wp = result.wpDataDB ?: run {
                         selectedItem = null
+                        return@run
                     }
 
-                    is ContextMenuAction.AcceptOrder -> {
-                        selectedItem = result.wpDataDB?.let {
-                            ContextMenuState(
-                                actions = listOf(
-                                    ContextMenuAction.ConfirmAcceptOneTime,
-                                    ContextMenuAction.ConfirmAcceptInfinite,
-                                    ContextMenuAction.Close
-                                ),
-                                wpDataDB = it
+                    val periodText = viewModel.uiState.value.filters?.let { f ->
+                        val range = f.rangeDataByKey
+                        val start = range?.start?.format(formatterDDmmYYYY) ?: "?"
+                        val end = range?.end?.format(formatterDDmmYYYY) ?: "?"
+                        "$start по $end"
+                    } ?: "не визначено"
+
+                    viewModel.requestJumpToAddressVisits(wp as WpDataDB, periodText)
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.AcceptOrder -> {
+                    selectedItem = result.wpDataDB?.let {
+                        ContextMenuState(
+                            wpDataDB = it,
+                            actions = listOf(
+                                ContextMenuAction.ConfirmAcceptOneTime,
+                                ContextMenuAction.ConfirmAcceptInfinite,
+                                ContextMenuAction.Close
                             )
-                        }
-                    }
-
-                    is ContextMenuAction.AcceptAllAtAddress -> {
-                        selectedItem = result.wpDataDB?.let {
-                            ContextMenuState(
-                                actions = listOf(
-                                    ContextMenuAction.ConfirmAllAcceptOneTime,
-                                    ContextMenuAction.ConfirmAllAcceptInfinite,
-                                    ContextMenuAction.Close
-                                ),
-                                wpDataDB = it
-                            )
-                        }
-                    }
-
-                    is ContextMenuAction.ConfirmAcceptOneTime -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAcceptInfinite -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
-                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.OpenVisit -> {
-                        result.wpDataDB?.let {
-                            val intent = Intent(context, DetailedReportActivity::class.java)
-                            intent.putExtra("WpDataDB_ID", it.id)
-                            context.startActivity(intent)
-                        }
-                        selectedItem = null
-                    }
-
-                    ContextMenuAction.OpenOrder -> {
-                        result.wpDataDB?.let {
-                            val intent = Intent(context, DetailedReportActivity::class.java)
-                            intent.putExtra("WpDataDB_ID", it.id)
-                            context.startActivity(intent)
-                        }
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.OpenSMSPlanDirectory -> {
-                        val intent = Intent(context, FeaturesActivity::class.java)
-                        val bundle = Bundle().apply {
-                            putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
-                            putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
-                            putString("modeUI", ModeUI.MULTI_SELECT.toString())
-                            putString("title", "Заявки")
-                            putString("subTitle", "## subTitle")
-                        }
-                        intent.putExtras(bundle)
-                        // launcher.launch(intent) // если используешь launcher — передай сюда как зависимость
-                        context.startActivity(intent)
-                        selectedItem = null
-                    }
-
-                    is ContextMenuAction.Close -> selectedItem = null
-
-                    else -> {
-                        // твой ShowMessageDialog
-                        // showMessageDialog = ...
-                        selectedItem = null
+                        )
                     }
                 }
+
+                is ContextMenuAction.AcceptAllAtAddress -> {
+                    selectedItem = result.wpDataDB?.let {
+                        ContextMenuState(
+                            wpDataDB = it,
+                            actions = listOf(
+                                ContextMenuAction.ConfirmAllAcceptOneTime,
+                                ContextMenuAction.ConfirmAllAcceptInfinite,
+                                ContextMenuAction.Close
+                            )
+                        )
+                    }
+                }
+
+                is ContextMenuAction.ConfirmAcceptOneTime -> {
+                    result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.ConfirmAcceptInfinite -> {
+                    result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.ConfirmAllAcceptOneTime -> {
+                    result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.ConfirmAllAcceptInfinite -> {
+                    result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.OpenVisit -> {
+                    result.wpDataDB?.let {
+                        val intent = Intent(context, DetailedReportActivity::class.java)
+                        intent.putExtra("WpDataDB_ID", it.id)
+                        context.startActivity(intent)
+                    }
+                    selectedItem = null
+                }
+
+                ContextMenuAction.OpenOrder -> {
+                    result.wpDataDB?.let {
+                        val intent = Intent(context, DetailedReportActivity::class.java)
+                        intent.putExtra("WpDataDB_ID", it.id)
+                        context.startActivity(intent)
+                    }
+                    selectedItem = null
+                }
+
+                is ContextMenuAction.OpenSMSPlanDirectory -> {
+                    val intent = Intent(context, FeaturesActivity::class.java)
+                    val bundle = Bundle().apply {
+                        putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
+                        putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
+                        putString("modeUI", ModeUI.MULTI_SELECT.toString())
+                        putString("title", "Заявки")
+                        putString("subTitle", "## subTitle")
+                    }
+                    intent.putExtras(bundle)
+                    context.startActivity(intent)
+                    selectedItem = null
+                }
+
+//                is ContextMenuAction.OpenUFMDWPDataSelector -> {
+//                    result.wpDataDB?.let {
+//                        viewModelScopeSafeLaunchOpenSelector(viewModel, it, state.origin)
+//                    }
+//                    selectedItem = null
+//                }
+
+                is ContextMenuAction.Close -> selectedItem = null
+                null -> selectedItem = null
+                else -> selectedItem = null
             }
-        )
+        }
+
+        if (state.entries.isNotEmpty()) {
+            LongClickContextMenuDialog(
+                visible = true,
+                wpDataDB = state.wpDataDB,
+                entries = state.entries,
+                onDismiss = dismissMenu,
+                onActionClick = handleAction
+            )
+        } else {
+            LegacyContextMenuDialog(
+                visible = true,
+                wpDataDB = state.wpDataDB,
+                actions = state.actions,
+                onDismiss = dismissMenu,
+                onActionClick = handleAction
+            )
+        }
     }
+//    selectedItem?.let { state ->
+//        LongClickContextMenuDialog(
+//            visible = true,
+//            wpDataDB = state.wpDataDB,
+//            actions = state.actions,
+//            entries = state.entries,
+//            onDismiss = { selectedItem = null },
+//            onActionClick = { result ->
+//                focusManager.clearFocus(force = true)
+//                when (result.action) {
+//                    is ContextMenuAction.ShowAllVizitInAdress -> {
+//
+//                        val wp = result.wpDataDB ?: run {
+//                            selectedItem = null
+//                            return@LongClickContextMenuDialog
+//                        }
+//
+//                        // periodText должен быть известен MainUI/MapsDialog.
+//                        // Самый простой путь: хранить periodText в MainViewModel.state,
+//                        // или передать в openContextMenu как параметр.
+//                        // Я покажу вариант через ViewModel.state (самый чистый).
+//                        val periodText = viewModel.uiState.value.filters?.let { f ->
+//                            val range = f.rangeDataByKey
+//                            val start = range?.start?.format(formatterDDmmYYYY) ?: "?"
+//                            val end = range?.end?.format(formatterDDmmYYYY) ?: "?"
+//                            "$start по $end"
+//                        } ?: "не визначено"
+//
+//                        viewModel.requestJumpToAddressVisits(wp, periodText)
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.AcceptOrder -> {
+//                        selectedItem = result.wpDataDB?.let {
+//                            ContextMenuState(
+//                                actions = listOf(
+//                                    ContextMenuAction.ConfirmAcceptOneTime,
+//                                    ContextMenuAction.ConfirmAcceptInfinite,
+//                                    ContextMenuAction.Close
+//                                ),
+//                                wpDataDB = it
+//                            )
+//                        }
+//                    }
+//
+//                    is ContextMenuAction.AcceptAllAtAddress -> {
+//                        selectedItem = result.wpDataDB?.let {
+//                            ContextMenuState(
+//                                actions = listOf(
+//                                    ContextMenuAction.ConfirmAllAcceptOneTime,
+//                                    ContextMenuAction.ConfirmAllAcceptInfinite,
+//                                    ContextMenuAction.Close
+//                                ),
+//                                wpDataDB = it
+//                            )
+//                        }
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAcceptOneTime -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptOneTime(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAcceptInfinite -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptInfinite(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAllAcceptOneTime -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkOneTime(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.ConfirmAllAcceptInfinite -> {
+//                        result.wpDataDB?.let { viewModel.requestAcceptAllWorkInfinite(it) }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.OpenVisit -> {
+//                        result.wpDataDB?.let {
+//                            val intent = Intent(context, DetailedReportActivity::class.java)
+//                            intent.putExtra("WpDataDB_ID", it.id)
+//                            context.startActivity(intent)
+//                        }
+//                        selectedItem = null
+//                    }
+//
+//                    ContextMenuAction.OpenOrder -> {
+//                        result.wpDataDB?.let {
+//                            val intent = Intent(context, DetailedReportActivity::class.java)
+//                            intent.putExtra("WpDataDB_ID", it.id)
+//                            context.startActivity(intent)
+//                        }
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.OpenSMSPlanDirectory -> {
+//                        val intent = Intent(context, FeaturesActivity::class.java)
+//                        val bundle = Bundle().apply {
+//                            putString("viewModel", SMSPlanSDBViewModel::class.java.canonicalName)
+//                            putString("contextUI", ContextUI.SMS_PLAN_DEFAULT.toString())
+//                            putString("modeUI", ModeUI.MULTI_SELECT.toString())
+//                            putString("title", "Заявки")
+//                            putString("subTitle", "## subTitle")
+//                        }
+//                        intent.putExtras(bundle)
+//                        // launcher.launch(intent) // если используешь launcher — передай сюда как зависимость
+//                        context.startActivity(intent)
+//                        selectedItem = null
+//                    }
+//
+//                    is ContextMenuAction.Close -> selectedItem = null
+//
+//                    else -> {
+//                        // твой ShowMessageDialog
+//                        // showMessageDialog = ...
+//                        selectedItem = null
+//                    }
+//                }
+//            }
+//        )
+//    }
 
     // Сам контроллер
     val open: (WpDataDB, List<ContextMenuAction>) -> Unit = { wp, actions ->
         selectedItem = ContextMenuState(actions = actions, wpDataDB = wp)
     }
+
+    val openState: (ContextMenuState) -> Unit = { state ->
+        selectedItem = state
+    }
+
     val close: () -> Unit = { selectedItem = null }
 
     showCardItemsDialog?.let {
@@ -481,11 +640,56 @@ fun rememberContextMenuHost(
         )
     }
 
-    return remember { ContextMenuController(open, close) }
+    return remember(open, openState, close) {
+        ContextMenuController(
+            open = open,
+            openState = openState,
+            close = close
+        )
+    }
 }
 
 @Composable
-fun ContextMenuDialog(
+fun LongClickContextMenuDialog(
+    visible: Boolean,
+    wpDataDB: WpDataDB,
+    entries: List<ContextMenuEntry>,
+    onDismiss: () -> Unit,
+    onActionClick: (ContextMenuResult) -> Unit
+) {
+    if (!visible) return
+
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .widthIn(min = 220.dp, max = screenWidth * 0.9f)
+                .background(Color.White, RoundedCornerShape(8.dp))
+        ) {
+            entries.forEach { entry ->
+                when (entry) {
+                    ContextMenuEntry.Divider -> {
+                        HorizontalDivider(
+                            color = Color(0xFFE0E0E0),
+                            thickness = 1.dp
+                        )
+                    }
+
+                    is ContextMenuEntry.Item -> {
+                        ContextMenuRow(
+                            wpDataDB = wpDataDB,
+                            item = entry,
+                            onActionClick = onActionClick
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable
+fun LegacyContextMenuDialog(
     visible: Boolean,
     wpDataDB: WpDataDB,
     actions: List<ContextMenuAction>,
@@ -503,7 +707,6 @@ fun ContextMenuDialog(
                 .background(Color.White, shape = RoundedCornerShape(6.dp))
                 .width(IntrinsicSize.Max)
         ) {
-            // Header
             val isMultiClient = actions.contains(ContextMenuAction.ConfirmAllAcceptOneTime)
                     || actions.contains(ContextMenuAction.ConfirmAllAcceptInfinite)
 
@@ -563,10 +766,8 @@ fun ContextMenuDialog(
             actions.forEach { action ->
                 val iconRes = action.iconResOrNull()
                 val textColor =
-                    if (iconRes == null)
-                        Color.Black.copy(alpha = 0.55f) // светло-серый
-                    else
-                        Color.Black.copy(alpha = 0.95f)
+                    if (iconRes == null) Color.Black.copy(alpha = 0.55f)
+                    else Color.Black.copy(alpha = 0.95f)
 
                 Column {
                     Row(
@@ -586,7 +787,7 @@ fun ContextMenuDialog(
                                 tint = Color.Black.copy(alpha = 0.95f)
                             )
                         } else {
-                            Spacer(Modifier.size(20.dp)) // чтобы текст всех строк был на одном уровне
+                            Spacer(Modifier.size(20.dp))
                         }
 
                         Spacer(Modifier.width(12.dp))
@@ -604,49 +805,156 @@ fun ContextMenuDialog(
                     Divider(color = Color.Gray, thickness = 1.dp)
                 }
             }
-
         }
     }
-
 }
 
+@Composable
+private fun ContextMenuRow(
+    wpDataDB: WpDataDB,
+    item: ContextMenuEntry.Item,
+    onActionClick: (ContextMenuResult) -> Unit
+) {
+    val textColor = if (item.enabled) {
+        Color.Black.copy(alpha = 0.95f)
+    } else {
+        Color.Black.copy(alpha = 0.45f)
+    }
 
-private fun optionDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
-    // Опції
-    val optionsExchange =
-        OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, codeDad2.toString())
-    optionsExchange.downloadOptions(object : ExchangeResponseInterface {
-        override fun <T> onSuccess(data: List<T>) {
-            if (data.isNotEmpty()) {
-                RealmManager.saveDownloadedOptions(data as List<OptionsDB>)
-            }
-            click.click()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (item.enabled && item.action != null) {
+                    Modifier.clickable {
+                        onActionClick(ContextMenuResult(item.action, wpDataDB))
+                    }
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.width(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ContextMenuLeadingView(
+                item = item,
+                tint = textColor
+            )
         }
 
-        override fun onFailure(error: String) {
-            click.click()
-        }
-    })
+        Spacer(Modifier.width(12.dp))
+
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = textColor,
+            modifier = Modifier.weight(1f)
+        )
+    }
 }
 
-private fun reportDownload(codeDad2: Long, datePremiumDownloadFormat: String, click: clickVoid) {
+@Composable
+private fun ContextMenuLeadingView(
+    item: ContextMenuEntry.Item,
+    tint: Color
+) {
+    when (val leading = item.leading) {
+        MenuLeading.None -> {
+            Spacer(Modifier.size(16.dp))
+        }
 
-    val reportPrepareExchange = ReportPrepareExchange(
-        datePremiumDownloadFormat,
-        datePremiumDownloadFormat,
-        codeDad2.toString()
-    )
-    reportPrepareExchange.downloadReportPrepare(object : ExchangeResponseInterface {
-        override fun <T> onSuccess(data: List<T>) {
-            if (data.isNotEmpty()) {
-                ReportPrepareRealm.setAll(data as List<ReportPrepareDB>)
+        MenuLeading.ActionIcon -> {
+            val iconRes = item.action?.iconResOrNull()
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = tint
+                )
+            } else {
+                Spacer(Modifier.size(16.dp))
             }
-
-            click.click()
         }
 
-        override fun onFailure(error: String) {
-            click.click()
+        is MenuLeading.DrawableIcon -> {
+            Icon(
+                painter = painterResource(id = leading.resId),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = tint
+            )
         }
-    })
+
+        is MenuLeading.Text -> {
+            Text(
+                text = leading.value,
+                color = tint,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        is MenuLeading.Checkbox -> {
+            Box(
+                modifier = Modifier
+                    .size(14.dp)
+                    .border(1.dp, tint, RoundedCornerShape(2.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (leading.checked) {
+                    Text(
+                        text = "✓",
+                        color = tint,
+                        fontSize = 10.sp,
+                        lineHeight = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun buildMenuEntries(
+    wpDataDB: WpDataDB,
+    actions: List<ContextMenuAction>,
+    entries: List<ContextMenuEntry>
+): List<ContextMenuEntry> {
+    if (entries.isNotEmpty()) return entries
+
+    val hasOneTime = ContextMenuAction.ConfirmAllAcceptOneTime in actions
+    val hasInfinite = ContextMenuAction.ConfirmAllAcceptInfinite in actions
+
+    val clients: List<String> = when {
+        hasOneTime -> WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+            wpDataDB.addr_id,
+            wpDataDB.dt
+        )
+        hasInfinite -> WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+            wpDataDB.addr_id
+        )
+        else -> emptyList()
+    }
+
+    return actions.map { action ->
+        val title = when (action) {
+            ContextMenuAction.ConfirmAllAcceptOneTime,
+            ContextMenuAction.ConfirmAllAcceptInfinite -> {
+                String.format(action.title, "${clients.size} ")
+            }
+            else -> action.title
+        }
+
+        ContextMenuEntry.Item(
+            title = title,
+            action = action,
+            enabled = true,
+            leading = MenuLeading.ActionIcon
+        )
+    }
 }

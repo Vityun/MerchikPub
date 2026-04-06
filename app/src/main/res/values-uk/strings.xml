@@ -210,6 +210,7 @@
     <string name="ui_cancel">Скасувати</string>
     <string name="ui_apply">Застосувати</string>
     <string name="ui_clear">Очистити</string>
+    <string name="ui_choice_action">Oбрати дію</string>
     <string name="ui_choice">Вибрати</string>
 
     <string name="ui_synhronize">Синхронізація</string>

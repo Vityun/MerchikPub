@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -44,8 +45,12 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -61,6 +66,8 @@ import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
@@ -69,6 +76,33 @@ import ua.com.merchik.merchik.database.room.RoomManager
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
+private const val PRODUCT_CODE_TAG = "PRODUCT_CODE_TAG"
+
+
+@Composable
+fun ItemFieldValue(
+    item: DataItemUI,
+    fieldValue: FieldValue,
+    visibilityField: Int? = null,
+    onClickProductCode: ((DataItemUI, FieldValue, ClickTextAction) -> Unit)? = null
+) {
+    Row(Modifier.fillMaxWidth()) {
+        if (visibilityField == View.VISIBLE) {
+            ItemTextField(
+                textField = fieldValue.field,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        ItemTextField(
+            textField = fieldValue.value,
+            modifier = Modifier.weight(2f),
+            onClick = { action ->
+                onClickProductCode?.invoke(item, fieldValue, action)
+            }
+        )
+    }
+}
 
 @Composable
 fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
@@ -110,6 +144,124 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
     )
 }
 
+@Composable
+private fun ItemTextField(
+    textField: TextField,
+    modifier: Modifier? = null,
+    onClick: ((ClickTextAction) -> Unit)? = null
+) {
+    val finalModifier = (modifier ?: Modifier)
+        .padding(
+            start = textField.modifierValue?.padding?.start ?: 0.dp,
+            top = textField.modifierValue?.padding?.top ?: 0.dp,
+            end = textField.modifierValue?.padding?.end ?: 0.dp,
+            bottom = textField.modifierValue?.padding?.bottom ?: 0.dp,
+        )
+        .then(
+            textField.modifierValue?.alignment?.let {
+                Modifier.wrapContentWidth(it)
+            } ?: Modifier
+        )
+        .then(
+            textField.modifierValue?.background?.let {
+                Modifier.background(color = it)
+            } ?: Modifier
+        )
+
+    val productCodeText = textField.productCodeText
+
+    if (productCodeText == null) {
+        Text(
+            text = textField.value,
+            fontWeight = textField.modifierValue?.fontWeight,
+            fontStyle = textField.modifierValue?.fontStyle,
+            color = textField.modifierValue?.textColor ?: Color.Black,
+            maxLines = textField.modifierValue?.maxLine ?: 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = finalModifier
+        )
+        return
+    }
+
+    val baseTextStyle = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = textField.modifierValue?.fontWeight,
+        fontStyle = textField.modifierValue?.fontStyle ?: FontStyle.Normal,
+        color = textField.modifierValue?.textColor ?: Color.Black
+    )
+
+    val annotated = remember(productCodeText) {
+        buildAnnotatedString {
+            var cursor = 0
+
+            productCodeText.parts.forEach { part ->
+                val start = cursor
+                append(part.text)
+                cursor += part.text.length
+                val end = cursor
+
+                addStyle(
+                    style = SpanStyle(
+                        color = part.color,
+                        textDecoration = if (productCodeText.underline) {
+                            TextDecoration.Underline
+                        } else {
+                            TextDecoration.None
+                        }
+                    ),
+                    start = start,
+                    end = end
+                )
+            }
+
+            productCodeText.clickAction?.let { action ->
+                addStringAnnotation(
+                    tag = PRODUCT_CODE_TAG,
+                    annotation = action.actionId + "|" + (action.argument ?: ""),
+                    start = 0,
+                    end = length
+                )
+            }
+        }
+    }
+
+    if (productCodeText.clickAction != null && onClick != null) {
+        ClickableText(
+            text = annotated,
+            style = baseTextStyle,
+            maxLines = textField.modifierValue?.maxLine ?: 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = finalModifier,
+            onClick = { offset ->
+                val annotation = annotated
+                    .getStringAnnotations(
+                        tag = PRODUCT_CODE_TAG,
+                        start = offset,
+                        end = offset
+                    )
+                    .firstOrNull()
+
+                if (annotation != null) {
+                    val split = annotation.item.split("|", limit = 2)
+                    onClick(
+                        ClickTextAction(
+                            actionId = split.getOrNull(0).orEmpty(),
+                            argument = split.getOrNull(1)?.takeIf { it.isNotEmpty() }
+                        )
+                    )
+                }
+            }
+        )
+    } else {
+        Text(
+            text = annotated,
+            style = baseTextStyle,
+            maxLines = textField.modifierValue?.maxLine ?: 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = finalModifier
+        )
+    }
+}
 @Composable
 fun SettingsItemView(item: SettingsItemUI) {
     var isChecked by remember { mutableStateOf(item.isEnabled) }
