@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -103,6 +104,7 @@ fun MessageDialog(
     onTextLinkClick: ((String) -> Unit)? = null,
     onDialogClosed: ((DialogCloseReason) -> Unit)? = null
 ) {
+    Log.e("additionalEarningsDialogData", "MessageDialog ++")
     val scrollState = rememberScrollState()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -411,6 +413,7 @@ fun MessageDialog(
             }
         }
     }
+    Log.e("additionalEarningsDialogData", "MessageDialog --")
 }
 
 //@Composable

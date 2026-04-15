@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsDialogViewModel
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.isDataReadyCompat
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -62,6 +63,11 @@ fun WpDataContentTab(dataIsReady: Boolean) {
             }
         }
 
+        val shouldShow = activity?.intent
+            ?.getBooleanExtra("showWPDataWithFilters", false) == true
+
+        if (!shouldShow)
+            ScrollDataHolder.instance().init()
 
         viewModel.contextUI = ContextUI.WP_DATA_IN_CONTAINER
         viewModel.modeUI = ModeUI.FILTER_SELECT

@@ -125,21 +125,38 @@ class MainRepository(
             // 👉 если пользователь ещё ничего не настраивал (settingsUI == null),
             //    НЕ скрываем group_header, он по умолчанию включён
             val hideUserFields: List<String>? = if (settingsUI == null) {
-                baseHide
+                val preparedHide = baseHide
                     .orEmpty()
-                    .filterNot {
-                        it.equals(
-                            "group_header",
-                            ignoreCase = true
-                        )
-                    }
-                    .plus("filter_select")
-//                    .distinctBy { it.lowercase() }
+                    .filterNot { it.equals("group_header", ignoreCase = true) }
                     .map { it.trim() }
+                    .toMutableList()
+
+                if (modeUI == ModeUI.DEFAULT) {
+                    preparedHide.add("filter_select")
+                } else if (modeUI == ModeUI.FILTER_SELECT) {
+                    preparedHide.removeAll { it.equals("filter_select", ignoreCase = true) }
+                }
+
+                preparedHide
             } else {
-                baseHide
-                    ?.map { it.trim() }
+                baseHide?.map { it.trim() }
             }
+//            val hideUserFields: List<String>? = if (settingsUI == null) {
+//                baseHide
+//                    .orEmpty()
+//                    .filterNot {
+//                        it.equals(
+//                            "group_header",
+//                            ignoreCase = true
+//                        )
+//                    }
+//                    .plus("filter_select")
+////                    .distinctBy { it.lowercase() }
+//                    .map { it.trim() }
+//            } else {
+//                baseHide
+//                    ?.map { it.trim() }
+//            }
 
 
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
@@ -155,7 +172,7 @@ class MainRepository(
                             "column_name" -> "Назва реквізитів"
                             "id_res_image" -> "Зображення"
                             "group_header" -> "Заголовок групи"
-                            "filter_select" -> "Возможность выбора элемента"
+                            "filter_select" -> "Можливість вибору елемента"
                             else -> nameUIRepository.getTranslateString(
                                 key,
                                 obj.getFieldTranslateId(key)

@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -121,6 +122,7 @@ fun GroupDeck(
 ) {
 
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
+    val uiState by viewModel.uiState.collectAsState()
 
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
@@ -136,6 +138,14 @@ fun GroupDeck(
 
     // стартовое состояние теперь учитывает collapsedByDefault при первой отрисовке
     var expanded by rememberSaveable(groupId) { mutableStateOf(defaultExpanded) }
+
+    val deckExpandCommand = uiState.deckExpandCommand
+
+    LaunchedEffect(deckExpandCommand?.version) {
+        deckExpandCommand?.let { command ->
+            expanded = command.expand
+        }
+    }
 
     if (items.isEmpty()) return
 
@@ -340,7 +350,15 @@ fun GroupDeck(
                                     expanded = !expanded
                                 },
                                 onLongClickItem = {
-                                    expanded = !expanded
+                                    if (items.size > 1) {
+                                        viewModel.onLongClickItems(
+                                            items = items,
+                                            context = context,
+                                            clickedItem = topItem
+                                        )
+                                    } else {
+                                        viewModel.onLongClickItem(it, context)
+                                    }
                                 },
                                 onClickItemImage = {
                                     viewModel.onClickItemImage(it, context)
@@ -388,7 +406,7 @@ fun GroupDeck(
                                 expanded = !expanded
                             },
                             onLongClickItem = {
-
+                                viewModel.onLongClickItem(it, context)
                             },
                             onClickItemImage = {
                                 viewModel.onClickItemImage(it, context)

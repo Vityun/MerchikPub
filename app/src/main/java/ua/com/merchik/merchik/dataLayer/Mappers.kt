@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.dataLayer
 
+import CardItemsData
+import ContextMenuAction
+import MessageDialogData
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
@@ -13,10 +16,6 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
-import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -175,42 +174,6 @@ fun DataObjectUI.toItemUI(
         val num = resolvePhotoNum(jsonObject, key, hashByIdKey[key], idResImage)
         if (num != null) images.add(num)   // без дедупа, как раньше по смыслу
     }
-
-//    val imageKeys = this.getFieldsImageOnUI()
-//        .split(",")
-//        .map { it.trim() }
-//        .filter { it.isNotEmpty() }
-//
-//    for (key in imageKeys) {
-//        resolvePhotoNum(jsonObject, key, idResImage)?.let { num ->
-//            if (!images.contains(num)) images.add(num)
-//        }
-//    }
-
-//    val imageKeys = this.getFieldsImageOnUI()
-//        .split(",")
-//        .map { it.trim() }
-//        .filter { it.isNotEmpty() }
-//
-//    for (key in imageKeys) {
-//        val photoId = jsonObject.optString(key, "0")
-//        when {
-//            photoId != "0" -> {
-//                RealmManager.getPhotoByPhotoId(photoId)?.getPhoto_num()?.let { images.add(it) }
-//            }
-//
-//            key == "photo_do_id" -> {
-//                val hash = jsonObject.optString("photo_do_hash", "0")
-//                if (hash.length > 12) {
-//                    RealmManager.getPhotoByHash(hash)?.getPhoto_num()?.let { images.add(it) }
-//                } else {
-//                    idResImage?.let { images.add(it.toString()) }
-//                }
-//            }
-//
-//            else -> idResImage?.let { images.add(it.toString()) }
-//        }
-//    }
 
     fun updateFields(key: String) {
         val valueRaw = jsonObject.opt(key) ?: return
@@ -412,18 +375,23 @@ fun ContextMenuAction.iconResOrNull(): Int? = when (this) {
     ContextMenuAction.RejectAddress -> null
     ContextMenuAction.RejectClient -> null
     ContextMenuAction.RejectByType -> null
-    ContextMenuAction.OpenVisit -> R.drawable.ic_37
+    ContextMenuAction.OpenVisit -> R.drawable.ic_24
     ContextMenuAction.OpenOrder -> R.drawable.ic_37
     ContextMenuAction.AskMoreMoney -> null
     ContextMenuAction.Feedback -> null
     ContextMenuAction.ConfirmAcceptOneTime -> R.drawable.ic_37
     ContextMenuAction.ConfirmAcceptInfinite -> R.drawable.ic_37
-    ContextMenuAction.Close -> R.drawable.ic_37
+    ContextMenuAction.Close -> R.drawable.ic_letter_x
     ContextMenuAction.ConfirmAllAcceptOneTime -> R.drawable.ic_37
     ContextMenuAction.ConfirmAllAcceptInfinite -> R.drawable.ic_37
     ContextMenuAction.OpenSMSPlanDirectory -> R.drawable.ic_37
 }
 
+enum class HiddenMenuMode {
+    INLINE,
+    OVERLAY,
+    REPLACE
+}
 
 enum class ContextUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT,
@@ -543,7 +511,17 @@ private fun formatDateString(raw: String?): String {
 
 
 sealed interface MainEvent {
-    data class ShowContextMenu(val menuState: ContextMenuState) : MainEvent
+    data class ShowContextMenu(val state: ContextMenuUiState) : MainEvent
+    data object HideContextMenu : MainEvent
+
+    data class NavigateToDetailedReport(val wpDataId: Long) : MainEvent
+    data class OpenUFMDWPDataSelector(
+        val addressId: String?,
+        val origin: LaunchOrigin? = null
+    ) : MainEvent
+
+    data object OpenSmsPlanDirectory : MainEvent
+
     data class ShowCardItemsDialog(val cardItemsData: CardItemsData) : MainEvent
     data class ShowLoading(val title: String, val durationMs: Long = 28_700L) : MainEvent
     data object LoadingCompleted : MainEvent
@@ -551,12 +529,9 @@ sealed interface MainEvent {
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent
     data object HideMessageDialog : MainEvent
     data object JumpToVizitAndCloseMaps : MainEvent
-
-    data class OpenUFMDWPDataSelector(val wp: WpDataDB,
-                                      val origin: LaunchOrigin? = null) : MainEvent
-
+    data object OpenSortingDialog : MainEvent
+    data object OpenAdditionalWorkDialog : MainEvent
 }
-
 
 sealed interface PendingAction {
     data class JumpToAddressVisits(

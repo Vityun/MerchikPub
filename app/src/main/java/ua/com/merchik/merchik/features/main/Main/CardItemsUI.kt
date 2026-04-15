@@ -293,50 +293,6 @@ fun CardItemsUI(title: String, item: DataItemUI, viewModel: MainViewModel, onDis
                                     )
                                 }
 
-//                                currentItem.fields.firstOrNull { it.key.equals("id_res_image", true) }
-//                                    ?.let { it ->
-//                                        val idResImage =
-//                                            (it.value.rawValue as? Int) ?: R.drawable.merchik
-//
-//                                        Box(
-//                                            modifier = Modifier
-//                                                .weight(1f)
-//                                                .padding(end = 5.dp)
-//                                                .border(1.dp, Color.LightGray)
-//                                                .background(Color.White)
-//                                                .align(Alignment.Top)
-//                                                .clipToBounds(),
-//                                            contentAlignment = Alignment.Center
-//                                        ) {
-//                                            val images = mutableListOf<Painter>()
-//                                            if (currentItem.images.isNullOrEmpty()) {
-//                                                images.add(painterResource(idResImage))
-//                                            } else {
-//                                                currentItem.images.forEach { pathImage ->
-//                                                    val file = File(pathImage)
-//                                                    images.add(
-//                                                        if (file.exists()) rememberAsyncImagePainter(
-//                                                            model = file
-//                                                        )
-//                                                        else painterResource(idResImage)
-//                                                    )
-//                                                }
-//                                            }
-//
-//                                            Image(
-//                                                painter = images[0],
-//                                                modifier = Modifier
-//                                                    .padding(2.dp)
-//                                                    .size(100.dp)
-//                                                    .clickable { viewModel.context?.let { context ->
-//                                                        onClickItemImage(currentItem, context)
-//                                                    } },
-//                                                contentScale = ContentScale.Fit,
-//                                                contentDescription = null
-//                                            )
-//                                        }
-//                                    }
-
                                 Column(modifier = Modifier.weight(2f)) {
                                     visibleFields.forEachIndexed { index, field ->
                                         if (!field.key.equals("id_res_image", true)) {

@@ -82,8 +82,11 @@ class FeaturesActivity : AppCompatActivity() {
 
         launchOrigin = intent?.readLaunchOriginOrNull() ?: LaunchOrigin(0,0,0,0)
 
+        val normalizedLaunchOrigin = launchOrigin.takeIf {
+            it.x != 0 || it.y != 0 || it.width != 0 || it.height != 0
+        }
 
-        if (launchOrigin.x != 0 && launchOrigin.y != 0) {
+        if (normalizedLaunchOrigin != null) {
             overridePendingTransition(0, 0)
         }
         setContent {
@@ -101,7 +104,7 @@ class FeaturesActivity : AppCompatActivity() {
                     }
 
                     FeaturesLaunchAnimationContainer(
-                        origin = launchOrigin,
+                        origin = normalizedLaunchOrigin,
                         durationMillis = animationTime
                     ) {
                         intent?.let { intent ->

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import CardItemsData
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -33,7 +34,6 @@ import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

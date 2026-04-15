@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import CardItemsData
 import android.app.Application
 import android.content.Context
 import android.util.Log
@@ -21,7 +22,6 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.componentsUI.CardItemsData
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

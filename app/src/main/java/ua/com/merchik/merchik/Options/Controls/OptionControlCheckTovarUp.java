@@ -147,8 +147,21 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
 
         // 5 проверим кол-во поднятого товара
         int sumUp = 0;
+
         try {
-            sumUp = reportPrepare.stream().map(table -> Integer.parseInt(table.getUp())).reduce(0, Integer::sum);
+            sumUp = reportPrepare.stream()
+                    .map(table -> {
+                        String up = table.getUp();
+                        if (up == null || up.trim().isEmpty()) return 0;
+                        try {
+                            return Integer.parseInt(up.trim());
+                        } catch (NumberFormatException e) {
+                            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp",
+                                    "Некорректный up: [" + up + "]");
+                            return 0;
+                        }
+                    })
+                    .reduce(0, Integer::sum);
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "Exception e: " + e);

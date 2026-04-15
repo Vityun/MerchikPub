@@ -1995,7 +1995,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     long seconds = millis / 1000;
                     Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds);
                     Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent);
-
                     INSTANCE.executeTransaction(realm -> {
                         table.setUp(data);
                         table.setUploadStatus(1);
@@ -2151,7 +2150,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         rp.setDtExpire("");
         rp.setExpireLeft("");
         rp.setNotes("");
-        rp.setUp("");
+        rp.setUp("0");
         rp.setAkciya("");
         rp.setAkciyaId("");
         rp.setOborotvedNum("");

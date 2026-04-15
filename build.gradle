@@ -54,3 +54,11 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+//subprojects { subproject ->
+//    subproject.tasks.whenTaskAdded {
+//        if (it.name.contains("kapt")) {
+//            it.enabled = false
+//        }
+//    }
+//}

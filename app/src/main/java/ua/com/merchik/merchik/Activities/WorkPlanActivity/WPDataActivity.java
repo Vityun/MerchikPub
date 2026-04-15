@@ -27,6 +27,7 @@ import com.google.android.material.tabs.TabLayout;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -74,6 +75,8 @@ public class WPDataActivity extends toolbar_menus {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         filter = findViewById(R.id.filter);
+
+//        ScrollDataHolder.Companion.instance().init();
 
 //        tabLayout = findViewById(R.id.tabLayout);
 //        viewPager = findViewById(R.id.viewPager);

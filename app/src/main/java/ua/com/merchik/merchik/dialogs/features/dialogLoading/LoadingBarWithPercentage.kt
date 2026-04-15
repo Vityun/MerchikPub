@@ -17,16 +17,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ua.com.merchik.merchik.R
 
 
 @Composable
 fun LoadingBarWithPercentage(
     progress: Float, // Значение от 0.0 до 1.0
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color(0xFFE0E0E0),
+    backgroundColor: Color = colorResource(R.color.background_item_filter),
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,

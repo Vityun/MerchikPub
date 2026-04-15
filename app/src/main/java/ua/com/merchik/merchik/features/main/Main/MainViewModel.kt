@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import MessageDialogData
 import android.app.Activity
 import android.app.Application
 import android.content.Context
@@ -64,6 +65,8 @@ import ua.com.merchik.merchik.dataLayer.common.ServerIssueDialogConfig
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
 import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
+import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionEvent
+import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -77,11 +80,7 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuAction
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuEntry
-import ua.com.merchik.merchik.features.main.componentsUI.ContextMenuState
-import ua.com.merchik.merchik.features.main.componentsUI.MenuLeading
-import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Locale
@@ -101,6 +100,7 @@ data class StateUI(
     var sortingFields: List<SortingField> = emptyList(),
     val groupingFields: List<GroupingField> = emptyList(),
     val filters: Filters? = null,
+    val deckExpandCommand: DeckExpandCommand? = null,
     val lastUpdate: Long = 0
 )
 
@@ -136,10 +136,7 @@ data class ItemFilter(
         bundle.putString("subTitle", subTitleContext)
         intent.putExtras(bundle)
         ActivityCompat.startActivityForResult(
-            activity,
-            intent,
-            DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
-            null
+            activity, intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST, null
         )
     }
 }
@@ -179,6 +176,9 @@ data class GroupMeta(
     val endIndexExclusive: Int      // индекс после последнего (как в subList)
 )
 
+data class DeckExpandCommand(
+    val expand: Boolean, val version: Long
+)
 
 abstract class MainViewModel(
     application: Application,
@@ -245,84 +245,14 @@ abstract class MainViewModel(
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
     open fun onLongClickItem(itemUI: DataItemUI, context: Context) {
-        if (false)
-            viewModelScope.launch(Dispatchers.IO) {
-                _events.emit(
-                    MainEvent.ShowContextMenu(
-                        menuState = ContextMenuState(
-                            wpDataDB = itemUI.rawObj.first() as WpDataDB,
-                            entries = listOf(
-                                ContextMenuEntry.Item(
-                                    title = "Додати",
-                                    action = null,
-                                    enabled = false,
-                                    leading = MenuLeading.Text("+")
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Змінити",
-                                    action = null,
-                                    enabled = false,
-                                    leading = MenuLeading.Text("✎")
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Видалити",
-                                    action = null,
-                                    enabled = false,
-                                    leading = MenuLeading.Text("🗑")
-                                ),
+    }
 
-                                ContextMenuEntry.Divider,
+    open fun onLongClickItems(
+        items: List<DataItemUI>, context: Context, clickedItem: DataItemUI = items.first()
+    ) {
+    }
 
-                                ContextMenuEntry.Item(
-                                    title = "Позначити",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Checkbox(true)
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Позначити усі",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Checkbox(true)
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Зняти позначку",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Checkbox(false)
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Зняти всi позначки",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Checkbox(false)
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Інвертувати",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Text("■")
-                                ),
-
-                                ContextMenuEntry.Divider,
-
-                                ContextMenuEntry.Item(
-                                    title = "Згорнути",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Text("✓")
-                                ),
-                                ContextMenuEntry.Item(
-                                    title = "Інша дія",
-                                    action = null,
-                                    enabled = true,
-                                    leading = MenuLeading.Text("○")
-                                )
-                            )
-                        )
-                    )
-                )
-            }
+    open fun onSelectedButtonClick() {
     }
 
     open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
@@ -351,16 +281,71 @@ abstract class MainViewModel(
         return null
     }
 
+    protected fun emitEvent(event: MainEvent) {
+        viewModelScope.launch {
+            _events.emit(event)
+        }
+    }
+
+    fun showContextMenu(state: ContextMenuUiState) {
+        emitEvent(MainEvent.ShowContextMenu(state))
+    }
+
+    fun hideContextMenu() {
+        emitEvent(MainEvent.HideContextMenu)
+    }
+
+    open fun onContextMenuAction(event: ContextMenuActionEvent) {
+        // default no-op
+    }
+
+    open fun onContextMenuDismissed() {
+        // optional
+    }
+
+    protected fun openDetailedReport(wpDataId: Long) {
+//        emitEvent(MainEvent.NavigateToDetailedReport(wpDataId))
+        context?.let {
+            val intent = Intent(context, DetailedReportActivity::class.java)
+            intent.putExtra("WpDataDB_ID", wpDataId)
+            it.startActivity(intent)
+        }
+    }
+
+    fun openUFMDSelector(addressId: String?, origin: LaunchOrigin?) {
+        launcher?.let { launcher ->
+            launchFeaturesActivity(
+                launcher = launcher,
+                context = context!!,
+                viewModelClass = WpDataDBViewModel::class,
+                dataJson = Gson().toJson(
+                    mapOf("addressId" to addressId)
+                ),
+                modeUI = ModeUI.MULTI_SELECT,
+                contextUI = ContextUI.WP_DATA,
+                title = "Додатковий заробіток",
+                origin = origin
+            )
+        }
+//        emitEvent(
+//            MainEvent.OpenUFMDWPDataSelector(
+//                addressId = addressId,
+//                origin = origin
+//            )
+//        )
+    }
+
+    protected fun openSmsPlanDirectory() {
+        emitEvent(MainEvent.OpenSmsPlanDirectory)
+    }
+
     var filters: Filters? = null
 
     protected var dialog: DialogFullPhoto? = null
 
 
     open fun onClickProductCode(
-        itemUI: DataItemUI,
-        fieldValue: FieldValue,
-        action: ClickTextAction,
-        context: Context
+        itemUI: DataItemUI, fieldValue: FieldValue, action: ClickTextAction, context: Context
     ) {
         when (fieldValue.key.lowercase()) {
             "feed_fl_code" -> {
@@ -427,16 +412,11 @@ abstract class MainViewModel(
 
         if (selectedIndex > -1) {
             Log.e("!!!!!!!!!!!", "+++++++++++++++")
-            dialog?.setPhotos(
-                selectedIndex,
-                photoLogData,
-                { _, photoDB ->
-                    onClickFullImage(photoDB, photoDBWithComments[photoDB])
-                    dialog?.dismiss()
-                    dialog = null
-                },
-                { /* updateContent если надо */ }
-            )
+            dialog?.setPhotos(selectedIndex, photoLogData, { _, photoDB ->
+                onClickFullImage(photoDB, photoDBWithComments[photoDB])
+                dialog?.dismiss()
+                dialog = null
+            }, { /* updateContent если надо */ })
 
             dialog?.setClose {
                 dialog?.dismiss()
@@ -453,11 +433,8 @@ abstract class MainViewModel(
 
         val json = JSONObject(Gson().toJson(obj))
 
-        val imageKeys = (obj as? DataObjectUI)?.getFieldsImageOnUI()
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotEmpty() }
-            .orEmpty()
+        val imageKeys = (obj as? DataObjectUI)?.getFieldsImageOnUI()?.split(",")?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }.orEmpty()
 
         // 1) основной id по индексу
         val idKey = imageKeys.getOrNull(index)
@@ -481,32 +458,26 @@ abstract class MainViewModel(
 
 
     private val _uiState = MutableStateFlow(StateUI())
-    val uiState
-            : StateFlow<StateUI>
+    val uiState: StateFlow<StateUI>
         get() = _uiState.asStateFlow()
 
 
     private val _rangeDataStart = MutableStateFlow<LocalDate?>(LocalDate.now())
-    val rangeDataStart
-            : StateFlow<LocalDate?>
+    val rangeDataStart: StateFlow<LocalDate?>
         get() = _rangeDataStart.asStateFlow()
 
 
     private val _rangeDataEnd = MutableStateFlow<LocalDate?>(LocalDate.now().plusDays(4))
-    val rangeDataEnd
-            : StateFlow<LocalDate?>
+    val rangeDataEnd: StateFlow<LocalDate?>
         get() = _rangeDataEnd.asStateFlow()
 
     private val _showMenuDialog = MutableStateFlow(false)
-    val showMenuDialog
-            : StateFlow<Boolean>
+    val showMenuDialog: StateFlow<Boolean>
         get() = _showMenuDialog.asStateFlow()
 
 
     protected val _events = MutableSharedFlow<MainEvent>(
-        replay = 0,
-        extraBufferCapacity = 10,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        replay = 0, extraBufferCapacity = 10, onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     val events = _events.asSharedFlow()
 
@@ -581,6 +552,10 @@ abstract class MainViewModel(
         _blockMapsForAdditionalWork.value = true
     }
 
+    protected fun openAdditionalWorkDialog() {
+        emitEvent(MainEvent.OpenAdditionalWorkDialog)
+    }
+
     private var planBudgetPollingJob: Job? = null
     private var loadingUnloading: TablesLoadingUnloading = TablesLoadingUnloading()
 
@@ -590,27 +565,66 @@ abstract class MainViewModel(
         observeSourcesForItems()
     }
 
+    data class AdditionalEarningsDialogState(
+        val wpList: List<WpDataDB>
+    )
+
+    private val _additionalEarningsIncoming =
+        MutableSharedFlow<List<WpDataDB>>(extraBufferCapacity = 1)
+    val additionalEarningsIncoming: SharedFlow<List<WpDataDB>> =
+        _additionalEarningsIncoming.asSharedFlow()
+
+    private val _additionalEarningsDialogState =
+        MutableStateFlow<AdditionalEarningsDialogState?>(null)
+    val additionalEarningsDialogState: StateFlow<AdditionalEarningsDialogState?> =
+        _additionalEarningsDialogState.asStateFlow()
+
+    fun sendAdditionalEarnings(wpList: List<WpDataDB>) {
+        if (wpList.isEmpty()) return
+        _additionalEarningsIncoming.tryEmit(wpList.toList())
+    }
+
+    open fun onMapContextMenuRequest(
+        raw: DataObjectUI,
+        origin: LaunchOrigin? = null
+    ) {
+        // default no-op
+    }
+
+    fun showAdditionalEarningsDialog(wpList: List<WpDataDB>) {
+        if (wpList.isEmpty()) return
+        _additionalEarningsDialogState.value = AdditionalEarningsDialogState(
+            wpList = wpList.toList()
+        )
+    }
+
+    fun clearAdditionalEarningsDialog() {
+        _additionalEarningsDialogState.value = null
+    }
+
+
     fun startPlanBudgetPollingSecond(wpDataAdditional: List<WPDataAdditional>) {
         viewModelScope.launch(Dispatchers.IO) {
             tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(
-                context as Activity,
-                wpDataAdditional
+                context as Activity, wpDataAdditional
             ) {
                 updateContent()
             }
         }
     }
 
+    protected fun openSortingDialog() {
+        emitEvent(MainEvent.OpenSortingDialog)
+        Log.e("!!!!!!!!!!!","---------------------")
+    }
 
     private fun loadPreferences() {
         _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
         val savedDistance = sharedPreferences.getFloat(APP_OFFSET_DISTANCE_METERS, 0f)
         if (savedDistance == 0f) {
-            val dossierSotrSDBList =
-                RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
-            val sotrudnikDistance =
-                (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
-                    .let { if (it == 0f || it == 1f) 3000f else it }
+            val dossierSotrSDBList = RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
+            val sotrudnikDistance = (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat()
+                ?: 3000f).let { if (it == 0f || it == 1f) 3000f else it }
             _offsetDistanceMeters.value = sotrudnikDistance
         } else {
             _offsetDistanceMeters.value = savedDistance
@@ -621,16 +635,10 @@ abstract class MainViewModel(
     private fun observeSourcesForItems() {
         viewModelScope.launch {
             combine(
-                _uiState,
-                _rangeDataStart,
-                _rangeDataEnd,
-                _offsetDistanceMeters
+                _uiState, _rangeDataStart, _rangeDataEnd, _offsetDistanceMeters
             ) { uiState, start, end, distance ->
                 RecomputeParams(
-                    uiState = uiState,
-                    rangeStart = start,
-                    rangeEnd = end,
-                    distanceMeters = distance
+                    uiState = uiState, rangeStart = start, rangeEnd = end, distanceMeters = distance
                 )
             }.collectLatest { params ->
                 recomputeDataItems(
@@ -651,8 +659,7 @@ abstract class MainViewModel(
     )
 
     private fun restoreSelected(
-        items: List<DataItemUI>,
-        selectedIds: Set<Long>
+        items: List<DataItemUI>, selectedIds: Set<Long>
     ): List<DataItemUI> {
         return items.map { item ->
             val isSelected = item.rawObj.any { raw ->
@@ -663,10 +670,7 @@ abstract class MainViewModel(
     }
 
     private suspend fun recomputeDataItems(
-        uiState: StateUI,
-        rangeStart: LocalDate?,
-        rangeEnd: LocalDate?,
-        distanceMeters: Float
+        uiState: StateUI, rangeStart: LocalDate?, rangeEnd: LocalDate?, distanceMeters: Float
     ) {
         val selectedIdsSnapshot = ScrollDataHolder.instance().getAllSnapshot()
 
@@ -675,8 +679,7 @@ abstract class MainViewModel(
             val footer = uiState.itemsFooter
 
             val restoredSourceItems = restoreSelected(
-                items = uiState.items,
-                selectedIds = selectedIdsSnapshot
+                items = uiState.items, selectedIds = selectedIdsSnapshot
             )
 
             val result: FilterAndSortResult = try {
@@ -691,9 +694,7 @@ abstract class MainViewModel(
                 )
             } catch (e: Throwable) {
                 Globals.writeToMLOG(
-                    "ERROR",
-                    "MainViewModel.recomputeDataItems",
-                    "filterAndSortDataItems failed: $e"
+                    "ERROR", "MainViewModel.recomputeDataItems", "filterAndSortDataItems failed: $e"
                 )
                 FilterAndSortResult(
                     items = emptyList(),
@@ -756,9 +757,9 @@ abstract class MainViewModel(
                     hideFields = uiState.value.settingsItems.filter { !it.isEnabled }
                         .map { it.key },
                     sortFields = uiState.value.sortingFields.filter { it.key != null }
-                        .map { it.copy(title = null) }
-                ),
-                contextUI)
+                        .map { it.copy(title = null) }),
+                contextUI
+            )
         }
     }
 
@@ -781,8 +782,7 @@ abstract class MainViewModel(
                 if (position < newSortingFields.size) newSortingFields[position] = it
                 else newSortingFields.add(position, it)
             } ?: run {
-                if (position < newSortingFields.size) newSortingFields[position] =
-                    SortingField()
+                if (position < newSortingFields.size) newSortingFields[position] = SortingField()
             }
             _uiState.update {
                 it.copy(
@@ -800,8 +800,7 @@ abstract class MainViewModel(
                 if (position < newGroupingFields.size) newGroupingFields[position] = it
                 else newGroupingFields.add(position, it)
             } ?: run {
-                if (position < newGroupingFields.size) newGroupingFields[position] =
-                    GroupingField()
+                if (position < newGroupingFields.size) newGroupingFields[position] = GroupingField()
             }
             _uiState.update {
                 it.copy(
@@ -831,9 +830,8 @@ abstract class MainViewModel(
             val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
 
             // 2) Дефолтные ключи группировки
-            val defaultGroupKeys: List<String> = getDefaultGroupUserFields()
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
+            val defaultGroupKeys: List<String> =
+                getDefaultGroupUserFields().map { it.trim() }.filter { it.isNotEmpty() }
 
             // 3) Есть ли вообще сохранённые сортировки у пользователя в БД?
             val hasUserSorting: Boolean = repository.hasUserSorting(table, contextUI)
@@ -849,9 +847,12 @@ abstract class MainViewModel(
                     // 👆 Только если НЕТ пользовательских сортировок (первый запуск)
                     sortingFieldsFromRepo.map { sf ->
                         val k = sf.key
-                        if (!k.isNullOrBlank() &&
-                            defaultGroupKeys.any { def -> def.equals(k, ignoreCase = true) }
-                        ) {
+                        if (!k.isNullOrBlank() && defaultGroupKeys.any { def ->
+                                def.equals(
+                                    k,
+                                    ignoreCase = true
+                                )
+                            }) {
                             sf.copy(group = true)
                         } else {
                             sf
@@ -863,31 +864,28 @@ abstract class MainViewModel(
                 }
 
             // дальше твой код без изменений
-            val groupingFields: List<GroupingField> = sortingFields
-                .mapIndexedNotNull { index, sf ->
-                    sf.takeIf { it.group && !it.key.isNullOrBlank() }?.let {
-                        GroupingField(
-                            key = it.key!!,
-                            title = it.title,
-                            priority = index,
-                            collapsedByDefault = true
-                        )
-                    }
+            val groupingFields: List<GroupingField> = sortingFields.mapIndexedNotNull { index, sf ->
+                sf.takeIf { it.group && !it.key.isNullOrBlank() }?.let {
+                    GroupingField(
+                        key = it.key!!,
+                        title = it.title,
+                        priority = index,
+                        collapsedByDefault = true
+                    )
                 }
+            }
 
             updateFilters()
 
-            val groupingKeys: List<String> = sortingFields
-                .filter { it.group && !it.key.isNullOrBlank() }
-                .map { it.key!! }
+            val groupingKeys: List<String> =
+                sortingFields.filter { it.group && !it.key.isNullOrBlank() }.map { it.key!! }
 
             _uiState.update { old ->
                 val titleResolved = title?.split(",")?.map { it.trim() }?.let {
                     it[0].toIntOrNull()?.let { intRes ->
                         context?.let { cont ->
                             getTranslateString(
-                                cont.getString(intRes),
-                                it[1].toLongOrNull()
+                                cont.getString(intRes), it[1].toLongOrNull()
                             )
                         }
                     }
@@ -901,14 +899,13 @@ abstract class MainViewModel(
                     addAll(old.itemsFooter.filter { it.selected }.map { it.stableId })
                 }
 
-                val dataWithRestoredSelected =
-                    if (selectedIds.isEmpty()) {
-                        dataItemUIS
-                    } else {
-                        dataItemUIS.map { item ->
-                            item.copy(selected = item.stableId in selectedIds)
-                        }
+                val dataWithRestoredSelected = if (selectedIds.isEmpty()) {
+                    dataItemUIS
+                } else {
+                    dataItemUIS.map { item ->
+                        item.copy(selected = item.stableId in selectedIds)
                     }
+                }
 
                 val selectedMode = old.filters?.selectedMode ?: SelectedMode.ALL
                 val shouldApply = (modeUI == ModeUI.FILTER_SELECT || modeUI == ModeUI.MULTI_SELECT)
@@ -918,10 +915,8 @@ abstract class MainViewModel(
                 } else {
                     when (selectedMode) {
                         SelectedMode.ALL -> dataWithRestoredSelected
-                        SelectedMode.ONLY_SELECTED -> dataWithRestoredSelected
-                            .filter { it.selected }
-                            .takeIf { it.isNotEmpty() }
-                            ?: dataWithRestoredSelected
+                        SelectedMode.ONLY_SELECTED -> dataWithRestoredSelected.filter { it.selected }
+                            .takeIf { it.isNotEmpty() } ?: dataWithRestoredSelected
 
                         SelectedMode.ONLY_UNSELECTED -> dataWithRestoredSelected.filter { !it.selected }
                     }
@@ -935,8 +930,7 @@ abstract class MainViewModel(
                 }
 
                 android.util.Log.e(
-                    "TEST_BAG1",
-                    "value ${RoomManager.SQL_DB.siteObjectsDao().all.size}"
+                    "TEST_BAG1", "value ${RoomManager.SQL_DB.siteObjectsDao().all.size}"
                 )
 
                 finalItems.forEach {
@@ -986,8 +980,7 @@ abstract class MainViewModel(
 //        viewModelScope.launch {
         _uiState.update {
             it.copy(
-                filters = filter,
-                lastUpdate = System.currentTimeMillis()
+                filters = filter, lastUpdate = System.currentTimeMillis()
             )
         }
 //        }
@@ -997,60 +990,57 @@ abstract class MainViewModel(
         val set = ids.toSet()
         if (set.isEmpty()) return
 
+        if (modeUI == ModeUI.DEFAULT) modeUI = ModeUI.FILTER_SELECT
+
         viewModelScope.launch {
             val holder = ScrollDataHolder.instance()
 
-            if (contextUI == ContextUI.WP_DATA_IN_CONTAINER)
-                if (modeUI == ModeUI.ONE_SELECT) {
-                    if (checked) {
-                        holder.setIds(listOf(set.first()))
-                    } else {
-                        holder.removeIds(set)
-                    }
+            if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) if (modeUI == ModeUI.ONE_SELECT) {
+                if (checked) {
+                    holder.setIds(listOf(set.first()))
                 } else {
-                    if (checked) {
-                        holder.addIds(set)
-                    } else {
-                        holder.removeIds(set)
-                    }
+                    holder.removeIds(set)
                 }
-            else
-                if (modeUI == ModeUI.ONE_SELECT) {
-                    if (checked) {
-                        holder.setIdsWithOutNotif(listOf(set.first()))
-                    } else {
-                        holder.removeIdsWithOutNotif(set)
-                    }
+            } else {
+                if (checked) {
+                    holder.addIds(set)
                 } else {
-                    if (checked) {
-                        holder.addIdsWithOutNotif(set)
+                    holder.removeIds(set)
+                }
+            }
+            else if (modeUI == ModeUI.ONE_SELECT) {
+                if (checked) {
+                    holder.setIdsWithOutNotif(listOf(set.first()))
+                } else {
+                    holder.removeIdsWithOutNotif(set)
+                }
+            } else {
+                if (checked) {
+                    holder.addIdsWithOutNotif(set)
 
-                    } else {
-                        holder.removeIdsWithOutNotif(set)
-                    }
+                } else {
+                    holder.removeIdsWithOutNotif(set)
                 }
+            }
 
             _uiState.update { state ->
                 state.copy(
                     itemsHeader = state.itemsHeader.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId in set) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId in set) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                     items = state.items.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId in set) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId in set) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                     itemsFooter = state.itemsFooter.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId in set) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId in set) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                 )
@@ -1060,6 +1050,7 @@ abstract class MainViewModel(
 
     fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {
         val targetId = itemUI.stableId ?: return
+        if (modeUI == ModeUI.DEFAULT) modeUI = ModeUI.FILTER_SELECT
 
         viewModelScope.launch {
             val holder = ScrollDataHolder.instance()
@@ -1078,42 +1069,38 @@ abstract class MainViewModel(
                         holder.removeId(targetId)
                     }
                 }
-            else
-                if (modeUI == ModeUI.ONE_SELECT) {
-                    if (checked) {
-                        holder.setIdsWithOutNotif(listOf(targetId))
-                    } else {
-                        holder.removeIdWithOutNotif(targetId)
-                    }
+            else if (modeUI == ModeUI.ONE_SELECT) {
+                if (checked) {
+                    holder.setIdsWithOutNotif(listOf(targetId))
                 } else {
-                    if (checked) {
-                        holder.addIdWithOutNotif(targetId)
-                    } else {
-                        holder.removeIdWithOutNotif(targetId)
-                    }
+                    holder.removeIdWithOutNotif(targetId)
                 }
+            } else {
+                if (checked) {
+                    holder.addIdWithOutNotif(targetId)
+                } else {
+                    holder.removeIdWithOutNotif(targetId)
+                }
+            }
 
             _uiState.update { state ->
                 state.copy(
                     itemsHeader = state.itemsHeader.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId == targetId) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId == targetId) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                     items = state.items.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId == targetId) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId == targetId) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                     itemsFooter = state.itemsFooter.map { old ->
                         old.copy(
-                            selected =
-                                if (old.stableId == targetId) checked
-                                else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
+                            selected = if (old.stableId == targetId) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else old.selected
                         )
                     },
                 )
@@ -1128,6 +1115,21 @@ abstract class MainViewModel(
         }
     }
 
+    fun setAllDecksExpanded(expand: Boolean) {
+        _uiState.update { state ->
+            val nextVersion = (state.deckExpandCommand?.version ?: 0L) + 1L
+            state.copy(
+                deckExpandCommand = DeckExpandCommand(
+                    expand = expand, version = nextVersion
+                )
+            )
+        }
+    }
+
+    fun collapseAllDecks() = setAllDecksExpanded(false)
+
+    fun expandAllDecks() = setAllDecksExpanded(true)
+
     fun selectOnlyItemsByStableIds(stableIds: List<Long>) {
         modeUI = ModeUI.FILTER_SELECT
 
@@ -1137,8 +1139,7 @@ abstract class MainViewModel(
             state.copy(
                 items = state.items.map { item ->
                     item.copy(selected = item.stableId in ids)
-                },
-                filters = (state.filters ?: Filters()).copy(
+                }, filters = (state.filters ?: Filters()).copy(
                     selectedMode = SelectedMode.ONLY_SELECTED
                 )
             )
@@ -1156,16 +1157,14 @@ abstract class MainViewModel(
     fun highlightByAddrId(addrId: String, color: Color) {
         val target = addrId.trim()
         highlightWhere(
-            predicate = { it.addrIdOrNull() == target },
-            color = color
+            predicate = { it.addrIdOrNull() == target }, color = color
         )
     }
 
     /** Подкрасить элемент по ID */
     fun highlightBId(id: Long, color: Color) {
         highlightWhere(
-            predicate = { it.stableId == id },
-            color = color
+            predicate = { it.stableId == id }, color = color
         )
     }
 
@@ -1177,23 +1176,15 @@ abstract class MainViewModel(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
 
-                        cancelText = "Скасувати",
-                        message = String.format(
-                            "Виконати поточну роботу\n" +
-                                    "<font color='gray'>Відвідування від</font> %s\n" +
-                                    "<br><font color='gray'>Клієнт:</font> %s\n" +
-                                    "<br><font color='gray'>Адреса:</font> %s\n" +
-                                    "<br><font color='gray'>Премія (план):</font> %s грн.\n" +
-                                    "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\n" +
-                                    "<br><font color='gray'>Середній час роботи:</font> %s хв\n",
+                        cancelText = "Скасувати", message = String.format(
+                            "Виконати поточну роботу\n" + "<font color='gray'>Відвідування від</font> %s\n" + "<br><font color='gray'>Клієнт:</font> %s\n" + "<br><font color='gray'>Адреса:</font> %s\n" + "<br><font color='gray'>Премія (план):</font> %s грн.\n" + "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s\n" + "<br><font color='gray'>Середній час роботи:</font> %s хв\n",
                             Clock.getHumanTime_dd_MMMM(wp.dt.time),
                             wp.client_txt,
                             wp.addr_txt,
                             wp.cash_ispolnitel,
                             wp.sku,
                             wp.duration
-                        ),
-                        status = DialogStatus.NORMAL
+                        ), status = DialogStatus.NORMAL
                     )
                 )
             )
@@ -1207,14 +1198,11 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Виконувати всі роботи цього клієнта за цією адресою\n" +
-                                "<font color='gray'>Посещение от</font> ${
-                                    Clock.getHumanTime_dd_MMMM(
-                                        wp.dt.time
-                                    )
-                                }" +
-                                "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" +
-                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        message = "Виконувати всі роботи цього клієнта за цією адресою\n" + "<font color='gray'>Посещение от</font> ${
+                            Clock.getHumanTime_dd_MMMM(
+                                wp.dt.time
+                            )
+                        }" + "\n<font color='gray'>Клиент:</font> ${wp.client_txt}" + "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
                         status = DialogStatus.NORMAL
                     )
                 )
@@ -1229,19 +1217,15 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Виконати поточні роботи за сьогодні\n" +
-                                "<font color='gray'>Посещение от</font> ${
-                                    Clock.getHumanTime_dd_MMMM(
-                                        wp.dt.time
-                                    )
-                                }" +
-                                "\n<font color='gray'>Клиенты:</font> ${
-                                    WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
-                                        wp.addr_id,
-                                        wp.dt
-                                    ).toString().removeSurrounding("[", "]")
-                                }" +
-                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        message = "Виконати поточні роботи за сьогодні\n" + "<font color='gray'>Посещение от</font> ${
+                            Clock.getHumanTime_dd_MMMM(
+                                wp.dt.time
+                            )
+                        }" + "\n<font color='gray'>Клиенты:</font> ${
+                            WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+                                wp.addr_id, wp.dt
+                            ).toString().removeSurrounding("[", "]")
+                        }" + "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
                         status = DialogStatus.NORMAL
                     )
                 )
@@ -1256,18 +1240,15 @@ abstract class MainViewModel(
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
-                        message = "Виконувати всі роботи доступні за цією адресою\n" +
-                                "<font color='gray'>Посещение от</font> ${
-                                    Clock.getHumanTime_dd_MMMM(
-                                        wp.dt.time
-                                    )
-                                }" +
-                                "\n<font color='gray'>Клиенты:</font> ${
-                                    WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
-                                        wp.addr_id
-                                    ).toString().removeSurrounding("[", "]")
-                                }" +
-                                "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
+                        message = "Виконувати всі роботи доступні за цією адресою\n" + "<font color='gray'>Посещение от</font> ${
+                            Clock.getHumanTime_dd_MMMM(
+                                wp.dt.time
+                            )
+                        }" + "\n<font color='gray'>Клиенты:</font> ${
+                            WPDataAdditionalFactory.getUniqueClientIdsForAddr_TXT(
+                                wp.addr_id
+                            ).toString().removeSurrounding("[", "]")
+                        }" + "\n<font color='gray'>Адрес:</font> ${wp.addr_txt}",
                         status = DialogStatus.NORMAL
                     )
                 )
@@ -1295,100 +1276,86 @@ abstract class MainViewModel(
     private fun doAcceptAllClientOneAddressInfinite(wp: WpDataDB) {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
-        val d = dao.getByAddr(wp.addr_id)
-            .subscribeOn(Schedulers.io())
-            .flatMap { list ->
-                if (list.isEmpty()) {
+        val d = dao.getByAddr(wp.addr_id).subscribeOn(Schedulers.io()).flatMap { list ->
+            if (list.isEmpty()) {
 //                    ###############
 //                    поменять на всех клиентов. В цикле перебрать по адресам
-                    dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressInfinite(wp))
-                        .andThen(Single.just(true))
-                } else Single.just(false)
-            }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { inserted ->
-                    pending = null
-                    viewModelScope.launch {
-                        // временный костыль
-                        tablesLoadingUnloading.uploadPlanBudget()
+                dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressInfinite(wp))
+                    .andThen(Single.just(true))
+            } else Single.just(false)
+        }.observeOn(AndroidSchedulers.mainThread()).subscribe({ inserted ->
+            pending = null
+            viewModelScope.launch {
+                // временный костыль
+                tablesLoadingUnloading.uploadPlanBudget()
 
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
-                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
-                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
-                                )
-                            )
+                _events.emit(
+                    MainEvent.ShowMessageDialog(
+                        MessageDialogData(
+                            message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                            else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                            status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
                         )
-                    }
-                },
-                { e ->
-                    pending = null
-                    viewModelScope.launch {
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
-                                    status = DialogStatus.ALERT,
-                                    positivText = "Синхронизация"
-                                )
-                            )
+                    )
+                )
+            }
+        }, { e ->
+            pending = null
+            viewModelScope.launch {
+                _events.emit(
+                    MainEvent.ShowMessageDialog(
+                        MessageDialogData(
+                            message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                            status = DialogStatus.ALERT,
+                            positivText = "Синхронизация"
                         )
-                    }
-                }
-            )
+                    )
+                )
+            }
+        })
         disposables.add(d)
     }
 
     private fun doAcceptAllClientOneAddressOneTime(wp: WpDataDB) {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
-        val d = dao.getByAddr(wp.addr_id)
-            .subscribeOn(Schedulers.io())
-            .flatMap { list ->
-                if (list.isEmpty()) {
+        val d = dao.getByAddr(wp.addr_id).subscribeOn(Schedulers.io()).flatMap { list ->
+            if (list.isEmpty()) {
 //                    ###############
 //                    поменять на всех клиентов. В цикле перебрать по адресам
-                    dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressOneTime(wp))
-                        .andThen(Single.just(true))
-                } else Single.just(false)
-            }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { inserted ->
-                    pending = null
-                    viewModelScope.launch {
-                        // временный костыль
-                        tablesLoadingUnloading.uploadPlanBudget()
+                dao.insertAll(WPDataAdditionalFactory.withAllClientForAddressOneTime(wp))
+                    .andThen(Single.just(true))
+            } else Single.just(false)
+        }.observeOn(AndroidSchedulers.mainThread()).subscribe({ inserted ->
+            pending = null
+            viewModelScope.launch {
+                // временный костыль
+                tablesLoadingUnloading.uploadPlanBudget()
 
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-                                    message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
-                                    else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
-                                    status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
-                                )
-                            )
+                _events.emit(
+                    MainEvent.ShowMessageDialog(
+                        MessageDialogData(
+                            message = if (inserted) "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ"
+                            else "Запрос на работы по этому посещению уже подан, как только куратор даст ответ вы получите уведомление",
+                            status = if (inserted) DialogStatus.NORMAL else DialogStatus.ALERT
                         )
-                    }
-                },
-                { e ->
-                    pending = null
-                    viewModelScope.launch {
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-                                    message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
-                                    status = DialogStatus.ALERT,
-                                    positivText = "Синхронизация"
-                                )
-                            )
+                    )
+                )
+            }
+        }, { e ->
+            pending = null
+            viewModelScope.launch {
+                _events.emit(
+                    MainEvent.ShowMessageDialog(
+                        MessageDialogData(
+                            message = "Ваша заявка создана, однако, для того чтобы ее подтвердить выполните обмен с сервером",
+                            status = DialogStatus.ALERT,
+                            positivText = "Синхронизация"
                         )
-                    }
-                }
-            )
+                    )
+                )
+            }
+        })
         disposables.add(d)
     }
 
@@ -1400,13 +1367,10 @@ abstract class MainViewModel(
         val uniqueWpList = wpList.distinctBy { it.code_dad2 }
         val dad2List = uniqueWpList.map { it.code_dad2 }
 
-        val d = dao.getByCodeDad2List(dad2List)
-            .subscribeOn(Schedulers.io())
+        val d = dao.getByCodeDad2List(dad2List).subscribeOn(Schedulers.io())
             .flatMapCompletable { existingList ->
 
-                val existingDad2Set = existingList
-                    .map { it.codeDad2 }
-                    .toSet()
+                val existingDad2Set = existingList.map { it.codeDad2 }.toSet()
 
                 val alreadySubmitted = mutableListOf<WpDataDB>()
                 val toInsert = mutableListOf<WPDataAdditional>()
@@ -1415,118 +1379,104 @@ abstract class MainViewModel(
                     if (wp.code_dad2 in existingDad2Set) {
                         alreadySubmitted.add(wp)
                     } else {
-                        if (forever)
-                            toInsert.add(WPDataAdditionalFactory.blankWithDad2Forever(wp))
-                        else
-                            toInsert.add(WPDataAdditionalFactory.blankWithDad2Now(wp))
+                        if (forever) toInsert.add(WPDataAdditionalFactory.blankWithDad2Forever(wp))
+                        else toInsert.add(WPDataAdditionalFactory.blankWithDad2Now(wp))
                     }
                 }
 
-                val insertCompletable =
-                    if (toInsert.isNotEmpty()) {
-                        dao.insertAll(toInsert)
-                    } else {
-                        Completable.complete()
-                    }
+                val insertCompletable = if (toInsert.isNotEmpty()) {
+                    dao.insertAll(toInsert)
+                } else {
+                    Completable.complete()
+                }
 
-                insertCompletable
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnComplete {
-                        pending = null
+                insertCompletable.observeOn(AndroidSchedulers.mainThread()).doOnComplete {
+                    pending = null
 
-                        val createdText = if (toInsert.isNotEmpty()) {
-                            buildString {
-                                append("Створено заявок: ${toInsert.size}")
+                    val createdText = if (toInsert.isNotEmpty()) {
+                        buildString {
+                            append("Створено заявок: ${toInsert.size}")
 //                                append(
 //                                    toInsert.joinToString("\n") { it.codeDad2.toString() }
 //                                )
-                            }
-                        } else {
-                            ""
                         }
+                    } else {
+                        ""
+                    }
 
-                        val alreadyText = if (alreadySubmitted.isNotEmpty()) {
-                            buildString {
-                                val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
-                                if (isNotEmpty()) append("\n")
-                                append("Заявки вже були подані раніше для відвідувань:</b>")
-                                append(
-                                    alreadySubmitted.joinToString("</b>") { "${formatter.format(it.dt)} ${it.client_txt}," }
+                    val alreadyText = if (alreadySubmitted.isNotEmpty()) {
+                        buildString {
+                            val formatter = SimpleDateFormat("dd MMM", Locale.getDefault())
+                            if (isNotEmpty()) append("\n")
+                            append("Заявки вже були подані раніше для відвідувань:</b>")
+                            append(
+                                alreadySubmitted.joinToString("</b>") { "${formatter.format(it.dt)} ${it.client_txt}," })
+                        }
+                    } else {
+                        ""
+                    }
+
+                    val message = when {
+                        createdText.isNotBlank() && alreadyText.isNotBlank() -> createdText + alreadyText
+
+                        createdText.isNotBlank() -> createdText
+
+                        alreadyText.isNotBlank() -> alreadyText.trim()
+
+                        else -> "Немає даних для обробки"
+                    }
+
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    subTitle = "Результат обробки",
+                                    message = message,
+                                    status = if (toInsert.isNotEmpty()) DialogStatus.NORMAL else DialogStatus.ALERT
                                 )
-                            }
-                        } else {
-                            ""
-                        }
+                            )
+                        )
+                    }
 
-                        val message = when {
-                            createdText.isNotBlank() && alreadyText.isNotBlank() ->
-                                createdText + alreadyText
-
-                            createdText.isNotBlank() ->
-                                createdText
-
-                            alreadyText.isNotBlank() ->
-                                alreadyText.trim()
-
-                            else ->
-                                "Немає даних для обробки"
-                        }
-
+                    // если есть хотя бы одна новая заявка — можно запускать обмен
+                    if (toInsert.isNotEmpty()) {
                         viewModelScope.launch {
                             _events.emit(
-                                MainEvent.ShowMessageDialog(
-                                    MessageDialogData(
-                                        subTitle = "Результат обробки",
-                                        message = message,
-                                        status = if (toInsert.isNotEmpty()) DialogStatus.NORMAL else DialogStatus.ALERT
-                                    )
+                                MainEvent.ShowLoading(
+                                    "Чекаємо на відповідь від сервера", 28_700L
                                 )
                             )
                         }
 
-                        // если есть хотя бы одна новая заявка — можно запускать обмен
-                        if (toInsert.isNotEmpty()) {
-                            viewModelScope.launch {
-                                _events.emit(
-                                    MainEvent.ShowLoading(
-                                        "Чекаємо на відповідь від сервера",
-                                        28_700L
-                                    )
-                                )
-                            }
+                        val uploadDisp = tablesLoadingUnloading.uploadPlanBudgetRx()
+                            .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread()).subscribe({
 
-                            val uploadDisp = tablesLoadingUnloading
-                                .uploadPlanBudgetRx()
-                                .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(
-                                    {
+                                // здесь уже можно либо ждать по каждому dad2,
+                                // либо сделать отдельную функцию waitDecisionByDad2List(...)
 
-                                        // здесь уже можно либо ждать по каждому dad2,
-                                        // либо сделать отдельную функцию waitDecisionByDad2List(...)
-
-                                        viewModelScope.launch {
-                                            val dad2ListFromResult = it.dad2List
+                                viewModelScope.launch {
+                                    val dad2ListFromResult = it.dad2List
 //                                            val result = waitDecisionByLisgtDad2(dad2List, timeoutMs = 28_700L)
-                                            _events.emit(MainEvent.LoadingCompleted)
+                                    _events.emit(MainEvent.LoadingCompleted)
 //                                            when (result) {
 //                                                DecisionResult.APPROVED -> {
 //                                                    _events.emit(MainEvent.LoadingCompleted)
 //                                                    // если нужно — можно короткий toast/snack без диалога
-                                            if (dad2List.isNotEmpty()) {
-                                                val wpDataAdditional = withContext(Dispatchers.IO) {
-                                                    RoomManager.SQL_DB.wpDataAdditionalDao()
-                                                        .getByCodeDad2ListSync(dad2List)
-                                                }
+                                    if (dad2List.isNotEmpty()) {
+                                        val wpDataAdditional = withContext(Dispatchers.IO) {
+                                            RoomManager.SQL_DB.wpDataAdditionalDao()
+                                                .getByCodeDad2ListSync(dad2List)
+                                        }
 //
-                                                context?.let {
-                                                    startPlanBudgetPollingSecond(
-                                                        wpDataAdditional
-                                                    )
-                                                }
+                                        context?.let {
+                                            startPlanBudgetPollingSecond(
+                                                wpDataAdditional
+                                            )
+                                        }
 //                                                }
-                                            }
+                                    }
 //
 //                                                DecisionResult.DECLINED -> {
 //                                                    _events.emit(MainEvent.LoadingCanceled)
@@ -1540,49 +1490,43 @@ abstract class MainViewModel(
 //                                                    // _events.emit(MainEvent.ShowMessageDialog(...))
 //                                                }
 //                                            }
-                                        }
+                                }
 
-                                    },
-                                    {
-                                        viewModelScope.launch {
-                                            _events.emit(MainEvent.LoadingCanceled)
-                                            _events.emit(
-                                                MainEvent.ShowMessageDialog(
-                                                    MessageDialogData(
-                                                        subTitle = "Створено та збережено ${toInsert.size} заявок",
-                                                        message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
-                                                        status = DialogStatus.ALERT,
-                                                        positivText = "Ok"
-                                                    )
-                                                )
+                            }, {
+                                viewModelScope.launch {
+                                    _events.emit(MainEvent.LoadingCanceled)
+                                    _events.emit(
+                                        MainEvent.ShowMessageDialog(
+                                            MessageDialogData(
+                                                subTitle = "Створено та збережено ${toInsert.size} заявок",
+                                                message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
+                                                status = DialogStatus.ALERT,
+                                                positivText = "Ok"
                                             )
-                                        }
-                                    }
-                                )
+                                        )
+                                    )
+                                }
+                            })
 
-                            disposables.add(uploadDisp)
-                        }
-                    }
-            }
-            .subscribe(
-                {
-                    // success already handled in doOnComplete
-                },
-                {
-                    pending = null
-                    viewModelScope.launch {
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-//                                    message = "Помилка при створенні заявок",
-                                    message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
-                                    status = DialogStatus.ALERT
-                                )
-                            )
-                        )
+                        disposables.add(uploadDisp)
                     }
                 }
-            )
+            }.subscribe({
+                // success already handled in doOnComplete
+            }, {
+                pending = null
+                viewModelScope.launch {
+                    _events.emit(
+                        MainEvent.ShowMessageDialog(
+                            MessageDialogData(
+//                                    message = "Помилка при створенні заявок",
+                                message = "Заявка на выполнение работ создана и передана куратору, в течении нескольких минут вы получите ответ. Если ответ будет положительный это посещение будет перенесено в план работ",
+                                status = DialogStatus.ALERT
+                            )
+                        )
+                    )
+                }
+            })
 
         disposables.add(d)
     }
@@ -1614,8 +1558,7 @@ abstract class MainViewModel(
                                     }
                                 }
                             }
-                        }
-                    )
+                        })
                 )
             )
         }
@@ -1629,8 +1572,7 @@ abstract class MainViewModel(
                     MessageDialogData(
                         subTitle = "Створено та збережено ${wpList.size} заявок",
                         message = String.format(
-                            "Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s " +
-                                    "<br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
+                            "Для того щоб сервер міг опрацювати (підтвердити) ваші замовлення, вам необхідно %s " + "<br>Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат",
                             "знайти місце з кращiм інтернет з'єднанням, і <a href=\"app://update\">виконати синхронiзацiю</a>. "
                         ),
                         status = DialogStatus.ALERT,
@@ -1645,46 +1587,35 @@ abstract class MainViewModel(
                             Handler(Looper.getMainLooper()).postDelayed(
                                 {
                                     progress.onCompleted()
-                                    MessageDialogBuilder(context as Activity)
-                                        .setTitle("Відсутнє інтернет з'єднання")
-                                        .setStatus(DialogStatus.ERROR)
-                                        .setMessage(
+                                    MessageDialogBuilder(context as Activity).setTitle("Відсутнє інтернет з'єднання")
+                                        .setStatus(DialogStatus.ERROR).setMessage(
                                             """
         Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу.
         """.trimIndent()
-                                        )
-                                        .setOnCancelAction { }
-                                        .setOnConfirmAction("Повторити") {
+                                        ).setOnCancelAction { }.setOnConfirmAction("Повторити") {
                                             val progress = ProgressViewModel(0)
                                             val loadingDialog = LoadingDialogWithPercent(
-                                                context as Activity,
-                                                progress
+                                                context as Activity, progress
                                             )
                                             loadingDialog.show()
                                             progress.onNextEvent("Перевірка зв'язку", 1000)
                                             Handler(Looper.getMainLooper()).postDelayed(
                                                 {
                                                     progress.onCompleted()
-                                                    MessageDialogBuilder(context as Activity)
-                                                        .setTitle("Відсутнє інтернет з'єднання")
-                                                        .setStatus(DialogStatus.ERROR)
-                                                        .setMessage(
-                                                            """
+                                                    MessageDialogBuilder(context as Activity).setTitle(
+                                                        "Відсутнє інтернет з'єднання"
+                                                    ).setStatus(DialogStatus.ERROR).setMessage(
+                                                        """
         Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу.
         """.trimIndent()
-                                                        )
-                                                        .setOnCancelAction { Unit }
+                                                    ).setOnCancelAction { Unit }
                                                         .setOnConfirmAction("Повторити") {
 
-                                                        }
-                                                        .show()
-                                                },
-                                                500
+                                                        }.show()
+                                                }, 500
                                             )
-                                        }
-                                        .show()
-                                },
-                                4500
+                                        }.show()
+                                }, 4500
                             )
                         },
                         onTextLinkClick = { url ->
@@ -1696,13 +1627,11 @@ abstract class MainViewModel(
                                     loadingDialog.show()
                                     progress.onNextEvent("Виконую синхронiзацiю", 12000)
                                     Handler(Looper.getMainLooper()).postDelayed(
-                                        { progress.onCompleted() },
-                                        500
+                                        { progress.onCompleted() }, 500
                                     )
                                 }
                             }
-                        }
-                    )
+                        })
                 )
             )
         }
@@ -1715,8 +1644,7 @@ abstract class MainViewModel(
     }
 
     fun showServerIssueDialog(
-        wpList: List<WpDataDB>,
-        scenario: ServerIssueScenario
+        wpList: List<WpDataDB>, scenario: ServerIssueScenario
     ) {
         val config = buildServerIssueConfig(scenario)
 
@@ -1749,19 +1677,16 @@ abstract class MainViewModel(
                     positiveText = "Повторити спробу",
                     onPositiveClick = {
                         runConnectionAttemptT(
-                            loadingText = "Перевірка зв'язку",
-                            loadingDelay = 850L
+                            loadingText = "Перевірка зв'язку", loadingDelay = 850L
                         )
                     },
                     onTextLinkClick = { url ->
                         if (url == "app://update") {
                             runConnectionAttempt(
-                                loadingText = "Виконую синхронiзацiю",
-                                loadingDelay = 400L
+                                loadingText = "Виконую синхронiзацiю", loadingDelay = 400L
                             )
                         }
-                    }
-                )
+                    })
             }
 
             ServerIssueScenario.WEAK_CONNECTION -> {
@@ -1770,19 +1695,16 @@ abstract class MainViewModel(
                     positiveText = "Повторити спробу",
                     onPositiveClick = {
                         runConnectionAttemptT(
-                            loadingText = "Перевірка зв'язку",
-                            loadingDelay = 800L
+                            loadingText = "Перевірка зв'язку", loadingDelay = 800L
                         )
                     },
                     onTextLinkClick = { url ->
                         if (url == "app://update") {
                             runConnectionAttempt(
-                                loadingText = "Виконую синхронiзацiю",
-                                loadingDelay = 200L
+                                loadingText = "Виконую синхронiзацiю", loadingDelay = 200L
                             )
                         }
-                    }
-                )
+                    })
             }
 
             ServerIssueScenario.INTERNET_DISABLED -> {
@@ -1798,8 +1720,7 @@ abstract class MainViewModel(
                         if (url == "app://internet-settings") {
                             openInternetSettings()
                         }
-                    }
-                )
+                    })
             }
         }
     }
@@ -1830,65 +1751,49 @@ abstract class MainViewModel(
             context?.startActivity(
                 Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            )
+                })
         } catch (_: Throwable) {
             try {
                 context?.startActivity(
                     Intent(Settings.ACTION_WIRELESS_SETTINGS).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                )
+                    })
             } catch (_: Throwable) {
                 context?.startActivity(
                     Intent(Settings.ACTION_SETTINGS).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                )
+                    })
             }
         }
     }
 
     private fun runConnectionAttemptT(
-        loadingText: String,
-        loadingDelay: Long
+        loadingText: String, loadingDelay: Long
     ) {
         showProgressDialog(
-            text = loadingText,
-            delayMs = loadingDelay
+            text = loadingText, delayMs = loadingDelay
         ) {
-            showNoConnectionDialog(
-                onRetry = {
-                    runConnectionAttempt(
-                        loadingText = "Перевірка зв'язку",
-                        loadingDelay = 700L
-                    )
-                },
-                onCancel = {
-                    showConnectionRestoredDialog()
-                }
-            )
+            showNoConnectionDialog(onRetry = {
+                runConnectionAttempt(
+                    loadingText = "Перевірка зв'язку", loadingDelay = 700L
+                )
+            }, onCancel = {
+                showConnectionRestoredDialog()
+            })
         }
     }
 
     private fun runConnectionAttempt(
-        loadingText: String,
-        loadingDelay: Long
+        loadingText: String, loadingDelay: Long
     ) {
         showProgressDialog(
-            text = loadingText,
-            delayMs = loadingDelay
+            text = loadingText, delayMs = loadingDelay
         ) {
-            showNoConnectionDialog(
-                onRetry = {
-                    runConnectionAttempt(
-                        loadingText = "Перевірка зв'язку",
-                        loadingDelay = 500L
-                    )
-                },
-                onCancel = {
-                }
-            )
+            showNoConnectionDialog(onRetry = {
+                runConnectionAttempt(
+                    loadingText = "Перевірка зв'язку", loadingDelay = 500L
+                )
+            }, onCancel = {})
         }
     }
 //
@@ -1946,28 +1851,21 @@ abstract class MainViewModel(
 //    }
 
     private fun showNoConnectionDialog(
-        onRetry: () -> Unit,
-        onCancel: () -> Unit = {}
+        onRetry: () -> Unit, onCancel: () -> Unit = {}
     ) {
         val activity = context as? Activity ?: return
 
-        MessageDialogBuilder(activity)
-            .setTitle("Відсутнiй зв'язок із сервером")
-            .setStatus(DialogStatus.ERROR)
-            .setMessage("Зачекати декiлька хвилин i спробуйте знову.")
+        MessageDialogBuilder(activity).setTitle("Відсутнiй зв'язок із сервером")
+            .setStatus(DialogStatus.ERROR).setMessage("Зачекати декiлька хвилин i спробуйте знову.")
             .setOnCancelAction {
                 onCancel()
-            }
-            .setOnConfirmAction("Повторити") {
+            }.setOnConfirmAction("Повторити") {
                 onRetry()
-            }
-            .show()
+            }.show()
     }
 
     private fun showProgressDialog(
-        text: String,
-        delayMs: Long,
-        onComplete: () -> Unit
+        text: String, delayMs: Long, onComplete: () -> Unit
     ) {
         val activity = context as? Activity ?: return
         val progress = ProgressViewModel(0)
@@ -1980,25 +1878,19 @@ abstract class MainViewModel(
             {
                 progress.onCompleted()
                 onComplete()
-            },
-            Random.nextLong(10, 900)
+            }, Random.nextLong(10, 900)
         )
     }
 
 
     private fun showConnectionRestoredDialog() {
         (context as? Activity)?.let { activity ->
-            MessageDialogBuilder(activity)
-                .setTitle("Зв'язок із сервером")
-                .setStatus(DialogStatus.NORMAL)
-                .setMessage(
+            MessageDialogBuilder(activity).setTitle("Зв'язок із сервером")
+                .setStatus(DialogStatus.NORMAL).setMessage(
                     """
                 Після відновлення зв'язку з сервером, система автоматично обробить Ваші замовлення та надішле підтвердження у Чат.
                 """.trimIndent()
-                )
-                .setOnConfirmAction {
-                }
-                .show()
+                ).setOnConfirmAction {}.show()
         }
     }
 
@@ -2006,79 +1898,69 @@ abstract class MainViewModel(
         val dad2 = wp.code_dad2
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
-        val d = dao.getByCodeDad2(dad2)
-            .subscribeOn(Schedulers.io())
-            .flatMap { list ->
-                if (list.isEmpty()) {
-                    if (forever)
-                        dao.insert(WPDataAdditionalFactory.blankWithDad2Forever(wp))
-                            .andThen(Single.just(true))
-                    else
-                        dao.insert(WPDataAdditionalFactory.blankWithDad2Now(wp))
-                            .andThen(Single.just(true))
-                } else {
-                    Single.just(false)
-                }
+        val d = dao.getByCodeDad2(dad2).subscribeOn(Schedulers.io()).flatMap { list ->
+            if (list.isEmpty()) {
+                if (forever) dao.insert(WPDataAdditionalFactory.blankWithDad2Forever(wp))
+                    .andThen(Single.just(true))
+                else dao.insert(WPDataAdditionalFactory.blankWithDad2Now(wp))
+                    .andThen(Single.just(true))
+            } else {
+                Single.just(false)
             }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { inserted ->
-                    pending = null
+        }.observeOn(AndroidSchedulers.mainThread()).subscribe({ inserted ->
+            pending = null
 
-                    if (!inserted) {
-                        // было и остаётся: заявка уже подана
-                        viewModelScope.launch {
-                            _events.emit(
-                                MainEvent.ShowMessageDialog(
-                                    MessageDialogData(
-                                        message = "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
-                                        status = DialogStatus.ALERT,
-                                    )
-                                )
-                            )
-                        }
-                        return@subscribe
-                    }
-
-                    // новая логика: вместо диалога показываем лоадер и реально ждём ответ
-                    viewModelScope.launch {
-                        _events.emit(
-                            MainEvent.ShowLoading(
-                                "Чекаємо на відповідь від сервера",
-                                28_700L
+            if (!inserted) {
+                // было и остаётся: заявка уже подана
+                viewModelScope.launch {
+                    _events.emit(
+                        MainEvent.ShowMessageDialog(
+                            MessageDialogData(
+                                message = "Запит на роботи з цього відвідування вже подано, як тільки куратор дасть відповідь ви отримаєте повідомлення",
+                                status = DialogStatus.ALERT,
                             )
                         )
-                    }
+                    )
+                }
+                return@subscribe
+            }
 
-                    // 1) обмен
-                    val uploadDisp = tablesLoadingUnloading
-                        .uploadPlanBudgetRx()  // новая Rx-версия (ниже)
-                        .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                            { _ ->
-                                // 2) ожидание решения в БД до 28.7 сек
-                                viewModelScope.launch {
-                                    val result = waitDecisionByDad2(dad2, timeoutMs = 28_700L)
+            // новая логика: вместо диалога показываем лоадер и реально ждём ответ
+            viewModelScope.launch {
+                _events.emit(
+                    MainEvent.ShowLoading(
+                        "Чекаємо на відповідь від сервера", 28_700L
+                    )
+                )
+            }
 
-                                    when (result) {
-                                        DecisionResult.APPROVED -> {
-                                            _events.emit(MainEvent.LoadingCompleted)
-                                            // если нужно — можно короткий toast/snack без диалога
-                                            val wpDataAdditional = withContext(Dispatchers.IO) {
-                                                RoomManager.SQL_DB.wpDataAdditionalDao()
-                                                    .getByCodeDad2Sync(dad2)
-                                            }
+            // 1) обмен
+            val uploadDisp =
+                tablesLoadingUnloading.uploadPlanBudgetRx()  // новая Rx-версия (ниже)
+                    .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
+                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ _ ->
+                        // 2) ожидание решения в БД до 28.7 сек
+                        viewModelScope.launch {
+                            val result = waitDecisionByDad2(dad2, timeoutMs = 28_700L)
+
+                            when (result) {
+                                DecisionResult.APPROVED -> {
+                                    _events.emit(MainEvent.LoadingCompleted)
+                                    // если нужно — можно короткий toast/snack без диалога
+                                    val wpDataAdditional = withContext(Dispatchers.IO) {
+                                        RoomManager.SQL_DB.wpDataAdditionalDao()
+                                            .getByCodeDad2Sync(dad2)
+                                    }
 
 
 
 
-                                            context?.let {
-                                                startPlanBudgetPollingSecond(
-                                                    wpDataAdditional
-                                                )
-                                            }
+                                    context?.let {
+                                        startPlanBudgetPollingSecond(
+                                            wpDataAdditional
+                                        )
+                                    }
 
 //                                            _events.emit(
 //                                                MainEvent.ShowMessageDialog(
@@ -2091,70 +1973,63 @@ abstract class MainViewModel(
 //                                                )
 //                                            )
 
-                                        }
-
-                                        DecisionResult.DECLINED -> {
-                                            _events.emit(MainEvent.LoadingCanceled)
-
-                                            val comment = withContext(Dispatchers.IO) {
-                                                RoomManager.SQL_DB.wpDataAdditionalDao()
-                                                    .getLastCommentByDad2Sync(dad2)
-                                            }
-
-                                            _events.emit(
-                                                MainEvent.ShowMessageDialog(
-                                                    MessageDialogData(
-                                                        subTitle = "Відповідь від сервера",
-                                                        message = comment?.takeIf { it.isNotBlank() }
-                                                            ?: "Заявка відхилена.",
-                                                        status = DialogStatus.ALERT
-                                                    )
-                                                )
-                                            )
-                                        }
-
-                                        DecisionResult.PENDING_TIMEOUT -> {
-                                            // ответа пока нет — но заявка отправлена
-                                            _events.emit(MainEvent.LoadingCompleted)
-                                            // при желании можно показать мягкое сообщение:
-                                            // _events.emit(MainEvent.ShowMessageDialog(...))
-                                        }
-                                    }
                                 }
-                            },
-                            { err ->
-                                viewModelScope.launch {
+
+                                DecisionResult.DECLINED -> {
                                     _events.emit(MainEvent.LoadingCanceled)
+
+                                    val comment = withContext(Dispatchers.IO) {
+                                        RoomManager.SQL_DB.wpDataAdditionalDao()
+                                            .getLastCommentByDad2Sync(dad2)
+                                    }
+
                                     _events.emit(
                                         MainEvent.ShowMessageDialog(
                                             MessageDialogData(
-                                                message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
-                                                status = DialogStatus.ALERT,
-                                                positivText = "Синхронізація"
-                                            )
-                                        )
-                                    )
+                                                subTitle = "Відповідь від сервера",
+                                                message = comment?.takeIf { it.isNotBlank() }
+                                                    ?: "Заявка відхилена.",
+                                                status = DialogStatus.ALERT)))
+                                }
+
+                                DecisionResult.PENDING_TIMEOUT -> {
+                                    // ответа пока нет — но заявка отправлена
+                                    _events.emit(MainEvent.LoadingCompleted)
+                                    // при желании можно показать мягкое сообщение:
+                                    // _events.emit(MainEvent.ShowMessageDialog(...))
                                 }
                             }
-                        )
-
-                    disposables.add(uploadDisp)
-                },
-                { _ ->
-                    pending = null
-                    viewModelScope.launch {
-                        _events.emit(
-                            MainEvent.ShowMessageDialog(
-                                MessageDialogData(
-                                    message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
-                                    status = DialogStatus.ALERT,
-                                    positivText = "Синхронізація"
+                        }
+                    }, { err ->
+                        viewModelScope.launch {
+                            _events.emit(MainEvent.LoadingCanceled)
+                            _events.emit(
+                                MainEvent.ShowMessageDialog(
+                                    MessageDialogData(
+                                        message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
+                                        status = DialogStatus.ALERT,
+                                        positivText = "Синхронізація"
+                                    )
                                 )
                             )
+                        }
+                    })
+
+            disposables.add(uploadDisp)
+        }, { _ ->
+            pending = null
+            viewModelScope.launch {
+                _events.emit(
+                    MainEvent.ShowMessageDialog(
+                        MessageDialogData(
+                            message = "Ваша заявка створена, однак, для того, щоб її підтвердити виконайте обмін із сервером",
+                            status = DialogStatus.ALERT,
+                            positivText = "Синхронізація"
                         )
-                    }
-                }
-            )
+                    )
+                )
+            }
+        })
 
         disposables.add(d)
     }
@@ -2180,8 +2055,7 @@ abstract class MainViewModel(
     }
 
     private suspend fun waitDecisionByLisgtDad2(
-        listDad2: List<Long>,
-        timeoutMs: Long
+        listDad2: List<Long>, timeoutMs: Long
     ): DecisionResult {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
@@ -2256,25 +2130,21 @@ abstract class MainViewModel(
     private fun doAcceptInfinite(wp: WpDataDB) {
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
-        val d = dao.getByClientAndAddr(wp.client_id.toInt(), wp.addr_id)
-            .subscribeOn(Schedulers.io())
-            .flatMap { list ->
-                if (list.isEmpty()) {
-                    dao.insert(WPDataAdditionalFactory.withClientAndAddress(wp))
-                        .andThen(Single.just(true))
-                } else Single.just(false)
-            }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { inserted ->
+        val d =
+            dao.getByClientAndAddr(wp.client_id.toInt(), wp.addr_id).subscribeOn(Schedulers.io())
+                .flatMap { list ->
+                    if (list.isEmpty()) {
+                        dao.insert(WPDataAdditionalFactory.withClientAndAddress(wp))
+                            .andThen(Single.just(true))
+                    } else Single.just(false)
+                }.observeOn(AndroidSchedulers.mainThread()).subscribe({ inserted ->
                     pending = null
                     viewModelScope.launch {
                         // временный костыль
                         tablesLoadingUnloading.uploadPlanBudget()
 
                         Globals.writeToMLOG(
-                            "INFO", "MainViewModel.doAcceptInfinite",
-                            "Updated: +"
+                            "INFO", "MainViewModel.doAcceptInfinite", "Updated: +"
                         )
                         _events.emit(
                             MainEvent.ShowMessageDialog(
@@ -2286,8 +2156,7 @@ abstract class MainViewModel(
                             )
                         )
                     }
-                },
-                { e ->
+                }, { e ->
                     pending = null
                     viewModelScope.launch {
                         _events.emit(
@@ -2300,83 +2169,76 @@ abstract class MainViewModel(
                             )
                         )
                     }
-                }
-            )
+                })
         disposables.add(d)
     }
 
+
     fun openContextMenu(wp: WpDataDB, contextUI: ContextUI, origin: LaunchOrigin? = null) {
-        viewModelScope.launch {
-            if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
-                // ✅ вместо меню — открываем новый экран
-                _events.emit(MainEvent.OpenUFMDWPDataSelector(wp, origin))
-                return@launch
-            }
-
-            val actions = buildActions(contextUI)
-            _events.emit(
-                MainEvent.ShowContextMenu(
-                    menuState = ContextMenuState(
-                        wpDataDB = wp,
-                        actions = actions,
-                        origin = origin
-
-                    )
-                )
-            )
-        }
+//        viewModelScope.launch {
+//            if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT) {
+//                // ✅ вместо меню — открываем новый экран
+//                _events.emit(MainEvent.OpenUFMDWPDataSelector(wp, origin))
+//                return@launch
+//            }
+//
+//            val actions = buildActions(contextUI)
+//            _events.emit(
+//                MainEvent.ShowContextMenu(
+//                    menuState = ContextMenuState(
+//                        wpDataDB = wp, actions = actions, origin = origin
+//
+//                    )
+//                )
+//            )
+//        }
     }
 
-    private fun buildActions(contextUI: ContextUI): List<ContextMenuAction> =
-        when (contextUI) {
-            ContextUI.WP_DATA_IN_CONTAINER -> listOf(
-                ContextMenuAction.OpenVisit,
-                ContextMenuAction.Close
-            )
-
-            ContextUI.WP_DATA -> listOf(
-                ContextMenuAction.OpenOrder,
-                ContextMenuAction.Close
-            )
-
-            ContextUI.WP_DATA_IN_CONTAINER_MULT -> listOf(
-//                ContextMenuAction.ShowAllVizitInAdress,
-                ContextMenuAction.OpenOrder,
-                ContextMenuAction.Close
-
-            )
-
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
-//                ContextMenuAction.AcceptOrder,
-//                ContextMenuAction.AcceptAllAtAddress,
-//                ContextMenuAction.RejectOrder,
-//                ContextMenuAction.RejectAddress,
-//                ContextMenuAction.RejectClient,
-//                ContextMenuAction.RejectByType,
-                ContextMenuAction.OpenOrder,
-//                ContextMenuAction.OpenSMSPlanDirectory,
-//                ContextMenuAction.AskMoreMoney,
-//                ContextMenuAction.Feedback,
-                ContextMenuAction.Close
-            )
-
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> listOf(
-//                ContextMenuAction.ShowAllVizitInAdress,
-//                ContextMenuAction.AcceptAllAtAddress,
+//    private fun buildActions(contextUI: ContextUI): List<ContextMenuAction> = when (contextUI) {
+//        ContextUI.WP_DATA_IN_CONTAINER -> listOf(
+//            ContextMenuAction.OpenVisit, ContextMenuAction.Close
+//        )
+//
+//        ContextUI.WP_DATA -> listOf(
+//            ContextMenuAction.OpenOrder, ContextMenuAction.Close
+//        )
+//
+//        ContextUI.WP_DATA_IN_CONTAINER_MULT -> listOf(
+////                ContextMenuAction.ShowAllVizitInAdress,
+//            ContextMenuAction.OpenOrder, ContextMenuAction.Close
+//
+//        )
+//
+//        ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> listOf(
+////                ContextMenuAction.AcceptOrder,
+////                ContextMenuAction.AcceptAllAtAddress,
 ////                ContextMenuAction.RejectOrder,
-//                ContextMenuAction.RejectAddress,
+////                ContextMenuAction.RejectAddress,
 ////                ContextMenuAction.RejectClient,
-//                ContextMenuAction.RejectByType,
-////                ContextMenuAction.OpenOrder,
-//                ContextMenuAction.OpenSMSPlanDirectory,
-//                ContextMenuAction.AskMoreMoney,
-//                ContextMenuAction.Feedback,
-                ContextMenuAction.OpenOrder,
-                ContextMenuAction.Close
-            )
-
-            else -> emptyList()
-        }
+////                ContextMenuAction.RejectByType,
+//            ContextMenuAction.OpenOrder,
+////                ContextMenuAction.OpenSMSPlanDirectory,
+////                ContextMenuAction.AskMoreMoney,
+////                ContextMenuAction.Feedback,
+//            ContextMenuAction.Close
+//        )
+//
+//        ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> listOf(
+////                ContextMenuAction.ShowAllVizitInAdress,
+////                ContextMenuAction.AcceptAllAtAddress,
+//////                ContextMenuAction.RejectOrder,
+////                ContextMenuAction.RejectAddress,
+//////                ContextMenuAction.RejectClient,
+////                ContextMenuAction.RejectByType,
+//////                ContextMenuAction.OpenOrder,
+////                ContextMenuAction.OpenSMSPlanDirectory,
+////                ContextMenuAction.AskMoreMoney,
+////                ContextMenuAction.Feedback,
+//            ContextMenuAction.OpenOrder, ContextMenuAction.Close
+//        )
+//
+//        else -> emptyList()
+//    }
 
 
     override fun onCleared() {
@@ -2392,9 +2254,7 @@ abstract class MainViewModel(
     fun requestJumpToAddressVisits(wp: WpDataDB, periodText: String) {
         // готовим pending
         pendingAction = PendingAction.JumpToAddressVisits(
-            addrText = wp.addr_txt ?: "",
-            addrTitle = wp.addr_txt,
-            periodText = periodText
+            addrText = wp.addr_txt ?: "", addrTitle = wp.addr_txt, periodText = periodText
         )
 
         viewModelScope.launch {

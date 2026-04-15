@@ -106,6 +106,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import rememberDialogCloseController
 import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Clock
@@ -127,19 +128,14 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
-import ua.com.merchik.merchik.features.main.componentsUI.MessageDialogData
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
-import ua.com.merchik.merchik.features.main.componentsUI.rememberContextMenuHost
-import ua.com.merchik.merchik.features.main.componentsUI.rememberDialogCloseController
-import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
 import kotlin.math.roundToInt
@@ -151,6 +147,8 @@ import kotlin.math.roundToInt
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
+    val uiInstanceId = remember { System.identityHashCode(Any()) }
+    Log.e("MAIN_UI", "compose instance = $uiInstanceId")
     val uiState by viewModel.uiState.collectAsState()
 
     val focusManager = LocalFocusManager.current
@@ -181,7 +179,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val mapsPulse = rememberPulseController()
     var mapsBtnRect by remember { mutableStateOf<Rect?>(null) }
 
-    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+//    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
 
     var showEmptyDataDialogLocal by remember { mutableStateOf(false) }
     val showEmptyDataDialog by viewModel.showEmptyDataDialog.collectAsState()
@@ -197,6 +195,21 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val showKostilDialog by viewModel.kostilDialog.collectAsState()
 
+    val activity = context as ComponentActivity
+    val shouldShow = activity.intent
+        ?.getBooleanExtra("showWPDataWithFilters", false) == true
+    LaunchedEffect(Unit) {
+        if (shouldShow && showActivityFilter) {
+            showSortingDataDialogLocal = true
+            val updated =
+                (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
+            viewModel.updateFilters(updated)
+            FilteringDialogDataHolder.instance().filters = updated
+        } else
+            ScrollDataHolder.instance().init()
+    }
+
+
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
         if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS)
@@ -204,10 +217,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     val mapsCloseController = rememberDialogCloseController()
-    // действие по клику
-    val menu = rememberContextMenuHost(
-        viewModel, context,
-        closeMapsDialogAnimated = { mapsCloseController.close() })
+
+    rememberContextMenuHost(
+        viewModel = viewModel,
+        onOpenSortingDialog = { showSortingDialog = true },
+        onOpenAdditionalWorkDialog = { showAditionalWorkDialog = true }
+//        closeMapsDialogAnimated = { mapsCloseController.close() }
+    )
 
     var searchFocused by remember { mutableStateOf(false) }
 
@@ -305,113 +321,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
-    val holder = WpSelectionDataHolder.instance()
-    val version = holder.version
+//    val holder = WpSelectionDataHolder.instance()
+//    val version = holder.version
+    val additionalEarningsDialogState by viewModel.additionalEarningsDialogState.collectAsState()
     val wpDataList = remember { mutableStateListOf<WpDataDB>() }
+
 
     var hasInternet by remember { mutableStateOf(true) }
     var pendingMainDialog by remember { mutableStateOf(false) }
     var notReadyMenu by remember { mutableStateOf(false) }
-
-
-    val activity = context as ComponentActivity
-    LaunchedEffect(Unit) {
-        val shouldShow = activity.intent?.getBooleanExtra("showWPDataWithFilters", false) == true
-        if (shouldShow && showActivityFilter) {
-            showSortingDataDialogLocal = true
-            val updated =
-                (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
-            viewModel.updateFilters(updated)
-            FilteringDialogDataHolder.instance().filters = updated
-        }
-    }
-
-    fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
-        if (wpList.isEmpty()) return
-
-        if (wpList.size == 1) {
-            val wp = wpList.first()
-
-            MessageDialogBuilder(activity)
-                .setTitle("Додатковий заробіток")
-                .setStatus(DialogStatus.NORMAL)
-                .setSubTitle(wp.addr_txt)
-                .setMessage(
-                    String.format(
-                        "Подать заявку на выполнение этих работ\n" +
-                                "<font color='gray'>Відвідування від</font> %s" +
-                                "<br><font color='gray'>Клієнт:</font> %s" +
-                                "<br><font color='gray'>Адреса:</font> %s" +
-                                "<br><font color='gray'>Премія (план):</font> %s грн." +
-                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
-                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
-                        Clock.getHumanTime_dd_MMMM(wp.dt.time),
-                        wp.client_txt,
-                        wp.addr_txt,
-                        wp.cash_ispolnitel,
-                        wp.sku,
-                        wp.duration
-                    )
-                )
-                .setOnConfirmAction("Выполнять всегда") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-
-                    } else {
-                        viewModel.doAcceptOneTime(wp = wp, true)
-                    }
-                }
-                .setOnCancelAction("Выполнить один раз") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        viewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-                        viewModel.doAcceptOneTime(wp = wp)
-                    }
-                }
-                .show()
-        } else {
-            MessageDialogBuilder(activity)
-                .setTitle("Додатковий заробіток")
-                .setStatus(DialogStatus.NORMAL)
-                .setSubTitle(wpList.first().addr_txt)
-                .setMessage(
-                    "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
-                )
-                .setOnConfirmAction("Выполнять всегда") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        viewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-//                        notReadyMenu = true
-                        viewModel.doAcceptOneTime(wpList = wpDataList, true)
-
-                    }
-                }
-                .setOnCancelAction("Выполнить один раз") {
-                    if (!hasInternet) {
-                        pendingMainDialog = true
-                        viewModel.showServerIssueDialog(
-                            wpDataList,
-                            ServerIssueScenario.INTERNET_DISABLED
-                        )
-                    } else {
-                        viewModel.doAcceptOneTime(wpList = wpDataList)
-//                        mainViewModel.showServerIssueDialog(
-//                            wpDataList,
-//                            ServerIssueScenario.WEAK_CONNECTION
-//                        )
-                    }
-                }
-                .show()
-        }
-    }
 
     fun restoreSelected(
         items: List<DataItemUI>,
@@ -428,11 +346,40 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         mutableStateOf(ScrollDataHolder.instance().getAllSnapshot())
     }
 
+    if (!shouldShow)
+        selectedIds = emptySet()
+
     DisposableEffect(Unit) {
         val removeListener = ScrollDataHolder.instance().addOnIdsChangedListener { ids ->
             selectedIds = ids.toSet()
         }
         onDispose { removeListener() }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.additionalEarningsIncoming.collect { wpList ->
+            if (wpList.isEmpty()) return@collect
+
+            wpDataList.clear()
+            wpDataList.addAll(wpList)
+
+            Toast.makeText(
+                viewModel.context,
+                "Знайдено результатів: ${wpDataList.size}",
+                Toast.LENGTH_LONG
+            ).show()
+
+            if (hasInternet) {
+                viewModel.showAdditionalEarningsDialog(wpList)
+                pendingMainDialog = false
+            } else {
+                pendingMainDialog = true
+                viewModel.showServerIssueDialog(
+                    wpDataList,
+                    ServerIssueScenario.INTERNET_DISABLED
+                )
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -450,37 +397,38 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 } else if (isConnected && pendingMainDialog && wpDataList.isNotEmpty()) {
                     pendingMainDialog = false
                     viewModel.hideServerIssueDialog()
-                    showMainAdditionalEarningsDialog(wpDataList)
-
+                    viewModel.showAdditionalEarningsDialog(wpDataList)
                 }
             }
         }
     }
 
-    LaunchedEffect(version) {
-        val wpList = holder.consumePendingSelected()
-        if (wpList.isNotEmpty()) {
-            wpDataList.clear()
-            wpDataList.addAll(wpList)
-
-            Toast.makeText(
-                viewModel.context,
-                "Знайдено результатів: ${wpDataList.size}",
-                Toast.LENGTH_LONG
-            ).show()
-
-            if (hasInternet) {
-                pendingMainDialog = false
-                showMainAdditionalEarningsDialog(wpDataList)
-            } else {
-                pendingMainDialog = true
-                viewModel.showServerIssueDialog(
-                    wpDataList,
-                    ServerIssueScenario.INTERNET_DISABLED
-                )
-            }
-        }
-    }
+//    LaunchedEffect(version) {
+//        val wpList = holder.consumePendingSelected()
+//        Log.e("MAIN_UI", "LaunchedEffect(version) instance=$uiInstanceId wpList=${wpList.size}")
+//        if (wpList.isNotEmpty()) {
+//            wpDataList.clear()
+//            wpDataList.addAll(wpList)
+//            Log.e("MAIN_UI", "set dialog data instance=$uiInstanceId")
+//
+//            Toast.makeText(
+//                viewModel.context,
+//                "Знайдено результатів: ${wpDataList.size}",
+//                Toast.LENGTH_LONG
+//            ).show()
+//
+//            if (hasInternet) {
+//                additionalEarningsDialogData = wpList.toList()
+//                pendingMainDialog = false
+//            } else {
+//                pendingMainDialog = true
+//                viewModel.showServerIssueDialog(
+//                    wpDataList,
+//                    ServerIssueScenario.INTERNET_DISABLED
+//                )
+//            }
+//        }
+//    }
 
     val cronchikViewModel: CronchikViewModel =
         remember(activity) { ViewModelProvider(activity)[CronchikViewModel::class.java] }
@@ -526,10 +474,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             val visibilityHeaderGroupName =
                 uiState.settingsItems.firstOrNull { it.key == "group_header" }?.isEnabled == true
 
-            var filterSelectMode =
+            val filterSelectMode =
                 uiState.settingsItems.firstOrNull { it.key == "filter_select" }?.isEnabled == true
-            if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER)
-                filterSelectMode = !filterSelectMode
+//            if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER)
+//                filterSelectMode = !filterSelectMode
 
             LaunchedEffect(filterSelectMode) {
                 if (viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT) {
@@ -673,10 +621,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         contentDescription = null
                     )
                 }
-
-//                uiState.let {
-//                    CollapsibleSubtitle(uiState = it, viewModel = viewModel)
-//                }
                 uiState.subTitle?.let {
                     Box(
                         modifier = Modifier
@@ -1081,7 +1025,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
+                        if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT ||
+                            viewModel.modeUI == ModeUI.FILTER_SELECT
+                        ) {
                             val selectedCount = dataItemsUI.filter { it.selected }.size
                             Tooltip(
                                 text = viewModel.getTranslateString(
@@ -1416,83 +1362,89 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                }
 
                 if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT ||
-                    viewModel.modeUI == ModeUI.FILTER_SELECT) {
-                    if (viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) // вернулся к старому функционалу, убрать
-                    Row {
-                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER &&
-                            viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER)
+                    viewModel.modeUI == ModeUI.FILTER_SELECT
+                ) {
+//                    if (viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) // вернулся к старому функционалу, убрать
+                        Row {
+                            if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER &&
+                                viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER
+                            )
+                                Button(
+                                    onClick = {
+                                        (context as? Activity)?.finish()
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(
+                                            id = R.color.blue
+                                        )
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                                ) {
+                                    Text(
+                                        viewModel.getTranslateString(
+                                            stringResource(id = R.string.ui_cancel),
+                                            5994
+                                        )
+                                    )
+                                }
+
+                            val selectedItems = dataItemsUI.filter { it.selected }
                             Button(
                                 onClick = {
-                                    (context as? Activity)?.finish()
+                                    if (selectedItems.isNotEmpty()) {
+                                        viewModel.onSelectedItemsUI(selectedItems)
+                                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                                            && viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) {
+                                            (context as? Activity)?.setResult(Activity.RESULT_OK)
+                                            (context as? Activity)?.finish()
+                                        }
+                                    } else {
+                                        showAditionalWorkDialog = true
+                                    }
                                 },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorResource(
-                                        id = R.color.blue
-                                    )
-                                ),
+                                colors =
+                                    if (selectedItems.isNotEmpty())
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = colorResource(
+                                                id = R.color.orange
+                                            )
+                                        )
+                                    else
+                                        ButtonDefaults.buttonColors(
+                                            containerColor =
+                                                if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) Color.Gray
+                                                else
+                                                    colorResource(
+                                                        id = R.color.blue
+                                                    )
+                                        ),
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                             ) {
-                                Text(
-                                    viewModel.getTranslateString(
-                                        stringResource(id = R.string.ui_cancel),
-                                        5994
-                                    )
-                                )
-                            }
-
-                        val selectedItems = dataItemsUI.filter { it.selected }
-                        Button(
-                            onClick = {
-                                if (selectedItems.isNotEmpty()) {
-                                    viewModel.onSelectedItemsUI(selectedItems)
-                                    if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
-                                        (context as? Activity)?.setResult(Activity.RESULT_OK)
-                                        (context as? Activity)?.finish()
-                                    }
+                                val titleText = if (
+                                    viewModel.contextUI != ContextUI.WP_DATA &&
+                                    viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
+                                ) {
+                                    val textRes =
+                                        if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                                            "${stringResource(id = R.string.ui_choice_action)} "
+                                        } else {
+                                            "${stringResource(id = R.string.ui_choice)} "
+                                        }
+                                    textRes + if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                                 } else {
-                                    showAditionalWorkDialog = true
+                                    "${stringResource(id = R.string.ui_add_job)} " +
+                                            if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                                 }
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors =
-                                if (selectedItems.isNotEmpty())
-                                    ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
-                                else
-                                    ButtonDefaults.buttonColors(
-                                        containerColor =
-                                            if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) Color.Gray
-                                            else
-                                                colorResource(
-                                                    id = R.color.blue
-                                                )
-                                    ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                        ) {
-                            val titleText = if (
-                                viewModel.contextUI != ContextUI.WP_DATA &&
-                                viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
-                            ) {
-                                val textRes =
-                                    if (viewModel.contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
-                                    "${stringResource(id = R.string.ui_choice_action)} "
-                                } else
-                                {
-                                    "${stringResource(id = R.string.ui_choice)} "
-                                }
-                                textRes + if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
-                            } else {
-                                "${stringResource(id = R.string.ui_add_job)} " +
-                                        if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
-                            }
 
-                            Text(text = titleText)
+                                Text(text = titleText)
+                            }
                         }
-                    }
 
                 }
 
@@ -1850,7 +1802,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             mainViewModel = viewModel,
             onDismiss = requestClose,
             onOpenContextMenu = { wp, ctxUI, option ->
-                viewModel.openContextMenu(wp, ctxUI, option)
+                viewModel.openUFMDSelector(wp.addr_id.toString(),  option)
             }
         )
     }
@@ -1955,283 +1907,91 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showAditionalWorkDialog) {
+        val isAdditional = (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+        val textAdd = if (isAdditional) "роботи по котрим хочете виконати" else "дію з якими хочете виконати"
         MessageDialog(
-            title = "Додатковий заробіток",
+            title = if (isAdditional) "Додатковий заробіток" else "План робiт",
             status = DialogStatus.NORMAL,
             subTitle = "Оберіть візити",
-            message = "Спочатку встановіть позначки на тих відвідуваннях, роботи по котрим хочете виконати. Для цього клікніть у кружечках розташованих у правому верхньому куті кожного відвідування",
+            message = "Спочатку встановіть позначки на тих відвідуваннях, $textAdd. Для цього клікніть у кружечках розташованих у правому верхньому куті кожного відвідування",
             onDismiss = { showAditionalWorkDialog = false },
             okButtonName = "Ok",
             onConfirmAction = { showAditionalWorkDialog = false }
         )
     }
+
+    additionalEarningsDialogState?.let { dialogState ->
+        val wpList = dialogState.wpList
+        val single = wpList.size == 1
+        val wp = wpList.firstOrNull()
+
+        Log.e("additionalEarningsDialogData","start")
+        MessageDialog(
+            title = "Додатковий заробіток",
+            status = DialogStatus.NORMAL,
+            subTitle = if (single) wp?.addr_txt ?: "" else wpList.firstOrNull()?.addr_txt ?: "",
+            message = if (single && wp != null) {
+                String.format(
+                    "Подати заявку на виконання цієї роботи<br>" +
+                            "Відвідування від %s<br>" +
+                            "Клієнт: %s<br>" +
+                            "Адреса: %s<br>" +
+                            "Премія (план): %s грн.<br>" +
+                            "СКЮ (кількість товарних позицій): %s<br>" +
+                            "Середній час роботи: %s хв",
+                    Clock.getHumanTime_dd_MMMM(wp.dt.time),
+                    wp.client_txt,
+                    wp.addr_txt,
+                    wp.cash_ispolnitel,
+                    wp.sku,
+                    wp.duration
+                )
+            } else {
+                "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
+            },
+            okButtonName = "Выполнять всегда",
+            cancelButtonName = "Выполнить один раз",
+            onDismiss = {
+                viewModel.clearAdditionalEarningsDialog()
+            },
+            onConfirmAction = {
+                viewModel.clearAdditionalEarningsDialog()
+                if (!hasInternet) {
+                    pendingMainDialog = true
+                    viewModel.showServerIssueDialog(
+                        wpDataList,
+                        ServerIssueScenario.INTERNET_DISABLED
+                    )
+                } else {
+                    if (single && wp != null) {
+                        viewModel.doAcceptOneTime(wp = wp, true)
+                    } else {
+                        viewModel.doAcceptOneTime(wpList = wpList, true)
+                    }
+                }
+            },
+            onCancelAction = {
+                viewModel.clearAdditionalEarningsDialog()
+                if (!hasInternet) {
+                    pendingMainDialog = true
+                    viewModel.showServerIssueDialog(
+                        wpDataList,
+                        ServerIssueScenario.INTERNET_DISABLED
+                    )
+                } else {
+                    if (single && wp != null) {
+                        viewModel.doAcceptOneTime(wp = wp)
+                    } else {
+                        viewModel.doAcceptOneTime(wpList = wpList)
+                    }
+                }
+            }
+        )
+        Log.e("additionalEarningsDialogData","final")
+    }
 }
 
-var index = 0
-
-//@Stable
-//@Composable
-//fun ItemUI(
-//    item: DataItemUI,
-//    settingsItemUI: List<SettingsItemUI>,
-//    visibilityColumName: Int,
-//    contextUI: ModeUI,
-//    onClickItem: (DataItemUI) -> Unit,
-//    onClickItemImage: (DataItemUI) -> Unit,
-//    onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
-//    onCheckItem: (Boolean, DataItemUI) -> Unit
-//) {
-//    index++
-//    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
-//
-//    Box(
-//        modifier = Modifier
-//            .clickable { onClickItem(item) }
-//            .fillMaxWidth()
-////            .padding(end = 10.dp, bottom = 7.dp)
-//            .clip(RoundedCornerShape(8.dp))
-//            .border(1.dp, Color.LightGray)
-//            .shadow(6.dp, RoundedCornerShape(8.dp))
-//            .then(
-//                Modifier.background(
-//                    if (item.selected) colorResource(id = R.color.selected_item)
-//                    else item.modifierContainer?.background ?: Color.White
-//                )
-//            )
-//    ) {
-//        if (item.images?.size == 3)
-//        // Новый блок для трех изображений в ряд
-//            Column(
-//                Modifier
-//                    .fillMaxWidth()
-//                    .padding(7.dp)
-//            ) {
-//                item.fields.firstOrNull { it.key.equals("id_res_image", true) }?.let {
-//                    val images = item.images.take(3)
-//                    val defaultImage = painterResource(R.drawable.merchik)
-//
-//                    Row(
-//                        modifier = Modifier
-////                            .padding(end = 5.dp)
-//                    ) {
-//                        repeat(3) { index ->
-//                            Box(
-//                                modifier = Modifier
-//                                    .weight(1f)
-//                                    .padding(2.dp)
-//                                    .aspectRatio(1f)
-//                                    .border(1.dp, Color.LightGray)
-//                                    .background(Color.White)
-//                            ) {
-//                                val painter = when {
-//                                    index < images.size -> {
-//                                        val file = File(images[index])
-//                                        if (file.exists()) {
-//                                            rememberAsyncImagePainter(model = file)
-//                                        } else {
-//                                            defaultImage
-//                                        }
-//                                    }
-//
-//                                    else -> defaultImage
-//                                }
-//
-//                                val fields = item.rawObj.firstOrNull()?.getFieldsForOrderOnUI()
-//                                when {
-//                                    fields.isNullOrEmpty() || index >= fields.size || fields[index].isNullOrEmpty() -> {
-//                                        Image(
-//                                            painter = painter,
-//                                            contentDescription = null,
-//                                            modifier = Modifier
-//                                                .fillMaxSize()
-//                                                .clickable {
-//                                                    onMultipleClickItemImage(
-//                                                        item,
-//                                                        index
-//                                                    )
-//                                                },
-//                                            contentScale = ContentScale.Crop
-//                                        )
-//                                    }
-//
-//                                    else -> {
-//                                        // Получаем базовый текст
-//                                        val baseText = fields[index].orEmpty()
-//                                        val modifiedText = if (baseText == "Планограма") {
-//                                            item.rawObj
-//                                                .filterIsInstance<PlanogrammVizitShowcaseSDB>()
-//                                                .firstOrNull()
-//                                                ?.planogram_id
-//                                                ?.let { "$baseText $it" }
-//                                                ?: baseText
-//                                        } else {
-//                                            baseText
-//                                        }
-//
-//                                        ImageWithText(
-//                                            item = item,
-//                                            index = index,
-//                                            painter = painter,
-//                                            imageText = modifiedText
-//                                        )
-//                                        { clickedItem, clickedIndex ->
-//                                            onMultipleClickItemImage(clickedItem, clickedIndex)
-//                                        }
-//
-//                                    }
-//                                }
-//                                if (index == 0) {
-//                                    item.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB }
-//                                        ?.let {
-//                                            it as PlanogrammVizitShowcaseSDB
-//                                            val text = it.score
-//                                            Box(
-//                                                modifier = Modifier.align(Alignment.TopEnd)
-//                                            )
-//                                            {
-//                                                TextInStrokeCircle(
-//                                                    modifier = Modifier
-//                                                        .clickable { onClickItem(item) }
-//                                                        .align(Alignment.Center),
-//                                                    text = text,
-//                                                    circleColor = Color.Gray,
-//                                                    textColor = Color.Gray,
-//                                                    aroundColor =
-//                                                        if (item.selected) colorResource(id = R.color.selected_item)
-//                                                        else item.modifierContainer?.background
-//                                                            ?: Color.White.copy(alpha = 0.5f),
-//                                                    circleSize = 30.dp,
-//                                                    textSize = 20f.toPx(),
-//                                                )
-//                                            }
-//                                        }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        else
-//            Row(Modifier.padding(7.dp)) {
-//                item.fields.firstOrNull {
-//                    it.key.equals(
-//                        "id_res_image",
-//                        true
-//                    )
-//                }?.let {
-//                    val idResImage = (it.value.rawValue as? Int)
-//                        ?: R.drawable.merchik
-//                    Box(
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .padding(end = 5.dp)
-//                            .border(1.dp, Color.LightGray)
-//                            .background(Color.White)
-//                            .align(alignment = Alignment.Top)
-//                    ) {
-//                        val images = mutableListOf<Painter>()
-//                        if (item.images.isNullOrEmpty()) {
-//                            images.add(painterResource(idResImage))
-//                        } else {
-//                            item.images.forEach { pathImage ->
-//                                val file = File(pathImage)
-//                                if (file.exists()) {
-//                                    images.add(
-//                                        rememberAsyncImagePainter(model = file)
-//                                    )
-//                                } else
-//                                    images.add(painterResource(idResImage))
-//                            }
-//                        }
-//
-//                        if (images.size <= 1) {
-//                            Image(
-//                                painter = images[0],
-//                                modifier = Modifier
-//                                    .padding(5.dp)
-//                                    .size(100.dp)
-//                                    .clickable { onClickItemImage(item) },
-//                                contentScale = ContentScale.FillWidth,
-//                                contentDescription = null
-//                            )
-//                        } else {
-//                            LazyRow {
-//                                items(images) { image ->
-//                                    Image(
-//                                        painter = image,
-//                                        modifier = Modifier
-//                                            .padding(5.dp)
-//                                            .size(100.dp)
-//                                            .clickable { onClickItemImage(item) },
-//                                        contentScale = ContentScale.FillWidth,
-//                                        contentDescription = null
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                Column(
-//                    modifier = Modifier
-//                        .weight(if (item.images?.size == 3) 1f else 2f)
-//                ) {
-//                    item.fields.forEachIndexed { index, field ->
-//                        if (settingsItemUI.firstOrNull {
-//                                it.key.equals(
-//                                    field.key,
-//                                    true
-//                                )
-//                            }?.isEnabled == false) {
-//                        } else {
-//                            if (!field.key.equals("id_res_image", true)) {
-//                                ItemFieldValue(field, visibilityColumName)
-//                                if (index < item.fields.size - 1)
-//                                    HorizontalDivider(color = Color.LightGray)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//        Column(modifier = Modifier.align(Alignment.TopEnd)) {
-//
-//            if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT) {
-//                RoundCheckbox(
-//                    modifier = Modifier.padding(
-//                        top = 3.dp,
-//                        end = 3.dp
-//                    ),
-//                    checked = item.selected,
-//                    aroundColor =
-//                        if (item.selected) colorResource(id = R.color.selected_item)
-//                        else item.modifierContainer?.background ?: Color.White,
-//                    onCheckedChange = { onCheckItem(it, item) }
-//                )
-//            }
-//
-//            item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
-//                ?.let {
-//                    it as AdditionalRequirementsMarkDB
-//                    val text = it.score ?: "0"
-//                    TextInStrokeCircle(
-//                        modifier = Modifier.padding(
-//                            top = 3.dp,
-//                            end = 3.dp
-//                        ),
-//                        text = text,
-//                        circleColor = if (text == "0") Color.Red else Color.Gray,
-//                        textColor = if (text == "0") Color.Red else Color.Gray,
-//                        aroundColor =
-//                            if (item.selected) colorResource(id = R.color.selected_item)
-//                            else item.modifierContainer?.background ?: Color.White,
-//                        circleSize = 30.dp,
-//                        textSize = 20f.toPx(),
-//                    )
-//                }
-//        }
-//    }
-//}
+//var index = 0
 
 @Stable
 @Composable
@@ -2247,8 +2007,8 @@ fun ItemUI(
     onCheckItem: (Boolean, DataItemUI) -> Unit,
     onClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit
 ) {
-    index++
-    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
+//    index++
+//    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
 
     // ✅ всегда считаем актуальный список видимых полей
     val visibleFields = item.fields.filter { field ->
@@ -2634,4 +2394,8 @@ fun ComposableLifecycle(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+}
+
+private fun Activity.isAlive(): Boolean {
+    return !isFinishing && !isDestroyed
 }

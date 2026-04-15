@@ -1066,6 +1066,8 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.planogram_img_id = MakePhoto.planogram_img_id;
                 photo.example_id = MakePhoto.example_id;
                 photo.example_img_id = MakePhoto.example_img_id;
+                if (MakePhoto.tovarId != null && !MakePhoto.tovarId.isEmpty())
+                    photo.tovar_id = MakePhoto.tovarId;
 
                 if (MakePhoto.photoType.equals("4")) {
                     photo.tovar_id = MakePhoto.tovarId;

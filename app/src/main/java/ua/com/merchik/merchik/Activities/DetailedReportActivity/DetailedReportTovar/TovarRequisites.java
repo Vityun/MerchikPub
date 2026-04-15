@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -66,13 +67,24 @@ public class TovarRequisites {
         DialogData res = new DialogData(context);
 
         TovarOptions tovarOptions;
-        if (photoType != 4) {
-            tovarOptions = new TovarOptions().createTovarOptionPhotoType();
-            res.setTitle("Фото вiтрини (наближене)");
-        } else {
-            tovarOptions = new TovarOptions().createTovarOptionPhoto();
-            res.setTitle("");
+
+        // 15.04.2026 сделал тип фото в заголовке корректным
+        tovarOptions = new TovarOptions().createTovarOptionPhotoType();
+        String photoTypeTxt;
+        try {
+           photoTypeTxt = PhotoTypeRealm.getPhotoTypeById(photoType).getNm();
+        } catch (Exception e) {
+            photoTypeTxt = "";
         }
+        res.setTitle(photoTypeTxt);
+
+//        if (photoType != 4) {
+//            tovarOptions = new TovarOptions().createTovarOptionPhotoType();
+//            res.setTitle("Фото вiтрини (наближене)");
+//        } else {
+//            tovarOptions = new TovarOptions().createTovarOptionPhoto();
+//            res.setTitle("");
+//        }
         res.setText("");
         res.setClose(res::dismiss);
         res.setLesson(context, true, 802);
