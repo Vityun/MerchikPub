@@ -145,14 +145,15 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         String exampleId = stackPhotoDB.getExample_img_id();
                         // Проверяем example_id на уникальность и непустоту
                         if (exampleId != null && !exampleId.isEmpty()
-//                                && uniqueExampleIds.add(exampleId)
+                                // 16.04 вернул фильтр что только уникальные
+                                && uniqueExampleIds.add(exampleId)
                         ) {
                             list.add(stackPhotoDB);
                         }
                     }
                 }
             }
-            // ✅ ДОБАВЛЯЕМ ВИТРИНЫ, КОТОРЫХ НЕТ В СФОТОГРАФИРОВАННЫХ
+            // ДОБАВЛЯЕМ ВИТРИНЫ, КОТОРЫХ НЕТ В СФОТОГРАФИРОВАННЫХ
             for (ShowcaseSDB showcase : showcaseSDBList) {
                 boolean isCreated = stackPhotoDBSList.stream()
                         .map(StackPhotoDB::getShowcase_id)

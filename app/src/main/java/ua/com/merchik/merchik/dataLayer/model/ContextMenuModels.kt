@@ -15,16 +15,17 @@ data class ContextMenuController(
 
 @Immutable
 data class ContextMenuPayload(
-    val items: List<DataItemUI>,
+    val selectedItems: List<DataItemUI>,
+    val allItems: List<DataItemUI>? = null,
     val deckId: String? = null,
     val origin: LaunchOrigin? = null
 ) {
     init {
-        require(items.isNotEmpty()) { "ContextMenuPayload.items cannot be empty" }
+        require(selectedItems.isNotEmpty()) { "ContextMenuPayload.items cannot be empty" }
     }
 
-    val isMulti: Boolean get() = items.size > 1
-    val firstItem: DataItemUI get() = items.first()
+    val isMulti: Boolean get() = selectedItems.size > 1
+    val firstItem: DataItemUI get() = selectedItems.first()
 }
 
 @Immutable

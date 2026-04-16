@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -53,6 +54,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -529,6 +531,11 @@ fun UniversalContextMenuDialog(
     var overlayOrigin by remember(state) { mutableStateOf(TransformOrigin.Center) }
     var baseCardBounds by remember(state) { mutableStateOf<Rect?>(null) }
 
+    val density = LocalDensity.current
+    val overlayWidth = baseCardBounds?.width?.let { px ->
+        with(density) { (px * 0.98f).toDp() }
+    }
+
     var pageStack by remember(state) {
         mutableStateOf(
             listOf(
@@ -655,7 +662,13 @@ fun UniversalContextMenuDialog(
                 overlayState?.let { overlay ->
                     ContextMenuCard(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .then(
+                            if (overlayWidth != null) {
+                                Modifier.requiredWidth(overlayWidth)
+                            } else {
+                                Modifier.fillMaxWidth(0.82f)
+                            }
+                        )
                             .align(Alignment.Center),
                         header = null
                     ) {
@@ -689,9 +702,9 @@ private fun ContextMenuCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .graphicsLayer {
-                    alpha = if (dimmed) 0.72f else 1f
-                    scaleX = if (dimmed) 0.985f else 1f
-                    scaleY = if (dimmed) 0.985f else 1f
+                    alpha = if (dimmed) 0.75f else 1f
+                    scaleX = 1f
+                    scaleY = 1f
                 }
                 .background(Color.White, RoundedCornerShape(8.dp))
         ) {

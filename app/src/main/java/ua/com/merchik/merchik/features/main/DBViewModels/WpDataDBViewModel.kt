@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.util.Log
+import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
@@ -25,9 +26,9 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.addrIdOrNull
+import ua.com.merchik.merchik.dataLayer.common.filterAndSortDataItems
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionEvent
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionIds
-import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionPreset
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuEntry
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuHeaderRow
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuHeaderUi
@@ -37,7 +38,6 @@ import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.MenuLeading
 import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
-import ua.com.merchik.merchik.dataLayer.model.fieldValueOrNull
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -779,34 +779,80 @@ class WpDataDBViewModel @Inject constructor(
     private fun buildEntries(payload: ContextMenuPayload): List<ContextMenuEntry> {
         val isActiveGrouped = uiState.value.groupingFields.isNotEmpty()
 
-        val items = payload.items
+        val items = payload.selectedItems
         val first = items.first()
+
+        val payloadIds = items.map { it.stableId }.toSet()
+        val itemsTemp = uiState.value.items
+
+        val allItems =
+            filterAndSortDataItems(
+                items = itemsTemp,
+                filters = uiState.value.filters,
+                sortingFields = uiState.value.sortingFields,
+                groupingFields = uiState.value.groupingFields,
+                rangeStart = rangeDataStart.value,
+                rangeEnd = rangeDataEnd.value,
+                searchText = uiState.value.filters?.searchText
+            ).items
+
+
+        val selectedInPayload = allItems.filter { it.stableId in payloadIds && it.selected }
+        val unselectedInPayload = allItems.filter { it.stableId in payloadIds && !it.selected }
+
+        val selectedGlobal = allItems.filter { it.selected }
+        val unselectedGlobal = allItems.filter { !it.selected }
+
+        val selectedInPayloadCount = selectedInPayload.size
+        val unselectedInPayloadCount = unselectedInPayload.size
+
+        val selectedGlobalCount = selectedGlobal.size
+        val unselectedGlobalCount = unselectedGlobal.size
 
         val wp = first.rawAs<WpDataDB>()
         val isMulti = items.size > 1
 
         val canEdit = !isMulti && wp != null
 
-        val markTitle = if (isMulti) "Позначити (${items.size})" else "Позначити"
-        val unmarkTitle = if (isMulti) "Зняти позначку (${items.size})" else "Зняти позначку"
+        val markTitle = if (isMulti) {
+            "Позначити ($unselectedInPayloadCount)"
+        } else {
+            "Позначити"
+        }
+
+        val unmarkTitle = if (isMulti) {
+            "Зняти позначку ($selectedInPayloadCount)"
+        } else {
+            "Зняти позначку"
+        }
+
+        val markAllTitle = "Позначити усі ($unselectedGlobalCount)"
+        val unmarkAllTitle = "Зняти всi позначки ($selectedGlobalCount)"
 
         val selectionEntries = listOf(
             ContextMenuPresets.Mark.toEntry(
                 id = "selection_mark",
-                title = markTitle
+                title = markTitle,
+                enabled = unselectedInPayloadCount > 0
             ),
             ContextMenuPresets.MarkAll.toEntry(
-                id = "selection_mark_all"
+                id = "selection_mark_all",
+                title = markAllTitle,
+                enabled = unselectedGlobalCount > 0
             ),
             ContextMenuPresets.Unmark.toEntry(
                 id = "selection_unmark",
-                title = unmarkTitle
+                title = unmarkTitle,
+                enabled = selectedInPayloadCount > 0
             ),
             ContextMenuPresets.UnmarkAll.toEntry(
-                id = "selection_unmark_all"
+                id = "selection_unmark_all",
+                title = unmarkAllTitle,
+                enabled = selectedGlobalCount > 0
             ),
             ContextMenuPresets.Invert.toEntry(
-                id = "selection_invert"
+                id = "selection_invert",
+                enabled = payloadIds.isNotEmpty()
             )
         )
 
@@ -825,6 +871,7 @@ class WpDataDBViewModel @Inject constructor(
             add(
                 ContextMenuPresets.Edit.toEntry(
                     id = "root_edit",
+                    title = "Змiнити/Вiдкрити",
                     enabled = canEdit
                 )
             )
@@ -915,7 +962,7 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     private fun buildServiceEntries(payload: ContextMenuPayload): List<ContextMenuEntry> {
-        val items = payload.items
+        val items = payload.selectedItems
         val selectedItems = items.filter { it.selected }
         val selectedCount = selectedItems.size
         val hasSelectedInClickedCard = selectedCount > 0
@@ -995,7 +1042,7 @@ class WpDataDBViewModel @Inject constructor(
 
             ContextMenuActionIds.MARK -> {
                 updateItemsSelect(
-                    ids = event.payload.items.map { it.stableId },
+                    ids = event.payload.selectedItems.map { it.stableId },
                     checked = true
                 )
             }
@@ -1009,7 +1056,7 @@ class WpDataDBViewModel @Inject constructor(
 
             ContextMenuActionIds.UNMARK -> {
                 updateItemsSelect(
-                    ids = event.payload.items.map { it.stableId },
+                    ids = event.payload.selectedItems.map { it.stableId },
                     checked = false
                 )
             }
@@ -1105,7 +1152,7 @@ class WpDataDBViewModel @Inject constructor(
         if (items.isEmpty()) return
 
         val payload = ContextMenuPayload(
-            items = items,
+            selectedItems = items,
             deckId = deckId,
             origin = origin
         )
@@ -1142,7 +1189,7 @@ class WpDataDBViewModel @Inject constructor(
         if (items.isEmpty()) return
 
         val payload = ContextMenuPayload(
-            items = items,
+            selectedItems = items,
             deckId = deckId,
             origin = origin
         )

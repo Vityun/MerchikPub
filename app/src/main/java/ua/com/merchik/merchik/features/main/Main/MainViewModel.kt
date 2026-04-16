@@ -658,7 +658,7 @@ abstract class MainViewModel(
         val distanceMeters: Float
     )
 
-    private fun restoreSelected(
+    fun restoreSelected(
         items: List<DataItemUI>, selectedIds: Set<Long>
     ): List<DataItemUI> {
         return items.map { item ->
