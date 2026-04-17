@@ -204,7 +204,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             if (!showcaseSDBList.isEmpty() && filledShowcaseIdsCount == 0) {
                 spannableStringBuilder.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(String.valueOf(showcaseSDBList.size())).append(" вітрин.");
                 signal = true;
-            } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
+            } else if (colMin > 0 && perShowcase < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
                 spannableStringBuilder.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
                         .append(String.valueOf(list.size()))
                         .append(" фото з ")
@@ -242,7 +242,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append(" з ")
                         .append(String.valueOf(showcaseSDBList.size()))
                         .append(" присутнiх на ТТ")
-                        .append(" (").append(String.valueOf(percentValue))
+                        .append(" (").append(String.valueOf(perShowcase))
                         .append("%), що БІЛЬШЕ плану в ").append(String.valueOf(colMin)).append("%.")
 //                        .append(stackPhotoDBSList.size())
 //                        .append(" СВІТЛИН ")

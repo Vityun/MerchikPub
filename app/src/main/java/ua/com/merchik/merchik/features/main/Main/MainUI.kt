@@ -1366,8 +1366,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 ) {
 //                    if (viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) // вернулся к старому функционалу, убрать
                         Row {
-                            if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER &&
-                                viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER
+                            if (
+//                                viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER &&
+//                                viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER
+                                viewModel.typeWindow != "container"
                             )
                                 Button(
                                     onClick = {
@@ -1396,8 +1398,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 onClick = {
                                     if (selectedItems.isNotEmpty()) {
                                         viewModel.onSelectedItemsUI(selectedItems)
-                                        if (viewModel.contextUI != ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER
-                                            && viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) {
+                                        if (viewModel.typeWindow != "container") {
                                             (context as? Activity)?.setResult(Activity.RESULT_OK)
                                             (context as? Activity)?.finish()
                                         }
@@ -1907,8 +1908,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showAditionalWorkDialog) {
-        val isAdditional = (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
-        val textAdd = if (isAdditional) "роботи по котрим хочете виконати" else "дію з якими хочете виконати"
+        val isAdditional = (viewModel.contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS)
+        val textAdd =
+            if (isAdditional) "роботи по котрим хочете виконати" else
+            "дію з якими хочете виконати"
         MessageDialog(
             title = if (isAdditional) "Додатковий заробіток" else "План робiт",
             status = DialogStatus.NORMAL,
@@ -1919,6 +1922,19 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             onConfirmAction = { showAditionalWorkDialog = false }
         )
     }
+//    if (showAditionalWorkDialog) {
+//        val isAdditional = (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
+//        val textAdd = if (isAdditional) "роботи по котрим хочете виконати" else "дію з якими хочете виконати"
+//        MessageDialog(
+//            title = if (isAdditional) "Додатковий заробіток" else "План робiт",
+//            status = DialogStatus.NORMAL,
+//            subTitle = "Оберіть візити",
+//            message = "Спочатку встановіть позначки на тих відвідуваннях, $textAdd. Для цього клікніть у кружечках розташованих у правому верхньому куті кожного відвідування",
+//            onDismiss = { showAditionalWorkDialog = false },
+//            okButtonName = "Ok",
+//            onConfirmAction = { showAditionalWorkDialog = false }
+//        )
+//    }
 
     additionalEarningsDialogState?.let { dialogState ->
         val wpList = dialogState.wpList

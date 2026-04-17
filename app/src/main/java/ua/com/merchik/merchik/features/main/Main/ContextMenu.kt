@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.features.main.Main
 
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -106,6 +105,7 @@ fun rememberContextMenuHost(
                     MainEvent.OpenAdditionalWorkDialog -> {
                         onOpenAdditionalWorkDialog()
                     }
+
                     else -> Unit
                 }
             }
@@ -194,12 +194,13 @@ private fun ContextMenuHeaderView(header: ContextMenuHeaderUi) {
 
         header.rows.forEachIndexed { index, row ->
             Row {
-                Text(
-                    text = "${row.label}: ",
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.DarkGray,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                if (row.label.isNotEmpty())
+                    Text(
+                        text = "${row.label}: ",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.DarkGray,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
 
                 Text(
                     text = row.value,
@@ -391,8 +392,7 @@ private fun ContextMenuEntriesContent(
     onActionClick: (ContextMenuActionEvent, closeMenu: Boolean) -> Unit,
     onOpenOverlay: (ContextMenuUiState, Rect?) -> Unit,
     onPushPage: (ContextMenuPage) -> Unit
-)
-{
+) {
     val expandedMap = remember(entries) { mutableStateMapOf<String, Boolean>() }
 
     entries
@@ -604,15 +604,16 @@ fun UniversalContextMenuDialog(
                         overlayState = overlay
 
                         val card = baseCardBounds
-                        overlayOrigin = if (card != null && clickedRowBounds != null && card.width > 0f && card.height > 0f) {
-                            val fx = ((clickedRowBounds.center.x - card.left) / card.width)
-                                .coerceIn(0.15f, 0.85f)
-                            val fy = ((clickedRowBounds.center.y - card.top) / card.height)
-                                .coerceIn(0.10f, 0.90f)
-                            TransformOrigin(fx, fy)
-                        } else {
-                            TransformOrigin.Center
-                        }
+                        overlayOrigin =
+                            if (card != null && clickedRowBounds != null && card.width > 0f && card.height > 0f) {
+                                val fx = ((clickedRowBounds.center.x - card.left) / card.width)
+                                    .coerceIn(0.15f, 0.85f)
+                                val fy = ((clickedRowBounds.center.y - card.top) / card.height)
+                                    .coerceIn(0.10f, 0.90f)
+                                TransformOrigin(fx, fy)
+                            } else {
+                                TransformOrigin.Center
+                            }
                     },
                     onPushPage = { nextPage -> pageStack = pageStack + nextPage }
                 )
@@ -663,12 +664,12 @@ fun UniversalContextMenuDialog(
                     ContextMenuCard(
                         modifier = Modifier
                             .then(
-                            if (overlayWidth != null) {
-                                Modifier.requiredWidth(overlayWidth)
-                            } else {
-                                Modifier.fillMaxWidth(0.82f)
-                            }
-                        )
+                                if (overlayWidth != null) {
+                                    Modifier.requiredWidth(overlayWidth)
+                                } else {
+                                    Modifier.fillMaxWidth(0.82f)
+                                }
+                            )
                             .align(Alignment.Center),
                         header = null
                     ) {

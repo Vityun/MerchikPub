@@ -109,15 +109,15 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 PHOTO_CART_WITH_GOODS,
                 null);
 
-        try {
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/stackPhoto!!!!: " + stackPhoto);
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/size!!!!: " + stackPhoto.size());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getId!!!!: " + stackPhoto.get(0).getId());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhotoServerId!!!!: " + stackPhoto.get(0).getPhotoServerId());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhoto_hash!!!!: " + stackPhoto.get(0).getPhoto_hash());
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!Exception e: " + e);
-        }
+//        try {
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/stackPhoto!!!!: " + stackPhoto);
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/size!!!!: " + stackPhoto.size());
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getId!!!!: " + stackPhoto.get(0).getId());
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhotoServerId!!!!: " + stackPhoto.get(0).getPhotoServerId());
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhoto_hash!!!!: " + stackPhoto.get(0).getPhoto_hash());
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!Exception e: " + e);
+//        }
 
 
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
