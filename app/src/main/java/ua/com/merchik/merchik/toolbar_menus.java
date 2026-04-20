@@ -1297,6 +1297,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         globals.writeToMLOG(" CRON.internetStatus: " + internetStatus + "\n");
 
                         cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+                        exchange.uploadAchievemnts();
 
 
                         // Если включена Автовыгрузка/Автообмен
@@ -1364,7 +1365,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
                                 exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
 //                        exchange.downloadAchievements();
-                                exchange.uploadAchievemnts();
                             }
 
                             // выгрузка окончания работы

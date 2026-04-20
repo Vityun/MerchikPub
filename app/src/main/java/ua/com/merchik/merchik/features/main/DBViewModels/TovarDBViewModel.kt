@@ -1,20 +1,25 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
-import CardItemsData
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import org.json.JSONObject
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
+import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Globals.OptionControlName
 import ua.com.merchik.merchik.Options.Options
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.ViewHolders.Clicks.clickVoid
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -22,7 +27,6 @@ import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.HiddenMenuMode
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
-import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
@@ -45,14 +49,22 @@ import ua.com.merchik.merchik.dataLayer.model.addOrReplaceField
 import ua.com.merchik.merchik.dataLayer.model.buildOptionCodeField
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter
+import ua.com.merchik.merchik.dialogs.DialogData
+import ua.com.merchik.merchik.dialogs.DialogData.DialogClickListener
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
+import java.util.Collections
+import java.util.Optional
+import java.util.function.Consumer
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -69,6 +81,7 @@ class TovarDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = TovarDB::class
+
 
 
     override fun onClickProductCode(
@@ -90,9 +103,21 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
-    override fun getDefaultHideFieldsForCards(): List<String> {
-        return ("manufacturer, ID").split(",").map { it.trim() }
+    override fun getDefaultSortUserFields(): List<String>? {
+        return "nm, manufacturer_id, weight, option_code, barcode".split(",")
     }
+
+    override fun getDefaultGroupUserFields(): List<String> {
+        return emptyList()
+    }
+
+    override fun getDefaultHideUserFields(): List<String>? {
+        return "column_name".split(",")
+    }
+
+//    override fun getDefaultHideFieldsForCards(): List<String> {
+//        return ("manufacturer, ID").split(",").map { it.trim() }
+//    }
 
 //    override fun onClickItem(itemUI: DataItemUI, context: Context) {
 //        super.onClickItem(itemUI, context)
@@ -370,53 +395,6 @@ class TovarDBViewModel @Inject constructor(
             HiddenMenuMode.OVERLAY -> SubmenuPresentation.OVERLAY
             HiddenMenuMode.REPLACE -> SubmenuPresentation.REPLACE
         }
-
-
-//    private fun buildHeader(items: List<DataItemUI>): ContextMenuHeaderUi {
-//        val item = items.first()
-//
-//        val wp = item.rawAs<WpDataDB>()
-//        val theme = item.rawAs<ThemeDB>()
-//
-//        val clientText = item.fieldValueOrNull("client_txt")
-//            ?: wp?.client_txt
-//            ?: theme?.nm
-//            ?: ""
-//
-//        val addressText = item.fieldValueOrNull("addr_txt")
-//            ?: wp?.addr_txt
-//            ?: ""
-//
-//        val rows = buildList {
-//            if (clientText.isNotBlank()) {
-//                add(
-//                    ContextMenuHeaderRow(
-//                        label = if (items.size > 1) "з ${items.size} елементiв" else "Клієнт",
-//                        value = if (items.size > 1) "" else clientText
-//                    )
-//                )
-//            }
-//
-//            if (addressText.isNotBlank()) {
-//                add(
-//                    ContextMenuHeaderRow(
-//                        label = "За адресою",
-//                        value = addressText
-//                    )
-//                )
-//            }
-//        }
-//
-//        return ContextMenuHeaderUi(
-//            visible = rows.isNotEmpty(),
-//            title = if (items.size > 1) {
-//                "Виберіть дію для групи з ${items.size} вiзитiв"
-//            } else {
-//                "Виберіть дію для вiзиту"
-//            },
-//            rows = rows
-//        )
-//    }
 
     private fun buildHeader(items: List<DataItemUI>): ContextMenuHeaderUi {
         val groupingFields = uiState.value.groupingFields
@@ -761,13 +739,12 @@ class TovarDBViewModel @Inject constructor(
     override fun onContextMenuAction(event: ContextMenuActionEvent) {
         when (event.actionId) {
             ContextMenuActionIds.EDIT -> {
-                val wp = event.payload.firstItem.rawAs<WpDataDB>() ?: return
-                openDetailedReport(wp.id)
+
             }
 
             ContextMenuActionIds.OPEN_ORDER -> {
-                val wp = event.payload.firstItem.rawAs<WpDataDB>() ?: return
-                openDetailedReport(wp.id)
+//                val wp = event.payload.firstItem.rawAs<WpDataDB>() ?: return
+//                openDetailedReport(wp.id)
             }
 
             ContextMenuActionIds.OPEN_UFMD_SELECTOR -> {
@@ -859,10 +836,189 @@ class TovarDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
+        try {
 
-        showItemContextMenu(
-            items = listOf(itemUI)
-        )
+            // Отображаем инфу по особенному Товару.
+            val list = itemUI.rawAs<TovarDB>() ?: return
+            val codeDad2 =
+                Gson().fromJson(dataJson, JSONObject::class.java)
+                    .getString("codeDad2")
+                    .toLong()
+
+            val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+            val recycl = RecycleViewDRAdapterTovar(context, RealmManager.getTovarListFromReportPrepareByDad2(codeDad2),
+                wpDataDB,
+                RecycleViewDRAdapterTovar.OpenType.DEFAULT
+            )
+
+            val adList: List<AdditionalRequirementsDB> = AdditionalRequirementsRealm.getData3(wpDataDB, AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT, null, null, 0)
+            val tovId: String? = list.getiD() // Идентификатор Товара
+            var result: Optional<AdditionalRequirementsDB>? = null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && adList != null) {
+                result = adList.stream()
+                    .filter { obj: AdditionalRequirementsDB ->
+                        obj.getTovarId() == tovId && obj.getOptionId().isEmpty()
+                    }
+                    .findFirst()
+
+                if (result!!.isPresent()) {
+                    val foundObject = result.get()
+                    // Выполняйте операции с найденным объектом
+                    val dialogMsg = DialogData(context)
+                    dialogMsg.setTitle("Додаткова вимога до товару.")
+                    dialogMsg.setText(foundObject.getNm())
+                    dialogMsg.setClose(DialogClickListener { dialogMsg.dismiss() })
+                    dialogMsg.show()
+                } else {
+                    // Обработка случая, когда объект не найден
+                }
+            }
+
+
+            //------------------------------------------------------------------
+
+            // На всякий случай зачищаю модальные окна.
+            val dialogList = recycl.dialogList
+            val optionsList2 = RealmManager.getTovarOptionInReportPrepare(codeDad2.toString(), null)
+            val options = Options()
+            val finalDeletePromoOption = false
+            // Получаем инфу об обязательных опциях
+            val tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption)
+            val reportPrepare = RealmManager.getTovarReportPrepare(
+                codeDad2.toString(),
+                tovId
+            )
+
+            Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size)
+
+            if (tovOptTplList.size > 0 && optionsList2 != null) {
+                // В Цикле открываем Н количество инфы
+                for (i in tovOptTplList.indices.reversed()) {
+                    if (tovOptTplList.get(i).getOptionControlName() != OptionControlName.AKCIYA) {
+                        if (tovOptTplList.get(i)
+                                .getOptionControlName() == OptionControlName.AKCIYA_ID && finalDeletePromoOption
+                        ) {
+                            // втыкаю
+                            Log.e("dialogShowRule", "1")
+                            recycl.showDialog(
+                                list,
+                                tovOptTplList[i],
+                                reportPrepare,
+                                tovId,
+                                codeDad2.toString(),
+                                wpDataDB.client_id,
+                                reportPrepare.oborotvedNum,
+                                reportPrepare.oborotvedNum,
+                                true,
+                                true
+                            )
+                        } else {
+                            Log.e("dialogShowRule", "2")
+                            recycl.showDialog(
+                                list,
+                                tovOptTplList[i],
+                                reportPrepare,
+                                tovId,
+                                codeDad2.toString(),
+                                wpDataDB.client_id,
+                                reportPrepare.oborotvedNum,
+                                reportPrepare.oborotvedNum,
+                                true,
+                                true
+                            )
+                        }
+                    }
+                }
+
+
+                Collections.reverse(dialogList)
+
+                var optionExists = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val opt = "159707"
+                    optionExists = optionsList2.stream().anyMatch { optionsDB: OptionsDB? ->
+                        optionsDB!!.optionId == opt ||
+                                optionsDB.optionControlId == opt
+                    }
+
+                    if (optionExists) {
+                        val matchingOption: Optional<OptionsDB> = optionsList2.stream()
+                            .filter { optionsDB: OptionsDB ->
+                                optionsDB.getOptionId() == opt ||
+                                        optionsDB.getOptionControlId() == opt
+                            }
+                            .findFirst()
+
+                        if (matchingOption.isPresent()) {
+                            val optionsDB = matchingOption.get()
+                            // Делайте что-то с объектом OptionsDB
+                            println(optionsDB)
+                            dialogList.add(
+                                TovarRequisites(
+                                    list,
+                                    reportPrepare
+                                ).createDialog(context, wpDataDB, optionsDB, clickVoid {})
+                            )
+                        } else {
+                            // Обработка случая, когда объект OptionsDB не найден
+                            println("Объект OptionsDB не найден")
+                        }
+                    }
+                }
+
+
+                dialogList.get(0).show()
+            } else {
+                val dialog = DialogData(context)
+                dialog.setTitle("Внимание!")
+                dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ")
+                dialog.setClose(DialogClickListener { dialog.dismiss() })
+                dialog.show()
+            }
+
+            val ar: AdditionalRequirementsDB? = showTovarAdditionalRequirement(list, adList)
+            if (ar != null) {
+                showTovarAdditionalRequirementDialog(context, list, ar)
+            }
+        } catch (e: java.lang.Exception) {
+            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e)
+            Globals.alertDialogMsg(
+                context, DialogStatus.ERROR,
+                "Увага",
+                "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e
+            )
+        }
+
+    }
+
+    fun showTovarAdditionalRequirementDialog(
+        context: Context?,
+        tovar: TovarDB,
+        additionalRequirementsDB: AdditionalRequirementsDB
+    ) {
+        val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovar.getManufacturerId())
+        AdditionalRequirementsAdapter().click(context, additionalRequirementsDB, tovar, tradeMarkDB)
+    }
+
+    private fun showTovarAdditionalRequirement(tovar: TovarDB, adList: List<AdditionalRequirementsDB>): AdditionalRequirementsDB? {
+        val res = arrayOf<AdditionalRequirementsDB?>(null)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val result = adList.stream()
+                .filter { obj: AdditionalRequirementsDB? -> obj!!.getTovarId() == tovar.getiD() }
+                .findFirst()
+            result!!.ifPresent(Consumer { currentAR: AdditionalRequirementsDB? ->
+                var currentAR = currentAR
+                currentAR = result.get()
+                // если опция контроля не указана
+                if (currentAR.getOptionId() != null && currentAR.getOptionId() == "0") {
+                    res[0] = currentAR
+                } else {
+                    println()
+                    res[0] = null
+                }
+            })
+        }
+        return res[0]
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

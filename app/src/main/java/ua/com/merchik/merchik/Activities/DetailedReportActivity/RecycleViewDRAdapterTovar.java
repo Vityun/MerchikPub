@@ -147,6 +147,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     // 08.04.24.
     boolean openNext = true;
 
+    /**
+     * 11.01.2021
+     * Отображаю диалог для внесения данных в Опции Контроля (Цена, фейс, количество...)
+     */
+    public List<DialogData> dialogList = new ArrayList<>();
+
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
@@ -1275,13 +1281,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
             }
         }
-
-
-        /**
-         * 11.01.2021
-         * Отображаю диалог для внесения данных в Опции Контроля (Цена, фейс, количество...)
-         */
-        private List<DialogData> dialogList = new ArrayList<>();
 
         /**
          * 29.03.23

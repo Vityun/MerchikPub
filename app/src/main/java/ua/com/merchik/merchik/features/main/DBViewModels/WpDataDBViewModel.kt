@@ -1122,10 +1122,8 @@ class WpDataDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
-
-        showItemContextMenu(
-            items = listOf(itemUI)
-        )
+        val wp = itemUI.rawAs<WpDataDB>() ?: return
+        openDetailedReport(wp.id)
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

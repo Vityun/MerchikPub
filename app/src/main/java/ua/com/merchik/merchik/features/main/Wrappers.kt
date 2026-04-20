@@ -15,6 +15,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import java.text.SimpleDateFormat
@@ -411,14 +412,16 @@ object SamplePhotoSDBOverride {
 
 object TovarDBOverride {
     fun getHidedFieldsOnUI(): String =
-        "barcode, client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +
+        "client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +
                 "height, ID, " +
-                "manufacturer_id, " +
+                "article, fcdCode, timeColor, " +
+//                "manufacturer_id, " +
                 "photo_id, " +
                 "related_tovar_id," +
                 " width, " +
                 "sortcol, " +
-                "manufacturer"
+                "manufacturer," +
+                "weight_gr"
 
     fun getFieldFirstImageUI(): String = "photo_id"
 
@@ -434,6 +437,7 @@ object TovarDBOverride {
         "height" -> 5975
         "ID" -> 5962
         "manufacturer_id" -> 5969
+        "manufacturer" -> 5969
         "nm" -> 5965
         "photo_id" -> 5974
         "related_tovar_id" -> 5971
@@ -449,6 +453,15 @@ object TovarDBOverride {
         "option_code" -> {
             val vv = value.toString()
             vv
+        }
+        "manufacturer_id" -> {
+            try {
+                val manufacturer_id = value.toString()
+                TradeMarkRealm.getTradeMarkRowById(manufacturer_id).nm
+            } catch (_: Exception){
+                value.toString()
+            }
+
         }
         else -> value.toString()
     }

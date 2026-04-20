@@ -26,11 +26,11 @@ fun TovarTabs(wpData: WpDataDB) {
             .put("codeDad2", wpData.code_dad2.toString())
             .put("clientId", wpData.client_id))
     viewModel.contextUI = ContextUI.TOVAR_FROM_TOVAR_TABS
-    viewModel.modeUI = ModeUI.DEFAULT
+    viewModel.modeUI = ModeUI.FILTER_SELECT
     viewModel.typeWindow = "container"
-    viewModel.subTitle = ""
+//    viewModel.subTitle = ""
     viewModel.context = context
-    viewModel.subTitle = "тут будет текст"
+//    viewModel.subTitle = "тут будет текст"
     viewModel.updateContent()
 
     MerchikTheme {
