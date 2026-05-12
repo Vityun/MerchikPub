@@ -90,6 +90,17 @@ fun StackCard(
                             action = action,
                             context = context
                         )
+                    },
+                    onLongClickProductCode = { clickedItem, fieldValue, action ->
+                        viewModel.onLongClickProductCode(
+                            itemUI = clickedItem,
+                            fieldValue = fieldValue,
+                            action = action,
+                            context = context
+                        )
+                    },
+                    onProductCodeTakePhoto = { clickedItem ->
+                        viewModel.onProductCodeTakePhoto(clickedItem, context)
                     }
                 )
             }

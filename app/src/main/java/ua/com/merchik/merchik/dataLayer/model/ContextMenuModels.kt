@@ -53,6 +53,7 @@ sealed interface MenuLeading {
     data class Checkbox(val checked: Boolean) : MenuLeading
     data class Text(val value: String) : MenuLeading
     data class DrawableIcon(@DrawableRes val resId: Int) : MenuLeading
+    data class BadgeText(val value: String) : MenuLeading
 }
 
 @Immutable
@@ -127,6 +128,23 @@ object ContextMenuActionIds {
     const val ASK_MORE_MONEY = "ask_more_money"
 
     const val LIST_SETTINGS = "list_settings"
+
+    const val TOVAR_PRICE = "tovar_price"
+    const val TOVAR_FACE = "tovar_face"
+    const val TOVAR_EXPIRE_LEFT = "tovar_expire_left"
+    const val TOVAR_AMOUNT = "tovar_amount"
+    const val TOVAR_UP = "tovar_up"
+    const val TOVAR_DT_EXPIRE = "tovar_dt_expire"
+    const val TOVAR_OBOROTVED_NUM = "tovar_oborotved_num"
+    const val TOVAR_ERROR_ID = "tovar_error_id"
+    const val TOVAR_AKCIYA_ID = "tovar_akciya_id"
+    const val TOVAR_AKCIYA = "tovar_akciya"
+    const val TOVAR_NOTES = "tovar_notes"
+
+    const val ADDITIONAL_CONTENT_DELETE_EXTRA = "additional_content_delete_extra"
+    const val ADDITIONAL_CONTENT_ADD_PPA = "additional_content_add_ppa"
+    const val ADDITIONAL_CONTENT_ADD_ALL = "additional_content_add_all"
+    const val ADDITIONAL_CONTENT_ADD_ONE = "additional_content_add_one"
 }
 
 @Immutable
@@ -297,6 +315,7 @@ object ContextMenuPresets {
         title = "Налаштування списку",
         leading = MenuLeading.DrawableIcon(R.drawable.ic_sort_down)
     )
+
 }
 
 inline fun <reified T : DataObjectUI> DataItemUI.rawAs(): T? =

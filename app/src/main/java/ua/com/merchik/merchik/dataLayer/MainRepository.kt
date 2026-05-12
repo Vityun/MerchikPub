@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik.dataLayer
 
 import android.util.Log
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.realm.Realm
@@ -24,12 +27,16 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
+import ua.com.merchik.merchik.data.RealmModels.ErrorDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier
+import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
@@ -106,15 +113,28 @@ class MainRepository(
 
         item?.let { obj ->
             val jsonObject = JSONObject(gson.toJson(obj))
-            val fields = mutableListOf<String>()
+            val imageCommentKeys = obj.getCommentsForImageKeys()
+
+            val fields = linkedSetOf<String>()
+
             fields.add("column_name")
             fields.add("group_header")
-            if (modeUI == ModeUI.DEFAULT || modeUI == ModeUI.FILTER_SELECT)
+
+            if (modeUI == ModeUI.DEFAULT || modeUI == ModeUI.FILTER_SELECT) {
                 fields.add("filter_select")
+            }
+
             obj.getIdResImage()?.let {
                 fields.add("id_res_image")
             }
-            jsonObject.keys().forEach { key -> fields.add(key) }
+
+            imageCommentKeys.forEach { key ->
+                fields.add(key)
+            }
+
+            jsonObject.keys().forEach { key ->
+                fields.add(key)
+            }
 
             // 👇 сначала забираем сохранённые настройки (если есть)
             val settingsUI = getSettingsUI(obj::class.java, contextUI)
@@ -141,23 +161,6 @@ class MainRepository(
             } else {
                 baseHide?.map { it.trim() }
             }
-//            val hideUserFields: List<String>? = if (settingsUI == null) {
-//                baseHide
-//                    .orEmpty()
-//                    .filterNot {
-//                        it.equals(
-//                            "group_header",
-//                            ignoreCase = true
-//                        )
-//                    }
-//                    .plus("filter_select")
-////                    .distinctBy { it.lowercase() }
-//                    .map { it.trim() }
-//            } else {
-//                baseHide
-//                    ?.map { it.trim() }
-//            }
-
 
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
 
@@ -173,6 +176,11 @@ class MainRepository(
                             "id_res_image" -> "Зображення"
                             "group_header" -> "Заголовок групи"
                             "filter_select" -> "Можливість вибору елемента"
+                            in imageCommentKeys -> nameUIRepository.getTranslateString(
+                                key,
+                                obj.getFieldTranslateId(key)
+                            ).takeIf { it.isNotBlank() } ?: "Опис зображення"
+
                             else -> nameUIRepository.getTranslateString(
                                 key,
                                 obj.getFieldTranslateId(key)
@@ -339,6 +347,7 @@ class MainRepository(
             OpinionSDB::class -> roomManager.opinionDao().all
             PlanogrammVizitShowcaseSDB::class -> roomManager.planogrammVizitShowcaseDao().all
             SMSPlanSDB::class -> roomManager.smsPlanDao().all
+            ErrorDB::class -> RealmManager.getAllErrorDbNotZero()
             else -> {
                 return emptyList()
             }
@@ -439,4 +448,13 @@ fun List<DataItemUI>.join(rightTable: List<DataItemUI>, query: String): List<Dat
 
         itemLeftUI.copy(rawObj = rawObj, fields = newFields)
     }
+}
+
+fun getDefaultImageCommentValueModifier(): MerchModifier {
+    return MerchModifier(
+        textColor = Color(0xFF1565C0),
+        padding = Padding(top = 4.dp, bottom = 2.dp),
+        maxLine = 2,
+        textDecoration = TextDecoration.Underline
+    )
 }

@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -236,7 +237,8 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return TovarDBOverride.INSTANCE.getContainerModifier(jsonObject);
+//        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
 
     @Nullable
@@ -262,4 +264,33 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     public List<String> getPreferredFieldOrder() {
         return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
     }
+
+    @Override
+    public @NotNull String getCommentsForImage() {
+        return  "tovar_image_balance_comment";
+    }
+
+    @Override
+    public String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return null;
+    }
+//    @Nullable
+//    @Override
+//    public String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+//        if (!"image_comment".equals(key)) {
+//            return null;
+//        }
+//
+//        String barcode = jsonObject.optString("barcode");
+//        String weight = jsonObject.optString("weight");
+//
+//        StringBuilder result = new StringBuilder();
+//
+//        if (barcode != null && !barcode.trim().isEmpty()) {
+//            result.append("Остаток: ").append(barcode);
+//        }
+//
+//        return result.length() > 0 ? result.toString() : null;
+//    }
+
 }

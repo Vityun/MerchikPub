@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -1451,5 +1452,16 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Override
     public List<String> getPreferredFieldOrder() {
         return new ArrayList<>(Arrays.asList("theme_id", "addr_txt", "client_txt", "dt", "cash_ispolnitel", "client_start_dt", "client_end_dt"));
+    }
+
+   @Override
+    public @NotNull String getCommentsForImage() {
+        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+    }
+
+
+    @Override
+    public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
     }
 }

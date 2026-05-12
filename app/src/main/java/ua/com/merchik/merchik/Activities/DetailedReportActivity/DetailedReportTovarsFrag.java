@@ -252,14 +252,13 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "v: " + v);
 
 
-//        if (tasksAndReclamationsSDB == null) {
-//            composeView = v.findViewById(R.id.compose_view_tovar);
-//            ConstraintLayout layoutTovar = v.findViewById(R.id.constraint_tovar);
-//            composeView.setVisibility(View.VISIBLE);
-//            layoutTovar.setVisibility(View.GONE);
-//        } else
+        if (tasksAndReclamationsSDB == null) {
+            composeView = v.findViewById(R.id.compose_view_tovar);
+            ConstraintLayout layoutTovar = v.findViewById(R.id.constraint_tovar);
+            composeView.setVisibility(View.VISIBLE);
+            layoutTovar.setVisibility(View.GONE);
+        } else
             try {
-
                 badgeTextView = v.findViewById(R.id.badge_text_view);
                 fab = v.findViewById(R.id.fab);
                 editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);

@@ -2034,11 +2034,26 @@ public class RealmManager {
         return INSTANCE.where(ErrorDB.class).findAll();
     }
 
+    public static List<ErrorDB> getAllErrorDbNotZero() {
+        RealmResults<ErrorDB> res = INSTANCE.where(ErrorDB.class)
+                .notEqualTo("parentId", "0")
+                .findAll();
+        if (res != null) {
+            return RealmManager.INSTANCE.copyFromRealm(res);
+        } else {
+            return null;
+        }
+    }
+
     // PROMO DB
     public static RealmResults<PromoDB> getAllPromoDb() {
         return INSTANCE.where(PromoDB.class).findAll();
     }
 
+
+    public static ErrorDB getErrorDbById(String id) {
+        return INSTANCE.where(ErrorDB.class).equalTo("ID", id).findFirst();
+    }
 
     /**
      * 30.09.2020

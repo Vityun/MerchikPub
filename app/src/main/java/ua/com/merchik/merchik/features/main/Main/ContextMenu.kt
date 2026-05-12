@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.features.main.Main
 
 
+import MessageDialogData
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -13,6 +15,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,11 +33,14 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +53,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -58,13 +66,17 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.MainEvent
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionEvent
@@ -74,6 +86,11 @@ import ua.com.merchik.merchik.dataLayer.model.ContextMenuPayload
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.MenuLeading
 import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialog
+import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
+import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoQuality
 
 
 @Composable
@@ -83,6 +100,10 @@ fun rememberContextMenuHost(
     onOpenAdditionalWorkDialog: () -> Unit = {}
 ) {
     var menuState by remember { mutableStateOf<ContextMenuUiState?>(null) }
+    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
+
+    val photoDialogState by viewModel.tovarPhotoDialogState.collectAsStateWithLifecycle()
+
     val focusManager = LocalFocusManager.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -96,6 +117,26 @@ fun rememberContextMenuHost(
 
                     MainEvent.HideContextMenu -> {
                         menuState = null
+                    }
+
+                    is MainEvent.ShowMessageDialog -> {
+                        showMessageDialog = event.data
+                    }
+
+                    is MainEvent.ShowLoading -> {
+                        showMessageDialog = MessageDialogData(
+                            subTitle = event.title,
+                            status = DialogStatus.LOADING,
+                            message = " ",
+                            showButton = false,
+                            isCancelable = false
+                        )
+                    }
+
+                    MainEvent.LoadingCompleted,
+                    MainEvent.LoadingCanceled,
+                    MainEvent.HideMessageDialog -> {
+                        showMessageDialog = null
                     }
 
                     MainEvent.OpenSortingDialog -> {
@@ -130,6 +171,47 @@ fun rememberContextMenuHost(
             }
         )
     }
+
+    showMessageDialog?.let { d ->
+        MessageDialog(
+            title = d.title,
+            subTitle = d.subTitle,
+            message = d.message,
+            status = d.status,
+            onDismiss = {
+                showMessageDialog = null
+                viewModel.cancelPending()
+            },
+            okButtonName = d.positivText ?: "Ok",
+            cancelButtonName = d.cancelText ?: "",
+            onConfirmAction = if (d.showButton) {
+                {
+                    d.onButtonOkClicked?.invoke()
+                    showMessageDialog = null
+                    viewModel.performPending()
+                }
+            } else null,
+            onCancelAction = if (d.cancelText != null || d.status == DialogStatus.NORMAL) {
+                {
+                    showMessageDialog = null
+                    viewModel.cancelPending()
+                }
+            } else null,
+            onTextLinkClick = {
+                d.onTextLinkClick?.invoke(it)
+            }
+        )
+    }
+
+    photoDialogState?.let { state ->
+        TovarPhotoDialog(
+            state = state,
+            onDismiss = {
+                viewModel.hideTovarPhotoDialog()
+            }
+        )
+    }
+
 }
 
 @Composable
@@ -280,6 +362,27 @@ private fun MenuLeadingView(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+        is MenuLeading.BadgeText -> {
+            Box(
+                modifier = Modifier
+                    .size(22.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(tint.copy(alpha = 0.01f))
+                    .border(
+                        width = 1.dp,
+                        color = tint.copy(alpha = 0.28f),
+                        shape = RoundedCornerShape(4.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = leading.value,
+                    color = tint,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

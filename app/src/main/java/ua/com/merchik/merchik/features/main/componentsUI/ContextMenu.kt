@@ -7,6 +7,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +33,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
 
@@ -42,59 +45,73 @@ fun ContextMenu(
     content: @Composable () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }
-    var time by remember { mutableIntStateOf(5) }
 
-    Box(modifier = modifier.pointerInput(Unit) {
-        detectTapGestures(
-            onTap = {
-                time = 5
-                isVisible = true
-            },
-        )
-    }) {
-        Column {
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        isVisible = true
+                    }
+                )
+            }
+        ) {
             content()
-            if (isVisible) {
-                Popup(
-                    onDismissRequest = {
-                        time = 0
-                        isVisible = false
-                    },
-                    offset = IntOffset(0, 100),
-                    alignment = Alignment.Center
+        }
+
+        if (isVisible) {
+            Popup(
+                onDismissRequest = {
+                    isVisible = false
+                },
+                offset = IntOffset(0, 100),
+                alignment = Alignment.Center,
+                properties = PopupProperties(
+                    focusable = true
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(
+                            width = 1.dp,
+                            color = colorResource(id = R.color.borderContextMenu),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(8.dp)
+                        )
                 ) {
-                    Box(
+                    LazyColumn(
                         modifier = Modifier
-                            .padding(8.dp)
-                            .shadow(4.dp, RoundedCornerShape(8.dp))
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(
-                                1.dp,
-                                colorResource(id = R.color.borderContextMenu),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .background(
-                                Color.White,
-                                RoundedCornerShape(8.dp)
-                            )
+                            .widthIn(max = 220.dp)
+                            .heightIn(max = 360.dp),
+                        contentPadding = PaddingValues(7.dp)
                     ) {
-                        LazyColumn(contentPadding = PaddingValues(7.dp)) {
-                            itemsIndexed(items = itemsMenu) { k, item ->
-                                Column(
+                        itemsIndexed(items = itemsMenu) { index, item ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        isVisible = false
+                                        onSelectedMenu(index)
+                                    }
+                            ) {
+                                Text(
+                                    text = item,
                                     modifier = Modifier
-                                        .clickable {
-                                            time = 0
-                                            isVisible = false
-                                            onSelectedMenu.invoke(k)
-                                        }
-                                        .widthIn(max = 200.dp)
-                                ) {
-                                    Text(
-                                        text = item,
-                                        modifier = Modifier
-                                            .padding(top = 5.dp, bottom = 5.dp)
-                                    )
-                                    if (k < itemsMenu.size - 1) HorizontalDivider(thickness = 1.dp)
+                                        .fillMaxWidth()
+                                        .padding(
+                                            horizontal = 8.dp,
+                                            vertical = 8.dp
+                                        )
+                                )
+
+                                if (index < itemsMenu.lastIndex) {
+                                    HorizontalDivider(thickness = 1.dp)
                                 }
                             }
                         }
@@ -102,11 +119,5 @@ fun ContextMenu(
                 }
             }
         }
-    }
-
-    LaunchedEffect(time) {
-        delay(1000L)
-        if (time <= 0) isVisible = false
-        else time--
     }
 }

@@ -49,7 +49,9 @@ import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.TovarOptions
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
@@ -70,6 +72,7 @@ import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.dataLayer.withContainerBackground
 import ua.com.merchik.merchik.dataLayer.withGroupingOnTop
 import ua.com.merchik.merchik.database.realm.RealmManager
@@ -81,6 +84,7 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Locale
@@ -180,6 +184,50 @@ data class DeckExpandCommand(
     val expand: Boolean, val version: Long
 )
 
+data class ProductCodeRowUi(
+    val id: String,
+    val title: String,
+    val value: String,
+    val minValue: Int = 0
+)
+
+enum class InlineEditorKind {
+    NUMBER,
+    TEXT,
+    DATE,
+    SINGLE_SELECT,
+    DOUBLE_SELECT,
+    TEXT_AND_SELECT
+}
+
+data class InlineChoiceUi(
+    val id: String,
+    val title: String
+)
+
+data class ProductCodeEditorRowUi(
+    val rowId: String,
+    val title: String,
+    val kind: InlineEditorKind,
+    val option: TovarOptions,
+    val value: String = "",
+    val value2: String = "",
+    val choices: List<InlineChoiceUi> = emptyList(),
+    val choices2: List<InlineChoiceUi> = emptyList()
+)
+
+enum class ProductCodeEditorMode {
+    REQUIRED,
+    ALL
+}
+
+data class ProductCodeEditorState(
+    val expanded: Boolean = false,
+    val sourceItemId: Long? = null,
+    val mode: ProductCodeEditorMode = ProductCodeEditorMode.REQUIRED,
+    val rowsByItemId: Map<Long, List<ProductCodeEditorRowUi>> = emptyMap()
+)
+
 abstract class MainViewModel(
     application: Application,
     val repository: MainRepository,
@@ -242,6 +290,17 @@ abstract class MainViewModel(
 
     open fun onClickAdditionalContent() {}
 
+    open fun onClickProductCode(
+        itemUI: DataItemUI, fieldValue: FieldValue, action: ClickTextAction, context: Context
+    ) {}
+
+    open fun onLongClickProductCode(
+        itemUI: DataItemUI,
+        fieldValue: FieldValue,
+        action: ClickTextAction,
+        context: Context
+    ) {}
+
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
     open fun onLongClickItem(itemUI: DataItemUI, context: Context) {
@@ -253,6 +312,17 @@ abstract class MainViewModel(
     }
 
     open fun onSelectedButtonClick() {
+    }
+
+    protected open fun persistInlineRowValue(
+        itemId: Long,
+        row: ProductCodeEditorRowUi,
+        newValue: String,
+        newValue2: String? = null
+    ): Boolean = false
+
+
+    open fun onProductCodeTakePhoto(itemUI: DataItemUI, context: Context) {
     }
 
     open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
@@ -303,6 +373,14 @@ abstract class MainViewModel(
         // optional
     }
 
+    open fun onClickImageComment(
+        itemUI: DataItemUI,
+        fieldValue: FieldValue,
+        context: Context
+    ) {
+        // default no-op
+    }
+
     protected fun openDetailedReport(wpDataId: Long) {
 //        emitEvent(MainEvent.NavigateToDetailedReport(wpDataId))
         context?.let {
@@ -342,29 +420,6 @@ abstract class MainViewModel(
     var filters: Filters? = null
 
     protected var dialog: DialogFullPhoto? = null
-
-
-    open fun onClickProductCode(
-        itemUI: DataItemUI, fieldValue: FieldValue, action: ClickTextAction, context: Context
-    ) {
-        when (fieldValue.key.lowercase()) {
-            "feed_fl_code" -> {
-                // обработка шифра ФЛ
-            }
-
-            "feed_fo_code" -> {
-                // обработка другого шифра
-            }
-
-            "nomenclature_code" -> {
-                // обработка кода номенклатуры
-            }
-
-            else -> {
-                // fallback
-            }
-        }
-    }
 
     open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
         onClickItemImage(clickedDataItemUI, context, 0) // Делегируем вызов новому методу
@@ -499,6 +554,32 @@ abstract class MainViewModel(
     private val _blockMapsForAdditionalWork = MutableStateFlow<Boolean>(false)
     val blockMapsForAdditionalWork: StateFlow<Boolean> get() = _blockMapsForAdditionalWork
 
+    private val _productCodeEditorState = MutableStateFlow(ProductCodeEditorState())
+    val productCodeEditorState: StateFlow<ProductCodeEditorState> =
+        _productCodeEditorState.asStateFlow()
+
+    private val _tovarPhotoDialogState =
+        MutableStateFlow<TovarPhotoDialogUiState?>(null)
+
+    val tovarPhotoDialogState: StateFlow<TovarPhotoDialogUiState?> =
+        _tovarPhotoDialogState.asStateFlow()
+
+    protected fun showTovarPhotoDialog(state: TovarPhotoDialogUiState) {
+        _tovarPhotoDialogState.value = state
+    }
+
+    protected fun updateTovarPhotoDialog(
+        transform: (TovarPhotoDialogUiState) -> TovarPhotoDialogUiState
+    ) {
+        _tovarPhotoDialogState.update { current ->
+            current?.let(transform)
+        }
+    }
+
+    fun hideTovarPhotoDialog() {
+        _tovarPhotoDialogState.value = null
+    }
+
     fun requestExpandGroup(groupId: String) {
         _expandGroup.tryEmit(groupId)
     }
@@ -532,6 +613,9 @@ abstract class MainViewModel(
         }
     }
 
+    fun setProductCodeEditor(productCodeEditorState: ProductCodeEditorState) {
+        _productCodeEditorState.value = productCodeEditorState
+    }
     fun setShowActivityFilter() {
         _showActivityFilter.value = false
     }
@@ -611,6 +695,157 @@ abstract class MainViewModel(
                 updateContent()
             }
         }
+    }
+
+    fun increaseProductCodeValue(itemId: Long, rowId: String) {
+        val row = findEditorRow(itemId, rowId) ?: return
+        val current = row.value.toIntOrNull() ?: 0
+        saveInlineRowValue(
+            itemId = itemId,
+            rowId = rowId,
+            newValue = (current + 1).toString(),
+            newValue2 = row.value2
+        )
+    }
+
+    fun decreaseProductCodeValue(itemId: Long, rowId: String) {
+        val row = findEditorRow(itemId, rowId) ?: return
+        val current = row.value.toIntOrNull() ?: 0
+        val next = (current - 1).coerceAtLeast(0)
+
+        saveInlineRowValue(
+            itemId = itemId,
+            rowId = rowId,
+            newValue = next.toString(),
+            newValue2 = row.value2
+        )
+    }
+
+    fun updateProductCodeValue(itemId: Long, rowId: String, newValue: String) {
+        val row = findEditorRow(itemId, rowId) ?: return
+
+        val prepared = when (row.kind) {
+            InlineEditorKind.NUMBER -> newValue.filter { it.isDigit() }
+            else -> newValue
+        }
+
+        saveInlineRowValue(
+            itemId = itemId,
+            rowId = rowId,
+            newValue = prepared,
+            newValue2 = row.value2
+        )
+    }
+
+    fun updateProductCodeSecondValue(itemId: Long, rowId: String, newValue: String) {
+        val row = findEditorRow(itemId, rowId) ?: return
+
+        saveInlineRowValue(
+            itemId = itemId,
+            rowId = rowId,
+            newValue = row.value,
+            newValue2 = newValue
+        )
+    }
+
+    protected open fun onInlineRowPersisted(
+        itemId: Long,
+        rowId: String
+    ) = Unit
+
+    private fun updateInlineRowState(
+        itemId: Long,
+        rowId: String,
+        value: String? = null,
+        value2: String? = null
+    ) {
+        val current = productCodeEditorState.value
+        val updatedMap = current.rowsByItemId.toMutableMap()
+
+        val updatedRows = updatedMap[itemId]
+            ?.map { row ->
+                if (row.rowId == rowId) {
+                    row.copy(
+                        value = value ?: row.value,
+                        value2 = value2 ?: row.value2
+                    )
+                } else {
+                    row
+                }
+            }
+            .orEmpty()
+
+        updatedMap[itemId] = updatedRows
+        setProductCodeEditor(current.copy(rowsByItemId = updatedMap))
+    }
+
+    private fun saveInlineRowValue(
+        itemId: Long,
+        rowId: String,
+        newValue: String,
+        newValue2: String? = null
+    ) {
+        val row = findEditorRow(itemId, rowId) ?: return
+
+        val persisted = persistInlineRowValue(
+            itemId = itemId,
+            row = row,
+            newValue = newValue,
+            newValue2 = newValue2 ?: row.value2
+        )
+
+        if (!persisted) return
+
+        onInlineRowPersisted(itemId, rowId)
+    }
+
+    protected fun replaceCurrentItemByStableId(updatedItem: DataItemUI) {
+        val targetId = updatedItem.stableId
+
+        _uiState.update { state ->
+            state.copy(
+                itemsHeader = state.itemsHeader.map { old ->
+                    if (old.stableId == targetId) updatedItem else old
+                },
+                items = state.items.map { old ->
+                    if (old.stableId == targetId) updatedItem else old
+                },
+                itemsFooter = state.itemsFooter.map { old ->
+                    if (old.stableId == targetId) updatedItem else old
+                }
+            )
+        }
+    }
+
+    fun getAllCurrentItems(): List<DataItemUI> {
+        return buildList {
+            addAll(uiState.value.itemsHeader)
+            addAll(uiState.value.items)
+            addAll(uiState.value.itemsFooter)
+        }
+    }
+
+    private fun findItemByStableId(stableId: Long): DataItemUI? {
+        return getAllCurrentItems().firstOrNull { it.stableId == stableId }
+    }
+
+    protected fun findTovarByStableId(stableId: Long): TovarDB? {
+        return findItemByStableId(stableId)?.rawAs<TovarDB>()
+    }
+
+    private fun findEditorRow(itemId: Long, rowId: String): ProductCodeEditorRowUi? {
+        return productCodeEditorState.value
+            .rowsByItemId[itemId]
+            ?.firstOrNull { it.rowId == rowId }
+    }
+
+    protected fun getCodeDad2String(): String {
+        return Gson().fromJson(dataJson, JSONObject::class.java)
+            .getString("codeDad2")
+    }
+
+    fun closeProductCodeEditor() {
+        _productCodeEditorState.value = ProductCodeEditorState()
     }
 
     protected fun openSortingDialog() {
@@ -929,14 +1164,6 @@ abstract class MainViewModel(
                     filteredSelectedItems.map { it.withGroupingOnTop(groupingKeys) }
                 }
 
-                android.util.Log.e(
-                    "TEST_BAG1", "value ${RoomManager.SQL_DB.siteObjectsDao().all.size}"
-                )
-
-                finalItems.forEach {
-                    android.util.Log.e("TEST_BAG", "value ${it.fields.first().field}")
-                }
-
                 if (finalItems.isEmpty()) {
                     _showEmptyDataDialog.value = true
                 }
@@ -984,6 +1211,20 @@ abstract class MainViewModel(
             )
         }
 //        }
+    }
+
+    fun updateSettingsItem(updatedItem: SettingsItemUI) {
+        _uiState.update { state ->
+            state.copy(
+                settingsItems = state.settingsItems.map { oldItem ->
+                    if (oldItem.key == updatedItem.key) {
+                        updatedItem
+                    } else {
+                        oldItem
+                    }
+                }
+            )
+        }
     }
 
     fun updateItemsSelect(ids: List<Long>, checked: Boolean) {

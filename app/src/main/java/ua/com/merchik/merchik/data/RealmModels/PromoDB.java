@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.data.RealmModels;
 
 import androidx.annotation.NonNull;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -128,5 +129,16 @@ public class PromoDB extends RealmObject implements DataObjectUI {
     @Override
     public List<String> getPreferredFieldOrder() {
         return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
+   @Override
+    public @NotNull String getCommentsForImage() {
+        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+    }
+
+
+    @Override
+    public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
     }
 }

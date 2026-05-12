@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.features.main.Main
 
 import android.content.Context
+import android.util.Log
+import android.view.View
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -50,10 +52,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.RealmModels.TovarDB
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.model.TextField
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -67,15 +72,15 @@ fun ItemRowCard(
     uiState: StateUI,
     viewModel: MainViewModel,
     context: Context,
-    visibilityColumName: Int
+    visibilityColumName: Int,
+    productCodeEditorState: ProductCodeEditorState
 ) {
+    val rows = productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
+    val expanded = productCodeEditorState.expanded && rows.isNotEmpty()
+
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = 10.dp, end = 10.dp,
-                bottom = 12.dp
-            )
+            .padding(start = 10.dp, end = 10.dp, bottom = 12.dp)
             .shadow(4.dp, RoundedCornerShape(8.dp))
     ) {
         ItemUI(
@@ -84,9 +89,7 @@ fun ItemRowCard(
             settingsItemUI = uiState.settingsItems,
             contextUI = viewModel.modeUI,
             onClickItem = { viewModel.onClickItem(it, context) },
-            onLongClickItem = {
-                viewModel.onLongClickItem(it, context)
-            },
+            onLongClickItem = { viewModel.onLongClickItem(it, context) },
             onClickItemImage = { viewModel.onClickItemImage(it, context) },
             onMultipleClickItemImage = { dataItem, index ->
                 viewModel.onClickItemImage(dataItem, context, index)
@@ -99,6 +102,38 @@ fun ItemRowCard(
                     itemUI = clickedItem,
                     fieldValue = fieldValue,
                     action = action,
+                    context = context
+                )
+            },
+            onLongClickProductCode = { clickedItem, fieldValue, action ->
+                viewModel.onLongClickProductCode(
+                    itemUI = clickedItem,
+                    fieldValue = fieldValue,
+                    action = action,
+                    context = context
+                )
+            },
+            productCodeExpanded = expanded,
+            productCodeRows = rows,
+            onProductCodeMinus = { rowId ->
+                viewModel.decreaseProductCodeValue(item.stableId, rowId)
+            },
+            onProductCodePlus = { rowId ->
+                viewModel.increaseProductCodeValue(item.stableId, rowId)
+            },
+            onProductCodeValueChange = { rowId, value ->
+                viewModel.updateProductCodeValue(item.stableId, rowId, value)
+            },
+            onProductCodeValue2Change = { rowId, value ->
+                viewModel.updateProductCodeSecondValue(item.stableId, rowId, value)
+            },
+            onProductCodeTakePhoto = { clickedItem ->
+                viewModel.onProductCodeTakePhoto(clickedItem, context)
+            },
+            onClickImageComment = { clickedItem, fieldValue ->
+                viewModel.onClickImageComment(
+                    itemUI = clickedItem,
+                    fieldValue = fieldValue,
                     context = context
                 )
             }
@@ -123,6 +158,7 @@ fun GroupDeck(
 
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
     val uiState by viewModel.uiState.collectAsState()
+    val productCodeEditorState by viewModel.productCodeEditorState.collectAsState()
 
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
@@ -149,18 +185,87 @@ fun GroupDeck(
 
     if (items.isEmpty()) return
 
-    val hasGroupHeader = groupMeta?.title?.isNotBlank() == true
+    val hasGroupTitle = groupMeta?.title?.isNotBlank() == true
+    val isGroupHeaderEnabled = settingsItems.isGroupHeaderEnabled()
 
-    val topItemRaw = remember(items) { buildGroupSummaryItem(items) }
-    // 👇 сводная карточка БЕЗ кастомных UI-модификаторов
-    val topItem = remember(topItemRaw, level, allSelected) {
-        topItemRaw.copy(selected = allSelected)
-            .witBackgroundUiModifiers(level)
+    val showGroupHeader = hasGroupTitle && isGroupHeaderEnabled
+
+    val keepTopCardVisibleWhenExpanded = hasGroupTitle && !showGroupHeader
+
+    LaunchedEffect(
+        groupMeta?.groupKey,
+        groupMeta?.title,
+        level,
+        expanded,
+        hasGroupTitle,
+        isGroupHeaderEnabled,
+        showGroupHeader,
+        keepTopCardVisibleWhenExpanded,
+        settingsItems
+    ) {
+        Log.e(
+            GROUP_DECK_DEBUG,
+            """
+        GroupDeck compose:
+        level=$level
+        groupKey=${groupMeta?.groupKey}
+        groupTitle=${groupMeta?.title}
+        expanded=$expanded
+
+        hasGroupTitle=$hasGroupTitle
+        isGroupHeaderEnabled=$isGroupHeaderEnabled
+        showGroupHeader=$showGroupHeader
+        keepTopCardVisibleWhenExpanded=$keepTopCardVisibleWhenExpanded
+
+        enabledSettings=${settingsItems.enabledKeysDebug()}
+        allSettings=${settingsItems.allKeysDebug()}
+        """.trimIndent()
+        )
+    }
+
+    val currentGroupingKey = remember(groupingFields, level) {
+        groupingFields.getOrNull(level)?.key?.takeIf { it.isNotBlank() }
+    }
+    val forcedGroupTitleKey = remember(
+        showGroupHeader,
+        currentGroupingKey,
+        groupMeta?.title
+    ) {
+        if (!showGroupHeader && !currentGroupingKey.isNullOrBlank() && !groupMeta?.title.isNullOrBlank()) {
+            currentGroupingKey
+        } else {
+            null
+        }
     }
 
     val stackSize = min(maxStackSize, items.size)
     val hasDeck = items.size > 1
     val count = items.size.coerceAtMost(4)
+
+    val forceColumnNameForDeck = hasDeck && !expanded && forcedGroupTitleKey == null
+
+    val topItemRaw = remember(
+        items,
+        forceColumnNameForDeck,
+        forcedGroupTitleKey,
+        groupMeta?.title
+    ) {
+        buildGroupSummaryItem(
+            groupItems = items,
+            forceColumnName = forceColumnNameForDeck,
+            forcedVisibleKeys = forcedGroupTitleKey?.let { setOf(it) }.orEmpty(),
+            forcedDisplayValues = if (forcedGroupTitleKey != null) {
+                mapOf(forcedGroupTitleKey to groupMeta?.title.orEmpty())
+            } else {
+                emptyMap()
+            }
+        )
+    }
+    // 👇 сводная карточка БЕЗ кастомных UI-модификаторов
+    val topItem = remember(topItemRaw, level, allSelected) {
+        topItemRaw.copy(selected = allSelected)
+            .witBackgroundUiModifiers(level)
+    }
 
     val shadow: Shadow = Shadow(
         radius = 1.dp,
@@ -171,26 +276,70 @@ fun GroupDeck(
 
     // небольшой подъём верхней карточки при раскрытии
     val topCardOffsetY by animateDpAsState(
-        targetValue = if (expanded && hasDeck && !hasGroupHeader) (-6).dp else 0.dp,
+        targetValue = if (expanded && hasDeck && keepTopCardVisibleWhenExpanded) (-6).dp else 0.dp,
         // ↳ смещаем вверх только в режиме, когда карта остаётся при expanded
         animationSpec = tween(250),
         label = "topCardOffset"
     )
 
     val cardBottomPadding by animateDpAsState(
-        targetValue = if (expanded && hasDeck && !hasGroupHeader) 8.dp else (2 + count * 5).dp,
+        targetValue = if (expanded && hasDeck && keepTopCardVisibleWhenExpanded) 8.dp else (2 + count * 5).dp,
         animationSpec = tween(250),
         label = "cardBottomPadding"
     )
 
-    val deckItems = remember(items, stackSize) { items.take(stackSize) }
-
     val hasHiddenSelected = remember(items, stackSize) {
         items.drop(stackSize).any { it.selected }
     }
-    val selectedBackColor = colorResource(R.color.selected_item)
-    val hiddenSelectedBackColor = Color.Yellow
-    val normalBackColor = Color.White
+
+    val forcedTopCardKeys = remember(
+        hasDeck,
+        expanded,
+        forcedGroupTitleKey
+    ) {
+        buildSet {
+            if (hasDeck && !expanded) add("column_name")
+            forcedGroupTitleKey?.let { add(it) }
+        }
+    }
+
+    val topCardSettings = settingsItems.withForcedKeys(forcedTopCardKeys)
+
+    val topCardVisibilityColumName = remember(
+        visibilityColumName,
+        forceColumnNameForDeck
+    ) {
+        if (forceColumnNameForDeck) {
+            View.VISIBLE
+        } else {
+            visibilityColumName
+        }
+    }
+    LaunchedEffect(
+        groupMeta?.groupKey,
+        expanded,
+        hasDeck,
+        forceColumnNameForDeck,
+        forcedGroupTitleKey,
+        forcedTopCardKeys,
+        topCardVisibilityColumName
+    ) {
+        Log.e(
+            GROUP_DECK_DEBUG,
+            """
+        GroupDeck top-card:
+        level=$level
+        groupKey=${groupMeta?.groupKey}
+        hasDeck=$hasDeck
+        expanded=$expanded
+        forceColumnNameForDeck=$forceColumnNameForDeck
+        forcedGroupTitleKey=$forcedGroupTitleKey
+        forcedTopCardKeys=${forcedTopCardKeys.joinToString(", ").ifBlank { "<none>" }}
+        topCardVisibilityColumName=$topCardVisibilityColumName
+        """.trimIndent()
+        )
+    }
+
 
     Column(
         modifier = Modifier
@@ -202,7 +351,7 @@ fun GroupDeck(
     ) {
 
         // --- Заголовок группы ---
-        if (hasGroupHeader) {
+        if (showGroupHeader) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,8 +359,14 @@ fun GroupDeck(
                     .clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val groupTitle = if (level > 0) {
+                    groupMeta!!.title.orEmpty()
+                } else {
+                    groupMeta!!.title.orEmpty()
+                }
+
                 Text(
-                    text = if (level > 0) "${groupMeta!!.title}" else groupMeta!!.title.orEmpty(),
+                    text = "$groupTitle (всего ${items.size} элементов)",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(start = 1.dp, end = 8.dp)
@@ -245,7 +400,26 @@ fun GroupDeck(
                 // ЛОГИКА:
                 //  - если НЕТ заголовка -> как раньше: карта/колода есть и при expanded = true
                 //  - если ЕСТЬ заголовок -> карта/колода только когда expanded = false
-                val showTopCardBlock = !expanded || !hasGroupHeader
+                val showTopCardBlock = !expanded || keepTopCardVisibleWhenExpanded
+
+                LaunchedEffect(
+                    groupMeta?.groupKey,
+                    expanded,
+                    keepTopCardVisibleWhenExpanded,
+                    showTopCardBlock
+                ) {
+                    Log.e(
+                        GROUP_DECK_DEBUG,
+                        """
+        GroupDeck visibility:
+        level=$level
+        groupKey=${groupMeta?.groupKey}
+        expanded=$expanded
+        keepTopCardVisibleWhenExpanded=$keepTopCardVisibleWhenExpanded
+        showTopCardBlock=$showTopCardBlock
+        """.trimIndent()
+                    )
+                }
 
                 if (hasDeck && showTopCardBlock) {
                     // кол-во подложек (слоёв)
@@ -267,18 +441,18 @@ fun GroupDeck(
                         if (firstRun) {
                             // если по умолчанию expanded=true и заголовка нет,
                             // подложки должны сразу быть скрыты, иначе будет “колода поверх раскрытого списка”.
-                            val startAlpha = if (expanded && !hasGroupHeader) 0f else 1f
+                            val startAlpha = if (expanded && keepTopCardVisibleWhenExpanded) 0f else 1f
                             for (i in 0 until backCount) backAlphas[i] = startAlpha
                             firstRun = false
                             return@LaunchedEffect
                         }
 
-                        if (expanded && !hasGroupHeader) {
+                        if (expanded && keepTopCardVisibleWhenExpanded) {
                             for (i in backCount - 1 downTo 0) {
                                 backAlphas[i] = 0f
                                 delay(120)
                             }
-                        } else if (!expanded && !hasGroupHeader) {
+                        } else if (!expanded && keepTopCardVisibleWhenExpanded) {
                             for (i in 0 until backCount) {
                                 backAlphas[i] = 1f
                                 delay(120)
@@ -342,8 +516,9 @@ fun GroupDeck(
                         ) {
                             ItemUI(
                                 item = topItem,
-                                visibilityColumName = visibilityColumName,
-                                settingsItemUI = settingsItems,
+                                visibilityColumName = topCardVisibilityColumName,
+                                settingsItemUI = topCardSettings,
+                                showRoundCheckbox = !(viewModel.modeUI == ModeUI.ONE_SELECT && level == 0),
                                 contextUI = viewModel.modeUI,
                                 onClickItem = {
                                     // клик по карте действует как по заголовку
@@ -367,11 +542,11 @@ fun GroupDeck(
                                     viewModel.onClickItemImage(dataItem, context, indexImg)
                                 },
                                 onCheckItem = { checked, it ->
-                                    viewModel.updateItemsSelect(
-                                        ids = items.map { it.stableId },
-                                        checked = checked
-                                    )
-//                                    viewModel.updateItemSelect(checked, it)
+                                    if (viewModel.modeUI != ModeUI.ONE_SELECT)
+                                        viewModel.updateItemsSelect(
+                                            ids = items.map { it.stableId },
+                                            checked = checked
+                                        )
                                 },
                                 onClickProductCode = { clickedItem, fieldValue, action ->
                                     viewModel.onClickProductCode(
@@ -380,7 +555,15 @@ fun GroupDeck(
                                         action = action,
                                         context = context
                                     )
-                                }
+                                },
+                                onLongClickProductCode = { clickedItem, fieldValue, action ->
+                                    viewModel.onLongClickProductCode(
+                                        itemUI = clickedItem,
+                                        fieldValue = fieldValue,
+                                        action = action,
+                                        context = context
+                                    )
+                                },
                             )
                         }
                     }
@@ -428,7 +611,15 @@ fun GroupDeck(
                                     action = action,
                                     context = context
                                 )
-                            }
+                            },
+                            onLongClickProductCode = { clickedItem, fieldValue, action ->
+                                viewModel.onLongClickProductCode(
+                                    itemUI = clickedItem,
+                                    fieldValue = fieldValue,
+                                    action = action,
+                                    context = context
+                                )
+                            },
                         )
                     }
                 }
@@ -468,26 +659,30 @@ fun GroupDeck(
                                         )
                                         .shadow(4.dp, RoundedCornerShape(8.dp))
                                 ) {
+                                    val rows =
+                                        productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
+                                    val expanded = productCodeEditorState.expanded
+
                                     ItemUI(
                                         item = item,
                                         visibilityColumName = visibilityColumName,
-                                        settingsItemUI = settingsItems,
+                                        settingsItemUI = uiState.settingsItems,
                                         contextUI = viewModel.modeUI,
-                                        onClickItem = {
-                                            viewModel.onClickItem(it, context)
-                                        },
+                                        onClickItem = { viewModel.onClickItem(it, context) },
                                         onLongClickItem = {
-                                            viewModel.onLongClickItem(it, context)
+                                            viewModel.onLongClickItem(
+                                                it,
+                                                context
+                                            )
                                         },
                                         onClickItemImage = {
-                                            viewModel.onClickItemImage(it, context)
-                                        },
-                                        onMultipleClickItemImage = { dataItem, indexImg ->
                                             viewModel.onClickItemImage(
-                                                dataItem,
-                                                context,
-                                                indexImg
+                                                it,
+                                                context
                                             )
+                                        },
+                                        onMultipleClickItemImage = { dataItem, index ->
+                                            viewModel.onClickItemImage(dataItem, context, index)
                                         },
                                         onCheckItem = { checked, it ->
                                             viewModel.updateItemSelect(checked, it)
@@ -497,6 +692,39 @@ fun GroupDeck(
                                                 itemUI = clickedItem,
                                                 fieldValue = fieldValue,
                                                 action = action,
+                                                context = context
+                                            )
+                                        },
+                                        onLongClickProductCode = { clickedItem, fieldValue, action ->
+                                            viewModel.onLongClickProductCode(
+                                                itemUI = clickedItem,
+                                                fieldValue = fieldValue,
+                                                action = action,
+                                                context = context
+                                            )
+                                        },
+                                        productCodeExpanded = expanded,
+                                        productCodeRows = rows,
+                                        onProductCodeMinus = { rowId ->
+                                            viewModel.decreaseProductCodeValue(item.stableId, rowId)
+                                        },
+                                        onProductCodePlus = { rowId ->
+                                            viewModel.increaseProductCodeValue(item.stableId, rowId)
+                                        },
+                                        onProductCodeValueChange = { rowId, value ->
+                                            viewModel.updateProductCodeValue(
+                                                item.stableId,
+                                                rowId,
+                                                value
+                                            )
+                                        },
+                                        onProductCodeTakePhoto = { clickedItem ->
+                                            viewModel.onProductCodeTakePhoto(clickedItem, context)
+                                        },
+                                        onClickImageComment = { clickedItem, fieldValue ->
+                                            viewModel.onClickImageComment(
+                                                itemUI = clickedItem,
+                                                fieldValue = fieldValue,
                                                 context = context
                                             )
                                         }
@@ -578,7 +806,6 @@ private fun BoxScope.DeckCardBack(
     )
 }
 
-
 private val GROUP_ALWAYS_HIDDEN_KEYS = setOf(
     "client_start_dt",
     "client_end_dt"
@@ -634,12 +861,21 @@ private fun aggregateNumberOrCount(rawValues: List<Any?>): Double? {
  */
 
 fun buildGroupSummaryItem(
-    groupItems: List<DataItemUI>
+    groupItems: List<DataItemUI>,
+    forceColumnName: Boolean = false,
+    forcedVisibleKeys: Set<String> = emptySet(),
+    forcedDisplayValues: Map<String, String> = emptyMap()
 ): DataItemUI {
     require(groupItems.isNotEmpty())
 
     val first = groupItems.first()
-    val visibleKeys = first.fields.map { it.key }.toSet()
+
+    val visibleKeys = buildSet {
+        addAll(first.fields.map { it.key.lowercase() })
+        if (forceColumnName) add("column_name")
+        addAll(forcedVisibleKeys.map { it.lowercase() })
+    }
+
     val orderedKeys = first.rawFields.map { it.key }
 
     val summaryRawFields = mutableListOf<FieldValue>()
@@ -656,9 +892,7 @@ fun buildGroupSummaryItem(
         val rawValues = perItemFields.map { it.value.rawValue }
         val displayValues = perItemFields.map { it.value.value.orEmpty().trim() }
 
-        // ---------- спец. сценарии ----------
         val aggregatedDisplay: String? = when (key) {
-
             "dt" -> {
                 val inputFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
                 val outputFormatter =
@@ -667,28 +901,22 @@ fun buildGroupSummaryItem(
                 val dates: List<LocalDate> = displayValues.mapNotNull { s ->
                     val v = s.trim()
                     if (v.isEmpty()) return@mapNotNull null
-
                     runCatching { LocalDate.parse(v, inputFormatter) }.getOrNull()
                 }
 
-                if (dates.isEmpty()) {
-                    null
-                } else {
+                if (dates.isEmpty()) null
+                else {
                     val minDate = dates.minOrNull()!!
                     val maxDate = dates.maxOrNull()!!
-
                     val minStr = minDate.format(outputFormatter)
                     val maxStr = maxDate.format(outputFormatter)
-
                     if (minDate == maxDate) minStr else "C $minStr по $maxStr"
                 }
             }
 
-
             "cash_ispolnitel" -> {
                 val sum = aggregateNumberOrCount(rawValues)
                 sum?.let {
-                    // Для денег сохраняем дробную часть, если есть
                     if (it % 1.0 == 0.0) "${it.toLong()} грн"
                     else String.format(Locale.getDefault(), "%.0f грн", it)
                 }
@@ -720,12 +948,9 @@ fun buildGroupSummaryItem(
                 }
             }
 
-
             "duration" -> {
                 val sum = aggregateNumberOrCount(rawValues)
-                sum?.let {
-                    "${it.toLong()} хв."
-                }
+                sum?.let { "${it.toLong()} хв." }
             }
 
             "user_txt" -> {
@@ -742,9 +967,9 @@ fun buildGroupSummaryItem(
             }
 
             "sku" -> ""
+            "option_code" -> ""
 
             "status" -> {
-                // парсим числовые статусы: 0,1,2,3,...
                 val statuses: List<Int> = rawValues.mapNotNull { v ->
                     v?.toString()?.trim()?.toIntOrNull()
                 }
@@ -753,8 +978,8 @@ fun buildGroupSummaryItem(
                     null
                 } else {
                     val total = statuses.size
-                    val prov = statuses.count { it == 1 }        // проведено (статус 1)
-                    val notProv = total - prov                   // все остальные — "не пров"
+                    val prov = statuses.count { it == 1 }
+                    val notProv = total - prov
 
                     fun pct(count: Int): Int =
                         if (total == 0) 0 else ((count * 100.0 / total).roundToInt())
@@ -766,24 +991,33 @@ fun buildGroupSummaryItem(
                 }
             }
 
-            else -> null
-        }
+            "expire_period" -> ""
+            "barcode" -> ""
+            "manufacturer_id" -> ""
+            "nm" -> ""
+            "group_id" -> ""
+            "weight" -> ""
+//                { "${displayValues.size} элементов" }
 
-        // ---------- дефолт: для полей без спец. логики ----------
+            else -> aggregateDefaultList(displayValues)
+        }
+        val forcedDisplay = forcedDisplayValues.entries
+            .firstOrNull { it.key.equals(key, ignoreCase = true) }
+            ?.value
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+
         val finalDisplay: String? =
-            if (aggregatedDisplay != null) {
+            forcedDisplay ?: if (aggregatedDisplay != null) {
                 aggregatedDisplay.ifEmpty { null }
             } else {
-                // если сценария нет — стандартное правило:
-                // все пустые → скрыть
-                // все одинаковые → показать
-                // разные → покахать списокм
                 val allEmpty = displayValues.all { it.isBlank() }
                 if (allEmpty) {
                     null
                 } else {
                     val distinct = displayValues.toSet()
-                    if (distinct.size == 1) distinct.first() else {
+                    if (distinct.size == 1) distinct.first()
+                    else {
                         val uniqueUsers: Set<String> = displayValues
                             .map { it.trim() }
                             .filter { it.isNotEmpty() }
@@ -792,7 +1026,6 @@ fun buildGroupSummaryItem(
                         else uniqueUsers.joinToString(", ")
                     }
                 }
-
             }
 
         if (finalDisplay == null) continue
@@ -801,7 +1034,14 @@ fun buildGroupSummaryItem(
 
         val aggregatedField = FieldValue(
             key = key,
-            field = template.field,
+            field = if (key == "sortcol") {
+                template.field.copy(
+                    rawValue = "Всего:",
+                    value = "Всего:"
+                )
+            } else {
+                template.field
+            },
             value = template.value.copy(
                 rawValue = finalDisplay,
                 value = finalDisplay
@@ -809,11 +1049,44 @@ fun buildGroupSummaryItem(
         )
 
         summaryRawFields += aggregatedField
-        if (key in visibleKeys) {
+
+        if (key.lowercase() in visibleKeys) {
             summaryFields += aggregatedField
         }
+
     }
 
+    val isTovarGroup = groupItems.firstOrNull()
+        ?.rawObj
+        ?.any { it is TovarDB } == true
+
+    if (isTovarGroup) {
+        val perItemFields: List<FieldValue> = groupItems.mapNotNull { item ->
+            item.rawFields.firstOrNull { it.key == "column_name" }
+        }
+        val displayValues = perItemFields.map { it.value.value.orEmpty().trim() }
+
+        val isTovarGroup = groupItems.firstOrNull()
+            ?.rawObj
+            ?.any { it is TovarDB } == true
+
+        if (isTovarGroup) {
+            val totalField = FieldValue(
+                key = "tovar_total_count",
+                field = TextField(
+                    rawValue = "Всего:",
+                    value = "Всего:"
+                ),
+                value = TextField(
+                    rawValue = "${groupItems.size} элементов",
+                    value = "${groupItems.size} элементов"
+                )
+            )
+
+            summaryRawFields += totalField
+            summaryFields += totalField
+        }
+    }
     val allRawObjects = groupItems.flatMap { it.rawObj }
 
     return first.copy(
@@ -823,6 +1096,25 @@ fun buildGroupSummaryItem(
     )
 }
 
+private fun aggregateDefaultList(
+    values: List<String?>,
+    maxVisible: Int = 2
+): String? {
+    val distinct = values
+        .mapNotNull { it?.trim() }
+        .filter { it.isNotEmpty() }
+        .distinct()
+
+    if (distinct.isEmpty()) return null
+
+    return if (distinct.size <= maxVisible) {
+        distinct.joinToString(", ")
+    } else {
+        val visible = distinct.take(maxVisible).joinToString(", ")
+        val extraCount = distinct.size - maxVisible
+        "$visible.. (усього ${distinct.size} елементів)"
+    }
+}
 
 private data class LocalGroup(
     val key: String,
@@ -840,7 +1132,7 @@ private fun buildSubGroups(
     val map = LinkedHashMap<String, MutableList<DataItemUI>>()
 
     for (item in items) {
-        val field = item.fields.firstOrNull {
+        val field = item.rawFields.firstOrNull {
             it.key.equals(groupingKey, ignoreCase = true)
         }
 
@@ -922,3 +1214,30 @@ private fun lightenTowardsWhite(color: Color, factor: Float): Color {
         alpha = color.alpha
     )
 }
+
+
+private fun List<SettingsItemUI>.withForcedKeys(keys: Set<String>): List<SettingsItemUI> {
+    if (keys.isEmpty()) return this
+
+    return map { item ->
+        if (keys.any { forced -> item.key.equals(forced, ignoreCase = true) }) {
+            item.copy(isEnabled = true)
+        } else {
+            item
+        }
+    }
+}
+
+private fun List<SettingsItemUI>.isGroupHeaderEnabled(): Boolean {
+    return firstOrNull { it.key.equals("group_header", ignoreCase = true) }?.isEnabled ?: true
+}
+
+private const val GROUP_DECK_DEBUG = "GROUP_DECK_DEBUG"
+
+private fun List<SettingsItemUI>.enabledKeysDebug(): String =
+    filter { it.isEnabled }
+        .joinToString(", ") { it.key }
+        .ifBlank { "<none>" }
+
+private fun List<SettingsItemUI>.allKeysDebug(): String =
+    joinToString(" | ") { "${it.key}=${it.isEnabled}" }

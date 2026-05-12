@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportHomeFrag.DetailedReportHomeFrag_VIDEO_LESSONS;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag.DetailedReportOptionsFrag_VIDEO_LESSONS;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTARFrag.DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
@@ -28,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -659,10 +661,36 @@ public class DetailedReportActivity extends toolbar_menus {
             adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), wpDataDB);
             viewPager.setAdapter(adapter);
 
+            int activeColor = ContextCompat.getColor(this, R.color.main_form);
+            int transparentColor = Color.TRANSPARENT;
+
+            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    if (tab.getPosition() == 2) { // второй таб
+                        tab.view.setBackgroundColor(activeColor);
+                    }
+                }
+
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
+                    if (tab.getPosition() == 2) {
+                        tab.view.setBackgroundColor(transparentColor);
+                    }
+                }
+
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+                    if (tab.getPosition() == 2) {
+                        tab.view.setBackgroundColor(activeColor);
+                    }
+                }
+            });
 
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
+
 
 //
                     if (commentViewModel.isSaved().getValue()) {

@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 35
         //noinspection HighAppVersionCode
-        versionCode  2026041500
-        versionName "2026041500"
+        versionCode  2026050500
+        versionName "2026050500"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -222,5 +222,5 @@ dependencies {
 //    implementation("com.google.firebase:firebase-analytics")
 
     debugImplementation 'com.github.amitshekhariitbhu.Android-Debug-Database:debug-db:1.0.7'
-
+    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 }

@@ -19,8 +19,13 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -53,7 +58,9 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
@@ -93,6 +100,7 @@ class FeaturesActivity : AppCompatActivity() {
             MerchikTheme {
                 Surface(
                     modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
                         .fillMaxSize(),
                     color = Color.Transparent,
                 ) {
@@ -129,6 +137,8 @@ class FeaturesActivity : AppCompatActivity() {
                                         ShowcaseDBViewModel::class -> viewModel() as ShowcaseDBViewModel
                                         SMSPlanSDBViewModel::class -> viewModel() as SMSPlanSDBViewModel
                                         JournalPhotoSDBViewModel::class -> viewModel() as JournalPhotoSDBViewModel
+                                        ErrorDBViewModel::class -> viewModel() as ErrorDBViewModel
+                                        AkciyaDBViewModel::class -> viewModel() as AkciyaDBViewModel
                                         else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")

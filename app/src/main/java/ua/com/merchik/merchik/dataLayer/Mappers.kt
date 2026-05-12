@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
@@ -25,6 +26,7 @@ import java.util.*
 import java.util.zip.CRC32
 
 interface DataObjectUI {
+
     fun getIdResImage(): Int? {
         return null
     }
@@ -37,6 +39,24 @@ interface DataObjectUI {
         return null
     }
 
+    fun getCommentsForImage(): String {
+        return ""
+    }
+
+    fun getCommentForImageValue(
+        key: String,
+        jsonObject: JSONObject
+    ): String? {
+        val rawValue = jsonObject.opt(key)
+
+        if (rawValue == null || rawValue == JSONObject.NULL) {
+            return null
+        }
+
+        return getValueUI(key, rawValue)
+            .trim()
+            .takeIf { it.isNotBlank() }
+    }
 
     fun getHidedFieldsOnUI(): String {
         return ""
@@ -49,7 +69,6 @@ interface DataObjectUI {
     fun getValueUI(key: String, value: Any): String {
         return value.toString()
     }
-
 
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier? {
         return null
@@ -64,9 +83,7 @@ interface DataObjectUI {
     }
 
     fun getPreferredFieldOrder(): List<String> = emptyList()
-
 }
-
 
 private fun logException(tag: String, where: String, e: Throwable, extra: String? = null) {
     val sw = StringWriter()
@@ -143,6 +160,8 @@ fun DataObjectUI.toItemUI(
         .filter { it.isNotBlank() }
         .toSet()
 
+    val imageCommentKeys = this.getCommentsForImageKeys()
+
     val idResImage = this.getIdResImage()
     if (idResImage != null) {
         val label = nameUIRepository.getTranslateString(
@@ -173,6 +192,41 @@ fun DataObjectUI.toItemUI(
     for (key in imageKeys) {
         val num = resolvePhotoNum(jsonObject, key, hashByIdKey[key], idResImage)
         if (num != null) images.add(num)   // без дедупа, как раньше по смыслу
+    }
+
+    fun addImageCommentField(key: String) {
+        val valueText = this.getCommentForImageValue(key, jsonObject)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: return
+
+        val label = nameUIRepository.getTranslateString(
+            key,
+            this.getFieldTranslateId(key)
+        )
+
+        val field = FieldValue(
+            key = key,
+            field = TextField(
+                rawValue = key,
+                value = "$label:"
+            ),
+            value = TextField(
+                rawValue = valueText,
+                value = valueText,
+                modifierValue = getDefaultImageCommentValueModifier()
+            )
+        )
+
+        rawFields.add(field)
+
+        if (key !in hiddenList) {
+            fields.add(field)
+        }
+    }
+
+    imageCommentKeys.forEach { key ->
+        addImageCommentField(key)
     }
 
     fun updateFields(key: String) {
@@ -244,8 +298,12 @@ fun DataObjectUI.toItemUI(
 
     // Генерация полей в финальном порядке
     for (key in finalOrderedKeys) {
+        if (imageCommentKeys.any { it.equals(key, ignoreCase = true) }) {
+            continue
+        }
         updateFields(key)
     }
+
 
     return DataItemUI(
         rawObj = listOf(this),
@@ -358,6 +416,14 @@ fun DataItemUI.addrIdOrNull(): String? =
         ?.toString()
         ?.trim()
 
+fun DataObjectUI.getCommentsForImageKeys(): List<String> {
+    return getCommentsForImage()
+        .split(",")
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .distinctBy { it.lowercase() }
+}
+
 
 enum class ModeUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT, FILTER_SELECT
@@ -402,6 +468,8 @@ enum class ContextUI {
     THEME_FROM_ACHIEVEMENT,
     TOVAR_FROM_ACHIEVEMENT,
     TOVAR_FROM_TOVAR_TABS,
+    TOVAR_FROM_TOVAR_TABS_ADD_NEW,
+    TOVAR_FROM_TOVAR_TABS_ADD_ALL,
     STACK_PHOTO_TO_FROM_ACHIEVEMENT,
     STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
     STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
@@ -427,7 +495,9 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_157354,    // Фото ДМП (42)
     SAMPLE_PHOTO_FROM_OPTION_164355,    // Фото планограмы (5)
     SAMPLE_PHOTO_FROM_OPTION_169108,    // фото POS материалов (47) +
-    SAMPLE_PHOTO_FROM_OPTION_172100     // Фото вітрини з акційними цінниками (48)
+    SAMPLE_PHOTO_FROM_OPTION_172100,    // Фото вітрини з акційними цінниками (48)
+    ERROR_FROM_TEXT_EDITOR,
+    AKCIYA_FROM_TEXT_EDITOR
 }
 
 

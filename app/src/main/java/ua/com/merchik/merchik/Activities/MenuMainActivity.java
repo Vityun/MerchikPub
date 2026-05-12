@@ -107,7 +107,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void testLong() {
         AppUsersDB appUsersDB = AppUserRealm.getAppUser();
-        if (appUsersDB != null && appUsersDB.getUserId() == 172906) {
+        if (appUsersDB != null && appUsersDB.getUserId() != 172906) {
             String res = CodeGenerator.getCode();
             Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
         }

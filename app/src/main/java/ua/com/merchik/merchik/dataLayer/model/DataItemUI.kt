@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
@@ -34,6 +35,7 @@ data class MerchModifier(
     val background: Color? = null,
     val alignment: Alignment.Horizontal? = null,
     val weight: Float? = null,
+    val textDecoration: TextDecoration? = null,
     val visibility: Int? = null,
     val maxLine: Int? = null
 )
@@ -62,7 +64,7 @@ data class SettingsItemUI(
     val key: String,
     val text: String,
     var isEnabled: Boolean,
-    var index: Int
+    val index: Int
 )
 
 @Immutable

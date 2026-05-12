@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
@@ -412,11 +413,13 @@ object SamplePhotoSDBOverride {
 
 object TovarDBOverride {
     fun getHidedFieldsOnUI(): String =
-        "client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +
+        "client_id, client_id2, deleted, depth, dt_update, " +
+//                "group_id, " +
                 "height, ID, " +
                 "article, fcdCode, timeColor, " +
 //                "manufacturer_id, " +
                 "photo_id, " +
+                "tovar_image_balance_comment, " +
                 "related_tovar_id," +
                 " width, " +
                 "sortcol, " +
@@ -433,7 +436,7 @@ object TovarDBOverride {
         "depth" -> 5977
         "dt_update" -> 5972
         "expire_period" -> 5979
-        "group_id" -> 5968
+        "group_id" -> 6110
         "height" -> 5975
         "ID" -> 5962
         "manufacturer_id" -> 5969
@@ -454,16 +457,47 @@ object TovarDBOverride {
             val vv = value.toString()
             vv
         }
+
+        "expire_period" -> {
+            if (value.toString() == "0") "Не вказаний термiн" else "$value дiб"
+        }
+
         "manufacturer_id" -> {
             try {
                 val manufacturer_id = value.toString()
                 TradeMarkRealm.getTradeMarkRowById(manufacturer_id).nm
-            } catch (_: Exception){
+            } catch (_: Exception) {
                 value.toString()
             }
 
         }
+
+        "group_id" -> {
+            try {
+                val id = (value as? Int) ?: (value as? String)?.toIntOrNull() ?: 0
+                if (id == 0)
+                    "Група не визначена"
+                else {
+                    val group = RoomManager.SQL_DB.tovarGroupDao().getById(id)
+                    group.nm
+                }
+            } catch (_: Exception) {
+                value.toString()
+            }
+        }
+
         else -> value.toString()
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("timeColor", "")
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
     }
 
 }
@@ -632,7 +666,7 @@ object StackPhotoDBOverride {
             if (hasError)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
 
-            val uploadTime = jsonObject.optLong("upload_to_server",0)
+            val uploadTime = jsonObject.optLong("upload_to_server", 0)
             return if (uploadTime > 0)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
             else
@@ -932,6 +966,26 @@ object WPDataBDOverride {
     }
 }
 
+object ErrorDBOverride {
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+
+        "parent_id" -> {
+            try {
+                val name =
+                    RealmManager.getErrorDbById(value.toString())
+                name.nm
+            } catch (e: Exception) {
+                value.toString()
+            }
+//            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm
+//                ?: "Відділ не визначено ($value)"
+        }
+
+        else -> value.toString()
+    }
+
+}
 @SuppressLint("SimpleDateFormat")
 fun formatDateString(raw: String?): String {
     if (raw.isNullOrBlank()) return ""

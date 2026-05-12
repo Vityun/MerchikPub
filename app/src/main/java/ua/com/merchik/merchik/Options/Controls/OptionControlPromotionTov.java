@@ -272,7 +272,7 @@ public class OptionControlPromotionTov<T> extends OptionControl {
 
 
     // TODO Это нужно перенести куда-то где можно нормально вызывать по всей приле
-    TovarOptions TPL = new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977);
+    TovarOptions TPL = new TovarOptions(AKCIYA_ID, "А", "Акция", "akciya_id", "main", 80977);
 
     // Нужно для заполенния ТПЛ-ов
     private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {

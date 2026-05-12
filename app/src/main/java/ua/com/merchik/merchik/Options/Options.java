@@ -4035,7 +4035,7 @@ public class Options {
                 // Получаю подробную инфу о текущей ТПЛке
                 TovarOptions temp = listTovOpt.get(listTovOpt.indexOf(new TovarOptions(optionId)));
 
-                Log.e("getOptionString", "tempO: " + new Gson().toJson(temp));
+//                Log.e("getOptionString", "tempO: " + new Gson().toJson(temp));
 
                 // Должен добавить в 'temps' элемент + записывать в опцию её символ
                 // todo должен написать функцию.
@@ -4144,7 +4144,7 @@ public class Options {
      */
     private Globals.Triple checkUploadedTPL(ReportPrepareDB tableRow, String data) {
 
-        Log.e("checkUploadedTPL2", "data: " + data);
+//        Log.e("checkUploadedTPL2", "data: " + data);
 
         if (tableRow == null) return Globals.Triple.NO_DATA;
 
@@ -4264,7 +4264,7 @@ public class Options {
     таблички ReportPrepare (дет. отчёт)) она будет себя вести по разному. Разный текст ил разное
     поведение. На данный момент это зависит от ТЕМЫ данного посещения (вроде из WPData)
     */
-    private static List<TovarOptions> getTovarOptins() {
+    public static List<TovarOptions> getTovarOptins() {
         if (list == null || list.isEmpty()) {
             list = new ArrayList<>();
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579));
@@ -4275,13 +4275,13 @@ public class Options {
             list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967, 164985, 165276));
             list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));
             list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242));
-            list.add(new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977));
+            list.add(new TovarOptions(AKCIYA_ID, "А", "Акция", "akciya_id", "main", 80977));
             list.add(new TovarOptions(AKCIYA, "Н", "Наличие акции", "akciya", "main", 80977));
             list.add(new TovarOptions(NOTES, "П", "Примечание", "notes", "main", 135590));
 
 //            list.add(new TovarOptions(NOTES, "П", "Примечание", "notes", "main", 135590));
 //            list.add(new TovarOptions(AKCIYA, "Н", "Наличие акции", "akciya", "main", 80977));
-//            list.add(new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977));
+//            list.add(new TovarOptions(AKCIYA_ID, "А", "Акция", "akciya_id", "main", 80977));
 //            list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592));
 //            list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));
 //            list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967));
@@ -4379,7 +4379,7 @@ $options_list_tpl=array(
         array(  Справочник Акций, выбор
             'options'    =>array(80977),
             'sign'       =>'А',
-            'sign_descr' =>'Вид акции',
+            'sign_descr' =>'Акция',
             'order_field'=>'akciya_id'
         ),
         array( 0 - не выбрано, 1 - есть , 2 - нет
@@ -4405,7 +4405,7 @@ $options_list_tpl=array(
 (DT_EXPIRE,     "Д", "Дата ок. ср. год"         , "dt_expire", "main", 84005, 84967, 164985, 165276));
 (OBOROTVED_NUM, "О", "Остаток по учёту"         , "oborotved_num", "main", 2243, 135448));
 (ERROR_ID,      "Ш", "Ошибка товара"            , "error_id", "main", 135592, 157242, !157241, !157243));
-(AKCIYA_ID,     "А", "Вид акции"                , "akciya_id", "main", 80977));
+(AKCIYA_ID,     "А", "Акция"                , "akciya_id", "main", 80977));
 (AKCIYA,        "Н", "Наличие акции"            , "akciya", "main", 80977));
 (NOTES,         "П", "Примечание"               , "notes", "main", 135590));
 

@@ -7,7 +7,6 @@ import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -316,15 +317,21 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
             case 143:   // Задачи
                 try {
                     long time = Clock.getDateLong(-30).getTime() / 1000;
-                    res.add(SQL_DB.tarDao().getAllByTp(Globals.userId, 1, time).size());
-                }catch (Exception e){}
+                    List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = SQL_DB.tarDao().getAllByTp(Globals.userId, 1, time);
+                    res.add(tasksAndReclamationsSDBS.size());
+                } catch (Exception e) {
+                    Log.e("ERROR", "Exeption: " + e.getMessage());
+                }
                 return res;
 
             case 144:   // Рекламации
                 try {
                     long time = Clock.getDateLong(-30).getTime() / 1000;
-                    res.add(SQL_DB.tarDao().getAllByTp(Globals.userId, 0, time).size());
-                }catch (Exception e){}
+                    List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = SQL_DB.tarDao().getAllByTp(Globals.userId, 0, time);
+                    res.add(tasksAndReclamationsSDBS.size());
+                } catch (Exception e) {
+                    Log.e("ERROR", "Exeption: " + e.getMessage());
+                }
                 return res;
 
             default:
