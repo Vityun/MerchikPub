@@ -691,8 +691,6 @@ public class DetailedReportActivity extends toolbar_menus {
                 @Override
                 public void onPageSelected(int position) {
 
-
-//
                     if (commentViewModel.isSaved().getValue()) {
                         // Показываем диалог
                         showSaveDialog();

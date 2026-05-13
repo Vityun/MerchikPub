@@ -4063,8 +4063,8 @@ public class Options {
             }
             if (!flag) {
                 Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(option, reportPrepareTovar));
-                Log.e("TPL_UPLOAD", "2: " + option.getOptionShort());
-                Log.e("TPL_UPLOAD", "2.uploaded: " + uploaded);
+//                Log.e("TPL_UPLOAD", "2: " + option.getOptionShort());
+//                Log.e("TPL_UPLOAD", "2.uploaded: " + uploaded);
                 tplOptional.append(setOptionTPLColor(option.getOptionShort(), false, uploaded));
 //                tplOptional.append(option.getOptionShort());
             }

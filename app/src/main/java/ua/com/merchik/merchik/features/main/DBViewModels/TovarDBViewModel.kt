@@ -167,6 +167,75 @@ class TovarDBViewModel @Inject constructor(
         return newCache
     }
 
+    private fun afterTovarRequisitesSaved(tovars: List<TovarDB>) {
+        if (tovars.isEmpty()) return
+
+        val savedIds = tovars
+            .map { it.getiD() }
+            .filter { it.isNotBlank() }
+            .toSet()
+
+        val affectedItems = getAllCurrentItems().filter { item ->
+            val tovarId = item.rawAs<TovarDB>()?.getiD()
+            tovarId in savedIds
+        }
+
+        affectedItems.forEach { item ->
+            val tovar = item.rawAs<TovarDB>() ?: return@forEach
+
+            invalidateProductCodeItemCache(
+                stableId = item.stableId,
+                tovarId = tovar.getiD()
+            )
+
+            refreshAllProductCodeRowsForItem(item.stableId)
+            refreshOptionCodeForItem(item.stableId)
+        }
+    }
+
+    private fun refreshAllProductCodeRowsForItem(itemId: Long) {
+        val current = productCodeEditorState.value
+        if (!current.expanded) return
+
+        val rows = current.rowsByItemId[itemId].orEmpty()
+        if (rows.isEmpty()) return
+
+        val tovar = findTovarByStableId(itemId) ?: return
+        val codeDad2 = getCodeDad2String()
+        val rp = RealmManager.getTovarReportPrepare(codeDad2, tovar.getiD())
+
+        val refreshedRows = rows.map { row ->
+            when (row.option.getOptionControlName()) {
+                OptionControlName.AKCIYA_ID -> {
+                    row.copy(
+                        value = getCurrentData(row.option, rp = rp).orEmpty(),
+                        value2 = rp?.getAkciya().orEmpty()
+                    )
+                }
+
+                OptionControlName.ERROR_ID -> {
+                    row.copy(
+                        value = getCurrentData(row.option, rp = rp).orEmpty(),
+                        value2 = rp?.getErrorComment().orEmpty()
+                    )
+                }
+
+                else -> {
+                    row.copy(
+                        value = getCurrentData(row.option, rp = rp).orEmpty()
+                    )
+                }
+            }
+        }
+
+        val updatedMap = current.rowsByItemId.toMutableMap()
+        updatedMap[itemId] = refreshedRows
+
+        setProductCodeEditor(
+            current.copy(rowsByItemId = updatedMap)
+        )
+    }
+
     private fun getCachedReportPrepare(
         codeDad2: String,
         tovarId: String
@@ -777,39 +846,42 @@ class TovarDBViewModel @Inject constructor(
         val originalItem = getAllCurrentItems().firstOrNull { it.stableId == itemId } ?: return
         val tovar = originalItem.rawAs<TovarDB>() ?: return
 
-        val codeDad2 = getCodeDad2String().toLong()
+        val codeDad2 = getCodeDad2String()
+
         val reportPrepare = RealmManager.getTovarReportPrepare(
-            codeDad2.toString(),
+            codeDad2,
             tovar.getiD()
         )
 
         val optionsList = RealmManager.getTovarOptionInReportPrepare(
-            codeDad2.toString(),
+            codeDad2,
             ""
         )
 
         val deletePromoOption = false
 
-        val updatedItem = if (reportPrepare == null) {
-            originalItem
-        } else {
+        var updatedItem = originalItem
+
+        if (reportPrepare != null) {
             val optionString = Options().getOptionString(
                 optionsList,
                 reportPrepare,
                 deletePromoOption
             )
 
-            if (optionString.isBlank()) {
-                originalItem
-            } else {
+            if (optionString.isNotBlank()) {
                 val optionField = buildOptionCodeField(
                     optionHtmlOrText = optionString,
                     key = FIELD_OPTION_CODE,
                     title = "Шифр",
                     actionId = "open_option_code"
                 )
-                originalItem.addOrReplaceField(optionField)
+
+                updatedItem = updatedItem.addOrReplaceField(optionField)
             }
+
+            val commentField = buildTovarBalanceImageCommentField(reportPrepare)
+            updatedItem = updatedItem.addOrReplaceImageCommentField(commentField)
         }
 
         replaceCurrentItemByStableId(updatedItem)
@@ -1353,8 +1425,24 @@ class TovarDBViewModel @Inject constructor(
             ContextMenuActionIds.CLOSE -> hideContextMenu()
 
             ContextMenuActionIds.ADDITIONAL_ADD -> {
-//                ######
-//                onSelectedItemsUI(event)
+                val selectedItems = event.payload.selectedItems.filter { it.selected }
+
+                val itemsToAdd = if (selectedItems.isNotEmpty()) {
+                    selectedItems
+                } else {
+                    event.payload.selectedItems
+                }
+
+                val selectedIds = itemsToAdd.mapNotNull { item ->
+                    item.rawAs<TovarDB>()?.getiD()
+                }
+
+                TovarTabsAddNewHolder.set(selectedIds)
+                hideContextMenu()
+
+                // Здесь нужен твой текущий механизм закрытия FeaturesActivity/возврата назад.
+                // Например, если у тебя есть событие закрытия экрана:
+                // emitEvent(MainEvent.CloseWithResult)
             }
 
             ContextMenuActionIds.ADDITIONAL_CONTENT_DELETE_EXTRA -> {
@@ -1384,174 +1472,159 @@ class TovarDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
-        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
-            try {
 
-                // Отображаем инфу по особенному Товару.
-                val list = itemUI.rawAs<TovarDB>() ?: return
-                val codeDad2 =
-                    Gson().fromJson(dataJson, JSONObject::class.java)
-                        .getString("codeDad2")
-                        .toLong()
+        if (contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) return
 
-                val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                val recycl = RecycleViewDRAdapterTovar(
-                    context, RealmManager.getTovarListFromReportPrepareByDad2(codeDad2),
-                    wpDataDB,
-                    RecycleViewDRAdapterTovar.OpenType.DEFAULT
-                )
+        try {
+            val tovar = itemUI.rawAs<TovarDB>() ?: return
 
-                val adList: List<AdditionalRequirementsDB> = AdditionalRequirementsRealm.getData3(
+            val codeDad2 = Gson()
+                .fromJson(dataJson, JSONObject::class.java)
+                .getString("codeDad2")
+                .toLong()
+
+            val codeDad2String = codeDad2.toString()
+
+            val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+                ?: return
+
+            val tovarId = tovar.getiD()
+
+            val adList: List<AdditionalRequirementsDB> = runCatching {
+                AdditionalRequirementsRealm.getData3(
                     wpDataDB,
                     AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT,
                     null,
                     null,
                     0
                 )
-                val tovId: String? = list.getiD() // Идентификатор Товара
-                var result: Optional<AdditionalRequirementsDB>? = null
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && adList != null) {
-                    result = adList.stream()
-                        .filter { obj: AdditionalRequirementsDB ->
-                            obj.getTovarId() == tovId && obj.getOptionId().isEmpty()
-                        }
-                        .findFirst()
+            }.getOrNull().orEmpty()
 
-                    if (result!!.isPresent()) {
-                        val foundObject = result.get()
-                        // Выполняйте операции с найденным объектом
-                        val dialogMsg = DialogData(context)
-                        dialogMsg.setTitle("Додаткова вимога до товару.")
-                        dialogMsg.setText(foundObject.getNm())
-                        dialogMsg.setClose(DialogClickListener { dialogMsg.dismiss() })
-                        dialogMsg.show()
-                    } else {
-                        // Обработка случая, когда объект не найден
-                    }
-                }
+            adList.firstOrNull { requirement ->
+                requirement.getTovarId() == tovarId &&
+                        requirement.getOptionId().isNullOrEmpty()
+            }?.let { requirement ->
+                val dialogMsg = DialogData(context)
+                dialogMsg.setTitle("Додаткова вимога до товару.")
+                dialogMsg.setText(requirement.getNm())
+                dialogMsg.setClose(DialogClickListener {
+                    dialogMsg.dismiss()
+                })
+                dialogMsg.show()
+            }
 
+            val optionsList2 = RealmManager.getTovarOptionInReportPrepare(
+                codeDad2String,
+                null
+            )
 
-                //------------------------------------------------------------------
-
-                // На всякий случай зачищаю модальные окна.
-                val dialogList = recycl.dialogList
-                val optionsList2 =
-                    RealmManager.getTovarOptionInReportPrepare(codeDad2.toString(), null)
-                val options = Options()
-                val finalDeletePromoOption = false
-                // Получаем инфу об обязательных опциях
-                val tovOptTplList =
-                    options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption)
-                val reportPrepare = RealmManager.getTovarReportPrepare(
-                    codeDad2.toString(),
-                    tovId
+            if (optionsList2.isNullOrEmpty()) {
+                val dialog = DialogData(context)
+                dialog.setTitle("Внимание!")
+                dialog.setText(
+                    "Для данного товара не определены реквизиты обязательные для заполнения. " +
+                            "Для принудительного вызова списка реквизитов выполните длинный клик по товару."
                 )
+                dialog.setClose(DialogClickListener {
+                    dialog.dismiss()
+                })
+                dialog.show()
 
-                Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size)
-
-                if (tovOptTplList.size > 0 && optionsList2 != null) {
-                    // В Цикле открываем Н количество инфы
-                    for (i in tovOptTplList.indices.reversed()) {
-                        if (tovOptTplList.get(i)
-                                .getOptionControlName() != OptionControlName.AKCIYA
-                        ) {
-                            if (tovOptTplList.get(i)
-                                    .getOptionControlName() == OptionControlName.AKCIYA_ID && finalDeletePromoOption
-                            ) {
-                                // втыкаю
-                                Log.e("dialogShowRule", "1")
-                                recycl.showDialog(
-                                    list,
-                                    tovOptTplList[i],
-                                    reportPrepare,
-                                    tovId,
-                                    codeDad2.toString(),
-                                    wpDataDB.client_id,
-                                    reportPrepare.oborotvedNum,
-                                    reportPrepare.oborotvedNum,
-                                    true,
-                                    true
-                                )
-                            } else {
-                                Log.e("dialogShowRule", "2")
-                                recycl.showDialog(
-                                    list,
-                                    tovOptTplList[i],
-                                    reportPrepare,
-                                    tovId,
-                                    codeDad2.toString(),
-                                    wpDataDB.client_id,
-                                    reportPrepare.oborotvedNum,
-                                    reportPrepare.oborotvedNum,
-                                    true,
-                                    true
-                                )
-                            }
-                        }
-                    }
-
-
-                    Collections.reverse(dialogList)
-
-                    var optionExists = false
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val opt = "159707"
-                        optionExists = optionsList2.stream().anyMatch { optionsDB: OptionsDB? ->
-                            optionsDB!!.optionId == opt ||
-                                    optionsDB.optionControlId == opt
-                        }
-
-                        if (optionExists) {
-                            val matchingOption: Optional<OptionsDB> = optionsList2.stream()
-                                .filter { optionsDB: OptionsDB ->
-                                    optionsDB.getOptionId() == opt ||
-                                            optionsDB.getOptionControlId() == opt
-                                }
-                                .findFirst()
-
-                            if (matchingOption.isPresent()) {
-                                val optionsDB = matchingOption.get()
-                                // Делайте что-то с объектом OptionsDB
-                                println(optionsDB)
-                                dialogList.add(
-                                    TovarRequisites(
-                                        list,
-                                        reportPrepare
-                                    ).createDialog(context, wpDataDB, optionsDB, clickVoid {})
-                                )
-                            } else {
-                                // Обработка случая, когда объект OptionsDB не найден
-                                println("Объект OptionsDB не найден")
-                            }
-                        }
-                    }
-
-
-                    dialogList.get(0).show()
-                } else {
-                    val dialog = DialogData(context)
-                    dialog.setTitle("Внимание!")
-                    dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ")
-                    dialog.setClose(DialogClickListener { dialog.dismiss() })
-                    dialog.show()
+                showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
+                    showTovarAdditionalRequirementDialog(
+                        context = context,
+                        tovar = tovar,
+                        additionalRequirementsDB = requirement
+                    )
                 }
 
-                val ar: AdditionalRequirementsDB? = showTovarAdditionalRequirement(list, adList)
-                if (ar != null) {
-                    showTovarAdditionalRequirementDialog(context, list, ar)
-                }
-            } catch (e: java.lang.Exception) {
-                Globals.writeToMLOG(
-                    "ERROR",
-                    "RecycleViewDRAdapterTovar.bind_7",
-                    "Exception e: " + e
+                return
+            }
+
+            val options = Options()
+            val finalDeletePromoOption = false
+
+            val requiredOptions = options.getRequiredOptionsTPL(
+                optionsList2,
+                finalDeletePromoOption
+            )
+
+            Log.e(
+                "DRAdapterTovar",
+                "Кол-во. обязательных опций: ${requiredOptions.size}"
+            )
+
+            val firstRequiredOption = requiredOptions.firstOrNull { option ->
+                option.getOptionControlName() != OptionControlName.AKCIYA
+            }
+
+            if (firstRequiredOption == null) {
+                val dialog = DialogData(context)
+                dialog.setTitle("Внимание!")
+                dialog.setText(
+                    "Для данного товара не определены реквизиты обязательные для заполнения. " +
+                            "Для принудительного вызова списка реквизитов выполните длинный клик по товару."
                 )
-                Globals.alertDialogMsg(
-                    context, DialogStatus.ERROR,
-                    "Увага",
-                    "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e
+                dialog.setClose(DialogClickListener {
+                    dialog.dismiss()
+                })
+                dialog.show()
+
+                showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
+                    showTovarAdditionalRequirementDialog(
+                        context = context,
+                        tovar = tovar,
+                        additionalRequirementsDB = requirement
+                    )
+                }
+
+                return
+            }
+
+            val reportPrepare = RealmManager.getTovarReportPrepare(
+                codeDad2String,
+                tovarId
+            ) ?: createNewRPRow(
+                tovarId = tovarId,
+                wpDataDB = wpDataDB
+            )
+
+            showDialogForItems(
+                tovars = listOf(tovar),
+                tpl = firstRequiredOption,
+                wpDataDB = wpDataDB,
+                finalBalanceData1 = reportPrepare
+                    ?.getOborotvedNum()
+                    ?.toString()
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+                    ?: "0",
+                finalBalanceDate1 = formatBalanceDateForDialog(reportPrepare),
+                clickType = true,
+                tovOptTplList = requiredOptions.toMutableList()
+            )
+
+            showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
+                showTovarAdditionalRequirementDialog(
+                    context = context,
+                    tovar = tovar,
+                    additionalRequirementsDB = requirement
                 )
             }
+
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "TovarDBViewModel.onClickItem",
+                "Exception e: $e"
+            )
+
+            Globals.alertDialogMsg(
+                context,
+                DialogStatus.ERROR,
+                "Увага",
+                "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: $e"
+            )
         }
     }
 
@@ -1588,6 +1661,35 @@ class TovarDBViewModel @Inject constructor(
                 "Не вдалося відкрити діалог фото залишків.\n\nПомилка: $e"
             )
         }
+    }
+
+    private fun buildPromotionalTovIds(
+        wpDataDB: WpDataDB,
+        data: List<AdditionalRequirementsDB>
+    ): MutableList<Int> {
+        val result = mutableListOf<Int>()
+
+        val docDt = wpDataDB.dt?.time?.div(1000) ?: 0L
+        val docDtMinus2 = Clock.getDatePeriodLong(docDt, -2)
+
+        data.forEach { item ->
+            val tovarId = item.getTovarId()
+                ?.takeIf { it.isNotBlank() && it != "0" }
+                ?.toIntOrNull()
+                ?: return@forEach
+
+            val startDt = item.dtStart?.time?.div(1000) ?: 0L
+            val endDt = item.dtEnd?.time?.div(1000) ?: 0L
+
+            val active = (startDt > 0L && endDt > 0L && docDtMinus2 < endDt) ||
+                    (startDt > 0L && endDt == 0L)
+
+            if (active) {
+                result.add(tovarId)
+            }
+        }
+
+        return result
     }
 
     private val manuallyAddedTovars = mutableListOf<TovarDB>()
@@ -2168,7 +2270,7 @@ class TovarDBViewModel @Inject constructor(
                                 dialog = dialog,
                                 wpDataDB = wpDataDB
                             )
-                            updateContent()
+//                            updateContent()
                         } else {
                             Toast.makeText(
                                 dialog.context,
@@ -2248,6 +2350,7 @@ class TovarDBViewModel @Inject constructor(
 
         tovars.forEach { tovar ->
             val rp = RealmManager.getTovarReportPrepare(cd2, tovar.getiD())
+
             operetionSaveRPToDB(
                 tpl = tpl,
                 rp = rp,
@@ -2257,6 +2360,8 @@ class TovarDBViewModel @Inject constructor(
                 wpDataDB = wpDataDB
             )
         }
+
+        afterTovarRequisitesSaved(tovars)
 
         Toast.makeText(
             context,
