@@ -167,7 +167,10 @@ class TovarDBViewModel @Inject constructor(
         return newCache
     }
 
-    private fun afterTovarRequisitesSaved(tovars: List<TovarDB>) {
+    private fun afterTovarRequisitesSaved(
+        tovars: List<TovarDB>,
+        changedTpl: TovarOptions
+    ) {
         if (tovars.isEmpty()) return
 
         val savedIds = tovars
@@ -188,9 +191,97 @@ class TovarDBViewModel @Inject constructor(
                 tovarId = tovar.getiD()
             )
 
-            refreshAllProductCodeRowsForItem(item.stableId)
+            refreshProductCodeRowForItem(
+                itemId = item.stableId,
+                changedTpl = changedTpl
+            )
+
             refreshOptionCodeForItem(item.stableId)
         }
+    }
+
+    private fun refreshProductCodeRowForItem(
+        itemId: Long,
+        changedTpl: TovarOptions
+    ) {
+        val current = productCodeEditorState.value
+        if (!current.expanded) return
+
+        val rows = current.rowsByItemId[itemId].orEmpty()
+        if (rows.isEmpty()) return
+
+        val tovar = findTovarByStableId(itemId) ?: return
+        val codeDad2 = getCodeDad2String()
+        val rp = RealmManager.getTovarReportPrepare(codeDad2, tovar.getiD())
+
+        val refreshedRows = rows.map { row ->
+            if (!isSameTovarOption(row.option, changedTpl)) {
+                row
+            } else {
+                refreshProductCodeRowFromReportPrepare(
+                    row = row,
+                    rp = rp
+                )
+            }
+        }
+
+        val updatedMap = current.rowsByItemId.toMutableMap()
+        updatedMap[itemId] = refreshedRows
+
+        setProductCodeEditor(
+            current.copy(rowsByItemId = updatedMap)
+        )
+    }
+
+    private fun refreshProductCodeRowFromReportPrepare(
+        row: ProductCodeEditorRowUi,
+        rp: ReportPrepareDB?
+    ): ProductCodeEditorRowUi {
+        return when (row.option.getOptionControlName()) {
+            OptionControlName.AKCIYA_ID -> {
+                row.copy(
+                    value = getCurrentData(row.option, rp = rp).orEmpty(),
+                    value2 = rp?.getAkciya().orEmpty()
+                )
+            }
+
+            OptionControlName.ERROR_ID -> {
+                row.copy(
+                    value = getCurrentData(row.option, rp = rp).orEmpty(),
+                    value2 = rp?.getErrorComment().orEmpty()
+                )
+            }
+
+            else -> {
+                row.copy(
+                    value = getCurrentData(row.option, rp = rp).orEmpty()
+                )
+            }
+        }
+    }
+
+    private fun isSameTovarOption(
+        left: TovarOptions,
+        right: TovarOptions
+    ): Boolean {
+        val leftControl = left.getOptionControlName()
+        val rightControl = right.getOptionControlName()
+
+        if (leftControl != null && leftControl == rightControl) {
+            return true
+        }
+
+        val leftOptionId = left.getOptionId()
+        val rightOptionId = right.getOptionId()
+
+        if (!leftOptionId.isNullOrEmpty() && leftOptionId == rightOptionId) {
+            return true
+        }
+
+        val leftControlId = left.optionId
+        val rightControlId = right.optionId
+
+        return !leftControlId.isNullOrEmpty() && leftControlId == rightControlId
     }
 
     private fun refreshAllProductCodeRowsForItem(itemId: Long) {
@@ -459,7 +550,7 @@ class TovarDBViewModel @Inject constructor(
                 searchText = "",
                 items = mutableListOf(
 //                    filterTovarDB,
-                    filterCustomerSDB
+//                    filterCustomerSDB
                 )
             )
 
@@ -1519,17 +1610,7 @@ class TovarDBViewModel @Inject constructor(
             )
 
             if (optionsList2.isNullOrEmpty()) {
-                val dialog = DialogData(context)
-                dialog.setTitle("Внимание!")
-                dialog.setText(
-                    "Для данного товара не определены реквизиты обязательные для заполнения. " +
-                            "Для принудительного вызова списка реквизитов выполните длинный клик по товару."
-                )
-                dialog.setClose(DialogClickListener {
-                    dialog.dismiss()
-                })
-                dialog.show()
-
+                showNoRequiredOptionsDialog(context)
                 showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
                     showTovarAdditionalRequirementDialog(
                         context = context,
@@ -1537,39 +1618,24 @@ class TovarDBViewModel @Inject constructor(
                         additionalRequirementsDB = requirement
                     )
                 }
-
                 return
             }
 
-            val options = Options()
             val finalDeletePromoOption = false
 
-            val requiredOptions = options.getRequiredOptionsTPL(
-                optionsList2,
-                finalDeletePromoOption
-            )
+            val requiredOptions = Options()
+                .getRequiredOptionsTPL(optionsList2, finalDeletePromoOption)
+                .filter { option ->
+                    option.getOptionControlName() != OptionControlName.AKCIYA
+                }
 
             Log.e(
                 "DRAdapterTovar",
                 "Кол-во. обязательных опций: ${requiredOptions.size}"
             )
 
-            val firstRequiredOption = requiredOptions.firstOrNull { option ->
-                option.getOptionControlName() != OptionControlName.AKCIYA
-            }
-
-            if (firstRequiredOption == null) {
-                val dialog = DialogData(context)
-                dialog.setTitle("Внимание!")
-                dialog.setText(
-                    "Для данного товара не определены реквизиты обязательные для заполнения. " +
-                            "Для принудительного вызова списка реквизитов выполните длинный клик по товару."
-                )
-                dialog.setClose(DialogClickListener {
-                    dialog.dismiss()
-                })
-                dialog.show()
-
+            if (requiredOptions.isEmpty()) {
+                showNoRequiredOptionsDialog(context)
                 showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
                     showTovarAdditionalRequirementDialog(
                         context = context,
@@ -1577,7 +1643,6 @@ class TovarDBViewModel @Inject constructor(
                         additionalRequirementsDB = requirement
                     )
                 }
-
                 return
             }
 
@@ -1589,19 +1654,11 @@ class TovarDBViewModel @Inject constructor(
                 wpDataDB = wpDataDB
             )
 
-            showDialogForItems(
-                tovars = listOf(tovar),
-                tpl = firstRequiredOption,
+            showRequiredDialogsQueue(
+                tovar = tovar,
                 wpDataDB = wpDataDB,
-                finalBalanceData1 = reportPrepare
-                    ?.getOborotvedNum()
-                    ?.toString()
-                    ?.trim()
-                    ?.takeIf { it.isNotBlank() }
-                    ?: "0",
-                finalBalanceDate1 = formatBalanceDateForDialog(reportPrepare),
-                clickType = true,
-                tovOptTplList = requiredOptions.toMutableList()
+                requiredOptions = requiredOptions,
+                reportPrepare = reportPrepare
             )
 
             showTovarAdditionalRequirement(tovar, adList)?.let { requirement ->
@@ -1628,6 +1685,108 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
+    private fun showNoRequiredOptionsDialog(context: Context) {
+        val dialog = DialogData(context)
+        dialog.setTitle("Внимание!")
+        dialog.setText(
+            "Для данного товара не определены реквизиты обязательные для заполнения. " +
+                    "Для принудительного вызова списка реквизитов выполните длинный клик по товару."
+        )
+        dialog.setClose(DialogClickListener {
+            dialog.dismiss()
+        })
+        dialog.show()
+    }
+    private fun showRequiredDialogsQueue(
+        tovar: TovarDB,
+        wpDataDB: WpDataDB,
+        requiredOptions: List<TovarOptions>,
+        reportPrepare: ReportPrepareDB
+    ) {
+        if (requiredOptions.isEmpty()) return
+
+        showRequiredDialogAtIndex(
+            tovar = tovar,
+            wpDataDB = wpDataDB,
+            requiredOptions = requiredOptions,
+            reportPrepare = reportPrepare,
+            index = 0
+        )
+    }
+
+    private fun showRequiredDialogAtIndex(
+        tovar: TovarDB,
+        wpDataDB: WpDataDB,
+        requiredOptions: List<TovarOptions>,
+        reportPrepare: ReportPrepareDB,
+        index: Int
+    ) {
+        val tpl = requiredOptions.getOrNull(index) ?: return
+
+        showDialogForItems(
+            tovars = listOf(tovar),
+            tpl = tpl,
+            wpDataDB = wpDataDB,
+            finalBalanceData1 = reportPrepare
+                .getOborotvedNum()
+                ?.toString()
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: "0",
+            finalBalanceDate1 = formatBalanceDateForDialog(reportPrepare),
+            clickType = true,
+            tovOptTplList = requiredOptions.toMutableList(),
+
+            onSaved = { savedTpl, changed ->
+                if (changed) {
+                    afterTovarRequisitesSaved(
+                        tovars = listOf(tovar),
+                        changedTpl = savedTpl
+                    )
+                }
+
+                openNextRequiredDialogWithDelay(
+                    tovar = tovar,
+                    wpDataDB = wpDataDB,
+                    requiredOptions = requiredOptions,
+                    reportPrepare = reportPrepare,
+                    nextIndex = index + 1
+                )
+            },
+
+            onSkipped = {
+                openNextRequiredDialogWithDelay(
+                    tovar = tovar,
+                    wpDataDB = wpDataDB,
+                    requiredOptions = requiredOptions,
+                    reportPrepare = reportPrepare,
+                    nextIndex = index + 1
+                )
+            }
+        )
+    }
+
+    private fun openNextRequiredDialogWithDelay(
+        tovar: TovarDB,
+        wpDataDB: WpDataDB,
+        requiredOptions: List<TovarOptions>,
+        reportPrepare: ReportPrepareDB,
+        nextIndex: Int
+    ) {
+        if (nextIndex >= requiredOptions.size) return
+
+        viewModelScope.launch {
+            delay(120L)
+
+            showRequiredDialogAtIndex(
+                tovar = tovar,
+                wpDataDB = wpDataDB,
+                requiredOptions = requiredOptions,
+                reportPrepare = reportPrepare,
+                index = nextIndex
+            )
+        }
+    }
     override fun onProductCodeTakePhoto(itemUI: DataItemUI, context: Context) {
         try {
             val tovar = itemUI.rawAs<TovarDB>() ?: return
@@ -2132,7 +2291,9 @@ class TovarDBViewModel @Inject constructor(
         finalBalanceData1: String?,
         finalBalanceDate1: String?,
         clickType: Boolean,
-        tovOptTplList: MutableList<TovarOptions>
+        tovOptTplList: MutableList<TovarOptions>,
+        onSaved: ((TovarOptions, Boolean) -> Unit)? = null,
+        onSkipped: (() -> Unit)? = null
     ) {
         if (tovars.isEmpty()) return
 
@@ -2201,12 +2362,13 @@ class TovarDBViewModel @Inject constructor(
                     createExpandableAdapter(dialog.context, groupPos),
                     DialogClickListener {
                         if (!dialog.getOperationResult().isNullOrBlank()) {
-                            saveDialogResultForItems(
+                            val changed = saveDialogResultForItems(
                                 tovars = tovars,
                                 tpl = tpl,
                                 dialog = dialog,
                                 wpDataDB = wpDataDB
                             )
+                            onSaved?.invoke(tpl, changed)
                         }
                     }
                 )
@@ -2249,12 +2411,17 @@ class TovarDBViewModel @Inject constructor(
                                     })
                                     dialogBadData.setCancel("Ні", DialogClickListener {
                                         dialogBadData.dismiss()
-                                        saveDialogResultForItems(
+//                                        onSkipped?.invoke()
+
+                                        val changed = saveDialogResultForItems(
                                             tovars = tovars,
                                             tpl = tpl,
                                             dialog = dialog,
                                             wpDataDB = wpDataDB
                                         )
+
+                                        onSaved?.invoke(tpl, changed)
+
                                     })
                                     dialogBadData.setClose(DialogClickListener { dialogBadData.dismiss() })
                                     dialogBadData.show()
@@ -2264,13 +2431,14 @@ class TovarDBViewModel @Inject constructor(
                         }
 
                         if (!dialog.getOperationResult().isNullOrBlank()) {
-                            saveDialogResultForItems(
+                            val changed = saveDialogResultForItems(
                                 tovars = tovars,
                                 tpl = tpl,
                                 dialog = dialog,
                                 wpDataDB = wpDataDB
                             )
-//                            updateContent()
+
+                            onSaved?.invoke(tpl, changed)
                         } else {
                             Toast.makeText(
                                 dialog.context,
@@ -2283,7 +2451,10 @@ class TovarDBViewModel @Inject constructor(
             }
 
             dialog.setCancel("Пропустить", DialogClickListener {
-                closeDialogRule(dialog, clickVoid { dialog.dismiss() })
+                closeDialogRule(dialog, clickVoid {
+                    dialog.dismiss()
+                    onSkipped?.invoke()
+                })
             })
 
             if (tpl.getOptionControlName() != OptionControlName.AKCIYA_ID &&
@@ -2343,35 +2514,99 @@ class TovarDBViewModel @Inject constructor(
         tpl: TovarOptions,
         dialog: DialogData,
         wpDataDB: WpDataDB
-    ) {
+    ): Boolean {
         val value1 = dialog.getOperationResult()
         val value2 = dialog.getOperationResult2()
         val cd2 = wpDataDB.code_dad2.toString()
 
+        var changedAny = false
+
         tovars.forEach { tovar ->
-            val rp = RealmManager.getTovarReportPrepare(cd2, tovar.getiD())
+            val rpBefore = RealmManager.getTovarReportPrepare(cd2, tovar.getiD())
+
+            val changed = isTovarOptionChanged(
+                tpl = tpl,
+                rp = rpBefore,
+                newValue1 = value1,
+                newValue2 = value2
+            )
+
+            if (!changed) {
+                return@forEach
+            }
 
             operetionSaveRPToDB(
                 tpl = tpl,
-                rp = rp,
+                rp = rpBefore,
                 data = value1,
                 data2 = value2,
                 tovarId = tovar.getiD(),
                 wpDataDB = wpDataDB
             )
+
+            changedAny = true
         }
 
-        afterTovarRequisitesSaved(tovars)
+        if (changedAny) {
+            Toast.makeText(
+                context,
+                if (tovars.size == 1) {
+                    "Внесено: $value1"
+                } else {
+                    "Внесено для ${tovars.size} товарів"
+                },
+                Toast.LENGTH_LONG
+            ).show()
+        }
 
-        Toast.makeText(
-            context,
-            if (tovars.size == 1) {
-                "Внесено: $value1"
-            } else {
-                "Внесено для ${tovars.size} товарів"
-            },
-            Toast.LENGTH_LONG
-        ).show()
+        return changedAny
+    }
+
+    private fun isTovarOptionChanged(
+        tpl: TovarOptions,
+        rp: ReportPrepareDB?,
+        newValue1: String?,
+        newValue2: String?
+    ): Boolean {
+        val oldValue1 = getCurrentData(tpl, rp)
+            .orEmpty()
+            .trim()
+
+        val actualNewValue1 = newValue1
+            .orEmpty()
+            .trim()
+
+        val control = tpl.getOptionControlName()
+
+        return when (control) {
+            OptionControlName.AKCIYA_ID -> {
+                val oldValue2 = rp?.getAkciya()
+                    .orEmpty()
+                    .trim()
+
+                val actualNewValue2 = newValue2
+                    .orEmpty()
+                    .trim()
+
+                oldValue1 != actualNewValue1 || oldValue2 != actualNewValue2
+            }
+
+            OptionControlName.ERROR_ID -> {
+                val oldValue2 = rp?.getErrorComment()
+                    .orEmpty()
+                    .trim()
+
+                val actualNewValue2 = newValue2
+                    .orEmpty()
+                    .trim()
+
+                oldValue1 != actualNewValue1 || oldValue2 != actualNewValue2
+            }
+
+            else -> {
+                oldValue1 != actualNewValue1
+            }
+        }
     }
 
     private fun getCommonCurrentData(

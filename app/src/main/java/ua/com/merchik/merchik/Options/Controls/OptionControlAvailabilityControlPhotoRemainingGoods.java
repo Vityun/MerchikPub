@@ -212,17 +212,19 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                         int face = Integer.parseInt(item.face);
                         if (face == 0 && !stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
                             TovarDB tovar = TovarRealm.getById(item.getTovarId());
-                            ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
-                            item.error = 1;
+                            if (tovar != null) {
+                                ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
+                                item.error = 1;
 
-                            String code = tovar.getiD();
-                            if (articleSDB != null && articleSDB.vendorCode != null)
-                                code = articleSDB.vendorCode;
+                                String code = tovar.getiD();
+                                if (articleSDB != null && articleSDB.vendorCode != null)
+                                    code = articleSDB.vendorCode;
 
 //                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
-                            item.errorNote = "(" + code + ") " + tovar.getNm() + " отриману з додатку мережі.";
+                                item.errorNote = "(" + code + ") " + tovar.getNm() + " отриману з додатку мережі.";
 
-                            tovs.append(createLinkedString(item.errorNote, item)).append("\n");
+                                tovs.append(createLinkedString(item.errorNote, item)).append("\n");
+                            }
                         } else {
                             item.error = 0;
                         }

@@ -409,33 +409,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
-//    LaunchedEffect(version) {
-//        val wpList = holder.consumePendingSelected()
-//        Log.e("MAIN_UI", "LaunchedEffect(version) instance=$uiInstanceId wpList=${wpList.size}")
-//        if (wpList.isNotEmpty()) {
-//            wpDataList.clear()
-//            wpDataList.addAll(wpList)
-//            Log.e("MAIN_UI", "set dialog data instance=$uiInstanceId")
-//
-//            Toast.makeText(
-//                viewModel.context,
-//                "Знайдено результатів: ${wpDataList.size}",
-//                Toast.LENGTH_LONG
-//            ).show()
-//
-//            if (hasInternet) {
-//                additionalEarningsDialogData = wpList.toList()
-//                pendingMainDialog = false
-//            } else {
-//                pendingMainDialog = true
-//                viewModel.showServerIssueDialog(
-//                    wpDataList,
-//                    ServerIssueScenario.INTERNET_DISABLED
-//                )
-//            }
-//        }
-//    }
-
     val cronchikViewModel: CronchikViewModel =
         remember(activity) { ViewModelProvider(activity)[CronchikViewModel::class.java] }
 
@@ -817,10 +790,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 }
                             } else {
                                 // ----- режим колод -----
-                                items(
+                                itemsIndexed(
                                     items = groups,
-                                    key = { it.groupKey } // groupKey или другой стабильный ключ группы
-                                ) { groupMeta ->
+                                    key = { index, groupMeta ->
+                                        "group_${index}_${groupMeta.groupKey}_${groupMeta.startIndex}_${groupMeta.endIndexExclusive}"
+                                    }
+                                ) { _, groupMeta ->
                                     val groupItems = dataItemsUI.subList(
                                         groupMeta.startIndex,
                                         groupMeta.endIndexExclusive
