@@ -1914,7 +1914,14 @@ class TovarDBViewModel @Inject constructor(
     private fun handleTovarDialogAction(event: ContextMenuActionEvent) {
         if (!isTovarDialogAction(event.actionId)) return
 
-        val selectedTovars = extractTovars(event.payload.selectedItems)
+        val selectedItems = event.payload.selectedItems.filter { it.selected }
+        val targetItems = if (selectedItems.isNotEmpty()) {
+            selectedItems
+        } else {
+            event.payload.selectedItems
+        }
+
+        val selectedTovars = extractTovars(targetItems)
         if (selectedTovars.isEmpty()) return
 
         val codeDad2 = getCodeDad2String().toLong()
@@ -1923,6 +1930,8 @@ class TovarDBViewModel @Inject constructor(
 
         val tpl = resolveTovarOption(event.actionId, tovarOptions) ?: return
 
+        val selectedStableIds = targetItems.map { it.stableId }
+
         showDialogForItems(
             tovars = selectedTovars,
             tpl = tpl,
@@ -1930,7 +1939,20 @@ class TovarDBViewModel @Inject constructor(
             finalBalanceData1 = "0",
             finalBalanceDate1 = "?",
             clickType = false,
-            tovOptTplList = tovarOptions.toMutableList()
+            tovOptTplList = tovarOptions.toMutableList(),
+            onSaved = { savedTpl, changed ->
+                if (changed) {
+                    afterTovarRequisitesSaved(
+                        tovars = selectedTovars,
+                        changedTpl = savedTpl
+                    )
+                }
+
+                showUnmarkSelectedConfirmDialog(
+                    selectedStableIds = selectedStableIds,
+                    selectedCount = selectedStableIds.size
+                )
+            }
         )
     }
 
@@ -2524,16 +2546,16 @@ class TovarDBViewModel @Inject constructor(
         tovars.forEach { tovar ->
             val rpBefore = RealmManager.getTovarReportPrepare(cd2, tovar.getiD())
 
-            val changed = isTovarOptionChanged(
-                tpl = tpl,
-                rp = rpBefore,
-                newValue1 = value1,
-                newValue2 = value2
-            )
-
-            if (!changed) {
-                return@forEach
-            }
+//            val changed = isTovarOptionChanged(
+//                tpl = tpl,
+//                rp = rpBefore,
+//                newValue1 = value1,
+//                newValue2 = value2
+//            )
+//
+//            if (!changed) {
+//                return@forEach
+//            }
 
             operetionSaveRPToDB(
                 tpl = tpl,
@@ -3143,6 +3165,7 @@ class TovarDBViewModel @Inject constructor(
         rp.setID(id)
         rp.setDt(System.currentTimeMillis().toString())
         rp.setDtReport(System.currentTimeMillis().toString())
+        rp.setDtChange(System.currentTimeMillis() / 1000)
         rp.setKli(wpDataDB.client_id)
         rp.setTovarId(tovarId)
         rp.setAddrId(wpDataDB.addr_id.toString())
@@ -3410,115 +3433,6 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
-    private fun requestAddAllCustomerTovars() {
-//        if (!Globals.onlineStatus) {
-//            emitEvent(
-//                MainEvent.ShowMessageDialog(
-//                    MessageDialogData(
-//                        subTitle = "Відсутнє інтернет з'єднання",
-//                        message = "Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу.<br>Нові товари не можуть бути додані без інтернету.",
-//                        status = DialogStatus.ERROR
-//                    )
-//                )
-//            )
-//            return
-//        }
-
-        val wp = getCurrentWpData() ?: return
-
-        val currentCustomerTovars = RealmManager.INSTANCE.copyFromRealm(
-            RealmManager.getTovarListByCustomer(wp.client_id)
-        )
-
-        val progress = ProgressViewModel(1)
-        val loadingDialog = LoadingDialogWithPercent(context as Activity, progress)
-        loadingDialog.show()
-        progress.onNextEvent("Завантажую усі товари цього клієнта", 3000)
-
-        val dataList = listOf(wp)
-
-        TablesLoadingUnloading().downloadTovarTableWhithResult(dataList, object : Click {
-            override fun <T> onSuccess(data: T) {
-                progress.onCompleted()
-
-                @Suppress("UNCHECKED_CAST")
-                val serverTovars = data as? List<TovarDB> ?: emptyList()
-
-                if (serverTovars.isEmpty()) {
-                    emitEvent(
-                        MainEvent.ShowMessageDialog(
-                            MessageDialogData(
-                                title = "Товари",
-                                subTitle = "Додати усі товари замовника",
-                                message = "На сервері немає нових товарів.",
-                                status = DialogStatus.NORMAL
-                            )
-                        )
-                    )
-                    return
-                }
-
-                val currentIds = currentCustomerTovars.map { it.getiD() }.toSet()
-                val newFromServer = serverTovars.filter { it.getiD() !in currentIds }
-
-                if (newFromServer.isEmpty()) {
-                    emitEvent(
-                        MainEvent.ShowMessageDialog(
-                            MessageDialogData(
-                                title = "Товари",
-                                subTitle = "Додати усі товари замовника",
-                                message = "Усі доступні товари вже відображені, на сервері немає нових товарів.",
-                                status = DialogStatus.NORMAL
-                            )
-                        )
-                    )
-                    return
-                }
-
-                emitEvent(
-                    MainEvent.ShowMessageDialog(
-                        MessageDialogData(
-                            title = "Товари",
-                            subTitle = "Додати усі товари замовника",
-                            message = "Завантажити ${newFromServer.size} товарів з сервера і додати у поточний звіт?",
-                            status = DialogStatus.NORMAL,
-                            positivText = "Так",
-                            cancelText = "Ні",
-                            isCancelable = true,
-                            onButtonOkClicked = {
-                                mergeManualTovars(newFromServer)
-
-                                emitEvent(
-                                    MainEvent.ShowMessageDialog(
-                                        MessageDialogData(
-                                            title = "Товари",
-                                            subTitle = "Товари додані",
-                                            message = "${newFromServer.size} товарів додані до звіту.<br><br>Збережені будуть тільки ті товари, по яких ви внесете зміни у реквізити.",
-                                            status = DialogStatus.NORMAL
-                                        )
-                                    )
-                                )
-                            }
-                        )
-                    )
-                )
-            }
-
-            override fun onFailure(error: String) {
-                progress.onCanceled()
-
-                emitEvent(
-                    MainEvent.ShowMessageDialog(
-                        MessageDialogData(
-                            subTitle = "Сталася помилка",
-                            message = error,
-                            status = DialogStatus.ERROR
-                        )
-                    )
-                )
-            }
-        })
-    }
 
     private fun requestAddAllTovar() {
         runWithAddTovarWarningIfNeeded {
@@ -3575,42 +3489,6 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
-    private fun openOneTovarDialog() {
-        val ctx = context ?: return
-        val wp = getCurrentWpData() ?: return
-
-        val dialog = DialogData(ctx)
-        dialog.setTitle("Оберіть Товар")
-        dialog.setText("")
-
-        val adapter = RecycleViewDRAdapterTovar(
-            ctx,
-            RealmManager.INSTANCE.copyFromRealm(
-                RealmManager.getTovarListByCustomer(wp.client_id)
-            ),
-            wp,
-            RecycleViewDRAdapterTovar.OpenType.DIALOG
-        )
-
-        adapter.elementClick(object : Clicks.click {
-            override fun <T> click(data: T) {
-                val tov = data as? TovarDB ?: return
-                Toast.makeText(ctx, "Додано товар: ${tov.nm}", Toast.LENGTH_SHORT).show()
-                mergeManualTovars(listOf(tov))
-                dialog.dismiss()
-            }
-        })
-
-        adapter.getFilter().filter(dialog.getEditTextSearchText())
-
-        dialog.setEditTextSearch(adapter)
-        dialog.setRecycler(
-            adapter,
-            LinearLayoutManager(ctx, LinearLayoutManager.VERTICAL, false)
-        )
-        dialog.setClose(dialog::dismiss)
-        dialog.show()
-    }
 
     private fun buildAdditionalContentSeedItem(): DataItemUI? {
         getAllCurrentItems().firstOrNull()?.let { return it }
@@ -3772,6 +3650,39 @@ class TovarDBViewModel @Inject constructor(
         }
 
         return oborotVed
+    }
+
+    private fun showUnmarkSelectedConfirmDialog(
+        selectedStableIds: List<Long>,
+        selectedCount: Int
+    ) {
+        if (selectedStableIds.isEmpty()) return
+
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowMessageDialog(
+                    MessageDialogData(
+                        title = "Товари",
+                        subTitle = "Сняти позначення?",
+                        message = "Дані внесено для $selectedCount товарів.\n\nСняти позначення з обраних товарів?",
+                        status = DialogStatus.NORMAL,
+                        positivText = "Так",
+                        cancelText = "Ні",
+                        showButton = true,
+                        isCancelable = true,
+                        onButtonOkClicked = {
+                            updateItemsSelect(
+                                ids = selectedStableIds,
+                                checked = false
+                            )
+                        },
+                        onButtonCancelClicked = {
+                            // просто закрыть диалог
+                        }
+                    )
+                )
+            )
+        }
     }
 
     private fun formatBalanceDateForDialog(

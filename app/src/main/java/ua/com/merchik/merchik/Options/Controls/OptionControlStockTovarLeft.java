@@ -260,7 +260,21 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
             int totalErrors = 0;
             for (ReportPrepareDB item : reportPrepare) {
 //                //определяем количество СКЮ
-                item.numberSKUForAccounting = Integer.parseInt(item.oborotvedNum) > 0 ? 1 : 0;
+                int oborotvedNum = 0;
+
+                try {
+                    oborotvedNum = Integer.parseInt(item.oborotvedNum);
+                } catch (Exception ignored) {
+                }
+
+                if (oborotvedNum > 0) {
+                    item.numberSKUForAccounting = 1;
+                } else {
+                    item.numberSKUForAccounting =
+                            item.note != null && item.note.length() > 10
+                                    ? 0
+                                    : 1;
+                }
                 item.errorExist = Integer.parseInt(item.errorId) > 0 ? 1 : 0;
 
                 if (item.errorExist == 1)
