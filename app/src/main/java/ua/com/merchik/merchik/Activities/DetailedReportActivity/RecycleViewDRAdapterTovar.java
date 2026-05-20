@@ -1297,7 +1297,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         //        @RequiresApi(api = Build.VERSION_CODES.N)
         public void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
             try {
-                final int adapterPosition = getAdapterPosition();
+                final int adapterPosition = getBindingAdapterPosition();
 
                 Log.e("showDialog", "TovarOptions tpl: " + tpl);
 
@@ -1451,7 +1451,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
                                                 Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
                                                 refreshElement(cd2, list.getiD());
-                                                notifyItemChanged(adapterPosition);
+                                                if (adapterPosition != RecyclerView.NO_POSITION) {
+                                                    notifyItemChanged(adapterPosition);
+                                                }
                                                 dialog.dismiss();
                                                 dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                                             }), setLayout());

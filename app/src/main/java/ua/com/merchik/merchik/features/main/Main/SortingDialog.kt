@@ -66,6 +66,9 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
             .filter { !it.key.equals("column_name", true) }      // служебную колонку исключаем
             .filter { !it.key.equals("group_header", true) }
             .filter { !it.key.equals("filter_select", true) }
+
+            .filter { !it.key.equals("id_res_image", true) } // два костыля
+            .filter { !it.key.equals("barcode", true) }
             .filter { setting ->
                 val hiddenByUser = setting.isEnabled
                 hiddenByUser

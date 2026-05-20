@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
@@ -20,14 +19,12 @@ import io.realm.RealmResults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
@@ -112,10 +109,8 @@ import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoQuality
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Collections
 import java.util.Date
 import java.util.Locale
-import java.util.Optional
 import java.util.function.Consumer
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -445,16 +440,19 @@ class TovarDBViewModel @Inject constructor(
 
     override fun getDefaultGroupUserFields(): List<String> {
         return listOf(
-                "group_id",        // 1-й уровень группировки
+            "group_id",        // 1-й уровень группировки
 //                "addr_txt",  // 2-й уровень (если включишь вторую группировку)
-                //            "client_txt" // 3-й уровень (опционально)
-            )
+            //            "client_txt" // 3-й уровень (опционально)
+        )
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
         return "column_name, expire_period, group_header".split(",")
     }
 
+    override fun getHideSortUserFields(): List<String>? {
+        return listOf("barcode", "id_image_res", "photo_id")
+    }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
 //        super.onClickItemImage(clickedDataItemUI, context)
@@ -545,14 +543,14 @@ class TovarDBViewModel @Inject constructor(
 //                )
 //            )
 //        else
-            filters = Filters(
-                rangeDataByKey = null,
-                searchText = "",
-                items = mutableListOf(
+        filters = Filters(
+            rangeDataByKey = null,
+            searchText = "",
+            items = mutableListOf(
 //                    filterTovarDB,
 //                    filterCustomerSDB
-                )
             )
+        )
 
     }
 
@@ -560,7 +558,8 @@ class TovarDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return try {
             if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_NEW ||
-                contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_ALL) {
+                contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_ALL
+            ) {
                 val clientId = Gson().fromJson(dataJson, JSONObject::class.java)
                     .getString("clientId")
 
@@ -579,6 +578,16 @@ class TovarDBViewModel @Inject constructor(
                 val tovarList = allClientTovars
                     .filterNot { it.getiD() in baseIds }
 
+                if (tovarList.isEmpty())
+                    viewModelScope.launch {
+                        delay(350)
+                        _events.emit(MainEvent.ShowMessageDialog(MessageDialogData(
+                            title = "Товари",
+                            subTitle = "Додати Товари",
+                            status = DialogStatus.ALERT,
+                            message = "Усі доступні товари цього клієнта вже додані",
+                        )))
+                    }
                 val baseItems = repository.toItemUIList(
                     TovarDB::class,
                     tovarList,
@@ -636,9 +645,11 @@ class TovarDBViewModel @Inject constructor(
                                     ?: return@map item
 
                                 val tovarId = tovar.getiD()
-                                val reportPrepare = getCachedReportPrepare(cache.codeDad2, tovarId) ?:
-                                createNewRPRow(tovarId = tovarId,
-                                    wpDataDB = wpDataDB)
+                                val reportPrepare = getCachedReportPrepare(cache.codeDad2, tovarId)
+                                    ?: createNewRPRow(
+                                        tovarId = tovarId,
+                                        wpDataDB = wpDataDB
+                                    )
 
                                 val optionString =
                                     Options().getOptionString(
@@ -808,7 +819,7 @@ class TovarDBViewModel @Inject constructor(
         context: Context
     ) {
         if (contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) return
-        Log.e("!!!!!!!!!!!!!!!","++++++++++++++++++++++++++")
+        Log.e("!!!!!!!!!!!!!!!", "++++++++++++++++++++++++++")
         if (!fieldValue.key.equals("tovar_image_balance_comment", ignoreCase = true)) {
             return
         }
@@ -1697,6 +1708,7 @@ class TovarDBViewModel @Inject constructor(
         })
         dialog.show()
     }
+
     private fun showRequiredDialogsQueue(
         tovar: TovarDB,
         wpDataDB: WpDataDB,
@@ -1787,6 +1799,7 @@ class TovarDBViewModel @Inject constructor(
             )
         }
     }
+
     override fun onProductCodeTakePhoto(itemUI: DataItemUI, context: Context) {
         try {
             val tovar = itemUI.rawAs<TovarDB>() ?: return
@@ -2041,6 +2054,7 @@ class TovarDBViewModel @Inject constructor(
             detachedTovar = detached
         )
     }
+
     private fun findLocalTovarPhoto(
         request: TovarPhotoRequest
     ): LocalTovarPhoto? {
@@ -3357,7 +3371,7 @@ class TovarDBViewModel @Inject constructor(
                 MessageDialogData(
                     title = "Товари",
                     subTitle = "Не можна виконати",
-                    message = "По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари!<br><br>Відмовитися від додавання товарів?",
+                    message = "По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари!<br>Відмовитися від додавання товарів?",
                     status = DialogStatus.ALERT,
                     positivText = "Так",
                     cancelText = "Ні",
@@ -3434,15 +3448,150 @@ class TovarDBViewModel @Inject constructor(
     }
 
 
+    //    private fun requestAddAllTovar() {
+//        runWithAddTovarWarningIfNeeded {
+//            openOneTovarDialogAllUFMD()
+//        }
+//    }
     private fun requestAddAllTovar() {
         runWithAddTovarWarningIfNeeded {
-            openOneTovarDialogAllUFMD()
+            requestAddAllTovarWithServerCheck()
         }
     }
+
     private fun requestAddOneTovar() {
         runWithAddTovarWarningIfNeeded {
             openOneTovarDialogUFMD()
         }
+    }
+
+    private fun requestAddAllTovarWithServerCheck() {
+        val ctx = context ?: return
+        val wp = getCurrentWpData() ?: return
+
+//        if (!Globals.onlineStatus) {
+//            emitEvent(
+//                MainEvent.ShowMessageDialog(
+//                    MessageDialogData(
+//                        title = "Товари",
+//                        subTitle = "Відсутнє інтернет з'єднання",
+//                        message = "Неможливо перевірити нові товари на сервері.<br><br>Відкрити поточний список товарів?",
+//                        status = DialogStatus.ERROR,
+//                        positivText = "Відкрити",
+//                        cancelText = "Закрити",
+//                        onButtonOkClicked = {
+//                            openOneTovarDialogAllUFMD()
+//                        }
+//                    )
+//                )
+//            )
+//            return
+//        }
+
+        val progress = ProgressViewModel(1)
+        val loadingDialog = LoadingDialogWithPercent(ctx as Activity, progress)
+        loadingDialog.show()
+        progress.onNextEvent("Перевіряю товари на сервері", 3000)
+
+        val dataList = listOf(wp)
+
+        TablesLoadingUnloading().downloadTovarTableWhithResult(
+            dataList,
+            object : Click {
+                override fun <T> onSuccess(data: T) {
+                    progress.onCompleted()
+
+                    @Suppress("UNCHECKED_CAST")
+                    val serverTovars = data as? List<TovarDB> ?: emptyList()
+
+                    if (serverTovars.isEmpty()) {
+                        openOneTovarDialogAllUFMD()
+                        return
+                    }
+
+                    val reportTovarIds = RealmManager
+                        .getTovarListFromReportPrepareByDad2Copy(wp.code_dad2)
+                        .mapNotNull { it.getiD() }
+                        .toSet()
+
+                    val localCustomerTovars = RealmManager.INSTANCE.copyFromRealm(
+                        RealmManager.getTovarListByCustomer(wp.client_id)
+                    )
+
+                    val localCustomerIds = localCustomerTovars
+                        .mapNotNull { it.getiD() }
+                        .toSet()
+
+                    val availableLocalCount = localCustomerTovars
+                        .filter { it.getiD() !in reportTovarIds }
+                        .size
+
+                    val serverTovarsToLoad = serverTovars
+                        .filter { serverTovar ->
+                            val id = serverTovar.getiD()
+                            id !in localCustomerIds && id !in reportTovarIds
+                        }
+                        .distinctBy { it.getiD() }
+
+                    if (serverTovarsToLoad.isEmpty()) {
+                        openOneTovarDialogAllUFMD()
+                        return
+                    }
+
+                    saveServerTovarsAndOpenAll(serverTovarsToLoad)
+
+//                    emitEvent(
+//                        MainEvent.ShowMessageDialog(
+//                            MessageDialogData(
+//                                title = "Товари",
+//                                subTitle = "Додати усі товари замовника",
+//                                message = buildString {
+//                                    append("Зараз доступно для додавання: ")
+//                                    append(availableLocalCount + serverTovarsToLoad.size)
+//                                    append(" товарів.<br>")
+//                                    append("З яких у додатку ")
+//                                    append(availableLocalCount)
+//                                    append(" товарів, котрих немає у поточному звіті. ")
+//                                    append("Також ви можете завантажити додатково ")
+//                                    append(serverTovarsToLoad.size)
+//                                    append(" товарів, які є у клієнта. <br>Завантажити усi і відкрити оновлений список на ${(availableLocalCount + serverTovarsToLoad.size)} товарiв?")
+//                                },
+//                                status = DialogStatus.NORMAL,
+//                                positivText = "Завантажити усi",
+//                                cancelText = "Не завантажувати",
+//                                isCancelable = true,
+//                                onButtonOkClicked = {
+//                                    saveServerTovarsAndOpenAll(serverTovarsToLoad)
+//                                },
+//                                onButtonCancelClicked = {
+//                                    openOneTovarDialogAllUFMD()
+//                                }
+//                            )
+//                        )
+//                    )
+                }
+
+                override fun onFailure(error: String) {
+                    progress.onCanceled()
+
+                    emitEvent(
+                        MainEvent.ShowMessageDialog(
+                            MessageDialogData(
+                                title = "Товари",
+                                subTitle = "Сталася помилка",
+                                message = error,
+                                status = DialogStatus.ERROR,
+                                positivText = "Відкрити поточні",
+                                cancelText = "Закрити",
+                                onButtonOkClicked = {
+                                    openOneTovarDialogAllUFMD()
+                                }
+                            )
+                        )
+                    )
+                }
+            }
+        )
     }
 
     private fun openOneTovarDialogAllUFMD() {
@@ -3465,6 +3614,48 @@ class TovarDBViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun saveServerTovarsAndOpenAll(serverTovarsToLoad: List<TovarDB>) {
+        if (serverTovarsToLoad.isEmpty()) {
+            openOneTovarDialogAllUFMD()
+            return
+        }
+
+        serverTovarsToLoad.forEach { tovar ->
+            tovar.timeColor = "FAF7BB"
+        }
+
+//        RealmManager.setTovarAsync(serverTovarsToLoad)
+        RealmManager.setTovar(serverTovarsToLoad)
+        viewModelScope.launch {
+            delay(50L)
+            openOneTovarDialogAllUFMD()
+        }
+//        emitEvent(
+//            MainEvent.ShowMessageDialog(
+//                MessageDialogData(
+//                    title = "Товари",
+//                    subTitle = "Товари завантажені",
+//                    message = buildString {
+//                        append("Завантажено ")
+//                        append(serverTovarsToLoad.size)
+//                        append(" товарів з сервера.<br>")
+////                        append("Додані товари будуть позначені світло-жовтим кольором.<br>")
+//                        append("У звіті будуть реально збережені тільки ті товари, по яких ви внесете зміни у реквізити.")
+//                    },
+//                    status = DialogStatus.NORMAL,
+//                    positivText = "Відкрити список",
+//                    cancelText = "Відмiнити",
+//                    onButtonOkClicked = {
+//                        viewModelScope.launch {
+//                            delay(400L)
+//                            openOneTovarDialogAllUFMD()
+//                        }
+//                    }
+//                )
+//            )
+//        )
     }
 
     private fun openOneTovarDialogUFMD() {

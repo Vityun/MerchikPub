@@ -345,6 +345,11 @@ abstract class MainViewModel(
         return null
     }
 
+    // поля которые будут спрятаны при сортировке
+    open fun getHideSortUserFields(): List<String>? {
+        return null
+    }
+
     open fun getDefaultGroupUserFields(): List<String> = emptyList()
 
     open fun getDefaultHideFieldsForCards(): List<String>? {
@@ -1053,6 +1058,7 @@ abstract class MainViewModel(
             val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
 
             val defaultSort = getDefaultSortUserFields()
+            val hideSort = getHideSortUserFields()
 
             val itemsHeader = getItemsHeader()
             val itemsFooter = getItemsFooter()
@@ -1062,14 +1068,23 @@ abstract class MainViewModel(
                 repository.getSettingsItemList(table, contextUI, hideFieldsForCards, modeUI)
 
             // 1) Берём сортировки
-            val sortingFieldsFromRepo = repository.getSortingFields(table, contextUI, defaultSort)
+            val sortingFieldsFromRepo = repository.getSortingFields(
+                table,
+                contextUI,
+                defaultSort,
+                hideSort
+            )
 
             // 2) Дефолтные ключи группировки
             val defaultGroupKeys: List<String> =
                 getDefaultGroupUserFields().map { it.trim() }.filter { it.isNotEmpty() }
 
             // 3) Есть ли вообще сохранённые сортировки у пользователя в БД?
-            val hasUserSorting: Boolean = repository.hasUserSorting(table, contextUI)
+            val hasUserSorting: Boolean = repository.hasUserSorting(
+                table,
+                contextUI,
+                hideSort
+            )
 
             // 4) Есть ли включённая группировка в том, что пришло из репозитория?
             val hasUserGrouping: Boolean = sortingFieldsFromRepo.any {

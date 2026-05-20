@@ -7,6 +7,7 @@ import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.GroupMeta
 import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
+import java.text.Collator
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -152,14 +153,35 @@ fun filterAndSortDataItems(
     }
 
     // 2) компаратор для ключей групп (список из одного элемента, но код универсальный)
+    val groupCollator = Collator.getInstance(Locale.getDefault()).apply {
+        strength = Collator.PRIMARY
+    }
+
     val groupKeyComparator = Comparator<List<Comparable<*>?>> { k1, k2 ->
         val maxSize = maxOf(k1.size, k2.size)
+
         for (i in 0 until maxSize) {
             val v1 = k1.getOrNull(i)
             val v2 = k2.getOrNull(i)
-            val cmp = compareValues(v1, v2)
+
+            val cmp = when {
+                v1 == null && v2 == null -> 0
+                v1 == null -> 1
+                v2 == null -> -1
+
+                v1 is String && v2 is String -> {
+                    groupCollator.compare(v1, v2)
+                }
+
+                else -> {
+                    @Suppress("UNCHECKED_CAST")
+                    compareValues(v1 as Comparable<Any>, v2 as Comparable<Any>)
+                }
+            }
+
             if (cmp != 0) return@Comparator cmp
         }
+
         0
     }
 
@@ -430,42 +452,75 @@ private fun makeComparator(
     sf: SortingField?,
     zoneId: ZoneId
 ): Comparator<DataItemUI> {
-    if (sf?.key == null || sf.key.isBlank() || (sf.order != 1 && sf.order != -1))
+    if (sf?.key == null || sf.key.isBlank() || (sf.order != 1 && sf.order != -1)) {
         return Comparator { _, _ -> 0 }
+    }
 
     val key = sf.key
     val asc = sf.order == 1
 
-    // готовим селектор "сначала пробуем дату, потом число, потом строку"
-    val selectorDate: (DataItemUI) -> Long? = { item ->
-        val raw = key?.let { getFieldRaw(item, it) }
-        // если ключ похож на дату — пробуем распарсить в любом случае
-        val ts = parseToMillis(raw, zoneId)
-        if (ts != null) ts
-        else if (key?.let { looksLikeDateKey(it) } == true) parseToMillis(
-            // иногда value.value хранит нормализованную строку
-            item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value,
-            zoneId
-        )
-        else null
-    }
-    val selectorNum: (DataItemUI) -> Double? = { item ->
-        parseNum(key?.let { getFieldRaw(item, it) })
-            ?: parseNum(item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value)
-    }
-    val selectorStr: (DataItemUI) -> String? = { item ->
-        item.fields.firstOrNull { it.key.equals(key, true) }?.value?.value
+    val collator = Collator.getInstance(Locale.getDefault()).apply {
+        strength = Collator.PRIMARY
     }
 
-    // Приоритет: дата > число > строка
-    val cmpDate = compareBy<DataItemUI, Long?>(nullsLast(naturalOrder()), selectorDate)
-    val cmpNum  = compareBy<DataItemUI, Double?>(nullsLast(naturalOrder()), selectorNum)
-    val cmpStr  = compareBy<DataItemUI, String?>(nullsLast(naturalOrder()), selectorStr)
+    val base = Comparator<DataItemUI> { left, right ->
+        val leftField = left.fields.firstOrNull {
+            it.key.equals(key, ignoreCase = true)
+        }
 
-    val base = cmpDate.thenComparing(cmpNum).thenComparing(cmpStr)
+        val rightField = right.fields.firstOrNull {
+            it.key.equals(key, ignoreCase = true)
+        }
+
+        val leftRaw = leftField?.value?.rawValue
+        val rightRaw = rightField?.value?.rawValue
+
+        val leftText = leftField?.value?.value?.trim().orEmpty()
+        val rightText = rightField?.value?.value?.trim().orEmpty()
+
+        // 1) Даты сортируем по raw/date millis.
+        // Но только если ключ реально похож на дату.
+        if (looksLikeDateKey(key)) {
+            val leftDate = parseToMillis(leftRaw, zoneId)
+                ?: parseToMillis(leftText, zoneId)
+
+            val rightDate = parseToMillis(rightRaw, zoneId)
+                ?: parseToMillis(rightText, zoneId)
+
+            val dateCmp = compareValues(leftDate, rightDate)
+            if (dateCmp != 0) {
+                return@Comparator dateCmp
+            }
+        }
+
+        // 2) Числа сортируем как числа только если UI-значение тоже число.
+        // Это важно: если rawValue = id/statusCode/clientId,
+        // а value.value = переведённый текст, rawValue не должен ломать порядок.
+        val leftNum = parseNum(leftText)
+        val rightNum = parseNum(rightText)
+
+        if (leftNum != null && rightNum != null) {
+            val numCmp = leftNum.compareTo(rightNum)
+            if (numCmp != 0) {
+                return@Comparator numCmp
+            }
+        }
+
+        // 3) Остальное сортируем по отображаемому тексту,
+        // то есть уже после перевода/обработки.
+        val leftSortText = leftText.ifBlank {
+            leftRaw?.toString()?.trim().orEmpty()
+        }
+
+        val rightSortText = rightText.ifBlank {
+            rightRaw?.toString()?.trim().orEmpty()
+        }
+
+        collator.compare(leftSortText, rightSortText)
+    }
+
     return if (asc) base else base.reversed()
 }
-
 
 private fun extractGroupKeyValues(
     item: DataItemUI,
@@ -473,16 +528,26 @@ private fun extractGroupKeyValues(
     zoneId: ZoneId
 ): List<Comparable<*>?> {
     return grouping.map { g ->
-        val fv = item.fields.firstOrNull { it.key.equals(g.key, ignoreCase = true) }
-        val raw = fv?.value?.rawValue
+        val key = g.key.orEmpty()
 
-        // пробуем как дату/время
-        val ts = parseToMillis(raw, zoneId)
-        if (ts != null) {
-            ts as Comparable<*> // Long
-        } else {
-            // fallback – UI-строка, чтобы хотя бы как-то сравнивалось
-            fv?.value?.value ?: raw?.toString() ?: ""
+        val fv = item.fields.firstOrNull {
+            it.key.equals(key, ignoreCase = true)
+        }
+
+        val raw = fv?.value?.rawValue
+        val text = fv?.value?.value?.trim().orEmpty()
+
+        if (looksLikeDateKey(key)) {
+            val ts = parseToMillis(raw, zoneId)
+                ?: parseToMillis(text, zoneId)
+
+            if (ts != null) {
+                return@map ts as Comparable<*>
+            }
+        }
+
+        text.ifBlank {
+            raw?.toString()?.trim().orEmpty()
         }
     }
 }

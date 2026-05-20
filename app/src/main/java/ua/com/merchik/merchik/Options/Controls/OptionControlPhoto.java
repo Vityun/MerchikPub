@@ -244,29 +244,6 @@ public class OptionControlPhoto<T> extends OptionControl {
 //        подводим итог
         ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
 
-        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
-            signal = true;
-            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
-            spannableStringBuilder.append("Не знайдено жодного фото ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(" по даному відвідуванню");
-            if (!stackPhotoFor132971.isEmpty()) {
-                signal = false;
-                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
-            }
-        } else if (stackPhotoDB.size() < m) { // главнй итог
-            spannableStringBuilder.append("Ви повинні зробити: ")
-                    .append(String.valueOf(m)).append(" фото з типом: ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(", а зробили: ")
-                    .append(String.valueOf(stackPhotoDB.size()))
-                    .append(" - доробiть фотографії.");
-            signal = true;
-        } else {
-            spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
-                    .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
-            signal = false;
-        }
 
         // Исключения
         // 3.1
@@ -275,7 +252,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 //
 // ВАЖНО: этот блок должен выполняться ДО основной проверки (до выставления signal),
 // иначе будет рассинхрон с 1С.
-        if ("158609".equals(optionId) || "169109".equals(optionId)) {
+        if ("158609".equals(optionId) || "169109".equals(optionId) || "164354".equals(optionId)) {
 
             // === ШАГ A: грузим ОСВ БЕЗ фильтра по адресу/сети ===
             List<AdditionalRequirementsDB> osvList =
@@ -347,6 +324,30 @@ public class OptionControlPhoto<T> extends OptionControl {
                     }
                 }
             }
+        }
+
+        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
+            signal = true;
+            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
+            spannableStringBuilder.append("Не знайдено жодного фото ")
+                    .append(item != null ? item.getNm() : photoTypeName)
+                    .append(" по даному відвідуванню");
+            if (!stackPhotoFor132971.isEmpty()) {
+                signal = false;
+                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
+            }
+        } else if (stackPhotoDB.size() < m) { // главнй итог
+            spannableStringBuilder.append("Ви повинні зробити: ")
+                    .append(String.valueOf(m)).append(" фото з типом: ")
+                    .append(item != null ? item.getNm() : photoTypeName)
+                    .append(", а зробили: ")
+                    .append(String.valueOf(stackPhotoDB.size()))
+                    .append(" - доробiть фотографії.");
+            signal = true;
+        } else {
+            spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
+                    .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
+            signal = false;
         }
 
 //        if ("158609".equals(optionId) || "169109".equals(optionId)) {
@@ -625,7 +626,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 spannableStringBuilder.append(", але для Лоток, наявність ФЗ ФТС не перевіряємо.");
             } else if (addressSDB.tpId == 1012) {   // Для Ева ФЗ ФТС НЕ проверяем
                 signal = false;
-                spannableStringBuilder.append(", але для Ева, наявність ФЗ ФТС не перевіряємо.");
+                spannableStringBuilder.append(". Але для Ева, наявність ФЗ ФТС не перевіряємо.");
             } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
                     Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
                     Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко

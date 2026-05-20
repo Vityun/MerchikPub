@@ -446,6 +446,10 @@ public class TablesLoadingUnloading {
                                     readyWPData = true;
                                     return;
                                 }
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getCode_dad2() == 1110526043698060395L)
+//                                        Log.e("!!!!!!!!!!", "+++++++++++");
+//                                }
                                 List<Long> dad2 = ScrollDataHolder.Companion.instance().getDad2();
                                 List<Long> confirmedGoodIds = new ArrayList<>();
 

@@ -7,8 +7,13 @@ import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -48,7 +53,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     private long dateTo;
     private Date dt;
     private int kps;
-    private int percentReclamation;
+    private Double percentReclamation;
     private Double percentReclamation2;
     private float percentReclamationConst;
 
@@ -87,14 +92,15 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
             period = " з " + Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy") + "";
 
-            kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1, null, null, null).size();
+            List<WpDataDB> wpDataDBList =  WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1, null, null, wp.getUser_id());
+            kps = wpDataDBList.size();
 
             usersSDB = SQL_DB.usersDao().getById(wp.getUser_id());
         }
     }
 
     private void executeOption() {
-        reclamations = filterReclamationAuthorNotUserSupervisor(SQL_DB.tarDao().getTARForOptionControl135061(0, dateFrom / 1000, dateTo / 1000));
+        reclamations = filterReclamationAuthorNotUserSupervisor(SQL_DB.tarDao().getTARForOptionControl135061(0, dateFrom / 1000, dateTo / 1000, Globals.userId));
 
         if (usersSDB.department == 3 || usersSDB.department == 8) {
             java.sql.Date dateF = new java.sql.Date(dateFrom);
@@ -124,8 +130,8 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
         //4.0. определим для исполнителя процент рекламаций
         if (kps > 0) {
-            percentReclamation = 100 * reclamations.size() / kps;
-            percentReclamation2 = Double.valueOf(100 * reclamations.size() / kps);
+            percentReclamation = 100.0 * reclamations.size() / kps;
+            percentReclamation2 = percentReclamation;
         }
 
         formula.append("\n\nВідсоток рекламацій = ( 100 * Кількість рекламацій / Кількість звітів )");
@@ -263,6 +269,5 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             }
         });
     }
-
 
 }

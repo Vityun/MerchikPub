@@ -436,7 +436,7 @@ object TovarDBOverride {
         "depth" -> 5977
         "dt_update" -> 5972
         "expire_period" -> 5979
-        "group_id" -> 6110
+        "group_id" -> 9591
         "height" -> 5975
         "ID" -> 5962
         "manufacturer_id" -> 5969

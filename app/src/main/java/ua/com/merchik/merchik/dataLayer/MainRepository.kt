@@ -217,17 +217,31 @@ class MainRepository(
     fun <T : DataObjectUI> getSortingFields(
         klass: KClass<T>,
         contextUI: ContextUI?,
-        defaultSortKeys: List<String>? = null
+        defaultSortKeys: List<String>? = null,
+        hideSortKeys: List<String>? = null
     ): List<SortingField> {
-        // 1) если в настройках уже есть сортировка — отдаем её
+
+        val hiddenSortKeys = hideSortKeys
+            .orEmpty()
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        // 1) если в настройках уже есть сортировка — отдаем её,
+        // но без полей, которые запрещены для сортировки/группировки
         getSettingsUI(klass.java, contextUI)?.sortFields?.let { saved ->
-            if (!saved.isNullOrEmpty()) return saved
+            val filteredSaved = saved.filterNot { sortField ->
+                hiddenSortKeys.any { hiddenKey ->
+                    hiddenKey.equals(sortField.key?.trim().orEmpty(), ignoreCase = true)
+                }
+            }
+
+            if (filteredSaved.isNotEmpty()) return filteredSaved
         }
 
         // 2) иначе пробуем собрать из дефолтных ключей
         if (defaultSortKeys.isNullOrEmpty()) return emptyList()
 
-        // достанем "пример" объекта (как в getSettingsItemList), чтобы получить корректные title'ы
         val sample: DataObjectUI? =
             (klass.java.newInstance() as? RealmObject)?.let {
                 (RealmManager.INSTANCE
@@ -251,10 +265,16 @@ class MainRepository(
                 }.getOrNull()
             }
 
-        // Собираем SortingField’ы по порядку ключей
         return defaultSortKeys
-            .mapNotNull { rawKey ->
-                val key = rawKey.trim().takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .filterNot { key ->
+                hiddenSortKeys.any { hiddenKey ->
+                    hiddenKey.equals(key, ignoreCase = true)
+                }
+            }
+            .map { key ->
                 SortingField(
                     key = key,
                     title = sample?.let {
@@ -268,16 +288,29 @@ class MainRepository(
             }
     }
 
-
     suspend fun hasUserSorting(
         table: KClass<out DataObjectUI>,
-        contextUI: ContextUI?
+        contextUI: ContextUI?,
+        hideSortKeys: List<String>? = null
     ): Boolean {
         val settings = getSettingsUI(
             table.java,
             contextUI
-        )   // тот же способ, как ты сейчас грузишь SettingsUI
-        return settings?.sortFields?.isNotEmpty() == true
+        )
+
+        val hiddenSortKeys = hideSortKeys
+            .orEmpty()
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+
+        return settings?.sortFields?.any { sortField ->
+            val key = sortField.key?.trim().orEmpty()
+
+            key.isNotEmpty() && hiddenSortKeys.none { hiddenKey ->
+                hiddenKey.equals(key, ignoreCase = true)
+            }
+        } == true
     }
 
 

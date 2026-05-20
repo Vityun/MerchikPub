@@ -141,28 +141,29 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             }
             //3.2. если нет товаров с ОСВ для данной опции, то берем все товары из самого отчета
             else {
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null, null, 0);
-                if (data != null) {
-                    for (AdditionalRequirementsDB item : data) {
-                        if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
-                            long startDt = item.dtStart != null ? item.dtStart.getTime() / 1000 : 0;
-                            long endDt = item.dtEnd != null ? item.dtEnd.getTime() / 1000 : 0;
-                            long docDt = wpDataDB.getDt().getTime() / 1000;
-                            long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
-                            long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
-
-                            if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)) {
-                                tovIds.add(item.getTovarId());
-                            }
-                        }
-                    }
-                }
+                // 20.05.2026 закомментировал этот кусок, так как он лишний и не соответствует 1С
+//                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null, null, 0);
+//                if (data != null) {
+//                    for (AdditionalRequirementsDB item : data) {
+//                        if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
+//                            long startDt = item.dtStart != null ? item.dtStart.getTime() / 1000 : 0;
+//                            long endDt = item.dtEnd != null ? item.dtEnd.getTime() / 1000 : 0;
+//                            long docDt = wpDataDB.getDt().getTime() / 1000;
+//                            long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
+//                            long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
+//
+//                            if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)) {
+//                                tovIds.add(item.getTovarId());
+//                            }
+//                        }
+//                    }
+//                }
                 if (tovIds.isEmpty()){
-//                    tovIds = new String[reportPrepare.size()];
+
                     for (int i = 0; i < reportPrepare.size(); i++) {
                         tovIds.add(reportPrepare.get(i).getTovarId());
                     }
-//                    Arrays.sort(tovIds);
+
                 }
 
             }
@@ -243,7 +244,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 signal = true;
             } else if (errorSum != null && errorSum > 0) {
                 String s = String.valueOf(errorSum);
-                spannableStringBuilder.append("Не надані світлини з ЗАЛИШКАМИ ").append(s).append(" відсутніх товарів. Таким чином Ви повинні підтвердити, що даних товарів нема на залишках.");
+                spannableStringBuilder.append("Не надані світлини з ЗАЛИШКАМИ по ").append(s).append(" відсутніх товарів. Таким чином Ви повинні підтвердити, що даних товарів нема на залишках.");
 
                 spannableStringBuilder.append("\n\n").append(tovs);
                 signal = true;
@@ -289,7 +290,6 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                     spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
-
             checkUnlockCode(optionDB);
 
 
