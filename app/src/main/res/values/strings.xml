@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">052000</string>
+    <string name="ver" translatable="false">052100</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-05-20</string>
+    <string name="debug_date" translatable="false">2026-05-21</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -250,6 +250,7 @@
     <string name="total_number_marked">Загальна кількість помічених елементів %s шт.</string>
 
     <string name="ui_setting_table">Налаштування таблиці</string>
+    <string name="ui_sorting_table">Сортировки/группировки</string>
     <string name="ui_setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
     <string name="ui_column_name">Назва стовпця</string>
     <string name="ui_visibility">Видимість</string>

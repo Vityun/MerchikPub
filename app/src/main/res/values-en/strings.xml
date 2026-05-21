@@ -239,6 +239,7 @@ You must review the specified claims, complete them, and provide your responses.
 
     <!-- UI SETTINGS -->
     <string name="ui_setting_table">Table settings</string>
+    <string name="ui_sorting_table">Sorting/Grouping</string>
     <string name="ui_setting_column_visibility_desc">To hide columns, tap the field</string>
     <string name="ui_column_name">Column name</string>
     <string name="ui_visibility">Visibility</string>

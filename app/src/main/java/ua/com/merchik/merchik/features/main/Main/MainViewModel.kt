@@ -197,7 +197,8 @@ enum class InlineEditorKind {
     DATE,
     SINGLE_SELECT,
     DOUBLE_SELECT,
-    TEXT_AND_SELECT
+    TEXT_AND_SELECT,
+//    PHOTO_COUNT
 }
 
 data class InlineChoiceUi(

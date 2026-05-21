@@ -203,7 +203,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         modifier = Modifier
                             .align(alignment = Alignment.CenterHorizontally),
                         text = viewModel.getTranslateString(
-                            stringResource(id = R.string.ui_setting_table),
+                            stringResource(id = R.string.ui_sorting_table),
                             5990
                         )
                     )

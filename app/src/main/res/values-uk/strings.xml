@@ -204,6 +204,7 @@
     <string name="total_number_marked">Загальна кількість позначених елементів: %s шт.</string>
 
     <string name="ui_setting_table">Налаштування таблиці</string>
+    <string name="ui_sorting_table">"Cортуваня/Групування "</string>
     <string name="ui_setting_column_visibility_desc">Щоб приховати певні стовпці, натисніть на поле</string>
     <string name="ui_column_name">Назва стовпця</string>
     <string name="ui_visibility">Видимість</string>

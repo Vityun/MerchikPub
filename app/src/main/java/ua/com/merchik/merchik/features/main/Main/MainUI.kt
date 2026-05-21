@@ -2373,7 +2373,8 @@ fun ProductCodeInlineEditor(
     onPlus: (String) -> Unit,
     onValueChange: (String, String) -> Unit,
     onValue2Change: (String, String) -> Unit,
-    onTakePhoto: () -> Unit
+    onTakePhoto: () -> Unit,
+    photoCount: Int = 0
 ) {
     val oddRowColor = Color(0xFFF3F3F3)
 
@@ -2502,8 +2503,13 @@ fun ProductCodeInlineEditor(
                 .fillMaxWidth()
                 .background(photoRowBackground)
         ) {
+            val photoTitle = if (photoCount > 0) {
+                "Фото остатков товара ($photoCount)"
+            } else {
+                "Фото остатков товара"
+            }
             PhotoEditorRow(
-                title = "Фото остатков товара",
+                title = photoTitle,
                 onTakePhoto = onTakePhoto
             )
         }

@@ -1845,7 +1845,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 res.row1TextValue = "";
                 res.row2TextValue = tovar.getNm();
                 res.row3TextValue = weightString;
-                Log.e("ПРОИЗВОДИТЕЛЬ", "2ШТО ТУТ?:" + RealmManager.getNmById(tovar.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "");
+//                Log.e("ПРОИЗВОДИТЕЛЬ", "2ШТО ТУТ?:" + RealmManager.getNmById(tovar.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "");
 
                 res.row4TextValue = RealmManager.getNmById(tovar.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "";
 
@@ -1872,6 +1872,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          */
         private void refreshElement(String cd2, String id) {
             boolean deletePromoOption;
+            if (tovIdList == null)
+                return;
             int tovId = Integer.parseInt(id);
             ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(cd2, id);
             ReportPrepareDB reportPrepareTovar2 = reportPrepareTovar;

@@ -30,7 +30,7 @@ class ErrorDBViewModel @Inject constructor(
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return "ID".split(",")
+        return "ID, column_name, notes".split(",")
     }
 
     override val table: KClass<out DataObjectUI>

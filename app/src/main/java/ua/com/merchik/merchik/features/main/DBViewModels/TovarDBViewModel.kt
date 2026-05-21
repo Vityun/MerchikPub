@@ -83,6 +83,7 @@ import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
@@ -242,6 +243,7 @@ class TovarDBViewModel @Inject constructor(
 
             OptionControlName.ERROR_ID -> {
                 row.copy(
+                    title = resolveErrorTitle(row.option, rp),
                     value = getCurrentData(row.option, rp = rp).orEmpty(),
                     value2 = rp?.getErrorComment().orEmpty()
                 )
@@ -277,49 +279,6 @@ class TovarDBViewModel @Inject constructor(
         val rightControlId = right.optionId
 
         return !leftControlId.isNullOrEmpty() && leftControlId == rightControlId
-    }
-
-    private fun refreshAllProductCodeRowsForItem(itemId: Long) {
-        val current = productCodeEditorState.value
-        if (!current.expanded) return
-
-        val rows = current.rowsByItemId[itemId].orEmpty()
-        if (rows.isEmpty()) return
-
-        val tovar = findTovarByStableId(itemId) ?: return
-        val codeDad2 = getCodeDad2String()
-        val rp = RealmManager.getTovarReportPrepare(codeDad2, tovar.getiD())
-
-        val refreshedRows = rows.map { row ->
-            when (row.option.getOptionControlName()) {
-                OptionControlName.AKCIYA_ID -> {
-                    row.copy(
-                        value = getCurrentData(row.option, rp = rp).orEmpty(),
-                        value2 = rp?.getAkciya().orEmpty()
-                    )
-                }
-
-                OptionControlName.ERROR_ID -> {
-                    row.copy(
-                        value = getCurrentData(row.option, rp = rp).orEmpty(),
-                        value2 = rp?.getErrorComment().orEmpty()
-                    )
-                }
-
-                else -> {
-                    row.copy(
-                        value = getCurrentData(row.option, rp = rp).orEmpty()
-                    )
-                }
-            }
-        }
-
-        val updatedMap = current.rowsByItemId.toMutableMap()
-        updatedMap[itemId] = refreshedRows
-
-        setProductCodeEditor(
-            current.copy(rowsByItemId = updatedMap)
-        )
     }
 
     private fun getCachedReportPrepare(
@@ -1011,6 +970,7 @@ class TovarDBViewModel @Inject constructor(
 
             OptionControlName.ERROR_ID -> {
                 existingRow.copy(
+                    title = resolveErrorTitle(existingRow.option, rp),
                     value = getCurrentData(existingRow.option, rp = rp).orEmpty(),
                     value2 = rp?.getErrorComment().orEmpty()
                 )
@@ -3322,9 +3282,14 @@ class TovarDBViewModel @Inject constructor(
                     else -> ""
                 }
 
+                val rowTitle = when (tpl.getOptionControlName()) {
+                    OptionControlName.ERROR_ID -> resolveErrorTitle(tpl, rp)
+                    else -> tpl.getOptionLong().orEmpty()
+                }
+
                 ProductCodeEditorRowUi(
                     rowId = tpl.getOrderField().orEmpty(),
-                    title = tpl.getOptionLong().orEmpty(),
+                    title = rowTitle,
                     kind = kind,
                     option = tpl,
                     value = currentValue,
@@ -3332,6 +3297,7 @@ class TovarDBViewModel @Inject constructor(
                     choices = choices,
                     choices2 = secondChoices
                 )
+
             }
 
         cache.rowsByItemAndMode[cacheKey] = rows
@@ -3919,6 +3885,31 @@ class TovarDBViewModel @Inject constructor(
                 HtmlCompat.FROM_HTML_MODE_LEGACY
             )
         )
+    }
+
+    private fun resolveErrorTitle(
+        tpl: TovarOptions,
+        rp: ReportPrepareDB?
+    ): String {
+        val fallback = tpl.getOptionLong().orEmpty()
+
+        val errorId = rp?.getErrorId()
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: return fallback
+
+        return setMapData(OptionControlName.ERROR_ID)
+            ?.entries
+            ?.firstOrNull { (key, _) -> key?.toString() == errorId }
+            ?.value
+            ?.takeIf { !it.isNullOrBlank() }
+            ?: fallback
+    }
+
+    private fun getPhotoCount(rp: ReportPrepareDB?): Int {
+        val tovarId = rp?.tovarId ?: return 0
+        val photos = StackPhotoRealm.getPhotoByTypeAndTovar(4, tovarId)
+        return photos?.size ?: 0
     }
 }
 
