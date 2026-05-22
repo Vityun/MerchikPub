@@ -54,7 +54,8 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
             ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS ->
                 ("addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
                         "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
-                        "tovar_id, user_id, option_id, client_id, color, main_option_id, amount_min, amount_max").split(",")
+                        "tovar_id, user_id, option_id, client_id, color, main_option_id, amount_min, amount_max," +
+                        "column_name, tovar_manufacturer_id").split(",")
 
             else -> null
         }
@@ -208,9 +209,9 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                         1
                     )
 
-                    val themeDBUI = repository.getAllRealm(ThemeDB::class, contextUI, null)
-                    val customerSDBUI = repository.getAllRoom(CustomerSDB::class, contextUI, null)
-                    val usersSDBBUI = repository.getAllRoom(UsersSDB::class, contextUI, null)
+//                    val themeDBUI = repository.getAllRealm(ThemeDB::class, contextUI, null)
+//                    val customerSDBUI = repository.getAllRoom(CustomerSDB::class, contextUI, null)
+//                    val usersSDBBUI = repository.getAllRoom(UsersSDB::class, contextUI, null)
 
                     val result = repository.toItemUIList(
                         AdditionalRequirementsDB::class,
@@ -239,9 +240,9 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                                     )
                             } ?: itemUI.copy()
                     }
-                        .join(themeDBUI, "theme_id = id: nm")
-                        .join(customerSDBUI, "client_id = client_id: nm")
-                        .join(usersSDBBUI, "author_id = user_id: fio")
+//                        .join(themeDBUI, "theme_id = id: nm")
+//                        .join(customerSDBUI, "client_id = client_id: nm")
+//                        .join(usersSDBBUI, "author_id = user_id: fio")
 
                     result
                 }

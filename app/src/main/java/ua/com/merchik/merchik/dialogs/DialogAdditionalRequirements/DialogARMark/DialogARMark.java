@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -265,39 +267,98 @@ public class DialogARMark {
         txtText.setText(text);
     }
 
-    public void setRatingBarAR(AdditionalRequirementsDB db, Float data, DialogData.DialogClickListener clickListener) {
+    public void setRatingBarAR(
+            AdditionalRequirementsDB db,
+            Float data,
+            DialogData.DialogClickListener clickListener
+    ) {
         if (data != null) {
             ratingBar.setRating(data);
         }
 
+        Handler ratingHandler = new Handler(Looper.getMainLooper());
+        final Runnable[] pendingRatingRunnable = new Runnable[1];
+        final boolean[] ratingActionInProgress = {false};
+
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            // Важно: не реагируем на программные изменения ratingBar.setRating(...)
+            if (!fromUser) return;
+
             int rate = (int) rating;
+
+            // Нормализуем значение, но это вызовет listener ещё раз с fromUser=false
             ratingBar.setRating(rate);
 
-            if (rate < 6) {
-                DialogData dialogData = new DialogData(context);
-                dialogData.setTitle("Коментар");
-                dialogData.setText("Внесіть коментар до низбкої оцінки");
-                dialogData.setOperation(DialogData.Operations.TEXT, "", null, () -> {
-                });
-                dialogData.setOk("Ok", () -> {
-                    if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10) {
-                        saveNewARMark(db, rate, dialogData.getOperationResult());
-                        Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(context, "Внесіть коментар більший за 10 символів.", Toast.LENGTH_LONG).show();
-                    }
-                });
-                dialogData.setClose(this::dismiss);
-                dialogData.show();
-            } else {
-
-                saveNewARMark(db, rate, "");
-
-                Toast.makeText(context, "Оцінка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+            // Debounce: если пользователь быстро нажал несколько звёзд —
+            // оставляем только последнее действие через 100 мс
+            if (pendingRatingRunnable[0] != null) {
+                ratingHandler.removeCallbacks(pendingRatingRunnable[0]);
             }
 
-            clickListener.clicked();
+            pendingRatingRunnable[0] = () -> {
+                if (ratingActionInProgress[0]) return;
+
+                ratingActionInProgress[0] = true;
+
+                if (rate < 6) {
+                    DialogData dialogData = new DialogData(context);
+                    dialogData.setTitle("Коментар");
+                    dialogData.setText("Внесіть коментар до низької оцінки");
+                    dialogData.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+                    });
+
+                    dialogData.setOk("Ok", () -> {
+                        if (dialogData.getOperationResult() != null
+                                && dialogData.getOperationResult().length() > 10) {
+
+                            saveNewARMark(db, rate, dialogData.getOperationResult());
+
+                            Toast.makeText(
+                                    context,
+                                    "Оцінка: " + rate + " установлена.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+
+                            clickListener.clicked();
+
+                            ratingActionInProgress[0] = false;
+                            dialogData.dismiss();
+
+                        } else {
+                            Toast.makeText(
+                                    context,
+                                    "Внесіть коментар більший за 10 символів.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+
+                            // Не сбрасываем ratingActionInProgress,
+                            // чтобы пользователь не открыл второй такой же диалог поверх текущего.
+                        }
+                    });
+
+                    dialogData.setClose(() -> {
+                        ratingActionInProgress[0] = false;
+                        dialogData.dismiss();
+                    });
+
+                    dialogData.show();
+
+                } else {
+                    saveNewARMark(db, rate, "");
+
+                    Toast.makeText(
+                            context,
+                            "Оцінка: " + rate + " установлена.",
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    clickListener.clicked();
+
+                    ratingActionInProgress[0] = false;
+                }
+            };
+
+            ratingHandler.postDelayed(pendingRatingRunnable[0], 100);
         });
     }
 

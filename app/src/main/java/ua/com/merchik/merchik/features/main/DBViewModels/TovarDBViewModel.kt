@@ -3815,13 +3815,20 @@ class TovarDBViewModel @Inject constructor(
     ) {
         if (selectedStableIds.isEmpty()) return
 
+        val selectedIds = uiState.value.items
+            .filter { it.selected }
+            .map { it.stableId }
+
+        if (selectedIds.isEmpty())
+            return
+
         viewModelScope.launch {
             _events.emit(
                 MainEvent.ShowMessageDialog(
                     MessageDialogData(
                         title = "Товари",
                         subTitle = "Сняти позначення?",
-                        message = "Дані внесено для $selectedCount товарів.\n\nСняти позначення з обраних товарів?",
+                        message = "Дані внесено для $selectedCount товарів. Зняти позначення з обраних товарів?",
                         status = DialogStatus.NORMAL,
                         positivText = "Так",
                         cancelText = "Ні",

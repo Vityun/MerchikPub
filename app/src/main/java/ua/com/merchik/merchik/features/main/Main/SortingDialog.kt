@@ -202,10 +202,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .align(alignment = Alignment.CenterHorizontally),
-                        text = viewModel.getTranslateString(
-                            stringResource(id = R.string.ui_sorting_table),
-                            5990
-                        )
+                        text = stringResource(id = R.string.ui_sorting_table)
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Box(
