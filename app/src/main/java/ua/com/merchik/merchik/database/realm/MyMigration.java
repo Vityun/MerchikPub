@@ -274,6 +274,43 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 26) {
+            RealmObjectSchema ppaSchema = schema.get("PPADB");
+
+            if (ppaSchema != null && !ppaSchema.hasField("optionId")) {
+                ppaSchema.addField("optionId", String.class);
+            }
+
+            oldVersion++;
+        }
+
+        if (oldVersion == 27) {
+            RealmObjectSchema themeSchema = schema.get("ThemeDB");
+
+            if (themeSchema != null) {
+                if (!themeSchema.hasField("opros_theme")) {
+                    themeSchema.addField("opros_theme", Integer.class);
+                }
+
+                if (!themeSchema.hasField("audio_filter")) {
+                    themeSchema.addField("audio_filter", Integer.class);
+                }
+
+                // Для старых записей поставим дефолтные значения,
+                // чтобы потом не ловить null при проверках.
+                themeSchema.transform(obj -> {
+                    if (obj.isNull("opros_theme")) {
+                        obj.setInt("opros_theme", 0);
+                    }
+
+                    if (obj.isNull("audio_filter")) {
+                        obj.setInt("audio_filter", 0);
+                    }
+                });
+            }
+
+            oldVersion++;
+        }
 
     }
 }

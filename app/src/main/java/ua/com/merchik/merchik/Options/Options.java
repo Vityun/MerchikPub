@@ -4044,6 +4044,8 @@ public class Options {
                         // ничего не делаю
                     } else {
                         Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+                        if (temp.getOrderField().equals("dt_expire") && reportPrepareTovar.getDtExpire().equals("0000-00-00"))
+                            uploaded = Globals.Triple.NO_DATA;
                         tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
                         temps.add(temp);
                     }

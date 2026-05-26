@@ -47,6 +47,14 @@ public class ThemeDB extends RealmObject implements DataObjectUI {
     @Expose
     private String dtUpdate;
 
+    @SerializedName("opros_theme")
+    @Expose
+    public Integer opros_theme;
+
+    @SerializedName("audio_filter")
+    @Expose
+    public Integer audio_filter;
+
     public String getID() {
         return id;
     }
@@ -93,6 +101,22 @@ public class ThemeDB extends RealmObject implements DataObjectUI {
 
     public void setDtUpdate(String dtUpdate) {
         this.dtUpdate = dtUpdate;
+    }
+
+    public Integer getOprosTheme() {
+        return opros_theme;
+    }
+
+    public void setOprosTheme(Integer opros_theme) {
+        this.opros_theme = opros_theme;
+    }
+
+    public Integer getAudioFilter() {
+        return audio_filter;
+    }
+
+    public void setAudioFilter(Integer audio_filter) {
+        this.audio_filter = audio_filter;
     }
 
     @Override

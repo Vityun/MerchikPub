@@ -867,7 +867,7 @@ fun DateEditorRow(
 ) {
     val context = LocalContext.current
     val formatter = remember {
-        java.text.SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     }
 
     Row(

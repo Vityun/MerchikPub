@@ -57,6 +57,7 @@ import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
+import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.synchronization.ConverterSynchronizationTimetable;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
@@ -88,6 +89,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammImagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammVizitShowcaseDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.QuestionAnswerDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SMSLogDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SMSPlanDao;
@@ -163,9 +165,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 SynchronizationTimeTable.class,
                 WPDataAdditional.class,      // Додатковий заробіток
                 InitStateEntity.class,
-                LocationDevices.class
+                LocationDevices.class,
+                QuestionAnswerDB.class
         },
-        version = 76
+        version = 77
 )
 
 
@@ -271,6 +274,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract InitStateDao initStateDao();
 
     public abstract LocationDevicesDao locationDevicesDao();
+
+    public abstract QuestionAnswerDao questionAnswerDao();
 
     public class MyAutoMigration {
     }

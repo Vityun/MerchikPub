@@ -50,8 +50,8 @@ public class RoomManager {
                         MIGRATION_70_71,
                         MIGRATION_71_72,
                         MIGRATION_72_73,
-                        MIGRATION_73_74
-//                        MIGRATION_74_75
+                        MIGRATION_73_74,
+                        MIGRATION_74_75
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -899,8 +899,30 @@ public class RoomManager {
 
     public static final Migration MIGRATION_74_75 = new Migration(74, 75) {
         @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // Ничего не делаем.
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `question_answers` (" +
+                            "`ID` INTEGER NOT NULL, " +
+                            "`user_id` INTEGER, " +
+                            "`question` TEXT, " +
+                            "`answer` TEXT, " +
+                            "`dt` INTEGER, " +
+                            "`avg_answer` TEXT, " +
+                            "`type_user` INTEGER, " +
+                            "`id_quest` INTEGER, " +
+                            "`comment` TEXT, " +
+                            "`id_quest_com` INTEGER, " +
+                            "`object_id` TEXT, " +
+                            "`object_str` TEXT, " +
+                            "`adr_id` TEXT, " +
+                            "`kli_id` TEXT, " +
+                            "`object_date` INTEGER, " +
+                            "`element_id` TEXT, " +
+                            "`option_id` TEXT, " +
+                            "`mnenie_id` TEXT, " +
+                            "PRIMARY KEY(`ID`)" +
+                            ")"
+            );
         }
     };
 }

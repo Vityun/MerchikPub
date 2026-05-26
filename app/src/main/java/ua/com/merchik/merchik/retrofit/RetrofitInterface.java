@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
+import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
@@ -59,6 +60,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.PhotoHash;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.PotentialClientResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.PromoTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSLogResponse;
@@ -447,6 +449,14 @@ public interface RetrofitInterface {
     @POST("mobile_app.php?")
     Call<ArticleTableResponse> GET_ARTICLE_T(@Query("mod") String mod,
                                              @Query("act") String act);
+
+    /**
+     * список вопросов для опроса
+     */
+    @POST("mobile_app.php?")
+    Call<QuestionAnswerResponse> GET_QUESTION_LIST(@Header("ContentType") String content,
+                                                   @Body JsonObject json);
+
 
 
     /**

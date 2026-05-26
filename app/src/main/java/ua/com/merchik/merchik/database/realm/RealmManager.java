@@ -79,7 +79,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-                .schemaVersion(26)
+                .schemaVersion(28)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -91,7 +91,7 @@ public class RealmManager {
         sharedPreferences = context.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("realm", false)) {
             List<SynchronizationTimetableDB> synchronizationTimetableDBList = RealmManager.getSynchronizationTimetable();
-            if (synchronizationTimetableDBList == null) {
+            if (synchronizationTimetableDBList == null || synchronizationTimetableDBList.isEmpty()) {
                 addSynchronizationTimetable();
                 PreferenceManager.getDefaultSharedPreferences(context).edit()
                         .putString("user_id", null).apply();
@@ -785,6 +785,49 @@ public class RealmManager {
         return INSTANCE.where(WpDataDB.class)
                 .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
                 .findAll();
+    }
+
+    public static List<WpDataDB> getAllWorkPlanSafe() {
+        Realm realm = null;
+
+        try {
+            RealmConfiguration configuration = Realm.getDefaultConfiguration();
+
+            if (configuration == null) {
+                Globals.writeToMLOG(
+                        "ERROR",
+                        "RealmManager/getAllWorkPlanSafe",
+                        "Realm default configuration is null"
+                );
+                return new ArrayList<>();
+            }
+
+            realm = Realm.getInstance(configuration);
+
+            RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
+                    .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
+                    .findAll();
+
+            if (results == null || results.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            return realm.copyFromRealm(results);
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "RealmManager/getAllWorkPlanSafe/Exception",
+                    "Exception: " + e
+            );
+
+            return new ArrayList<>();
+
+        } finally {
+            if (realm != null && !realm.isClosed()) {
+                realm.close();
+            }
+        }
     }
 
 

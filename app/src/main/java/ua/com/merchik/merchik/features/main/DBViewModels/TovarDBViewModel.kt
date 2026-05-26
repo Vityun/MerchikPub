@@ -540,12 +540,16 @@ class TovarDBViewModel @Inject constructor(
                 if (tovarList.isEmpty())
                     viewModelScope.launch {
                         delay(350)
-                        _events.emit(MainEvent.ShowMessageDialog(MessageDialogData(
-                            title = "Товари",
-                            subTitle = "Додати Товари",
-                            status = DialogStatus.ALERT,
-                            message = "Усі доступні товари цього клієнта вже додані",
-                        )))
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    title = "Товари",
+                                    subTitle = "Додати Товари",
+                                    status = DialogStatus.ALERT,
+                                    message = "Усі доступні товари цього клієнта вже додані",
+                                )
+                            )
+                        )
                     }
                 val baseItems = repository.toItemUIList(
                     TovarDB::class,
@@ -1519,13 +1523,69 @@ class TovarDBViewModel @Inject constructor(
 
             ContextMenuActionIds.ADDITIONAL_CONTENT_ADD_ALL -> {
                 hideContextMenu()
-                requestAddAllTovar()
+                val wp = getCurrentWpData() ?: return
+                if (wp.main_option_id != "574")
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    title = "Товари",
+                                    subTitle = "Додати товари",
+                                    message = "Внимание! Для ДАННОГО случая рекомендую НЕ ИСПОЛЬЗОВАТЬ этот режим добавления товаров. Вам следует добавлять <u>ТОЛЬКО те товары, которые установлены в ППА</u> для опции [ОснОпция]." +
+                                            " Лучше обратитесь за помощью к руководителю. Отказаться от добавления ВСЕХ товаров?",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Так",
+                                    cancelText = "Ні",
+                                    showButton = true,
+                                    isCancelable = true,
+                                    onButtonOkClicked = {
+
+                                    },
+                                    onButtonCancelClicked = {
+                                        // просто закрыть диалог
+                                        requestAddAllTovar()
+                                    }
+                                )
+                            )
+                        )
+                    }
+                else
+                    requestAddAllTovar()
 
             }
 
             ContextMenuActionIds.ADDITIONAL_CONTENT_ADD_ONE -> {
                 hideContextMenu()
-                requestAddOneTovar()
+                val wp = getCurrentWpData() ?: return
+                if (wp.main_option_id != "574")
+                    viewModelScope.launch {
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    title = "Товари",
+                                    subTitle = "Додати товари",
+                                    message = "Внимание! Для ДАННОГО случая рекомендую НЕ ИСПОЛЬЗОВАТЬ этот режим добавления товаров. Вам следует добавлять <u>ТОЛЬКО те товары, которые установлены в ППА</u> для опции [ОснОпция]." +
+                                            " Лучше обратитесь за помощью к руководителю. Отказаться от добавления ВСЕХ товаров?",
+                                    status = DialogStatus.ALERT,
+                                    positivText = "Так",
+                                    cancelText = "Ні",
+                                    showButton = true,
+                                    isCancelable = true,
+                                    onButtonOkClicked = {
+
+                                    },
+                                    onButtonCancelClicked = {
+                                        // просто закрыть диалог
+//                                    requestAddPpaTovars()
+                                        requestAddOneTovar()
+
+                                    }
+                                )
+                            )
+                        )
+                    }
+                else
+                    requestAddOneTovar()
             }
 
             else -> handleTovarDialogAction(event)
@@ -3018,7 +3078,7 @@ class TovarDBViewModel @Inject constructor(
                 Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data)
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
                     table!!.setPrice(data)
-                    table.setUploadStatus(1)
+                    table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
                     RealmManager.setReportPrepareRow(table)
                 })
@@ -3028,7 +3088,7 @@ class TovarDBViewModel @Inject constructor(
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
                     table!!.setFace(data)
-                    table.setUploadStatus(1)
+                    table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
                     RealmManager.setReportPrepareRow(table)
                 })
@@ -3037,8 +3097,8 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.EXPIRE_LEFT -> {
                 Log.e("SAVE_TO_REPORT_OPT", "EXPIRE_LEFT: " + data)
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setExpireLeft(data)
-                    table.setUploadStatus(1)
+                    table.setExpireLeft(data)
+                    table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
                     RealmManager.setReportPrepareRow(table)
                 })
@@ -3357,6 +3417,7 @@ class TovarDBViewModel @Inject constructor(
         runWithAddTovarWarningIfNeeded {
             val wp = getCurrentWpData() ?: return@runWithAddTovarWarningIfNeeded
 
+
             val ppaTovars = PPADBRealm.getTovarListByPPA(
                 wp.client_id,
                 wp.addr_id,
@@ -3391,7 +3452,8 @@ class TovarDBViewModel @Inject constructor(
                             title = "Товари",
                             subTitle = "Додати товари з ППА",
                             message = "Немає чого додавати — усі товари з ППА вже актуальні.",
-                            status = DialogStatus.NORMAL
+                            status = DialogStatus.NORMAL,
+                            cancelText = "Скасувати"
                         )
                     )
                 )

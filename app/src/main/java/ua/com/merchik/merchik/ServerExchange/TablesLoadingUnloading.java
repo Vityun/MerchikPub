@@ -275,11 +275,11 @@ public class TablesLoadingUnloading {
                             downloadReportPrepare(0);
                         }
                     });
-                    RealmResults<WpDataDB> wpDataDBS = RealmManager.getAllWorkPlan();
-                    if (wpDataDBS != null && !wpDataDBS.isEmpty()) {
-                        List<WpDataDB> wpDataDBList = INSTANCE.copyFromRealm(wpDataDBS);
+                    List<WpDataDB> wpDataDBList = RealmManager.getAllWorkPlanSafe();
+                    if (!wpDataDBList.isEmpty()) {
                         downloadTovarTable(null, wpDataDBList);
                     }
+
                     globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
                 } catch (Exception e) {
                     globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
@@ -4136,6 +4136,20 @@ id_exclude - иди товаров которые есть в приложени
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+//            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
+//                    .enqueue(new Callback<JsonObject>() {
+//                        @Override
+//                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                            Log.e("!!!!!!!!","+++++++++++");
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<JsonObject> call, Throwable t) {
+//                            Log.e("!!!!!!!!","+++++++++++");
+//
+//                        }
+//                    });
+
 
             Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<PPAonResponse>() {
@@ -4253,6 +4267,19 @@ id_exclude - иди товаров которые есть в приложени
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
+                    .enqueue(new Callback<JsonObject>() {
+                        @Override
+                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                            Log.e("!!!!!!","+++");
+                        }
+
+                        @Override
+                        public void onFailure(Call<JsonObject> call, Throwable t) {
+                            Log.e("!!!!!!","+++");
+                        }
+                    });
 
             Call<ThemeTableRespose> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_Theme(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<ThemeTableRespose>() {

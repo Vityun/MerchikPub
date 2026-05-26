@@ -54,6 +54,10 @@ public class PPADB  extends RealmObject {
     @SerializedName("code_iza")
     @Expose
     private String codeIza;
+    //25.05.2025 добавил
+    @SerializedName("option_id")
+    @Expose
+    private String optionId;
 
     public String getID() {
         return id;
