@@ -35,6 +35,24 @@ public abstract class QuestionAnswerDao {
     @Query("DELETE FROM question_answers")
     public abstract void clear();
 
+    @Query(
+            "SELECT * FROM question_answers " +
+                    "WHERE user_id = :userId " +
+                    "AND dt >= :dateFrom " +
+                    "AND dt <= :dateTo " +
+                    "AND (" +
+                    "   id_quest IN (:themeIds) " +
+                    "   OR id_quest_com IN (:themeIds)" +
+                    ") " +
+                    "ORDER BY dt DESC"
+    )
+    public abstract List<QuestionAnswerDB> getComplaintsByUserAndPeriod(
+            long userId,
+            long dateFrom,
+            long dateTo,
+            List<Integer> themeIds
+    );
+
     @Transaction
     public void replaceAll(List<QuestionAnswerDB> list) {
         clear();

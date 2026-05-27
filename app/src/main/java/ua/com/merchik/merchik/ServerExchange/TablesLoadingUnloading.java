@@ -4267,19 +4267,19 @@ id_exclude - иди товаров которые есть в приложени
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
-                    .enqueue(new Callback<JsonObject>() {
-                        @Override
-                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                            Log.e("!!!!!!","+++");
-                        }
-
-                        @Override
-                        public void onFailure(Call<JsonObject> call, Throwable t) {
-                            Log.e("!!!!!!","+++");
-                        }
-                    });
+//
+//            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
+//                    .enqueue(new Callback<JsonObject>() {
+//                        @Override
+//                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                            Log.e("!!!!!!","+++");
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<JsonObject> call, Throwable t) {
+//                            Log.e("!!!!!!","+++");
+//                        }
+//                    });
 
             Call<ThemeTableRespose> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_Theme(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<ThemeTableRespose>() {

@@ -220,6 +220,7 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 4");
 
 
+            // 2.4
             // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
             eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
@@ -227,7 +228,6 @@ public class OptionControlEKL<T> extends OptionControl {
 
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(-1): " + new Gson().toJson(eklSDB));
 
-            //2.5
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
@@ -254,14 +254,6 @@ public class OptionControlEKL<T> extends OptionControl {
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(2): " + new Gson().toJson(eklSDB));
                 }
 
-                /*test*/
-//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.6");
-//                eklSDB = SQL_DB.eklDao().getByTEst(wpDataDB.getAddr_id(), wpDataDB.getUser_id());
-//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.7");
-//                eklSDB = SQL_DB.eklDao().getByTEst(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
-//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.8");
-                /*end test*/
-
                 if (eklSDB != null) {
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
                 } else {
@@ -270,11 +262,9 @@ public class OptionControlEKL<T> extends OptionControl {
             } else {
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB2: " + eklSDB.size());
             }
-
-            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 6");
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(3): " + new Gson().toJson(eklSDB));
 
-            // 3.0 Проверка ЭКЛов
+            // 2.5 Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
                 if (addressSDB.tpId == 383) {   // АШАН
                     if (wpDataDB.getDot_user_id() != 0 || wpDataDB.getFot_user_id() != 0) {

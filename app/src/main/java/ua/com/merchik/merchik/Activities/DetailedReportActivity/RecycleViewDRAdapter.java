@@ -208,8 +208,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                 Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
 
-                if (optionsButtons.getOptionId().equals("135413"))
-                    Log.e("!!!!!!", "+++");
+//                if (optionsButtons.getOptionId().equals("151122"))
+//                    Log.e("!!!!!!", "+++");
 
                 textInteger.setVisibility(View.VISIBLE);
 
@@ -318,6 +318,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 169108   // фото POS материалов (46)
                         || optionId == 2243
                         || optionId == 172100   // Фото вітрини з акційними цінниками
+//                        || optionId == 151122   // Жилетка: жалобы на условия работ
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -885,6 +886,27 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             });
 
                             break;
+
+//                        case (151122):  // Жилетка: жалобы на условия работ
+//
+//                            SpannableString spannableString151122 = SpannableString.valueOf("100?69");
+//                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                            textInteger.setText(spannableString151122);
+////                            textInteger.setOnClickListener(v -> {
+////                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+////                                Bundle bundle = new Bundle();
+////                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+////                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
+////                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+////                                bundle.putString("dataJson", new Gson().toJson(dad2));
+////                                bundle.putString("title", "Перелік фото звітів");
+////                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(4).getNm());
+////                                intent.putExtras(bundle);
+////                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+////                            });
+//
+//                            break;
+
 
                         case (172100):  // Фото вітрини з акційними цінниками
 //                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
