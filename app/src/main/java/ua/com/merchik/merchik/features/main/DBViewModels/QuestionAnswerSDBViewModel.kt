@@ -95,16 +95,9 @@ class QuestionAnswerSDBViewModel @Inject constructor(
         return try
         {
             val data = RoomManager.SQL_DB.questionAnswerDao().all
-            repository.toItemUIList(OpinionSDB::class, data, contextUI, null)
+            repository.toItemUIList(QuestionAnswerDB::class, data, contextUI, null)
                 .map {
                     when (contextUI) {
-                        ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-                            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                            val opinionID = dataJsonObject.get("opinionID").asInt
-
-                            val selected = (it.rawObj.firstOrNull { it is OpinionSDB } as? OpinionSDB)?.id == opinionID
-                            it.copy(selected = selected)
-                        }
                         ContextUI.QUESTION_ANSWER_SELECTOR -> {
                             val selected = FilteringDialogDataHolder.instance()
                                 .filters

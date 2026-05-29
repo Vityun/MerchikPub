@@ -319,7 +319,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 169108   // фото POS материалов (46)
                         || optionId == 2243
                         || optionId == 172100   // Фото вітрини з акційними цінниками
-                        || optionId == 151122   // Жилетка: жалобы на условия работ
+//                        || optionId == 151122   // Жилетка: жалобы на условия работ
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -888,25 +888,25 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
 
-                        case (151122):  // Жилетка: жалобы на условия работ
-
-                            SpannableString spannableString151122 = SpannableString.valueOf("8/1");
-                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            textInteger.setText(spannableString151122);
-                            textInteger.setOnClickListener(v -> {
-                                Intent intent = new Intent(mContext, FeaturesActivity.class);
-                                Bundle bundle = new Bundle();
-                                bundle.putString("viewModel", QuestionAnswerSDBViewModel.class.getCanonicalName());
-                                bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
-                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-                                bundle.putString("dataJson", new Gson().toJson(dad2));
-                                bundle.putString("title", "Жилетка");
-                                bundle.putString("subTitle", "Жалобы на..");
-                                intent.putExtras(bundle);
-                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
-                            });
-
-                            break;
+//                        case (151122):  // Жилетка: жалобы на условия работ
+//
+//                            SpannableString spannableString151122 = SpannableString.valueOf("8/1");
+//                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                            textInteger.setText(spannableString151122);
+//                            textInteger.setOnClickListener(v -> {
+//                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+//                                Bundle bundle = new Bundle();
+//                                bundle.putString("viewModel", QuestionAnswerSDBViewModel.class.getCanonicalName());
+//                                bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
+//                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//                                bundle.putString("dataJson", new Gson().toJson(dad2));
+//                                bundle.putString("title", "Жилетка");
+//                                bundle.putString("subTitle", "Жалобы на..");
+//                                intent.putExtras(bundle);
+//                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+//                            });
+//
+//                            break;
 
 
                         case (172100):  // Фото вітрини з акційними цінниками

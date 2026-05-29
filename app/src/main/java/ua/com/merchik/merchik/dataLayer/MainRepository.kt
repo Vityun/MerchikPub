@@ -27,6 +27,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
+import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
@@ -39,6 +40,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
+import ua.com.merchik.merchik.features.main.QuestionAnswerDBOverride
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -381,8 +383,9 @@ class MainRepository(
             PlanogrammVizitShowcaseSDB::class -> roomManager.planogrammVizitShowcaseDao().all
             SMSPlanSDB::class -> roomManager.smsPlanDao().all
             ErrorDB::class -> RealmManager.getAllErrorDbNotZero()
+            QuestionAnswerDB::class -> roomManager.questionAnswerDao().all
             else -> {
-                return emptyList()
+                emptyList()
             }
         }
     }
