@@ -497,7 +497,9 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_169108,    // фото POS материалов (47) +
     SAMPLE_PHOTO_FROM_OPTION_172100,    // Фото вітрини з акційними цінниками (48)
     ERROR_FROM_TEXT_EDITOR,
-    AKCIYA_FROM_TEXT_EDITOR
+    AKCIYA_FROM_TEXT_EDITOR,
+    QUESTION_ANSWER_INFO,
+    QUESTION_ANSWER_SELECTOR
 }
 
 

@@ -607,6 +607,19 @@ object OpinionSDBOverride {
     fun getHidedFieldsOnUI(): String =
         "dt_change, grp_id, ID"
 
+
+}
+
+object QuestionAnswerDBOverride {
+
+    fun getHidedFieldsOnUI(): String =
+        "dt_change, grp_id, ID"
+
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "fio" -> 7789
+        else -> null
+    }
 }
 
 object PlanogrammVizitShowcaseSDBOverride {

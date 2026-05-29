@@ -134,6 +134,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
@@ -358,6 +359,11 @@ public class Options {
                 case 132624:
                     OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAddComment.showOptionMassage("");
+                    break;
+
+                case 151121:
+                    OptionControlQuestionAnswer<?> optionControlQuestionAnswer = new OptionControlQuestionAnswer<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlQuestionAnswer.showOptionMassage("");
                     break;
 
                 case 84001:
@@ -1266,7 +1272,7 @@ public class Options {
      * Для реализации этого функционала я введу режим специальный и в зависимости от него буду
      * настраивать опцию.
      */
-    public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, ConductMode mode, Clicks.click click) {
+    public void conduct(Context context, WpDataDB wpDataDB, List<OptionsDB> options, ConductMode mode, Clicks.click click) {
         try {
             int register = 0;
 
@@ -1278,7 +1284,11 @@ public class Options {
             OptionMassageType type = new OptionMassageType();
             type.type = STRING;
             Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
-                    "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
+                    "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wpDataDB), JsonObject.class));
+
+            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpDataDB.getId()));
+            Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
+                    "WpDataDB From Realm: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
 
             Log.e("!", "ConductMode: " + mode.name() +
                     "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
@@ -2002,6 +2012,15 @@ public class Options {
                     optionControlAddComment.showOptionMassage(block);
                 }
                 return optionControlAddComment.isBlockOption2() ? 1 : 0;
+
+            case 151121:
+                OptionControlQuestionAnswer<?> optionControlQuestionAnswer = new OptionControlQuestionAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlQuestionAnswer.isBlockOption()))
+                    optionControlQuestionAnswer.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlQuestionAnswer.signal && optionControlQuestionAnswer.isBlockOption()) {
+                    optionControlQuestionAnswer.showOptionMassage(block);
+                }
+                return optionControlQuestionAnswer.isBlockOption2() ? 1 : 0;
 
             case 84001:
                 OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
