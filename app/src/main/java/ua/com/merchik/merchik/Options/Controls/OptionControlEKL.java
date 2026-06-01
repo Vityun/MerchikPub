@@ -154,7 +154,7 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
         Calendar limitCal = Calendar.getInstance();
-        limitCal.set(2026, Calendar.JUNE, 1, 0, 0, 0);
+        limitCal.set(2027, Calendar.JUNE, 1, 0, 0, 0);
         limitCal.set(Calendar.MILLISECOND, 0);
 
         Date limitDate = limitCal.getTime();
@@ -165,7 +165,7 @@ public class OptionControlEKL<T> extends OptionControl {
         )
                 && !optionDB.getOptionControlId().equals("132629")
                 && wpDataDB.getDt().before(limitDate)) { //  434 = АТБ или 676 = Акварель
-            optionMsg.append("Не проверяем для АТБ до 01.06.2026");
+            optionMsg.append("Не проверяем для АТБ до 01.06.2027");
             signal = false;
         } else {
             // Определем Группу Товаров
