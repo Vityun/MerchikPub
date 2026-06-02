@@ -23,6 +23,14 @@ public class ThemeRealm {
         return INSTANCE.copyFromRealm(INSTANCE.where(ThemeDB.class).findAll());
     }
 
+    public static List<ThemeDB> getAllOpros() {
+        return INSTANCE.copyFromRealm(
+                INSTANCE.where(ThemeDB.class)
+                        .isNotNull("opros_theme")
+                        .greaterThan("opros_theme", 0)
+                        .findAll()
+        );
+    }
 
 //    public static ThemeDB getByID(String id){
 //        return INSTANCE.where(ThemeDB.class)

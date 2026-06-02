@@ -354,6 +354,25 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getPhotosByDAD2AllTypes(long dad2) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", dad2)
+                .findAll();
+    }
+
+    public static RealmResults<StackPhotoDB> getPhotosByAddrClientAndTypes(
+            long addrId,
+            String clientId,
+            Integer[] photoTypes
+    ) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("addr_id", addrId)
+                .equalTo("client_id", clientId)
+                .in("photo_type", photoTypes)
+                .findAll();
+    }
+
+
     /**
      * 28.05.2025.
      * Новый запрос к бд когда не надо делать фото если тип 31 и example 78

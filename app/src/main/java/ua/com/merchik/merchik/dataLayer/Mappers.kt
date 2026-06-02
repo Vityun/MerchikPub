@@ -4,17 +4,14 @@ import CardItemsData
 import ContextMenuAction
 import MessageDialogData
 import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import java.io.PrintWriter
@@ -473,6 +470,7 @@ enum class ContextUI {
     STACK_PHOTO_TO_FROM_ACHIEVEMENT,
     STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
     STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
+    ADD_STACK_PHOTO_TO_ZIR,
     USERS_SDB_FROM_EKL,
     PLANOGRAMM_VIZIT_SHOWCASE,
     SHOWCASE,
@@ -499,7 +497,7 @@ enum class ContextUI {
     ERROR_FROM_TEXT_EDITOR,
     AKCIYA_FROM_TEXT_EDITOR,
     QUESTION_ANSWER_INFO,
-    QUESTION_ANSWER_SELECTOR
+    ADD_THEME_QUESTION_ANSWER
 }
 
 

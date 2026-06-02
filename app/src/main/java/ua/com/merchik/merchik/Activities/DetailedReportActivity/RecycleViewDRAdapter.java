@@ -566,17 +566,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case (158308):  // Фото витрины отдалённое
 
                         case (132968):  // Вставляем количество выполненных Фоток Витрин
-//                            textInteger.setText(
-//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
-//                                    TextView.BufferType.SPANNABLE
-//                            );
-//
-//                            textInteger.setOnClickListener(view -> {
-//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-//                                intent.putExtra("report_prepare", true);
-//                                intent.putExtra("dad2", dad2);
-//                                view.getContext().startActivity(intent);
-//                            });
+
                             SpannableString spannableString132968 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0));
                             spannableString132968.setSpan(new UnderlineSpan(), 0, spannableString132968.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -888,9 +878,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
 
-//                        case (151122):  // Жилетка: жалобы на условия работ
-//
-//                            SpannableString spannableString151122 = SpannableString.valueOf("8/1");
+                        case (151122):  // Жилетка: жалобы на условия работ
+
+//                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getAll().size() + "/1");
 //                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 //                            textInteger.setText(spannableString151122);
 //                            textInteger.setOnClickListener(v -> {
@@ -900,13 +890,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                                bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
 //                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
 //                                bundle.putString("dataJson", new Gson().toJson(dad2));
-//                                bundle.putString("title", "Жилетка");
-//                                bundle.putString("subTitle", "Жалобы на..");
+//                                bundle.putString("title", "Жалобы, замечания, предложения");
+//                                bundle.putString("subTitle", "Перечень пожеланий, предложений, замечаний по работе системы. " +
+//                                        "Замечания которые вы здесь оставите будут передану руководству компании, проанализированы, и вы получите ответ.");
 //                                intent.putExtras(bundle);
 //                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
 //                            });
-//
-//                            break;
+
+                            break;
 
 
                         case (172100):  // Фото вітрини з акційними цінниками

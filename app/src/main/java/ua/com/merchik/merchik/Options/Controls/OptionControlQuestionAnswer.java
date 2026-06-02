@@ -36,6 +36,8 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
     private static final int THEME_MANAGER_WRONG = 612;
     private static final int THEME_DISMISSED_SALARY_REVIEW = 421;
 
+    private static final boolean TEMP_IGNORE_UNTIL_2027 = true;
+
     private WpDataDB wpDataDB;
     private UsersSDB user;
 
@@ -225,6 +227,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                 }
             }
 
+
             /*
              * 5.0
              */
@@ -243,6 +246,17 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             /*
              * 6.0
              */
+            /*
+             * Временное исключение до 01.01.2027:
+             * замечания/жалобы пока не блокируем.
+             */
+            if (signal && TEMP_IGNORE_UNTIL_2027 && isBeforeTemporaryExceptionEndDate()) {
+                stringBuilderMsg
+                        .append("\n\nДо 01.01.2027 діє тимчасове виключення. ")
+                        .append("Отримання зауважень/скарг НЕ контролюємо.");
+
+                signal = false;
+            }
             setIsBlockOption(signal);
 
             checkUnlockCode(optionDB);
@@ -318,6 +332,32 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             return format.format(new Date(dateSec * 1000L));
         } catch (Exception e) {
             return String.valueOf(dateSec);
+        }
+    }
+
+    private boolean isBeforeTemporaryExceptionEndDate() {
+        try {
+            Calendar now = Calendar.getInstance();
+
+            Calendar endDate = Calendar.getInstance();
+            endDate.set(Calendar.YEAR, 2027);
+            endDate.set(Calendar.MONTH, Calendar.JANUARY);
+            endDate.set(Calendar.DAY_OF_MONTH, 1);
+            endDate.set(Calendar.HOUR_OF_DAY, 0);
+            endDate.set(Calendar.MINUTE, 0);
+            endDate.set(Calendar.SECOND, 0);
+            endDate.set(Calendar.MILLISECOND, 0);
+
+            return now.getTimeInMillis() < endDate.getTimeInMillis();
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/isBeforeTemporaryExceptionEndDate",
+                    "Exception e: " + e
+            );
+
+            return false;
         }
     }
 }

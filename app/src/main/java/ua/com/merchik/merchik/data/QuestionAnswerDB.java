@@ -262,7 +262,7 @@ public class QuestionAnswerDB implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return QuestionAnswerDBOverride.INSTANCE.getHidedFieldsOnUI();
     }
 
     @Nullable
@@ -274,7 +274,7 @@ public class QuestionAnswerDB implements DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return QuestionAnswerDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

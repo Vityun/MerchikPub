@@ -1,9 +1,11 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryTasksAndReclamationsSDB;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,12 +28,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
@@ -44,12 +51,17 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Tab3Fragment extends Fragment {
@@ -202,22 +214,41 @@ public class Tab3Fragment extends Fragment {
 
     private void setAddButton() {
         add.setOnClickListener(v -> {
-            Intent intentOpen = new Intent(v.getContext(), PhotoLogActivity.class);
+//            Intent intentOpen = new Intent(v.getContext(), PhotoLogActivity.class);
             if (tarData.vinovnikScore != null && tarData.vinovnikScore > 0) {
                 dialog = new DialogCreateTAR(v.getContext());
                 dialog.setTitle("Внесение комментария");
                 dialog.addPhoto("Короткий клик - открывает фотоаппарат для выполнения фото\nДолгий клик - открывает Журнал фото для выбора.");
                 dialog.addEditText("Добавьте комментарий");
+
+                TarPhotoDataHolder.Companion.instance();
                 dialog.serCustomRecyclerView(new Clicks.click() {
                     @Override
                     public <T> void click(T data) {
                         // Подготовка данных для сохранения в БД
                         switch ((int) data) {
                             case 1:
-                                Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case1", "start");
-                                intentOpen.putExtra("choise", true);
-                                intentOpen.putExtra("resultCode", 101);
-                                startActivityForResult(intentOpen, 101);
+//                                Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case1", "start");
+//                                intentOpen.putExtra("choise", true);
+//                                intentOpen.putExtra("resultCode", 101);
+//                                startActivityForResult(intentOpen, 101);
+//                                dialog.setDataUpdate();
+                                JsonObject dataJson = new JsonObject();
+                                dataJson.addProperty("clientId", tarData.client);
+                                dataJson.addProperty("addrId", tarData.addr.toString());
+
+                                Intent intent = new Intent(requireContext(), FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", JournalPhotoSDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.ADD_STACK_PHOTO_TO_ZIR.toString());
+                                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dataJson));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) requireActivity(), intent, NEED_UPDATE_UI_REQUEST, null);
+
+
 //                                Toast.makeText(v.getContext(), "Короткий клик", Toast.LENGTH_SHORT).show();
                                 break;
 
@@ -235,10 +266,10 @@ public class Tab3Fragment extends Fragment {
                             case 3:
                                 try {
                                     MakePhotoFromGaleryTasksAndReclamationsSDB = tarData;
-                                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                                    intent.setType("image/*");
-                                    Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + intent);
-                                    ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                                    Intent mediaPicker = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                    mediaPicker.setType("image/*");
+                                    Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + mediaPicker);
+                                    ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(mediaPicker, "Select Picture"), 500);
                                 } catch (Exception e) {
                                     Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
                                 }

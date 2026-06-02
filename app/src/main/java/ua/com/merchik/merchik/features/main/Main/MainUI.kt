@@ -119,9 +119,12 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.Utils.observeInternetState
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
+import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.common.ServerIssueScenario
@@ -132,7 +135,9 @@ import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
@@ -1246,8 +1251,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 if (selectedItems.isNotEmpty()) {
                                     viewModel.onSelectedItemsUI(selectedItems)
                                     if (viewModel.typeWindow != "container") {
-                                        (context as? Activity)?.setResult(Activity.RESULT_OK)
-                                        (context as? Activity)?.finish()
+                                        if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER) {
+                                            showQuestionAnswerThemeDialog(
+                                                context = context,
+                                                itemsUI = selectedItems.first().rawObj
+                                            )
+                                        } else {
+                                            (context as? Activity)?.setResult(Activity.RESULT_OK)
+                                            (context as? Activity)?.finish()
+                                        }
                                     }
                                 } else {
                                     showAditionalWorkDialog = true
@@ -2514,6 +2526,114 @@ fun ProductCodeInlineEditor(
             )
         }
     }
+}
+
+private fun showQuestionAnswerThemeDialog(
+    context: Context,
+    itemsUI: List<DataObjectUI>
+) {
+    val theme = itemsUI.firstOrNull { it is ThemeDB } as? ThemeDB
+
+    if (theme == null) {
+        Toast.makeText(
+            context,
+            "Не вдалося визначити тему",
+            Toast.LENGTH_LONG
+        ).show()
+        return
+    }
+
+    val themeTitle = theme.nm.orEmpty()
+    val themeComment = theme.comment
+        ?.takeIf { it.isNotBlank() }
+        ?: "Внесіть коментар до обраної теми"
+
+    val dialog = DialogData(context)
+
+    dialog.setTitle(themeTitle)
+    dialog.setText(themeComment)
+    dialog.setOperation(
+        DialogData.Operations.TEXT,
+        "",
+        null,
+        null
+    )
+
+    dialog.setOk("Сохранить") {
+        val comment = dialog.operationResult
+            ?.trim()
+            .orEmpty()
+
+        if (comment.length > 1) {
+            saveQuestionAnswerTheme(
+                theme = theme,
+                comment = comment
+            )
+
+            Toast.makeText(
+                dialog.context,
+                "Комментарий сохранён",
+                Toast.LENGTH_LONG
+            ).show()
+
+            dialog.dismiss()
+
+            (context as? Activity)?.setResult(Activity.RESULT_OK)
+            (context as? Activity)?.finish()
+
+        } else {
+            Toast.makeText(
+                dialog.context,
+                "Комментарий НЕ сохранён. Заполните корректно поле для комментария!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    dialog.setClose {
+        dialog.dismiss()
+    }
+
+    dialog.show()
+}
+
+private fun saveQuestionAnswerTheme(
+    theme: ThemeDB,
+    comment: String
+) {
+    val curTime = System.currentTimeMillis() / 1000L
+
+    val themeId = theme.getID()
+        ?.trim()
+        .orEmpty()
+
+    val themeName = theme.getNm()
+        ?.trim()
+        .orEmpty()
+
+    val questionAnswer = QuestionAnswerDB().apply {
+        id = System.currentTimeMillis()
+
+        userId = Globals.userId.toLong()
+
+        question = themeName
+        answer = comment
+        this.comment = comment
+
+        dt = curTime
+
+        idQuest = themeId.toIntOrNull()
+        idQuestCom = themeId.toIntOrNull()
+
+        objectId = themeId
+        objectStr = themeName
+        elementId = themeId
+
+        optionId = ""
+        mnenieId = ""
+    }
+
+    RoomManager.SQL_DB.questionAnswerDao().insert(questionAnswer)
 }
 
 @Composable

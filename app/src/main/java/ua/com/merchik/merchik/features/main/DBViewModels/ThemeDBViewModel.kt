@@ -1,20 +1,29 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.Realm
+import ua.com.merchik.merchik.ViewHolders.Clicks.click
+import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
+import ua.com.merchik.merchik.dialogs.DialogData
+import ua.com.merchik.merchik.dialogs.DialogData.DialogClickListener
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -38,7 +47,7 @@ class ThemeDBViewModel @Inject constructor(
 
     override fun updateFilters() {
         val data = when(contextUI) {
-            ContextUI.THEME_FROM_ACHIEVEMENT -> {
+            ContextUI.THEME_FROM_ACHIEVEMENT-> {
                 val themeIDs: Array<String> = Gson().fromJson(dataJson, Array<String>::class.java)
                 ThemeRealm.getThemeByIds(themeIDs)
             }
@@ -70,7 +79,8 @@ class ThemeDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return try
         {
-            val data = ThemeRealm.getAll()
+            val data = if (contextUI != ContextUI.ADD_THEME_QUESTION_ANSWER) ThemeRealm.getAll()
+            else ThemeRealm.getAllOpros()
             repository.toItemUIList(ThemeDB::class, data, contextUI, null)
                 .map {
                     when (contextUI) {
@@ -97,6 +107,7 @@ class ThemeDBViewModel @Inject constructor(
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+        Log.e("!!!!!!!!!!!","00000++++++++++")
         when (contextUI) {
             ContextUI.THEME_FROM_ACHIEVEMENT -> {
                 (itemsUI.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.let {

@@ -613,13 +613,36 @@ object OpinionSDBOverride {
 object QuestionAnswerDBOverride {
 
     fun getHidedFieldsOnUI(): String =
-        "dt_change, grp_id, ID"
+        "dt_change, grp_id, ID, id_quest_com, type_user, option_id, element_id, object_str, mnenie_id, object_id, answer"
 
 
     fun getTranslateId(key: String): Long? = when (key) {
-        "fio" -> 7789
+        "dt" -> 5917
+        "comment" -> 5911
         else -> null
     }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+
+        "dt" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis * 1000)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter).toString()
+                } catch (e: Exception) {
+                    "Робота не закінчена"
+                }
+        }
+
+        else -> value.toString()
+    }
+
+
 }
 
 object PlanogrammVizitShowcaseSDBOverride {

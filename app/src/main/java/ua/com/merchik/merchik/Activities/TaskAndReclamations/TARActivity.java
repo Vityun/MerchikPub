@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
 import static ua.com.merchik.merchik.Globals.getRealPathFromURI;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
@@ -32,6 +33,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TarPhotoDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
@@ -367,6 +369,17 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 MakePhoto.openCameraPhotoUri = null;
 
                 fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+            }
+
+
+            if (requestCode == NEED_UPDATE_UI_REQUEST) {
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+                try {
+                    fragmentHome.secondFrag.setPhoto(TarPhotoDataHolder.Companion.instance().getPhotoToId());
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult NEED_UPDATE_UI_REQUEST", "Exception e: " + e);
+                }
             }
 
 

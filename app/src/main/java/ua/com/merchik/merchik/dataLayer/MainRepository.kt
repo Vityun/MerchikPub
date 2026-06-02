@@ -37,10 +37,8 @@ import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
-import ua.com.merchik.merchik.features.main.QuestionAnswerDBOverride
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -104,6 +102,7 @@ class MainRepository(
                     SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.firstOrNull() as DataObjectUI
                     AddressSDB::class -> roomManager.addressDao().all.firstOrNull() as DataObjectUI
                     SMSPlanSDB::class -> roomManager.smsPlanDao().all.firstOrNull() as DataObjectUI
+                    QuestionAnswerDB::class -> roomManager.questionAnswerDao().all.firstOrNull() as DataObjectUI
                     else -> null
                 }
             }.getOrNull()

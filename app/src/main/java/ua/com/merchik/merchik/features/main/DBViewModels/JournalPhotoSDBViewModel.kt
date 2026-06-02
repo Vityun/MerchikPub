@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogAdapter
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TarPhotoDataHolder
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -18,6 +19,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -27,6 +29,8 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder
 import ua.com.merchik.merchik.features.main.Main.Filters
@@ -110,10 +114,33 @@ class JournalPhotoSDBViewModel @Inject constructor(
     }
 
     override fun updateFilters() {
-
         try {
+            val zirParams = getZirFilterParamsOrNull()
 
-            val typePhoto = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoType())
+            val typePhoto = if (zirParams != null) {
+                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoType())
+                    .filter { it.id.toString().toIntOrNull() in ZIR_PHOTO_TYPES }
+            } else {
+                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoType())
+            }
+
+            val clients = if (zirParams != null) {
+                val client = RoomManager.SQL_DB.customerDao()
+                    .getById(zirParams.clientId)
+
+                if (client != null) listOf(client) else emptyList()
+            } else {
+                RoomManager.SQL_DB.customerDao().all
+            }
+
+            val addresses = if (zirParams != null) {
+                val address = RoomManager.SQL_DB.addressDao()
+                    .getById(zirParams.addrId.toInt())
+
+                if (address != null) listOf(address) else emptyList()
+            } else {
+                RoomManager.SQL_DB.addressDao().all
+            }
 
             val typePhotoFilter = ItemFilter(
                 "Тип фото",
@@ -129,8 +156,6 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 true
             )
 
-            val client = RoomManager.SQL_DB.customerDao().all
-
             val clientFilter = ItemFilter(
                 "Клієнт",
                 CustomerSDB::class,
@@ -140,12 +165,10 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 "## sub title",
                 "client_id",
                 "id",
-                client.map { it.id },
-                client.map { it.nm },
+                clients.map { it.id },
+                clients.map { it.nm },
                 enabled = true
             )
-
-            val adress = RoomManager.SQL_DB.addressDao().all
 
             val adressFilter = ItemFilter(
                 "Адреса",
@@ -156,8 +179,8 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 "## sub title",
                 "addr_id",
                 "id",
-                adress.map { it.id.toString() },
-                adress.map { it.nm },
+                addresses.map { it.id.toString() },
+                addresses.map { it.nm },
                 enabled = true
             )
 
@@ -185,20 +208,17 @@ class JournalPhotoSDBViewModel @Inject constructor(
                     adressFilter,
                     userFilter
                 ),
-                rangeDataByKey =
-                    RangeDate(
-                        key = "----",
-                        start = rangeDataStart.value,
-                        end = rangeDataEnd.value,
-                        enabled = true
-                    )
+                rangeDataByKey = RangeDate(
+                    key = "----",
+                    start = rangeDataStart.value,
+                    end = rangeDataEnd.value,
+                    enabled = true
+                )
             )
         } catch (e: Exception) {
-            Log.e("!", "error: ${e.message}")
-            filters
+            Log.e("StackPhotoViewModel", "updateFilters error: ${e.message}", e)
         }
     }
-
 
     override fun getDefaultHideUserFields(): List<String> {
         return ("approve, code_dad2, dviUpload, errorTime, dvi, upload_status, " +
@@ -237,6 +257,19 @@ class JournalPhotoSDBViewModel @Inject constructor(
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, null)
     }
 
+
+    override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+        when (contextUI) {
+            ContextUI.ADD_STACK_PHOTO_TO_ZIR -> {
+                (itemsUI.first().rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.let {
+                    TarPhotoDataHolder.instance().photoToId = it.id
+                }
+            }
+            else -> {}
+        }
+    }
+
+
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {
 
         val stackPhotoDB: StackPhotoDB? =
@@ -272,4 +305,54 @@ class JournalPhotoSDBViewModel @Inject constructor(
             Toast.makeText(context, "Починаю вивантаження фото.", Toast.LENGTH_SHORT).show()
         }
     }
+
+    private data class ZirFilterParams(
+        val addrId: String,
+        val clientId: String
+    )
+
+    private fun getZirFilterParamsOrNull(): ZirFilterParams? {
+        if (contextUI != ContextUI.ADD_STACK_PHOTO_TO_ZIR) return null
+
+        val jsonString = dataJson
+            .takeIf { it!!.isNotBlank() }
+            ?: return null
+
+        Log.e("ZIR_FILTER", "dataJson=$jsonString")
+
+        val json = runCatching {
+            JSONObject(jsonString)
+        }.getOrNull() ?: return null
+
+        val addrId = json.optString("addrId")
+            .takeIf { it.isNotBlank() }
+            ?: return null
+
+        val clientId = json.optString("clientId")
+            .takeIf { it.isNotBlank() }
+            ?: return null
+
+        return ZirFilterParams(
+            addrId = addrId,
+            clientId = clientId
+        )
+    }
+
+    private val ZIR_PHOTO_TYPES = listOf(
+        4,
+        0,
+        10,
+        14,
+        28,
+        31,
+        36,
+        39,
+        40,
+        41,
+        42,
+        45,
+        46,
+        47,
+        48
+    )
 }

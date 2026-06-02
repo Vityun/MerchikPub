@@ -2,10 +2,12 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
@@ -16,13 +18,12 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -38,18 +39,9 @@ class QuestionAnswerSDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = QuestionAnswerDB::class
 
-//    override fun getDefaultHideUserFields(): List<String>? {
-//        Log.e("OpinionSDBViewModel","getDefaultHideUserFields +")
-//        return when(contextUI) {
-//            ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-////                "dt_change".split(",")
-//                val list = mutableListOf("dt_change", "grp_id")
-//                Log.e("OpinionSDBViewModel","getDefaultHideUserFields: $list")
-//                list
-//            }
-//            else -> null
-//        }
-//    }
+    override fun getDefaultHideUserFields(): List<String> {
+        return ("ID, user_id").split(",")
+    }
 
     override fun updateFilters() {
         Log.e("OpinionSDBViewModel","++++")
@@ -82,12 +74,12 @@ class QuestionAnswerSDBViewModel @Inject constructor(
             true
         )
 
-        filters = Filters(
-            searchText = "",
-            items = mutableListOf(
-//                filterThemeDB
-            )
-        )
+//        filters = Filters(
+//            searchText = "",
+//            items = mutableListOf(
+////                filterThemeDB
+//            )
+//        )
     }
 
     override suspend fun getItems(): List<DataItemUI> {
@@ -98,7 +90,7 @@ class QuestionAnswerSDBViewModel @Inject constructor(
             repository.toItemUIList(QuestionAnswerDB::class, data, contextUI, null)
                 .map {
                     when (contextUI) {
-                        ContextUI.QUESTION_ANSWER_SELECTOR -> {
+                        ContextUI.ADD_THEME_QUESTION_ANSWER -> {
                             val selected = FilteringDialogDataHolder.instance()
                                 .filters
                                 ?.items
@@ -159,5 +151,28 @@ class QuestionAnswerSDBViewModel @Inject constructor(
             }
         }
     }
+
+    override fun onClickAdditionalContent() {
+        super.onClickAdditionalContent()
+        launcher?.let {
+            launchFeaturesActivity(
+                launcher = it,
+                context = context!!,
+                viewModelClass = ThemeDBViewModel::class,
+//                dataJson = Gson().toJson(
+//                    JSONObject()
+//                        .put("codeDad2", wpData.code_dad2.toString())
+//                        .put("clientId", wpData.client_id)
+//                ),
+                modeUI = ModeUI.ONE_SELECT,
+                contextUI = ContextUI.ADD_THEME_QUESTION_ANSWER,
+                title = "Жилетка",
+                subTitle = "Выберите тему.",
+            )
+        }
+
+        Log.e("!!!!!!!!!!!!!!!!","+++++++++++++++++++++")
+    }
+
 
 }
