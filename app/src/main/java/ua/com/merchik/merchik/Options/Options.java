@@ -100,6 +100,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonQuestionAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
@@ -1884,6 +1885,10 @@ public class Options {
 
             case 135159:
                 OptionButtAchievements<?> optionButtAchievements = new OptionButtAchievements<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            case 151122:
+                OptionButtonQuestionAnswer<?> optionButtonQuestionAnswer = new OptionButtonQuestionAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 157274:

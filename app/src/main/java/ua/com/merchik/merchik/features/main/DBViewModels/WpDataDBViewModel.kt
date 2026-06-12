@@ -6,9 +6,11 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
+import androidx.room.Room
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.tasks.await
 import ua.com.merchik.merchik.Globals
@@ -49,6 +51,9 @@ import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
 import ua.com.merchik.merchik.trecker
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.reflect.KClass
@@ -111,21 +116,6 @@ class WpDataDBViewModel @Inject constructor(
                     RealmManager.INSTANCE.copyFromRealm(rawData)
                 }
 
-//                if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
-//                    subTitle =
-//                        CustomString.createTitleMsg(
-//                            data,
-//                            CustomString.TitleMode.MIX
-//                        )
-//                            .toString()
-//                    subTitleLong =
-//                        CustomString.createTitleMsg(
-//                            data,
-//                            CustomString.TitleMode.FULL
-//                        )
-//                            .toString()
-//                }
-
                 val dataUniqUser = data.distinctBy { it.user_id }
                     .let { list ->
                         if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
@@ -136,8 +126,28 @@ class WpDataDBViewModel @Inject constructor(
                     }
                 val dataUniqAdress =
                     if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) data.distinctBy { it.addr_id } else emptyList()
-                val client =
-                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RoomManager.SQL_DB.customerDao().all else emptyList()
+
+                val client = when (contextUI) {
+                    ContextUI.WP_DATA_IN_CONTAINER -> {
+                        RoomManager.SQL_DB.customerDao().all
+                    }
+
+                    ContextUI.WP_DATA_ADDRESS_CLIENT -> {
+                        val root = JsonParser.parseString(dataJson).asJsonObject
+
+                        val clientId = (
+                                root.get("clientId")
+                                    ?: root.getAsJsonObject("nameValuePairs")?.get("clientId")
+                                ).let { el ->
+                                if (el == null || el.isJsonNull) null else el.asInt
+                            } ?: error("clientId missing in dataJson: $root")
+
+                        listOfNotNull(RoomManager.SQL_DB.customerDao().getById(clientId.toString()))
+                    }
+
+                    else -> emptyList()
+                }
+
                 val filterUsersSDB = ItemFilter(
                     "Виконавець",
                     UsersSDB::class,
@@ -226,10 +236,6 @@ class WpDataDBViewModel @Inject constructor(
                     enabled = true
                 )
 
-//                if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
-//                    if (rangeDataEnd.value != null)
-//                        setEndDate(LocalDate.now().plusDays(3))
-//                }
 
                 val newFilters = prev.copy(
                     items =
@@ -266,18 +272,6 @@ class WpDataDBViewModel @Inject constructor(
 
                 val dataUniqUser = data.distinctBy { it.user_id }
 
-//                subTitle =
-//                    CustomString.createTitleMsg(
-//                        data,
-//                        CustomString.TitleMode.MIX
-//                    )
-//                        .toString()
-//                subTitleLong =
-//                    CustomString.createTitleMsg(
-//                        data,
-//                        CustomString.TitleMode.FULL
-//                    )
-//                        .toString()
 
                 val filterUsersSDB = ItemFilter(
                     "Виконавець",
@@ -346,6 +340,90 @@ class WpDataDBViewModel @Inject constructor(
                 updateFilters(newFilters)
             }
 
+            ContextUI.WP_DATA_ADDRESS_CLIENT -> {
+                val root = Gson().fromJson(dataJson, JsonObject::class.java)
+
+                val dad2 = (
+                        root.get("codeDad2")
+                            ?: root.getAsJsonObject("nameValuePairs")?.get("codeDad2")
+                        ).let { el ->
+                        if (el == null || el.isJsonNull) null else el.asLong
+                    } ?: error("codeDad2 missing in dataJson: $root")
+
+
+                val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(dad2)
+
+                val data = mutableListOf(wpDataDB)
+
+
+                val dataUniqUser = data.distinctBy { it.user_id }
+
+
+                val filterUsersSDB = ItemFilter(
+                    "Виконавець",
+                    UsersSDB::class,
+                    UsersSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## USER",
+                    "## sub title",
+                    "user_txt",
+                    "user_txt",
+                    dataUniqUser.map { it.user_txt.toString() },
+                    dataUniqUser.map { it.user_txt },
+                    false
+                )
+
+                val dataUniqAdress =
+                    data.distinctBy { it.addr_id }
+                val client =
+                    data.distinctBy { it.client_id }
+//                     RoomManager.SQL_DB.customerDao().all
+
+
+                val filterAddressSDB = ItemFilter(
+                    "Адреса",
+                    AddressSDB::class,
+                    AddressSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "## ADRESS",
+                    "## sub title",
+                    "addr_txt",
+                    "addr_txt",
+                    dataUniqAdress.map { it.addr_txt.toString() },
+                    dataUniqAdress.map { it.addr_txt },
+                    enabled = false
+                )
+
+                val filterClientSDB = ItemFilter(
+                    "Клієнт",
+                    CustomerSDB::class,
+                    CustomerSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Додати Клієнта",
+                    "## sub title",
+                    "client_txt",
+                    "client_txt",
+                    client.map { it.client_txt },
+                    client.map { it.client_txt },
+                    enabled = false
+                )
+                val newFilters = prev.copy(
+                    items =
+                        mutableListOf(
+                            filterAddressSDB,
+                            filterClientSDB,
+                        ),
+                    rangeDataByKey = null
+//                    rangeDataByKey = RangeDate(
+//                        key = "dt",
+//                        start = rangeDataStart.value,
+//                        end = rangeDataEnd.value,
+//                        enabled = true,
+//                    )
+                )
+                updateFilters(newFilters)
+            }
+
             else -> {
                 super.updateFilters()
             }
@@ -355,6 +433,7 @@ class WpDataDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         Log.e("!!!!!!TEST!!!!!!", "getItems: start")
         val raw: List<WpDataDB> = when (contextUI) {
+
 
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
                 val data = RealmManager.getAllWorkPlanForRNO()
@@ -398,6 +477,35 @@ class WpDataDBViewModel @Inject constructor(
                 data
             }
 
+            ContextUI.WP_DATA_ADDRESS_CLIENT -> {
+                val root = JsonParser.parseString(dataJson).asJsonObject
+
+                val dad2 = (
+                        root.get("codeDad2")
+                            ?: root.getAsJsonObject("nameValuePairs")?.get("codeDad2")
+                        ).let { el ->
+                        if (el == null || el.isJsonNull) null else el.asLong
+                    } ?: error("codeDad2 missing in dataJson: $root")
+
+
+                val periodDays = 30
+                val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(dad2)
+                val documentDateMs = wpDataDB.dt?.time ?: System.currentTimeMillis()
+                val periodFromMs = documentDateMs - periodDays * 24L * 60L * 60L * 1000L
+
+                val periodFromDate = Date(periodFromMs)
+                val periodToDate = Date(documentDateMs)
+
+                val visits = RealmManager.INSTANCE
+                    .where(WpDataDB::class.java)
+                    .equalTo("addr_id", wpDataDB.addr_id)
+                    .equalTo("client_id",wpDataDB.client_id)
+                    .greaterThanOrEqualTo("dt", periodFromDate)
+                    .lessThanOrEqualTo("dt", periodToDate)
+                    .findAll()
+                    .let { RealmManager.INSTANCE.copyFromRealm(it) }
+                visits
+            }
             else -> {
                 Globals.writeToMLOG(
                     "INFO",
@@ -459,7 +567,6 @@ class WpDataDBViewModel @Inject constructor(
             .map {
                 when (contextUI) {
                     ContextUI.WP_DATA -> {
-                        val selected = Random.nextBoolean()
                         FilteringDialogDataHolder.instance()
                             .filters
 //                        val selected = filter
@@ -1100,4 +1207,10 @@ class WpDataDBViewModel @Inject constructor(
             )
         )
     }
+}
+
+private fun formatQuestionAnswerDate(date: Date): String {
+    return runCatching {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(date)
+    }.getOrDefault("")
 }

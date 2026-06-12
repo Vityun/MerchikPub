@@ -1,68 +1,105 @@
 package ua.com.merchik.merchik.data.Database.Room;
 
 import androidx.room.TypeConverter;
+import android.util.Log;
+
 
 import java.sql.Date;
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
 public class DateConverter {
 
-//    @TypeConverter
-//    public static Date toDate(String date) {
-//        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-//        try {
-//            return new Date(format.parse(date).getTime());
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
+    private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
+    private static final ThreadLocal<SimpleDateFormat> DF_DATE =
+            new ThreadLocal<SimpleDateFormat>() {
+                @Override
+                protected SimpleDateFormat initialValue() {
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    df.setTimeZone(GMT);
+                    df.setLenient(false);
+                    return df;
+                }
+            };
 
+    private static final ThreadLocal<SimpleDateFormat> DF_DATE_TIME =
+            new ThreadLocal<SimpleDateFormat>() {
+                @Override
+                protected SimpleDateFormat initialValue() {
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+                    df.setTimeZone(GMT);
+                    df.setLenient(false);
+                    return df;
+                }
+            };
 
-    static DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    static {
-        df.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
-
-    static DateFormat dfH = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-    static {
-        dfH.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
-
-
+    private static final ThreadLocal<SimpleDateFormat> DF_DATE_TIME_SECONDS =
+            new ThreadLocal<SimpleDateFormat>() {
+                @Override
+                protected SimpleDateFormat initialValue() {
+                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                    df.setTimeZone(GMT);
+                    df.setLenient(false);
+                    return df;
+                }
+            };
 
     @TypeConverter
     public static Date timeToDate(String value) {
-        if (value != null) {
-            try {
-                return new Date(df.parse(value).getTime());
-            } catch (ParseException e) {
-                try {
-                    return new Date(dfH.parse(value).getTime());
-                } catch (ParseException parseException) {
-                    parseException.printStackTrace();
-                }
-            }
+        if (value == null) return null;
+
+        String s = value.trim();
+
+        if (s.isEmpty()
+                || s.equalsIgnoreCase("null")
+                || s.equals("0000-00-00")
+                || s.equals("0000-00-00 00:00")
+                || s.equals("0000-00-00 00:00:00")) {
             return null;
-        } else {
+        }
+
+        java.util.Date parsed;
+
+        // Сначала полный формат, потом короче
+        parsed = parseExact(DF_DATE_TIME_SECONDS.get(), s);
+        if (parsed != null) return new Date(parsed.getTime());
+
+        parsed = parseExact(DF_DATE_TIME.get(), s);
+        if (parsed != null) return new Date(parsed.getTime());
+
+        parsed = parseExact(DF_DATE.get(), s);
+        if (parsed != null) return new Date(parsed.getTime());
+
+        Log.e("DateConverter", "Cannot parse date value: [" + value + "]");
+        return null;
+    }
+
+    private static java.util.Date parseExact(SimpleDateFormat format, String value) {
+        try {
+            ParsePosition position = new ParsePosition(0);
+            java.util.Date date = format.parse(value, position);
+
+            if (date == null) return null;
+
+            // Запрещаем частичный парсинг.
+            // Например yyyy-MM-dd не должен успешно парсить "2026-06-05 12:30"
+            if (position.getIndex() != value.length()) return null;
+
+            return date;
+        } catch (Throwable e) {
+            Log.e("DateConverter", "Parse error. value=[" + value + "]", e);
             return null;
         }
     }
 
     @TypeConverter
     public static String dateToTime(Date value) {
-        if (value != null) {
-            return df.format(value);
-        } else {
-            return null;
-        }
+        if (value == null) return null;
+        return DF_DATE.get().format(value);
     }
-
 
     @TypeConverter
     public static java.util.Date fromTimestamp(Long value) {
@@ -73,29 +110,4 @@ public class DateConverter {
     public static Long dateToTimestamp(java.util.Date date) {
         return date == null ? null : date.getTime();
     }
-
-//    @TypeConverter
-//    public static Date toDate(Long timestamp) {
-//        Log.e("MIGRATION_2_3", "CONVERTER/toDate: " + timestamp);
-//        return timestamp == null ? null : new Date(timestamp);
-//    }
-
-//    @TypeConverter
-//    public static String toSTimestamp(Date date) {
-//        Log.e("MIGRATION_2_3", "CONVERTER/toTimestamp: " + date);
-//        return String.valueOf(date == null ? null : date.getTime());
-//    }
-
-//    @TypeConverter
-//    public static Long toTimestamp(Date date) {
-//        Log.e("MIGRATION_2_3", "CONVERTER/toTimestamp: " + date);
-//        return date == null ? null : date.getTime();
-//    }
-
-
-//    @TypeConverter
-//    public static Date dateToDate(Date date){
-//        return new Date(date.getTime());
-//    }
-
 }

@@ -225,6 +225,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
+        m = m + 1;
 
         int adress = ((WpDataDB) document).getAddr_id();
 //        получаем данные из таблицы фото

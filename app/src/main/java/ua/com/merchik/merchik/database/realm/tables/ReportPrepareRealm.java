@@ -114,4 +114,29 @@ public class ReportPrepareRealm {
     }
 
 
+    public static List<ReportPrepareDB> getReportPrepareUpMoreThanZeroByDad2List_LIST(List<Long> dad2List) {
+        if (dad2List == null || dad2List.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String[] dad2Array = new String[dad2List.size()];
+        for (int i = 0; i < dad2List.size(); i++) {
+            dad2Array[i] = String.valueOf(dad2List.get(i));
+        }
+
+        RealmResults<ReportPrepareDB> reportPrepareDBS = INSTANCE.where(ReportPrepareDB.class)
+                .in("codeDad2", dad2Array)
+                .isNotNull("up")
+                .notEqualTo("up", "")
+                .notEqualTo("up", "0")
+                .findAll();
+
+        List<ReportPrepareDB> result = new ArrayList<>();
+        if (reportPrepareDBS != null) {
+            result = INSTANCE.copyFromRealm(reportPrepareDBS);
+        }
+
+        return result;
+    }
+
 }

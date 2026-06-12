@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
 import ua.com.merchik.merchik.ViewHolders.Clicks.click
@@ -77,6 +78,12 @@ class ThemeDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
+        try {
+            val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
+            Log.e("!!!!!!!!", "codeDad2: $codeDad2")
+        } catch (e: Exception) {
+            Log.e("111111","err^ $e")
+        }
         return try
         {
             val data = if (contextUI != ContextUI.ADD_THEME_QUESTION_ANSWER) ThemeRealm.getAll()

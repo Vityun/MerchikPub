@@ -132,6 +132,7 @@ import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.FCMToken;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
+import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
@@ -1159,6 +1160,12 @@ public interface RetrofitInterface {
     Call<SiteObjects> GET_SITE_OBJECTS(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<QuestionAnswerUploadResponse> QUESTION_ANSWER_UPLOAD(
+            @Header("Content-Type") String contentType,
+            @Body JsonObject body
+    );
 
 
     @POST("mobile_app.php?")

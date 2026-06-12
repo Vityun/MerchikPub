@@ -24,10 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,21 +48,27 @@ fun TextFieldInputRounded(
     modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
-    onFocusChangedParent: (Boolean) -> Unit // уведомляем родителя
+    onFocusChangedParent: (Boolean) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
     var isFocusedSearchView by remember { mutableStateOf(false) }
+
+    fun activateSearch() {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
 
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = modifier
-//            .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(Color.White)
-            // плавная подстройка размера внутреннего контента
             .animateContentSize(animationSpec = tween(220))
             .onFocusChanged {
-                val focused = it.isFocused
+                val focused = it.hasFocus
                 isFocusedSearchView = focused
                 onFocusChangedParent(focused)
             }
@@ -68,20 +77,36 @@ fun TextFieldInputRounded(
             Text(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 7.dp),
-                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find), 6002),
+                    .padding(start = 7.dp)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        activateSearch()
+                    },
+                text = viewModel.getTranslateString(
+                    stringResource(id = R.string.ui_text_find),
+                    6002
+                ),
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
             )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val iconId = if (value.isNotEmpty()) R.drawable.ic_close else R.drawable.ic_search
+            val iconId = if (value.isNotEmpty()) {
+                R.drawable.ic_close
+            } else {
+                R.drawable.ic_search
+            }
 
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                textStyle = TextStyle.Default.copy(color = Color.Black, fontSize = 16.sp),
+                textStyle = TextStyle.Default.copy(
+                    color = Color.Black,
+                    fontSize = 16.sp
+                ),
                 maxLines = 1,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
@@ -90,6 +115,7 @@ fun TextFieldInputRounded(
                     }
                 ),
                 modifier = Modifier
+                    .focusRequester(focusRequester)
                     .align(Alignment.CenterVertically)
                     .padding(start = 7.dp)
                     .weight(1f)
@@ -103,74 +129,15 @@ fun TextFieldInputRounded(
                     .padding(end = 7.dp, start = 7.dp)
                     .size(30.dp)
                     .clickable(
-                        enabled = value.isNotEmpty(),
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
-                        onValueChange("")
-                    }
-            )
-        }
-    }
-}
-
-
-
-@Composable
-fun TextFieldInputRounded(
-    viewModel: MainViewModel,
-    modifier: Modifier = Modifier,
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    var isFocusedSearchView by remember { mutableStateOf(false) }
-
-    Box(
-        contentAlignment = Alignment.CenterStart,
-        modifier = modifier
-            .shadow(4.dp, RoundedCornerShape(8.dp))
-            .clip(RoundedCornerShape(8.dp))
-            .background(color = Color.White)
-            .onFocusChanged { isFocusedSearchView = it.isFocused }
-    ) {
-        if (!isFocusedSearchView && value.isEmpty()) {
-            Text(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 7.dp),
-                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find), 6002),
-                fontSize = 16.sp,
-                color = colorResource(id = R.color.hintColorDefault),
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                textStyle = TextStyle.Default.copy(color = Color.Black, fontSize = 16.sp),
-                maxLines = 1,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                modifier = Modifier
-                    .padding(start = 7.dp)
-                    .weight(1f)
-            )
-
-            val iconId = if (value.isNotEmpty()) R.drawable.ic_close else R.drawable.ic_search
-
-            Image(
-                painter = painterResource(id = iconId),
-                contentDescription = "",
-                colorFilter = ColorFilter.tint(Color.Black),
-                modifier = Modifier
-                    .padding(end = 7.dp, start = 7.dp)
-                    .size(30.dp)
-                    .clickable(
-                        enabled = value.isNotEmpty(),
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        onValueChange("")
+                        if (value.isNotEmpty()) {
+                            onValueChange("")
+                            activateSearch()
+                        } else {
+                            activateSearch()
+                        }
                     }
             )
         }

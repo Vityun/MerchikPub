@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -104,6 +103,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.rememberAsyncImagePainter
+import com.google.gson.Gson
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -135,6 +135,8 @@ import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogData
@@ -143,6 +145,8 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
+import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialog
+import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialogUiState
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
@@ -157,6 +161,9 @@ import kotlin.math.roundToInt
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
+
+    var showQuestionAnswerDialog by remember { mutableStateOf(false) }
+
 
     val uiInstanceId = remember { System.identityHashCode(Any()) }
     Log.e("MAIN_UI", "compose instance = $uiInstanceId")
@@ -206,6 +213,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val listState = rememberLazyListState()
 
     val showKostilDialog by viewModel.kostilDialog.collectAsState()
+
+    var showSavedMessage by remember { mutableStateOf(false) }
+    var validationErrorMessage by remember { mutableStateOf<String?>(null) }
 
     val activity = context as ComponentActivity
     val shouldShow = activity.intent
@@ -285,11 +295,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     // как только клавиатура скрылась — снимаем фокус → панель схлопнется
-    LaunchedEffect(imeVisible) {
-        if (!imeVisible && searchFocused) {
-            focusManager.clearFocus(force = true)
-        }
-    }
+//    LaunchedEffect(imeVisible) {
+//        if (!imeVisible && searchFocused) {
+//            focusManager.clearFocus(force = true)
+//        }
+//    }
 
     viewModel.launcher = launcher
 
@@ -337,7 +347,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //    val version = holder.version
     val additionalEarningsDialogState by viewModel.additionalEarningsDialogState.collectAsState()
     val wpDataList = remember { mutableStateListOf<WpDataDB>() }
-
 
     var hasInternet by remember { mutableStateOf(true) }
     var pendingMainDialog by remember { mutableStateOf(false) }
@@ -752,7 +761,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         .shadow(4.dp, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
-                        .focusable()
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
                     LazyColumnScrollbar(
@@ -1252,10 +1260,26 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     viewModel.onSelectedItemsUI(selectedItems)
                                     if (viewModel.typeWindow != "container") {
                                         if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER) {
-                                            showQuestionAnswerThemeDialog(
-                                                context = context,
-                                                itemsUI = selectedItems.first().rawObj
-                                            )
+                                            val theme =
+                                                selectedItems.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB
+                                            if (theme != null && theme.id == "610")
+                                                showQuestionAnswerDialog = true
+                                            else
+                                                showQuestionAnswerThemeDialog(
+                                                    viewModel = viewModel,
+                                                    context = context,
+                                                    itemsUI = selectedItems.first().rawObj,
+                                                    onValidationError = { message ->
+                                                        validationErrorMessage = message
+                                                    },
+                                                    onSavedSuccess = {
+                                                        showSavedMessage = true
+                                                    }
+                                                )
+//                                                showQuestionAnswerThemeDialog(
+//                                                    context = context,
+//                                                    itemsUI = selectedItems.first().rawObj
+//                                                )
                                         } else {
                                             (context as? Activity)?.setResult(Activity.RESULT_OK)
                                             (context as? Activity)?.finish()
@@ -1823,19 +1847,6 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             onConfirmAction = { showAditionalWorkDialog = false }
         )
     }
-//    if (showAditionalWorkDialog) {
-//        val isAdditional = (viewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER)
-//        val textAdd = if (isAdditional) "роботи по котрим хочете виконати" else "дію з якими хочете виконати"
-//        MessageDialog(
-//            title = if (isAdditional) "Додатковий заробіток" else "План робiт",
-//            status = DialogStatus.NORMAL,
-//            subTitle = "Оберіть візити",
-//            message = "Спочатку встановіть позначки на тих відвідуваннях, $textAdd. Для цього клікніть у кружечках розташованих у правому верхньому куті кожного відвідування",
-//            onDismiss = { showAditionalWorkDialog = false },
-//            okButtonName = "Ok",
-//            onConfirmAction = { showAditionalWorkDialog = false }
-//        )
-//    }
 
     additionalEarningsDialogState?.let { dialogState ->
         val wpList = dialogState.wpList
@@ -1905,6 +1916,66 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             }
         )
         Log.e("additionalEarningsDialogData", "final")
+    }
+
+    if (showQuestionAnswerDialog) {
+        val theme = ThemeRealm.getThemeById("610")
+        theme?.let {
+            QuestionAnswerDialog(
+                viewModel = viewModel,
+                state = QuestionAnswerDialogUiState(
+                    address = "повна адреса",
+                    client = "РОга и Копыта",
+                    dad2 = "только для отладки"
+                ),
+                themeTitle = it.nm,
+                themeComment = it.comment,
+                hint = "Введіть значення",
+                onDismiss = {
+                    showQuestionAnswerDialog = false
+                },
+                onSave = { result ->
+                    // тут потом сохраним QuestionAnswerDB
+                    showQuestionAnswerDialog = false
+                }
+            )
+        }
+    }
+
+    validationErrorMessage?.let { message ->
+        MessageDialog(
+            title = "Данные не сохранены",
+            subTitle = "Перевірте дані",
+            status = DialogStatus.ALERT,
+            message = message,
+            okButtonName = "Ок",
+            onDismiss = {
+                validationErrorMessage = null
+            },
+            onConfirmAction = {
+                validationErrorMessage = null
+            }
+        )
+    }
+
+    if (showSavedMessage) {
+        MessageDialog(
+            title = "Отзыв подан",
+            subTitle = "Спасибо!",
+            status = DialogStatus.NORMAL,
+            message = "Благодаря анализу вашего мнения мы сможем улучшить работу нашего предприятия и тем самым увеличить ваши доходы!",
+            okButtonName = "Ок",
+            onDismiss = {
+                showSavedMessage = false
+                (context as? Activity)?.setResult(Activity.RESULT_OK)
+                (context as? Activity)?.finish()
+            },
+            onConfirmAction = {
+                showSavedMessage = false
+                (context as? Activity)?.setResult(Activity.RESULT_OK)
+                (context as? Activity)?.finish()
+            }
+        )
     }
 }
 
@@ -2528,33 +2599,52 @@ fun ProductCodeInlineEditor(
     }
 }
 
+
 private fun showQuestionAnswerThemeDialog(
+    viewModel: MainViewModel,
     context: Context,
-    itemsUI: List<DataObjectUI>
+    itemsUI: List<DataObjectUI>,
+    onValidationError: (String) -> Unit,
+    onSavedSuccess: () -> Unit
 ) {
     val theme = itemsUI.firstOrNull { it is ThemeDB } as? ThemeDB
 
     if (theme == null) {
-        Toast.makeText(
-            context,
-            "Не вдалося визначити тему",
-            Toast.LENGTH_LONG
-        ).show()
+        onValidationError("Не вдалося визначити тему")
         return
     }
 
+    val extraTextFor600 =
+        "Вы можете использовать текущий вариант ответа некоторое время — до двух недель. " +
+                "Но не может быть, чтобы вас абсолютно всё устраивало. " +
+                "Всегда бывают какие-то неудобства. Выберите соответствующий вариант и опишите его."
+
     val themeTitle = theme.nm.orEmpty()
-    val themeComment = theme.comment
-        ?.takeIf { it.isNotBlank() }
-        ?: "Внесіть коментар до обраної теми"
+
+    val themeComment = when {
+        theme.id == "600" -> {
+            val base = theme.comment?.takeIf { it.isNotBlank() }
+            if (base.isNullOrBlank()) {
+                extraTextFor600
+            } else {
+                "$base\n\n$extraTextFor600"
+            }
+        }
+
+        else -> {
+            theme.comment?.takeIf { it.isNotBlank() }
+                ?: "Внесіть коментар до обраної теми"
+        }
+    }
 
     val dialog = DialogData(context)
+    val hint = if (theme.id == "600") theme.nm else ""
 
     dialog.setTitle(themeTitle)
     dialog.setText(themeComment)
     dialog.setOperation(
         DialogData.Operations.TEXT,
-        "",
+        hint,
         null,
         null
     )
@@ -2565,28 +2655,24 @@ private fun showQuestionAnswerThemeDialog(
             .orEmpty()
 
         if (comment.length > 1) {
-            saveQuestionAnswerTheme(
-                theme = theme,
-                comment = comment
-            )
-
-            Toast.makeText(
-                dialog.context,
-                "Комментарий сохранён",
-                Toast.LENGTH_LONG
-            ).show()
-
-            dialog.dismiss()
-
-            (context as? Activity)?.setResult(Activity.RESULT_OK)
-            (context as? Activity)?.finish()
-
+            runCatching {
+                saveQuestionAnswerTheme(
+                    viewModel = viewModel,
+                    theme = theme,
+                    comment = comment
+                )
+            }.onSuccess {
+                dialog.dismiss()
+                onSavedSuccess()
+            }.onFailure { error ->
+                onValidationError(
+                    "Помилка збереження: ${error.message.orEmpty()}"
+                )
+            }
         } else {
-            Toast.makeText(
-                dialog.context,
-                "Комментарий НЕ сохранён. Заполните корректно поле для комментария!",
-                Toast.LENGTH_LONG
-            ).show()
+            onValidationError(
+                "Комментарий НЕ сохранён. Заполните корректно поле для комментария!"
+            )
         }
     }
 
@@ -2598,10 +2684,11 @@ private fun showQuestionAnswerThemeDialog(
 }
 
 private fun saveQuestionAnswerTheme(
+    viewModel: MainViewModel,
     theme: ThemeDB,
     comment: String
 ) {
-    val curTime = System.currentTimeMillis() / 1000L
+    val nowSeconds = System.currentTimeMillis() / 1000L
 
     val themeId = theme.getID()
         ?.trim()
@@ -2610,6 +2697,11 @@ private fun saveQuestionAnswerTheme(
     val themeName = theme.getNm()
         ?.trim()
         .orEmpty()
+
+    val wpDataDB = runCatching {
+        val codeDad2 = Gson().fromJson(viewModel.dataJson, Long::class.java)
+        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+    }.getOrNull()
 
     val questionAnswer = QuestionAnswerDB().apply {
         id = System.currentTimeMillis()
@@ -2620,14 +2712,32 @@ private fun saveQuestionAnswerTheme(
         answer = comment
         this.comment = comment
 
-        dt = curTime
+        dt = nowSeconds
 
         idQuest = themeId.toIntOrNull()
         idQuestCom = themeId.toIntOrNull()
 
-        objectId = themeId
-        objectStr = themeName
-        elementId = themeId
+        if (wpDataDB != null) {
+            objectId = wpDataDB.code_dad2.toString()
+            objectStr = wpDataDB.doc_num_otchet.orEmpty()
+
+            adrId = wpDataDB.addr_id.toString()
+            kliId = wpDataDB.client_id.orEmpty()
+
+            objectDate = wpDataDB.dt?.time?.div(1000L) ?: nowSeconds
+
+            elementId = ""
+        } else {
+            objectId = ""
+            objectStr = ""
+
+            adrId = ""
+            kliId = ""
+
+            objectDate = nowSeconds
+
+            elementId = ""
+        }
 
         optionId = ""
         mnenieId = ""

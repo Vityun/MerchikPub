@@ -61,4 +61,7 @@ public abstract class QuestionAnswerDao {
             insertAll(list);
         }
     }
+
+    @Query("SELECT * FROM question_answers WHERE ID > :minId ORDER BY ID ASC")
+    public abstract List<QuestionAnswerDB> getAllForUploadTest(long minId);
 }

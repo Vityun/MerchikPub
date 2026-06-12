@@ -85,7 +85,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
 
                 this.documentDateSec = getDocumentDateSec(wpDataDB);
                 this.dateFromSec = documentDateSec - 30L * 24L * 60L * 60L;
-                this.dateToSec = documentDateSec;
+                this.dateToSec = documentDateSec + 24L * 60L * 60L;
 
                 this.periodText = "За период с "
                         + formatDateSec(dateFromSec)

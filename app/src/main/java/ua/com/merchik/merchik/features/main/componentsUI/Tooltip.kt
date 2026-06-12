@@ -5,6 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +26,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
@@ -87,5 +92,94 @@ fun Tooltip(
         delay(1000L)
         if (time <= 0) isVisible = false
         else time--
+    }
+}
+
+
+@Composable
+fun TooltipWithDetails(
+    text: String,
+    modifier: Modifier = Modifier,
+    detailsText: String = "Детальніше",
+    onDetailsClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    var time by remember { mutableIntStateOf(5) }
+
+    Box(
+        modifier = modifier.pointerInput(Unit) {
+            detectTapGestures(
+                onTap = {
+                    time = 5
+                    isVisible = true
+                }
+            )
+        }
+    ) {
+        content()
+
+        if (isVisible) {
+            Popup(
+                offset = IntOffset(0, -100),
+                alignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(
+                            1.dp,
+                            colorResource(id = R.color.borderToolTip),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .background(
+                            colorResource(id = R.color.backgroundToolTip),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(7.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.widthIn(max = 220.dp),
+                        text = text,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = detailsText,
+                        color = colorResource(id = R.color.blue),
+                        textDecoration = TextDecoration.Underline,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .clickable {
+                                time = 0
+                                isVisible = false
+                                onDetailsClick()
+                            }
+                            .padding(
+                                start = 8.dp,
+                                top = 4.dp,
+                                bottom = 2.dp
+                            )
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(isVisible, time) {
+        if (!isVisible) return@LaunchedEffect
+
+        delay(1000L)
+
+        if (time <= 0) {
+            isVisible = false
+        } else {
+            time--
+        }
     }
 }

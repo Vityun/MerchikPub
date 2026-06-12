@@ -43,6 +43,13 @@ class QuestionAnswerSDBViewModel @Inject constructor(
         return ("ID, user_id").split(",")
     }
 
+    override fun getDefaultGroupUserFields(): List<String> {
+        return emptyList()
+    }
+    override fun getDefaultSortUserFields(): List<String>? {
+        return "dt, id_quest, comment".split(",")
+    }
+
     override fun updateFilters() {
         Log.e("OpinionSDBViewModel","++++")
         val data = when(contextUI) {
@@ -159,19 +166,14 @@ class QuestionAnswerSDBViewModel @Inject constructor(
                 launcher = it,
                 context = context!!,
                 viewModelClass = ThemeDBViewModel::class,
-//                dataJson = Gson().toJson(
-//                    JSONObject()
-//                        .put("codeDad2", wpData.code_dad2.toString())
-//                        .put("clientId", wpData.client_id)
-//                ),
+                dataJson = dataJson,
                 modeUI = ModeUI.ONE_SELECT,
                 contextUI = ContextUI.ADD_THEME_QUESTION_ANSWER,
-                title = "Жилетка",
-                subTitle = "Выберите тему.",
+                title = "Жалобы, Замечания, Предложени (Жилетка)",
+                subTitle = "Выберите тему из списка. Благодаря анализу вашего мнения мы сможем улучшить работу нашего предприятия и тем самым увеличить ваши доходы.",
             )
         }
 
-        Log.e("!!!!!!!!!!!!!!!!","+++++++++++++++++++++")
     }
 
 

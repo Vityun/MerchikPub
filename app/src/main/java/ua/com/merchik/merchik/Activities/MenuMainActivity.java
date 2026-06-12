@@ -68,6 +68,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUpload;
+import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.room.RoomManager;
@@ -245,6 +247,7 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
         downloadTest();
+        uploadQuestionAnswersTest();
 //        new Translate().uploadNewTranslate();
 
 //        new TablesLoadingUnloading().donwloadPlanBudget();
@@ -657,4 +660,147 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
         }
     }
 
+    private boolean isQuestionAnswersUploading = false;
+
+    private static final long TEST_MIN_QUESTION_ANSWER_ID = 1781248749450L;
+
+    public void uploadQuestionAnswersTest() {
+        if (isQuestionAnswersUploading) return;
+
+        isQuestionAnswersUploading = true;
+
+        try {
+            StandartData data = new StandartData();
+            data.mod = "quest_data";
+            data.act = "add_row";
+
+            List<QuestionAnswerDB> list =
+                    SQL_DB.questionAnswerDao().getAllForUploadTest(TEST_MIN_QUESTION_ANSWER_ID);
+
+            if (list == null || list.isEmpty()) {
+                Log.e("QuestionAnswerUpload", "Нет данных для выгрузки");
+                isQuestionAnswersUploading = false;
+                return;
+            }
+
+            List<QuestionAnswerUpload> dataList = new ArrayList<>();
+
+            for (QuestionAnswerDB item : list) {
+                dataList.add(QuestionAnswerUpload.fromDb(item));
+            }
+
+            data.data = dataList;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = gson.fromJson(json, JsonObject.class);
+
+            Log.e("QuestionAnswerUpload", "request: " + convertedObject);
+
+            Globals.writeToMLOG(
+                    "INFO",
+                    "uploadQuestionAnswersTest",
+                    "request: " + convertedObject
+            );
+
+            Call<QuestionAnswerUploadResponse> call =
+                    RetrofitBuilder.getRetrofitInterface()
+                            .QUESTION_ANSWER_UPLOAD(
+                                    RetrofitBuilder.contentType,
+                                    convertedObject
+                            );
+
+            call.enqueue(new Callback<QuestionAnswerUploadResponse>() {
+                @Override
+                public void onResponse(
+                        Call<QuestionAnswerUploadResponse> call,
+                        Response<QuestionAnswerUploadResponse> response
+                ) {
+                    try {
+                        Log.e("QuestionAnswerUpload", "response.code(): " + response.code());
+
+                        QuestionAnswerUploadResponse body = response.body();
+
+                        Log.e("QuestionAnswerUpload", "response.body(): " + new Gson().toJson(body));
+
+                        Globals.writeToMLOG(
+                                "INFO",
+                                "uploadQuestionAnswersTest/onResponse",
+                                "response.code(): " + response.code()
+                        );
+
+                        Globals.writeToMLOG(
+                                "INFO",
+                                "uploadQuestionAnswersTest/onResponse",
+                                "response.body(): " + new Gson().toJson(body)
+                        );
+
+                        if (response.isSuccessful()
+                                && body != null
+                                && Boolean.TRUE.equals(body.state)) {
+
+                            Log.e("QuestionAnswerUpload", "Выгрузка успешна. Кол-во: " + list.size());
+
+                            Globals.writeToMLOG(
+                                    "INFO",
+                                    "uploadQuestionAnswersTest/onResponse",
+                                    "successful, count: " + list.size()
+                            );
+
+                            // Пока для теста ничего локально не обновляем.
+                            // Когда поймём точный ответ сервера, тут можно будет
+                            // сохранить mnenie_id / server id в локальную БД.
+
+                        } else {
+                            String error = body != null ? body.error : "body is null";
+
+                            Log.e("QuestionAnswerUpload", "Ошибка выгрузки: " + error);
+
+                            Globals.writeToMLOG(
+                                    "ERROR",
+                                    "uploadQuestionAnswersTest/onResponse",
+                                    "upload error: " + error
+                            );
+                        }
+
+                    } catch (Exception e) {
+                        Log.e("QuestionAnswerUpload", "Exception: " + e);
+
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "uploadQuestionAnswersTest/onResponse/catch",
+                                "Exception: " + e
+                        );
+
+                    } finally {
+                        isQuestionAnswersUploading = false;
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<QuestionAnswerUploadResponse> call, Throwable t) {
+                    Log.e("QuestionAnswerUpload", "Throwable: " + t);
+
+                    Globals.writeToMLOG(
+                            "ERROR",
+                            "uploadQuestionAnswersTest/onFailure",
+                            "Throwable: " + t
+                    );
+
+                    isQuestionAnswersUploading = false;
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e("QuestionAnswerUpload", "Exception: " + e);
+
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "uploadQuestionAnswersTest/catch",
+                    "Exception: " + e
+            );
+
+            isQuestionAnswersUploading = false;
+        }
+    }
 }

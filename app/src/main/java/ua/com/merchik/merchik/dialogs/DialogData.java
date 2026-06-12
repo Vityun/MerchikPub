@@ -7,7 +7,11 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -19,6 +23,7 @@ import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -125,7 +130,7 @@ public class DialogData {
     }
 
     public enum Operations {
-        Text, TEXT, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner
+        Text, TEXT, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner, DecimalNumber,
     }
 
     private DialogClickListener listenerOK;
@@ -318,7 +323,8 @@ public class DialogData {
 //    public void setTextOneClick(SpannableStringBuilder text, DialogClickListener clickListener) {
 //        this.text.setVisibility(View.VISIBLE);
 //        this.text.setScrollbarFadingEnabled(false);
-////        this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
+
+    ////        this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
 //        this.text.setMovementMethod(LinkMovementMethod.getInstance());// Делаю возможность скролить текст
 //        this.text.setClickable(false);
 //        this.text.setLongClickable(false);
@@ -330,8 +336,6 @@ public class DialogData {
 //            this.text.setVisibility(View.GONE);
 //        }
 //    }
-
-
     public void setClose(DialogClickListener clickListener) {
         imgBtnClose.setOnClickListener(v -> {
             clickListener.clicked();
@@ -746,7 +750,12 @@ public class DialogData {
             case TEXT:
                 ok.setVisibility(View.GONE);
                 editText.setVisibility(View.VISIBLE);
-                if (data.contains("Ваш")) {
+                if (data.equals("Введіть значення")) {
+                    editText.setHint(data);
+                } else if (data.contains("Зауважень")) {
+                    editText.setHint(data);
+                    result = data;
+                } else if (data.contains("Ваш")) {
                     editText.setHint(data);
                 } else {
                     editText.setText(data);
@@ -802,6 +811,102 @@ public class DialogData {
                 });
                 break;
 
+            case DecimalNumber:
+                editText.setVisibility(View.VISIBLE);
+                editText.setGravity(Gravity.CENTER);
+                editText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+
+                if (data != null && data.equals("Введіть значення")) {
+                    editText.setHint(data);
+                } else {
+                    String prepared = normalizeDecimalInput(data);
+                    editText.setText(prepared);
+                }
+
+                editText.setSelection(editText.getText().length());
+
+                editText.setSelectAllOnFocus(true);
+                editText.selectAll();
+
+                editText.setSingleLine(true);
+                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+
+                editText.setRawInputType(
+                        InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL
+                );
+
+                editText.setKeyListener(
+                        android.text.method.DigitsKeyListener.getInstance("0123456789.,")
+                );
+
+                final boolean[] selfChange = {false};
+
+                editText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+                        if (selfChange[0]) return;
+
+                        String source = editable.toString();
+                        String fixed = normalizeDecimalInput(source);
+
+                        if (!source.equals(fixed)) {
+                            selfChange[0] = true;
+                            editText.setText(fixed);
+                            editText.setSelection(editText.getText().length());
+                            selfChange[0] = false;
+                        }
+
+                        result = fixed;
+                    }
+                });
+
+                editText.setOnEditorActionListener((v, actionId, event) -> {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        result = normalizeDecimalResult(v.getText().toString());
+
+                        if (isValidDecimalResult(result)) {
+                            listener.clicked();
+                            dialog.dismiss();
+                        } else {
+                            Toast.makeText(
+                                    dialog.getContext(),
+                                    "Внесіть коректне число",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        }
+
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                ok.setOnClickListener(v -> {
+                    result = normalizeDecimalResult(editText.getText().toString());
+
+                    Log.e("setOperation", "DecimalNumber.result: " + result);
+
+                    if (isValidDecimalResult(result)) {
+                        listener.clicked();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(
+                                dialog.getContext(),
+                                "Внесіть коректне число",
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
+
+                break;
 
             case Telephone:
                 editText.setVisibility(View.VISIBLE);
@@ -836,7 +941,10 @@ public class DialogData {
 
             case Number:
                 editText.setVisibility(View.VISIBLE);
-                editText.setText(data);
+                if (data.equals("Введіть значення")) {
+                    editText.setHint(data);
+                } else
+                    editText.setText(data);
                 editText.setSelection(editText.getText().length());
 
                 editText.setSelectAllOnFocus(true);
@@ -1067,7 +1175,8 @@ public class DialogData {
 
                     // Set popupWindow height to 500px
                     popupWindow.setHeight(200);
-                } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
+                } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException |
+                         IllegalAccessException e) {
                     e.printStackTrace();
                 }
 
@@ -1483,4 +1592,53 @@ public class DialogData {
     }
 
 
+    private String normalizeDecimalInput(String source) {
+        if (source == null) return "";
+
+        String text = source
+                .trim()
+                .replace(',', '.');
+
+        StringBuilder result = new StringBuilder();
+        boolean hasDot = false;
+
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+
+            if (Character.isDigit(ch)) {
+                result.append(ch);
+            } else if (ch == '.' && !hasDot) {
+                if (result.length() == 0) {
+                    result.append("0");
+                }
+
+                result.append('.');
+                hasDot = true;
+            }
+        }
+
+        return result.toString();
+    }
+
+    private String normalizeDecimalResult(String source) {
+        String result = normalizeDecimalInput(source);
+
+        while (result.endsWith(".")) {
+            result = result.substring(0, result.length() - 1);
+        }
+
+        return result;
+    }
+
+    private boolean isValidDecimalResult(String value) {
+        if (value == null) return false;
+
+        String text = value.trim();
+
+        if (text.isEmpty()) return false;
+        if (text.equals(".")) return false;
+        if (text.equals(",")) return false;
+
+        return text.matches("\\d+(\\.\\d+)?");
+    }
 }

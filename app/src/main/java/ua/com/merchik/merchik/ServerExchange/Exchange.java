@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
@@ -1252,6 +1253,14 @@ public class Exchange {
                             });
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
+                        }
+
+                        try {
+                            QuestionExchange questionExchange = new QuestionExchange();
+                            questionExchange.downloadQuestionAnswer();
+                            questionExchange.uploadQuestionAnswers();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "startExchange/QuestionExchange/", "Exception e: " + e);
                         }
 
                         // TODO Это надо будет нормально оформить

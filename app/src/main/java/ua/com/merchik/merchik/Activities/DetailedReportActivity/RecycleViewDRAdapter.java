@@ -319,7 +319,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 169108   // фото POS материалов (46)
                         || optionId == 2243
                         || optionId == 172100   // Фото вітрини з акційними цінниками
-//                        || optionId == 151122   // Жилетка: жалобы на условия работ
+                        || optionId == 151122   // Жилетка: жалобы на условия работ
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -880,22 +880,23 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case (151122):  // Жилетка: жалобы на условия работ
 
-//                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getAll().size() + "/1");
-//                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//                            textInteger.setText(spannableString151122);
-//                            textInteger.setOnClickListener(v -> {
-//                                Intent intent = new Intent(mContext, FeaturesActivity.class);
-//                                Bundle bundle = new Bundle();
-//                                bundle.putString("viewModel", QuestionAnswerSDBViewModel.class.getCanonicalName());
-//                                bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
-//                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//                                bundle.putString("dataJson", new Gson().toJson(dad2));
-//                                bundle.putString("title", "Жалобы, замечания, предложения");
-//                                bundle.putString("subTitle", "Перечень пожеланий, предложений, замечаний по работе системы. " +
-//                                        "Замечания которые вы здесь оставите будут передану руководству компании, проанализированы, и вы получите ответ.");
-//                                intent.putExtras(bundle);
-//                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
-//                            });
+                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getAll().size() + "/1");
+                            spannableString151122.setSpan(new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default)), 0, spannableString151122.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            textInteger.setText(spannableString151122);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", QuestionAnswerSDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Жалобы, Замечания, Предложения (Жилетка)");
+                                bundle.putString("subTitle", "Перечень пожеланий, предложений, замечаний по работе системы. " +
+                                        "Замечания которые вы здесь оставите будут передану руководству компании, проанализированы, и вы получите ответ. Для подачи нового обращения нажмите на кнопку +");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
 
                             break;
 
@@ -2068,6 +2069,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
         int maxPhotos = Integer.parseInt(min);
+        maxPhotos = maxPhotos + 1;
 
         data = "" + dataBaseCount + "/" + maxPhotos;
 

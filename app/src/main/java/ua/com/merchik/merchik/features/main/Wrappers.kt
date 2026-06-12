@@ -613,12 +613,14 @@ object OpinionSDBOverride {
 object QuestionAnswerDBOverride {
 
     fun getHidedFieldsOnUI(): String =
-        "dt_change, grp_id, ID, id_quest_com, type_user, option_id, element_id, object_str, mnenie_id, object_id, answer"
+        "dt_change, grp_id, ID, id_quest_com, type_user, option_id, element_id, object_str, " +
+                "mnenie_id, object_id, answer, question"
 
 
     fun getTranslateId(key: String): Long? = when (key) {
         "dt" -> 5917
         "comment" -> 5911
+        "id_quest" -> 8724
         else -> null
     }
 
@@ -626,17 +628,27 @@ object QuestionAnswerDBOverride {
 
         "dt" -> {
             val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
-            if (value.toString() == "0")
+            val raw = value.toString().trim()
+
+            if (raw.isEmpty() || raw == "0" || raw.equals("null", ignoreCase = true)) {
                 "-"
-            else
+            } else {
                 try {
-                    val millis = value.toString().toLong()
-                    Instant.ofEpochMilli(millis * 1000)
+                    val seconds = raw.toLong()
+                    Instant.ofEpochSecond(seconds)
                         .atZone(ZoneId.systemDefault())
-                        .format(formatter).toString()
+                        .format(formatter)
                 } catch (e: Exception) {
-                    "Робота не закінчена"
+                    raw
                 }
+            }
+        }
+
+        "id_quest" -> try {
+            val tmeme = ThemeRealm.getThemeById(value.toString())
+            "($value) ${tmeme.nm}"
+        } catch (_: Exception) {
+            value.toString()
         }
 
         else -> value.toString()

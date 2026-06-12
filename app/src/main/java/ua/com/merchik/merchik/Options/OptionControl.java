@@ -7,11 +7,11 @@ import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.Arrays;
-
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
+
+import java.util.Arrays;
+
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
@@ -135,13 +135,15 @@ public class OptionControl<T> {
             showUnlockCodeDialogInMainThread(wpDataDB1, isBlockOption());
         });
         dialog.setImgBtnCall(context);
-        dialog.setCancel("Исправить замечание", () -> {
-            DetailedReportViewModel viewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(DetailedReportViewModel.class);
-            viewModel.postScrollToId(optionDB);
-            DialogManager.dismissAll();
-        });
+        if (block)
+            dialog.setCancel("Исправить замечание", () -> {
+                DetailedReportViewModel viewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(DetailedReportViewModel.class);
+                viewModel.postScrollToId(optionDB);
+                DialogManager.dismissAll();
+            });
+        else
+            dialog.setCancel("Закрыть", DialogManager::dismissAll);
     }
-
 
 
     public void setIsBlockOption(boolean block) {
