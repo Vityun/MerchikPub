@@ -70,7 +70,7 @@ public final class FaceSaveGuard {
             }
 
             return FaceSaveCheckResult.error(
-                    "Робота вже завершена. Неможливо встановити кількість фейсів 0."
+                    "Вы не можете обнулить количество фейсов данного товара не загрузив его Фото Остатков"
             );
 
         } catch (Exception e) {
