@@ -441,6 +441,9 @@ class WpDataDBViewModel @Inject constructor(
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
                     ?: emptyList()
 
+                for (wp in data){
+                    Log.e("@@@@@@@@@@@@@@@@@@@@@@@@@","date: ${wp.dt}")
+                }
                 Globals.writeToMLOG(
                     "INFO",
                     "WpDataDBViewModel.getItems",

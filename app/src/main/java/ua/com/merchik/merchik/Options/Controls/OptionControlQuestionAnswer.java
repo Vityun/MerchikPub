@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +36,9 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
     private static final int THEME_PAYMENT_INCREASE = 610;
     private static final int THEME_MANAGER_WRONG = 612;
     private static final int THEME_DISMISSED_SALARY_REVIEW = 421;
+    private static final int THEME_NO_COMPLAINTS = 600;
+
+    private static final long DAY_SEC = 24L * 60L * 60L;
 
     private static final boolean TEMP_IGNORE_UNTIL_2027 = true;
 
@@ -121,66 +125,11 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             List<QuestionAnswerDB> complaints = getComplaints();
 
             /*
-             * 3.0. Сформируем сообщение и сигнал
+             * 3.0. Сформируем сообщение и базовый сигнал
              */
             int complaintsCount = complaints != null ? complaints.size() : 0;
 
-            // исполнитель не провел 5-го отчета
-            boolean beforeFifthReport;
-
-            try {
-
-                java.util.Date docDate = wpDataDB != null ? wpDataDB.getDt() : null;
-
-                if (user == null) {
-                    beforeFifthReport = true;
-
-                } else if (user.reportDate05 == null) {
-                    beforeFifthReport = true;
-
-                } else if (docDate == null) {
-                    beforeFifthReport = true;
-
-                } else {
-                    Calendar report05Calendar = Calendar.getInstance();
-                    report05Calendar.setTime(user.reportDate05); // java.sql.Date
-                    report05Calendar.set(Calendar.HOUR_OF_DAY, 0);
-                    report05Calendar.set(Calendar.MINUTE, 0);
-                    report05Calendar.set(Calendar.SECOND, 0);
-                    report05Calendar.set(Calendar.MILLISECOND, 0);
-
-                    Calendar docCalendar = Calendar.getInstance();
-                    docCalendar.setTime(docDate); // java.util.Date
-                    docCalendar.set(Calendar.HOUR_OF_DAY, 0);
-                    docCalendar.set(Calendar.MINUTE, 0);
-                    docCalendar.set(Calendar.SECOND, 0);
-                    docCalendar.set(Calendar.MILLISECOND, 0);
-
-                    beforeFifthReport =
-                            report05Calendar.getTimeInMillis() >= docCalendar.getTimeInMillis();
-                }
-
-            } catch (Exception e) {
-                Globals.writeToMLOG(
-                        "ERROR",
-                        "OptionControlQuestionAnswer/executeOption/beforeFifthReport",
-                        "Exception e: " + e
-                );
-
-                beforeFifthReport = true;
-            }
-
-            if (complaintsCount == 0 && beforeFifthReport) {
-
-                stringBuilderMsg
-                        .append(periodText)
-                        .append(" замечаний (жалоб) на условия работы практикант ")
-                        .append(controlledUserText)
-                        .append(" НЕ подавал, но до 5-го отчета это не обязательно.");
-
-                signal = false;
-
-            } else if (complaintsCount == 0) {
+            if (complaintsCount == 0) {
 
                 stringBuilderMsg
                         .append(periodText)
@@ -204,18 +153,67 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             }
 
             /*
-             * Исключение из 1С:
-             * если это разбор з/п уволенного бойца, то получение жалоб не контролируем.
-             * На всякий случай оставил для полного соответствия 1С, хотя это явно лишнее в приложении
+             * 4.0. Исключения из 1С
              */
-            if (signal && theme == THEME_DISMISSED_SALARY_REVIEW && isControlledUserDismissed()) {
+
+            /*
+             * 4.1. Исключение по количеству отчетов у исполнителя.
+             *
+             * Аналог 1С:
+             * Если сигнал есть, документ = ОтчетИсполнителя,
+             * и Кон.ДатаОМ20 пустая или Кон.ДатаОМ20 >= ДатаДок,
+             * значит до 20-го отчета подача замечаний не обязательна.
+             */
+            if (signal && isExecutorReportDocument() && isBeforeTwentiethReport()) {
                 stringBuilderMsg
-                        .append(" Но, проверяемый уволен. Поэтому получение замечаний (жалоб) НЕ контролируем!");
+                        .append(" Але, до 20-го звіту це не обов'язково.");
+
                 signal = false;
             }
 
             /*
-             * 4.0
+             * 4.2. Исключение:
+             * если это разбор з/п уволенного бойца,
+             * то получение жалоб не контролируем.
+             */
+            if (signal && theme == THEME_DISMISSED_SALARY_REVIEW && isControlledUserDismissed()) {
+                stringBuilderMsg
+                        .append(" Но, проверяемый уволен. Поэтому получение замечаний (жалоб) НЕ контролируем!");
+
+                signal = false;
+            }
+
+            /*
+             * 4.3. Новое исключение из 1С от 14.06.2026:
+             * на протяжении примерно двух недель исполнитель может выбрать вариант "Замечаний нет".
+             *
+             * Логика:
+             * - делим контролируемый период пополам;
+             * - ищем тему 600 в первой половине;
+             * - ищем тему 600 во второй половине;
+             * - если в первой половине нет, а во второй есть,
+             *   значит делаем исключение до рассчитанной даты.
+             */
+            if (signal && isExecutorReportDocument()) {
+                applyNoComplaintsTemporaryWindowException();
+            }
+
+            /*
+             * 4.4. Временное исключение до 01.07.2026.
+             *
+             * Важно:
+             * в 1С проверяется дата документа:
+             * Если Дат < '01.07.2026'
+             */
+            if (signal && isExecutorReportDocument() && isDocumentBeforeTemporaryExceptionEndDate()) {
+                stringBuilderMsg
+                        .append("\nАле до 01.07.2026 зроблено виключення");
+
+                signal = false;
+            }
+
+            /*
+             * 5.0. КАНОН.
              */
             if (signal) {
                 if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {
@@ -227,10 +225,6 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                 }
             }
 
-
-            /*
-             * 5.0
-             */
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
@@ -243,20 +237,6 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                 }
             });
 
-            /*
-             * 6.0
-             */
-            /*
-             * Временное исключение до 01.01.2027:
-             * замечания/жалобы пока не блокируем.
-             */
-            if (signal && TEMP_IGNORE_UNTIL_2027 && isBeforeTemporaryExceptionEndDate()) {
-                stringBuilderMsg
-                        .append("\n\nДо 01.01.2027 діє тимчасове виключення. ")
-                        .append("Отримання зауважень/скарг НЕ контролюємо.");
-
-                signal = false;
-            }
             setIsBlockOption(signal);
 
             checkUnlockCode(optionDB);
@@ -273,10 +253,10 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
     private List<QuestionAnswerDB> getComplaints() {
         try {
             List<Integer> themeIds = Arrays.asList(
-                    THEME_OTHER,
-                    THEME_IDEA,
-                    THEME_PAYMENT_INCREASE,
-                    THEME_MANAGER_WRONG
+                    THEME_OTHER,              // 6
+                    THEME_IDEA,               // 607
+                    THEME_PAYMENT_INCREASE,   // 610
+                    THEME_MANAGER_WRONG       // 612
             );
 
             return SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
@@ -290,6 +270,26 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             Globals.writeToMLOG(
                     "ERROR",
                     "OptionControlQuestionAnswer/getComplaints",
+                    "Exception e: " + e
+            );
+
+            return new ArrayList<>();
+        }
+    }
+
+    private List<QuestionAnswerDB> getNoComplaintsAnswers(long fromSec, long toSec) {
+        try {
+            return SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
+                    userId,
+                    fromSec,
+                    toSec,
+                    Collections.singletonList(THEME_NO_COMPLAINTS)
+            );
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/getNoComplaintsAnswers",
                     "Exception e: " + e
             );
 
@@ -360,4 +360,223 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             return false;
         }
     }
+
+    private void applyNoComplaintsTemporaryWindowException() {
+        try {
+            long periodFromSec = normalizeDateSecToDay(dateFromSec);
+            long periodToSec = normalizeDateSecToDay(dateToSec);
+
+            if (periodToSec < periodFromSec) {
+                return;
+            }
+
+            long periodDays = Math.round((periodToSec - periodFromSec) / (double) DAY_SEC);
+            long deltaDays = Math.round(periodDays / 2.0);
+
+            long firstPartFromSec = periodFromSec;
+            long firstPartToSec = periodFromSec + deltaDays * DAY_SEC;
+
+            long secondPartFromSec = periodFromSec + (deltaDays + 1L) * DAY_SEC;
+            long secondPartToSec = periodToSec;
+
+            List<QuestionAnswerDB> firstPartAnswers =
+                    getNoComplaintsAnswers(firstPartFromSec, firstPartToSec);
+
+            List<QuestionAnswerDB> secondPartAnswers =
+                    getNoComplaintsAnswers(secondPartFromSec, secondPartToSec);
+
+            int firstCount = firstPartAnswers != null ? firstPartAnswers.size() : 0;
+            int secondCount = secondPartAnswers != null ? secondPartAnswers.size() : 0;
+
+            if (firstCount == 0 && secondCount > 0) {
+                long answerDateSec = getLatestQuestionAnswerDateSec(secondPartAnswers);
+
+                if (answerDateSec <= 0L) {
+                    return;
+                }
+
+                long documentDateSec = normalizeDateSecToDay(getDocumentDateSec(wpDataDB));
+
+                /*
+                 * Аналог 1С:
+                 * ДатИск = Дат + (ДатЗап - (ДатС + Дельта + 1));
+                 */
+                long exceptionDateSec = documentDateSec + (answerDateSec - secondPartFromSec);
+
+                stringBuilderMsg
+                        .append(", але до ")
+                        .append(formatDateSec(exceptionDateSec))
+                        .append(", зроблено виключення.");
+
+                signal = false;
+            }
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/applyNoComplaintsTemporaryWindowException",
+                    "Exception e: " + e
+            );
+        }
+    }
+
+    private long getLatestQuestionAnswerDateSec(List<QuestionAnswerDB> answers) {
+        try {
+            if (answers == null || answers.isEmpty()) {
+                return 0L;
+            }
+
+            long latestDateSec = 0L;
+
+            for (QuestionAnswerDB answer : answers) {
+                long answerDateSec = getQuestionAnswerDateSec(answer);
+
+                if (answerDateSec > latestDateSec) {
+                    latestDateSec = answerDateSec;
+                }
+            }
+
+            return normalizeDateSecToDay(latestDateSec);
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/getLatestQuestionAnswerDateSec",
+                    "Exception e: " + e
+            );
+
+            return 0L;
+        }
+    }
+
+    private long getQuestionAnswerDateSec(QuestionAnswerDB answer) {
+        try {
+            if (answer == null) {
+                return 0L;
+            }
+
+            if (answer.getDt() != null) {
+                return answer.getDt() / 1000L;
+            }
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/getQuestionAnswerDateSec",
+                    "Exception e: " + e
+            );
+        }
+
+        return 0L;
+    }
+
+    private boolean isBeforeTwentiethReport() {
+        try {
+            java.util.Date docDate = wpDataDB != null ? wpDataDB.getDt() : null;
+
+            if (user == null) {
+                return true;
+            }
+
+            /*
+             * В 1С:
+             * Кон.ДатаОМ20
+             *
+             * Здесь нужно использовать твое Android-поле,
+             * которое соответствует ДатаОМ20.
+             *
+             * Старое user.reportDate05 нужно заменить на новое поле.
+             */
+            if (user.reportDate20 == null) {
+                return true;
+            }
+
+            if (docDate == null) {
+                return true;
+            }
+
+            Calendar report20Calendar = Calendar.getInstance();
+            report20Calendar.setTime(user.reportDate20);
+            clearTime(report20Calendar);
+
+            Calendar docCalendar = Calendar.getInstance();
+            docCalendar.setTime(docDate);
+            clearTime(docCalendar);
+
+            return report20Calendar.getTimeInMillis() >= docCalendar.getTimeInMillis();
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/isBeforeTwentiethReport",
+                    "Exception e: " + e
+            );
+
+            return true;
+        }
+    }
+
+    private boolean isExecutorReportDocument() {
+        /*
+         * В 1С условие:
+         * ДокИст.Вид() = "ОтчетИсполнителя"
+         *
+         * Если эта Android-опция вызывается только из ОтчетаИсполнителя,
+         * можно оставить true.
+         *
+         * Если опция общая для разных документов —
+         * сюда надо поставить реальную проверку типа документа.
+         */
+        return true;
+    }
+
+
+
+    private boolean isDocumentBeforeTemporaryExceptionEndDate() {
+        try {
+            long documentDateSec = normalizeDateSecToDay(getDocumentDateSec(wpDataDB));
+
+            Calendar endDate = Calendar.getInstance();
+            endDate.set(Calendar.YEAR, 2026);
+            endDate.set(Calendar.MONTH, Calendar.JULY);
+            endDate.set(Calendar.DAY_OF_MONTH, 1);
+            endDate.set(Calendar.HOUR_OF_DAY, 0);
+            endDate.set(Calendar.MINUTE, 0);
+            endDate.set(Calendar.SECOND, 0);
+            endDate.set(Calendar.MILLISECOND, 0);
+
+            long endDateSec = endDate.getTimeInMillis() / 1000L;
+
+            return documentDateSec < endDateSec;
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlQuestionAnswer/isDocumentBeforeTemporaryExceptionEndDate",
+                    "Exception e: " + e
+            );
+
+            return false;
+        }
+    }
+
+    private long normalizeDateSecToDay(long dateSec) {
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(dateSec * 1000L);
+            clearTime(calendar);
+            return calendar.getTimeInMillis() / 1000L;
+
+        } catch (Exception e) {
+            return dateSec;
+        }
+    }
+
+    private void clearTime(Calendar calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+    }
+
 }

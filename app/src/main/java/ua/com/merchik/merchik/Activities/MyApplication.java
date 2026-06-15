@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.io.File;
 
@@ -63,6 +64,25 @@ public class MyApplication extends Application {
                 }
         );
 
+        Thread.UncaughtExceptionHandler defaultHandler =
+                Thread.getDefaultUncaughtExceptionHandler();
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            if (throwable instanceof OutOfMemoryError) {
+                Log.e(
+                        "GlobalOOM",
+                        "OutOfMemoryError in thread: " + thread.getName(),
+                        throwable
+                );
+
+                // Тут можно попробовать сохранить минимальный лог,
+                // но не делай тяжелых операций — памяти уже почти нет.
+            }
+
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable);
+            }
+        });
     }
 
     public static Context getAppContext() {

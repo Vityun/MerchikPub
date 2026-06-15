@@ -26,6 +26,7 @@ import retrofit2.Response
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Globals.OptionControlName
@@ -94,6 +95,7 @@ import ua.com.merchik.merchik.dialogs.DialogData.DialogClickListener
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
@@ -3086,6 +3088,18 @@ class TovarDBViewModel @Inject constructor(
 
             OptionControlName.FACE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
+                val result =
+                    FaceSaveGuard.canSaveFace(wpDataDB, rp, data)
+
+                if (result.isError) {
+                    MessageDialogBuilder(Globals.unwrap(context))
+                        .setTitle("Изменения не сохранены")
+                        .setMessage(result.getError())
+                        .setStatus(DialogStatus.ERROR)
+                        .setOnConfirmAction { Unit }
+                        .show()
+                    return
+                }
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
                     table!!.setFace(data)
                     table.uploadStatus = 1

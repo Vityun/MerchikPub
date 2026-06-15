@@ -23,6 +23,7 @@ import okio.ByteString;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import ua.com.merchik.merchik.BuildConfig;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -73,16 +74,24 @@ public class RetrofitBuilder {
 
         // Регистрация пользовательского адаптера для Date
         gsonBuilder.registerTypeAdapter(Date.class, new CustomDateTypeAdapter());
-//        gsonBuilder.registerTypeAdapter(String.class, new CleanStringAdapter());
+        gsonBuilder.registerTypeAdapter(String.class, new CleanStringAdapter());
+
 
         Gson gson = gsonBuilder.create();
 
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Логирует тела запросов и ответов
+//        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Логирует тела запросов и ответов
+
+        if (BuildConfig.DEBUG) {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        } else {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.NONE);
+        }
+
 
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.addInterceptor(new TimeoutInterceptor());
-        httpClientBuilder.addInterceptor(new HtmlEntityInterceptor());
+//        httpClientBuilder.addInterceptor(new HtmlEntityInterceptor());
         httpClientBuilder.addInterceptor(new StateErrorBroadcastInterceptor());
 
 //        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));

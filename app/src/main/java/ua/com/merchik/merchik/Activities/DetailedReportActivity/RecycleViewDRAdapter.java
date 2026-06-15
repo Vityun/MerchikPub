@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.userId;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
@@ -9,7 +8,12 @@ import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirement
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.animation.*;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -49,7 +53,11 @@ import com.google.gson.JsonObject;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.realm.RealmResults;
@@ -63,7 +71,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
-import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
@@ -1364,9 +1371,20 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (adapter == null) return;
 
         final RecyclerView.AdapterDataObserver observer = new RecyclerView.AdapterDataObserver() {
-            @Override public void onChanged() { tryOnce(); }
-            @Override public void onItemRangeInserted(int start, int count) { tryOnce(); }
-            @Override public void onItemRangeChanged(int start, int count) { tryOnce(); }
+            @Override
+            public void onChanged() {
+                tryOnce();
+            }
+
+            @Override
+            public void onItemRangeInserted(int start, int count) {
+                tryOnce();
+            }
+
+            @Override
+            public void onItemRangeChanged(int start, int count) {
+                tryOnce();
+            }
 
             private void tryOnce() {
                 int p = getItemPosition(optionsDB);
@@ -1705,9 +1723,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
         return 0;
     }
+
     public int getItemPositionForOptionControl(OptionsDB item) {
         try {
-            for (OptionsDB optionsDB: butt){
+            for (OptionsDB optionsDB : butt) {
                 if (optionsDB.getOptionControlId().equals(item.getOptionId())
 //                        && optionsDB.getOptionTxt().contains("Кнопка")
                 )
@@ -1720,7 +1739,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
         return 0;
     }
-
 
 
     /*Активные на данный момент кнопки*/
@@ -2062,14 +2080,21 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     }
                 }
             } catch (Exception e) {
-                Log.e("!!!","error: " + e.getMessage());
+                Log.e("!!!", "error: " + e.getMessage());
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "Exception: " + e.getMessage());
             }
         }
 
 
         int maxPhotos = Integer.parseInt(min);
-        maxPhotos = maxPhotos + 1;
+        if (option.getOptionId().equals("135158") || option.getOptionId().equals("141360") || option.getOptionId().equals("132969"))
+            maxPhotos = maxPhotos;
+        else
+            maxPhotos = maxPhotos + 1;
+
+        if (option.getOptionId().equals("158308"))
+            maxPhotos = maxPhotos + 1;
+
 
         data = "" + dataBaseCount + "/" + maxPhotos;
 
@@ -2077,8 +2102,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0" -> new ForegroundColorSpan(Color.GRAY);
-            case "1" -> new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
-            case "2" -> new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+            case "1" ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+            case "2" ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
             default -> new ForegroundColorSpan(Color.YELLOW);
         };
         //        if (dataBaseCount >= maxPhotos) {

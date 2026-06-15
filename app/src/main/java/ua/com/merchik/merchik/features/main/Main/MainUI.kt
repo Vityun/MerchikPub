@@ -2538,10 +2538,24 @@ fun ProductCodeInlineEditor(
                                     AkciyaPresence.NONE -> "2"
                                     AkciyaPresence.UNSET -> "0"
                                 }
+
                                 onValue2Change(row.rowId, savedValue2)
+
+                                // Если пользователь выбрал "немає" или снял выбор —
+                                // выбранный тип акции больше не должен висеть в row.value.
+                                if (newPresence != AkciyaPresence.HAS) {
+                                    onValueChange(row.rowId, "")
+                                }
                             },
                             onSelected = { id, _ ->
-                                onValueChange(row.rowId, id.orEmpty())
+                                val selectedId = id.orEmpty()
+
+                                onValueChange(row.rowId, selectedId)
+
+                                // Если выбрали конкретную акцию — автоматически ставим "є".
+                                if (selectedId.isNotBlank()) {
+                                    onValue2Change(row.rowId, "1")
+                                }
                             }
                         )
                     }
@@ -2627,7 +2641,7 @@ private fun showQuestionAnswerThemeDialog(
             if (base.isNullOrBlank()) {
                 extraTextFor600
             } else {
-                "$base\n\n$extraTextFor600"
+                base
             }
         }
 

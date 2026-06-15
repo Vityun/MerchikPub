@@ -12,7 +12,6 @@ import android.view.View;
 
 import java.util.Date;
 import java.util.List;
-import java.util.function.LongFunction;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
@@ -225,7 +224,15 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
-        m = m + 1;
+        // 15.06.2026 временное решение +1 ко всем фоткам, кроме исключений, сделал специаьно так коряво, что бы читалось лучше
+        if (optionId.equals("159707") || optionId.equals("1470") || optionId.equals("158361")
+                || optionId.equals("141361") || optionId.equals("132971"))
+            m = m;
+        else
+            m = m + 1;
+
+        if (optionId.equals("134583"))
+            m = m + 1;
 
         int adress = ((WpDataDB) document).getAddr_id();
 //        получаем данные из таблицы фото
@@ -282,7 +289,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                     Log.e("!!!158609!!!", "C-> r.getGrpId(): " + r.getGrpId() + " | isEmpty1c(r.getGrpId()): " + isEmpty1c(r.getGrpId()));
                     Log.e("!!!158609!!!", "C-> r.getAddrId(): " + r.getAddrId() + " | isEmpty1c(r.getAddrId()): " + isEmpty1c(r.getAddrId()));
                     if (r.getGrpId().equals("320"))
-                        Log.e("!","+");
+                        Log.e("!", "+");
                     if (!allAddrAndGrp
                             && isEmpty1c(r.getGrpId())
                             && isEmpty1c(r.getAddrId())) {

@@ -23,11 +23,13 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -56,13 +58,11 @@ import io.reactivex.rxjava3.subjects.SingleSubject;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
@@ -86,6 +86,7 @@ import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
+import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
@@ -524,19 +525,22 @@ public class TablesLoadingUnloading {
 
         data.mod = "plan";
         data.act = "list";
-        data.date_from = Clock.getDatePeriod(-3);
+        data.date_from = Clock.getDatePeriod(-3); // по факту -2
         data.date_to = Clock.getDatePeriod(3);
 
-        long vpi;
-//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-//        if (sTable != null) {
-//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-//            vpi = sTable.getVpi_app();
-//            Log.e("updateWpData", "vpi: " + vpi);
-//        } else
-        vpi = 0;
+        if (Globals.userId == 143565) // исключение дляя Балаба
+            data.date_from = Clock.getDatePeriod(-4);
 
-//        data.dt_change_from = String.valueOf(vpi);
+        long vpi;
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
+            vpi = 0;
+
+        data.dt_change_from = String.valueOf(vpi);
 
 
         try {
@@ -612,10 +616,12 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
 //                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-                                for (WpDataDB wpDataDB : wpDataDBList) {
-                                    if (wpDataDB.getUser_id() == 14041)
-                                        Log.e("!!!!!!!!!!", "+++++++++++");
-                                }
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 14041){
+//                                        Log.e("!!!!!!!!!!", "+++++++++++");
+//                                    Log.e("!!!!!!!!!!", "wpdata: " + wpDataDB.getDt());
+//                                    }
+//                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
@@ -4151,24 +4157,53 @@ id_exclude - иди товаров которые есть в приложени
 //                    });
 
 
-            Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<PPAonResponse>() {
+//            Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
+//            call.enqueue(new Callback<PPAonResponse>() {
+//                @Override
+//                public void onResponse(Call<PPAonResponse> call, Response<PPAonResponse> response) {
+//                    try {
+////                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
+//                        Log.e("MenuMainTest", "test");
+//                        if (response.isSuccessful())
+//                            if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty())
+//                                setPPA(response.body().getList());
+//                    } catch (Exception e) {
+//                        Log.e("MenuMainTest", "Exception e: " + e);
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<PPAonResponse> call, Throwable t) {
+//                    Log.e("MenuMainTest", "test.t:" + t);
+//                }
+//            });
+            Call<ResponseBody> call = RetrofitBuilder
+                    .getRetrofitInterface()
+                    .GET_TABLE_PPA_RAW(RetrofitBuilder.contentType, convertedObject);
+
+            call.enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onResponse(Call<PPAonResponse> call, Response<PPAonResponse> response) {
-                    try {
-//                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
-                        Log.e("MenuMainTest", "test");
-                        if (response.isSuccessful())
-                            if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty())
-                                setPPA(response.body().getList());
-                    } catch (Exception e) {
-                        Log.e("MenuMainTest", "Exception e: " + e);
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (!response.isSuccessful()) {
+                        Log.e("MenuMainTest", "PPA response not successful: " + response.code());
+                        return;
                     }
+
+                    ResponseBody body = response.body();
+
+                    if (body == null) {
+                        Log.e("MenuMainTest", "PPA response body is null");
+                        return;
+                    }
+
+                    new Thread(() -> {
+                        parsePpaResponseStreaming(body);
+                    }).start();
                 }
 
                 @Override
-                public void onFailure(Call<PPAonResponse> call, Throwable t) {
-                    Log.e("MenuMainTest", "test.t:" + t);
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    Log.e("MenuMainTest", "PPA request failed: " + t, t);
                 }
             });
         } catch (Exception e) {
@@ -4176,6 +4211,76 @@ id_exclude - иди товаров которые есть в приложени
         }
     }
 
+    private void parsePpaResponseStreaming(ResponseBody responseBody) {
+        Gson gson = new Gson();
+
+        List<PPADB> buffer = new ArrayList<>(300);
+
+        try (
+                ResponseBody body = responseBody;
+                Reader reader = body.charStream()
+        ) {
+            JsonReader jsonReader = new JsonReader(reader);
+
+            jsonReader.beginObject();
+
+            while (jsonReader.hasNext()) {
+                String name = jsonReader.nextName();
+
+                if ("state".equals(name)) {
+                    boolean state = jsonReader.nextBoolean();
+                    Log.e("MenuMainTest", "PPA state: " + state);
+
+                } else if ("list".equals(name)) {
+                    jsonReader.beginArray();
+
+                    while (jsonReader.hasNext()) {
+                        PPADB item = gson.fromJson(jsonReader, PPADB.class);
+
+                        if (item != null) {
+                            buffer.add(item);
+                        }
+
+                        if (buffer.size() >= 300) {
+                            savePpaChunk(buffer);
+                            buffer.clear();
+                        }
+                    }
+
+                    jsonReader.endArray();
+
+                } else {
+                    jsonReader.skipValue();
+                }
+            }
+
+            jsonReader.endObject();
+
+            if (!buffer.isEmpty()) {
+                savePpaChunk(buffer);
+                buffer.clear();
+            }
+
+            Log.e("MenuMainTest", "PPA parsing finished");
+
+        } catch (OutOfMemoryError e) {
+            Log.e("MenuMainTest", "OOM while streaming PPA response", e);
+
+        } catch (Exception e) {
+            Log.e("MenuMainTest", "Error while streaming PPA response", e);
+        }
+    }
+
+    private void savePpaChunk(List<PPADB> chunk) {
+        try {
+            List<PPADB> copy = new ArrayList<>(chunk);
+            setPPA(copy);
+            Log.e("MenuMainTest", "Saved PPA chunk size: " + copy.size());
+
+        } catch (Exception e) {
+            Log.e("MenuMainTest", "Error saving PPA chunk", e);
+        }
+    }
 
     private void downloadTAR() {
         try {

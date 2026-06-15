@@ -1103,6 +1103,12 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+    @POST("mobile_app.php?")
+    Call<ResponseBody> GET_TABLE_PPA_RAW(
+            @Header("Content-Type") String contentType,
+            @Body JsonObject body
+    );
+
 
     @POST("mobile_app.php?")
     Call<TasksAndReclamationsResponce> GET_TABLE_TasksAndReclamations(

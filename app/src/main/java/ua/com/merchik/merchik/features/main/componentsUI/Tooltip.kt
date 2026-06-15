@@ -150,7 +150,7 @@ fun TooltipWithDetails(
 
                     Text(
                         text = detailsText,
-                        color = colorResource(id = R.color.blue),
+                        color = colorResource(id = R.color.centerColor),
                         textDecoration = TextDecoration.Underline,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier

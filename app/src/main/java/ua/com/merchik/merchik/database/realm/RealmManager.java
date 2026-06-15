@@ -1982,6 +1982,26 @@ public class RealmManager {
         return res;
     }
 
+    public static boolean hasTovarOptionControlInReportPrepare(Long dad2, String optionControlId) {
+        try {
+            if (optionControlId == null || optionControlId.trim().isEmpty()) return false;
+
+            OptionsDB option = INSTANCE.where(OptionsDB.class)
+                    .equalTo("codeDad2", dad2.toString())
+                    .equalTo("optionControlId", optionControlId)
+                    .findFirst();
+            return option != null;
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "RealmManager/hasTovarOptionControlInReportPrepare",
+                    "Exception e: " + e
+            );
+            return false;
+        }
+    }
+
     // Получение листа Опций по данному товару
     public static TovarDB getTovar(String tovarId) {
         TovarDB optionsDBS = INSTANCE.where(TovarDB.class)

@@ -29,8 +29,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.realm.RealmResults;
+import kotlin.Unit;
 import retrofit2.Call;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecyclerViewOptionControlHint;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
@@ -50,6 +52,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowTovarRequisites {
@@ -740,6 +744,18 @@ public class ShowTovarRequisites {
 
             case FACE:
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
+                FaceSaveGuard.FaceSaveCheckResult result =
+                        FaceSaveGuard.canSaveFace(wpDataDB, rp, data);
+
+                if (result.isError()) {
+                    new MessageDialogBuilder(Globals.unwrap(context))
+                            .setTitle("Изменения не сохранены")
+                            .setMessage(result.getError())
+                            .setStatus(DialogStatus.ERROR)
+                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                            .show();
+                    return;
+                }
                 INSTANCE.executeTransaction(realm -> {
                     table.setFace(data);
                     table.setUploadStatus(1);
