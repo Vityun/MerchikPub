@@ -1955,15 +1955,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 case FACE:
                     Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
                     FaceSaveGuard.FaceSaveCheckResult result =
-                            FaceSaveGuard.canSaveFace(wpDataDB, rp, data);
+                            FaceSaveGuard.canSaveFace(mContext,wpDataDB, rp, data);
 
                     if (result.isError()) {
-                        new MessageDialogBuilder(Globals.unwrap(mContext))
-                                .setTitle("Изменения не сохранены")
-                                .setMessage(result.getError())
-                                .setStatus(DialogStatus.ERROR)
-                                .setOnConfirmAction(() -> Unit.INSTANCE)
-                                .show();
+//                        new MessageDialogBuilder(Globals.unwrap(mContext))
+//                                .setTitle("Изменения не сохранены")
+//                                .setMessage(result.getError())
+//                                .setStatus(DialogStatus.ERROR)
+//                                .setOnConfirmAction(() -> Unit.INSTANCE)
+//                                .show();
                         return;
                     }
                     INSTANCE.executeTransaction(realm -> {

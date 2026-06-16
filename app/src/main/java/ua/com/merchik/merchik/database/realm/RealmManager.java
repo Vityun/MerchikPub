@@ -1066,6 +1066,41 @@ public class RealmManager {
         } else return "";
     }
 
+    public static OptionsDB getTovarOptionControlInReportPrepare(
+            Long dad2,
+            String optionControlId
+    ) {
+        try {
+            if (dad2 == null) {
+                return null;
+            }
+
+            if (optionControlId == null || optionControlId.trim().isEmpty()) {
+                return null;
+            }
+
+            OptionsDB option = INSTANCE.where(OptionsDB.class)
+                    .equalTo("codeDad2", dad2.toString())
+                    .equalTo("optionControlId", optionControlId)
+                    .findFirst();
+
+            if (option == null) {
+                return null;
+            }
+
+            return INSTANCE.copyFromRealm(option);
+
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "RealmManager/getTovarOptionControlInReportPrepare",
+                    "Exception e: " + e
+            );
+
+            return null;
+        }
+    }
+
     public static RealmResults<OptionsDB> getOptionsByOtchetId(long otchetId, String codeDad2) {
         String sOtchetId = String.valueOf(otchetId);
         return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("codeDad2", codeDad2).findAll();

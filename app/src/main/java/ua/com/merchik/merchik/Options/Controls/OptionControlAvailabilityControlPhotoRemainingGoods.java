@@ -59,7 +59,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
     public int OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID = 159707;
 
-    private static final LocalDate EXCEPTION_BEFORE_DATE = LocalDate.of(2026, 1, 3);
+    public static final LocalDate EXCEPTION_BEFORE_DATE = LocalDate.of(2026, 1, 3);
 
     public boolean signal = true;
 

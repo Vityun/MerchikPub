@@ -85,7 +85,9 @@ import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -3089,15 +3091,9 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.FACE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
                 val result =
-                    FaceSaveGuard.canSaveFace(wpDataDB, rp, data)
+                    FaceSaveGuard.canSaveFace(context,wpDataDB, rp, data)
 
                 if (result.isError) {
-                    MessageDialogBuilder(Globals.unwrap(context))
-                        .setTitle("Изменения не сохранены")
-                        .setMessage(result.getError())
-                        .setStatus(DialogStatus.ERROR)
-                        .setOnConfirmAction { Unit }
-                        .show()
                     return
                 }
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->

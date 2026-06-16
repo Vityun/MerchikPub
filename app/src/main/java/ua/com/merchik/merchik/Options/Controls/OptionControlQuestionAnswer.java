@@ -205,12 +205,12 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
              * в 1С проверяется дата документа:
              * Если Дат < '01.07.2026'
              */
-            if (signal && isExecutorReportDocument() && isDocumentBeforeTemporaryExceptionEndDate()) {
-                stringBuilderMsg
-                        .append("\nАле до 01.07.2026 зроблено виключення");
-
-                signal = false;
-            }
+//            if (signal && isExecutorReportDocument() && isDocumentBeforeTemporaryExceptionEndDate()) {
+//                stringBuilderMsg
+//                        .append("\nАле до 01.07.2026 зроблено виключення");
+//
+//                signal = false;
+//            }
 
             /*
              * 5.0. КАНОН.

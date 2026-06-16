@@ -1268,7 +1268,7 @@ private fun QuestionAnswerInlineEditableChip(
                     QuestionAnswerBorderWidth,
                     colorResource(
                         id = if (isError || isEmpty) {
-                            R.color.errorLightColor
+                            R.color.red_error
                         } else {
                             R.color.borderContextMenu
                         }
@@ -1326,6 +1326,8 @@ private fun QuestionAnswerInlineReadOnlyChip(
     ) {
         Text(
             text = value.ifBlank { "0" },
+            color = colorResource(id = R.color.centerColor),
+            textDecoration = TextDecoration.Underline,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
             maxLines = 1,
@@ -1358,7 +1360,8 @@ private fun QuestionAnswerCommentInput(
             .border(
                 BorderStroke(
                     1.dp,
-                    colorResource(id = R.color.borderContextMenu)
+                    colorResource(id = if (value.isNotEmpty()) R.color.borderContextMenu else R.color.red_error)
+//                            colorResource(id = R.color.borderContextMenu)
                 ),
                 RoundedCornerShape(QuestionAnswerCorner)
             )

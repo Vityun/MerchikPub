@@ -540,7 +540,7 @@ public class TablesLoadingUnloading {
         } else
             vpi = 0;
 
-        data.dt_change_from = String.valueOf(vpi);
+//        data.dt_change_from = String.valueOf(vpi);
 
 
         try {
