@@ -2936,16 +2936,16 @@ class TovarDBViewModel @Inject constructor(
         val map: MutableMap<Int?, String?> = java.util.HashMap<Int?, String?>()
         when (optionControlName) {
             OptionControlName.ERROR_ID -> {
-//                val errorDbList = RealmManager.getAllErrorDb()
-//                var i = 0
-//                while (i < errorDbList.size) {
-//                    if (errorDbList.get(i)!!.getNm() != null && errorDbList.get(i)!!
-//                            .getNm() != ""
-//                    ) {
-//                        map.put(errorDbList.get(i)!!.getID().toInt(), errorDbList.get(i)!!.getNm())
-//                    }
-//                    i++
-//                }
+                val errorDbList = RealmManager.getAllErrorDb()
+                var i = 0
+                while (i < errorDbList.size) {
+                    if (errorDbList.get(i)!!.getNm() != null && errorDbList.get(i)!!
+                            .getNm() != ""
+                    ) {
+                        map.put(errorDbList.get(i)!!.getID().toInt(), errorDbList.get(i)!!.getNm())
+                    }
+                    i++
+                }
                 map.put(0, "Выберите ошибку товара")
                 return map
             }
@@ -3071,7 +3071,13 @@ class TovarDBViewModel @Inject constructor(
             rp = createNewRPRow(tovarId, wpDataDB)
         }
 
-        if (data == null || data.isEmpty()) {
+        val optionName = tpl.getOptionControlName()
+
+// Для AKCIYA_ID разрешаем пустой data,
+// потому что "немає" хранится в data2, а data может быть пустым.
+        val valueRequired = optionName != OptionControlName.AKCIYA_ID
+
+        if (valueRequired && data.isNullOrEmpty()) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show()
             return
         }
@@ -3117,7 +3123,7 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.AMOUNT -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data)
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setAmount(data.toInt())
+                    table!!.setAmount(data!!.toInt())
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
                     RealmManager.setReportPrepareRow(table)
@@ -3176,10 +3182,12 @@ class TovarDBViewModel @Inject constructor(
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data)
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2)
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setAkciyaId(data)
-                    if (data2 != null && !data2.isEmpty()) {
-                        table.setAkciya(data2)
-                    }
+                    table!!.setAkciyaId(data.orEmpty())
+                    table.setAkciya(data2.orEmpty())
+//                    table!!.setAkciyaId(data)
+//                    if (data2 != null && !data2.isEmpty()) {
+//                        table.setAkciya(data2)
+//                    }
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
                     RealmManager.setReportPrepareRow(table)

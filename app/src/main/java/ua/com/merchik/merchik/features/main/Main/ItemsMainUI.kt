@@ -718,6 +718,9 @@ fun GroupDeck(
                                                 value
                                             )
                                         },
+                                        onProductCodeValue2Change = { rowId, value ->
+                                            viewModel.updateProductCodeSecondValue(item.stableId, rowId, value)
+                                        },
                                         onProductCodeTakePhoto = { clickedItem ->
                                             viewModel.onProductCodeTakePhoto(clickedItem, context)
                                         },

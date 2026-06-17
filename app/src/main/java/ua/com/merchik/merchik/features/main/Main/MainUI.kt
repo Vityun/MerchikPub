@@ -2539,28 +2539,33 @@ fun ProductCodeInlineEditor(
                                     AkciyaPresence.UNSET -> "0"
                                 }
 
+                                // Только одно событие.
+                                // Очистку row.value для "немає" делает updateProductCodeSecondValue()
                                 onValue2Change(row.rowId, savedValue2)
-
-                                // Если пользователь выбрал "немає" или снял выбор —
-                                // выбранный тип акции больше не должен висеть в row.value.
-                                if (newPresence != AkciyaPresence.HAS) {
-                                    onValueChange(row.rowId, "")
-                                }
                             },
                             onSelected = { id, _ ->
                                 val selectedId = id.orEmpty()
 
-                                onValueChange(row.rowId, selectedId)
-
-                                // Если выбрали конкретную акцию — автоматически ставим "є".
-                                if (selectedId.isNotBlank()) {
-                                    onValue2Change(row.rowId, "1")
+                                if (selectedId.isBlank()) {
+                                    return@AkciyaSelectorRow
                                 }
+
+                                // Только одно событие.
+                                // value2 = "1" выставляет updateProductCodeValue()
+                                onValueChange(row.rowId, selectedId)
                             }
                         )
                     }
-
                     InlineEditorKind.TEXT_AND_SELECT -> {
+                        Log.e(
+                            "TEXT_AND_SELECT",
+                            "value=${row.value}, value2=${row.value2}, choicesSize=${row.choices.size}"
+                        )
+
+                        row.choices.forEach {
+                            Log.e("TEXT_AND_SELECT", "choice id=${it.id}, title=${it.title}")
+                        }
+
                         val selectedErrorId = row.value.takeIf { it.isNotBlank() }
                         val selectedErrorName = row.choices
                             .firstOrNull { it.id == row.value }
@@ -2568,7 +2573,6 @@ fun ProductCodeInlineEditor(
                             .orEmpty()
 
                         TextAndSelectEditorRow(
-                            title = row.title,
                             text = row.value2,
                             selectedId = selectedErrorId,
                             selectedValue = selectedErrorName,

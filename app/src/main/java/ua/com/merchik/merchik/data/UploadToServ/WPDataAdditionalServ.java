@@ -15,12 +15,26 @@ public class WPDataAdditionalServ {
     public String user_decision;
     public int user_session_id;
 
+    public String date_from;
+    public String date_to;
+
     // Конструктор со всеми параметрами
 
     public WPDataAdditionalServ(){};
 
-    public WPDataAdditionalServ(long element_id, long dt, int client_id, String isp, int addr_id,
-                                long code_dad2, int theme_id, String user_decision, int user_session_id) {
+    public WPDataAdditionalServ(
+            long element_id,
+            long dt,
+            int client_id,
+            String isp,
+            int addr_id,
+            long code_dad2,
+            int theme_id,
+            String user_decision,
+            int user_session_id,
+            String date_from,
+            String date_to
+    ) {
         this.element_id = element_id;
         this.dt = dt;
         this.client_id = client_id;
@@ -30,6 +44,8 @@ public class WPDataAdditionalServ {
         this.theme_id = theme_id;
         this.user_decision = user_decision;
         this.user_session_id = user_session_id;
+        this.date_from = date_from;
+        this.date_to = date_to;
     }
 
     // Геттеры и сеттеры
@@ -87,6 +103,22 @@ public class WPDataAdditionalServ {
 
     public void setTheme_id(int theme_id) {
         this.theme_id = theme_id;
+    }
+
+    public String getDate_from() {
+        return date_from;
+    }
+
+    public void setDate_from(String date_from) {
+        this.date_from = date_from;
+    }
+
+    public String getDate_to() {
+        return date_to;
+    }
+
+    public void setDate_to(String date_to) {
+        this.date_to = date_to;
     }
 
     public String getUser_decision() {

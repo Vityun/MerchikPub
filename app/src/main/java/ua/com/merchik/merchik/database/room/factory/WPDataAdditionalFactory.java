@@ -73,7 +73,7 @@ public final class WPDataAdditionalFactory {
         e.clientId = Integer.parseInt(wpDataDB.getClient_id());
         e.isp = "";
         e.addrId = wpDataDB.getAddr_id();
-        e.codeDad2 = wpDataDB.getCode_dad2();
+        e.codeDad2 = 0L; // 17.06.2026 для случая когда навсегда поменял с e.codeDad2 = wpDataDB.getCode_dad2() на 0
         e.themeId = wpDataDB.getTheme_id();
         e.userDecision = 1;
         e.confirmDt = 0L;
@@ -116,6 +116,7 @@ public final class WPDataAdditionalFactory {
         e.comment = null;
         e.kps = 0;
         e.uploadStatus = 1;
+        e.dateFrom = wpDataDB.getDt();
         return e;
     }
 
@@ -138,6 +139,7 @@ public final class WPDataAdditionalFactory {
             e.comment = null;
             e.kps = 0;
             e.uploadStatus = 1;
+            e.dateFrom = wpDataDB.getDt();
             list.add(e);
         }
         return list;
@@ -161,6 +163,8 @@ public final class WPDataAdditionalFactory {
             e.confirmAuto = 0;
             e.comment = null;
             e.kps = 0;
+            e.dateTo = wpDataDB.getDt();
+            e.dateFrom = wpDataDB.getDt();
             e.uploadStatus = 1;
             list.add(e);
         }

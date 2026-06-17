@@ -293,14 +293,16 @@ abstract class MainViewModel(
 
     open fun onClickProductCode(
         itemUI: DataItemUI, fieldValue: FieldValue, action: ClickTextAction, context: Context
-    ) {}
+    ) {
+    }
 
     open fun onLongClickProductCode(
         itemUI: DataItemUI,
         fieldValue: FieldValue,
         action: ClickTextAction,
         context: Context
-    ) {}
+    ) {
+    }
 
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
@@ -622,6 +624,7 @@ abstract class MainViewModel(
     fun setProductCodeEditor(productCodeEditorState: ProductCodeEditorState) {
         _productCodeEditorState.value = productCodeEditorState
     }
+
     fun setShowActivityFilter() {
         _showActivityFilter.value = false
     }
@@ -727,6 +730,21 @@ abstract class MainViewModel(
         )
     }
 
+    //    fun updateProductCodeValue(itemId: Long, rowId: String, newValue: String) {
+//        val row = findEditorRow(itemId, rowId) ?: return
+//
+//        val prepared = when (row.kind) {
+//            InlineEditorKind.NUMBER -> newValue.filter { it.isDigit() }
+//            else -> newValue
+//        }
+//
+//        saveInlineRowValue(
+//            itemId = itemId,
+//            rowId = rowId,
+//            newValue = prepared,
+//            newValue2 = row.value2
+//        )
+//    }
     fun updateProductCodeValue(itemId: Long, rowId: String, newValue: String) {
         val row = findEditorRow(itemId, rowId) ?: return
 
@@ -735,11 +753,16 @@ abstract class MainViewModel(
             else -> newValue
         }
 
+        val preparedValue2 = when {
+            row.kind == InlineEditorKind.DOUBLE_SELECT && prepared.isNotBlank() -> "1"
+            else -> row.value2
+        }
+
         saveInlineRowValue(
             itemId = itemId,
             rowId = rowId,
             newValue = prepared,
-            newValue2 = row.value2
+            newValue2 = preparedValue2
         )
     }
 
@@ -749,8 +772,8 @@ abstract class MainViewModel(
         saveInlineRowValue(
             itemId = itemId,
             rowId = rowId,
-            newValue = row.value,
-            newValue2 = newValue
+            newValue = row.value,   // тип акции НЕ трогаем
+            newValue2 = newValue    // меняем только чекбокс
         )
     }
 
@@ -793,15 +816,24 @@ abstract class MainViewModel(
     ) {
         val row = findEditorRow(itemId, rowId) ?: return
 
+        val finalValue2 = newValue2 ?: row.value2
+
         val persisted = persistInlineRowValue(
             itemId = itemId,
             row = row,
             newValue = newValue,
-            newValue2 = newValue2 ?: row.value2
+            newValue2 = finalValue2
         )
 
         if (!persisted) return
-// ## обвновляем линейку
+
+        updateInlineRowState(
+            itemId = itemId,
+            rowId = rowId,
+            value = newValue,
+            value2 = finalValue2
+        )
+
         onInlineRowPersisted(itemId, rowId)
     }
 
@@ -856,7 +888,7 @@ abstract class MainViewModel(
 
     protected fun openSortingDialog() {
         emitEvent(MainEvent.OpenSortingDialog)
-        Log.e("!!!!!!!!!!!","---------------------")
+        Log.e("!!!!!!!!!!!", "---------------------")
     }
 
     private fun loadPreferences() {

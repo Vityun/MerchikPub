@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.data.UploadToServ;
 
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -20,6 +22,8 @@ public final class WPDataAdditionalMapper {
         d.theme_id = s.themeId;
         d.user_decision = String.valueOf(s.userDecision);  // Int -> String
         d.user_session_id = userSessionId;
+        d.date_from = formatDateForServer(s.dateFrom);
+        d.date_to = formatDateForServer(s.dateTo);
         return d;
     }
 
@@ -29,5 +33,15 @@ public final class WPDataAdditionalMapper {
         return out;
     }
 
+
+    private static final SimpleDateFormat SERVER_DATE_FORMAT =
+            new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
+    private static String formatDateForServer(Date date) {
+        if (date == null) {
+            return "";
+        }
+        return SERVER_DATE_FORMAT.format(date);
+    }
 
 }

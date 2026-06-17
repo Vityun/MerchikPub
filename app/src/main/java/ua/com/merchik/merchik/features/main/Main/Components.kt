@@ -1004,6 +1004,7 @@ fun AkciyaSelectorRow(
                         onPresenceChanged(
                             if (checked) AkciyaPresence.NONE else AkciyaPresence.UNSET
                         )
+                        onSelected(null, "")
                     },
                     colors = CheckboxDefaults.colors(
                         checkedColor = Color(0xFF1565C0),
@@ -1048,42 +1049,10 @@ fun AkciyaSelectorRow(
     }
 }
 
-@Composable
-fun DoubleSelectEditorRow(
-    title: String,
-    value: String,
-    value2: String,
-    choices: List<InlineChoiceUi>,
-    choices2: List<InlineChoiceUi>,
-    onSelected1: (String) -> Unit,
-    onSelected2: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-    ) {
-        Text(text = title, modifier = Modifier.padding(bottom = 6.dp))
-
-        ChoiceDropDown(
-            selectedId = value,
-            choices = choices,
-            onSelected = onSelected1
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ChoiceDropDown(
-            selectedId = value2,
-            choices = choices2,
-            onSelected = onSelected2
-        )
-    }
-}
 
 @Composable
 fun TextAndSelectEditorRow(
-    title: String,
+    title: String = "Ошибка товара",
     text: String,
     selectedId: String?,
     selectedValue: String,
