@@ -525,11 +525,11 @@ public class TablesLoadingUnloading {
 
         data.mod = "plan";
         data.act = "list";
-        data.date_from = Clock.getDatePeriod(-3); // по факту -2
+        data.date_from = Clock.getDatePeriod(-2); // по факту -2
         data.date_to = Clock.getDatePeriod(3);
 
         if (Globals.userId == 143565) // исключение дляя Балаба
-            data.date_from = Clock.getDatePeriod(-4);
+            data.date_from = Clock.getDatePeriod(-3);
 
         long vpi;
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
@@ -540,7 +540,7 @@ public class TablesLoadingUnloading {
         } else
             vpi = 0;
 
-//        data.dt_change_from = String.valueOf(vpi);
+        data.dt_change_from = String.valueOf(vpi);
 
 
         try {
@@ -4157,55 +4157,55 @@ id_exclude - иди товаров которые есть в приложени
 //                    });
 
 
-//            Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
-//            call.enqueue(new Callback<PPAonResponse>() {
+            Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<PPAonResponse>() {
+                @Override
+                public void onResponse(Call<PPAonResponse> call, Response<PPAonResponse> response) {
+                    try {
+//                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
+                        Log.e("MenuMainTest", "test");
+                        if (response.isSuccessful())
+                            if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty())
+                                setPPA(response.body().getList());
+                    } catch (Exception e) {
+                        Log.e("MenuMainTest", "Exception e: " + e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<PPAonResponse> call, Throwable t) {
+                    Log.e("MenuMainTest", "test.t:" + t);
+                }
+            });
+//            Call<ResponseBody> call = RetrofitBuilder
+//                    .getRetrofitInterface()
+//                    .GET_TABLE_PPA_RAW(RetrofitBuilder.contentType, convertedObject);
+//
+//            call.enqueue(new Callback<ResponseBody>() {
 //                @Override
-//                public void onResponse(Call<PPAonResponse> call, Response<PPAonResponse> response) {
-//                    try {
-////                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
-//                        Log.e("MenuMainTest", "test");
-//                        if (response.isSuccessful())
-//                            if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty())
-//                                setPPA(response.body().getList());
-//                    } catch (Exception e) {
-//                        Log.e("MenuMainTest", "Exception e: " + e);
+//                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+//                    if (!response.isSuccessful()) {
+//                        Log.e("MenuMainTest", "PPA response not successful: " + response.code());
+//                        return;
 //                    }
+//
+//                    ResponseBody body = response.body();
+//
+//                    if (body == null) {
+//                        Log.e("MenuMainTest", "PPA response body is null");
+//                        return;
+//                    }
+//
+//                    new Thread(() -> {
+//                        parsePpaResponseStreaming(body);
+//                    }).start();
 //                }
 //
 //                @Override
-//                public void onFailure(Call<PPAonResponse> call, Throwable t) {
-//                    Log.e("MenuMainTest", "test.t:" + t);
+//                public void onFailure(Call<ResponseBody> call, Throwable t) {
+//                    Log.e("MenuMainTest", "PPA request failed: " + t, t);
 //                }
 //            });
-            Call<ResponseBody> call = RetrofitBuilder
-                    .getRetrofitInterface()
-                    .GET_TABLE_PPA_RAW(RetrofitBuilder.contentType, convertedObject);
-
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    if (!response.isSuccessful()) {
-                        Log.e("MenuMainTest", "PPA response not successful: " + response.code());
-                        return;
-                    }
-
-                    ResponseBody body = response.body();
-
-                    if (body == null) {
-                        Log.e("MenuMainTest", "PPA response body is null");
-                        return;
-                    }
-
-                    new Thread(() -> {
-                        parsePpaResponseStreaming(body);
-                    }).start();
-                }
-
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Log.e("MenuMainTest", "PPA request failed: " + t, t);
-                }
-            });
         } catch (Exception e) {
             Log.e("MenuMainTest", "Exception e.t:" + e);
         }
