@@ -45,6 +45,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.gson.Gson;
+
 import kotlin.Unit;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -343,6 +345,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             @Override
             public void onChanged(OptionsDB optionsDB) {
                 int scrollPosition = recycleViewDRAdapter.getItemPositionForOptionControl(optionsDB);
+                Log.e("showOrScrollAndWait", "animation optionsDB: " + new Gson().toJson(optionsDB));
                 if (scrollPosition > 0) {
                     rvContacts.smoothScrollToPosition(scrollPosition);
                     // запустить попытки найти ViewHolder и затем анимировать

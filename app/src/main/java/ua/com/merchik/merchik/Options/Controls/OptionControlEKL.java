@@ -358,6 +358,18 @@ public class OptionControlEKL<T> extends OptionControl {
                 } else
                     tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);
 
+                String otdelName;
+                String otdelId;
+                if (tovarGroupSDB1 != null) {
+                    otdelName = tovarGroupSDB1.nm;
+                    otdelId = tovarGroupSDB1.id.toString();
+                }
+                else {
+                    otdelName = "Відділ не визначено";
+                    otdelId = "0";
+                }
+                
+
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
                 } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
@@ -374,8 +386,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     signal = false;
                     // TODO otdel lvl
                     Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "usersSDBPTT.otdelId: " + usersSDBPTT.otdelId);
-                    Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent: " + SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent);
-                    optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" c нарушением уровня вложенности.")
+                    optionMsg.append(", но ").append("у ПТТ указан отдел ").append(tovarGroupSDB1.nm).append(" c нарушением уровня вложенности.")
                     /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //                    try {
@@ -389,22 +400,22 @@ public class OptionControlEKL<T> extends OptionControl {
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
                             signal = false;
-                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" (№").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).id).append(")").append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = true;
-                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" (№").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).id).append(")").append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (для магазина в котором более 5 касс и исполнитель провел 20-й отчет)");
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
                         if (documentUser.reportDate40 == null || documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = false;
-                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" (№").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).id).append(")").append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = false;
-                            optionMsg.append("                    RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(client_id, 0)\n").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" (№").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).id).append(")").append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append("                    RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(client_id, 0)\n").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (но в данном магазине ").append(addressSDB.kolKass).append(" касс и это допустимо)");
                         }
                     }
