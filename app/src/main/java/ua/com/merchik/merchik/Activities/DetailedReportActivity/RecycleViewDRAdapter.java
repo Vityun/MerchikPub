@@ -7,6 +7,7 @@ import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModelKt.COMPLAINT_REPEAT_WINDOW_SECONDS;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -887,8 +888,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case (151122):  // Жилетка: жалобы на условия работ
 
-                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getAll().size() + "/1");
-                            spannableString151122.setSpan(new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default)), 0, spannableString151122.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            String isSignal = optionsButtons.getIsSignal();
+                            ForegroundColorSpan foregroundSpan = switch (isSignal) {
+                                case "0" -> new ForegroundColorSpan(Color.GRAY);
+                                case "1" ->
+                                        new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+                                case "2" ->
+                                        new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+                                default -> new ForegroundColorSpan(Color.YELLOW);
+                            };
+
+                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getByAddressClientAndDateRange(
+                                    wp.getClient_id(),
+                                    String.valueOf(wp.getAddr_id()),
+                                    COMPLAINT_REPEAT_WINDOW_SECONDS
+                            ).size() + "/1");
+                            spannableString151122.setSpan(foregroundSpan, 0, spannableString151122.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                             textInteger.setText(spannableString151122);
                             textInteger.setOnClickListener(v -> {

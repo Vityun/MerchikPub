@@ -665,7 +665,6 @@ public class Globals {
             }
 
             //3
-            int readPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
             if (readPermission == PackageManager.PERMISSION_GRANTED) {
                 // Разрешение на чтение внешнего хранилища есть
                 Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Разрешение на чтение внешнего хранилища есть");

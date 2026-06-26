@@ -85,6 +85,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -840,24 +841,6 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 123;
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == READ_EXTERNAL_STORAGE_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение на чтение внешнего хранилища получено
-                // Вы можете продолжить выполнение действий, требующих разрешения
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST.onRequestPermissionsResult", "Разрешение на чтение внешнего хранилища получено");
-            } else {
-                // Разрешение на чтение внешнего хранилища отклонено
-                // Вы можете выполнить действия, когда разрешение не было предоставлено
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST.onRequestPermissionsResult", "Разрешение на чтение внешнего хранилища отклонено");
-            }
-        }
-    }
-
     private boolean checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return Environment.isExternalStorageManager();
@@ -896,7 +879,8 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
                     Uri uri = data.getData();
-                    File file = new File(Globals.FileUtils.getRealPathFromUri(getApplicationContext(), uri));
+                    PhotoPickerUtils.persistReadPermissionIfPossible(this, data);
+                    File file = PhotoPickerUtils.copyPickedImageToFile(getApplicationContext(), uri);
                     StackPhotoDB stackPhotoDB = savePhoto(file, MakePhotoFromGaleryWpDataDB, photoType, MakePhotoFromGalery.tovarId, getApplicationContext());
 
                     if (stackPhotoDB != null) {

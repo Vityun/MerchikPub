@@ -613,14 +613,16 @@ object OpinionSDBOverride {
 object QuestionAnswerDBOverride {
 
     fun getHidedFieldsOnUI(): String =
-        "dt_change, grp_id, ID, id_quest_com, type_user, option_id, element_id, object_str, " +
-                "mnenie_id, object_id, answer, question"
+        "dt_change, grp_id, id_quest_com, type_user, option_id, element_id, object_str, " +
+                "mnenie_id, object_id, answer, question, user_id, object_date, avg_answer, timeColor"
 
 
     fun getTranslateId(key: String): Long? = when (key) {
         "dt" -> 5917
         "comment" -> 5911
         "id_quest" -> 8724
+        "adr_id" -> 1101
+        "kli_id" -> 1102
         else -> null
     }
 
@@ -651,7 +653,33 @@ object QuestionAnswerDBOverride {
             value.toString()
         }
 
+
+        "adr_id" -> try {
+            val address = RoomManager.SQL_DB.addressDao().getById(value.toString().toInt())
+            address.nm
+        } catch (_: Exception) {
+            value.toString()
+        }
+
+        "kli_id" -> try {
+            val client = RoomManager.SQL_DB.customerDao().getById(value.toString())
+            client.nm
+        } catch (_: Exception) {
+            value.toString()
+        }
+
         else -> value.toString()
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("timeColor", "")
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
     }
 
 

@@ -9,7 +9,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,6 +44,7 @@ import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -266,10 +266,9 @@ public class Tab3Fragment extends Fragment {
                             case 3:
                                 try {
                                     MakePhotoFromGaleryTasksAndReclamationsSDB = tarData;
-                                    Intent mediaPicker = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                                    mediaPicker.setType("image/*");
+                                    Intent mediaPicker = PhotoPickerUtils.createSingleImageChooser();
                                     Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + mediaPicker);
-                                    ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(mediaPicker, "Select Picture"), 500);
+                                    ((TARActivity) v.getContext()).startActivityForResult(mediaPicker, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
                                 } catch (Exception e) {
                                     Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
                                 }

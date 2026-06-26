@@ -85,9 +85,13 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
+import ua.com.merchik.merchik.features.rno.RnoRequestCoordinator
+import ua.com.merchik.merchik.features.rno.RnoRequestResult
+import ua.com.merchik.merchik.features.rno.RnoRequestStatus
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
@@ -1548,6 +1552,7 @@ abstract class MainViewModel(
     /** Обе кнопки диалога вызывают это действие */
     fun performPending() {
         val op = pending ?: return
+        pending = null
         when (op) {
             is PendingOp.AcceptOneTime -> doAcceptOneTime(op.wp)
             is PendingOp.AcceptInfinite -> doAcceptInfinite(op.wp)
@@ -1561,8 +1566,14 @@ abstract class MainViewModel(
     }
 
     private val tablesLoadingUnloading = TablesLoadingUnloading()
+    private val rnoRequestCoordinator = RnoRequestCoordinator(tablesLoadingUnloading)
+    private val activeRnoSubmissionKeys = ConcurrentHashMap.newKeySet<String>()
 
     private fun doAcceptAllClientOneAddressInfinite(wp: WpDataDB) {
+        val rows = RealmManager.getAllWorkPlanByAddressForRNO(wp.addr_id)
+        submitRnoRequests(rows.takeIf { it.isNotEmpty() } ?: listOf(wp), forever = true)
+        return
+
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
         val d = dao.getByAddr(wp.addr_id).subscribeOn(Schedulers.io()).flatMap { list ->
@@ -1606,6 +1617,11 @@ abstract class MainViewModel(
     }
 
     private fun doAcceptAllClientOneAddressOneTime(wp: WpDataDB) {
+        val rows = RealmManager.getAllWorkPlanByAddressForRNO(wp.addr_id)
+            .filter { it.dt == wp.dt }
+        submitRnoRequests(rows.takeIf { it.isNotEmpty() } ?: listOf(wp), forever = false)
+        return
+
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
         val d = dao.getByAddr(wp.addr_id).subscribeOn(Schedulers.io()).flatMap { list ->
@@ -1648,7 +1664,152 @@ abstract class MainViewModel(
         disposables.add(d)
     }
 
+    private fun submitRnoRequests(wpList: List<WpDataDB>, forever: Boolean = false) {
+        if (wpList.isEmpty()) return
+
+        val submissionKey = rnoSubmissionKey(wpList, forever)
+        if (!activeRnoSubmissionKeys.add(submissionKey)) {
+            Log.i("RNO", "Duplicate RNO submission ignored: $submissionKey")
+            return
+        }
+
+        pending = null
+        viewModelScope.launch {
+            _events.emit(
+                MainEvent.ShowLoading(
+                    "Чекаємо на відповідь від сервера",
+                    28_700L
+                )
+            )
+        }
+
+        val d = rnoRequestCoordinator.submit(wpList, forever)
+            .doFinally { activeRnoSubmissionKeys.remove(submissionKey) }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result -> handleRnoRequestResult(result) },
+                { error ->
+                    viewModelScope.launch {
+                        _events.emit(MainEvent.LoadingCanceled)
+                        _events.emit(
+                            MainEvent.ShowMessageDialog(
+                                MessageDialogData(
+                                    subTitle = "Помилка подачі заявки",
+                                    message = error.message
+                                        ?: "Не вдалося створити або відправити заявку.",
+                                    status = DialogStatus.ALERT
+                                )
+                            )
+                        )
+                    }
+                }
+            )
+
+        disposables.add(d)
+    }
+
+    private fun rnoSubmissionKey(wpList: List<WpDataDB>, forever: Boolean): String {
+        val keys = wpList
+            .map { wp ->
+                val codeDad2 = if (forever) 0L else wp.code_dad2
+                "${wp.client_id}:${wp.addr_id}:$codeDad2"
+            }
+            .distinct()
+            .sorted()
+            .joinToString(separator = "|")
+        return "${if (forever) "forever" else "once"}:$keys"
+    }
+
+    private fun handleRnoRequestResult(result: RnoRequestResult) {
+        viewModelScope.launch {
+            when (result.status) {
+                RnoRequestStatus.APPROVED -> {
+                    _events.emit(MainEvent.LoadingCompleted)
+
+                    val activity = context as? Activity
+                    val syncStarted = activity?.let {
+                        rnoRequestCoordinator.startConfirmedExchange(
+                            it,
+                            result,
+                            Runnable { updateContent() }
+                        )
+                    } ?: false
+
+                    if (!syncStarted) {
+                        emitRnoMessage(
+                            subTitle = "Заявку підтверджено",
+                            message = "Сервер підтвердив заявку, але не вдалося запустити обмін для отримання нового візиту. Виконайте синхронізацію вручну.",
+                            status = DialogStatus.ALERT
+                        )
+                    }
+                }
+
+                RnoRequestStatus.DECLINED -> {
+                    _events.emit(MainEvent.LoadingCanceled)
+                    emitRnoMessage(
+                        subTitle = "Відповідь від сервера",
+                        message = result.comment?.takeIf { it.isNotBlank() }
+                            ?: "Заявка відхилена.",
+                        status = DialogStatus.ALERT
+                    )
+                }
+
+                RnoRequestStatus.TIMEOUT -> {
+                    _events.emit(MainEvent.LoadingCompleted)
+                    emitRnoMessage(
+                        subTitle = "Заявку передано куратору",
+                        message = "Заявку створено та передано на сервер. Відповідь поки не отримана; вона буде підтягнута під час наступного обміну.",
+                        status = DialogStatus.ALERT
+                    )
+                }
+
+                RnoRequestStatus.SUBMITTED -> {
+                    _events.emit(MainEvent.LoadingCanceled)
+                    val message = if (result.createdCount == 0 && result.alreadySubmittedCount > 0) {
+                        "Запит на ці роботи вже було подано раніше. Як тільки куратор дасть відповідь, Ви отримаєте повідомлення."
+                    } else {
+                        "Заявку створено та збережено. Для підтвердження виконайте обмін із сервером."
+                    }
+                    emitRnoMessage(
+                        subTitle = "Заявка збережена",
+                        message = message,
+                        status = DialogStatus.ALERT
+                    )
+                }
+
+                RnoRequestStatus.SYNC_FAILED -> {
+                    _events.emit(MainEvent.LoadingCanceled)
+                    emitRnoMessage(
+                        subTitle = "Помилка обробки заявки",
+                        message = result.errorMessage
+                            ?: "Не вдалося завершити обробку заявки. Виконайте синхронізацію вручну.",
+                        status = DialogStatus.ALERT
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun emitRnoMessage(
+        subTitle: String,
+        message: String,
+        status: DialogStatus
+    ) {
+        _events.emit(
+            MainEvent.ShowMessageDialog(
+                MessageDialogData(
+                    subTitle = subTitle,
+                    message = message,
+                    status = status
+                )
+            )
+        )
+    }
+
     fun doAcceptOneTime(wpList: List<WpDataDB>, forever: Boolean = false) {
+        submitRnoRequests(wpList, forever)
+        return
+
         if (wpList.isEmpty()) return
 
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
@@ -2184,6 +2345,9 @@ abstract class MainViewModel(
     }
 
     fun doAcceptOneTime(wp: WpDataDB, forever: Boolean = false) {
+        submitRnoRequests(listOf(wp), forever)
+        return
+
         val dad2 = wp.code_dad2
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
@@ -2417,6 +2581,9 @@ abstract class MainViewModel(
 //    }
 
     private fun doAcceptInfinite(wp: WpDataDB) {
+        submitRnoRequests(listOf(wp), forever = true)
+        return
+
         val dao = RoomManager.SQL_DB.wpDataAdditionalDao()
 
         val d =

@@ -65,6 +65,10 @@ public class WPDataActivity extends toolbar_menus {
     EditText searchView;
     private ImageButton filter;
 
+    private static final long EXIT_CONFIRMATION_INTERVAL_MS = 2_000L;
+    private long lastBackPressedAt = 0L;
+
+
     //----------------------------------------------------------------------------------------------
     @SuppressLint("ResourceType")
     @Override
@@ -259,4 +263,19 @@ public class WPDataActivity extends toolbar_menus {
             Log.d(TAG, "intent." + k + "=" + b.get(k));
         }
     }
+
+
+    @Override
+    public void onBackPressed() {
+        long now = System.currentTimeMillis();
+
+        if (now - lastBackPressedAt < 2_000L) {
+            super.onBackPressed();
+            finishAffinity();
+        } else {
+            lastBackPressedAt = now;
+            Toast.makeText(this, "Нажмите ещё раз, чтобы выйти", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }

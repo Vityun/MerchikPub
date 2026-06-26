@@ -51,6 +51,7 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
@@ -80,7 +81,6 @@ import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 import ua.com.merchik.merchik.toolbar_menus
-import java.io.File
 
 @AndroidEntryPoint
 class FeaturesActivity : AppCompatActivity() {
@@ -205,11 +205,8 @@ class FeaturesActivity : AppCompatActivity() {
 
 
                 val uri = data.data
-                val file = File(
-                    Globals.FileUtils.getRealPathFromUri(
-                        applicationContext, uri
-                    )
-                )
+                PhotoPickerUtils.persistReadPermissionIfPossible(this, data)
+                val file = PhotoPickerUtils.copyPickedImageToFile(applicationContext, uri!!)
                 val stackPhotoDB = DetailedReportActivity.savePhoto(
                     file,
                     MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB,

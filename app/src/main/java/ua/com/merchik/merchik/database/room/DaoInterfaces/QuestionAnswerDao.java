@@ -64,4 +64,37 @@ public abstract class QuestionAnswerDao {
 
     @Query("SELECT * FROM question_answers WHERE ID > :minId ORDER BY ID ASC")
     public abstract List<QuestionAnswerDB> getAllForUploadTest(long minId);
+
+
+    @Query(
+            "SELECT dt " +
+                    "FROM question_answers " +
+                    "WHERE (id_quest = :themeId OR id_quest_com = :themeId) " +
+                    "AND kli_id = :clientId " +
+                    "AND adr_id = :addressId " +
+                    "AND dt >= :fromSeconds " +
+                    "ORDER BY dt DESC " +
+                    "LIMIT 1"
+    )
+    public abstract Long findLastComplaintDate(
+            int themeId,
+            String clientId,
+            String addressId,
+            long fromSeconds
+    );
+
+
+    @Query(
+            "SELECT * " +
+                    "FROM question_answers " +
+                    "WHERE kli_id = :clientId " +
+                    "AND adr_id = :addressId " +
+                    "AND dt >= :fromSeconds " +
+                    "ORDER BY dt DESC"
+    )
+    public abstract List<QuestionAnswerDB> getByAddressClientAndDateRange(
+            String clientId,
+            String addressId,
+            long fromSeconds
+    );
 }

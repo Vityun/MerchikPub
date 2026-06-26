@@ -5,14 +5,13 @@ import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFrom
 import android.content.Context;
 import android.content.Intent;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -50,17 +49,11 @@ public class OptionButtonPhotoEFFIE<T> extends OptionControl {
 //            MakePhoto makePhoto = new MakePhoto();
 //            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
 
-            if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
-                MakePhotoFromGaleryWpDataDB = wpDataDB;
-                MakePhotoFromGalery.tovarId = "0";
-                MakePhotoFromGalery.photoType = 46;
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                intent.putExtra("photo_type", 46); // Добавляем тип фотографии в интент
-                ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-            } else {
-                DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission((AppCompatActivity) context);
-            }
+            MakePhotoFromGaleryWpDataDB = wpDataDB;
+            MakePhotoFromGalery.tovarId = "0";
+            MakePhotoFromGalery.photoType = 46;
+            Intent intent = PhotoPickerUtils.createSingleImageChooser();
+            ((DetailedReportActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoFOT/executeOption/Exception", "Exception e: " + e);

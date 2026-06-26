@@ -66,8 +66,11 @@ fun WpDataContentTab(dataIsReady: Boolean) {
         val shouldShow = activity?.intent
             ?.getBooleanExtra("showWPDataWithFilters", false) == true
 
-        if (!shouldShow)
-            ScrollDataHolder.instance().init()
+        LaunchedEffect(Unit) {
+            if (!shouldShow) {
+                ScrollDataHolder.instance().init()
+            }
+        }
 
         viewModel.contextUI = ContextUI.WP_DATA_IN_CONTAINER
         viewModel.modeUI = ModeUI.FILTER_SELECT

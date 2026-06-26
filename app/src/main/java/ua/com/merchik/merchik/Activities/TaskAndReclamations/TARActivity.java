@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
-import static ua.com.merchik.merchik.Globals.getRealPathFromURI;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryTasksAndReclamationsSDB;
@@ -11,7 +10,6 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -36,10 +34,10 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSe
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TarPhotoDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -323,22 +321,15 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 fragmentHome.homeFrag.dialog.refreshAdaper(stackPhotoDB);
             }
 
-            if (requestCode == PICK_GALLERY_IMAGE_REQUEST) {
+            if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
 
                 Uri uri = data.getData();
-                File file = null;
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                    file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
-                } else {
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                    String filePath = getRealPathFromURI(uri);
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                    file = new File(filePath);
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                }
+                PhotoPickerUtils.persistReadPermissionIfPossible(this, data);
+                File file = PhotoPickerUtils.copyPickedImageToFile(getApplicationContext(), uri);
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
                 StackPhotoDB stackPhotoDB =  savePhoto(file, MakePhotoFromGaleryTasksAndReclamationsSDB, MakePhotoFromGalery.tovarId, getApplicationContext());
 
 //                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client, fragmentHome.secondFrag.data);
@@ -650,19 +641,4 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 //        Log.e("TasksActivity_T", "4. fragmentManager.getFragments(): " + fragmentManager.getFragments());
 //    }
 
-
-
-    /*
-                        case 3:
-                            try {
-                                MakePhotoFromGaleryTasksAndReclamationsSDB = ;
-                                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                                intent.setType("image/*");
-                                Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + intent);
-                                ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
-                            }
-                            break;
-*/
 }

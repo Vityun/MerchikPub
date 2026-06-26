@@ -102,12 +102,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import coil.compose.rememberAsyncImagePainter
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import rememberDialogCloseController
@@ -153,6 +156,9 @@ import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 
@@ -217,18 +223,29 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showSavedMessage by remember { mutableStateOf(false) }
     var validationErrorMessage by remember { mutableStateOf<String?>(null) }
 
+    var repeatComplaintDialogState by remember {
+        mutableStateOf<RepeatComplaintDialogState?>(null)
+    }
+
     val activity = context as ComponentActivity
     val shouldShow = activity.intent
         ?.getBooleanExtra("showWPDataWithFilters", false) == true
     LaunchedEffect(Unit) {
-        if (shouldShow && showActivityFilter) {
-            showSortingDataDialogLocal = true
+        if (!shouldShow) {
+            ScrollDataHolder.instance().init()
+        }
+    }
+
+    LaunchedEffect(shouldShow, showActivityFilter) {
+        if (shouldShow) {
+            if (showActivityFilter) {
+                showSortingDataDialogLocal = true
+            }
             val updated =
                 (uiState.filters ?: Filters()).copy(selectedMode = SelectedMode.ONLY_SELECTED)
             viewModel.updateFilters(updated)
             FilteringDialogDataHolder.instance().filters = updated
-        } else
-            ScrollDataHolder.instance().init()
+        }
     }
 
 
@@ -1274,9 +1291,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                                     },
                                                     onSavedSuccess = {
                                                         showSavedMessage = true
+                                                    },
+                                                    onRepeatComplaint = { themeName, createdAtSeconds, onConfirm ->
+                                                        repeatComplaintDialogState = RepeatComplaintDialogState(
+                                                            themeName = themeName,
+                                                            createdAtSeconds = createdAtSeconds,
+                                                            onConfirm = onConfirm
+                                                        )
                                                     }
-                                                )
-//                                                showQuestionAnswerThemeDialog(
+                                                )//                                                showQuestionAnswerThemeDialog(
 //                                                    context = context,
 //                                                    itemsUI = selectedItems.first().rawObj
 //                                                )
@@ -1940,6 +1963,32 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
             )
         }
+    }
+
+    repeatComplaintDialogState?.let { dialogState ->
+        MessageDialog(
+            title = "Повторне звернення",
+            status = DialogStatus.ALERT,
+            message =
+                "За темою ${dialogState.themeName.ifBlank { "Без назви" }} " +
+                        "по цій ТТ звернення вже було створено " +
+                        "${formatComplaintDate(dialogState.createdAtSeconds)}. " +
+                        "Створити нову скаргу?",
+            okButtonName = "Так",
+            cancelButtonName = "Ні",
+            onDismiss = {
+                repeatComplaintDialogState = null
+            },
+            onCancelAction = {
+                repeatComplaintDialogState = null
+            },
+            onConfirmAction = {
+                val confirmAction = dialogState.onConfirm
+
+                repeatComplaintDialogState = null
+                confirmAction()
+            }
+        )
     }
 
     validationErrorMessage?.let { message ->
@@ -2617,13 +2666,17 @@ fun ProductCodeInlineEditor(
     }
 }
 
-
 private fun showQuestionAnswerThemeDialog(
     viewModel: MainViewModel,
     context: Context,
     itemsUI: List<DataObjectUI>,
     onValidationError: (String) -> Unit,
-    onSavedSuccess: () -> Unit
+    onSavedSuccess: () -> Unit,
+    onRepeatComplaint: (
+        themeName: String,
+        createdAtSeconds: Long,
+        onConfirm: () -> Unit
+    ) -> Unit
 ) {
     val theme = itemsUI.firstOrNull { it is ThemeDB } as? ThemeDB
 
@@ -2631,6 +2684,7 @@ private fun showQuestionAnswerThemeDialog(
         onValidationError("Не вдалося визначити тему")
         return
     }
+
 
     val extraTextFor600 =
         "Вы можете использовать текущий вариант ответа некоторое время — до двух недель. " +
@@ -2667,12 +2721,8 @@ private fun showQuestionAnswerThemeDialog(
         null
     )
 
-    dialog.setOk("Сохранить") {
-        val comment = dialog.operationResult
-            ?.trim()
-            .orEmpty()
-
-        if (comment.length > 1) {
+    fun saveAnswer(comment: String) {
+        viewModel.viewModelScope.launch {
             runCatching {
                 saveQuestionAnswerTheme(
                     viewModel = viewModel,
@@ -2687,10 +2737,55 @@ private fun showQuestionAnswerThemeDialog(
                     "Помилка збереження: ${error.message.orEmpty()}"
                 )
             }
-        } else {
+        }
+    }
+
+    dialog.setOk("Сохранить") {
+        val comment = dialog.operationResult
+            ?.trim()
+            .orEmpty()
+
+        if (comment.length <= 1) {
             onValidationError(
                 "Комментарий НЕ сохранён. Заполните корректно поле для комментария!"
             )
+            return@setOk
+        }
+
+        val complaintKey = createComplaintCheckKey(
+            viewModel = viewModel,
+            theme = theme
+        )
+
+        /*
+         * Нет данных для проверки — сохраняем по обычному сценарию.
+         */
+        if (complaintKey == null) {
+            saveAnswer(comment)
+            return@setOk
+        }
+
+        viewModel.viewModelScope.launch {
+            runCatching {
+                findRecentComplaintDate(complaintKey)
+            }.onSuccess { createdAtSeconds ->
+                if (createdAtSeconds == null) {
+                    saveAnswer(comment)
+                    return@onSuccess
+                }
+
+                onRepeatComplaint(
+                    themeTitle,
+                    createdAtSeconds
+                ) {
+                    saveAnswer(comment)
+                }
+            }.onFailure { error ->
+                onValidationError(
+                    "Не вдалося перевірити попередні звернення: " +
+                            error.message.orEmpty()
+                )
+            }
         }
     }
 
@@ -2763,6 +2858,74 @@ private fun saveQuestionAnswerTheme(
 
     RoomManager.SQL_DB.questionAnswerDao().insert(questionAnswer)
 }
+
+private const val COMPLAINT_REPEAT_WINDOW_SECONDS =
+    7L * 24L * 60L * 60L
+
+private data class ComplaintCheckKey(
+    val themeId: Int,
+    val themeName: String,
+    val clientId: String,
+    val addressId: String
+)
+
+private fun createComplaintCheckKey(
+    viewModel: MainViewModel,
+    theme: ThemeDB
+): ComplaintCheckKey? {
+    val themeId = theme.getID()
+        ?.trim()
+        ?.toIntOrNull()
+        ?: return null
+
+    val wpDataDB = runCatching {
+        val codeDad2 = Gson().fromJson(viewModel.dataJson, Long::class.java)
+        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+    }.getOrNull() ?: return null
+
+    val clientId = wpDataDB.client_id.orEmpty()
+    val addressId = wpDataDB.addr_id.toString()
+
+    if (clientId.isBlank() || addressId.isBlank()) {
+        return null
+    }
+
+    return ComplaintCheckKey(
+        themeId = themeId,
+        themeName = theme.getNm()?.trim().orEmpty(),
+        clientId = clientId,
+        addressId = addressId
+    )
+}
+
+private suspend fun findRecentComplaintDate(
+    key: ComplaintCheckKey
+): Long? = withContext(Dispatchers.IO) {
+    val nowSeconds = System.currentTimeMillis() / 1000L
+
+    RoomManager.SQL_DB
+        .questionAnswerDao()
+        .findLastComplaintDate(
+            key.themeId,
+            key.clientId,
+            key.addressId,
+            nowSeconds - COMPLAINT_REPEAT_WINDOW_SECONDS
+        )
+}
+
+private fun formatComplaintDate(createdAtSeconds: Long): String {
+    return SimpleDateFormat(
+        "dd.MM.yyyy",
+        Locale.getDefault()
+    ).format(Date(createdAtSeconds * 1000L))
+}
+
+private data class RepeatComplaintDialogState(
+    val themeName: String,
+    val createdAtSeconds: Long,
+    val onConfirm: () -> Unit
+)
+
 
 @Composable
 fun ComposableLifecycle(

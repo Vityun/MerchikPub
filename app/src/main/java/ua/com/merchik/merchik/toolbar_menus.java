@@ -135,6 +135,7 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.rno.RnoRequestCoordinator;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.ProgressRequestBody;
@@ -151,6 +152,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     public static WebSocketStatus webSocketStatus;
 
     TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+
+    private static final long EXIT_CONFIRMATION_INTERVAL_MS = 2_500L;
+    private long lastBackPressedAt = 0L;
 
     private WPDataObj wpDataObj;
 
@@ -1414,6 +1418,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     });
 
                                     // доп заработок
+                                    RnoRequestCoordinator.resumePendingAndSync(toolbar_menus.this);
 //                                tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(toolbar_menus.this);
 //                        if (!SQL_DB.wpDataAdditionalDao().getNotConfirmDecision().isEmpty())
 //                            tablesLoadingUnloading.donwloadPlanBudget();

@@ -31,6 +31,9 @@ public interface WPDataAdditionalDao {
     @Query("SELECT * FROM wp_data_additional WHERE uploadStatus = 1")
     List<WPDataAdditional> getUploadToServer();
 
+    @Query("UPDATE wp_data_additional SET uploadStatus = 0 WHERE ID IN (:ids)")
+    void markUploadSkippedByIdsSync(List<Long> ids);
+
 //    dt хранится в секундах (а не в миллисекундах), то разница 3 дня — это:
 //    3 дня — это 3 * 24 * 60 * 60 = 259200 секунд
 //    1 ltym — это 24 * 60 * 60 = 86400 секунд
@@ -62,6 +65,9 @@ public interface WPDataAdditionalDao {
 
     @Query("SELECT * FROM wp_data_additional WHERE client_id = :clientId AND addr_id = :addrId")
     Single<List<WPDataAdditional>> getByClientAndAddr(int clientId, int addrId);
+
+    @Query("SELECT * FROM wp_data_additional WHERE client_id = :clientId AND addr_id = :addrId AND code_dad2 = :codeDad2 ORDER BY dt DESC")
+    List<WPDataAdditional> getByClientAddrCodeDad2Sync(int clientId, int addrId, long codeDad2);
 
     @Query("SELECT * FROM wp_data_additional WHERE ID = :id LIMIT 1")
     WPDataAdditional getByIdSync(long id); // вызывается внутри транзакции / в bg-потоке

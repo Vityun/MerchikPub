@@ -220,7 +220,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                     stringBuilderMsg.append("\n\nДокумент проведен не будет!");
                 } else {
                     stringBuilderMsg.append(
-                            "\n\nВы можете получить Премиальные БОЛЬШЕ, если он подаст замечение (в МВС)."
+                            "\n\nВы можете получить Премиальные БОЛЬШЕ, если будете подавать замечания (в МВС)."
                     );
                 }
             }

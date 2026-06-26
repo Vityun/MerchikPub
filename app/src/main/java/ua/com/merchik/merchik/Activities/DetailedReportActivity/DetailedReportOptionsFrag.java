@@ -5,17 +5,15 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.Manifest;
 import android.animation.*;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,14 +26,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -61,6 +55,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
@@ -93,22 +88,28 @@ public class DetailedReportOptionsFrag extends Fragment {
         }
     }
 
-    ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
-            new ActivityResultCallback<Uri>() {
-                @Override
-                public void onActivityResult(Uri uri) {
-                    try {
-                        File file = new File(Globals.FileUtils.getRealPathFromUri(getContext(), uri));
-                        savePhoto(file, wpDataDB, photoHandler.getPhotoType(), MakePhotoFromGalery.tovarId, getApplicationContext());
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
-                    }
-                }
-            });
-
     //    private static Context mContext;
     private WpDataDB wpDataDB;
     private DetailedReportViewModel viewModel;
+
+    ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                try {
+                    Intent data = result.getData();
+                    if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null || getContext() == null || photoHandler == null) {
+                        return;
+                    }
+
+                    Uri uri = data.getData();
+                    PhotoPickerUtils.persistReadPermissionIfPossible(requireContext(), data);
+                    File file = PhotoPickerUtils.copyPickedImageToFile(requireContext(), uri);
+                    savePhoto(file, wpDataDB, photoHandler.getPhotoType(), MakePhotoFromGalery.tovarId, getApplicationContext());
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+                }
+            });
+
 
     public static final Integer[] DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
 
@@ -515,7 +516,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 try {
                     int photoType = (int) data;
                     photoHandler = new PhotoHandler(photoType);
-                    mGetContent.launch("image/*");
+                    imagePickerLauncher.launch(PhotoPickerUtils.createSingleImageChooser());
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
                 }
@@ -543,50 +544,6 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     public void test() {
 
-    }
-
-    public class PermissionUtils {
-
-        @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-        public static String[] storage_permissions_33 = {
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.READ_MEDIA_AUDIO,
-                Manifest.permission.READ_MEDIA_VIDEO
-        };
-
-        public static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 1;
-
-        public static boolean checkReadExternalStoragePermission(Context context) {
-            int permissionStatus = -1;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES);
-            } else {
-                permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
-            }
-            return permissionStatus == PackageManager.PERMISSION_GRANTED;
-        }
-
-        public static void requestReadExternalStoragePermission(Activity activity) {
-            try {
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    ActivityCompat.requestPermissions(
-                            activity,
-                            storage_permissions_33,
-                            1
-                    );
-                } else {
-                    ActivityCompat.requestPermissions(
-                            activity,
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                            READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE
-                    );
-                }
-            } catch (Exception e) {
-                Log.e("test", "Exception e: " + e);
-                Globals.writeToMLOG("ERROR", "Вибрати з галереї", "requestReadExternalStoragePermission: " + e.getMessage());
-            }
-        }
     }
 
     // ---------- вспомогательный метод в Activity/Fragment (Java) ----------

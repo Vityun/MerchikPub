@@ -550,13 +550,7 @@ public class menu_login extends AppCompatActivity {
         int call = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE);
 
         // Storage
-        int readExt = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
         int writeExt = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        // Android 13 media
-        int readImages = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_IMAGES);
-        int readVideo  = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_VIDEO);
-        int readAudio  = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_MEDIA_AUDIO);
 
         // Bluetooth (Android 12+)
         int btScan = PackageManager.PERMISSION_GRANTED;
@@ -577,11 +571,6 @@ public class menu_login extends AppCompatActivity {
                     camera == PackageManager.PERMISSION_GRANTED &&
                     call == PackageManager.PERMISSION_GRANTED &&
 
-                    // media perms
-                    readImages == PackageManager.PERMISSION_GRANTED &&
-                    readVideo == PackageManager.PERMISSION_GRANTED &&
-                    readAudio == PackageManager.PERMISSION_GRANTED &&
-
                     // Wi-Fi scan on 13+
                     nearbyWifi == PackageManager.PERMISSION_GRANTED &&
 
@@ -592,7 +581,6 @@ public class menu_login extends AppCompatActivity {
             return fine == PackageManager.PERMISSION_GRANTED &&
                     camera == PackageManager.PERMISSION_GRANTED &&
                     call == PackageManager.PERMISSION_GRANTED &&
-                    readExt == PackageManager.PERMISSION_GRANTED &&
                     writeExt == PackageManager.PERMISSION_GRANTED &&
 
                     // BT on 12+
@@ -609,14 +597,9 @@ public class menu_login extends AppCompatActivity {
         perms.add(Manifest.permission.CALL_PHONE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            perms.add(Manifest.permission.READ_MEDIA_IMAGES);
-            perms.add(Manifest.permission.READ_MEDIA_VIDEO);
-            perms.add(Manifest.permission.READ_MEDIA_AUDIO);
-
             // Wi-Fi scan permission for 13+
             perms.add(Manifest.permission.NEARBY_WIFI_DEVICES);
         } else {
-            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 

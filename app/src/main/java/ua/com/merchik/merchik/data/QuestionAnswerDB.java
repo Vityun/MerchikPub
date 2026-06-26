@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -112,6 +113,9 @@ public class QuestionAnswerDB implements DataObjectUI {
     @SerializedName("mnenie_id")
     @Expose
     private String mnenieId;
+
+    @Ignore
+    private String timeColor;
 
     public long getId() {
         return id;
@@ -292,7 +296,7 @@ public class QuestionAnswerDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return QuestionAnswerDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable
@@ -328,5 +332,13 @@ public class QuestionAnswerDB implements DataObjectUI {
     @Override
     public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
+    }
+
+    public String getTimeColor() {
+        return timeColor;
+    }
+
+    public void setTimeColor(String timeColor) {
+        this.timeColor = timeColor;
     }
 }

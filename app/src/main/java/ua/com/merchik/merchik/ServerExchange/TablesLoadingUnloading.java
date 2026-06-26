@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -64,6 +65,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.AdditionalWPHolder;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -435,6 +437,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
 
+                            Set<Long> knownDad2BeforeDownload = getKnownWorkPlanDad2Snapshot();
                             downloadWPDataWithCords();
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
@@ -451,27 +454,59 @@ public class TablesLoadingUnloading {
 //                                    if (wpDataDB.getCode_dad2() == 1110526043698060395L)
 //                                        Log.e("!!!!!!!!!!", "+++++++++++");
 //                                }
-                                List<Long> dad2 = ScrollDataHolder.Companion.instance().getDad2();
+                                Set<Long> dad2 = new HashSet<>();
+                                for (Long pendingDad2 : ScrollDataHolder.Companion.instance().getDad2()) {
+                                    if (pendingDad2 != null && pendingDad2 > 0L) {
+                                        dad2.add(pendingDad2);
+                                    }
+                                }
                                 List<Long> confirmedGoodIds = new ArrayList<>();
+                                Set<Long> confirmedGoodDad2 = new HashSet<>();
+                                List<AdditionalWPHolder> pendingAdditionalRequests =
+                                        ScrollDataHolder.Companion.instance().getAdditionalRequests();
+                                List<AdditionalWPHolder> confirmedAdditionalRequests = new ArrayList<>();
 
                                 for (WpDataDB wpDataDB : wpDataDBList) {
+                                    boolean matchedByDad2 = false;
                                     if (dad2.contains(wpDataDB.getCode_dad2())) {
-                                        List<Long> id = RealmManager.getWpDataIdsByAdditionalIds(Collections.singletonList(wpDataDB.getCode_dad2()));
-                                        confirmedGoodIds.addAll(id);
+                                        confirmedGoodIds.add(wpDataDB.getId());
+                                        confirmedGoodDad2.add(wpDataDB.getCode_dad2());
+                                        matchedByDad2 = true;
+                                    }
+
+                                    if (!matchedByDad2
+                                            && !pendingAdditionalRequests.isEmpty()
+                                            && wpDataDB.getCode_dad2() > 0L
+                                            && isNewWorkPlanDad2(knownDad2BeforeDownload, wpDataDB.getCode_dad2())) {
+                                        for (AdditionalWPHolder request : pendingAdditionalRequests) {
+                                            if (matchesPendingAdditionalRequest(request, wpDataDB)) {
+                                                confirmedGoodIds.add(wpDataDB.getId());
+                                                confirmedAdditionalRequests.add(request);
+                                                break;
+                                            }
+                                        }
                                     }
 
                                     Log.e("!!!!!!!!!!", "+++++++++++");
                                 }
-                                if (dad2.size() == confirmedGoodIds.size()) // это место под вопросом, а если не прилит одна работа?
+                                if (!confirmedGoodIds.isEmpty()) {
                                     ScrollDataHolder.Companion.instance().addIds(confirmedGoodIds);
-                                else {
-                                    new MessageDialogBuilder((Activity) context)
-                                            .setTitle("Додатковий заробіток")
-                                            .setStatus(DialogStatus.ERROR)
-                                            .setSubTitle("## Сообщение для отладки")
-                                            .setMessage("Не были получены следующие dad2: " + dad2
-                                                    + "\nЯкщо побачите це повідомлення, відправте скріншот з ним вашому керівнику.")
-                                            .show();
+                                    ScrollDataHolder.Companion.instance().removeDad2(confirmedGoodDad2);
+                                    ScrollDataHolder.Companion.instance().removeAdditionalRequests(confirmedAdditionalRequests);
+                                    Globals.writeToMLOG(
+                                            "INFO",
+                                            "TablesLoadingUnloading/downloadWPData",
+                                            "Confirmed RNO wp_data ids: " + confirmedGoodIds
+                                    );
+                                }
+                                if (!dad2.isEmpty() && confirmedGoodDad2.size() < dad2.size()) {
+                                    Set<Long> missingDad2 = new HashSet<>(dad2);
+                                    missingDad2.removeAll(confirmedGoodDad2);
+                                    Globals.writeToMLOG(
+                                            "INFO",
+                                            "TablesLoadingUnloading/downloadWPData",
+                                            "Confirmed RNO dad2 not received yet: " + missingDad2
+                                    );
                                 }
 
 
@@ -519,13 +554,61 @@ public class TablesLoadingUnloading {
 
     }
 
+    private Set<Long> getKnownWorkPlanDad2Snapshot() {
+        try {
+            Set<Long> result = new HashSet<>();
+            List<WpDataDB> localWorkPlan = RealmManager.getAllWorkPlanSafe();
+            if (localWorkPlan != null) {
+                for (WpDataDB item : localWorkPlan) {
+                    if (item != null && item.getCode_dad2() > 0L) {
+                        result.add(item.getCode_dad2());
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "TablesLoadingUnloading/getKnownWorkPlanDad2Snapshot",
+                    "Exception: " + e
+            );
+            return null;
+        }
+    }
+
+    private boolean isNewWorkPlanDad2(Set<Long> knownDad2BeforeDownload, long codeDad2) {
+        if (codeDad2 <= 0L) return false;
+        if (knownDad2BeforeDownload == null) {
+            return RealmManager.getWorkPlanRowByCodeDad2(codeDad2) == null;
+        }
+        return !knownDad2BeforeDownload.contains(codeDad2);
+    }
+
+    private boolean matchesPendingAdditionalRequest(AdditionalWPHolder request, WpDataDB wpDataDB) {
+        if (request == null || wpDataDB == null) return false;
+        Long requestDad2 = request.getCodeDad2();
+        if (requestDad2 != null && requestDad2 > 0L) return false;
+        if (wpDataDB.getUser_id() != Globals.userId) return false;
+
+        Integer requestAddrId = request.getAdrId();
+        Integer requestClientId = request.getClientId();
+        if (requestAddrId == null || requestClientId == null) return false;
+        if (wpDataDB.getAddr_id() != requestAddrId) return false;
+
+        try {
+            return Integer.parseInt(wpDataDB.getClient_id()) == requestClientId;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     public void downloadWPDataWithCords() {
 
         StandartData data = new StandartData();
 
         data.mod = "plan";
         data.act = "list";
-        data.date_from = Clock.getDatePeriod(-2); // по факту -2
+        data.date_from = Clock.getDatePeriod(-1);
         data.date_to = Clock.getDatePeriod(3);
 
         if (Globals.userId == 143565) // исключение дляя Балаба
@@ -615,13 +698,13 @@ public class TablesLoadingUnloading {
                             if (response.body().getState() && response.body().getList() != null
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
-//                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-//                                for (WpDataDB wpDataDB : wpDataDBList) {
-//                                    if (wpDataDB.getUser_id() == 14041){
-//                                        Log.e("!!!!!!!!!!", "+++++++++++");
-//                                    Log.e("!!!!!!!!!!", "wpdata: " + wpDataDB.getDt());
-//                                    }
-//                                }
+                                List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
+                                for (WpDataDB wpDataDB : wpDataDBList) {
+                                    if (wpDataDB.getUser_id() == 14041) {
+                                        Log.e("!!!!!!!!!!", "+++++++++++");
+                                        Log.e("!!!!!!!!!!", "wpdata: " + wpDataDB.getDt());
+                                    }
+                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
@@ -851,25 +934,42 @@ public class TablesLoadingUnloading {
                                                     "Inserted: " + result.list.size() + ". Not-confirm before: " + beforeIds.size() + ", after: " + afterIds.size()
                                                             + ". confirmedCount: " + confirmedCount);
 
-                                            // Если есть confirmedIds — положим их в ScrollDataHolder и вызовем downloadWPData()
+                                            // Если есть confirmedIds — запомним ключи для последующей привязки к реальным wp_data.id
                                             if (confirmedCount > 0) {
                                                 List<WPDataAdditional> wpDataAdditionalListConfirmed =
                                                         SQL_DB.wpDataAdditionalDao().getByIds(new ArrayList<>(confirmedIds)
                                                         );
-                                                Set<Long> goodIds = new HashSet<>();
+                                                List<Long> confirmedGoodDad2 = new ArrayList<>();
+                                                List<AdditionalWPHolder> confirmedAdditionalRequests = new ArrayList<>();
 
                                                 for (WPDataAdditional wpDataAdditional : wpDataAdditionalListConfirmed) {
-                                                    if (wpDataAdditional.action == 1)
-                                                        goodIds.add(wpDataAdditional.ID);
+                                                    if (wpDataAdditional.action != 1) continue;
+                                                    if (wpDataAdditional.codeDad2 > 0) {
+                                                        confirmedGoodDad2.add(wpDataAdditional.codeDad2);
+                                                    } else {
+                                                        confirmedAdditionalRequests.add(
+                                                                new AdditionalWPHolder(
+                                                                        wpDataAdditional.ID,
+                                                                        wpDataAdditional.codeDad2,
+                                                                        wpDataAdditional.addrId,
+                                                                        wpDataAdditional.clientId,
+                                                                        null
+                                                                )
+                                                        );
+                                                    }
                                                 }
 
-                                                List<Long> confirmedList = new ArrayList<>(confirmedIds);
-                                                ScrollDataHolder.Companion.instance().addIds(confirmedList);
+                                                if (!confirmedGoodDad2.isEmpty()) {
+                                                    ScrollDataHolder.Companion.instance().addDad2(confirmedGoodDad2);
+                                                }
+                                                if (!confirmedAdditionalRequests.isEmpty()) {
+                                                    ScrollDataHolder.Companion.instance().addAdditionalRequests(confirmedAdditionalRequests);
+                                                }
 
                                                 Log.e("donwloadPlanBudget", "some items became confirmed -> launching downloadWPData()");
                                                 Globals.writeToMLOG("INFO",
                                                         "TablesLoadingUnloading.donwloadPlanBudget",
-                                                        "Detected confirmed items: " + confirmedList);
+                                                        "Detected confirmed RNO rows: " + confirmedIds);
 
 //                                                try {
 //                                                    downloadWPData();
@@ -1103,6 +1203,7 @@ public class TablesLoadingUnloading {
                                 // + можно фильтровать action==1, как у тебя было
                                 List<Long> confirmedGoodIds = new ArrayList<>();
                                 List<Long> confirmedGoodDad2 = new ArrayList<>();
+                                List<AdditionalWPHolder> confirmedAdditionalRequests = new ArrayList<>();
 
                                 if (refreshed != null) {
                                     for (WPDataAdditional w : refreshed) {
@@ -1114,7 +1215,19 @@ public class TablesLoadingUnloading {
                                         // если тебе нужен фильтр action==1
                                         if (w.action == 1) {
                                             confirmedGoodIds.add(w.ID);
-                                            confirmedGoodDad2.add(w.codeDad2);
+                                            if (w.codeDad2 > 0) {
+                                                confirmedGoodDad2.add(w.codeDad2);
+                                            } else {
+                                                confirmedAdditionalRequests.add(
+                                                        new AdditionalWPHolder(
+                                                                w.ID,
+                                                                w.codeDad2,
+                                                                w.addrId,
+                                                                w.clientId,
+                                                                null
+                                                        )
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -1133,9 +1246,12 @@ public class TablesLoadingUnloading {
                                 );
 
                                 // Side-effect: кладём в ScrollDataHolder
-                                if (!confirmedGoodIds.isEmpty()) {
+                                if (!confirmedGoodIds.isEmpty() && !confirmedGoodDad2.isEmpty()) {
                                     ScrollDataHolder.Companion.instance().addDad2(confirmedGoodDad2);
 //                                    ScrollDataHolder.Companion.instance().addIds(confirmedGoodIds);
+                                }
+                                if (!confirmedAdditionalRequests.isEmpty()) {
+                                    ScrollDataHolder.Companion.instance().addAdditionalRequests(confirmedAdditionalRequests);
                                 }
 
                                 return confirmedGoodIds; // <-- вернём список подтверждённых
@@ -1147,7 +1263,7 @@ public class TablesLoadingUnloading {
                         confirmedIds -> {
                             if (confirmedIds != null && !confirmedIds.isEmpty()) {
                                 // === Дальше твоя "крон-логика" ===
-                                runCronLogicAfterConfirmed(context, onFinish);
+                                runCronLogicAfterConfirmed(context, onFinish, confirmedIds.size());
                             } else {
                                 Log.i("donwloadPlanBudget", "No confirmed items this tick");
                             }
@@ -1165,7 +1281,7 @@ public class TablesLoadingUnloading {
      * Твой "крончик" вынесен в отдельный метод, чтобы основной код был читаемый.
      * Тут можно дальше оптимизировать по шагам (например, не плодить new TablesLoadingUnloading()).
      */
-    private void runCronLogicAfterConfirmed(Activity context, Runnable onFinish) {
+    private void runCronLogicAfterConfirmed(Activity context, Runnable onFinish, int approvedRequestsCount) {
 
         ProgressViewModel progress = new ProgressViewModel(1);
         LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(context, progress);
@@ -1239,12 +1355,15 @@ public class TablesLoadingUnloading {
 
         // по закрытию лоадинга — показываем сообщение и дергаем onFinish
         loadingDialog.setOnDismissListener(() -> {
-            String msg = "Сервер получил и обработал 1 заявок на дополнительный заработок. Все они подтверждены и Вы можете приступить к их выполнению. Для этого перейдите в ";
-//            String msg = "Надійшло підтвердження за заявкою, яку ви подали. Щоб переглянути нову роботу, натисніть 'Ок'.";
-            if (!notice.isEmpty())
-                msg = notice + " <a href=\"app://click\">план работ</a>";
-//            msg = msg + " <a href=\"app://click\">посешение</a>";
-            // перейти в план работ -> посмотреть
+            int approvedCount = approvedRequestsCount > 0
+                    ? approvedRequestsCount
+                    : ScrollDataHolder.Companion.instance().getAll().size();
+            if (approvedCount <= 0) approvedCount = 1;
+            String msg = "Сервер получил и обработал "
+                    + approvedCount
+                    + " заявок на дополнительный заработок. Все они подтверждены и Вы можете приступить к их выполнению. Для этого перейдите в план работ. " +
+                    "Если нажмете на желтый счетчик с количеством работ, применится фильтр по ним";
+//                    + "<a href=\"app://click\">план работ</a>";
             new MessageDialogBuilder(context)
                     .setTitle("Зміни в планi робіт")
                     .setStatus(DialogStatus.NORMAL)
@@ -1257,6 +1376,8 @@ public class TablesLoadingUnloading {
                         return Unit.INSTANCE;
                     })
                     .setOnTextLinkClick(() -> {
+                        if (onFinish != null) onFinish.run();
+                        notice = "";
                         Intent intent = new Intent(context, WPDataActivity.class);
                         intent.putExtra("showWPDataWithFilters", true);
                         context.startActivity(intent);
@@ -1268,7 +1389,6 @@ public class TablesLoadingUnloading {
     }
 
 
-    // class fields (добавьте в ваш класс)
     private final AtomicBoolean uploadRunning = new AtomicBoolean(false);
     private final AtomicInteger uploadPending = new AtomicInteger(0);
     private final CompositeDisposable disposables = new CompositeDisposable();
@@ -1296,6 +1416,58 @@ public class TablesLoadingUnloading {
             new AtomicReference<>(null);
 
     private final CompositeDisposable disposables2 = new CompositeDisposable();
+
+    private List<WPDataAdditional> deduplicateUploadPlanBudgetRows(
+            WPDataAdditionalDao dao,
+            List<WPDataAdditional> rows
+    ) {
+        if (rows == null || rows.isEmpty()) return new ArrayList<>();
+
+        Map<String, WPDataAdditional> unique = new LinkedHashMap<>();
+        List<Long> skippedIds = new ArrayList<>();
+
+        for (WPDataAdditional row : rows) {
+            if (row == null) continue;
+
+            String key = uploadPlanBudgetBusinessKey(row);
+            WPDataAdditional existing = unique.get(key);
+            if (existing == null) {
+                unique.put(key, row);
+                continue;
+            }
+
+            if (shouldPreferUploadPlanBudgetRow(row, existing)) {
+                skippedIds.add(existing.ID);
+                unique.put(key, row);
+            } else {
+                skippedIds.add(row.ID);
+            }
+        }
+
+        if (!skippedIds.isEmpty()) {
+            dao.markUploadSkippedByIdsSync(skippedIds);
+            Globals.writeToMLOG(
+                    "INFO",
+                    "TablesLoadingUnloading/deduplicateUploadPlanBudgetRows",
+                    "Skipped duplicated RNO upload rows: " + skippedIds
+            );
+        }
+
+        return new ArrayList<>(unique.values());
+    }
+
+    private String uploadPlanBudgetBusinessKey(WPDataAdditional row) {
+        return row.clientId + ":" + row.addrId + ":" + row.codeDad2;
+    }
+
+    private boolean shouldPreferUploadPlanBudgetRow(
+            WPDataAdditional candidate,
+            WPDataAdditional current
+    ) {
+        if (candidate.ID > 0 && current.ID <= 0) return true;
+        if (candidate.ID <= 0 && current.ID > 0) return false;
+        return candidate.dt < current.dt;
+    }
 
     public Single<UploadPlanBudgetResult> uploadPlanBudgetRx() {
         SingleSubject<UploadPlanBudgetResult> current = inFlight.get();
@@ -1325,6 +1497,11 @@ public class TablesLoadingUnloading {
                 .subscribeOn(Schedulers.io())
                 .flatMap(list -> {
                     if (list == null || list.isEmpty()) {
+                        return Single.just(new UploadPlanBudgetResult(0, 0, null, null));
+                    }
+
+                    list = deduplicateUploadPlanBudgetRows(dao, list);
+                    if (list.isEmpty()) {
                         return Single.just(new UploadPlanBudgetResult(0, 0, null, null));
                     }
 
@@ -1367,7 +1544,7 @@ public class TablesLoadingUnloading {
                                         }
                                     }
 
-                                    notice = resp.notice;
+                                    notice = resp.notice != null ? resp.notice : "";
                                 }
 
                                 return new Object[]{mapping, results};
@@ -1397,7 +1574,10 @@ public class TablesLoadingUnloading {
                                                         try {
                                                             long serverId = Long.parseLong(r.id);
                                                             dao.applyServerResultSync(serverId, r.state, r.comment, nowSec);
-                                                            dad2List.add(dao.getByIdSync(serverId).codeDad2);
+                                                            WPDataAdditional item = dao.getByIdSync(serverId);
+                                                            if (item != null) {
+                                                                dad2List.add(item.codeDad2);
+                                                            }
                                                         } catch (NumberFormatException ignore) {
                                                         }
                                                     }
@@ -1435,6 +1615,13 @@ public class TablesLoadingUnloading {
             return;
         }
 
+        WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
+        wpDataAdditionals = deduplicateUploadPlanBudgetRows(dao, wpDataAdditionals);
+        if (wpDataAdditionals.isEmpty()) {
+            uploadRunning.set(false);
+            return;
+        }
+
         List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
 
         StandartData data = new StandartData();
@@ -1445,8 +1632,6 @@ public class TablesLoadingUnloading {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        WPDataAdditionalDao dao = SQL_DB.wpDataAdditionalDao();
 
         Disposable d = RetrofitBuilder.getRetrofitInterface()
                 .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject) // Single<UploadResponse>
@@ -1957,6 +2142,10 @@ public class TablesLoadingUnloading {
                     if (reportPrepareServer.getState() && reportPrepareServer.getList() != null
                             && !reportPrepareServer.getList().isEmpty())
                         RealmManager.setReportPrepare(reportPrepareServer.getList());
+                }, throwable -> {
+                    Log.e("TablesLoadUpload", "downloadReportPrepearByHash failed", throwable);
+                    Globals.writeToMLOG("ERROR", "downloadReportPrepearByHash/onError",
+                            "exception: " + throwable.getMessage());
                 });
 
     }
@@ -1996,6 +2185,10 @@ public class TablesLoadingUnloading {
                             && !optionsServer.getList().isEmpty())
                         RealmManager.setOptions2(optionsServer.getList());
 
+                }, throwable -> {
+                    Log.e("TablesLoadUpload", "downloadOptionTableByHash failed", throwable);
+                    Globals.writeToMLOG("ERROR", "downloadOptionTableByHash/onError",
+                            "exception: " + throwable.getMessage());
                 });
 
     }
@@ -2047,6 +2240,10 @@ public class TablesLoadingUnloading {
                                     }
                                 });
                     }
+                }, throwable -> {
+                    Log.e("TablesLoadUpload", "downloadAddressTableByHash failed", throwable);
+                    Globals.writeToMLOG("ERROR", "downloadAddressTableByHash/onError",
+                            "exception: " + throwable.getMessage());
                 });
 
     }
@@ -2100,6 +2297,10 @@ public class TablesLoadingUnloading {
                                 });
                     }
 
+                }, throwable -> {
+                    Log.e("TablesLoadUpload", "downloadClientTableByHash failed", throwable);
+                    Globals.writeToMLOG("ERROR", "downloadClientTableByHash/onError",
+                            "exception: " + throwable.getMessage());
                 });
 
     }

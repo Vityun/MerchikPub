@@ -9,17 +9,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import java.io.File;
 import java.util.Arrays;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -109,23 +107,17 @@ public class TovarRequisites {
                 "Вибрати з галереї",
                 () -> {
                     try {
-                        if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
-                            Globals.writeToMLOG("INFO", "Вибрати з галереї", "DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)");
-                            MakePhotoFromGaleryWpDataDB = wpDataDB;
-                            if (photoType != 4)
-                                MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
-                            MakePhotoFromGalery.photoType = photoType;
-                            Intent intent = new Intent(Intent.ACTION_PICK);
-                            intent.setType("image/*");
-                            if (context instanceof DetailedReportActivity) {
-                                ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                            } else if (context instanceof FeaturesActivity) {
-                                ((FeaturesActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                                res.dismiss();
-                            }
-                        } else {
-                            DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission((AppCompatActivity) context);
-                            Globals.writeToMLOG("INFO", "Вибрати з галереї", "Запрос доступа");
+                        Globals.writeToMLOG("INFO", "Вибрати з галереї", "PhotoPickerUtils.createSingleImageChooser()");
+                        MakePhotoFromGaleryWpDataDB = wpDataDB;
+                        if (photoType != 4)
+                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
+                        MakePhotoFromGalery.photoType = photoType;
+                        Intent intent = PhotoPickerUtils.createSingleImageChooser();
+                        if (context instanceof DetailedReportActivity) {
+                            ((DetailedReportActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+                        } else if (context instanceof FeaturesActivity) {
+                            ((FeaturesActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+                            res.dismiss();
                         }
                     } catch (Exception e) {
                         Globals.writeToMLOG("INFO", "Вибрати з галереї", "Exception e: " + Arrays.toString(e.getStackTrace()));

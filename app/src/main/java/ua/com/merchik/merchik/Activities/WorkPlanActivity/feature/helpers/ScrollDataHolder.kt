@@ -9,7 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class ScrollDataHolder private constructor() {
     private val ids: MutableSet<Long> = mutableSetOf()
-    private val dad2: MutableList<Long> = mutableListOf()
+    private val dad2: MutableSet<Long> = linkedSetOf()
+    private val additionalRequests: MutableSet<AdditionalWPHolder> = linkedSetOf()
     private var currentIndex = 0
 
     // Потокобезопасный список слушателей (каждый получает актуальную копию ids)
@@ -76,6 +77,7 @@ class ScrollDataHolder private constructor() {
     fun init() {
         ids.clear()
         dad2.clear()
+        additionalRequests.clear()
         currentIndex = 0
         notifyListeners()
     }
@@ -88,11 +90,37 @@ class ScrollDataHolder private constructor() {
         ids.add(id)
     }
 
+    @Synchronized
     fun addDad2(newDad2: Collection<Long>) {
-        if (newDad2.isNotEmpty()) {
-            dad2.addAll(newDad2)
-            notifyListeners()
+        val positiveDad2 = newDad2.filter { it > 0L }
+        if (positiveDad2.isNotEmpty()) {
+            val before = dad2.size
+            dad2.addAll(positiveDad2)
+            if (dad2.size != before) notifyListeners()
         }
+    }
+
+    @Synchronized
+    fun removeDad2(dad2ToRemove: Collection<Long>) {
+        if (dad2ToRemove.isEmpty()) return
+        dad2.removeAll(dad2ToRemove.toSet())
+    }
+
+    @Synchronized
+    fun addAdditionalRequests(newRequests: Collection<AdditionalWPHolder>) {
+        if (newRequests.isEmpty()) return
+        additionalRequests.addAll(newRequests.filter { (it.codeDad2 ?: 0L) <= 0L })
+    }
+
+    @Synchronized
+    fun removeAdditionalRequests(requestsToRemove: Collection<AdditionalWPHolder>) {
+        if (requestsToRemove.isEmpty()) return
+        additionalRequests.removeAll(requestsToRemove.toSet())
+    }
+
+    @Synchronized
+    fun getAdditionalRequests(): List<AdditionalWPHolder> {
+        return additionalRequests.toList()
     }
 
 
@@ -181,8 +209,9 @@ class ScrollDataHolder private constructor() {
         currentIndex = 0
     }
 
+    @Synchronized
     fun getDad2(): List<Long> {
-        return dad2
+        return dad2.toList()
     }
 
 

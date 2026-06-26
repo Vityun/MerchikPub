@@ -2,12 +2,9 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
@@ -18,14 +15,20 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
-import ua.com.merchik.merchik.dialogs.DialogData
+import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
+import java.util.Calendar
 import javax.inject.Inject
 import kotlin.reflect.KClass
+
+public const val COMPLAINT_REPEAT_WINDOW_SECONDS =
+    30L * 24L * 60L * 60L
 
 @HiltViewModel
 class QuestionAnswerSDBViewModel @Inject constructor(
@@ -40,78 +43,128 @@ class QuestionAnswerSDBViewModel @Inject constructor(
         get() = QuestionAnswerDB::class
 
     override fun getDefaultHideUserFields(): List<String> {
-        return ("ID, user_id").split(",")
+        return ("ID, adr_id, kli_id").split(",")
     }
 
     override fun getDefaultGroupUserFields(): List<String> {
         return emptyList()
     }
+
     override fun getDefaultSortUserFields(): List<String>? {
         return "dt, id_quest, comment".split(",")
     }
 
     override fun updateFilters() {
-        Log.e("OpinionSDBViewModel","++++")
-        val data = when(contextUI) {
-            ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                val themeID = dataJsonObject.get("themeID").asInt
+        Log.e("OpinionSDBViewModel", "++++")
+        val data = when (contextUI) {
 
-//                val themeID: Int = Gson().fromJson(dataJson, Int::class.java)
-                val listOpinionTheme = RoomManager.SQL_DB.opinionThemeDao().getByTheme(themeID)
-                val mnenieIds = listOpinionTheme.map { it.mnenieId }.toMutableList()
-                RoomManager.SQL_DB.opinionDao().getOpinionByIds(mnenieIds)
+            ContextUI.QUESTION_ANSWER_INFO -> {
+                val themeList = arrayOf("6", "600", "607", "610", "612", "412")
+                ThemeRealm.getThemeByIds(themeList)
             }
+
             else -> {
-                Log.e("OpinionSDBViewModel","updateFilters ----")
-                emptyList() }
+                Log.e("OpinionSDBViewModel", "updateFilters ----")
+                emptyList()
+            }
         }
 
         val filterThemeDB = ItemFilter(
-            "Доп. фильтр",
-            OpinionSDB::class,
-            QuestionAnswerSDBViewModel::class,
+            "Тема",
+            ThemeDB::class,
+            ThemeDBViewModel::class,
             ModeUI.MULTI_SELECT,
-            "Вид достижения",
+            "Тема",
             "Выберите характер достижения, которое Вы выполнили",
-            "id",
-            "id",
+            "id_quest",
+            "question",
             data.map { it.id.toString() },
             data.map { it.nm },
-            true
+            false
         )
 
-//        filters = Filters(
-//            searchText = "",
-//            items = mutableListOf(
-////                filterThemeDB
-//            )
-//        )
+        filters = Filters(
+            searchText = "",
+            items = mutableListOf(
+                filterThemeDB
+            )
+        )
     }
 
     override suspend fun getItems(): List<DataItemUI> {
-        Log.e("OpinionSDBViewModel","++++")
-        return try
-        {
-            val data = RoomManager.SQL_DB.questionAnswerDao().all
-            repository.toItemUIList(QuestionAnswerDB::class, data, contextUI, null)
-                .map {
-                    when (contextUI) {
-                        ContextUI.ADD_THEME_QUESTION_ANSWER -> {
-                            val selected = FilteringDialogDataHolder.instance()
-                                .filters
-                                ?.items
-                                ?.firstOrNull { it.clazz == table }
-                                ?.rightValuesRaw
-                                ?.contains((it.rawObj.firstOrNull { it is QuestionAnswerDB } as? QuestionAnswerDB)?.id.toString())
-                            it.copy(selected = selected == true)
+        Log.e("OpinionSDBViewModel", "++++")
+
+        return try {
+            val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
+            Log.e("OpinionSDBViewModel", "codeDad2: $codeDad2")
+
+            val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+                ?: return emptyList()
+
+            val visitDateSeconds = wpDataDB.dt?.time?.div(1000L)
+                ?: return emptyList()
+            Log.e("OpinionSDBViewModel", "++++")
+
+            val dateFrom = visitDateSeconds - COMPLAINT_REPEAT_WINDOW_SECONDS
+            val currentDad2 = wpDataDB.code_dad2.toString()
+
+            Log.e("OpinionSDBViewModel", "adr: ${wpDataDB.addr_id}")
+            Log.e("OpinionSDBViewModel", "cli: ${wpDataDB.client_id}")
+            val data =
+                RoomManager.SQL_DB.questionAnswerDao()
+                    .getByAddressClientAndDateRange(
+
+                        wpDataDB.client_id,
+                        wpDataDB.addr_id.toString(),
+                        dateFrom
+                    )
+                    .onEach { questionAnswer ->
+                        questionAnswer.timeColor = if (isToday(questionAnswer.dt)) {
+                            Log.e(
+                                "OpinionSDBViewModel",
+                                "questionAnswer.objectId: ${questionAnswer.objectId}"
+                            )
+                            Log.e("OpinionSDBViewModel", "currentDad2: ${currentDad2}")
+                            "FAF7BB"
+                        } else {
+                            null
                         }
-                        else -> { it }
                     }
 
+            Log.e("OpinionSDBViewModel", "data: ${data.size}")
+
+            repository.toItemUIList(
+                QuestionAnswerDB::class,
+                data,
+                contextUI,
+                null
+            ).map { item ->
+                when (contextUI) {
+                    ContextUI.ADD_THEME_QUESTION_ANSWER -> {
+                        val selected = FilteringDialogDataHolder.instance()
+                            .filters
+                            ?.items
+                            ?.firstOrNull { it.clazz == table }
+                            ?.rightValuesRaw
+                            ?.contains(
+                                (item.rawObj.firstOrNull { it is QuestionAnswerDB }
+                                        as? QuestionAnswerDB)
+                                    ?.id
+                                    .toString()
+                            )
+
+                        item.copy(selected = selected == true)
+                    }
+
+                    else -> item
                 }
+            }
         } catch (e: Exception) {
-            Log.e("OpinionSDBViewModel","getItems -> Exception: ${e.message}")
+            Log.e(
+                "OpinionSDBViewModel",
+                "getItems -> Exception: ${e.message}",
+                e
+            )
             emptyList()
         }
     }
@@ -120,18 +173,28 @@ class QuestionAnswerSDBViewModel @Inject constructor(
         Log.e("ADD_OPINION_FROM_DETAIL", "onSelectedItemsUI")
         when (contextUI) {
             ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-                Log.e("ADD_OPINION_FROM_DETAIL", "onSelectedItemsUI -> ADD_OPINION_FROM_DETAILED_REPORT")
+                Log.e(
+                    "ADD_OPINION_FROM_DETAIL",
+                    "onSelectedItemsUI -> ADD_OPINION_FROM_DETAILED_REPORT"
+                )
 
                 (itemsUI.first().rawObj.firstOrNull { it is OpinionSDB } as? OpinionSDB)?.let {
-                    Log.e("ADD_OPINION_FROM_DETAIL", "onSelectedItemsUI -> itemsUI.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.let")
+                    Log.e(
+                        "ADD_OPINION_FROM_DETAIL",
+                        "onSelectedItemsUI -> itemsUI.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.let"
+                    )
                     OpinionDataHolder.instance().opinionID = it.id
                     OpinionDataHolder.instance().opinionName = it.nm
-                    Log.e("ADD_OPINION_FROM_DETAIL", "opinionName: ${OpinionDataHolder.instance().opinionID}")
+                    Log.e(
+                        "ADD_OPINION_FROM_DETAIL",
+                        "opinionName: ${OpinionDataHolder.instance().opinionID}"
+                    )
                 }
             }
+
             ContextUI.DEFAULT -> {
                 FilteringDialogDataHolder.instance().filters.apply {
-                    this?.let {filters ->
+                    this?.let { filters ->
                         filters.items = filters.items.map { itemFilter ->
                             if (itemFilter.clazz == table) {
                                 val rightValuesRaw = mutableListOf<String>()
@@ -153,8 +216,9 @@ class QuestionAnswerSDBViewModel @Inject constructor(
                     }
                 }
             }
+
             else -> {
-                Log.e("OpinionSDBViewModel","onSelectedItemsUI -> empty")
+                Log.e("OpinionSDBViewModel", "onSelectedItemsUI -> empty")
             }
         }
     }
@@ -177,4 +241,16 @@ class QuestionAnswerSDBViewModel @Inject constructor(
     }
 
 
+    private fun isToday(seconds: Long?): Boolean {
+        if (seconds == null || seconds <= 0L) return false
+
+        val today = Calendar.getInstance()
+
+        val created = Calendar.getInstance().apply {
+            timeInMillis = seconds * 1000L
+        }
+
+        return today.get(Calendar.YEAR) == created.get(Calendar.YEAR) &&
+                today.get(Calendar.DAY_OF_YEAR) == created.get(Calendar.DAY_OF_YEAR)
+    }
 }

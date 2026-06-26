@@ -284,7 +284,8 @@ class MainRepository(
                             it.getFieldTranslateId(key)
                         )
                     } ?: key,
-                    order = if (key.equals("create_time", ignoreCase = true)) -1 else 1
+                    order = if (key.equals("create_time", ignoreCase = true)
+                        || (key.equals("dt", ignoreCase = true) && klass == QuestionAnswerDB::class)) -1 else 1
                 )
             }
     }

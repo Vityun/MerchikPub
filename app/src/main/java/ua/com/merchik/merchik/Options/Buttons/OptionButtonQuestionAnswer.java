@@ -6,14 +6,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
@@ -25,8 +22,6 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
-import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 
 public class OptionButtonQuestionAnswer<T> extends OptionControl {

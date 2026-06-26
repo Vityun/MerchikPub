@@ -197,7 +197,59 @@ fun WpDataTabsScreen() {
         cronchikViewModel.updateBadgeAdditionalIncome(distance)
 
     val pendingScrollHash = remember { mutableStateOf<Long?>(null) }
+    val pendingFilterIds = remember { mutableStateOf<List<Long>?>(null) }
     val isScrolling = remember { mutableStateOf(false) }
+
+    fun applyPlanBadgeFilter(targetIds: List<Long>) {
+        if (targetIds.isEmpty() || isScrolling.value) return
+
+        val currentItems = viewModel.uiState.value.items
+        if (currentItems.isEmpty()) return
+
+        val availableIds = currentItems.map { it.stableId }.toSet()
+        val applicableIds = targetIds.filter { it in availableIds }
+        val staleIds = targetIds.filterNot { it in availableIds }
+        if (staleIds.isNotEmpty()) {
+            ScrollDataHolder.instance().removeIds(staleIds)
+        }
+        if (applicableIds.isEmpty()) return
+
+        isScrolling.value = true
+        try {
+            applicableIds.forEach {
+                viewModel.highlightBId(it, green)
+            }
+            viewModel.selectOnlyItemsByStableIds(applicableIds)
+            viewModel.updateContent()
+        } finally {
+            isScrolling.value = false
+        }
+    }
+
+    val shouldApplyPlanFilterFromIntent =
+        activity.intent?.getBooleanExtra("showWPDataWithFilters", false) == true
+
+    LaunchedEffect(
+        shouldApplyPlanFilterFromIntent,
+        dataIsReady,
+        badgeCounts.getOrNull(0) ?: 0
+    ) {
+        if (!shouldApplyPlanFilterFromIntent) return@LaunchedEffect
+
+        val targetHash = ScrollDataHolder.instance().getAll()
+        selectedTabIndex = 0
+        initialTabResolved = true
+
+        if (targetHash.isEmpty()) return@LaunchedEffect
+
+        if (viewModel.uiState.value.items.isNotEmpty()) {
+            applyPlanBadgeFilter(targetHash)
+        } else {
+            pendingFilterIds.value = targetHash
+        }
+
+        activity.intent?.removeExtra("showWPDataWithFilters")
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -242,6 +294,11 @@ fun WpDataTabsScreen() {
                                         background = if (index == 0) green else Color.Red,
                                         borderAndTextColor = if (index == 0) Color.Black else Color.White,
                                         modifier = Modifier.clickable {
+                                            if (index != 0) {
+                                                selectTab(index)
+                                                return@clickable
+                                            }
+
                                             Toast.makeText(
                                                 context,
                                                 "Фільтри до плану робіт застосовані. Відібрано ${count ?: 0} візитів",
@@ -257,20 +314,12 @@ fun WpDataTabsScreen() {
                                                 return@clickable
                                             }
 
-                                            if (selectedTabIndex == index) {
-                                                if (!isScrolling.value) {
-                                                    isScrolling.value = true
-                                                    if (targetHash.isNotEmpty()) {
-                                                        targetHash.forEach {
-                                                            viewModel.highlightBId(it, green)
-                                                        }
-                                                        viewModel.selectOnlyItemsByStableIds(
-                                                            targetHash
-                                                        )
-                                                        viewModel.updateContent()
-                                                    }
-                                                    isScrolling.value = false
-                                                }
+                                            selectTab(index)
+
+                                            if (selectedTabIndex == index && viewModel.uiState.value.items.isNotEmpty()) {
+                                                applyPlanBadgeFilter(targetHash)
+                                            } else {
+                                                pendingFilterIds.value = targetHash
                                             }
                                         }
                                     )
@@ -280,6 +329,23 @@ fun WpDataTabsScreen() {
                     }
                 )
             }
+        }
+
+        LaunchedEffect(selectedTabIndex, pendingFilterIds.value, dataIsReady) {
+            val pendingIds = pendingFilterIds.value ?: return@LaunchedEffect
+            if (selectedTabIndex != 0) return@LaunchedEffect
+
+            repeat(8) {
+                if (viewModel.uiState.value.items.isNotEmpty()) {
+                    applyPlanBadgeFilter(pendingIds)
+                    pendingFilterIds.value = null
+                    return@LaunchedEffect
+                }
+                delay(150)
+            }
+
+            applyPlanBadgeFilter(pendingIds)
+            pendingFilterIds.value = null
         }
 
         LaunchedEffect(selectedTabIndex, pendingScrollHash.value) {

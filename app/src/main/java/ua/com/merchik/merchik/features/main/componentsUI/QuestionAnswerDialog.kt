@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
-import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
@@ -13,12 +12,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +33,7 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -45,14 +43,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +79,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -91,7 +87,6 @@ import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.QuestionAnswerDB
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -176,6 +171,16 @@ fun QuestionAnswerDialog(
     var showToolTip by remember { mutableStateOf(false) }
     var showSavedMessage by remember { mutableStateOf(false) }
 
+    var recentComplaintDateSeconds by remember { mutableStateOf<Long?>(null) }
+    var isCheckingRecentComplaint by remember { mutableStateOf(false) }
+
+    fun formatComplaintDate(seconds: Long): String {
+        return SimpleDateFormat(
+            "dd.MM.yyyy",
+            Locale.getDefault()
+        ).format(Date(seconds * 1000L))
+    }
+
     var avgWorkDurationPlan by remember(state.avgWorkDurationPlan) {
         mutableStateOf(state.avgWorkDurationPlan)
     }
@@ -205,6 +210,7 @@ fun QuestionAnswerDialog(
     val avgWorkDurationFact = calculatedData.avgWorkDurationFact
     val avgUpOnShowcaseFact = calculatedData.avgUpOnShowcaseFact
     val wantReceiveFact = calculatedData.wantReceiveFact
+    val avgCashPenaltyFact = calculatedData.avgCashPenaltyFact
 
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
@@ -216,7 +222,8 @@ fun QuestionAnswerDialog(
     val statementTemplate = remember {
         viewModel.getTranslateString(
             "Я, {USER}, зазвичай витрачаю на роботу з цим клієнтом у цiй ТТ {DURATION_FACT} хвилин, " +
-                    "при цьому, зазвичай, за вiзит піднімаю на вітрину приблизно {UP_FACT} одиниць товару і отримую на руки близько {CASH_FACT} грн/вiзит. " +
+                    "при цьому, зазвичай, за вiзит піднімаю на вітрину приблизно {UP_FACT} одиниць товару і отримую на руки близько {CASH_FACT} грн/вiзит, " +
+                    "при цьому втрачаю на сигналах за опціями {CASH_PENALTY_FACT} грн/вiзит. " +
                     "Вважаю, що оплата недостатня. Хочу, щоб вона становила {DESIRED_CASH} грн/вiзит. " +
                     "Або збільшити кількість візитів, зараз в середньому {VISITS_PER_WEEK_FACT} вiзитiв на тиждень, хочу щоб становила {VISITS_PER_WEEK} вiзитiв в тиждень. " +
                     "Крім того, хочу зазначити:",
@@ -251,6 +258,46 @@ fun QuestionAnswerDialog(
         }
 
         dialog.show()
+    }
+
+    fun saveComplaintNow() {
+        coroutineScope.launch {
+            runCatching {
+                saveQuestionAnswerToDb(
+                    wpdata = wpdata,
+                    themeTitle = themeTitle,
+                    statementTemplate = statementTemplate,
+
+                    avgWorkDurationFact = avgWorkDurationFact,
+                    avgUpOnShowcaseFact = avgUpOnShowcaseFact,
+                    wantReceiveFact = wantReceiveFact,
+                    avgCashPenaltyFact = avgCashPenaltyFact,
+                    visitsPerWeekFact = calculatedData.visitsPerWeekFact,
+
+                    desiredCash = wantReceivePlan,
+                    desiredVisitsPerWeek = visitsPerWeekPlan,
+
+                    totalUpOnShowcase = calculatedData.totalUpOnShowcase,
+                    reportPrepareCount = calculatedData.reportPrepareCount,
+
+                    comment = comment
+                )
+            }.onSuccess {
+                showSavedMessage = true
+            }.onFailure { error ->
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "QuestionAnswerDialog/saveQuestionAnswerToDb",
+                    "Exception: $error"
+                )
+
+                Toast.makeText(
+                    context,
+                    "Помилка збереження",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
     Dialog(
@@ -396,6 +443,10 @@ fun QuestionAnswerDialog(
                                             "Показник розраховано як середню кількість візитів на тиждень."
                                 }
 
+                                val cashPenaltyTooltip = remember(calculatedData) {
+                                    "Це середнє зниження за опціями. $factPeriodTooltip."
+                                }
+
                                 val upTooltip = remember(calculatedData) {
                                     "Це середня кількість піднятого товару. $factPeriodTooltip. " +
                                             "Всего за этот период было поднято ${calculatedData.totalUpOnShowcase} единиц товара, согласно поданным вами отчетов"
@@ -412,6 +463,8 @@ fun QuestionAnswerDialog(
                                     upTooltip = upTooltip,
                                     cashFact = wantReceiveFact,
                                     cashTooltip = "Це значення взято з поточних робіт.",
+                                    cashPenaltyFact = avgCashPenaltyFact,
+                                    cashPenaltyTooltip = cashPenaltyTooltip,
                                     visitsPerWeekFact = calculatedData.visitsPerWeekFact,
                                     visitsPerWeekFactTooltip = visitsPerWeekTooltip,
                                     desiredCash = wantReceivePlan,
@@ -496,42 +549,74 @@ fun QuestionAnswerDialog(
                                         return@Button
                                     }
 
+                                    if (isCheckingRecentComplaint) {
+                                        return@Button
+                                    }
+
                                     coroutineScope.launch {
-                                        runCatching {
-                                            saveQuestionAnswerToDb(
-                                                wpdata = wpdata,
-                                                themeTitle = themeTitle,
-                                                statementTemplate = statementTemplate,
+                                        isCheckingRecentComplaint = true
 
-                                                avgWorkDurationFact = avgWorkDurationFact,
-                                                avgUpOnShowcaseFact = avgUpOnShowcaseFact,
-                                                wantReceiveFact = wantReceiveFact,
-                                                visitsPerWeekFact = calculatedData.visitsPerWeekFact,
+                                        val complaintKey = ComplaintKey(
+                                            themeId = QUESTION_PAY_INCREASE_ID,
+                                            clientId = wpdata.client_id.orEmpty(),
+                                            addressId = wpdata.addr_id.toString()
+                                        )
 
-                                                desiredCash = wantReceivePlan,
-                                                desiredVisitsPerWeek = visitsPerWeekPlan,
-
-                                                totalUpOnShowcase = calculatedData.totalUpOnShowcase,
-                                                reportPrepareCount = calculatedData.reportPrepareCount,
-
-                                                comment = comment
-                                            )
-                                        }.onSuccess {
-                                            showSavedMessage = true
+                                        val lastComplaintDate = runCatching {
+                                            findRecentComplaintDate(complaintKey)
                                         }.onFailure { error ->
                                             Globals.writeToMLOG(
                                                 "ERROR",
-                                                "QuestionAnswerDialog/saveQuestionAnswerToDb",
+                                                "QuestionAnswerDialog/findRecentComplaintDate",
                                                 "Exception: $error"
                                             )
+                                        }.getOrNull()
 
-                                            Toast.makeText(
-                                                context,
-                                                "Помилка збереження",
-                                                Toast.LENGTH_LONG
-                                            ).show()
+                                        isCheckingRecentComplaint = false
+
+                                        if (lastComplaintDate != null) {
+                                            recentComplaintDateSeconds = lastComplaintDate
+                                        } else {
+                                            saveComplaintNow()
                                         }
                                     }
+//                                    coroutineScope.launch {
+//                                        runCatching {
+//                                            saveQuestionAnswerToDb(
+//                                                wpdata = wpdata,
+//                                                themeTitle = themeTitle,
+//                                                statementTemplate = statementTemplate,
+//
+//                                                avgWorkDurationFact = avgWorkDurationFact,
+//                                                avgUpOnShowcaseFact = avgUpOnShowcaseFact,
+//                                                wantReceiveFact = wantReceiveFact,
+//                                                avgCashPenaltyFact = avgCashPenaltyFact,
+//                                                visitsPerWeekFact = calculatedData.visitsPerWeekFact,
+//
+//                                                desiredCash = wantReceivePlan,
+//                                                desiredVisitsPerWeek = visitsPerWeekPlan,
+//
+//                                                totalUpOnShowcase = calculatedData.totalUpOnShowcase,
+//                                                reportPrepareCount = calculatedData.reportPrepareCount,
+//
+//                                                comment = comment
+//                                            )
+//                                        }.onSuccess {
+//                                            showSavedMessage = true
+//                                        }.onFailure { error ->
+//                                            Globals.writeToMLOG(
+//                                                "ERROR",
+//                                                "QuestionAnswerDialog/saveQuestionAnswerToDb",
+//                                                "Exception: $error"
+//                                            )
+//
+//                                            Toast.makeText(
+//                                                context,
+//                                                "Помилка збереження",
+//                                                Toast.LENGTH_LONG
+//                                            ).show()
+//                                        }
+//                                    }
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(
@@ -549,6 +634,30 @@ fun QuestionAnswerDialog(
                 }
             }
         }
+    }
+
+    recentComplaintDateSeconds?.let { createdAtSeconds ->
+        MessageDialog(
+            title = "Жалобы, Замечания, Предложения",
+            subTitle = "Схожа скарга вже була",
+            status = DialogStatus.ALERT,
+            message =
+                "За темою Хочу збільшення розміру оплати по цiй ТТ звернення вже було створено " +
+                        "${formatComplaintDate(createdAtSeconds)}. " +
+                        "Створити нову скаргу?",
+            okButtonName = "Так",
+            cancelButtonName = "Ні",
+            onDismiss = {
+                recentComplaintDateSeconds = null
+            },
+            onCancelAction = {
+                recentComplaintDateSeconds = null
+            },
+            onConfirmAction = {
+                recentComplaintDateSeconds = null
+                saveComplaintNow()
+            }
+        )
     }
 
     if (showToolTip) {
@@ -984,6 +1093,8 @@ private fun QuestionAnswerStatementBlock(
     upTooltip: String,
     cashFact: String,
     cashTooltip: String,
+    cashPenaltyFact: String,
+    cashPenaltyTooltip: String,
     visitsPerWeekFact: String,
     visitsPerWeekFactTooltip: String,
     desiredCash: String,
@@ -1029,6 +1140,12 @@ private fun QuestionAnswerStatementBlock(
                         key = "{CASH_FACT}",
                         value = cashFact,
                         tooltip = cashTooltip
+                    ),
+
+                    QuestionAnswerStatementInsert.ReadOnly(
+                        key = "{CASH_PENALTY_FACT}",
+                        value = cashPenaltyFact,
+                        tooltip = cashPenaltyTooltip
                     ),
 
                     QuestionAnswerStatementInsert.Editable(
@@ -1129,21 +1246,21 @@ private fun QuestionAnswerStatementTemplateText(
                             TooltipWithDetails(
                                 text = insert.tooltip,
                                 onDetailsClick = {
-                                   viewModel.launcher?.let { launcher ->
-                                       launchFeaturesActivity(
-                                           launcher = launcher,
-                                           context = context,
-                                           viewModelClass = WpDataDBViewModel::class,
-                                           dataJson = Gson().toJson(
-                                               mapOf("codeDad2" to dad2)
-                                           ),
-                                           modeUI = ModeUI.DEFAULT,
-                                           contextUI = ContextUI.WP_DATA_ADDRESS_CLIENT,
-                                           title = "План робiт",
-                                           subTitle = "В текущей форме отображены визиты, на основании которых рассчитаны средние показатели работ (длительность, количество поднятого товара и пр.).",
-                                           origin = null
-                                       )
-                                   }
+                                    viewModel.launcher?.let { launcher ->
+                                        launchFeaturesActivity(
+                                            launcher = launcher,
+                                            context = context,
+                                            viewModelClass = WpDataDBViewModel::class,
+                                            dataJson = Gson().toJson(
+                                                mapOf("codeDad2" to dad2)
+                                            ),
+                                            modeUI = ModeUI.DEFAULT,
+                                            contextUI = ContextUI.WP_DATA_ADDRESS_CLIENT,
+                                            title = "План робiт",
+                                            subTitle = "В текущей форме отображены визиты, на основании которых рассчитаны средние показатели работ (длительность, количество поднятого товара и пр.).",
+                                            origin = null
+                                        )
+                                    }
 
                                 }
                             ) {
@@ -1252,7 +1369,7 @@ private fun QuestionAnswerInlineEditableChip(
             ).forEach { target ->
                 shakeOffset.animateTo(
                     targetValue = target,
-                    animationSpec = tween (durationMillis = 45)
+                    animationSpec = tween(durationMillis = 45)
                 )
             }
         }
@@ -1501,6 +1618,7 @@ private suspend fun saveQuestionAnswerToDb(
     avgWorkDurationFact: String,
     avgUpOnShowcaseFact: String,
     wantReceiveFact: String,
+    avgCashPenaltyFact: String,
     visitsPerWeekFact: String,
 
     desiredCash: String,
@@ -1512,76 +1630,77 @@ private suspend fun saveQuestionAnswerToDb(
     comment: String
 ) {
 //    withContext(Dispatchers.IO) {
-        val nowSeconds = System.currentTimeMillis() / 1000L
+    val nowSeconds = System.currentTimeMillis() / 1000L
 
-        val answerText = buildQuestionAnswerSavedText(
-            template = statementTemplate,
-            userName = wpdata.user_txt,
-            durationFact = avgWorkDurationFact,
-            upFact = avgUpOnShowcaseFact,
-            cashFact = wantReceiveFact,
-            visitsPerWeekFact = visitsPerWeekFact,
-            desiredCash = desiredCash,
-            desiredVisitsPerWeek = desiredVisitsPerWeek,
-            comment = comment
-        )
+    val answerText = buildQuestionAnswerSavedText(
+        template = statementTemplate,
+        userName = wpdata.user_txt,
+        durationFact = avgWorkDurationFact,
+        upFact = avgUpOnShowcaseFact,
+        cashFact = wantReceiveFact,
+        cashPenaltyFact = avgCashPenaltyFact,
+        visitsPerWeekFact = visitsPerWeekFact,
+        desiredCash = desiredCash,
+        desiredVisitsPerWeek = desiredVisitsPerWeek,
+        comment = comment
+    )
 
-        val avgAnswerText = buildString {
-            append("avgWorkDurationFact=").append(avgWorkDurationFact)
-            append("; avgUpOnShowcaseFact=").append(avgUpOnShowcaseFact)
-            append("; wantReceiveFact=").append(wantReceiveFact)
-            append("; visitsPerWeekFact=").append(visitsPerWeekFact)
-            append("; desiredCash=").append(desiredCash.ifBlank { "0" })
-            append("; desiredVisitsPerWeek=").append(desiredVisitsPerWeek.ifBlank { "0" })
-            append("; totalUpOnShowcase=").append(totalUpOnShowcase)
-            append("; reportPrepareCount=").append(reportPrepareCount)
-        }
+    val avgAnswerText = buildString {
+        append("avgWorkDurationFact=").append(avgWorkDurationFact)
+        append("; avgUpOnShowcaseFact=").append(avgUpOnShowcaseFact)
+        append("; wantReceiveFact=").append(wantReceiveFact)
+        append("; visitsPerWeekFact=").append(visitsPerWeekFact)
+        append("; desiredCash=").append(desiredCash.ifBlank { "0" })
+        append("; desiredVisitsPerWeek=").append(desiredVisitsPerWeek.ifBlank { "0" })
+        append("; totalUpOnShowcase=").append(totalUpOnShowcase)
+        append("; reportPrepareCount=").append(reportPrepareCount)
+    }
 
-        val questionAnswer = QuestionAnswerDB().apply {
-            id = System.currentTimeMillis()
+    val questionAnswer = QuestionAnswerDB().apply {
+        id = System.currentTimeMillis()
 
-            userId = Globals.userId.toLong()
+        userId = Globals.userId.toLong()
 
-            question = themeTitle
-            answer = desiredCash
-            dt = nowSeconds
+        question = themeTitle
+        answer = desiredCash
+        dt = nowSeconds
 
-            avgAnswer = desiredVisitsPerWeek
+        avgAnswer = desiredVisitsPerWeek
 
-            /*
-             * Если type_user нужен строго по старой логике —
-             * тут можно будет заменить на нужный код.
-             */
-            typeUser = null
+        /*
+         * Если type_user нужен строго по старой логике —
+         * тут можно будет заменить на нужный код.
+         */
+        typeUser = null
 
-            idQuest = QUESTION_PAY_INCREASE_ID
-            idQuestCom = QUESTION_PAY_INCREASE_ID
+        idQuest = QUESTION_PAY_INCREASE_ID
+        idQuestCom = QUESTION_PAY_INCREASE_ID
 
-            this.comment = answerText
+        this.comment = answerText
 
-            /*
-             * ДокНом берем из wpdata.doc_num.
-             */
-            objectId = wpdata.code_dad2.toString()
-            objectStr = wpdata.doc_num_otchet.orEmpty()
+        /*
+         * ДокНом берем из wpdata.doc_num.
+         */
+        objectId = wpdata.code_dad2.toString()
+        objectStr = wpdata.doc_num_otchet.orEmpty()
 
-            adrId = wpdata.addr_id.toString()
-            kliId = wpdata.client_id.orEmpty()
+        adrId = wpdata.addr_id.toString()
+        kliId = wpdata.client_id.orEmpty()
 
-            objectDate = wpdata.dt?.time?.div(1000L) ?: 0L
+        objectDate = wpdata.dt?.time?.div(1000L) ?: 0L
 
-            /*
-             * Привязываем запись к текущему ДАД2.
-             */
-            elementId = ""
+        /*
+         * Привязываем запись к текущему ДАД2.
+         */
+        elementId = ""
 
-            optionId = ""
-            mnenieId = ""
-        }
+        optionId = ""
+        mnenieId = ""
+    }
 
-        RoomManager.SQL_DB
-            .questionAnswerDao()
-            .insert(questionAnswer)
+    RoomManager.SQL_DB
+        .questionAnswerDao()
+        .insert(questionAnswer)
 //    }
 }
 
@@ -1591,6 +1710,7 @@ private fun buildQuestionAnswerSavedText(
     durationFact: String,
     upFact: String,
     cashFact: String,
+    cashPenaltyFact: String,
     visitsPerWeekFact: String,
     desiredCash: String,
     desiredVisitsPerWeek: String,
@@ -1601,6 +1721,7 @@ private fun buildQuestionAnswerSavedText(
         .replace("{DURATION_FACT}", durationFact.ifBlank { "0" })
         .replace("{UP_FACT}", upFact.ifBlank { "0" })
         .replace("{CASH_FACT}", cashFact.ifBlank { "0" })
+        .replace("{CASH_PENALTY_FACT}", cashPenaltyFact.ifBlank { "0" })
         .replace("{VISITS_PER_WEEK_FACT}", visitsPerWeekFact.ifBlank { "0" })
         .replace("{DESIRED_CASH}", desiredCash.ifBlank { "не вказано" })
         .replace("{VISITS_PER_WEEK}", desiredVisitsPerWeek.ifBlank { "не вказано" })
@@ -1620,6 +1741,7 @@ private data class QuestionAnswerCalculatedData(
     val avgWorkDurationFact: String = "0",
     val avgUpOnShowcaseFact: String = "0",
     val wantReceiveFact: String = "0",
+    val avgCashPenaltyFact: String = "0",
 
     val visitsPerWeekFact: String = "0",
 
@@ -1708,6 +1830,13 @@ private fun calculateQuestionAnswerData(
             "0"
         }
 
+        val avgCashPenaltyFact = if (visits.isNotEmpty()) {
+            formatQuestionAnswerWholeNumber(
+                visits.map { it.cash_penalty }.average()
+            )
+        } else {
+            "0"
+        }
 
         QuestionAnswerCalculatedData(
             periodFromText = periodFromText,
@@ -1718,6 +1847,7 @@ private fun calculateQuestionAnswerData(
             wantReceiveFact = formatQuestionAnswerNumber(wpdata.cash_ispolnitel),
             visitsPerWeekFact = visitsPerWeekFact,
             totalUpOnShowcase = totalUpOnShowcase,
+            avgCashPenaltyFact = avgCashPenaltyFact,
             reportPrepareCount = reportPrepareList.size
         )
 
@@ -1758,14 +1888,24 @@ private fun formatQuestionAnswerDate(date: Date): String {
 }
 
 private fun formatQuestionAnswerNumber(value: Double): String {
+    return formatQuestionAnswerWholeNumber(value)
+}
+
+private fun formatQuestionAnswerIntNumber(value: Double): String {
+    return formatQuestionAnswerWholeNumber(value)
+}
+
+private fun formatQuestionAnswerVisitsPerWeek(value: Double): String {
+    return formatQuestionAnswerWholeNumber(value)
+}
+
+private fun formatQuestionAnswerWholeNumber(value: Double): String {
     if (value.isNaN() || value.isInfinite()) return "0"
 
-    val rounded = BigDecimal(value)
-        .setScale(1, RoundingMode.HALF_UP)
-        .stripTrailingZeros()
+    return BigDecimal
+        .valueOf(value)
+        .setScale(0, RoundingMode.HALF_UP)
         .toPlainString()
-
-    return rounded.ifBlank { "0" }
 }
 
 private fun QuestionAnswerStatementInsert.inlineWidth(): TextUnit {
@@ -1801,18 +1941,33 @@ private fun String?.toQuestionAnswerIntOrZero(): Int {
         ?: 0
 }
 
-private fun formatQuestionAnswerIntNumber(value: Double): String {
-    if (value.isNaN() || value.isInfinite()) return "0"
 
-    return BigDecimal(value)
-        .setScale(0, RoundingMode.HALF_UP)
-        .toPlainString()
-}
+private const val COMPLAINT_REPEAT_WINDOW_SECONDS = 7L * 24L * 60L * 60L
 
-private fun formatQuestionAnswerVisitsPerWeek(value: Double): String {
-    if (value.isNaN() || value.isInfinite()) return "0"
+private data class ComplaintKey(
+    val themeId: Int,
+    val clientId: String,
+    val addressId: String
+)
 
-    return BigDecimal(value)
-        .setScale(0, RoundingMode.HALF_UP)
-        .toPlainString()
+private suspend fun findRecentComplaintDate(
+    key: ComplaintKey,
+    nowSeconds: Long = System.currentTimeMillis() / 1000L
+): Long? = withContext(Dispatchers.IO) {
+    if (
+        key.themeId <= 0 ||
+        key.clientId.isBlank() ||
+        key.addressId.isBlank()
+    ) {
+        return@withContext null
+    }
+
+    RoomManager.SQL_DB
+        .questionAnswerDao()
+        .findLastComplaintDate(
+            key.themeId,
+            key.clientId,
+            key.addressId,
+            nowSeconds - COMPLAINT_REPEAT_WINDOW_SECONDS
+        )
 }
