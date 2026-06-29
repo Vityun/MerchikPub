@@ -1,6 +1,11 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.DAY_SEC;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_IDEA;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_MANAGER_WRONG;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_OTHER;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_PAYMENT_INCREASE;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
@@ -93,6 +98,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
+import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
@@ -898,11 +904,21 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 default -> new ForegroundColorSpan(Color.YELLOW);
                             };
 
-                            SpannableString spannableString151122 = SpannableString.valueOf(SQL_DB.questionAnswerDao().getByAddressClientAndDateRange(
-                                    wp.getClient_id(),
-                                    String.valueOf(wp.getAddr_id()),
-                                    COMPLAINT_REPEAT_WINDOW_SECONDS
-                            ).size() + "/1");
+                            List<Integer> themeIds = Arrays.asList(
+                                    THEME_OTHER,              // 6
+                                    THEME_IDEA,               // 607
+                                    THEME_PAYMENT_INCREASE,   // 610
+                                    THEME_MANAGER_WRONG       // 612
+                            );
+
+                            List<QuestionAnswerDB> answerDBSList = SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
+                                    Globals.userId,
+                                    30 * DAY_SEC,
+                                    3 * DAY_SEC,
+                                    themeIds
+                            );
+
+                            SpannableString spannableString151122 = SpannableString.valueOf(answerDBSList.size() + "/1");
                             spannableString151122.setSpan(foregroundSpan, 0, spannableString151122.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                             textInteger.setText(spannableString151122);
@@ -1413,6 +1429,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     }
 
     private void showOrScrollAndWait(final OptionsDB optionsDB, final RecyclerView recyclerView, final int pos) {
+        Log.e("showOrScrollAndWait", "animation optionsDB: " + new Gson().toJson(optionsDB));
         RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
         if (!(lm instanceof LinearLayoutManager)) {
             // для простоты поддержим только LinearLayoutManager; для других — smoothScroll
@@ -1468,6 +1485,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     // animateHighlightView — ваша текущая визуальная подсветка (не трогает позицию/данные)
     private void animateHighlightView(final View itemView) {
+        Log.e("showOrScrollAndWait", "animateHighlightView ");
         if (itemView == null) return;
         final Drawable orig = itemView.getBackground();
         final int highlightColor = Color.parseColor("#FFF59D");
@@ -1742,10 +1760,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     public int getItemPositionForOptionControl(OptionsDB item) {
         try {
             for (OptionsDB optionsDB : butt) {
+                // б - контроля
+                Log.e("showOrScrollAndWait","control optionsDB: " + optionsDB.getOptionControlId());
                 if (optionsDB.getOptionControlId().equals(item.getOptionId())
-//                        && optionsDB.getOptionTxt().contains("Кнопка")
-                )
+                ) {
+                    Log.e("showOrScrollAndWait","item.getOptionId(): " + item.getOptionId());
+                    Log.e("showOrScrollAndWait","item.getOptionControlId(): " + item.getOptionControlId());
+                    Log.e("showOrScrollAndWait", "getItemPositionForOptionControl optionsDB 0: " + new Gson().toJson(optionsDB));
+                    Log.e("showOrScrollAndWait", "getItemPositionForOptionControl optionsDB 1: " + new Gson().toJson(item));
+                    Log.e("showOrScrollAndWait", "butt.indexOf(optionsDB) - " + butt.indexOf(optionsDB) );
+
                     return butt.indexOf(optionsDB);
+                }
             }
             return butt.indexOf(item);
         } catch (Exception e) {

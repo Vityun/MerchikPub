@@ -31,14 +31,14 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
 
     public int OPTION_CONTROL_QUESTION_ANSWER_ID = 151121;
 
-    private static final int THEME_OTHER = 6;
-    private static final int THEME_IDEA = 607;
-    private static final int THEME_PAYMENT_INCREASE = 610;
-    private static final int THEME_MANAGER_WRONG = 612;
-    private static final int THEME_DISMISSED_SALARY_REVIEW = 421;
-    private static final int THEME_NO_COMPLAINTS = 600;
+    public static final int THEME_OTHER = 6;
+    public static final int THEME_IDEA = 607;
+    public static final int THEME_PAYMENT_INCREASE = 610;
+    public static final int THEME_MANAGER_WRONG = 612;
+    public static final int THEME_DISMISSED_SALARY_REVIEW = 421;
+    public static final int THEME_NO_COMPLAINTS = 600;
 
-    private static final long DAY_SEC = 24L * 60L * 60L;
+    public static final long DAY_SEC = 24L * 60L * 60L;
 
     private static final boolean TEMP_IGNORE_UNTIL_2027 = true;
 
@@ -89,7 +89,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
 
                 this.documentDateSec = getDocumentDateSec(wpDataDB);
                 this.dateFromSec = documentDateSec - 30L * 24L * 60L * 60L;
-                this.dateToSec = documentDateSec + 2 * 24L * 60L * 60L;
+                this.dateToSec = documentDateSec + 3 * 24L * 60L * 60L;
 
                 this.periodText = "За период с "
                         + formatDateSec(dateFromSec)

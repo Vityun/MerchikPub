@@ -5,14 +5,10 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.animation.*;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,6 +32,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,12 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.daimajia.androidanimations.library.Techniques;
-import com.daimajia.androidanimations.library.YoYo;
-import com.google.gson.Gson;
-
 import kotlin.Unit;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -114,6 +109,10 @@ public class DetailedReportOptionsFrag extends Fragment {
 
 
     public static final Integer[] DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
+
+    private YoYo.YoYoString currentPulse;
+    private View currentPulseView;
+    private int currentPulsePosition = RecyclerView.NO_POSITION;
 
     public static RecyclerView rvContacts;
     public static RecycleViewDRAdapter recycleViewDRAdapter;
@@ -239,6 +238,9 @@ public class DetailedReportOptionsFrag extends Fragment {
 
                     WorkPlan workPlan = new WorkPlan();
                     rvContacts = v.findViewById(R.id.DRRecycleView);
+                    rvContacts.addOnChildAttachStateChangeListener(pulseViewGuard);
+                    rvContacts.addOnScrollListener(pulsePositionGuard);
+
                     List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
                     setupRecyclerView(optionsButtons);
@@ -563,7 +565,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 RecyclerView.ViewHolder vh = recyclerView.findViewHolderForAdapterPosition(pos);
                 if (vh != null) {
                     // нашли view — выполняем подсветку и пульсацию
-                    highlightAndTada(vh.itemView);
+                    highlightAndTada(vh.itemView, pos);
                 } else if (attempts.get() < MAX_ATTEMPTS) {
                     handler.postDelayed(this, DELAY_MS);
                 } else {
@@ -577,26 +579,96 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
     // ---------- анимация подсветки + "тада" ----------
-    private void highlightAndTada(final View itemView) {
-        if (itemView == null) return;
+//    private void highlightAndTada(final View itemView, int pos) {
+//        if (itemView == null) return;
+//
+//        // Запускаем пульсацию
+//        Log.e("!!!!!!!!!!!!!!!!!!!!","animation: " + pos);
+//
+//        YoYo.with(Techniques.Pulse)
+//                .duration(850)
+//                .repeat(15)
+    ////                .onEnd(animator -> itemView.setBackground(originalBg))
+//                .playOn(itemView);
+//
+//    }
 
-        // Сохраняем оригинальный фон
-//        final Drawable originalBg = itemView.getBackground();
+    private final RecyclerView.OnChildAttachStateChangeListener pulseViewGuard =
+            new RecyclerView.OnChildAttachStateChangeListener() {
 
-        // Цвет подсветки (можешь заменить на свой)
-//        final int highlightColor = ContextCompat.getColor(itemView.getContext(), R.color.colorInetYellow);
+                @Override
+                public void onChildViewAttachedToWindow(View view) {
+                    // Ничего не делаем.
+                }
 
-        // Меняем фон на цвет подсветки
-//        itemView.setBackgroundColor(highlightColor);
+                @Override
+                public void onChildViewDetachedFromWindow(View view) {
+                    // Останавливаем Pulse лишь тогда,
+                    // когда RecyclerView убрал именно мигающую строку.
+                    if (view == currentPulseView) {
+                        stopCurrentPulse();
+                    }
+                }
+            };
 
-        // Запускаем пульсацию
-        YoYo.with(Techniques.Pulse)
+    private void highlightAndTada(final View itemView, int pos) {
+        if (itemView == null) {
+            return;
+        }
+
+        // Если раньше мигала другая кнопка — останавливаем только её.
+        stopCurrentPulse();
+
+        currentPulseView = itemView;
+        currentPulsePosition = pos;
+
+        Log.e("!!!!!!!!!!!!!!!!!!!!", "animation: " + pos);
+
+        currentPulse = YoYo.with(Techniques.Pulse)
                 .duration(850)
                 .repeat(15)
-//                .onEnd(animator -> itemView.setBackground(originalBg))
+                .onEnd(animator -> {
+                    if (currentPulseView == itemView) {
+                        currentPulse = null;
+                        currentPulseView = null;
+                        currentPulsePosition = RecyclerView.NO_POSITION;
+                    }
+                })
                 .playOn(itemView);
-
     }
 
+    private void stopCurrentPulse() {
+        if (currentPulse != null) {
+            currentPulse.stop();
+        }
 
+        currentPulse = null;
+        currentPulseView = null;
+        currentPulsePosition = RecyclerView.NO_POSITION;
+    }
+
+    private final RecyclerView.OnScrollListener pulsePositionGuard =
+            new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(
+                        RecyclerView recyclerView,
+                        int dx,
+                        int dy
+                ) {
+                    super.onScrolled(recyclerView, dx, dy);
+
+                    if (currentPulseView == null) {
+                        return;
+                    }
+
+                    int actualPosition =
+                            recyclerView.getChildAdapterPosition(currentPulseView);
+
+                    // Этот View уже привязан не к нужной позиции
+                    // либо выбыл из списка.
+                    if (actualPosition != currentPulsePosition) {
+                        stopCurrentPulse();
+                    }
+                }
+            };
 }
