@@ -2822,7 +2822,7 @@ private fun saveQuestionAnswerTheme(
         userId = Globals.userId.toLong()
 
         question = themeName
-        answer = comment
+        answer = "1"
         this.comment = comment
 
         dt = nowSeconds

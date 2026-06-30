@@ -6,6 +6,8 @@ import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
+import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -23,6 +25,7 @@ import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
+import java.util.Arrays
 import java.util.Calendar
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -110,14 +113,27 @@ class QuestionAnswerSDBViewModel @Inject constructor(
 
             Log.e("OpinionSDBViewModel", "adr: ${wpDataDB.addr_id}")
             Log.e("OpinionSDBViewModel", "cli: ${wpDataDB.client_id}")
-            val data =
-                RoomManager.SQL_DB.questionAnswerDao()
-                    .getByAddressClientAndDateRange(
+            val themeIds = listOf<Int?>(
+                OptionControlQuestionAnswer.THEME_OTHER,  // 6
+                OptionControlQuestionAnswer.THEME_IDEA,  // 607
+                OptionControlQuestionAnswer.THEME_PAYMENT_INCREASE,  // 610
+                OptionControlQuestionAnswer.THEME_MANAGER_WRONG // 612
+            )
 
-                        wpDataDB.client_id,
-                        wpDataDB.addr_id.toString(),
-                        dateFrom
-                    )
+            val data  = RoomManager.SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
+                Globals.userId.toLong(),
+                wpDataDB.dt.time / 1000 - 30 * 24L * 60L * 60L,
+                wpDataDB.dt.time / 1000 + 3 * 24L * 60L * 60L,
+                themeIds
+            )
+
+//                RoomManager.SQL_DB.questionAnswerDao()
+//                    .getByAddressClientAndDateRange(
+//
+//                        wpDataDB.client_id,
+//                        wpDataDB.addr_id.toString(),
+//                        dateFrom
+//                    )
                     .onEach { questionAnswer ->
                         questionAnswer.timeColor = if (isToday(questionAnswer.dt)) {
                             Log.e(

@@ -913,8 +913,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             List<QuestionAnswerDB> answerDBSList = SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
                                     Globals.userId,
-                                    30 * DAY_SEC,
-                                    3 * DAY_SEC,
+                                    wp.getDt().getTime()/1000 - 30 * 24L * 60L * 60L,
+                                    wp.getDt().getTime()/1000 + 3 * 24L * 60L * 60L,
                                     themeIds
                             );
 

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -15,10 +16,12 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUpload;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class QuestionExchange {
@@ -84,12 +87,16 @@ public class QuestionExchange {
         isQuestionAnswersUploading = true;
 
         try {
+
+
             StandartData data = new StandartData();
             data.mod = "quest_data";
             data.act = "add_row";
 
-            List<QuestionAnswerDB> list =
-                    SQL_DB.questionAnswerDao().getAllForUploadTest(TEST_MIN_QUESTION_ANSWER_ID);
+            SynchronizationTimetableDB synchronizationTimetableDB = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("question_answer"));
+
+            final List<QuestionAnswerDB> list =
+                    SQL_DB.questionAnswerDao().getAllForUploadTest(synchronizationTimetableDB.getVpi_app());
 
             if (list == null || list.isEmpty()) {
                 Log.e("QuestionAnswerUpload", "Нет данных для выгрузки");
@@ -164,6 +171,17 @@ public class QuestionExchange {
                             // Пока для теста ничего локально не обновляем.
                             // Когда поймём точный ответ сервера, тут можно будет
                             // сохранить mnenie_id / server id в локальную БД.
+                            long lastId;
+
+                            if (!list.isEmpty()) {
+                                lastId = list.get(list.size() - 1).getId();
+                            } else {
+                                lastId = 10000000L;
+                            }
+                            INSTANCE.executeTransaction(realm -> {
+                                synchronizationTimetableDB.setVpi_app(lastId);
+                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                            });
 
                         } else {
                             String error = body != null ? body.error : "body is null";
