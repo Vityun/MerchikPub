@@ -4,9 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.remember
 import androidx.lifecycle.SavedStateHandle
-import androidx.room.Room
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -55,7 +53,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.random.Random
 import kotlin.reflect.KClass
 
 @HiltViewModel
@@ -441,8 +438,8 @@ class WpDataDBViewModel @Inject constructor(
                     ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
                     ?: emptyList()
 
-                for (wp in data){
-                    Log.e("@@@@@@@@@@@@@@@@@@@@@@@@@","date: ${wp.dt}")
+                for (wp in data) {
+                    Log.e("@@@@@@@@@@@@@@@@@@@@@@@@@", "date: ${wp.dt}")
                 }
                 Globals.writeToMLOG(
                     "INFO",
@@ -502,13 +499,14 @@ class WpDataDBViewModel @Inject constructor(
                 val visits = RealmManager.INSTANCE
                     .where(WpDataDB::class.java)
                     .equalTo("addr_id", wpDataDB.addr_id)
-                    .equalTo("client_id",wpDataDB.client_id)
+                    .equalTo("client_id", wpDataDB.client_id)
                     .greaterThanOrEqualTo("dt", periodFromDate)
                     .lessThanOrEqualTo("dt", periodToDate)
                     .findAll()
                     .let { RealmManager.INSTANCE.copyFromRealm(it) }
                 visits
             }
+
             else -> {
                 Globals.writeToMLOG(
                     "INFO",
@@ -627,12 +625,14 @@ class WpDataDBViewModel @Inject constructor(
             }
         }.distinctBy { it.id }
         if (contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER ||
+            contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT ||
             contextUI == ContextUI.WP_DATA
         ) {
+            Log.e("CONTAINER_MULT", "CLICK ==>>> contextUI: ${contextUI.name}")
             WpSelectionDataHolder.instance().set(selectedWp)
             showAdditionalEarningsDialog(selectedWp)
-        }
-        showServiceContextMenu(itemsUI)
+        } else
+            showServiceContextMenu(itemsUI)
     }
 
     private val hiddenMenuMode: HiddenMenuMode = HiddenMenuMode.INLINE

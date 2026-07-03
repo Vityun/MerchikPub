@@ -1,9 +1,12 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.SALARY_CUT;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +25,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.compose.ui.platform.ComposeView;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,11 +40,13 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import dagger.hilt.android.AndroidEntryPoint;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
@@ -58,8 +64,12 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModel;
 
 
 @SuppressLint("ValidFragment")
@@ -288,7 +298,7 @@ public class DetailedReportHomeFrag extends Fragment {
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + wpDataDB.cash_penalty + "</u></font>" + " грн."), this::openConductDialog));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + wpDataDB.cash_penalty + "</u></font>" + " грн."), this::openOptionsUFMD));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
@@ -379,6 +389,19 @@ public class DetailedReportHomeFrag extends Fragment {
         return res;
     }
 
+    private void openOptionsUFMD() {
+        Intent intent = new Intent(requireActivity(), FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", OptionsDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.OPTIONS.toString());
+        bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+        bundle.putString("dataJson", new Gson().toJson(wpDataDB.getCode_dad2()));
+        bundle.putString("title", "Опции");
+        bundle.putString("subTitle", "Перечень опций");
+        intent.putExtras(bundle);
+        ActivityCompat.startActivityForResult(requireActivity(), intent, NEED_UPDATE_UI_REQUEST, null);
+
+    }
     private void openConductDialog() {
         WorkPlan workPlan = new WorkPlan();
         List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());

@@ -29,6 +29,7 @@ fun LoadingBarWithPercentage(
     progress: Float, // Значение от 0.0 до 1.0
     modifier: Modifier = Modifier,
     backgroundColor: Color = colorResource(R.color.background_item_filter),
+    completionContent: (@Composable () -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -51,13 +52,23 @@ fun LoadingBarWithPercentage(
         }
         Spacer(modifier = Modifier.width(8.dp))
         // Текст процентов
-        Text(
-            text = "${(progress * 100).toInt()}%",
-            style = MaterialTheme.typography.headlineSmall,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.width(60.dp),
-            color = Color(0xCC1E201D),
-            textAlign = TextAlign.Center
-        )
+        Box(
+            modifier = Modifier
+                .width(60.dp)
+                .height(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (completionContent != null) {
+                completionContent()
+            } else {
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color(0xCC1E201D),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }

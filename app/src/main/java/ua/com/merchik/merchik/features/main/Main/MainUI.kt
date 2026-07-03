@@ -359,6 +359,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             }
         }
     }
+    Log.e("CONTAINER_MULT", "contextUI: ${viewModel.contextUI.name}")
 
 //    val holder = WpSelectionDataHolder.instance()
 //    val version = holder.version
@@ -1275,7 +1276,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             onClick = {
                                 if (selectedItems.isNotEmpty()) {
                                     viewModel.onSelectedItemsUI(selectedItems)
-                                    if (viewModel.typeWindow != "container") {
+                                    val waitForAdditionalEarningsDialog =
+                                        viewModel.additionalEarningsDialogState.value != null
+                                    if (viewModel.typeWindow != "container" && !waitForAdditionalEarningsDialog) {
                                         if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER) {
                                             val theme =
                                                 selectedItems.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB
@@ -1875,12 +1878,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         val wpList = dialogState.wpList
         val single = wpList.size == 1
         val wp = wpList.firstOrNull()
-
+        fun htmlText(value: Any?): String = android.text.Html.escapeHtml(value?.toString().orEmpty())
+        val dialogSubTitle = if (single) wp?.addr_txt.orEmpty() else wpList.firstOrNull()?.addr_txt.orEmpty()
         Log.e("additionalEarningsDialogData", "start")
         MessageDialog(
             title = "Додатковий заробіток",
             status = DialogStatus.NORMAL,
-            subTitle = if (single) wp?.addr_txt ?: "" else wpList.firstOrNull()?.addr_txt ?: "",
+            subTitle = dialogSubTitle,
             message = if (single && wp != null) {
                 String.format(
                     "Подати заявку на виконання цієї роботи<br>" +
@@ -1890,12 +1894,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             "Премія (план): %s грн.<br>" +
                             "СКЮ (кількість товарних позицій): %s<br>" +
                             "Середній час роботи: %s хв",
-                    Clock.getHumanTime_dd_MMMM(wp.dt.time),
-                    wp.client_txt,
-                    wp.addr_txt,
-                    wp.cash_ispolnitel,
-                    wp.sku,
-                    wp.duration
+                    htmlText(wp.dt?.time?.let { Clock.getHumanTime_dd_MMMM(it) } ?: "-"),
+                    htmlText(wp.client_txt),
+                    htmlText(wp.addr_txt),
+                    htmlText(wp.cash_ispolnitel),
+                    htmlText(wp.sku),
+                    htmlText(wp.duration)
                 )
             } else {
                 "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"

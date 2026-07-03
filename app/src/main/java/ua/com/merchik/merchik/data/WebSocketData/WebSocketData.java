@@ -31,6 +31,18 @@ public class WebSocketData {
     @Expose
     public String text;
 
+    @SerializedName("type")
+    @Expose
+    public String type;
+
+    @SerializedName("progress")
+    @Expose
+    public Object progress;
+
+    @SerializedName("hide_progress")
+    @Expose
+    public Object hideProgress;
+
     @SerializedName("data")
     @Expose
     public Data data;
@@ -43,6 +55,22 @@ public class WebSocketData {
         @SerializedName("time")
         @Expose
         public Double time;
+
+        @SerializedName("text")
+        @Expose
+        public String text;
+
+        @SerializedName("type")
+        @Expose
+        public String type;
+
+        @SerializedName("progress")
+        @Expose
+        public Object progress;
+
+        @SerializedName("hide_progress")
+        @Expose
+        public Object hideProgress;
 
     }
 }

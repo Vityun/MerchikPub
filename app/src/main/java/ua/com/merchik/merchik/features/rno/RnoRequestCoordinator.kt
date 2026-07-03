@@ -69,7 +69,9 @@ class RnoRequestCoordinator @JvmOverloads constructor(
                         .timeout(UPLOAD_TIMEOUT_SEC, TimeUnit.SECONDS)
                         .subscribeOn(Schedulers.io())
                         .flatMap { upload ->
-                            Single.fromCallable {
+                            immediateResultForUpload(batch, upload)?.let { result ->
+                                Single.just(result)
+                            } ?: Single.fromCallable {
                                 waitForDecisionBlocking(
                                     batch = batch,
                                     timeoutMs = decisionTimeoutMs,
@@ -97,13 +99,6 @@ class RnoRequestCoordinator @JvmOverloads constructor(
 
         return inFlightSubmissions.putIfAbsent(signature, submission) ?: submission
     }
-
-    @JvmOverloads
-    fun submit(
-        wpData: WpDataDB,
-        forever: Boolean = false,
-        decisionTimeoutMs: Long = DEFAULT_DECISION_TIMEOUT_MS
-    ): Single<RnoRequestResult> = submit(listOf(wpData), forever, decisionTimeoutMs)
 
     @JvmOverloads
     fun startConfirmedExchange(
@@ -184,6 +179,31 @@ class RnoRequestCoordinator @JvmOverloads constructor(
         return batch.toResult(
             status = RnoRequestStatus.SUBMITTED,
             rows = rows
+        )
+    }
+
+    private fun immediateResultForUpload(
+        batch: RequestBatch,
+        upload: TablesLoadingUnloading.UploadPlanBudgetResult
+    ): RnoRequestResult? {
+        val notice = upload.notice?.takeIf { it.isNotBlank() }
+        val comment = upload.comments
+            ?.firstOrNull { !it.isNullOrBlank() }
+            ?.trim()
+        val hasServerAnswer = upload.serverResultCount > 0 || notice != null || comment != null
+        if (!hasServerAnswer) return null
+
+        val rows = loadRowsForKeys(RoomManager.SQL_DB.wpDataAdditionalDao(), batch.keys)
+        val allApproved = batch.keys.isNotEmpty() &&
+                upload.serverResultCount >= batch.keys.size &&
+                upload.serverApprovedCount >= batch.keys.size &&
+                upload.serverRejectedCount == 0
+
+        return batch.toResult(
+            status = if (allApproved) RnoRequestStatus.APPROVED else RnoRequestStatus.SUBMITTED,
+            rows = rows,
+            comment = comment,
+            notice = notice
         )
     }
 
@@ -333,7 +353,7 @@ class RnoRequestCoordinator @JvmOverloads constructor(
 
     companion object {
         private const val TAG = "RnoRequestCoordinator"
-        private const val DEFAULT_DECISION_TIMEOUT_MS = 28_700L
+        private const val DEFAULT_DECISION_TIMEOUT_MS = 128_700L
         private const val UPLOAD_TIMEOUT_SEC = 35L
         private const val POLL_INTERVAL_MS = 2_000L
 
@@ -346,7 +366,14 @@ class RnoRequestCoordinator @JvmOverloads constructor(
             if (!resumeRunning.compareAndSet(false, true)) return
 
             val coordinator = RnoRequestCoordinator()
-            coordinator.tablesLoadingUnloading.uploadPlanBudgetRx()
+            val uploadSingle = coordinator.tablesLoadingUnloading.uploadPlanBudgetRxIfIdle()
+            if (uploadSingle == null) {
+                Log.i(TAG, "resumePendingAndSync skipped: uploadPlanBudgetRx is already running")
+                resumeRunning.set(false)
+                return
+            }
+
+            uploadSingle
                 .onErrorReturn { error ->
                     Log.e(TAG, "resume upload failed", error)
                     TablesLoadingUnloading.UploadPlanBudgetResult(0, 0, emptyList(), null)

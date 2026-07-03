@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -73,6 +74,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -89,6 +91,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
+import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -108,6 +111,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.Utils.LocationUtils;
+import ua.com.merchik.merchik.Utils.toast.Toasty;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -150,6 +154,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     static trecker trecker = new trecker();
     public static WebSocket webSocket;
     public static WebSocketStatus webSocketStatus;
+    private static final Object WEB_SOCKET_LOCK = new Object();
+    private static final long WEB_SOCKET_RECONNECT_DELAY_MS = 10_000L;
+    private static final int WEB_SOCKET_NORMAL_CLOSURE_STATUS = 1000;
+    private static boolean webSocketConnecting = false;
+    private static String webSocketSession;
+    private Runnable pendingWebSocketReconnect;
+    private static LoadingDialogWithPercent globalProgressDialog;
+    private static ProgressViewModel globalProgressViewModel;
+    private static Activity globalProgressActivity;
 
     TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 
@@ -272,7 +285,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             password = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString("password", "");
 
-            startWebSocket(getApplicationContext());
+            startWebSocket(this);
 
 
             Log.e("PreferenceManager", "TOOLBAR" + PreferenceManager.getDefaultSharedPreferences(this)
@@ -651,6 +664,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //        cronchikViewModel.stopTimer(); // Останавливаем при уничтожении Activity
 
         globals.handlerCount.removeCallbacks(runnableCron10);
+        if (pendingWebSocketReconnect != null) {
+            globals.handlerCount.removeCallbacks(pendingWebSocketReconnect);
+            pendingWebSocketReconnect = null;
+        }
         if (trecker != null)
             trecker.stopTracking(this);
     }
@@ -1285,6 +1302,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             Log.e("КРОНЧИК", "login: " + login);
                             Log.e("КРОНЧИК", "password: " + password);
 
+                            ensureWebSocketConnectedForCurrentSession(toolbar_menus.this);
+
                             if (callCounter % 2 == 0)
                                 server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
                             internetStatus = server.internetStatus();       // Обновление статуса интеренета
@@ -1420,6 +1439,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     // доп заработок
                                     RnoRequestCoordinator.resumePendingAndSync(toolbar_menus.this);
 //                                tablesLoadingUnloading.donwloadPlanBudgetForConfirmDecision(toolbar_menus.this);
+//                                    ##########################
+
+
 //                        if (!SQL_DB.wpDataAdditionalDao().getNotConfirmDecision().isEmpty())
 //                            tablesLoadingUnloading.donwloadPlanBudget();
 
@@ -2599,9 +2621,321 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      * 12.09.22
      * Работа с сокетом
      */
+    private boolean handleGlobalNotice(WebSocketData wsData) {
+        String text = getWsText(wsData);
+        if (text == null || text.trim().isEmpty()) {
+            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "Ignored empty notice");
+            return true;
+        }
+
+        Activity activity = getActiveActivity();
+        if (activity == null) {
+            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "No active activity. text: " + text);
+            return true;
+        }
+
+        String type = normalizeNoticeType(getWsType(wsData));
+        activity.runOnUiThread(() -> {
+            switch (type) {
+                case "success":
+                    Toasty.success(activity, text, Toasty.LENGTH_LONG).show();
+                    break;
+                case "warning":
+                    Toasty.warning(activity, text, Toasty.LENGTH_LONG).show();
+                    break;
+                case "error":
+                    Toasty.error(activity, text, Toasty.LENGTH_LONG).show();
+                    break;
+                case "alert":
+                case "info":
+                default:
+                    Toasty.info(activity, text, Toasty.LENGTH_LONG).show();
+                    break;
+            }
+        });
+        Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "type: " + type + ", text: " + text);
+        return true;
+    }
+
+    private void handleGlobalProgressShow(WebSocketData wsData) {
+        Activity activity = getActiveActivity();
+        if (activity == null) {
+            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_progress_show", "No active activity");
+            return;
+        }
+
+        String text = getWsText(wsData);
+        activity.runOnUiThread(() -> {
+            if (!isActivityUsable(activity)) return;
+            ensureGlobalProgressDialog(activity);
+            globalProgressViewModel.reset(text == null ? "" : text);
+            globalProgressDialog.show();
+        });
+    }
+
+    private void handleGlobalProgressData(WebSocketData wsData) {
+        Activity activity = getActiveActivity();
+        if (activity == null) {
+            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_progress_data", "No active activity");
+            return;
+        }
+
+        String text = getWsText(wsData);
+        float progress = getWsProgress(wsData);
+        boolean hideProgress = getWsHideProgress(wsData);
+        activity.runOnUiThread(() -> {
+            if (!isActivityUsable(activity)) return;
+            ensureGlobalProgressDialog(activity);
+            if (!globalProgressDialog.isShowing()) {
+                globalProgressDialog.show();
+            }
+            globalProgressViewModel.setProgressPercent(progress, text, 300L);
+            if (hideProgress || progress >= 100f) {
+                globalProgressViewModel.completeAndHide(300L, 500L);
+            }
+        });
+    }
+
+    private void handleGlobalProgressHide() {
+        Activity activity = getActiveActivity();
+        if (activity == null) {
+            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_progress_hide", "No active activity");
+            return;
+        }
+
+        activity.runOnUiThread(() -> {
+            if (globalProgressViewModel != null) {
+                globalProgressViewModel.completeAndHide(250L, 500L);
+            } else if (globalProgressDialog != null) {
+                globalProgressDialog.dismiss();
+            }
+        });
+    }
+
+    private void ensureGlobalProgressDialog(Activity activity) {
+        if (globalProgressDialog != null && globalProgressActivity == activity) {
+            return;
+        }
+
+        if (globalProgressDialog != null) {
+            globalProgressDialog.dismiss();
+        }
+        globalProgressActivity = activity;
+        globalProgressViewModel = new ProgressViewModel(1);
+        globalProgressDialog = new LoadingDialogWithPercent(activity, globalProgressViewModel);
+        LoadingDialogWithPercent createdDialog = globalProgressDialog;
+        globalProgressDialog.setOnDismissListener(() -> {
+            if (globalProgressDialog == createdDialog) {
+                globalProgressDialog = null;
+                globalProgressViewModel = null;
+                globalProgressActivity = null;
+            }
+        });
+    }
+
+    private Activity getActiveActivity() {
+        Activity activity = MyApplication.getCurrentActivity();
+        if (isActivityUsable(activity)) {
+            return activity;
+        }
+        return isActivityUsable(this) ? this : null;
+    }
+
+    private boolean isActivityUsable(Activity activity) {
+        return activity != null
+                && !activity.isFinishing()
+                && (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !activity.isDestroyed());
+    }
+
+    private String getWsText(WebSocketData wsData) {
+        if (wsData == null) return "";
+        if (wsData.data != null && wsData.data.text != null && !wsData.data.text.trim().isEmpty()) {
+            return wsData.data.text;
+        }
+        return wsData.text == null ? "" : wsData.text;
+    }
+
+    private String getWsType(WebSocketData wsData) {
+        if (wsData == null) return "info";
+        if (wsData.data != null && wsData.data.type != null && !wsData.data.type.trim().isEmpty()) {
+            return wsData.data.type;
+        }
+        return wsData.type == null ? "info" : wsData.type;
+    }
+
+    private String normalizeNoticeType(String type) {
+        if (type == null) return "info";
+        String normalized = type.trim().toLowerCase(Locale.US);
+        switch (normalized) {
+            case "alert":
+            case "success":
+            case "warning":
+            case "error":
+            case "info":
+                return normalized;
+            default:
+                return "info";
+        }
+    }
+
+    private float getWsProgress(WebSocketData wsData) {
+        Object value = null;
+        if (wsData != null && wsData.data != null && wsData.data.progress != null) {
+            value = wsData.data.progress;
+        } else if (wsData != null) {
+            value = wsData.progress;
+        }
+        float progress = parseFloat(value, 0f);
+        return Math.max(0f, Math.min(100f, progress));
+    }
+
+    private boolean getWsHideProgress(WebSocketData wsData) {
+        Object value = null;
+        if (wsData != null && wsData.data != null && wsData.data.hideProgress != null) {
+            value = wsData.data.hideProgress;
+        } else if (wsData != null) {
+            value = wsData.hideProgress;
+        }
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue() != 0d;
+        }
+        if (value instanceof String) {
+            String normalized = ((String) value).trim().toLowerCase(Locale.US);
+            return normalized.equals("true") || normalized.equals("1") || normalized.equals("yes");
+        }
+        return false;
+    }
+
+    private float parseFloat(Object value, float fallback) {
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Float.parseFloat(((String) value).trim());
+            } catch (Exception ignored) {
+                return fallback;
+            }
+        }
+        return fallback;
+    }
+
+    private boolean hasWebSocketSession(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private boolean isSameWebSocketSession(String first, String second) {
+        if (first == null) return second == null;
+        return first.equals(second);
+    }
+
+    private void ensureWebSocketConnectedForCurrentSession(Context context) {
+        if (!hasWebSocketSession(Globals.session)) {
+            if (webSocket != null) {
+                resetWebSocket("session is empty");
+            }
+            return;
+        }
+
+        boolean needStart;
+        boolean needReconnect;
+        synchronized (WEB_SOCKET_LOCK) {
+            needStart = webSocket == null;
+            needReconnect = webSocket != null && !isSameWebSocketSession(webSocketSession, Globals.session);
+        }
+
+        if (needReconnect) {
+            resetWebSocket("session changed");
+            startWebSocket(context);
+        } else if (needStart) {
+            startWebSocket(context);
+        }
+    }
+
+    private void checkSessionAndStartWebSocket(Context context) {
+        synchronized (WEB_SOCKET_LOCK) {
+            if (webSocketConnecting) {
+                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket", "Connection already in progress");
+                return;
+            }
+            if (webSocket != null && isSameWebSocketSession(webSocketSession, Globals.session)) {
+                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket", "WebSocket already connected for session: " + webSocketSession);
+                return;
+            }
+            webSocketConnecting = true;
+        }
+
+        server.sessionCheckAndLogin(context, login, password, success -> runOnUiThread(() -> {
+            synchronized (WEB_SOCKET_LOCK) {
+                webSocketConnecting = false;
+            }
+
+            if (isFinishing() || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && isDestroyed())) {
+                return;
+            }
+
+            if (!success || !hasWebSocketSession(Globals.session)) {
+                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/sessionCheck", "Session check failed");
+                scheduleWebSocketReconnect(context, "session check failed");
+                return;
+            }
+
+            if (webSocket != null && !isSameWebSocketSession(webSocketSession, Globals.session)) {
+                resetWebSocket("session changed after check");
+            }
+
+            startWebSocket(context, true);
+        }));
+    }
+
+    private void resetWebSocket(String reason) {
+        WebSocket socketToClose;
+        synchronized (WEB_SOCKET_LOCK) {
+            socketToClose = webSocket;
+            webSocket = null;
+            webSocketSession = null;
+            webSocketStatus = WebSocketStatus.NOT_ACTIVE;
+        }
+
+        if (socketToClose != null) {
+            socketToClose.close(WEB_SOCKET_NORMAL_CLOSURE_STATUS, reason);
+        }
+        Globals.writeToMLOG("INFO", "TOOLBAR/WebSocket/reset", "reason: " + reason);
+    }
+
+    private void scheduleWebSocketReconnect(Context context, String reason) {
+        if (pendingWebSocketReconnect != null) {
+            globals.handlerCount.removeCallbacks(pendingWebSocketReconnect);
+        }
+        pendingWebSocketReconnect = () -> {
+            pendingWebSocketReconnect = null;
+            startWebSocket(context);
+        };
+        Globals.writeToMLOG("INFO", "TOOLBAR/WebSocket/reconnect", "reason: " + reason);
+        globals.handlerCount.postDelayed(pendingWebSocketReconnect, WEB_SOCKET_RECONNECT_DELAY_MS);
+    }
+
+    private void handleWebSocketDisconnected(Context context, String reason) {
+        resetWebSocket(reason);
+        scheduleWebSocketReconnect(context, reason);
+    }
+
     public void startWebSocket(Context context) {
+        startWebSocket(context, false);
+    }
+
+    private void startWebSocket(Context context, boolean sessionChecked) {
         try {
+            if (!sessionChecked) {
+                checkSessionAndStartWebSocket(context);
+                return;
+            }
             if (webSocket == null) {
+                webSocketSession = Globals.session;
+                webSocketStatus = WebSocketStatus.NOT_ACTIVE;
                 webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
                     @Override
                     public <T> void click(T data) {
@@ -2663,17 +2997,36 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             new ChatSDB().saveChatFromWebSocket(wsData.chat);
                                             break;
                                         case "global_notice":
+                                            if (handleGlobalNotice(wsData)) {
+                                                break;
+                                            }
                                             Toast.makeText(context, "Глобальное оповещение: " + wsData.text, Toast.LENGTH_SHORT).show();
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "wsData.text: " + wsData.text);
+                                            break;
+                                        case "global_progress_show":
+                                            handleGlobalProgressShow(wsData);
+                                            break;
+                                        case "global_progress_data":
+                                            handleGlobalProgressData(wsData);
+                                            break;
+                                        case "global_progress_hide":
+                                            handleGlobalProgressHide();
                                             break;
                                         default:
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/default", "data: " + data);
                                             break;
                                     }
                                 }
-                            } else if (data.equals("error")) {
-                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: error. Restart.");
-                                startWebSocket(context);
+                            } else if (data instanceof WebSocket) {
+                                if (data == webSocket) {
+                                    Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "current socket failure. Restart.");
+                                    handleWebSocketDisconnected(context, "failure");
+                                } else {
+                                    Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "ignored stale socket failure");
+                                }
+                            } else if ("error".equals(data) || "closed".equals(data)) {
+                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: " + data + ". Restart.");
+                                handleWebSocketDisconnected(context, String.valueOf(data));
                             } else {
                                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: null");
                             }
@@ -2682,10 +3035,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         }
                     }
                 });
+                webSocketStatus = WebSocketStatus.ACTIVE;
+                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket", "Started for session: " + webSocketSession);
             } else {
                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/", "webSocket(null): " + webSocket);
             }
         } catch (Exception e) {
+            synchronized (WEB_SOCKET_LOCK) {
+                webSocketConnecting = false;
+            }
             Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/catch", "Exception e: " + e);
         }
     }

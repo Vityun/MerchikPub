@@ -116,10 +116,14 @@ public interface WPDataAdditionalDao {
         WPDataAdditional item = getByIdSync(serverId);
         if (item == null) return;
 
-        // 1 = APPROVED, 2 = DECLINED (как у тебя уже используется)
-        item.action = accepted ? 1 : 2;
-
-        item.confirmDecision = item.action;
+        // accepted=false here means auto-approval was not granted yet; final decision comes later.
+        if (accepted) {
+            item.action = 1;
+            item.confirmDecision = 1;
+        } else {
+            item.action = 0;
+            item.confirmDecision = 0;
+        }
         // 27.01.2026 временный костыль всегда выставляю в 0, попадаем в крончик и из него уже меняем на необходимое
 //        item.confirmDecision = 0;
 

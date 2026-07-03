@@ -1028,6 +1028,30 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static List<OptionsDB> getOptionsByDad2(long codeDad2) {
+        String sOtchetId = String.valueOf(codeDad2);
+        RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
+                .beginGroup()
+                .equalTo("codeDad2", sOtchetId)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .and()
+                .equalTo("deleted", "0")
+                .endGroup()
+                .or()
+                .equalTo("codeDad2", sOtchetId)
+                .and()
+                .equalTo("deleted", "0")
+                .and()
+                .equalTo("optionId", "2243")
+                .findAll();
+        if (realmResults != null && !realmResults.isEmpty()) {
+            return INSTANCE.copyFromRealm(realmResults);
+        } else {
+            return null;
+        }
+    }
+
     public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
         return INSTANCE.where(OptionsDB.class)

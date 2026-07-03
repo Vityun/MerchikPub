@@ -1,12 +1,24 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 
-public class OptionsDB extends RealmObject {
+import java.util.List;
+
+import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.OptionsDBOverride;
+
+public class OptionsDB extends RealmObject implements DataObjectUI {
 
     @SerializedName("ID")
     @Expose
@@ -124,6 +136,9 @@ public class OptionsDB extends RealmObject {
     @SerializedName("option_group_txt")
     @Expose
     private String optionGroupTxt;
+
+    @Ignore
+    private String timeColor;
 
     public OptionsDB() {
     }
@@ -484,4 +499,82 @@ public class OptionsDB extends RealmObject {
 //        return s.hashCode();
 //    }
 
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return "";
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return OptionsDBOverride.INSTANCE.getContainerModifier(jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
+    @Override
+    public @NotNull String getCommentsForImage() {
+        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+    }
+
+
+    @Override
+    public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
+    }
+
+    public String getTimeColor() {
+        return timeColor;
+    }
+
+    public void setTimeColor(String timeColor) {
+        this.timeColor = timeColor;
+    }
 }

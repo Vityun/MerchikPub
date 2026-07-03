@@ -4,11 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -28,13 +28,12 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 
 
 @Composable
-fun LoadingDialog(viewModel: ProgressViewModel,onDismiss: () -> Unit) {
+fun LoadingDialog(viewModel: ProgressViewModel, onDismiss: () -> Unit) {
     // Для управления состоянием подтверждающего диалога
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
@@ -58,35 +57,36 @@ fun LoadingDialog(viewModel: ProgressViewModel,onDismiss: () -> Unit) {
         ) {
 
             Row(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .padding(start = 15.dp, bottom = 15.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically // Для выравнивания текста и кнопки по вертикали
-            ) {
-                Text(
-                    text = viewModel.currentMessage.value,
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.weight(1f)
-                        .padding(top = 16.dp),
-                    color = Color.White
-                )
-                ImageButton(
-                    id = R.drawable.ic_letter_x,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(color = Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
                     modifier = Modifier
-                        .padding(end = 10.dp),
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, bottom = 15.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically // Для выравнивания текста и кнопки по вертикали
+                ) {
+                    Text(
+                        text = viewModel.currentMessage.value,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 16.dp),
+                        color = Color.White
+                    )
+                    ImageButton(
+                        id = R.drawable.ic_letter_x,
+                        shape = CircleShape,
+                        colorImage = ColorFilter.tint(color = Color.Gray),
+                        sizeButton = 40.dp,
+                        sizeImage = 25.dp,
+                        modifier = Modifier
+                            .padding(end = 10.dp),
 //                    .padding(start = 15.dp, bottom = 10.dp)
 //                    .align(alignment = Alignment.End),
-                    onClick = { showConfirmationDialog = true }
-                )
-            }
+                        onClick = { showConfirmationDialog = true }
+                    )
+                }
             Box(
                 modifier = Modifier
-                    .wrapContentWidth()
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
                     .background(color = Color.White)
             )

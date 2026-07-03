@@ -21,14 +21,74 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
     var isCompleted by mutableStateOf(false)
         private set
 
-    private val stepPercentage = 1f / expectedEvents
+    var showCompletionAnimation by mutableStateOf(false)
+        private set
+
+    private val stepPercentage = if (expectedEvents <= 0) 1f else 1f / expectedEvents
     private var currentStepIndex = 0
     private var currentTargetProgress = 0f
 
     private var currentAnimationJob: Job? = null
 
+    fun reset(message: String) {
+        currentAnimationJob?.cancel()
+        progress.floatValue = 0f
+        currentMessage.value = message
+        isCompleted = false
+        showCompletionAnimation = false
+        currentStepIndex = 0
+        currentTargetProgress = 0f
+    }
+
+    fun setMessage(message: String?) {
+        if (!message.isNullOrBlank()) {
+            currentMessage.value = message
+        }
+    }
+
+    @JvmOverloads
+    fun setProgressPercent(progressPercent: Float, message: String? = null, durationMillis: Long = 300L) {
+        if (showCompletionAnimation) {
+            return
+        }
+        if (isCompleted) {
+            isCompleted = false
+        }
+        setMessage(message)
+        val targetProgress = (progressPercent / 100f).coerceIn(0f, 1f)
+        currentAnimationJob?.cancel()
+        currentAnimationJob = viewModelScope.launch {
+            animateProgress(from = progress.floatValue, to = targetProgress, durationMillis)
+        }
+    }
+
+    @JvmOverloads
+    fun completeAndHide(durationMillis: Long = 300L, progressHoldMillis: Long = 500L) {
+        if (showCompletionAnimation || isCompleted) {
+            return
+        }
+        currentAnimationJob?.cancel()
+        currentAnimationJob = viewModelScope.launch {
+            if (progress.floatValue < 1f) {
+                animateProgress(from = progress.floatValue, to = 1f, durationMillis)
+            } else {
+                progress.floatValue = 1f
+            }
+            delay(progressHoldMillis)
+            showCompletionAnimation = true
+        }
+    }
+
+    fun hideNow() {
+        currentAnimationJob?.cancel()
+        showCompletionAnimation = false
+        viewModelScope.launch {
+            isCompleted = true
+        }
+    }
+
     fun onNextEvent(message: String, durationMillis: Long = 2000L) {
-        if (isCompleted) return
+        if (isCompleted || showCompletionAnimation) return
 
         // Вычисляем цель для следующего шага
         val nextTargetProgress = ((currentStepIndex + 1) * stepPercentage).coerceAtMost(0.99f)
@@ -51,7 +111,7 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
     }
 
     fun onNextEvent(message: String) {
-        if (isCompleted) return
+        if (isCompleted || showCompletionAnimation) return
 
         // Вычисляем цель для следующего шага
         val nextTargetProgress = ((currentStepIndex + 1) * stepPercentage).coerceAtMost(0.99f)
@@ -74,6 +134,11 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
     }
 
     private suspend fun animateProgress(from: Float, to: Float, durationMillis: Long) {
+        if (durationMillis <= 0L) {
+            progress.floatValue = to
+            return
+        }
+
         val startTime = System.currentTimeMillis()
         val endTime = startTime + durationMillis
 
@@ -92,17 +157,14 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
     }
 
     fun onCompleted() {
-        if (isCompleted) return
+        if (isCompleted || showCompletionAnimation) return
         currentMessage.value = "Виконано"
-        viewModelScope.launch {
-            progress.floatValue = 1f
-            delay(1000)
-            isCompleted = true
-        }
+        completeAndHide()
     }
 
     fun onCanceled() {
         if (isCompleted) return
+        showCompletionAnimation = false
         currentMessage.value = "Вiдмiнено"
         viewModelScope.launch {
             delay(500)
@@ -115,15 +177,23 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
         currentMessage.value = "Виконано"
         viewModelScope.launch {
             progress.floatValue = 1f
+            showCompletionAnimation = false
             isCompleted = true
         }
     }
 
     fun onCanceledNoAnim() {
         if (isCompleted) return
+        showCompletionAnimation = false
         currentMessage.value = "Вiдмiнено"
         viewModelScope.launch {
             isCompleted = true
         }
+    }
+
+    fun onCompletionAnimationFinished() {
+        if (isCompleted) return
+        showCompletionAnimation = false
+        isCompleted = true
     }
 }

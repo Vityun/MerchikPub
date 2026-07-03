@@ -145,7 +145,7 @@ public class RetrofitBuilder {
         OkHttpClient imageClient = new OkHttpClient.Builder()
 //                .dispatcher(imageDispatcher)
 //                .dispatcher(new Dispatcher(executorServiceForImage))
-                .connectTimeout(15, TimeUnit.SECONDS)
+                .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
 
@@ -165,6 +165,7 @@ public class RetrofitBuilder {
 
     public static WebSocket webSocket() {
         OkHttpClient client = new OkHttpClient.Builder()
+                .pingInterval(10, TimeUnit.SECONDS)
                 .build();
 
         Request request = new Request.Builder()
@@ -217,7 +218,8 @@ public class RetrofitBuilder {
         WebSocket webSocket;
         OkHttpClient client;
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .pingInterval(10, TimeUnit.SECONDS);
         client = builder.build();
         Request request = new Request.Builder()
                 .url("wss://ws.merchik.com.ua")
@@ -232,6 +234,10 @@ public class RetrofitBuilder {
             }
         }
 
+        final int userId = Globals.userId;
+        final String token = Globals.token;
+        final String sessionId = Globals.session;
+
         Globals.writeToMLOG("INFO", "WebSocket/Headers", "Headers: " + request.headers().toString());
 
         webSocket = client.newWebSocket(request, new WebSocketListener() {
@@ -242,12 +248,12 @@ public class RetrofitBuilder {
                 WebsocketParam websocketParam = new WebsocketParam();
                 websocketParam.act = "auth";
                 websocketParam.mod = "auth";
-                websocketParam.userId = Globals.userId;
-                websocketParam.token = Globals.token;
+                websocketParam.userId = userId;
+                websocketParam.token = token;
 
                 Selector selector = new Selector();
                 selector.platformId = 5;
-                selector.sessionId = Globals.session;
+                selector.sessionId = sessionId;
 
                 websocketParam.selector = selector;
 
@@ -288,13 +294,20 @@ public class RetrofitBuilder {
             }
 
             @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+                Log.i("WebSockets", "Closed : " + code + " / " + reason);
+                Globals.writeToMLOG("INFO", "WebSocket/onClosed", "Closed : " + code + " / " + reason);
+                click.click(webSocket);
+            }
+
+            @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 Log.i("WebSockets", "Error : " + t.getMessage());
                 Globals.writeToMLOG("INFO", "WebSocket/onFailure/Throwable", "Throwable t: " + t.getMessage());
                 if (response != null && response.body() != null) {
                     Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
                 }
-                click.click("error");
+                click.click(webSocket);
             }
         });
         return webSocket;

@@ -15,6 +15,10 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class server {
 
+    public interface SessionCheckCallback {
+        void onComplete(boolean success);
+    }
+
 
     /**
      * Создает тело запроса на основе полученных значений HashMap.
@@ -247,6 +251,14 @@ public class server {
      *
      * */
     public static void sessionCheckAndLogin(Context context, String login, String password) {
+        sessionCheckAndLoginInternal(context, login, password, false, null);
+    }
+
+    public static void sessionCheckAndLogin(Context context, String login, String password, SessionCheckCallback callback) {
+        sessionCheckAndLoginInternal(context, login, password, false, callback);
+    }
+
+    private static void sessionCheckAndLoginInternal(Context context, String login, String password, boolean loginAlreadyTried, SessionCheckCallback callback) {
         String modAuth = "auth";
 
         Log.e("sessionCheckAndLogin", "Проверка онлайн я или нет." + login + password);
@@ -261,21 +273,44 @@ public class server {
                     SessionCheck resp = response.body();
                     Log.e("sessionCheckAndLogin", "AUTH: " + resp.getAuth());
 
-                    if (resp.getState()) {
-                        if (!resp.getAuth()) {   // Если сессия протухла - логинимся
+                    if (Boolean.TRUE.equals(resp.getState())) {
+
+                        if (!Boolean.TRUE.equals(resp.getAuth())) {   // Если сессия протухла - логинимся
                             Log.e("sessionCheckAndLogin", "Сессия протухла - я пробую выполнить вход.");
                             Globals.onlineStatus = false;
-                            loginOnServer(context, login, password);
+                            if (loginAlreadyTried) {
+                                notifySessionCheck(callback, false);
+                            } else if (callback != null) {
+                                loginOnServer(context, login, password, success -> {
+                                    if (success) {
+                                        sessionCheckAndLoginInternal(context, login, password, true, callback);
+                                    } else {
+                                        notifySessionCheck(callback, false);
+                                    }
+                                });
+                            } else {
+                                loginOnServer(context, login, password);
+                            }
                         } else {
                             Globals.onlineStatus = true;
-                            Log.e("sessionCheckAndLogin", "Сессия нормальная - работаем дальше" + " /Кто залогинен, если все ок:" + resp.getUserInfo().getFio());
+                            Globals.session = response.body().getSessionId();
+                            if (resp.websocketParam != null && resp.websocketParam.token != null) {
+                                Globals.token = resp.websocketParam.token;
+                            }
+                            Log.e("current_session","sessionId: " + Globals.session);
+                            if (resp.getUserInfo() != null) {
+                                Log.e("sessionCheckAndLogin", "Сессия нормальная - работаем дальше" + " /Кто залогинен, если все ок:" + resp.getUserInfo().getFio());
+                            }
+                            notifySessionCheck(callback, true);
                         }
                     } else {
                         Globals.onlineStatus = false;
                         Log.e("sessionCheckAndLogin", "State = false");
+                        notifySessionCheck(callback, false);
                     }
                 } else {
                     Globals.onlineStatus = false;
+                    notifySessionCheck(callback, false);
                 }
             }
 
@@ -283,9 +318,16 @@ public class server {
             public void onFailure(retrofit2.Call<SessionCheck> call, Throwable t) {
                 Globals.onlineStatus = false;
                 Log.e("sessionCheckAndLogin", "FAILURE: " + t);
+                notifySessionCheck(callback, false);
             }
         });
 
+    }
+
+    private static void notifySessionCheck(SessionCheckCallback callback, boolean success) {
+        if (callback != null) {
+            callback.onComplete(success);
+        }
     }
 
 
@@ -297,6 +339,10 @@ public class server {
      * Передаю логин и пароль для этого.
      * */
     public static void loginOnServer(Context context, String login, String password) {
+        loginOnServer(context, login, password, null);
+    }
+
+    public static void loginOnServer(Context context, String login, String password, SessionCheckCallback callback) {
         String mod = "auth";
         String act = "sotr_auth";
 
@@ -311,13 +357,16 @@ public class server {
 
                     // Разбираем ответ на логин
                     Log.e("loginOnServer", "LOGIN STATE: " + resp.getState());
-                    if (resp.getState()) {
+                    if (Boolean.TRUE.equals(resp.getState())) {
                         Globals.onlineStatus = true;
+                        notifySessionCheck(callback, true);
                     } else {
                         Globals.onlineStatus = false;
+                        notifySessionCheck(callback, false);
                     }
                 } else {
                     Globals.onlineStatus = false;
+                    notifySessionCheck(callback, false);
                 }
             }
 
@@ -325,6 +374,7 @@ public class server {
             public void onFailure(retrofit2.Call<Login> callLogin, Throwable t) {
                 Log.e("loginOnServer", "FAILURE: " + t);
                 Globals.onlineStatus = false;
+                notifySessionCheck(callback, false);
             }
         });
 

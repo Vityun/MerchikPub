@@ -23,7 +23,7 @@ public class UploadResponse {
     }
 
     public static class ResultItem {
-        @SerializedName("ID") public String id;       // server ID (как "2973870")
+        @SerializedName(value = "ID", alternate = {"id"}) public String id;       // server ID (как "2973870")
         @SerializedName("state") public boolean state; // принято/отказано (или approved/declined)
         @SerializedName("comment") public String comment;
     }

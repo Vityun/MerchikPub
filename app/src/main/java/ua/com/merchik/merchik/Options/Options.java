@@ -436,6 +436,7 @@ public class Options {
                 case 164354:    // Фото Планограмми ТТ
                 case 132971:    // Фото товара біля вітрини
                 case 169109:    // Контроль наличия Фото POS материалов
+                case 174241:    // Контроль наличия Фото витрины с товарами конкурентов
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -1824,6 +1825,7 @@ public class Options {
             case 164354:    // Фото Планограмми ТТ
             case 164352:    // Контроль наявності світлини прикасової зони
             case 169109:    // Контроль наличия Фото POS материалов
+            case 174241:    // Контроль наличия Фото витрины с товарами конкурентов
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))

@@ -1,13 +1,16 @@
 package ua.com.merchik.merchik.Activities;
 
+import android.app.Activity;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 
 import com.google.android.gms.maps.MapsInitializer;
 import dagger.hilt.android.HiltAndroidApp;
@@ -28,6 +31,7 @@ import ua.com.merchik.merchik.database.room.RoomManager;
 public class MyApplication extends Application {
 
     private static Context context;
+    private static WeakReference<Activity> currentActivity = new WeakReference<>(null);
 
     @Override
     public void onCreate() {
@@ -38,6 +42,40 @@ public class MyApplication extends Application {
         Clock.initTime();
 
         MyApplication.context = getApplicationContext();
+        registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+            }
+
+            @Override
+            public void onActivityStarted(Activity activity) {
+            }
+
+            @Override
+            public void onActivityResumed(Activity activity) {
+                currentActivity = new WeakReference<>(activity);
+            }
+
+            @Override
+            public void onActivityPaused(Activity activity) {
+            }
+
+            @Override
+            public void onActivityStopped(Activity activity) {
+            }
+
+            @Override
+            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+            }
+
+            @Override
+            public void onActivityDestroyed(Activity activity) {
+                Activity current = currentActivity.get();
+                if (current == activity) {
+                    currentActivity = new WeakReference<>(null);
+                }
+            }
+        });
 
 //        throw new RuntimeException("Test Crash"); // Force a crash
         File cacheDir = getCacheDir();
@@ -87,6 +125,10 @@ public class MyApplication extends Application {
 
     public static Context getAppContext() {
         return MyApplication.context;
+    }
+
+    public static Activity getCurrentActivity() {
+        return currentActivity.get();
     }
 
 

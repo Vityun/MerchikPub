@@ -2,8 +2,6 @@ package ua.com.merchik.merchik.dialogs.features
 
 import android.app.Activity
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
@@ -17,17 +15,20 @@ class LoadingDialogWithPercent(val context: Activity,
 
     private val isDialogVisible = mutableStateOf(false)
     private var listener: DialogDismissedListener? = null
+    private var composeView: ComposeView? = null
 
     fun show() {
+        if (isDialogVisible.value) return
+
         isDialogVisible.value = true
-        val composeView = ComposeView(context).apply {
+        val view = ComposeView(context).apply {
             setContent {
                 MerchikTheme {
                     if (isDialogVisible.value) {
                         LoadingDialog(
                             viewModel = progressViewModel,
                             onDismiss = {
-                                isDialogVisible.value = false
+                                dismiss()
                                 listener?.onDialogDismissed() // Вызываем слушатель
                             }
                         )
@@ -36,7 +37,18 @@ class LoadingDialogWithPercent(val context: Activity,
             }
         }
         // Вставляем ComposeView в корневой layout
-        context.findViewById<ViewGroup>(android.R.id.content).addView(composeView)
+        composeView = view
+        context.findViewById<ViewGroup>(android.R.id.content).addView(view)
+    }
+
+    fun dismiss() {
+        if (!isDialogVisible.value && composeView == null) return
+
+        isDialogVisible.value = false
+        composeView?.let { view ->
+            (view.parent as? ViewGroup)?.removeView(view)
+        }
+        composeView = null
     }
 
     fun isShowing(): Boolean {

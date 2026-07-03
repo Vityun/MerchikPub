@@ -1765,13 +1765,9 @@ abstract class MainViewModel(
 
                 RnoRequestStatus.SUBMITTED -> {
                     _events.emit(MainEvent.LoadingCanceled)
-                    val message = if (result.createdCount == 0 && result.alreadySubmittedCount > 0) {
-                        "Запит на ці роботи вже було подано раніше. Як тільки куратор дасть відповідь, Ви отримаєте повідомлення."
-                    } else {
-                        "Заявку створено та збережено. Для підтвердження виконайте обмін із сервером."
-                    }
+                    val message = buildRnoSubmittedMessage(result)
                     emitRnoMessage(
-                        subTitle = "Заявка збережена",
+                        subTitle = if (result.notice.isNullOrBlank()) "Заявка збережена" else "Відповідь від сервера",
                         message = message,
                         status = DialogStatus.ALERT
                     )
@@ -1787,6 +1783,26 @@ abstract class MainViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun buildRnoSubmittedMessage(result: RnoRequestResult): String {
+        val notice = result.notice?.takeIf { it.isNotBlank() }
+        val fallback = if (result.createdCount == 0 && result.alreadySubmittedCount > 0) {
+            "Запит на ці роботи вже було подано раніше. Як тільки куратор дасть відповідь, Ви отримаєте повідомлення."
+        } else {
+            "Заявку створено та передано на сервер. Як тільки куратор дасть відповідь, Ви отримаєте повідомлення."
+        }
+
+        val message = notice ?: fallback
+        val comment = result.comment?.takeIf { it.isNotBlank() }
+        val isSingleRequest = result.requestedDad2List.distinct().size <= 1 &&
+                (result.createdCount + result.alreadySubmittedCount <= 1)
+
+        return if (isSingleRequest && comment != null) {
+            "$message<br><br>$comment"
+        } else {
+            message
         }
     }
 
@@ -2390,7 +2406,7 @@ abstract class MainViewModel(
             // 1) обмен
             val uploadDisp =
                 tablesLoadingUnloading.uploadPlanBudgetRx()  // новая Rx-версия (ниже)
-                    .timeout(35, java.util.concurrent.TimeUnit.SECONDS)
+                    .timeout(135, java.util.concurrent.TimeUnit.SECONDS)
                     .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ _ ->
                         // 2) ожидание решения в БД до 28.7 сек

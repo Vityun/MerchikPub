@@ -20,6 +20,7 @@ import android.util.Pair;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -421,7 +422,7 @@ public class TablesLoadingUnloading {
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
         if (sTable != null) {
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
+            vpi = sTable.getVpi_app() - 60 * 75;
             Log.e("updateWpData", "vpi: " + vpi);
         } else
             vpi = 0;
@@ -509,7 +510,8 @@ public class TablesLoadingUnloading {
                                     );
                                 }
 
-
+//                                Toast.makeText(context, "Added " + wpDataDBList.size() + " works", Toast.LENGTH_LONG).show();
+                                Log.e("downloadWPData", "Added " + wpDataDBList.size() + " works");
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
                                 INSTANCE.executeTransaction(realm -> {
@@ -520,6 +522,9 @@ public class TablesLoadingUnloading {
                                 });
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
                             } else {
+//                                Toast.makeText(context, "No works added", Toast.LENGTH_LONG).show();
+                                Log.e("downloadWPData", "No works added");
+
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
                                 isdownloadWPData = false;
                             }
@@ -1398,6 +1403,10 @@ public class TablesLoadingUnloading {
         public final int autoApprovedCount;
         public final List<Long> dad2List;
         public final String notice;
+        public final int serverResultCount;
+        public final int serverApprovedCount;
+        public final int serverRejectedCount;
+        public final List<String> comments;
 
         public UploadPlanBudgetResult(
                 int updatedCount,
@@ -1405,14 +1414,31 @@ public class TablesLoadingUnloading {
                 List<Long> dad2List,
                 String notice
         ) {
+            this(updatedCount, autoApprovedCount, dad2List, notice, 0, 0, 0, null);
+        }
+
+        public UploadPlanBudgetResult(
+                int updatedCount,
+                int autoApprovedCount,
+                List<Long> dad2List,
+                String notice,
+                int serverResultCount,
+                int serverApprovedCount,
+                int serverRejectedCount,
+                List<String> comments
+        ) {
             this.updatedCount = updatedCount;
             this.autoApprovedCount = autoApprovedCount;
             this.dad2List = dad2List;
             this.notice = notice;
+            this.serverResultCount = serverResultCount;
+            this.serverApprovedCount = serverApprovedCount;
+            this.serverRejectedCount = serverRejectedCount;
+            this.comments = comments;
         }
     }
 
-    private final AtomicReference<SingleSubject<UploadPlanBudgetResult>> inFlight =
+    private static final AtomicReference<SingleSubject<UploadPlanBudgetResult>> uploadPlanBudgetInFlight =
             new AtomicReference<>(null);
 
     private final CompositeDisposable disposables2 = new CompositeDisposable();
@@ -1470,20 +1496,56 @@ public class TablesLoadingUnloading {
     }
 
     public Single<UploadPlanBudgetResult> uploadPlanBudgetRx() {
-        SingleSubject<UploadPlanBudgetResult> current = inFlight.get();
+        SingleSubject<UploadPlanBudgetResult> current = uploadPlanBudgetInFlight.get();
         if (current != null) {
-            return current; // уже выполняется — подписываемся на тот же результат
+            return current.flatMap(ignored -> uploadPlanBudgetRx());
         }
 
         SingleSubject<UploadPlanBudgetResult> subject = SingleSubject.create();
-        if (!inFlight.compareAndSet(null, subject)) {
+        if (!uploadPlanBudgetInFlight.compareAndSet(null, subject)) {
             // кто-то успел раньше
-            return inFlight.get();
+            SingleSubject<UploadPlanBudgetResult> running = uploadPlanBudgetInFlight.get();
+            if (running != null) {
+                return running;
+            }
+            return uploadPlanBudgetRx();
         }
 
         Disposable d = startUploadChainRx()
-                .doFinally(() -> inFlight.set(null))
-                .subscribe(subject::onSuccess, subject::onError);
+                .subscribe(
+                        result -> {
+                            uploadPlanBudgetInFlight.compareAndSet(subject, null);
+                            subject.onSuccess(result);
+                        },
+                        error -> {
+                            uploadPlanBudgetInFlight.compareAndSet(subject, null);
+                            subject.onError(error);
+                        }
+                );
+
+        disposables.add(d);
+        return subject;
+    }
+
+    @Nullable
+    public Single<UploadPlanBudgetResult> uploadPlanBudgetRxIfIdle() {
+        SingleSubject<UploadPlanBudgetResult> subject = SingleSubject.create();
+        if (!uploadPlanBudgetInFlight.compareAndSet(null, subject)) {
+            Log.i("UPLOAD", "uploadPlanBudgetRx already running; skipped new request");
+            return null;
+        }
+
+        Disposable d = startUploadChainRx()
+                .subscribe(
+                        result -> {
+                            uploadPlanBudgetInFlight.compareAndSet(subject, null);
+                            subject.onSuccess(result);
+                        },
+                        error -> {
+                            uploadPlanBudgetInFlight.compareAndSet(subject, null);
+                            subject.onError(error);
+                        }
+                );
 
         disposables.add(d);
         return subject;
@@ -1514,10 +1576,16 @@ public class TablesLoadingUnloading {
                     data.data = servs;
 
                     JsonObject body = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+                    Log.e("wp_data_request_add","startUploadChainRx: " + body);
 
                     return RetrofitBuilder.getRetrofitInterface()
                             .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, body)
                             .map(resp -> {
+                                Log.e("wp_data_request_add","startUploadChainRx response: " +new Gson().toJson(resp));
+                                Log.e("wp_data_request_add","startUploadChainRx response data: " +new Gson().toJson(resp.data));
+                                Log.e("wp_data_request_add","startUploadChainRx response result: " +new Gson().toJson(resp.result));
+                                Log.e("wp_data_request_add","startUploadChainRx response result: " +new Gson().toJson(resp.notice));
+
                                 List<Pair<Long, Long>> mapping = new ArrayList<>();
                                 List<UploadResponse.ResultItem> results = new ArrayList<>();
 
@@ -1555,8 +1623,34 @@ public class TablesLoadingUnloading {
                                 @SuppressWarnings("unchecked")
                                 List<UploadResponse.ResultItem> results = (List<UploadResponse.ResultItem>) arr[1];
 
+                                int serverResultCount = results == null ? 0 : results.size();
+                                int serverApprovedCount = 0;
+                                int serverRejectedCount = 0;
+                                List<String> comments = new ArrayList<>();
+                                if (results != null) {
+                                    for (UploadResponse.ResultItem r : results) {
+                                        if (r == null) continue;
+                                        if (r.state) {
+                                            serverApprovedCount++;
+                                        } else {
+                                            serverRejectedCount++;
+                                        }
+                                        if (r.comment != null && !r.comment.trim().isEmpty()) {
+                                            comments.add(r.comment);
+                                        }
+                                    }
+                                }
                                 if (mapping == null || mapping.isEmpty()) {
-                                    return Single.just(new UploadPlanBudgetResult(0, 0, null, null));
+                                    return Single.just(new UploadPlanBudgetResult(
+                                            0,
+                                            serverApprovedCount,
+                                            null,
+                                            notice,
+                                            serverResultCount,
+                                            serverApprovedCount,
+                                            serverRejectedCount,
+                                            comments
+                                    ));
                                 }
                                 List<Long> dad2List = new ArrayList<Long>();
                                 return Completable
@@ -1585,7 +1679,16 @@ public class TablesLoadingUnloading {
                                             });
                                         })
                                         .subscribeOn(Schedulers.io())
-                                        .andThen(Single.just(new UploadPlanBudgetResult(mapping.size(), 0, dad2List, notice)));
+                                        .andThen(Single.just(new UploadPlanBudgetResult(
+                                                mapping.size(),
+                                                serverApprovedCount,
+                                                dad2List,
+                                                notice,
+                                                serverResultCount,
+                                                serverApprovedCount,
+                                                serverRejectedCount,
+                                                comments
+                                        )));
                             });
                 });
     }
@@ -1632,10 +1735,13 @@ public class TablesLoadingUnloading {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("wp_data_request_add","startUploadChain: " + convertedObject);
 
         Disposable d = RetrofitBuilder.getRetrofitInterface()
                 .UPLOAD_WP_DATA_ADDITIONAL(RetrofitBuilder.contentType, convertedObject) // Single<UploadResponse>
                 .map(resp -> {
+                    Log.e("wp_data_request_add","response data: " +new Gson().toJson(resp.data));
+                    Log.e("wp_data_request_add","response result: " +new Gson().toJson(resp.result));
                     List<Pair<Long, Long>> mapping = new ArrayList<>();
                     if (resp != null && resp.data != null) {
                         for (UploadResponse.Item it : resp.data) {
@@ -2387,22 +2493,19 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<SotrTable> call, Response<SotrTable> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSESotrTable: " + response.body());
                     if (response.body().getState()) {
 //                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Успех.", 1095, null, null, null, null, null, Globals.session, null)));
                         if (!response.body().getList().isEmpty()) {
-                            Log.e("TAG_TABLE", "ListS: 200");
-
                             ArrayList<UsersDB> list = new ArrayList<UsersDB>();
                             List<SotrTableList> responseList = response.body().getList();
 
                             for (int i = 0; i < responseList.size(); i++) {
-                                if (responseList.get(i).getFio().contains("Примак")) {
-                                    SotrTableList sotr = responseList.get(i);
-                                    Log.e("!!!!!!!!!!!", "sotr: " + sotr.getFio());
-                                }
-                                if (responseList.get(i).getWork_start_date() != null && !responseList.get(i).getWork_start_date().isEmpty())
-                                    Log.e("!!!!!!!!!!", "sotr_list: " + responseList.get(i).getWork_start_date());
+//                                if (responseList.get(i).getFio().contains("Примак")) {
+//                                    SotrTableList sotr = responseList.get(i);
+//                                    Log.e("!!!!!!!!!!!", "sotr: " + sotr.getFio());
+//                                }
+//                                if (responseList.get(i).getWork_start_date() != null && !responseList.get(i).getWork_start_date().isEmpty())
+//                                    Log.e("!!!!!!!!!!", "sotr_list: " + responseList.get(i).getWork_start_date());
                                 list.add(i, new UsersDB(
                                         responseList.get(i).getUser_id(),
                                         responseList.get(i).getFio(),

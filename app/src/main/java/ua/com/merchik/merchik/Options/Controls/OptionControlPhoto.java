@@ -10,6 +10,8 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import com.google.gson.Gson;
+
 import java.util.Date;
 import java.util.List;
 
@@ -95,6 +97,10 @@ public class OptionControlPhoto<T> extends OptionControl {
         } else {
             optionId = optionDB.getOptionControlId();
         }
+
+
+        Log.e("OptionControlPhoto","optionId 8====> " + optionId);
+        Log.e("OptionControlPhoto","8====> " + new Gson().toJson(optionDB));
 
         int m = Integer.parseInt(optionDB.getAmountMin());
 //        if (m == 0) {
@@ -221,6 +227,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                 photoType = 47; // 47 - фото POS материалов
                 m = m > 0 ? m : 1;
                 break;
+            case "174241":  // Контроль наличия Фото витрины с товарами конкурентов
+                photoType = 49; // 47 - фото витрины с товарами конкурентов
+                m = m > 0 ? m : 1;
+                break;
 
         }
 
@@ -231,7 +241,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         else
             m = m + 1;
 
-        if (optionId.equals("134583"))
+        if (optionDB.getOptionId().equals("134583") || optionDB.getOptionId().equals("158308"))
             m = m + 1;
 
         int adress = ((WpDataDB) document).getAddr_id();
@@ -279,7 +289,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 int currentAddr = wpDataDB.getAddr_id();
                 Log.e("!!!158609!!!", "B-> currentAddr: " + currentAddr);
 
-                // ⚠️ ВАЖНО: ЭТО ДОЛЖНО СООТВЕТСТВОВАТЬ 1С "Гру"
+                // ЭТО ДОЛЖНО СООТВЕТСТВОВАТЬ 1С "Гру"
                 int currentGrp = addressSDB.tpId; // если в 1С это торговая марка
                 Log.e("!!!158609!!!", "B-> currentGrp: " + currentGrp);
                 // === ШАГ C: ВсеСетиАдреса ===

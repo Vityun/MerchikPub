@@ -498,7 +498,8 @@ enum class ContextUI {
     ERROR_FROM_TEXT_EDITOR,
     AKCIYA_FROM_TEXT_EDITOR,
     QUESTION_ANSWER_INFO,
-    ADD_THEME_QUESTION_ANSWER
+    ADD_THEME_QUESTION_ANSWER,
+    OPTIONS
 }
 
 
@@ -594,7 +595,7 @@ sealed interface MainEvent {
     data object OpenSmsPlanDirectory : MainEvent
 
     data class ShowCardItemsDialog(val cardItemsData: CardItemsData) : MainEvent
-    data class ShowLoading(val title: String, val durationMs: Long = 28_700L) : MainEvent
+    data class ShowLoading(val title: String, val durationMs: Long = 180_700L) : MainEvent
     data object LoadingCompleted : MainEvent
     data object LoadingCanceled : MainEvent
     data class ShowMessageDialog(val data: MessageDialogData) : MainEvent

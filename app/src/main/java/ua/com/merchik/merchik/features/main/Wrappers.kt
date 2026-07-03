@@ -1062,6 +1062,20 @@ object ErrorDBOverride {
     }
 
 }
+
+object OptionsDBOverride {
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("timeColor", "")
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
+    }
+
+}
 @SuppressLint("SimpleDateFormat")
 fun formatDateString(raw: String?): String {
     if (raw.isNullOrBlank()) return ""
