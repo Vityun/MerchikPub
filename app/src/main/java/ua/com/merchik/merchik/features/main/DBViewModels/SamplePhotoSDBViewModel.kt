@@ -109,6 +109,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                 else -> {
                     null
                 }
@@ -152,7 +153,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213
                     -> {
                     typePhotoId?.let {
                         val workPlan = WorkPlan()
@@ -206,6 +208,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                 else -> {
                     null
                 }
@@ -216,15 +219,23 @@ class SamplePhotoSDBViewModel @Inject constructor(
             typePhotoId?.let {
                 /* времено пока Вова не починит */
                 val imagesType =
-                    if (typePhotoId == 48) {
-                        val im = ImagesTypeListDB()
-                        im.id = 48
-                        im.nm = "Фото Biтрини з Aкційними Цінниками"
-                        im
-                    } else
-                        RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
+//                    when (typePhotoId) {
+//                         48 -> {
+//                            val im = ImagesTypeListDB()
+//                            im.id = 48
+//                            im.nm = "Фото Biтрини з Aкційними Цінниками"
+//                            im
+//                        }
+//                        49 -> {
+//                            val im = ImagesTypeListDB()
+//                            im.id = 49
+//                            im.nm = "Фото Biтрини Конекрентiв"
+//                            im
+//                        }
+//                        else ->
+                            RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
 
-
+//                    }
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",
                     ImagesTypeListDB::class,

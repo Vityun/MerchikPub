@@ -54,6 +54,7 @@ abstract class BaseMapViewModel(
             }
 
             is MapIntent.SetInput -> onSetInput(intent)
+            is MapIntent.SetPointsInput -> onSetPointsInput(intent)
             is MapIntent.MarkerClicked -> onMarkerClicked(intent.point, intent.positionOptions)
             MapIntent.ConfirmJump -> onConfirm()
             MapIntent.DismissConfirm -> Unit
@@ -115,6 +116,43 @@ abstract class BaseMapViewModel(
             didAutoCenter = true
         }
 
+    }
+
+    private fun onSetPointsInput(i: MapIntent.SetPointsInput) = viewModelScope.launch(Dispatchers.Default) {
+        val effectiveDistance = i.distanceMeters?.toDouble() ?: 5_000.0
+        val pointsUi = makeUiUC(
+            i.center,
+            i.points,
+            emptyMap<Int, Pair<Int, Double>>(),
+            effectiveDistance
+        )
+
+        _state.update {
+            it.copy(
+                isLoading = false,
+                filtered = emptyList(),
+                center = i.center,
+                pointsUi = pointsUi,
+                userLat = i.userLat,
+                userLon = i.userLon,
+                autoBaselineRadiusMeters = null,
+                customRadiusMeters = i.distanceMeters?.toDouble(),
+                circleRadiusMeters = i.distanceMeters?.toDouble()
+            )
+        }
+
+        val latLngs = buildList {
+            i.center?.let { add(it.pos) }
+            addAll(i.points.map { com.google.android.gms.maps.model.LatLng(it.lat, it.lon) })
+            val uLat = i.userLat
+            val uLon = i.userLon
+            if (isValidLatLon(uLat, uLon)) add(com.google.android.gms.maps.model.LatLng(uLat!!, uLon!!))
+        }
+
+        if (i.autoCenterOnSetInput && !didAutoCenter && latLngs.isNotEmpty()) {
+            _effects.emit(MapEffect.MoveCamera(currentSessionId, latLngs, padding = 80, zoomIfSingle = 14f))
+            didAutoCenter = true
+        }
     }
 
 

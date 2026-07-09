@@ -1846,6 +1846,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<ImageTypes> call, Response<ImageTypes> response) {
                 Log.e("TAG_TEST", "RESPONSE_1" + response.body());
+                Log.e("TAG_TEST", "RESPONSE_1"  + new Gson().toJson(response.body()));
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getMenuList() != null && response.body().getMenuList().getImagesTypeList() != null) {
 

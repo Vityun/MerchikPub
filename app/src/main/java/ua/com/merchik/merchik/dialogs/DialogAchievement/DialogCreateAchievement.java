@@ -86,6 +86,8 @@ public class DialogCreateAchievement {
     //    private Button photoTo, photoAfter;
     private ImageView photoToIV, photoAfterIV;
 
+    private final int THEME_YTRIMANIE = 1251;
+
 //    private Spinner spinnerTheme;
 //    private Spinner spinnerClient, spinnerManufacture;
 //    public static String[] themeList = new String[]{
@@ -256,19 +258,19 @@ public class DialogCreateAchievement {
                     achievementsSDB.manufacturer = AchievementDataHolder.Companion.instance().getManufactureId();
                 }
 
-                if (AchievementDataHolder.Companion.instance().getPhotoHashTo() != null) {
+                if (AchievementDataHolder.Companion.instance().getPhotoHashTo() != null && !Objects.requireNonNull(AchievementDataHolder.Companion.instance().getPhotoHashTo()).isEmpty()) {
                     achievementsSDB.img_before_hash = AchievementDataHolder.Companion.instance().getPhotoHashTo();
-                } else if (stackPhotoDBTo != null && stackPhotoDBTo.getPhoto_hash() != null) {
-                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
+//                } else if (stackPhotoDBTo != null && stackPhotoDBTo.getPhoto_hash() != null) {
+//                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if (AchievementDataHolder.Companion.instance().getPhotoHashAfter() != null) {
+                if (AchievementDataHolder.Companion.instance().getPhotoHashAfter() != null && !Objects.requireNonNull(AchievementDataHolder.Companion.instance().getPhotoHashAfter()).isEmpty()) {
                     achievementsSDB.img_after_hash = AchievementDataHolder.Companion.instance().getPhotoHashAfter();
-                } else if (stackPhotoDBAfter != null && stackPhotoDBAfter.getPhoto_hash() != null) {
-                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+//                } else if (stackPhotoDBAfter != null && stackPhotoDBAfter.getPhoto_hash() != null) {
+//                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
@@ -488,54 +490,35 @@ public class DialogCreateAchievement {
     }
 
     public void buttonPhotoTo() {
-//        photoTo.setVisibility(View.GONE);
+
         photoToIV.setVisibility(View.VISIBLE);
         photoToIV.setOnClickListener(v -> {
+            Long previusDad2 = null;
+            if (AchievementDataHolder.Companion.instance().getThemeId() != null &&
+                    AchievementDataHolder.Companion.instance().getThemeId() == THEME_YTRIMANIE){
+                previusDad2 = RealmManager.getPreviousVisitDad2(codeDad2);
+            }
+
+
+
+
             Intent intent = new Intent(context, FeaturesActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
-            bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
+            if (previusDad2 == null) {
+                bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
+                bundle.putString("dataJson", new Gson().toJson(codeDad2));
+
+            } else {
+                bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE.toString());
+                bundle.putString("dataJson", new Gson().toJson(previusDad2));
+            }
             bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-            bundle.putString("dataJson", new Gson().toJson(codeDad2));
             bundle.putString("title", "Перелік фото звітів");
             bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(14).getNm());
             intent.putExtras(bundle);
             ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });
-//        photoTo.setOnClickListener(v -> {
-//            try {
-//                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-//                intentPhotoLog.putExtra("achievements", true);
-//                intentPhotoLog.putExtra("choise", true);
-//                intentPhotoLog.putExtra("dad2", codeDad2);
-//                intentPhotoLog.putExtra("photoType", 14);
-//                v.getContext().startActivity(intentPhotoLog);
-//
-//                photoTo.setVisibility(View.GONE);
-//
-//                clickVoidAchievement = new Clicks.click() {
-//                    @Override
-//                    public <T> void click(T data) {
-//                        stackPhotoDBTo = (StackPhotoDB) data;
-//                        photoToIV.setVisibility(View.VISIBLE);
-//                        photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
-//                        photoToIV.setOnClickListener(v1 -> {
-//                            try {
-//                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-//                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-//                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-//                                dialogFullPhoto.show();
-//                            } catch (Exception e) {
-//                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
-//                            }
-//                        });
-//                    }
-//                };
-//
-//            } catch (Exception e) {
-//                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-//            }
-//        });
     }
 
     public void buttonPhotoAfter() {
@@ -553,175 +536,9 @@ public class DialogCreateAchievement {
             intent.putExtras(bundle);
             ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });
-//        photoAfterIV.setOnClickListener(v -> {
-//            try {
-//                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-//                intentPhotoLog.putExtra("achievements", true);
-//                intentPhotoLog.putExtra("choise", true);
-//                intentPhotoLog.putExtra("dad2", codeDad2);
-//                intentPhotoLog.putExtra("photoType", 0);
-//                v.getContext().startActivity(intentPhotoLog);
-//
-////                photoAfter.setVisibility(View.GONE);
-//
-//                clickVoidAchievement = new Clicks.click() {
-//                    @Override
-//                    public <T> void click(T data) {
-//                        stackPhotoDBAfter = (StackPhotoDB) data;
-//                        photoAfterIV.setVisibility(View.VISIBLE);
-//                        photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
-//                        photoAfterIV.setOnClickListener(v1 -> {
-//                            try {
-//                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-//                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-//                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-//                                dialogFullPhoto.show();
-//                            } catch (Exception e) {
-//                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
-//                            }
-//                        });
-//                    }
-//                };
-//
-//            } catch (Exception e) {
-//                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-//            }
-//        });
+
     }
 
-//    public void createSpinnerTheme() {
-////        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
-////        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//
-//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
-//        spinnerTheme.setAdapter(adapter1);
-//        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @Override
-//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-//                String data = adapterView.getItemAtPosition(i).toString();
-//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-//
-//                if (data.equals(themeList[0])) {
-//                    spinnerThemeResult = 595;
-//                } else if (data.equals(themeList[1])) {
-//                    spinnerThemeResult = 1252;
-//                } else if (data.equals(themeList[2])) {
-//                    spinnerThemeResult = 1251;
-//                }/*else {
-//                    spinnerThemeResult = 595;
-//                }*/
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> adapterView) {
-//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-////                spinnerThemeResult = 595;
-//            }
-//        });
-//    }
-
-//    public void createSpinnerClient() {
-//        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(clientId, "1253");
-//
-//        if (additionalRequirementsDBList == null) return;
-//
-//        String[] clientList = new String[additionalRequirementsDBList.size() + 1];
-//        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
-//        for (int i = 0; i < additionalRequirementsDBList.size(); i++) {
-//            clientList[i + 1] = additionalRequirementsDBList.get(i).getNotes();
-//        }
-//
-//
-////        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
-////        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//
-//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
-//        spinnerClient.setAdapter(adapter1);
-//        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @RequiresApi(api = Build.VERSION_CODES.N)
-//            @Override
-//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-//                String data = adapterView.getItemAtPosition(i).toString();
-//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-//
-//                // Используем Stream для поиска объекта в списке по значению notes
-//                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
-//                        .filter(item -> data.equals(item.getNotes()))
-//                        .findFirst();
-//
-//                // Проверяем, найден ли объект
-//                if (foundObject.isPresent()) {
-//                    // Объект найден, можно получить его id или выполнить другие действия
-//                    int objectId = foundObject.get().getId();
-//                    spinnerClientResult = objectId;
-//                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
-//                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
-//                    spinnerClientResult = 1;
-//                } else {
-//                    // Объект не найден
-//                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> adapterView) {
-//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-//                spinnerClientResult = 0;
-//            }
-//        });
-//    }
-
-//    public void createSpinnerManufacture() {
-//        List<TovarDB> tovarDBList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2));
-//
-//        String[] ids = new String[tovarDBList.size()];
-//        int j = 0;
-//        for (TovarDB item : tovarDBList) {
-//            ids[j++] = item.getManufacturerId();
-//        }
-//
-//        List<TradeMarkDB> tradeMarkDBList = TradeMarkRealm.getTradeMarkByIds(ids);
-//
-//        String[] list = new String[tradeMarkDBList.size()];
-//        for (int i = 0; i < tradeMarkDBList.size(); i++) {
-//            list[i] = tradeMarkDBList.get(i).getNm();
-//        }
-//
-//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, list, "Оберіть торгівельну марку товару");
-//        spinnerManufacture.setAdapter(adapter1);
-//        spinnerManufacture.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @RequiresApi(api = Build.VERSION_CODES.N)
-//            @Override
-//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-//                String data = adapterView.getItemAtPosition(i).toString();
-//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-//
-//                // Используем Stream для поиска объекта в списке по значению notes
-//                Optional<TradeMarkDB> foundObject = tradeMarkDBList.stream()
-//                        .filter(item -> data.equals(item.getNm()))
-//                        .findFirst();
-//
-//                // Проверяем, найден ли объект
-//                if (foundObject.isPresent()) {
-//                    // Объект найден, можно получить его id или выполнить другие действия
-//                    int objectId = Integer.parseInt(foundObject.get().getID());
-//                    spinnerManufactureResult = objectId;
-//                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
-//                }/* else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
-//                    spinnerManufactureResult = 1;
-//                }*/ else {
-//                    // Объект не найден
-//                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> adapterView) {
-//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-////                spinnerManufactureResult = 0;
-//            }
-//        });
-//    }
 
     public void setData(WpDataDB wpDataDB) {
         AchievementDataHolder.Companion.instance().init();

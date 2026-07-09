@@ -90,6 +90,7 @@ class StackPhotoDBViewModel @Inject constructor(
         when (contextUI) {
             ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
             ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+            ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
             ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
@@ -101,6 +102,7 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.STACK_PHOTO_FROM_OPTION_158605,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
                 -> {
 
@@ -152,7 +154,8 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
                     ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> 14
 
-                    ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> 0
+                    ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
+                    ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE -> 0
                     ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
@@ -164,21 +167,16 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                     else -> 0 // Резервное значение, не должно использоваться
                 }
 
-                val imagesType = /* времено пока Вова не починит */
-                    if (typePhotoId == 48) {
-                        val im = ImagesTypeListDB()
-                        im.id = 48
-                        im.nm = "Фото Biтрини з Aкційними Цінниками"
-                        im
-                    } else
-                        RealmManager.INSTANCE.copyFromRealm(
-                            PhotoTypeRealm.getPhotoTypeById(
-                                typePhotoId
-                            )
-                        )
+                val imagesType = RealmManager.INSTANCE.copyFromRealm(
+                    PhotoTypeRealm.getPhotoTypeById(
+                        typePhotoId
+                    )
+                )
+
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",
                     ImagesTypeListDB::class,
@@ -211,6 +209,7 @@ class StackPhotoDBViewModel @Inject constructor(
             when (contextUI) {
                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+                ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
                 ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
@@ -222,6 +221,7 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.STACK_PHOTO_FROM_OPTION_158605,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
                     -> {
                     var codeDad2: Long
@@ -248,7 +248,9 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                         ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> 14
 
+                        ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
                         ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> 0
+
                         ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
@@ -260,6 +262,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                         else -> 0 // Резервное значение, не должно использоваться
                     }
 
@@ -275,10 +278,12 @@ class StackPhotoDBViewModel @Inject constructor(
                     repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)
                         .map {
                             val photoId = when (contextUI) {
+                                ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
                                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT ->
                                     AchievementDataHolder.instance().photoToId
 
                                 ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> AchievementDataHolder.instance().photoAfterId
+
                                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> VizitShowcaseDataHolder.getInstance()[id].photoDoId
 
                                 else -> 0
@@ -307,6 +312,7 @@ class StackPhotoDBViewModel @Inject constructor(
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
         (itemsUI.first().rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.let {
             when (contextUI) {
+                ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> {
                     AchievementDataHolder.instance().photoToId = it.id
                     AchievementDataHolder.instance().photoToURI = it.photo_num
@@ -353,6 +359,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     )
                 if (wpDataDB != null) {
                     val typePhotoId = when (contextUI) {
+                        ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> 14
                         else -> {
                             null

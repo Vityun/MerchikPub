@@ -567,12 +567,16 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
         // сохраняем сигнал
+        float finalShtraf = shtraf;
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
+                    double penalty = wpDataDB.getCash_zakaz() * finalShtraf;
                     optionDB.setIsSignal("1");
+                    optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {
                     optionDB.setIsSignal("2");
+                    optionDB.setSumPenalty("0.00");
                 }
                 realm.insertOrUpdate(optionDB);
             }

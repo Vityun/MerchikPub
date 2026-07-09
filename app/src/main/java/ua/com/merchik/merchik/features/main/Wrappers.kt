@@ -19,6 +19,8 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -1064,6 +1066,36 @@ object ErrorDBOverride {
 }
 
 object OptionsDBOverride {
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+
+        "sum_penalty" -> {
+            try {
+                val sum = formatUah(value.toString())
+                if (sum.contains("0.00"))
+                    sum
+                else
+                    "-${formatUah(value.toString())}"
+            } catch (_: Exception) {
+                value.toString()
+            }
+        }
+        "sum_premiya" -> {
+            try {
+                val sum = formatUah(value.toString())
+                if (sum.contains("0.00"))
+                    sum
+                else
+                    "+${formatUah(value.toString())}"
+            } catch (_: Exception) {
+                value.toString()
+            }
+        }
+        else -> value.toString()
+
+    }
+
+
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         val color =
             try {
@@ -1075,7 +1107,29 @@ object OptionsDBOverride {
         return MerchModifier(background = color)
     }
 
+    fun getHidedFieldsOnUI(): String =
+        "ID, client_id, addr_id, user_id, dt, code_dad2, doc_id, doc_type, " +
+                "option_block_1, option_block_2, " +
+                "priznak, proveden, deleted, lesson_id, so, notes, " +
+                "author_id, dt_change, " +
+                "amount_max, price, percent, block_pns, key_option, " +
+                "option_group, option_group_txt, timeColor"
+
+
+
+    private fun formatUah(value: String?): String {
+        val amount = value
+            ?.trim()
+            ?.replace(',', '.')
+            ?.toBigDecimalOrNull()
+            ?.setScale(2, RoundingMode.HALF_UP)
+            ?: BigDecimal.ZERO.setScale(2)
+
+        return "${amount.toPlainString()} грн"
+    }
+
 }
+
 @SuppressLint("SimpleDateFormat")
 fun formatDateString(raw: String?): String {
     if (raw.isNullOrBlank()) return ""

@@ -10,6 +10,7 @@ import ua.com.merchik.merchik.features.main.Main.GroupingField
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.StoreCenter
+import ua.com.merchik.merchik.features.maps.domain.StorePoint
 import java.time.LocalDate
 
 sealed interface MapIntent {
@@ -22,6 +23,15 @@ sealed interface MapIntent {
         val rangeStartLocalDate: LocalDate?, // поменяли тип на LocalDate?
         val rangeEndLocalDate: LocalDate?,
         val search: String?,
+        val userLat: Double?,
+        val userLon: Double?,
+        val distanceMeters: Float?,
+        val autoCenterOnSetInput: Boolean = true
+    ) : MapIntent
+
+    data class SetPointsInput(
+        val center: StoreCenter?,
+        val points: List<StorePoint>,
         val userLat: Double?,
         val userLon: Double?,
         val distanceMeters: Float?,
@@ -72,6 +82,7 @@ object MapReducer {
         )
 
         is MapIntent.SetInput -> state.copy(isLoading = true, userLat = intent.userLat, userLon = intent.userLon)
+        is MapIntent.SetPointsInput -> state.copy(isLoading = true, userLat = intent.userLat, userLon = intent.userLon)
         is MapIntent.MarkerClicked -> state.copy(activePoint = intent.point, positionOptions = intent.positionOptions)
         MapIntent.ConfirmJump -> state  // <-- НИЧЕГО НЕ ДЕЛАЕМ!
         MapIntent.DismissConfirm -> state.copy(pendingWp = null, pendingStableId = null)

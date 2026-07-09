@@ -318,9 +318,20 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         }
 
         // 7.0 сохраним сигнал
-//        if (optionDB.getIsSignal().equals("0")) {
-        saveOption(String.valueOf(signalInt));
-//        }
+        RealmManager.INSTANCE.executeTransaction(realm -> {
+            if (optionDB != null) {
+                if (signal) {
+                    double penalty = wpDataDB.getCash_zakaz() * 0.07693;
+                    optionDB.setIsSignal("1");
+                    optionDB.setSumPenalty(String.valueOf(penalty));
+                } else {
+                    optionDB.setIsSignal("2");
+                    optionDB.setSumPenalty("0.00");
+                }
+                realm.insertOrUpdate(optionDB);
+            }
+        });
+
 
         // 8.0 Блокировка проведения
         if (signalInt == 1) {
@@ -329,14 +340,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         checkUnlockCode(optionDB);
     }
 
-    private void saveOption(String signal) {
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            if (optionDB != null) {
-                optionDB.setIsSignal(signal);
-                realm.insertOrUpdate(optionDB);
-            }
-        });
-    }
+
 
 
     /**

@@ -93,10 +93,13 @@ public class OptionControlAddComment<T> extends OptionControl {
             // 5.0
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
-                    if (signal){
+                    if (signal) {
+                        double penalty = wpDataDB.getCash_zakaz() * 0.07693;
                         optionDB.setIsSignal("1");
-                    }else {
+                        optionDB.setSumPenalty(String.valueOf(penalty));
+                    } else {
                         optionDB.setIsSignal("2");
+                        optionDB.setSumPenalty("0.00");
                     }
                     realm.insertOrUpdate(optionDB);
                 }

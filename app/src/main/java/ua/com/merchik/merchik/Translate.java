@@ -311,7 +311,7 @@ public class Translate {
 
         // Для создания достижения выберите...
 
-
+//############
         res.add(new AddTranslation(
                 "1",
                 "tovar_trade_mark",

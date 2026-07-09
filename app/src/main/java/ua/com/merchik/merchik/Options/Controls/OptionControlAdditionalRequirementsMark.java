@@ -307,9 +307,12 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
+                        double penalty = wpDataDB.getCash_zakaz() * 0.07693;
                         optionDB.setIsSignal("1");
+                        optionDB.setSumPenalty(String.valueOf(penalty));
                     } else {
                         optionDB.setIsSignal("2");
+                        optionDB.setSumPenalty("0.00");
                     }
                     realm.insertOrUpdate(optionDB);
                 }

@@ -502,7 +502,7 @@ public class OptionsDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "";
+        return OptionsDBOverride.INSTANCE.getHidedFieldsOnUI();
     }
 
     @Nullable
@@ -514,7 +514,7 @@ public class OptionsDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return OptionsDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

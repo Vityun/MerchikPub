@@ -172,9 +172,12 @@ public class OptionControlTwoWorkInOneDay<T> extends OptionControl {
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
+                    double penalty = wpDataDB.getCash_zakaz() * 0.07693;
                     optionDB.setIsSignal("1");
+                    optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {
                     optionDB.setIsSignal("2");
+                    optionDB.setSumPenalty("0.00");
                 }
                 realm.insertOrUpdate(optionDB);
             }
@@ -216,82 +219,82 @@ public class OptionControlTwoWorkInOneDay<T> extends OptionControl {
 
 
 
-    private void executeOption2() {
-        // 2.0
-        // ---  Получаем данные с БД для подальшей обработке
-        RealmResults<WpDataDB> wp = WpDataRealm.getWpData();
-        wp = wp.where()
-                .greaterThanOrEqualTo("dt", oneDayBefore)
-                .lessThanOrEqualTo("dt", oneDayAfter)
-                .equalTo("user_id", userId)
-                .notEqualTo("code_dad2", codeDad2)
-                .findAll();
-        List<WpDataDB> wpDataDB = RealmManager.INSTANCE.copyFromRealm(wp);
-
-        // ---  Создаём место куда будем писать ошибки
-        List<WpDataDB> result = new ArrayList<>();
-
-        // ---  В цикле пробегаем по всему отобранному Плану работ
-        for (WpDataDB item : wpDataDB) {
-            if (item.getVisit_start_dt() > 0 && item.getVisit_end_dt() == 0) {
-                result.add(item);
-                Globals.writeToMLOG("INFO", "OptionControlEndAnotherWork/executeOption", "WpDataDB dad2: " + item.getCode_dad2());
-
-                SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-                String formattedDate = formatter.format(item.getDt());
-                String address = item.getAddr_txt();
-                if (address == null || address.isEmpty())
-                    address = "адреса не визначена";
-                // Dialog massage
-                spannableStringBuilder
-                        .append("Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩЕЙ работы!")
-                        .append("\n")
-                        .append(createLinkedString(
-                                "Перейдіть до цього візиту:\n" +
-                                        formattedDate + ", " + address + ", " + item.getClient_txt() +
-                                        " та натисніть копку 'Закінчення роботи' або введіть код розблокування", item))
-                        .append("\n");
-            }
-        }
-
-        // ---  Отображаем ОБЫЧНОЕ сообщение. Не развёрнутое.
-        if (wpDataDB.size() == 0) {
-            massageToUser = "Нет данных для анализа окончания ПРЕДЫДУЩИХ работ.";
-            signal = false;
-//            unlockCodeResultListener.onUnlockCodeFailure();
-//            unlockCodeResultListener.onUnlockCodeSuccess();
-        } else if (result.size() == 0) {
-            massageToUser = "Замечаний по указанию времени начала/окончания ПРЕДЫДУЩИХ работ нет.";
-            signal = false;
-//            unlockCodeResultListener.onUnlockCodeFailure();
-//            unlockCodeResultListener.onUnlockCodeSuccess();
-        } else {
-            massageToUser = "Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩУЮ работу!";
-            signal = true;
-//            unlockCodeResultListener.onUnlockCodeSuccess();
-//            unlockCodeResultListener.onUnlockCodeFailure();
-        }
-
-
-        //6.0.
-        setIsBlockOption(signal);
-        checkUnlockCode(optionDB);
-
-        //8.0. блокировка проведения
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            if (optionDB != null) {
-                if (signal) {
-                    optionDB.setIsSignal("1");
-                } else {
-                    optionDB.setIsSignal("2");
-                }
-                realm.insertOrUpdate(optionDB);
-            }
-        });
-
-        Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
-        Log.d("test", "massageToUser: " + massageToUser);
-    }
+//    private void executeOption2() {
+//        // 2.0
+//        // ---  Получаем данные с БД для подальшей обработке
+//        RealmResults<WpDataDB> wp = WpDataRealm.getWpData();
+//        wp = wp.where()
+//                .greaterThanOrEqualTo("dt", oneDayBefore)
+//                .lessThanOrEqualTo("dt", oneDayAfter)
+//                .equalTo("user_id", userId)
+//                .notEqualTo("code_dad2", codeDad2)
+//                .findAll();
+//        List<WpDataDB> wpDataDB = RealmManager.INSTANCE.copyFromRealm(wp);
+//
+//        // ---  Создаём место куда будем писать ошибки
+//        List<WpDataDB> result = new ArrayList<>();
+//
+//        // ---  В цикле пробегаем по всему отобранному Плану работ
+//        for (WpDataDB item : wpDataDB) {
+//            if (item.getVisit_start_dt() > 0 && item.getVisit_end_dt() == 0) {
+//                result.add(item);
+//                Globals.writeToMLOG("INFO", "OptionControlEndAnotherWork/executeOption", "WpDataDB dad2: " + item.getCode_dad2());
+//
+//                SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+//                String formattedDate = formatter.format(item.getDt());
+//                String address = item.getAddr_txt();
+//                if (address == null || address.isEmpty())
+//                    address = "адреса не визначена";
+//                // Dialog massage
+//                spannableStringBuilder
+//                        .append("Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩЕЙ работы!")
+//                        .append("\n")
+//                        .append(createLinkedString(
+//                                "Перейдіть до цього візиту:\n" +
+//                                        formattedDate + ", " + address + ", " + item.getClient_txt() +
+//                                        " та натисніть копку 'Закінчення роботи' або введіть код розблокування", item))
+//                        .append("\n");
+//            }
+//        }
+//
+//        // ---  Отображаем ОБЫЧНОЕ сообщение. Не развёрнутое.
+//        if (wpDataDB.size() == 0) {
+//            massageToUser = "Нет данных для анализа окончания ПРЕДЫДУЩИХ работ.";
+//            signal = false;
+////            unlockCodeResultListener.onUnlockCodeFailure();
+////            unlockCodeResultListener.onUnlockCodeSuccess();
+//        } else if (result.size() == 0) {
+//            massageToUser = "Замечаний по указанию времени начала/окончания ПРЕДЫДУЩИХ работ нет.";
+//            signal = false;
+////            unlockCodeResultListener.onUnlockCodeFailure();
+////            unlockCodeResultListener.onUnlockCodeSuccess();
+//        } else {
+//            massageToUser = "Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩУЮ работу!";
+//            signal = true;
+////            unlockCodeResultListener.onUnlockCodeSuccess();
+////            unlockCodeResultListener.onUnlockCodeFailure();
+//        }
+//
+//
+//        //6.0.
+//        setIsBlockOption(signal);
+//        checkUnlockCode(optionDB);
+//
+//        //8.0. блокировка проведения
+//        RealmManager.INSTANCE.executeTransaction(realm -> {
+//            if (optionDB != null) {
+//                if (signal) {
+//                    optionDB.setIsSignal("1");
+//                } else {
+//                    optionDB.setIsSignal("2");
+//                }
+//                realm.insertOrUpdate(optionDB);
+//            }
+//        });
+//
+//        Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
+//        Log.d("test", "massageToUser: " + massageToUser);
+//    }
 
     public boolean isSignal() {
         return signal;

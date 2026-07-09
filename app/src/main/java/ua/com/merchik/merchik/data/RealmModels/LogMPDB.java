@@ -70,7 +70,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "address, CoordAltitude, CoordSpeed, codeDad2, id, inPlace, mocking, serverId" +
+        return "address, CoordAltitude, CoordSpeed, codeDad2, id, inPlace, mocking, serverId, " +
                 "upload, vpi, gp, locationUniqueString";
     }
 

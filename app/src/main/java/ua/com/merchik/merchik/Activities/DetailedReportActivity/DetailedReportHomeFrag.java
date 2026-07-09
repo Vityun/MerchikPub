@@ -397,7 +397,7 @@ public class DetailedReportHomeFrag extends Fragment {
         bundle.putString("modeUI", ModeUI.DEFAULT.toString());
         bundle.putString("dataJson", new Gson().toJson(wpDataDB.getCode_dad2()));
         bundle.putString("title", "Опции");
-        bundle.putString("subTitle", "Перечень опций");
+        bundle.putString("subTitle", "Перечень опций. Красным отмечены невыполненные опции (действия исполнителя) и суммы которые вы можете получить дополнительно выполнив эти опции  (действия).");
         intent.putExtras(bundle);
         ActivityCompat.startActivityForResult(requireActivity(), intent, NEED_UPDATE_UI_REQUEST, null);
 

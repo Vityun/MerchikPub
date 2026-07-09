@@ -248,7 +248,7 @@ public class MenuMainActivity extends toolbar_menus {
 
         downloadTest();
         uploadQuestionAnswersTest();
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
 //        new TablesLoadingUnloading().donwloadPlanBudget();
 

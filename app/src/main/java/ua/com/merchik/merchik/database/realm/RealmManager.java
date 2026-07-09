@@ -967,6 +967,30 @@ public class RealmManager {
         return INSTANCE.where(WpDataDB.class).equalTo("dt", date).findAll().size();
     }
 
+    @Nullable
+    public static Long getPreviousVisitDad2(long currentCodeDad2) {
+        WpDataDB current = getWorkPlanRowByCodeDad2(currentCodeDad2);
+
+        if (current == null
+                || current.getDt() == null
+                || current.getClient_id() == null
+                || current.getClient_id().trim().isEmpty()) {
+            return null;
+        }
+
+        WpDataDB previousVisit = INSTANCE
+                .where(WpDataDB.class)
+                .equalTo("client_id", current.getClient_id())
+                .equalTo("addr_id", current.getAddr_id())
+                .lessThan("dt", current.getDt())
+                .sort("dt", Sort.DESCENDING)
+                .findFirst();
+
+        return previousVisit != null
+                ? previousVisit.getCode_dad2()
+                : null;
+    }
+
     /**
      * 29.12.2020
      * Попытка создать "универсальный" запрос к БД

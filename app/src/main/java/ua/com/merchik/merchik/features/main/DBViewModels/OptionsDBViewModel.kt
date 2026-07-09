@@ -6,8 +6,6 @@ import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
-import ua.com.merchik.merchik.Globals
-import ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
@@ -19,14 +17,11 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
-import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
-import java.util.Arrays
 import java.util.Calendar
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -45,53 +40,52 @@ class OptionsDBViewModel @Inject constructor(
         get() = OptionsDB::class
 
     override fun getDefaultHideUserFields(): List<String> {
-        return ("ID, adr_id, kli_id").split(",")
-    }
+        return (
+                "option_control_id, is_signal, sum_premiya, amount, amount_min, option_txt, " +
+                        "option_id, amount_max, option_control_descr, column_name, option_descr"
+                ).split(",").map { it.trim() }    }
 
     override fun getDefaultGroupUserFields(): List<String> {
         return emptyList()
     }
 
     override fun getDefaultSortUserFields(): List<String>? {
-        return "dt, id_quest, comment".split(",")
+        return "sum_penalty".split(",")
     }
 
-//    override fun updateFilters() {
-//        Log.e("OpinionSDBViewModel", "++++")
-//        val data = when (contextUI) {
-//
-//            ContextUI.QUESTION_ANSWER_INFO -> {
-//                val themeList = arrayOf("6", "600", "607", "610", "612", "412")
-//                ThemeRealm.getThemeByIds(themeList)
-//            }
-//
-//            else -> {
-//                Log.e("OpinionSDBViewModel", "updateFilters ----")
-//                emptyList()
-//            }
-//        }
-//
-//        val filterThemeDB = ItemFilter(
-//            "Тема",
-//            ThemeDB::class,
-//            ThemeDBViewModel::class,
-//            ModeUI.MULTI_SELECT,
-//            "Тема",
-//            "Выберите характер достижения, которое Вы выполнили",
-//            "id_quest",
-//            "question",
-//            data.map { it.id.toString() },
-//            data.map { it.nm },
-//            false
-//        )
-//
-//        filters = Filters(
-//            searchText = "",
-//            items = mutableListOf(
-//                filterThemeDB
-//            )
-//        )
-//    }
+    override fun updateFilters() {
+        Log.e("OpinionSDBViewModel", "++++")
+        try {
+
+            val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
+
+            val data = RealmManager.getOptionsByDad2(codeDad2).take(1)
+
+
+
+            val filterThemeDB = ItemFilter(
+                "dad2",
+                OptionsDB::class,
+                OptionsDBViewModel::class,
+                ModeUI.MULTI_SELECT,
+                "Тема",
+                "Выберите характер достижения, которое Вы выполнили",
+                "code_dad2",
+                "code_dad2",
+                data.map { it.codeDad2 },
+                data.map { it.codeDad2 },
+                false
+            )
+
+            filters = Filters(
+                searchText = "",
+                items = mutableListOf(
+                    filterThemeDB
+                )
+            )
+        } catch (e: Exception) {
+        }
+    }
 
     override suspend fun getItems(): List<DataItemUI> {
         Log.e("OpinionSDBViewModel", "++++")
@@ -101,14 +95,13 @@ class OptionsDBViewModel @Inject constructor(
             Log.e("OpinionSDBViewModel", "codeDad2: $codeDad2")
 
             val data = RealmManager.getOptionsByDad2(codeDad2)
+                .filter { !it.optionControlTxt.isNullOrBlank() }
                 .onEach { option ->
-                    if (option.isSignal != "0")
+                    if (option.sumPenalty != "0.00")
                         option.timeColor = "FFC4C4"
-
                 }
                 ?: return emptyList()
 
-//                    data
 
 
             repository.toItemUIList(

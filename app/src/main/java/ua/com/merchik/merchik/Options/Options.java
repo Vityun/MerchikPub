@@ -97,6 +97,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoPOS;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseAktion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseKonkurent;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
@@ -436,7 +437,7 @@ public class Options {
                 case 164354:    // Фото Планограмми ТТ
                 case 132971:    // Фото товара біля вітрини
                 case 169109:    // Контроль наличия Фото POS материалов
-                case 174241:    // Контроль наличия Фото витрины с товарами конкурентов
+                case 174214:    // Контроль наличия Фото витрины с товарами конкурентов
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -1347,7 +1348,7 @@ public class Options {
                         if (item.getOptionControlId().equals("84006"))
                             optionSumRes += wp.getCash_zakaz() * 0.16;
                         else
-                            optionSumRes += wp.getCash_zakaz() * 0.08;
+                            optionSumRes += wp.getCash_zakaz() * 0.07693;
                     }
                 }
 
@@ -1571,7 +1572,7 @@ public class Options {
 
     private CharSequence counter2Text(WpDataDB wpDataDB) {
         CharSequence res = "";
-        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
+        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
         res = Html.fromHtml("<font color=red>" + res + "</font>");
         return res;
     }
@@ -1825,7 +1826,7 @@ public class Options {
             case 164354:    // Фото Планограмми ТТ
             case 164352:    // Контроль наявності світлини прикасової зони
             case 169109:    // Контроль наличия Фото POS материалов
-            case 174241:    // Контроль наличия Фото витрины с товарами конкурентов
+            case 174214:    // Контроль наличия Фото витрины с товарами конкурентов
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
@@ -2093,6 +2094,10 @@ public class Options {
 
             case 158605:
                 new OptionButtonPhotoShowcaseFullness<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            case 174213:
+                new OptionButtonPhotoShowcaseKonkurent<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 157277:
