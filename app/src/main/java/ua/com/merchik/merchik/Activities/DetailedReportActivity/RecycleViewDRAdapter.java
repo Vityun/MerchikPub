@@ -2099,7 +2099,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 + " | code_dad2: " + option.getCodeDad2());
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
         String min = option.getAmountMin();
-        if (min.equals("0") && !option.getOptionId().equals("174213")) {
+        if (min.equals("0")) {
             min = "3";
 
             if (option.getOptionId().equals("151139")

@@ -281,8 +281,8 @@ public class Tab3Fragment extends Fragment {
                         Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "start");
                         String res = dialog.comment;
 
-                        ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(this.tarData.themeId));
-                        if(theme.need_photo == 1 && dialog.photo == null){
+                        boolean photoRequired = isPhotoRequiredForTheme();
+                        if (photoRequired && !hasValidPhoto(dialog.photo)) {
                             DialogData dialogNoPhoto = new DialogData(requireContext());
                             dialogNoPhoto.setTitle("Ошибка комментария");
                             dialogNoPhoto.setText("По данной темы у коментария должна быть фотография, выполните фото прежде чем сохранить коментарий.");
@@ -325,6 +325,18 @@ public class Tab3Fragment extends Fragment {
                         }catch (Exception e){
                             Toast.makeText(requireContext(), "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
                             Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Фото сохранить не удалось!");
+                        }
+
+                        if (photoRequired && !hasValidCommentPhoto(row)) {
+                            DialogData dialogNoPhoto = new DialogData(requireContext());
+                            dialogNoPhoto.setTitle("Ошибка комментария");
+                            dialogNoPhoto.setText("Для этой темы комментарий обязательно должен содержать фотографию. Добавьте фото перед сохранением комментария.");
+                            dialogNoPhoto.setDialogIco();
+                            dialogNoPhoto.setClose(dialogNoPhoto::dismiss);
+                            dialogNoPhoto.show();
+
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Required photo is missing in TAR comment row. TAR: " + this.tarData.id);
+                            return;
                         }
 
                         row.setTp(String.valueOf(tarData.tp));
@@ -419,6 +431,30 @@ public class Tab3Fragment extends Fragment {
             dialog.setClose(dialog::dismiss);
             dialog.show();*/
         });
+    }
+
+    private boolean isPhotoRequiredForTheme() {
+        try {
+            ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(this.tarData.themeId));
+            return theme != null && theme.need_photo == 1;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "Tab3Fragment.isPhotoRequiredForTheme", "Exception e: " + e);
+            return false;
+        }
+    }
+
+    private boolean hasValidPhoto(StackPhotoDB photo) {
+        return photo != null && (hasValidPhotoValue(photo.getPhotoServerId()) || hasValidPhotoValue(photo.getPhoto_hash()));
+    }
+
+    private boolean hasValidCommentPhoto(TARCommentsDB row) {
+        return row != null && (hasValidPhotoValue(row.getPhoto()) || hasValidPhotoValue(row.photo_hash));
+    }
+
+    private boolean hasValidPhotoValue(String value) {
+        if (value == null) return false;
+        String trimmed = value.trim();
+        return !trimmed.isEmpty() && !trimmed.equals("0") && !trimmed.equalsIgnoreCase("null");
     }
 
 

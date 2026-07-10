@@ -37,7 +37,7 @@ public class ThemeDB extends RealmObject implements DataObjectUI {
 
     @SerializedName("need_photo")
     @Expose
-    public Integer need_photo;
+    public Integer need_photo;  // если 1 значит фотография обязательна
 
     @SerializedName("need_report")
     @Expose

@@ -190,6 +190,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 Log.e("!!!","-");
             } else {
                 tovs.append("Ви повинні завантажити в нашу систему світлину з залишком товару:").append("\n");
+                Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "reportPrepare size: " + reportPrepare.size());
                 for (ReportPrepareDB item : reportPrepare) {
                     if (tovIds.isEmpty()) {
                         int face = Integer.parseInt(item.face);
@@ -203,7 +204,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                                 code = articleSDB.vendorCode;
 
 //                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
-                            item.errorNote = "(" + code + ") " + tovar.getNm() + " отриману з додатку мережі.";
+                            item.errorNote = "(" + code + ") " + tovar.getNm();
+
+                            Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "step one: " + tovar.getiD() + " " + item.errorNote);
 
                             tovs.append(createLinkedString(item.errorNote, item)).append("\n");
                         } else {
@@ -222,8 +225,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                                     code = articleSDB.vendorCode;
 
 //                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
-                                item.errorNote = "(" + code + ") " + tovar.getNm() + " отриману з додатку мережі.";
+                                item.errorNote = "(" + code + ") " + tovar.getNm();
 
+                                Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "step two: " + tovar.getiD() + " " + item.errorNote);
                                 tovs.append(createLinkedString(item.errorNote, item)).append("\n");
                             }
                         } else {
