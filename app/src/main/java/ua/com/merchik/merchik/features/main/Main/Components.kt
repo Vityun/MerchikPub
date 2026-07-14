@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.features.main.Main
 
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -68,6 +67,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -88,6 +88,10 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
@@ -105,8 +109,8 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
-import java.util.Calendar
-import java.util.Locale
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
@@ -716,6 +720,48 @@ fun NumberInput(
     )
 }
 
+@Composable
+fun DecimalNumberInput(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var localValue by remember(value) { mutableStateOf(value) }
+
+    BasicTextField(
+        value = localValue,
+        onValueChange = { input ->
+            val prepared = normalizeDecimalNumberInput(input)
+            localValue = prepared
+
+            if (prepared.isNotBlank() && !prepared.endsWith(".")) {
+                onValueChange(prepared)
+            }
+        },
+        singleLine = true,
+        textStyle = LocalTextStyle.current.copy(
+            textAlign = TextAlign.Center
+        ),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal,
+            imeAction = ImeAction.Done
+        ),
+        modifier = Modifier
+            .width(152.dp)
+            .height(38.dp),
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                innerTextField()
+            }
+        }
+    )
+}
+
 private const val MIN_COMMENT_MEANINGFUL_CHARS = 10
 
 private fun String.meaningfulCharsCount(): Int {
@@ -858,6 +904,38 @@ fun NumberEditorRow(
     }
 }
 
+@Composable
+fun DecimalNumberEditorRow(
+    title: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            maxLines = 2
+        )
+
+        DecimalNumberInput(
+            value = value,
+            onValueChange = onValueChange
+        )
+    }
+}
+
+private fun parseEditorDate(value: String): LocalDate? {
+    if (value.isBlank()) return null
+
+    return runCatching {
+        LocalDate.parse(value.trim(), DateTimeFormatter.ISO_LOCAL_DATE)
+    }.getOrNull()
+}
 
 @Composable
 fun DateEditorRow(
@@ -865,10 +943,13 @@ fun DateEditorRow(
     value: String,
     onDateSelected: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val formatter = remember {
-        java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        DateTimeFormatter.ISO_LOCAL_DATE
     }
+    var selectedDate by remember(value) {
+        mutableStateOf(parseEditorDate(value) ?: LocalDate.now())
+    }
+    val dateDialog = rememberMaterialDialogState()
 
     Row(
         modifier = Modifier
@@ -889,20 +970,7 @@ fun DateEditorRow(
 //                .padding(horizontal = 16.dp)
                 .border(1.dp, Color.LightGray, RoundedCornerShape(6.dp))
                 .clickable {
-                    val calendar = Calendar.getInstance()
-
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            val picked = Calendar.getInstance().apply {
-                                set(year, month, dayOfMonth)
-                            }
-                            onDateSelected(formatter.format(picked.time))
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
+                    dateDialog.show()
                 }
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
@@ -913,6 +981,41 @@ fun DateEditorRow(
                 maxLines = 1,
                 color = if (value.isBlank()) Color.Gray else LocalContentColor.current
             )
+        }
+    }
+
+    MaterialDialog(
+        dialogState = dateDialog,
+        buttons = {
+            positiveButton(
+                text = "ОК",
+                textStyle = TextStyle(
+                    color = colorResource(R.color.blue),
+                    fontWeight = FontWeight.Black
+                )
+            )
+            negativeButton(
+                text = "Скасувати",
+                textStyle = TextStyle(
+                    color = colorResource(R.color.orange),
+                    fontWeight = FontWeight.Black
+                )
+            )
+        }
+    ) {
+        datepicker(
+            initialDate = selectedDate,
+            title = title,
+            colors = DatePickerDefaults.colors(
+                headerBackgroundColor = Color(0xFFB1B1B1),
+                headerTextColor = Color.White,
+                calendarHeaderTextColor = Color(0xFFB1B1B1),
+                dateActiveBackgroundColor = Color(0xFFB1B1B1),
+                dateActiveTextColor = Color.White
+            )
+        ) { newDate ->
+            selectedDate = newDate
+            onDateSelected(newDate.format(formatter))
         }
     }
 }

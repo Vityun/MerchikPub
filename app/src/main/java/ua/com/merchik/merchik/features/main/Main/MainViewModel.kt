@@ -197,12 +197,44 @@ data class ProductCodeRowUi(
 
 enum class InlineEditorKind {
     NUMBER,
+    DECIMAL_NUMBER,
     TEXT,
     DATE,
     SINGLE_SELECT,
     DOUBLE_SELECT,
     TEXT_AND_SELECT,
 //    PHOTO_COUNT
+}
+
+internal fun normalizeDecimalNumberInput(input: String): String {
+    val result = StringBuilder()
+    var hasSeparator = false
+    var fractionDigits = 0
+
+    input.replace(',', '.').forEach { char ->
+        when {
+            char.isDigit() -> {
+                if (hasSeparator) {
+                    if (fractionDigits < 2) {
+                        result.append(char)
+                        fractionDigits++
+                    }
+                } else {
+                    result.append(char)
+                }
+            }
+
+            char == '.' && !hasSeparator -> {
+                if (result.isEmpty()) {
+                    result.append('0')
+                }
+                result.append(char)
+                hasSeparator = true
+            }
+        }
+    }
+
+    return result.toString()
 }
 
 data class InlineChoiceUi(
@@ -666,6 +698,10 @@ abstract class MainViewModel(
         val wpList: List<WpDataDB>
     )
 
+    data class CustomAditionalDialogRequest(
+        val id: Long = System.currentTimeMillis()
+    )
+
     private val _additionalEarningsIncoming =
         MutableSharedFlow<List<WpDataDB>>(extraBufferCapacity = 1)
     val additionalEarningsIncoming: SharedFlow<List<WpDataDB>> =
@@ -675,6 +711,11 @@ abstract class MainViewModel(
         MutableStateFlow<AdditionalEarningsDialogState?>(null)
     val additionalEarningsDialogState: StateFlow<AdditionalEarningsDialogState?> =
         _additionalEarningsDialogState.asStateFlow()
+
+    private val _customAditionalDialogRequest =
+        MutableStateFlow<CustomAditionalDialogRequest?>(null)
+    val customAditionalDialogRequest: StateFlow<CustomAditionalDialogRequest?> =
+        _customAditionalDialogRequest.asStateFlow()
 
     fun sendAdditionalEarnings(wpList: List<WpDataDB>) {
         if (wpList.isEmpty()) return
@@ -697,6 +738,14 @@ abstract class MainViewModel(
 
     fun clearAdditionalEarningsDialog() {
         _additionalEarningsDialogState.value = null
+    }
+
+    protected fun requestCustomAditionalDialog() {
+        _customAditionalDialogRequest.value = CustomAditionalDialogRequest()
+    }
+
+    fun clearCustomAditionalDialogRequest() {
+        _customAditionalDialogRequest.value = null
     }
 
 
@@ -754,6 +803,7 @@ abstract class MainViewModel(
 
         val prepared = when (row.kind) {
             InlineEditorKind.NUMBER -> newValue.filter { it.isDigit() }
+            InlineEditorKind.DECIMAL_NUMBER -> normalizeDecimalNumberInput(newValue)
             else -> newValue
         }
 

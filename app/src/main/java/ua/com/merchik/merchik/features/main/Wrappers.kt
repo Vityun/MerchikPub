@@ -736,6 +736,8 @@ object StackPhotoDBOverride {
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         try {
             val specialCol = jsonObject.optInt("specialCol", 0)
+            if (specialCol == -1)
+                return MerchModifier()
             if (specialCol == 2)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
             if (specialCol == 1)
@@ -797,6 +799,9 @@ object StackPhotoDBOverride {
 
         "comment" -> 5911
         "photo_type" -> 5981
+        "showcase_id" -> 4632
+        "showcaseId" -> 4632
+        "showcaseName" -> 4396
 
         else -> null
     }

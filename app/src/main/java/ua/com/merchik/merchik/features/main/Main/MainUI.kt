@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -143,9 +144,14 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogData
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
+import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
+import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialogButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialog
@@ -169,12 +175,15 @@ import kotlin.math.roundToInt
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var showQuestionAnswerDialog by remember { mutableStateOf(false) }
+    var showCustomAditionalConfirmDialog by remember { mutableStateOf(false) }
+    var showCustomAditionalDialog by remember { mutableStateOf(false) }
 
 
     val uiInstanceId = remember { System.identityHashCode(Any()) }
     Log.e("MAIN_UI", "compose instance = $uiInstanceId")
     val uiState by viewModel.uiState.collectAsState()
 
+    val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val productCodeEditorState by viewModel.productCodeEditorState.collectAsState()
 
@@ -364,11 +373,52 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //    val holder = WpSelectionDataHolder.instance()
 //    val version = holder.version
     val additionalEarningsDialogState by viewModel.additionalEarningsDialogState.collectAsState()
+    val customAditionalDialogRequest by viewModel.customAditionalDialogRequest.collectAsState()
     val wpDataList = remember { mutableStateListOf<WpDataDB>() }
 
     var hasInternet by remember { mutableStateOf(true) }
     var pendingMainDialog by remember { mutableStateOf(false) }
     var notReadyMenu by remember { mutableStateOf(false) }
+
+    LaunchedEffect(customAditionalDialogRequest?.id) {
+        if (customAditionalDialogRequest != null) {
+            showCustomAditionalConfirmDialog = true
+            viewModel.clearCustomAditionalDialogRequest()
+        }
+    }
+
+    fun openCustomAditionalDialogAfterLoading() {
+        coroutineScope.launch {
+            val progress = ProgressViewModel(1)
+            val loadingDialog = LoadingDialogWithPercent(activity, progress)
+            var completed = false
+            var dismissedByUser = false
+
+            loadingDialog.setOnDismissListener(object : DialogDismissedListener {
+                override fun onDialogDismissed() {
+                    dismissedByUser = true
+                }
+            })
+
+            try {
+                progress.reset("Подготовка формы")
+                loadingDialog.show()
+                progress.setProgressPercent(
+                    progressPercent = 100f,
+                    message = "Подготовка формы",
+                    durationMillis = 2_000L
+                )
+                delay(2_000L)
+                completed = !dismissedByUser
+            } finally {
+                loadingDialog.dismiss()
+            }
+
+            if (completed) {
+                showCustomAditionalDialog = true
+            }
+        }
+    }
 
     fun restoreSelected(
         items: List<DataItemUI>,
@@ -1874,6 +1924,64 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         )
     }
 
+    if (showCustomAditionalConfirmDialog) {
+        MessageDialog(
+            title = "План работ",
+            status = DialogStatus.NORMAL,
+            subTitle = "Добавить новую работу",
+            message = "Добавить новую работу?",
+            okButtonName = "Добавить",
+            cancelButtonName = "Отмена",
+            onDismiss = {
+                showCustomAditionalConfirmDialog = false
+            },
+            onCancelAction = {
+                showCustomAditionalConfirmDialog = false
+            },
+            onConfirmAction = {
+                showCustomAditionalConfirmDialog = false
+                openCustomAditionalDialogAfterLoading()
+            }
+        )
+    }
+
+    if (showCustomAditionalDialog) {
+        CustomAditionalDialog(
+            title = "Добавить новую работу",
+            subTitle = "Шаблон формы для создания новой работы",
+            onDismiss = {
+                showCustomAditionalDialog = false
+            },
+            actions = {
+                CustomAditionalDialogButton(
+                    text = "Закрыть",
+                    onClick = {
+                        showCustomAditionalDialog = false
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 6.dp)
+                )
+
+                CustomAditionalDialogButton(
+                    text = "Сохранить",
+                    onClick = {
+                        showCustomAditionalDialog = false
+                    },
+                    colorResId = R.color.orange,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 6.dp)
+                )
+            }
+        ) {
+            Text(
+                text = "Здесь будет форма добавления новой работы.",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+
     additionalEarningsDialogState?.let { dialogState ->
         val wpList = dialogState.wpList
         val single = wpList.size == 1
@@ -2539,6 +2647,14 @@ fun ProductCodeInlineEditor(
                             value = row.value,
                             onMinus = { onMinus(row.rowId) },
                             onPlus = { onPlus(row.rowId) },
+                            onValueChange = { onValueChange(row.rowId, it) }
+                        )
+                    }
+
+                    InlineEditorKind.DECIMAL_NUMBER -> {
+                        DecimalNumberEditorRow(
+                            title = row.title,
+                            value = row.value,
                             onValueChange = { onValueChange(row.rowId, it) }
                         )
                     }

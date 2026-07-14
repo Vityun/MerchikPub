@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.features.main.Main.Filters
@@ -42,6 +43,28 @@ class ShowcaseDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = StackPhotoDB::class
+
+    override fun getDefaultHideUserFields(): List<String>? {
+//        return when (contextUI) {
+//            ContextUI.SHOWCASE,
+//            ContextUI.SHOWCASE_FROM_ACHIEVEMENT ->
+                return listOf(
+                    "column_name",
+                    "group_header",
+
+                    "id", "photoServerId", "dt", "object_id", "user_id", "addr_id", "client_id", "theme_id", "tovar_id", "time_event", "vpi", "create_time",
+                    "upload_to_server", "get_on_server", "code_dad2", "photo_num", "photo_hash", "photo_type", "photo_size", "photo_user_id", "photo_group_id",
+                    "doc_id", "comment", "gp", "upload_time", "upload_status", "status", "error", "errorTime", "errorTxt", "userTxt", "customerTxt", "addressTxt",
+                    "photo_typeTxt", "approve", "dvi", "mark", "premiya", "photoServerURL", "dviUpload", "commentUpload", "markUpload", "premiyaUpload", "img_src_id",
+                    "showcase_id", "code_iza", "planogram_id", "planogram_img_id", "example_id", "example_img_id", "specialCol"
+                )
+//                ("column_name, group_header").split(",")
+
+
+//            else -> null
+//        }
+    }
+
 
     override fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {
         val dialogFullPhoto = DialogFullPhotoR(context)
@@ -123,61 +146,181 @@ class ShowcaseDBViewModel @Inject constructor(
 //        }
     }
 
+
+    override fun getItemsFooter(): List<DataItemUI> {
+        return when (contextUI) {
+            ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
+                val data = StackPhotoDB::class.java.newInstance()
+                data.comment = "Це досягнення не відноситься до жодної з пропозицій замовника"
+                data.id = -999
+                data.photoServerId = "-999"
+                data.photo_hash = "-999"
+                data.showcaseId = 0
+                data.specialCol = -1
+                data.showcaseName = "Створити фото без зазначення вітрини"
+                repository.toItemUIList(
+                    StackPhotoDB::class,
+                    listOf(data),
+                    contextUI,
+                    null
+                )
+            }
+
+            else -> {
+                emptyList()
+            }
+        }
+
+    }
+
     @RequiresApi(Build.VERSION_CODES.N)
     override suspend fun getItems(): List<DataItemUI> {
         return try {
             when (contextUI) {
-                ContextUI.SHOWCASE
-                    -> {
-//                    val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
+                ContextUI.SHOWCASE,
+                ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
+
                     val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                    val codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
-                    val id = if (dataJsonObject.has("planogrammVizitShowcaseId"))
-                        dataJsonObject["planogrammVizitShowcaseId"].asInt
-                    else 0
+                    val codeDad2 = dataJsonObject["wpDataDBId"].asString.toLong()
+
+                    val planogrammVizitShowcaseId =
+                        dataJsonObject
+                            .takeIf { it.has("planogrammVizitShowcaseId") }
+                            ?.get("planogrammVizitShowcaseId")
+                            ?.asInt
+                            ?: 0
 
                     val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
                         RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    )
-                    val list = mutableListOf(0, 1, 2)
-                    val showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
-                        wpDataDB!!.client_id, wpDataDB.addr_id, list
-                    )
+                    ) ?: return emptyList()
 
-                    val ids = showcaseDataList.map { it.photoId?.toString() }.toTypedArray()
+                    val showcaseTypes = listOf(0, 1, 2)
 
-                    val data: List<StackPhotoDB> =
-                        RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByIds2(ids))
+                    val showcaseDataList = RoomManager.SQL_DB
+                        .showcaseDao()
+                        .getByDocTP(
+                            wpDataDB.client_id,
+                            wpDataDB.addr_id,
+                            showcaseTypes
+                        )
 
-                    repository.toItemUIList(StackPhotoDB::class, data, contextUI, 0)
-                        .map {
-                            val photoId: String =
-                                VizitShowcaseDataHolder.getInstance()[id].showcasePhotoId.toString()
-                            val justId =
-                                (it.rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.photoServerId.toString()
-                            val selected =
-                                justId == photoId
-                            it.copy(selected = selected)
+                    /*
+                     * Сопоставляем photoId фотографии с соответствующей витриной.
+                     *
+                     * Ключ приводим к String, потому что photoServerId в StackPhotoDB
+                     * ниже также сравнивается как строка.
+                     */
+                    val showcaseByPhotoId = showcaseDataList
+                        .mapNotNull { showcase ->
+                            showcase.photoId
+                                ?.toString()
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { photoId ->
+                                    photoId to showcase
+                                }
+                        }
+                        .toMap()
+
+                    val photoIds = showcaseByPhotoId.keys.toTypedArray()
+
+                    val photos = RealmManager.INSTANCE.copyFromRealm(
+                        StackPhotoRealm.getByIds2(photoIds)
+                    ).onEach { photo ->
+
+                        val showcase = showcaseByPhotoId[
+                            photo.photoServerId?.toString()
+                        ]
+
+                        photo.showcaseId = showcase?.id ?: 0
+                        photo.showcaseName = showcase?.nm.orEmpty()
+                        photo.specialCol = -1
+                    }
+
+                    val selectedPhotoId = VizitShowcaseDataHolder
+                        .getInstance()[planogrammVizitShowcaseId]
+                        .showcasePhotoId
+                        .toString()
+
+                    repository
+                        .toItemUIList(
+                            StackPhotoDB::class,
+                            photos,
+                            contextUI,
+                            0
+                        )
+                        .map { item ->
+
+                            val stackPhoto = item.rawObj
+                                .filterIsInstance<StackPhotoDB>()
+                                .firstOrNull()
+
+                            item.copy(
+                                selected = stackPhoto
+                                    ?.photoServerId
+                                    ?.toString() == selectedPhotoId
+                            )
                         }
                 }
+                ContextUI.SHOWCASE_COMPLETED_CHECK -> {
+                    val dataJsonObject = Gson().fromJson(
+                        dataJson,
+                        JsonObject::class.java
+                    )
 
-                ContextUI.SHOWCASE_COMPLETED_CHECK
-                    -> {
-                    val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                    val codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
+                    val codeDad2 = dataJsonObject
+                        .get("wpDataDBId")
+                        .asString
+                        .toLong()
 
                     val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
                         RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    )
-                    val list = mutableListOf(0, 1, 2)
-                    val showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
-                        wpDataDB!!.client_id, wpDataDB.addr_id, list
-                    )
+                    ) ?: return emptyList()
 
-                    val ids = showcaseDataList.map { it.photoId?.toString() }.toTypedArray()
+                    val showcaseTypes = listOf(0, 1, 2)
 
+                    val showcaseDataList = RoomManager.SQL_DB
+                        .showcaseDao()
+                        .getByDocTP(
+                            wpDataDB.client_id,
+                            wpDataDB.addr_id,
+                            showcaseTypes
+                        )
+
+                    /*
+                     * Связываем ID фотографии с витриной.
+                     */
+                    val showcaseByPhotoId = showcaseDataList
+                        .mapNotNull { showcase ->
+                            showcase.photoId
+                                ?.toString()
+                                ?.takeIf { it.isNotBlank() && it != "0" }
+                                ?.let { photoId ->
+                                    photoId to showcase
+                                }
+                        }
+                        .toMap()
+
+                    val photoIds = showcaseByPhotoId
+                        .keys
+                        .toTypedArray()
+
+                    /*
+                     * Получаем фотографии витрин и записываем в каждую:
+                     * showcaseId и showcaseName.
+                     *
+                     * specialCol здесь не меняем.
+                     */
                     val data: List<StackPhotoDB> =
-                        RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByIds2(ids))
+                        RealmManager.INSTANCE.copyFromRealm(
+                            StackPhotoRealm.getByIds2(photoIds)
+                        ).onEach { photo ->
+                            val showcase = showcaseByPhotoId[
+                                photo.photoServerId?.toString()
+                            ]
+
+                            photo.showcaseId = showcase?.id ?: 0
+                            photo.showcaseName = showcase?.nm.orEmpty()
+                        }
 
                     val listOfStackPhotoCOMPLETED = buildList {
                         addAll(
@@ -188,6 +331,7 @@ class ShowcaseDBViewModel @Inject constructor(
                                 )
                             )
                         )
+
                         addAll(
                             RealmManager.INSTANCE.copyFromRealm(
                                 StackPhotoRealm.getPhotosByDAD2(
@@ -198,73 +342,82 @@ class ShowcaseDBViewModel @Inject constructor(
                         )
                     }
 
-
-                    val uniqueExampleIds: MutableSet<String> = HashSet()
-//                    val dataList: MutableList<StackPhotoDB> = ArrayList()
-
-//                    for (stackPhotoDB in listOfStackPhotoCOMPLETED) {
-//                        val showcaseIdStack = stackPhotoDB.showcase_id
-//                        if (showcaseIdStack != null && showcaseIdStack.isNotEmpty() && showcaseIdStack != "0") {
-//                            val isShowcaseIdPresent = listOfStackPhotoCOMPLETED.any { photo ->
-//                                photo.showcase_id?.let { id ->
-//                                    showcaseDataList.any { showcase -> showcase.id.toString() == id }
-//                                } ?: false
-//                            }
-//                            53920528
-//                            if (isShowcaseIdPresent) {
-//                                val exampleId = stackPhotoDB.getExample_img_id()
-//                                if (exampleId != null && exampleId.isNotEmpty()  && uniqueExampleIds.add(exampleId)
-//                                ) {
-//                                }
-//                            }
-//                        }
-//                    }
+                    val uniqueExampleIds = mutableSetOf<String>()
 
                     for (stackPhotoDB in listOfStackPhotoCOMPLETED) {
                         val showcaseIdStack = stackPhotoDB.showcase_id
-                        if (!showcaseIdStack.isNullOrEmpty() && showcaseIdStack != "0") {
 
-                            val isShowcaseIdPresent =
-                                showcaseDataList.any { it.id.toString() == showcaseIdStack }
+                        if (
+                            showcaseIdStack.isNullOrEmpty() ||
+                            showcaseIdStack == "0"
+                        ) {
+                            continue
+                        }
 
-                            if (isShowcaseIdPresent) {
-                                val exampleId = stackPhotoDB.getExample_img_id()
-                                if (!exampleId.isNullOrEmpty() && uniqueExampleIds.add(exampleId)) {
+                        val isShowcaseIdPresent = showcaseDataList.any { showcase ->
+                            showcase.id.toString() == showcaseIdStack
+                        }
 
-                                    // Найдём соответствующий элемент в списке `data`
-//                                    data.find { it.photoServerId == exampleId }?.let { dataItem ->
-//                                        dataItem.specialCol = 1
-//                                    }
-                                    val dataItem = data.find { it.photoServerId == exampleId }
+                        if (!isShowcaseIdPresent) {
+                            continue
+                        }
 
-                                    if (dataItem != null) {
-                                        dataItem.specialCol = 1
-                                    }
-                                    // Пройтись по всему списку и отметить 2 для всех без совпадения
-                                    data.forEach { photo ->
-                                        if (photo.specialCol == 0) {
-                                            photo.specialCol = 2
-                                        }
-                                    }
+                        val exampleId = stackPhotoDB.example_img_id
 
-                                }
+                        if (
+                            exampleId.isNullOrEmpty() ||
+                            !uniqueExampleIds.add(exampleId)
+                        ) {
+                            continue
+                        }
+
+                        val dataItem = data.find { photo ->
+                            photo.photoServerId == exampleId
+                        }
+
+                        if (dataItem != null) {
+                            dataItem.specialCol = 1
+                        }
+
+                        /*
+                         * Сохраняем существующую логику цветов:
+                         * 1 — фотография найдена;
+                         * 2 — остальные фотографии.
+                         */
+                        data.forEach { photo ->
+                            if (photo.specialCol == 0) {
+                                photo.specialCol = 2
                             }
                         }
                     }
 
+                    repository
+                        .toItemUIList(
+                            StackPhotoDB::class,
+                            data,
+                            contextUI,
+                            0
+                        )
+                        .map { item ->
+                            val stackPhoto = item.rawObj
+                                .filterIsInstance<StackPhotoDB>()
+                                .firstOrNull()
 
-                    repository.toItemUIList(StackPhotoDB::class, data, contextUI, 0)
-                        .map {
-                            val selected = FilteringDialogDataHolder.instance()
+                            val selected = FilteringDialogDataHolder
+                                .instance()
                                 .filters
                                 ?.items
-                                ?.firstOrNull { it.clazz == table }
+                                ?.firstOrNull { filter ->
+                                    filter.clazz == table
+                                }
                                 ?.rightValuesRaw
-                                ?.contains((it.rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.id.toString())
-                            it.copy(selected = selected == true)
+                                ?.contains(stackPhoto?.id?.toString())
+
+                            item.copy(
+                                selected = selected == true
+                            )
                         }
                 }
-
                 else -> {
                     emptyList()
                 }
@@ -283,13 +436,11 @@ class ShowcaseDBViewModel @Inject constructor(
                     dataHolder[planogrammId.value].showcaseId = it.showcase_id?.toIntOrNull() ?: 0
                     dataHolder[planogrammId.value].showcasePhotoId =
                         it.photoServerId?.toIntOrNull() ?: 0
+                }
 
-
-//                    VizitShowcaseDataHolder.instance().planogrammVizitMap[planogrammId.value] =
-//                        it.photoServerId
-//                    it.getShowcase_id()
-//                    VizitShowcaseDataHolder.instance().photoId = it.id
-//                    VizitShowcaseDataHolder.instance().photoServerId = it.photoServerId
+                ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
+                    AchievementDataHolder.instance().showcaseId = it.showcaseId
+                    AchievementDataHolder.instance().showcaseName = "№${it.showcaseId} ${it.showcaseName}"
                 }
 
                 else -> {}

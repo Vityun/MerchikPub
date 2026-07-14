@@ -31,6 +31,7 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.json.JSONObject;
 
@@ -57,6 +58,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
@@ -80,7 +82,7 @@ public class DialogCreateAchievement {
     private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
 
     private ImageButton close, help, videoHelp, call, addSotr;
-    private TextView title, client, address, visit, theme, offerFromClient, offerFromClientItem, tovarTxt, tradeMarkItem, themeItem;
+    private TextView title, client, address, visit, theme, offerFromClient, offerFromClientItem, tovarTxt, tradeMarkItem, themeItem, showcase, showcaseItem;
     private EditText comment;
     private Button save;
     //    private Button photoTo, photoAfter;
@@ -128,6 +130,7 @@ public class DialogCreateAchievement {
             theme = dialog.findViewById(R.id.theme);
             offerFromClient = dialog.findViewById(R.id.offer_from_the_client);
             offerFromClientItem = dialog.findViewById(R.id.offer_from_the_client_item);
+            offerFromClientItem.setText(underLineText("Натисніть для обрання Пропозиції"));
             offerFromClientItem.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
@@ -153,6 +156,7 @@ public class DialogCreateAchievement {
 
 //            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
             themeItem = dialog.findViewById(R.id.themeItem);
+            themeItem.setText(underLineText("Натисніть для обрання Теми"));
             themeItem.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
@@ -168,7 +172,27 @@ public class DialogCreateAchievement {
             });
 //            spinnerClient = dialog.findViewById(R.id.spinner_client);
 //            spinnerManufacture = dialog.findViewById(R.id.spinner_trade_mark);
+            showcaseItem = dialog.findViewById(R.id.chose_showcase_item);
+            showcaseItem.setText(underLineText("Натисніть для обрання Вiтрини"));
+            showcaseItem.setOnClickListener(view -> {
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", ShowcaseDBViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.SHOWCASE_FROM_ACHIEVEMENT.toString());
+                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                JsonObject dataJson = new JsonObject();
+//                                dataJson.addProperty("tradeMarkDBId", tradeMarkId);
+                dataJson.addProperty("wpDataDBId", String.valueOf(codeDad2));
+//                                dataJson.addProperty("optionDBId", optionId);
+                bundle.putString("dataJson", new Gson().toJson(dataJson));
+                bundle.putString("title", "Вiтрини");
+                bundle.putString("subTitle", "Оберiть поточну Вiтрину");
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+            });
+
             tradeMarkItem = dialog.findViewById(R.id.tradeMarkItem);
+            tradeMarkItem.setText(underLineText("Натисніть для обрання Марки товару"));
             tradeMarkItem.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
@@ -182,6 +206,7 @@ public class DialogCreateAchievement {
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
             tovarTxt = dialog.findViewById(R.id.tovar_choose);
+            tovarTxt.setText(underLineText("Натисніть для обрання Товару"));
             tovarTxt.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
@@ -202,7 +227,7 @@ public class DialogCreateAchievement {
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
 
-            setTextUI();
+//            setTextUI();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogCreateAchievement", "Exception e: " + e);
@@ -254,6 +279,11 @@ public class DialogCreateAchievement {
                     return;
                 }
 
+                if (AchievementDataHolder.Companion.instance().getShowcaseId() == null) {
+                    Toast.makeText(v.getContext(), "Ви не вказали вiтрину, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 if (AchievementDataHolder.Companion.instance().getManufactureId() != null) {
                     achievementsSDB.manufacturer = AchievementDataHolder.Companion.instance().getManufactureId();
                 }
@@ -301,14 +331,8 @@ public class DialogCreateAchievement {
     }
 
     public void dismiss() {
-        /* 05.02.2025
-         TODO это хреновый костыль довести до ума
-         */
-        Log.e("--------------", "+++++++");
-//        Intent intent = new Intent(context, FeaturesActivity.class);
-//        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
-
         if (dialog != null) dialog.dismiss();
+        onUpdateUI = null;
     }
 
     public void setTitle(String title) {
@@ -490,49 +514,137 @@ public class DialogCreateAchievement {
     }
 
     public void buttonPhotoTo() {
-
         photoToIV.setVisibility(View.VISIBLE);
+
         photoToIV.setOnClickListener(v -> {
-            Long previusDad2 = null;
-            if (AchievementDataHolder.Companion.instance().getThemeId() != null &&
-                    AchievementDataHolder.Companion.instance().getThemeId() == THEME_YTRIMANIE){
-                previusDad2 = RealmManager.getPreviousVisitDad2(codeDad2);
+            Integer showcaseId = AchievementDataHolder.Companion
+                    .instance()
+                    .getShowcaseId();
+
+            if (showcaseId == null) {
+                Toast.makeText(
+                        v.getContext(),
+                        "Ви не вказали вітрину. Вкажіть спочатку вітрину",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
             }
 
+            Long previousDad2 = null;
 
+            Integer themeId = AchievementDataHolder.Companion
+                    .instance()
+                    .getThemeId();
 
+            if (themeId != null && themeId == THEME_YTRIMANIE) {
+                previousDad2 = RealmManager.getPreviousVisitDad2(codeDad2);
+            }
 
-            Intent intent = new Intent(context, FeaturesActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
-            if (previusDad2 == null) {
-                bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
-                bundle.putString("dataJson", new Gson().toJson(codeDad2));
+            /*
+             * Если для темы удержания найден предыдущий визит —
+             * берём фотографии предыдущего визита.
+             * Иначе работаем с текущим codeDad2.
+             */
+            long targetCodeDad2;
+            ContextUI targetContextUI;
 
+            if (previousDad2 == null) {
+                targetCodeDad2 = codeDad2;
+                targetContextUI =
+                        ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT;
             } else {
-                bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE.toString());
-                bundle.putString("dataJson", new Gson().toJson(previusDad2));
+                targetCodeDad2 = previousDad2;
+                targetContextUI =
+                        ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE;
             }
-            bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-            bundle.putString("title", "Перелік фото звітів");
-            bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(14).getNm());
+
+            JsonObject dataJson = new JsonObject();
+            dataJson.addProperty(
+                    "wpDataDBId",
+                    String.valueOf(targetCodeDad2)
+            );
+            dataJson.addProperty(
+                    "showcaseId",
+                    showcaseId
+            );
+
+            Intent intent = new Intent(
+                    context,
+                    FeaturesActivity.class
+            );
+
+            Bundle bundle = new Bundle();
+            bundle.putString(
+                    "viewModel",
+                    StackPhotoDBViewModel.class.getCanonicalName()
+            );
+            bundle.putString(
+                    "contextUI",
+                    targetContextUI.toString()
+            );
+            bundle.putString(
+                    "modeUI",
+                    ModeUI.ONE_SELECT.toString()
+            );
+            bundle.putString(
+                    "dataJson",
+                    new Gson().toJson(dataJson)
+            );
+            bundle.putString(
+                    "title",
+                    "Перелік фото звітів"
+            );
+            bundle.putString(
+                    "subTitle",
+                    "Справочник Фото: " +
+                            ImagesTypeListRealm.getByID(14).getNm()
+            );
+
             intent.putExtras(bundle);
-            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
+            ActivityCompat.startActivityForResult(
+                    (Activity) context,
+                    intent,
+                    NEED_UPDATE_UI_REQUEST,
+                    null
+            );
         });
     }
 
     public void buttonPhotoAfter() {
 //        photoAfter.setVisibility(View.GONE);
+
         photoAfterIV.setVisibility(View.VISIBLE);
         photoAfterIV.setOnClickListener(v -> {
+            Integer showcaseId = AchievementDataHolder.Companion
+                    .instance()
+                    .getShowcaseId();
+
+            if (showcaseId == null) {
+                Toast.makeText(
+                        v.getContext(),
+                        "Ви не вказали вітрину. Вкажіть спочатку вітрину",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
+            }
+
+            JsonObject dataJson = new JsonObject();
+            dataJson.addProperty("wpDataDBId", String.valueOf(codeDad2));
+            dataJson.addProperty("showcaseId", showcaseId);
+
+
+
             Intent intent = new Intent(context, FeaturesActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
             bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
             bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-            bundle.putString("dataJson", new Gson().toJson(codeDad2));
-            bundle.putString("title", "title");
-            bundle.putString("subTitle", "subTitle");
+//            bundle.putString("dataJson", new Gson().toJson(codeDad2));
+            bundle.putString("dataJson", new Gson().toJson(dataJson));
+            bundle.putString("title", "Перелік фото звітів");
+            bundle.putString("subTitle", "Справочник Фото: " +
+                    ImagesTypeListRealm.getByID(0).getNm());
             intent.putExtras(bundle);
             ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });
@@ -572,6 +684,8 @@ public class DialogCreateAchievement {
     }
 
     public void setData(AchievementsSDB data) {
+        AchievementDataHolder.Companion.instance().init();
+
         CustomerSDB customerSDB = SQL_DB.customerDao().getById(data.clientId);
         UsersSDB usersSDB = SQL_DB.usersDao().getById(data.userId);
 
@@ -611,6 +725,10 @@ public class DialogCreateAchievement {
         tovarTxt.setText(underLineText(
                 AchievementDataHolder.Companion.instance().getTovarName() == null ?
                         "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()));
+        showcaseItem.setText(underLineText(
+                AchievementDataHolder.Companion.instance().getShowcaseName() == null ?
+                        "Натисніть для обрання Вiтрини" : AchievementDataHolder.Companion.instance().getShowcaseName())
+        );
         tradeMarkItem.setText(underLineText(
                 AchievementDataHolder.Companion.instance().getManufactureName() == null ?
                         "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName())

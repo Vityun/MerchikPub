@@ -93,6 +93,11 @@ class WpDataDBViewModel @Inject constructor(
             )
     }
 
+    override fun onClickAdditionalContent() {
+        super.onClickAdditionalContent()
+        requestCustomAditionalDialog()
+    }
+
     override fun updateFilters() {
         val prev = uiState.value.filters ?: Filters()
 

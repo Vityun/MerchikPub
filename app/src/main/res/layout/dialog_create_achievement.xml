@@ -175,15 +175,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/theme" />
 
-<!--                <Spinner-->
-<!--                    android:id="@+id/spinner_theme"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginStart="8dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    app:layout_constraintEnd_toEndOf="parent"-->
-<!--                    app:layout_constraintStart_toStartOf="parent"-->
-<!--                    app:layout_constraintTop_toBottomOf="@+id/themeItem" />-->
 
                 <TextView
                     android:id="@+id/offer_from_the_client"
@@ -210,15 +201,31 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client" />
 
-<!--                <Spinner-->
-<!--                    android:id="@+id/spinner_client"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginStart="8dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    app:layout_constraintEnd_toEndOf="parent"-->
-<!--                    app:layout_constraintStart_toStartOf="parent"-->
-<!--                    app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client_item" />-->
+                <TextView
+                    android:id="@+id/chose_showcase"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:singleLine="false"
+                    android:textStyle="bold"
+                    android:text="Вiтрина: "
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client_item" />
+
+                <TextView
+                    android:id="@+id/chose_showcase_item"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="Натисніть для обрання Вiтрини"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/chose_showcase" />
+
 
                 <TextView
                     android:id="@+id/tradeMark"
@@ -231,7 +238,7 @@
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client_item" />
+                    app:layout_constraintTop_toBottomOf="@+id/chose_showcase_item" />
 
                 <TextView
                     android:id="@+id/tradeMarkItem"

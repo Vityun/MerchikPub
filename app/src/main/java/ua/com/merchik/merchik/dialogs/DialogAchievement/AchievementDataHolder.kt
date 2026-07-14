@@ -9,6 +9,8 @@ class AchievementDataHolder private constructor() {
     var manufactureName: String? = null
     var themeId: Int? = null
     var themeName: String? = null
+    var showcaseId: Int? = null
+    var showcaseName: String? = null
     var photoToId: Int? = null
     var photoToURI: String? = null
     var photoHashTo: String? = null
@@ -36,6 +38,8 @@ class AchievementDataHolder private constructor() {
         manufactureName = null
         themeId = null
         themeName = null
+        showcaseId = null
+        showcaseName = null
         photoToId = null
         photoToURI = null
         photoHashTo = null

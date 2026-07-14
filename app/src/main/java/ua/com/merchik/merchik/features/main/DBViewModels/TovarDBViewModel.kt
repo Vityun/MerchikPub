@@ -3320,13 +3320,16 @@ class TovarDBViewModel @Inject constructor(
         val rows = templates
             .filter { it.getOptionControlName() != OptionControlName.AKCIYA }
             .map { tpl ->
-                val kind = when (operationType(tpl)) {
-                    DialogData.Operations.Number -> InlineEditorKind.NUMBER
-                    DialogData.Operations.Text -> InlineEditorKind.TEXT
-                    DialogData.Operations.Date -> InlineEditorKind.DATE
-                    DialogData.Operations.DoubleSpinner -> InlineEditorKind.DOUBLE_SELECT
-                    DialogData.Operations.EditTextAndSpinner -> InlineEditorKind.TEXT_AND_SELECT
-                    else -> InlineEditorKind.TEXT
+                val kind = when (tpl.getOptionControlName()) {
+                    OptionControlName.PRICE -> InlineEditorKind.DECIMAL_NUMBER
+                    else -> when (operationType(tpl)) {
+                        DialogData.Operations.Number -> InlineEditorKind.NUMBER
+                        DialogData.Operations.Text -> InlineEditorKind.TEXT
+                        DialogData.Operations.Date -> InlineEditorKind.DATE
+                        DialogData.Operations.DoubleSpinner -> InlineEditorKind.DOUBLE_SELECT
+                        DialogData.Operations.EditTextAndSpinner -> InlineEditorKind.TEXT_AND_SELECT
+                        else -> InlineEditorKind.TEXT
+                    }
                 }
 
                 val currentValue = getCurrentData(tpl, rp).orEmpty()

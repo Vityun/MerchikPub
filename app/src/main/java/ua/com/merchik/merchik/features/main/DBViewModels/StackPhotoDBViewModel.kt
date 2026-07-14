@@ -15,6 +15,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
 import ua.com.merchik.merchik.WorkPlan
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -31,6 +32,7 @@ import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.features.main.Main.Filters
@@ -103,38 +105,87 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
-                -> {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> {
 
-                try {
-                    val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                var showcaseId: Int? = null
 
-                    val codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
-                    planogrammId.value = dataJsonObject.get("planogrammVizitShowcaseId").asInt
-                    wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    )
+                /*
+                 * Поддерживаем два формата dataJson:
+                 *
+                 * 1. Старый:
+                 *    123456789
+                 *
+                 * 2. Новый:
+                 *    {
+                 *        "wpDataDBId": "123456789",
+                 *        "showcaseId": 15
+                 *    }
+                 */
+                val codeDad2 = try {
+                    val dataJsonObject =
+                        Gson().fromJson(dataJson, JsonObject::class.java)
 
+                    val parsedCodeDad2 = dataJsonObject
+                        .get("wpDataDBId")
+                        ?.takeUnless { it.isJsonNull }
+                        ?.asString
+                        ?.toLongOrNull()
+                        ?: throw IllegalArgumentException("wpDataDBId is missing")
+
+                    dataJsonObject
+                        .get("planogrammVizitShowcaseId")
+                        ?.takeUnless { it.isJsonNull }
+                        ?.asInt
+                        ?.let { receivedPlanogrammId ->
+                            planogrammId.value = receivedPlanogrammId
+                        }
+
+                    showcaseId = dataJsonObject
+                        .get("showcaseId")
+                        ?.takeUnless { it.isJsonNull }
+                        ?.asString
+                        ?.toIntOrNull()
+
+                    parsedCodeDad2
                 } catch (e: Exception) {
-                    val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-                    val wpRow = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-
-                    if (wpRow != null) {
-                        wpDataDB = RealmManager.INSTANCE.copyFromRealm(wpRow)
-                    } else {
-                        // Обработка ситуации, когда запись не найдена
-                        Toast.makeText(
-                            context,
-                            "Дані застаріли і не можуть бути змінені у додатку",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        Globals.writeToMLOG(
-                            "ERROR", "StackPhotoDBViewModel.updateFilters",
-                            "Exception e: $e"
-                        )
-                        return
-                    }
+                    runCatching {
+                        Gson().fromJson(dataJson, Long::class.java)
+                    }.getOrNull()
                 }
+
+                if (codeDad2 == null) {
+                    Toast.makeText(
+                        context,
+                        "Не вдалося визначити відвідування",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "StackPhotoDBViewModel.updateFilters",
+                        "Не вдалося отримати codeDad2 з dataJson: $dataJson"
+                    )
+                    return
+                }
+
+                val wpRow = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+
+                if (wpRow == null) {
+                    Toast.makeText(
+                        context,
+                        "Дані застаріли і не можуть бути змінені у додатку",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "StackPhotoDBViewModel.updateFilters",
+                        "WpDataDB не знайдено. codeDad2: $codeDad2"
+                    )
+                    return
+                }
+
+                wpDataDB = RealmManager.INSTANCE.copyFromRealm(wpRow)
 
                 val filterWpDataDB = ItemFilter(
                     "Відвідування",
@@ -156,6 +207,7 @@ class StackPhotoDBViewModel @Inject constructor(
 
                     ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
                     ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE -> 0
+
                     ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
@@ -168,13 +220,12 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
-                    else -> 0 // Резервное значение, не должно использоваться
+
+                    else -> 0
                 }
 
                 val imagesType = RealmManager.INSTANCE.copyFromRealm(
-                    PhotoTypeRealm.getPhotoTypeById(
-                        typePhotoId
-                    )
+                    PhotoTypeRealm.getPhotoTypeById(typePhotoId)
                 )
 
                 val filterImagesTypeListDB = ItemFilter(
@@ -191,16 +242,54 @@ class StackPhotoDBViewModel @Inject constructor(
                     true
                 )
 
+                val filterItems = mutableListOf(
+                    filterWpDataDB,
+                    filterImagesTypeListDB
+                )
+
+
+                showcaseId?.let { receivedShowcaseId ->
+                    val showcase = RoomManager.SQL_DB
+                        .showcaseDao()
+                        .getById(receivedShowcaseId)
+
+                    if (showcase != null) {
+                        val filterShowcaseDB = ItemFilter(
+                            "Вітрина",
+                            ShowcaseSDB::class,
+                            ShowcaseDBViewModel::class,
+                            ModeUI.MULTI_SELECT,
+                            "Вітрина",
+                            "Оберіть поточну вітрину",
+
+                            // Поле в StackPhotoDB
+                            "showcase_id",
+
+                            // Поле в ShowcaseSDB
+                            "id",
+
+                            mutableListOf(showcase.id.toString()),
+                            mutableListOf(showcase.nm.orEmpty()),
+                            true
+                        )
+
+                        filterItems.add(filterShowcaseDB)
+                    } else {
+                        Globals.writeToMLOG(
+                            "ERROR",
+                            "StackPhotoDBViewModel.updateFilters",
+                            "ShowcaseSDB не знайдено. showcaseId: $receivedShowcaseId"
+                        )
+                    }
+                }
+
                 filters = Filters(
                     rangeDataByKey = null,
-                    items = mutableListOf(
-                        filterWpDataDB,
-                        filterImagesTypeListDB
-                    )
+                    items = filterItems
                 )
             }
 
-            else -> {}
+            else -> Unit
         }
     }
 
@@ -222,28 +311,70 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100
-                    -> {
-                    var codeDad2: Long
-                    var id: Int
-                    try {
-                        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                        codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
-                        id = dataJsonObject.get("planogrammVizitShowcaseId").asInt
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> {
 
+                    var planogrammVizitShowcaseId = 0
+                    var receivedShowcaseId: Int? = null
+
+                    /*
+                     * Поддерживаем:
+                     *
+                     * Старый формат:
+                     * 123456789
+                     *
+                     * Формат планограммы:
+                     * {
+                     *     "wpDataDBId": "123456789",
+                     *     "planogrammVizitShowcaseId": 3
+                     * }
+                     *
+                     * Новый формат:
+                     * {
+                     *     "wpDataDBId": "123456789",
+                     *     "showcaseId": 15
+                     * }
+                     */
+                    val codeDad2 = try {
+                        val dataJsonObject = Gson().fromJson(
+                            dataJson,
+                            JsonObject::class.java
+                        )
+
+                        val parsedCodeDad2 = dataJsonObject
+                            .get("wpDataDBId")
+                            ?.takeUnless { it.isJsonNull }
+                            ?.asString
+                            ?.toLongOrNull()
+                            ?: throw IllegalArgumentException(
+                                "wpDataDBId не передан"
+                            )
+
+                        planogrammVizitShowcaseId = dataJsonObject
+                            .get("planogrammVizitShowcaseId")
+                            ?.takeUnless { it.isJsonNull }
+                            ?.asString
+                            ?.toIntOrNull()
+                            ?: 0
+
+                        receivedShowcaseId = dataJsonObject
+                            .get("showcaseId")
+                            ?.takeUnless { it.isJsonNull }
+                            ?.asString
+                            ?.toIntOrNull()
+
+                        parsedCodeDad2
                     } catch (e: Exception) {
-                        codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-                        id = 0
+                        Gson().fromJson(dataJson, Long::class.java)
                     }
-//                    val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-//                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-//                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-//                    )
+
                     Globals.writeToMLOG(
                         "INFO",
                         "StackPhotoDBViewModel.getItems",
-                        "codeDad2: $codeDad2"
+                        "codeDad2: $codeDad2, " +
+                                "planogrammVizitShowcaseId: $planogrammVizitShowcaseId, " +
+                                "showcaseId: $receivedShowcaseId"
                     )
+
                     val typePhoto = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                         ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> 14
@@ -263,7 +394,8 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
-                        else -> 0 // Резервное значение, не должно использоваться
+
+                        else -> 0
                     }
 
                     val data = RealmManager.INSTANCE.copyFromRealm(
@@ -273,38 +405,94 @@ class StackPhotoDBViewModel @Inject constructor(
                         )
                     )
 
-                    data.reverse() //25.04.2025 добавил обратную сортировку
+                    /*
+                     * Если передана витрина, находим её и связываем
+                     * с фотографией по ShowcaseSDB.photoId.
+                     */
+                    receivedShowcaseId?.let { showcaseId ->
+                        val showcase = RoomManager.SQL_DB
+                            .showcaseDao()
+                            .getById(showcaseId)
 
-                    repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)
-                        .map {
-                            val photoId = when (contextUI) {
+                        if (showcase != null) {
+                            val showcasePhotoId = showcase.photoId?.toString()
+
+                            data.forEach { photo ->
+                                val isShowcasePhoto =
+                                    !showcasePhotoId.isNullOrBlank() &&
+                                            photo.photoServerId == showcasePhotoId
+
+                                if (isShowcasePhoto) {
+                                    photo.showcaseId = showcase.id
+                                    photo.showcaseName = showcase.nm.orEmpty()
+                                }
+                            }
+                        } else {
+                            Globals.writeToMLOG(
+                                "ERROR",
+                                "StackPhotoDBViewModel.getItems",
+                                "ShowcaseSDB не знайдено. showcaseId: $showcaseId"
+                            )
+                        }
+                    }
+
+                    data.reverse()
+
+                    repository
+                        .toItemUIList(
+                            StackPhotoDB::class,
+                            data,
+                            contextUI,
+                            typePhoto
+                        )
+                        .map { item ->
+                            val selectedPhotoId = when (contextUI) {
                                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
-                                ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT ->
+                                ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> {
                                     AchievementDataHolder.instance().photoToId
+                                }
 
-                                ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> AchievementDataHolder.instance().photoAfterId
+                                ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> {
+                                    AchievementDataHolder.instance().photoAfterId
+                                }
 
-                                ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> VizitShowcaseDataHolder.getInstance()[id].photoDoId
+                                ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> {
+                                    VizitShowcaseDataHolder
+                                        .getInstance()[planogrammVizitShowcaseId]
+                                        .photoDoId
+                                }
 
                                 else -> 0
                             }
+
+                            val stackPhoto = item.rawObj
+                                .filterIsInstance<StackPhotoDB>()
+                                .firstOrNull()
+
                             val selected = when (contextUI) {
-                                ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT ->
-                                    (it.rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.photoServerId == photoId.toString()
+                                ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> {
+                                    stackPhoto?.photoServerId ==
+                                            selectedPhotoId.toString()
+                                }
 
-                                else -> (it.rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.id == photoId
+                                else -> {
+                                    stackPhoto?.id == selectedPhotoId
+                                }
                             }
-                            it.copy(selected = selected)
 
+                            item.copy(selected = selected)
                         }
                 }
 
-                else -> {
-                    emptyList()
-                }
+                else -> emptyList()
             }
-
         } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "StackPhotoDBViewModel.getItems",
+                "Exception: $e"
+            )
+
             emptyList()
         }
     }
@@ -409,7 +597,7 @@ class StackPhotoDBViewModel @Inject constructor(
                 "get_on_server, id, markUpload, object_id, photo_hash, photo_num, photo_type, " +
                 "premiyaUpload, specialCol, commentUpload, upload_time, upload_to_server, vpi, " +
                 "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt, code_iza, " +
-                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId").split(",")
+                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id").split(",")
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {
