@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -465,6 +466,165 @@ public class MakePhoto {
     public static String example_id = "";
     public static String example_img_id = "";
 
+    private static final String PENDING_PHOTO_PREFS = "make_photo_pending_state";
+    private static final String KEY_PHOTO_NUM = "photo_num";
+    private static final String KEY_DT = "dt";
+    private static final String KEY_PHOTO_TYPE = "photo_type";
+    private static final String KEY_TOVAR_ID = "tovar_id";
+    private static final String KEY_PHOTO_CUSTOMER_GROUP = "photo_customer_group";
+    private static final String KEY_IMG_SRC_ID = "img_src_id";
+    private static final String KEY_SHOWCASE_ID = "showcase_id";
+    private static final String KEY_PLANOGRAM_ID = "planogram_id";
+    private static final String KEY_PLANOGRAM_IMG_ID = "planogram_img_id";
+    private static final String KEY_EXAMPLE_ID = "example_id";
+    private static final String KEY_EXAMPLE_IMG_ID = "example_img_id";
+    private static final long EMPTY_DT = Long.MIN_VALUE;
+
+    public static final class PendingPhotoState {
+        public final String photoNum;
+        public final Long dt;
+        public final String photoType;
+        public final String tovarId;
+        public final String photoCustomerGroup;
+        public final String imgSrcId;
+        public final String showcaseId;
+        public final String planogramId;
+        public final String planogramImgId;
+        public final String exampleId;
+        public final String exampleImgId;
+
+        private PendingPhotoState(
+                String photoNum,
+                Long dt,
+                String photoType,
+                String tovarId,
+                String photoCustomerGroup,
+                String imgSrcId,
+                String showcaseId,
+                String planogramId,
+                String planogramImgId,
+                String exampleId,
+                String exampleImgId
+        ) {
+            this.photoNum = photoNum;
+            this.dt = dt;
+            this.photoType = photoType;
+            this.tovarId = tovarId;
+            this.photoCustomerGroup = photoCustomerGroup;
+            this.imgSrcId = imgSrcId;
+            this.showcaseId = showcaseId;
+            this.planogramId = planogramId;
+            this.planogramImgId = planogramImgId;
+            this.exampleId = exampleId;
+            this.exampleImgId = exampleImgId;
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static String notNull(String value) {
+        return value == null ? "" : value;
+    }
+
+    private static SharedPreferences pendingPhotoPrefs(Context context) {
+        Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) {
+            return null;
+        }
+        return appContext.getSharedPreferences(PENDING_PHOTO_PREFS, Context.MODE_PRIVATE);
+    }
+
+    public static void persistPendingPhoto(Context context, String photoPath) {
+        if (isBlank(photoPath)) {
+            return;
+        }
+
+        SharedPreferences prefs = pendingPhotoPrefs(context);
+        if (prefs == null) {
+            return;
+        }
+
+        prefs.edit()
+                .putString(KEY_PHOTO_NUM, photoPath)
+                .putLong(KEY_DT, dt != null ? dt : EMPTY_DT)
+                .putString(KEY_PHOTO_TYPE, notNull(photoType))
+                .putString(KEY_TOVAR_ID, notNull(tovarId))
+                .putString(KEY_PHOTO_CUSTOMER_GROUP, notNull(photoCustomerGroup))
+                .putString(KEY_IMG_SRC_ID, notNull(img_src_id))
+                .putString(KEY_SHOWCASE_ID, notNull(showcase_id))
+                .putString(KEY_PLANOGRAM_ID, notNull(planogram_id))
+                .putString(KEY_PLANOGRAM_IMG_ID, notNull(planogram_img_id))
+                .putString(KEY_EXAMPLE_ID, notNull(example_id))
+                .putString(KEY_EXAMPLE_IMG_ID, notNull(example_img_id))
+                .apply();
+    }
+
+    public static PendingPhotoState readPendingPhoto(Context context) {
+        SharedPreferences prefs = pendingPhotoPrefs(context);
+        if (prefs == null) {
+            return null;
+        }
+
+        String pendingPhotoNum = prefs.getString(KEY_PHOTO_NUM, null);
+        if (isBlank(pendingPhotoNum)) {
+            return null;
+        }
+
+        long pendingDt = prefs.getLong(KEY_DT, EMPTY_DT);
+        return new PendingPhotoState(
+                pendingPhotoNum,
+                pendingDt == EMPTY_DT ? null : pendingDt,
+                prefs.getString(KEY_PHOTO_TYPE, "0"),
+                prefs.getString(KEY_TOVAR_ID, ""),
+                prefs.getString(KEY_PHOTO_CUSTOMER_GROUP, ""),
+                prefs.getString(KEY_IMG_SRC_ID, ""),
+                prefs.getString(KEY_SHOWCASE_ID, ""),
+                prefs.getString(KEY_PLANOGRAM_ID, ""),
+                prefs.getString(KEY_PLANOGRAM_IMG_ID, ""),
+                prefs.getString(KEY_EXAMPLE_ID, ""),
+                prefs.getString(KEY_EXAMPLE_IMG_ID, "")
+        );
+    }
+
+    public static PendingPhotoState restorePendingPhoto(Context context) {
+        PendingPhotoState state = readPendingPhoto(context);
+        if (state == null) {
+            return null;
+        }
+
+        photoNum = state.photoNum;
+        dt = state.dt;
+        photoType = isBlank(state.photoType) ? "0" : state.photoType;
+        tovarId = notNull(state.tovarId);
+        photoCustomerGroup = notNull(state.photoCustomerGroup);
+        img_src_id = notNull(state.imgSrcId);
+        showcase_id = notNull(state.showcaseId);
+        planogram_id = notNull(state.planogramId);
+        planogram_img_id = notNull(state.planogramImgId);
+        example_id = notNull(state.exampleId);
+        example_img_id = notNull(state.exampleImgId);
+        return state;
+    }
+
+    public static String getPendingPhotoNum(Context context) {
+        if (!isBlank(photoNum)) {
+            return photoNum;
+        }
+
+        PendingPhotoState state = restorePendingPhoto(context);
+        return state != null ? state.photoNum : null;
+    }
+
+    public static void clearPendingPhoto(Context context) {
+        SharedPreferences prefs = pendingPhotoPrefs(context);
+        if (prefs != null) {
+            prefs.edit().clear().apply();
+        }
+        photoNum = null;
+    }
+
     public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
         try {
             final WorkPlan workPlan = new WorkPlan();
@@ -488,6 +648,7 @@ public class MakePhoto {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 
             photoNum = photoFile.getAbsolutePath();
+            persistPendingPhoto(activity, photoNum);
 
             boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile, clickVoid);
 
@@ -504,6 +665,7 @@ public class MakePhoto {
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
             }
         } catch (Exception e) {
+            clearPendingPhoto(activity);
             Globals.writeToMLOG("ERROR", "makePhoto", "Error msg(Exception e): " + e);
             Toast.makeText(activity, "Ошибка при выполнении фото: " + e, Toast.LENGTH_LONG).show();
         }

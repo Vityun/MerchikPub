@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
+import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammImagesSDB;
@@ -82,6 +83,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionThemeDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.OrderDataDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammGroupDao;
@@ -166,9 +168,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 WPDataAdditional.class,      // Додатковий заробіток
                 InitStateEntity.class,
                 LocationDevices.class,
-                QuestionAnswerDB.class
+                QuestionAnswerDB.class,
+                OrderDataSDB.class
         },
-        version = 77
+        version = 78
 )
 
 
@@ -276,6 +279,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract LocationDevicesDao locationDevicesDao();
 
     public abstract QuestionAnswerDao questionAnswerDao();
+
+    public abstract OrderDataDao orderDataDao();
 
     public class MyAutoMigration {
     }

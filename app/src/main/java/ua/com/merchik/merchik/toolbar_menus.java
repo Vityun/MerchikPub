@@ -1141,8 +1141,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             File uploadFile = FileCompressor.compressFile(file.getPath(), outputFilePath);
 
 
-            if (uploadFile != null) {
-                System.out.println("File_Size:: " + uploadFile.getAbsolutePath() + " | " + uploadFile.length());
+            if (uploadFile != null && uploadFile.exists() && uploadFile.length() > 0) {
+                long sourceSize = file.length();
+                long compressedSize = uploadFile.length();
+                System.out.println("File_Size:: " + uploadFile.getAbsolutePath() + " | " + compressedSize);
+                Globals.writeToMLOG("INFO", "toolbar_menus/sendEmail", "log file compressed. sourceSize=" + sourceSize + ", compressedSize=" + compressedSize);
 
 
                 ProgressViewModel progress = new ProgressViewModel(99);
@@ -1153,7 +1156,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
                 ProgressRequestBody progressRequestBody = new ProgressRequestBody(
-                        file,
+                        uploadFile,
                         "application/gzip",
                         percentage -> {
                             // Обновляем прогресс, например, в UI
@@ -1166,7 +1169,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //        MultipartBody.Part part = createMultipart(uploadFile, "m_log_" + currentDate + ".gz");
                 MultipartBody.Part part = MultipartBody.Part.createFormData(
                         "file",
-                        file.getName(),
+                        uploadFile.getName(),
                         progressRequestBody
                 );
 
@@ -1179,16 +1182,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         progress.onCompleted();
 
-                        file.deleteOnExit();
-                        uploadFile.deleteOnExit();
+                        deleteLogTempFiles(file, uploadFile);
                     }
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         progress.onCanceled();
 
-                        file.deleteOnExit();
-                        uploadFile.deleteOnExit();
+                        deleteLogTempFiles(file, uploadFile);
 
                         new MessageDialogBuilder(toolbar_menus.this)
                                 .setTitle("Помилка")
@@ -1226,6 +1227,18 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 "Зв`язок з сервером на поточний момент встановити не вдалось! Файл не був вiдправлений. " +
                         "Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу",
                 DialogStatus.ERROR).show();
+    }
+
+    private static void deleteLogTempFiles(File... files) {
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            if (file != null && file.exists() && !file.delete()) {
+                Globals.writeToMLOG("INFO", "toolbar_menus/deleteLogTempFiles", "Can't delete temp file: " + file.getAbsolutePath());
+            }
+        }
     }
 
     public static void copy(File src, File dst) throws IOException {

@@ -107,6 +107,7 @@ import androidx.lifecycle.viewModelScope
 import coil.compose.rememberAsyncImagePainter
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -149,9 +150,14 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedList
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
+import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
+import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
+import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialogButton
+import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalWorkForm
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialog
@@ -160,6 +166,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
+import ua.com.merchik.merchik.features.main.order.OrderDataPreloadRepository
 import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import java.io.File
 import java.text.SimpleDateFormat
@@ -177,6 +184,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showQuestionAnswerDialog by remember { mutableStateOf(false) }
     var showCustomAditionalConfirmDialog by remember { mutableStateOf(false) }
     var showCustomAditionalDialog by remember { mutableStateOf(false) }
+    var customAditionalDate by remember { mutableStateOf("") }
+    var customAditionalExecutorFirm by remember { mutableStateOf("") }
+    var customAditionalCustomer by remember { mutableStateOf("") }
+    var customAditionalAddress by remember { mutableStateOf("") }
+    var customAditionalOrder by remember { mutableStateOf("") }
 
 
     val uiInstanceId = remember { System.identityHashCode(Any()) }
@@ -192,6 +204,38 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var isActiveGrouped by remember { mutableStateOf(false) }
 
     var showAdditionalContent by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val noDataText = "(нет данных)"
+        val currentUserData = withContext(Dispatchers.IO) {
+            runCatching {
+                val db = RoomManager.SQL_DB
+                val user = db
+                    .usersDao()
+                    .getById(Globals.userId)
+                val executorFirm = user
+                    ?.clientId
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { clientId ->
+                        db
+                            .customerDao()
+                            ?.getById(clientId)
+                            ?.nm
+                    }
+                    ?.takeIf { it.isNotBlank() }
+                    ?: noDataText
+
+                val customer = user
+                    ?.fio
+                    ?.takeIf { it.isNotBlank() }
+                    ?: noDataText
+
+                executorFirm to customer
+            }.getOrDefault(noDataText to noDataText)
+        }
+        customAditionalExecutorFirm = currentUserData.first
+        customAditionalCustomer = currentUserData.second
+    }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     val settingPulse = rememberPulseController()
@@ -298,6 +342,16 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
+            CustomAditionalOrderSelectionHolder.consume()?.let { selection ->
+                customAditionalOrder = selection.name
+                    ?.takeIf { it.isNotBlank() }
+                    ?: selection.id.orEmpty()
+            }
+            CustomAditionalAddressSelectionHolder.consume()?.let { selection ->
+                customAditionalAddress = selection.name
+                    ?.takeIf { it.isNotBlank() }
+                    ?: selection.id.orEmpty()
+            }
             viewModel.updateContent()
         }
     }
@@ -391,6 +445,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         coroutineScope.launch {
             val progress = ProgressViewModel(1)
             val loadingDialog = LoadingDialogWithPercent(activity, progress)
+            val preloadJob = async(Dispatchers.IO) {
+                OrderDataPreloadRepository.preload(context.applicationContext)
+            }
             var completed = false
             var dismissedByUser = false
 
@@ -404,11 +461,36 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 progress.reset("Подготовка формы")
                 loadingDialog.show()
                 progress.setProgressPercent(
-                    progressPercent = 100f,
-                    message = "Подготовка формы",
+                    progressPercent = 90f,
+                    message = "Загрузка заказов и адресов",
                     durationMillis = 2_000L
                 )
                 delay(2_000L)
+
+                runCatching { preloadJob.await() }
+                    .onSuccess { result ->
+                        val message =
+                            "savedOrderCount=${result.savedOrderCount}, savedAddressCount=${result.savedAddressCount}, errors=${result.errors}"
+                        Log.e("CustomAditionalPreload", "completed: $message")
+                        Globals.writeToMLOG("INFO", "CustomAditionalPreload/result", message)
+                    }
+                    .onFailure { throwable ->
+                        Log.e("CustomAditionalPreload", "failed", throwable)
+                        Globals.writeToMLOG(
+                            "ERROR",
+                            "CustomAditionalPreload/error",
+                            throwable.message ?: throwable.toString()
+                        )
+                    }
+
+                if (!dismissedByUser) {
+                    progress.setProgressPercent(
+                        progressPercent = 100f,
+                        message = "Готово",
+                        durationMillis = 300L
+                    )
+                    delay(300L)
+                }
                 completed = !dismissedByUser
             } finally {
                 loadingDialog.dismiss()
@@ -1925,11 +2007,27 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     }
 
     if (showCustomAditionalConfirmDialog) {
+        val dossierSotrSDBList =
+            RoomManager.SQL_DB.dossierSotrDao().getData(null, 1367L, null)
+        val sotrudnikDistance = (dossierSotrSDBList.maxOfOrNull { it.examId }?.toFloat() ?: 3000f)
+        fun formatDistance(m: Float): String {
+            val mm = m.toInt()
+            return if (mm < 1000) {
+                "$mm м"
+            } else {
+                val km = mm / 1000f
+                // 10.0 км, 3.5 км и т.п.
+                val text = if (km % 1f == 0f) km.toInt().toString() else String.format("%.1f", km)
+                "$text км"
+            }
+        }
         MessageDialog(
             title = "План работ",
             status = DialogStatus.NORMAL,
             subTitle = "Добавить новую работу",
-            message = "Добавить новую работу?",
+            message = "Используя этот инструмент, вы можете создать новый визит и выполнить по нему работы. <br>" +
+                    "Внимание! Список адресов будет предложен в радиусе ${formatDistance(sotrudnikDistance)} от вашего текущего место положения.<br>" +
+                    "Если нужного адреса в списке нет, обратитесь за помощью к своему руководителю или службу поддержки.",
             okButtonName = "Добавить",
             cancelButtonName = "Отмена",
             onDismiss = {
@@ -1948,7 +2046,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     if (showCustomAditionalDialog) {
         CustomAditionalDialog(
             title = "Добавить новую работу",
-            subTitle = "Шаблон формы для создания новой работы",
+            subTitle = "Шаблон формы для создания новой работы.<br>" +
+                    "Укажите дату, адрес и заказ (шаблон) по которым вы хотите сформировать и выполнить новый визит.",
             onDismiss = {
                 showCustomAditionalDialog = false
             },
@@ -1975,9 +2074,39 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 )
             }
         ) {
-            Text(
-                text = "Здесь будет форма добавления новой работы.",
-                modifier = Modifier.fillMaxWidth()
+            CustomAditionalWorkForm(
+                executorFirm = customAditionalExecutorFirm,
+                customer = customAditionalCustomer,
+                date = customAditionalDate,
+                address = customAditionalAddress,
+                order = customAditionalOrder,
+                onDateSelected = { selectedDate ->
+                    customAditionalDate = selectedDate
+                },
+                onAddressClick = {
+                    launchFeaturesActivity(
+                        launcher = launcher,
+                        context = context,
+                        viewModelClass = AddressSDBViewModel::class,
+                        modeUI = ModeUI.ONE_SELECT,
+                        contextUI = ContextUI.DEFAULT,
+                        title = "Адрес",
+                        subTitle = "Выберите адрес для новой работы",
+                        origin = null
+                    )
+                },
+                onOrderClick = {
+                    launchFeaturesActivity(
+                        launcher = launcher,
+                        context = context,
+                        viewModelClass = OrderDataSDBViewModel::class,
+                        modeUI = ModeUI.ONE_SELECT,
+                        contextUI = ContextUI.DEFAULT,
+                        title = "Заказ",
+                        subTitle = "Выберите заказ для новой работы",
+                        origin = null
+                    )
+                }
             )
         }
     }

@@ -3,7 +3,9 @@ package ua.com.merchik.merchik.features.main.componentsUI
 import android.view.WindowManager
 import androidx.annotation.ColorRes
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +15,13 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,16 +44,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val CustomAditionalCorner = 8.dp
+private val CustomAditionalBorderWidth = 1.dp
+private val CustomAditionalFieldMinHeight = 42.dp
 
 @Composable
 fun CustomAditionalDialog(
@@ -62,6 +83,8 @@ fun CustomAditionalDialog(
     actions: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+
+    val address = "Адреса по которым вы можете создать новый визит. Если..."
     val scrollState = rememberScrollState()
     var subTitleMaxLines by remember { mutableIntStateOf(1) }
     var showToolTip by remember { mutableStateOf(false) }
@@ -214,6 +237,250 @@ fun CustomAditionalDialog(
             okButtonName = "OK",
             onDismiss = { showToolTip = false },
             onConfirmAction = { showToolTip = false }
+        )
+    }
+}
+
+@Composable
+fun CustomAditionalWorkForm(
+    executorFirm: String = "",
+    customer: String = "",
+    date: String = "",
+    address: String = "",
+    order: String = "",
+    onCustomerClick: (() -> Unit)? = null,
+    onDateSelected: (String) -> Unit = {},
+    onAddressClick: (() -> Unit)? = null,
+    onOrderClick: (() -> Unit)? = null
+) {
+    val displayDateFormatter = remember {
+        DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+    }
+    var selectedDate by remember(date, displayDateFormatter) {
+        mutableStateOf(parseCustomAditionalDate(date, displayDateFormatter) ?: LocalDate.now())
+    }
+    val dateDialog = rememberMaterialDialogState()
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        CustomAditionalSelectField(
+            title = "Фирма - исполнитель",
+            value = executorFirm,
+            tooltipText = "Это фирма (предприятие) исполнитель работ."
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CustomAditionalSelectField(
+            title = "Фирма - заказчик",
+            value = executorFirm,
+            tooltipText = "Это фирма (предприятие) заказчик работ.",
+            onClick = onCustomerClick
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CustomAditionalSelectField(
+            title = "Сотрудник - исполнитель",
+            value = customer,
+            tooltipText = "Это сотрудник исполнитель работы.",
+            onClick = onCustomerClick
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+//        Box(
+//            modifier = Modifier.fillMaxWidth(),
+//            contentAlignment = Alignment.CenterEnd
+//        ) {
+        CustomAditionalSelectField(
+            title = "Дата",
+            value = date,
+            tooltipText = "Выберите дату новой работы.",
+            onClick = { dateDialog.show() },
+//                modifier = Modifier.width(152.dp)
+        )
+//        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CustomAditionalSelectField(
+            title = "Адрес",
+            value = address,
+            tooltipText = "Выбор адреса будет подключен следующим шагом.",
+            onClick = onAddressClick
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CustomAditionalSelectField(
+            title = "Заказ",
+            value = order,
+            tooltipText = "Выбор заказа будет подключен следующим шагом.",
+            onClick = onOrderClick
+        )
+    }
+
+    MaterialDialog(
+        dialogState = dateDialog,
+        buttons = {
+            positiveButton(
+                text = "ОК",
+                textStyle = TextStyle(
+                    color = colorResource(R.color.blue),
+                    fontWeight = FontWeight.Black
+                )
+            )
+            negativeButton(
+                text = "Скасувати",
+                textStyle = TextStyle(
+                    color = colorResource(R.color.orange),
+                    fontWeight = FontWeight.Black
+                )
+            )
+        }
+    ) {
+        datepicker(
+            initialDate = selectedDate,
+            title = "Дата",
+            colors = DatePickerDefaults.colors(
+                headerBackgroundColor = Color(0xFFB1B1B1),
+                headerTextColor = Color.White,
+                calendarHeaderTextColor = Color(0xFFB1B1B1),
+                dateActiveBackgroundColor = Color(0xFFB1B1B1),
+                dateActiveTextColor = Color.White
+            )
+        ) { newDate ->
+            selectedDate = newDate
+            onDateSelected(newDate.format(displayDateFormatter))
+        }
+    }
+}
+
+private fun parseCustomAditionalDate(
+    value: String,
+    displayDateFormatter: DateTimeFormatter
+): LocalDate? {
+    if (value.isBlank()) return null
+
+    val trimmed = value.trim()
+    return runCatching {
+        LocalDate.parse(trimmed, DateTimeFormatter.ISO_LOCAL_DATE)
+    }.getOrNull() ?: runCatching {
+        LocalDate.parse(trimmed, displayDateFormatter)
+    }.getOrNull()
+}
+
+@Composable
+private fun CustomAditionalSelectField(
+    title: String,
+    value: String,
+    tooltipText: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    val content: @Composable (Modifier) -> Unit = { fieldModifier ->
+        Box(
+            modifier = fieldModifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = CustomAditionalFieldMinHeight)
+                    .border(
+                        BorderStroke(
+                            CustomAditionalBorderWidth,
+                            colorResource(id = R.color.borderContextMenu)
+                        ),
+                        RoundedCornerShape(CustomAditionalCorner)
+                    )
+                    .padding(
+                        top = 12.dp,
+                        start = 6.dp,
+                        end = 6.dp,
+                        bottom = 6.dp
+                    ),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                CustomAditionalValueChip(
+                    value = value,
+                    placeholder = "Выбрать",
+                    onClick = onClick
+                )
+            }
+
+            Text(
+                text = title,
+                color = Color.Gray,
+                fontSize = 13.sp,
+                lineHeight = 13.sp,
+                style = TextStyle(
+                    platformStyle = PlatformTextStyle(
+                        includeFontPadding = false
+                    )
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = 12.dp, y = (-8).dp)
+                    .background(Color.White)
+                    .padding(horizontal = 6.dp, vertical = 0.dp)
+            )
+        }
+    }
+
+    if (onClick == null) {
+        Tooltip(text = tooltipText, modifier = modifier) {
+            content(Modifier)
+        }
+    } else {
+        content(modifier)
+    }
+}
+
+@Composable
+private fun CustomAditionalValueChip(
+    value: String,
+    placeholder: String,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val isEmpty = value.isBlank()
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .wrapContentWidth()
+            .background(
+                color = colorResource(id = R.color.background_item_filter),
+                shape = RoundedCornerShape(CustomAditionalCorner)
+            )
+            .border(
+                BorderStroke(
+                    CustomAditionalBorderWidth,
+                    colorResource(id = R.color.borderContextMenu)
+                ),
+                RoundedCornerShape(CustomAditionalCorner)
+            )
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick.invoke() }
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                start = 7.dp,
+                top = 4.dp,
+                bottom = 4.dp,
+                end = 7.dp
+            ),
+            text = value.ifBlank { placeholder },
+            color = if (isEmpty) Color.DarkGray else Color.Black,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            textAlign = TextAlign.Start
         )
     }
 }

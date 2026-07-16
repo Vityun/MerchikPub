@@ -51,7 +51,8 @@ public class RoomManager {
                         MIGRATION_71_72,
                         MIGRATION_72_73,
                         MIGRATION_73_74,
-                        MIGRATION_74_75
+                        MIGRATION_74_75,
+                        MIGRATION_77_78
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -921,6 +922,38 @@ public class RoomManager {
                             "`option_id` TEXT, " +
                             "`mnenie_id` TEXT, " +
                             "PRIMARY KEY(`ID`)" +
+                            ")"
+            );
+        }
+    };
+
+    public static final Migration MIGRATION_77_78 = new Migration(77, 78) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `order_data` (" +
+                            "`id` TEXT NOT NULL, " +
+                            "`order_id` TEXT, " +
+                            "`client_id` TEXT, " +
+                            "`isp_id` TEXT, " +
+                            "`order_type` TEXT, " +
+                            "`order_type_id` TEXT, " +
+                            "`dt_create` TEXT, " +
+                            "`dt_smeta_ymd` TEXT, " +
+                            "`smeta_id` TEXT, " +
+                            "`date_from_ymd` TEXT, " +
+                            "`date_to_ymd` TEXT, " +
+                            "`time_start` TEXT, " +
+                            "`time_end` TEXT, " +
+                            "`work_cnt` TEXT, " +
+                            "`price_plan` TEXT, " +
+                            "`price_act` TEXT, " +
+                            "`invoice_id` TEXT, " +
+                            "`price_paid` TEXT, " +
+                            "`order_status` TEXT, " +
+                            "`order_status_txt` TEXT, " +
+                            "`comment` TEXT, " +
+                            "PRIMARY KEY(`id`)" +
                             ")"
             );
         }

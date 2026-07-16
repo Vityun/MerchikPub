@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
+import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB
@@ -105,6 +106,7 @@ class MainRepository(
                     AddressSDB::class -> roomManager.addressDao().all.firstOrNull() as DataObjectUI
                     SMSPlanSDB::class -> roomManager.smsPlanDao().all.firstOrNull() as DataObjectUI
                     QuestionAnswerDB::class -> roomManager.questionAnswerDao().all.firstOrNull() as DataObjectUI
+                    OrderDataSDB::class -> roomManager.orderDataDao().all.firstOrNull() as DataObjectUI
                     else -> null
                 }
             }.getOrNull()
@@ -263,6 +265,7 @@ class MainRepository(
                         SamplePhotoSDB::class -> room.samplePhotoDao().all.firstOrNull() as DataObjectUI
                         AddressSDB::class -> room.addressDao().all.firstOrNull() as DataObjectUI
                         SMSPlanSDB::class -> room.smsPlanDao().all.firstOrNull() as DataObjectUI
+                        OrderDataSDB::class -> room.orderDataDao().all.firstOrNull() as DataObjectUI
                         else -> null
                     }
                 }.getOrNull()
@@ -386,6 +389,7 @@ class MainRepository(
             SMSPlanSDB::class -> roomManager.smsPlanDao().all
             ErrorDB::class -> RealmManager.getAllErrorDbNotZero()
             QuestionAnswerDB::class -> roomManager.questionAnswerDao().all
+            OrderDataSDB::class -> roomManager.orderDataDao().all
             else -> {
                 emptyList()
             }

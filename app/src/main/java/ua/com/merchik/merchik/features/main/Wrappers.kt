@@ -184,6 +184,55 @@ object CustomerSDBOverride {
     }
 }
 
+object OrderDataSDBOverride {
+    fun getHidedFieldsOnUI(): String =
+        "id, order_type_id, dt_create, dt_smeta_ymd, smeta_id, time_start, time_end, price_act, invoice_id, price_paid, order_status"
+
+    fun getTranslateId(key: String): Long? = null
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt_create" -> formatUnixSeconds(value.toString()) ?: value.toString()
+        "date_from_ymd", "date_to_ymd", "dt_smeta_ymd" -> formatYmd(value.toString()) ?: value.toString()
+        "price_plan", "price_act", "price_paid" -> formatMoney(value.toString()) ?: value.toString()
+        "client_id", "isp_id" -> try {
+            RoomManager.SQL_DB.customerDao().getById(value.toString()).nm
+        } catch (_: Exception){
+            value.toString()
+        }
+
+        else -> value.toString()
+    }
+
+    fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        "order_id",
+        "order_status_txt",
+        "order_type" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+
+        else -> MerchModifier(padding = Padding(end = 10.dp))
+    }
+
+    private fun formatUnixSeconds(value: String): String? {
+        val seconds = value.toLongOrNull() ?: return null
+        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(seconds * 1000L))
+    }
+
+    private fun formatYmd(value: String): String? {
+        if (value.isBlank()) return null
+        return runCatching {
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(
+                SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(value) ?: return null
+            )
+        }.getOrNull()
+    }
+
+    private fun formatMoney(value: String): String? {
+        if (value.isBlank()) return null
+        return "${value.toBigDecimalOrNull()
+            ?.setScale(2, RoundingMode.HALF_UP)
+            ?.toPlainString()} грн"
+    }
+}
+
 object AdditionalRequirementsDBOverride {
     fun getValueUI(key: String, value: Any): String = when (key) {
         "dt_change" -> {

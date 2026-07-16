@@ -935,7 +935,11 @@ public class DetailedReportActivity extends toolbar_menus {
                 Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
                 savePhoto(globals, this);
             } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
-                StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
+                String pendingPhotoNum = MakePhoto.getPendingPhotoNum(this);
+                if (!TextUtils.isEmpty(pendingPhotoNum)) {
+                    StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
+                }
+                MakePhoto.clearPendingPhoto(this);
             }
 
             if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
@@ -1016,11 +1020,20 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
     public static void savePhoto(Globals globals, Activity activity) {
-        File photoFile = new File(MakePhoto.photoNum);
+        MakePhoto.restorePendingPhoto(activity);
+        String pendingPhotoNum = MakePhoto.getPendingPhotoNum(activity);
+        if (TextUtils.isEmpty(pendingPhotoNum)) {
+            Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Pending photo path is empty");
+            showPhotoSaveError(activity, "Не удалось завершить сохранение фото: потерян путь к файлу. Повторите съемку.");
+            return;
+        }
+
+        File photoFile = new File(pendingPhotoNum);
         Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "File(MakePhoto.photoNum).size: " + photoFile.length());
 
-        if (photoFile.length() <= 1) {
-            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
+        if (!photoFile.exists() || photoFile.length() <= 1) {
+            StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
+            MakePhoto.clearPendingPhoto(activity);
             new MessageDialogBuilder(activity)
                     .setTitle("Помилка при виготовленні фото")
                     .setStatus(DialogStatus.ERROR)
@@ -1029,9 +1042,17 @@ public class DetailedReportActivity extends toolbar_menus {
                     .show();
         } else
             try {
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + pendingPhotoNum);
 
-                StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
+                StackPhotoDB pendingPhoto = StackPhotoRealm.getByPhotoNum(pendingPhotoNum);
+                if (pendingPhoto == null) {
+                    Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "StackPhoto row not found for photoNum: " + pendingPhotoNum);
+                    MakePhoto.clearPendingPhoto(activity);
+                    showPhotoSaveError(activity, "Не удалось завершить сохранение фото: запись фото не найдена в базе. Повторите съемку.");
+                    return;
+                }
+
+                StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(pendingPhoto);
 
                 JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
@@ -1047,6 +1068,14 @@ public class DetailedReportActivity extends toolbar_menus {
                     photoFile = resizeImageFile(activity, photoFile);
                 } catch (Exception e) {
                     globals.alertDialogMsg(activity, "Ошибка В ужатии: " + e);
+                }
+
+                if (photoFile == null || !photoFile.exists()) {
+                    Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Photo file is missing after resize");
+                    StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
+                    MakePhoto.clearPendingPhoto(activity);
+                    showPhotoSaveError(activity, "Не удалось завершить сохранение фото: файл не найден после обработки. Повторите съемку.");
+                    return;
                 }
 
                 exifPhotoData(photoFile);
@@ -1089,9 +1118,32 @@ public class DetailedReportActivity extends toolbar_menus {
                 Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
+                MakePhoto.clearPendingPhoto(activity);
+            } catch (OutOfMemoryError e) {
+                StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
+                MakePhoto.clearPendingPhoto(activity);
+                Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "OutOfMemoryError: " + e);
+                showPhotoSaveError(activity, "Не хватило памяти для обработки фото. Закройте лишние приложения и повторите съемку.");
             } catch (Exception e) {
+                StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
+                MakePhoto.clearPendingPhoto(activity);
                 Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
+                showPhotoSaveError(activity, "Не удалось завершить сохранение фото. Повторите съемку.");
             }
+    }
+
+
+    private static void showPhotoSaveError(Activity activity, String message) {
+        if (activity == null || activity.isFinishing()) {
+            return;
+        }
+
+        new MessageDialogBuilder(activity)
+                .setTitle("Помилка при збереженні фото")
+                .setStatus(DialogStatus.ERROR)
+                .setMessage(message)
+                .setOnCancelAction(() -> null)
+                .show();
     }
 
 

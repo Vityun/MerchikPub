@@ -32,6 +32,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -259,9 +260,14 @@ public class PhotoReports {
      */
     private void getDataToUpload() {
         List<StackPhotoDB> res = realm.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
+        String pendingPhotoNum = MakePhoto.getPendingPhotoNum(mContext);
         for (StackPhotoDB photo : res) {
             if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
                 String filePath = photo.getPhoto_num();
+                if (pendingPhotoNum != null && pendingPhotoNum.equals(filePath)) {
+                    Globals.writeToMLOG("INFO", "PhotoReports.getDataToUpload", "skip pending MakePhoto: " + filePath);
+                    continue;
+                }
                 File file = new File(filePath);
                 if (file.exists() && file.length() > 1) {
                     Globals.writeToMLOG("INFO", "PhotoReports.getDataToUpload", "realmResults add: " + photo.getPhoto_num());

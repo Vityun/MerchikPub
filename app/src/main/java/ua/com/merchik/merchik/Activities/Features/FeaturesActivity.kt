@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
@@ -67,6 +68,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewMode
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
@@ -143,6 +145,8 @@ class FeaturesActivity : AppCompatActivity() {
                                         AkciyaDBViewModel::class -> viewModel() as AkciyaDBViewModel
                                         QuestionAnswerSDBViewModel::class -> viewModel() as QuestionAnswerSDBViewModel
                                         OptionsDBViewModel::class -> viewModel() as OptionsDBViewModel
+                                        OrderDataSDBViewModel::class -> viewModel() as OrderDataSDBViewModel
+                                        AddressSDBViewModel::class -> viewModel() as AddressSDBViewModel
                                                 else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")
@@ -235,7 +239,10 @@ class FeaturesActivity : AppCompatActivity() {
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
             DetailedReportActivity.savePhoto(Globals(), this)
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
-            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum)
+            MakePhoto.getPendingPhotoNum(this)?.takeIf { it.isNotBlank() }?.let {
+                StackPhotoRealm.deleteByPhotoNum(it)
+            }
+            MakePhoto.clearPendingPhoto(this)
         }
     }
 
