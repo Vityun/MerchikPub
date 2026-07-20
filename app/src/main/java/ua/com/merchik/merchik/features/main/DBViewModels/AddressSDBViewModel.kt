@@ -104,14 +104,32 @@ object CustomAditionalAddressSelectionHolder {
         private set
     var selectedName: String? = null
         private set
+    var mapSelectionEnabled: Boolean = false
+        private set
+    var mapSubtitle: String? = null
+        private set
+    var mapDistanceMeters: Float = 2_000f
+        private set
 
     fun set(id: String?, name: String?) {
         selectedId = id
         selectedName = name
     }
 
+    fun configureMapSelection(
+        subtitle: String?,
+        distanceMeters: Float = 2_000f
+    ) {
+        mapSelectionEnabled = true
+        mapSubtitle = subtitle
+        mapDistanceMeters = distanceMeters
+    }
+
     fun consume(): CustomAditionalAddressSelection? {
-        if (selectedId == null && selectedName == null) return null
+        if (selectedId == null && selectedName == null) {
+            clear()
+            return null
+        }
         val result = CustomAditionalAddressSelection(selectedId, selectedName)
         clear()
         return result
@@ -120,5 +138,8 @@ object CustomAditionalAddressSelectionHolder {
     fun clear() {
         selectedId = null
         selectedName = null
+        mapSelectionEnabled = false
+        mapSubtitle = null
+        mapDistanceMeters = 2_000f
     }
 }

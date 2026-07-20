@@ -6,7 +6,6 @@ import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -14,8 +13,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import ua.com.merchik.merchik.trecker
@@ -41,6 +44,8 @@ object OrderDataPreloadRepository {
         val addressJson: JsonObject?,
         val savedOrderCount: Int,
         val savedAddressCount: Int,
+        val savedTradeMarkCount: Int,
+        val missingTradeMarkIds: List<String>,
         val errors: List<String>
     )
 
@@ -58,17 +63,20 @@ object OrderDataPreloadRepository {
 
         orderResult.exceptionOrNull()?.let { errors.add("order_data.list: ${it.message}") }
         addressResult.exceptionOrNull()?.let { errors.add("addr_list: ${it.message}") }
+        addressResult.getOrNull()?.errors?.let { errors.addAll(it) }
 
         PreloadResult(
             orderListJson = orderResult.getOrNull()?.json,
             addressJson = addressResult.getOrNull()?.json,
             savedOrderCount = orderResult.getOrNull()?.savedCount ?: 0,
             savedAddressCount = addressResult.getOrNull()?.savedCount ?: 0,
+            savedTradeMarkCount = addressResult.getOrNull()?.savedTradeMarkCount ?: 0,
+            missingTradeMarkIds = addressResult.getOrNull()?.missingTradeMarkIds.orEmpty(),
             errors = errors
         ).also { result ->
             logInfo(
                 "preload",
-                "completed: savedOrderCount=${result.savedOrderCount}, savedAddressCount=${result.savedAddressCount}, errors=${result.errors}"
+                "completed: savedOrderCount=${result.savedOrderCount}, savedAddressCount=${result.savedAddressCount}, savedTradeMarkCount=${result.savedTradeMarkCount}, missingTradeMarkIds=${result.missingTradeMarkIds}, errors=${result.errors}"
             )
         }
     }
@@ -119,7 +127,7 @@ object OrderDataPreloadRepository {
             val request = JsonObject().apply {
                 addProperty("mod", "order_data")
                 addProperty("act", "visit_add_one_time")
-                add("data", JsonArray().apply { add(item) })
+                add("data", item)
             }
 
             executeJsonRequest("order_data.visit_add_one_time", request)
@@ -147,10 +155,24 @@ object OrderDataPreloadRepository {
             val json = executeJsonRequest("data_list.addr_list", request)
             val response = gson.fromJson(json, AddressResponse::class.java)
             val addresses = response?.list.orEmpty()
+            var savedTradeMarkCount = 0
+            var missingTradeMarkIds = emptyList<String>()
+            val errors = mutableListOf<String>()
 
             if (response?.state == true && addresses.isNotEmpty()) {
                 RoomManager.SQL_DB.addressDao().insertAll(addresses)
                 logInfo("data_list.addr_list.save", "saved AddressSDB count=${addresses.size}")
+
+                runCatching {
+                    downloadMissingTradeMarksForAddresses(addresses)
+                }.onSuccess { tradeMarkResult ->
+                    savedTradeMarkCount = tradeMarkResult.savedCount
+                    missingTradeMarkIds = tradeMarkResult.requestedIds
+                }.onFailure { throwable ->
+                    val message = throwable.message ?: throwable.toString()
+                    errors.add("trade_marks: $message")
+                    logError("data_list.tovar_manufacturer_list", message)
+                }
             } else {
                 logInfo(
                     "data_list.addr_list.save",
@@ -158,8 +180,96 @@ object OrderDataPreloadRepository {
                 )
             }
 
-            AddressPreloadResult(json = json, savedCount = addresses.size)
+            AddressPreloadResult(
+                json = json,
+                savedCount = addresses.size,
+                savedTradeMarkCount = savedTradeMarkCount,
+                missingTradeMarkIds = missingTradeMarkIds,
+                errors = errors
+            )
         }
+
+    private suspend fun downloadMissingTradeMarksForAddresses(
+        addresses: List<AddressSDB>
+    ): TradeMarkPreloadResult {
+        val missingIds = findMissingTradeMarkIds(addresses)
+        if (missingIds.isEmpty()) {
+            logInfo("data_list.tovar_manufacturer_list", "skip: no missing trade marks")
+            return TradeMarkPreloadResult(requestedIds = emptyList(), savedCount = 0)
+        }
+
+        val response = timeRequest("data_list.tovar_manufacturer_list") {
+            val call = RetrofitBuilder.getRetrofitInterface()
+                .GET_TRADE_MARKS_T(
+                    "data_list",
+                    "tovar_manufacturer_list",
+                    missingIds.toTypedArray()
+                )
+            logInfo(
+                "data_list.tovar_manufacturer_list",
+                "request=${call.request().method} ${call.request().url}"
+            )
+            call.execute()
+        }
+
+        if (!response.isSuccessful) {
+            val message = "HTTP ${response.code()} ${response.message()}"
+            logError("data_list.tovar_manufacturer_list", message)
+            throw IllegalStateException(message)
+        }
+
+        val body = response.body()
+            ?: throw IllegalStateException("empty response body")
+
+        if (body.state != true) {
+            throw IllegalStateException("state=${body.state}")
+        }
+
+        val tradeMarks = body.list.orEmpty()
+        if (tradeMarks.isNotEmpty()) {
+            saveTradeMarksPartial(tradeMarks)
+        }
+
+        logInfo(
+            "data_list.tovar_manufacturer_list.save",
+            "requestedIds=$missingIds, saved TradeMarkDB count=${tradeMarks.size}"
+        )
+
+        return TradeMarkPreloadResult(
+            requestedIds = missingIds,
+            savedCount = tradeMarks.size
+        )
+    }
+
+    private suspend fun findMissingTradeMarkIds(addresses: List<AddressSDB>): List<String> =
+        withContext(Dispatchers.Main) {
+            addresses
+                .asSequence()
+                .mapNotNull { it.tpId }
+                .filter { it > 0 }
+                .map { it.toString() }
+                .distinct()
+                .filter { id -> TradeMarkRealm.getTradeMarkRowById(id) == null }
+                .toList()
+        }
+
+    private suspend fun saveTradeMarksPartial(tradeMarks: List<TradeMarkDB>) {
+        withContext(Dispatchers.Main) {
+            val realm = RealmManager.INSTANCE
+                ?: throw IllegalStateException("Realm is not initialized")
+
+            realm.beginTransaction()
+            try {
+                realm.copyToRealmOrUpdate(tradeMarks)
+                realm.commitTransaction()
+            } catch (throwable: Throwable) {
+                if (realm.isInTransaction) {
+                    realm.cancelTransaction()
+                }
+                throw throwable
+            }
+        }
+    }
 
     private fun defaultDtChangeFrom(): String {
         val nowSeconds = System.currentTimeMillis() / 1000L
@@ -258,11 +368,19 @@ object OrderDataPreloadRepository {
 
     data class AddressPreloadResult(
         val json: JsonObject,
-        val savedCount: Int
+        val savedCount: Int,
+        val savedTradeMarkCount: Int,
+        val missingTradeMarkIds: List<String>,
+        val errors: List<String>
     )
 
     data class OrderPreloadResult(
         val json: JsonObject,
+        val savedCount: Int
+    )
+
+    private data class TradeMarkPreloadResult(
+        val requestedIds: List<String>,
         val savedCount: Int
     )
 

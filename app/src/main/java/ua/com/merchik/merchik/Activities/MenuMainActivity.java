@@ -30,8 +30,12 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +48,12 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okio.Buffer;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -63,6 +73,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
@@ -246,9 +257,11 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        downloadTest();
-        uploadQuestionAnswersTest();
-        new Translate().uploadNewTranslate();
+//        downloadTest();
+//        uploadQuestionAnswersTest();
+//        new Translate().uploadNewTranslate();
+
+        downloadTradeMarksTable();
 
 //        new TablesLoadingUnloading().donwloadPlanBudget();
 
@@ -801,6 +814,290 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
             );
 
             isQuestionAnswersUploading = false;
+        }
+    }
+
+
+    private static final String HTTP_LOG_TAG = "TRADE_MARKS_HTTP";
+    private static final int LOG_CHUNK_SIZE = 3500;
+
+    private final Gson logGson = new GsonBuilder()
+            .setPrettyPrinting()
+            .serializeNulls()
+            .create();
+
+    public void downloadTradeMarksTable() {
+        Log.e(
+                "SERVER_REALM_DB_UPDATE",
+                "downloadTradeMarksTable START"
+        );
+
+        String mod = "data_list";
+        String act = "tovar_manufacturer_list";
+
+        String[] ids = {
+                "3573",
+                "319",
+                "320",
+                "18"
+        };
+
+        Call<TradeMarkResponse> call =
+                RetrofitBuilder
+                        .getRetrofitInterface()
+                        .GET_TRADE_MARKS_T(mod, act, ids);
+
+        Log.e(
+                "TRADE_MARKS_HTTP",
+                "REQUEST: " + call.request().method()
+                        + " " + call.request().url()
+        );
+
+        call.enqueue(new Callback<TradeMarkResponse>() {
+            @Override
+            public void onResponse(
+                    Call<TradeMarkResponse> call,
+                    Response<TradeMarkResponse> response
+            ) {
+                Log.e(
+                        "TRADE_MARKS_HTTP",
+                        "RESPONSE CODE: " + response.code()
+                );
+
+                Log.e(
+                        "TRADE_MARKS_HTTP",
+                        "RESPONSE URL: " + call.request().url()
+                );
+
+                TradeMarkResponse body = response.body();
+
+                if (response.isSuccessful() && body != null) {
+                    Log.e(
+                            "TRADE_MARKS_HTTP",
+                            "RESPONSE BODY: " + new Gson().toJson(body)
+                    );
+
+                    if (body.getState()) {
+                        if (body.getList() != null) {
+                            Log.e(
+                                    "SERVER_REALM_DB_UPDATE",
+                                    "TradeMarksTable.SIZE: "
+                                            + body.getList().size()
+                            );
+
+                            RealmManager.setTradeMarks(body.getList());
+                        } else {
+                            Log.e(
+                                    "SERVER_REALM_DB_UPDATE",
+                                    "TradeMarksTable list is NULL"
+                            );
+                        }
+                    } else {
+                        Log.e(
+                                "SERVER_REALM_DB_UPDATE",
+                                "Server returned state=false"
+                        );
+                    }
+
+//                    readyTradeMarksTable = true;
+                } else {
+//                    readyTradeMarksTable = false;
+
+                    try {
+                        String error = response.errorBody() != null
+                                ? response.errorBody().string()
+                                : "<empty error body>";
+
+                        Log.e(
+                                "TRADE_MARKS_HTTP",
+                                "ERROR BODY: " + error
+                        );
+                    } catch (Exception exception) {
+                        Log.e(
+                                "TRADE_MARKS_HTTP",
+                                "Failed to read error body",
+                                exception
+                        );
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(
+                    Call<TradeMarkResponse> call,
+                    Throwable throwable
+            ) {
+//                readyTradeMarksTable = false;
+//                syncInternetError = true;
+
+                Log.e(
+                        "TRADE_MARKS_HTTP",
+                        "REQUEST FAILED: " + call.request().url(),
+                        throwable
+                );
+            }
+        });
+    }
+
+    private void logHttpRequest(Request request) {
+        StringBuilder logBuilder = new StringBuilder();
+
+        logBuilder.append("\n");
+        logBuilder.append("================ HTTP REQUEST ================\n");
+        logBuilder.append("Method: ").append(request.method()).append("\n");
+        logBuilder.append("URL: ").append(request.url()).append("\n");
+
+        logBuilder.append("\nHeaders:\n");
+        appendHeaders(logBuilder, request.headers());
+
+        logBuilder.append("\nBody:\n");
+
+        RequestBody requestBody = request.body();
+
+        if (requestBody == null) {
+            logBuilder.append("<empty>");
+        } else {
+            try {
+                Buffer buffer = new Buffer();
+                requestBody.writeTo(buffer);
+
+                Charset charset = StandardCharsets.UTF_8;
+                MediaType contentType = requestBody.contentType();
+
+                if (contentType != null) {
+                    Charset detectedCharset =
+                            contentType.charset(StandardCharsets.UTF_8);
+
+                    if (detectedCharset != null) {
+                        charset = detectedCharset;
+                    }
+                }
+
+                logBuilder.append(buffer.readString(charset));
+
+            } catch (Exception exception) {
+                logBuilder
+                        .append("<failed to read request body: ")
+                        .append(exception)
+                        .append(">");
+            }
+        }
+
+        logBuilder.append("\n================================================");
+
+        logLongText(HTTP_LOG_TAG, logBuilder.toString());
+    }
+
+    private void logHttpResponse(
+            Request request,
+            Response<?> response
+    ) {
+        StringBuilder logBuilder = new StringBuilder();
+
+        logBuilder.append("\n");
+        logBuilder.append("================ HTTP RESPONSE ================\n");
+        logBuilder.append("Request URL: ").append(request.url()).append("\n");
+        logBuilder.append("Request method: ").append(request.method()).append("\n");
+        logBuilder.append("HTTP code: ").append(response.code()).append("\n");
+        logBuilder.append("Message: ").append(response.message()).append("\n");
+        logBuilder.append("Successful: ").append(response.isSuccessful()).append("\n");
+
+        if (response.raw() != null) {
+            logBuilder
+                    .append("Protocol: ")
+                    .append(response.raw().protocol())
+                    .append("\n");
+        }
+
+        logBuilder.append("\nHeaders:\n");
+        appendHeaders(logBuilder, response.headers());
+
+        logBuilder.append("\nBody:\n");
+
+        if (response.isSuccessful()) {
+            Object responseBody = response.body();
+
+            if (responseBody == null) {
+                logBuilder.append("<null>");
+            } else {
+                try {
+                    logBuilder.append(logGson.toJson(responseBody));
+                } catch (Exception exception) {
+                    logBuilder
+                            .append("<failed to serialize response body>\n")
+                            .append("Body.toString(): ")
+                            .append(responseBody)
+                            .append("\n")
+                            .append("Error: ")
+                            .append(exception);
+                }
+            }
+        } else {
+            ResponseBody errorBody = response.errorBody();
+
+            if (errorBody == null) {
+                logBuilder.append("<empty error body>");
+            } else {
+                try {
+                    /*
+                     * string() читает errorBody только один раз.
+                     * Если он нужен ниже по коду, сохрани строку
+                     * в отдельную переменную и используй её повторно.
+                     */
+                    logBuilder.append(errorBody.string());
+                } catch (IOException exception) {
+                    logBuilder
+                            .append("<failed to read error body: ")
+                            .append(exception)
+                            .append(">");
+                }
+            }
+        }
+
+        logBuilder.append("\n=================================================");
+
+        logLongText(HTTP_LOG_TAG, logBuilder.toString());
+    }
+
+    private void appendHeaders(
+            StringBuilder logBuilder,
+            Headers headers
+    ) {
+        if (headers == null || headers.size() == 0) {
+            logBuilder.append("<empty>\n");
+            return;
+        }
+
+        for (int index = 0; index < headers.size(); index++) {
+            String headerName = headers.name(index);
+            String headerValue = headers.value(index);
+
+            logBuilder
+                    .append(headerName)
+                    .append(": ")
+                    .append(headerValue)
+                    .append("\n");
+        }
+    }
+
+    private void logLongText(
+            String tag,
+            String text
+    ) {
+        if (text == null) {
+            Log.e(tag, "<null>");
+            return;
+        }
+
+        int textLength = text.length();
+
+        for (int start = 0; start < textLength; start += LOG_CHUNK_SIZE) {
+            int end = Math.min(start + LOG_CHUNK_SIZE, textLength);
+
+            Log.e(
+                    tag,
+                    text.substring(start, end)
+            );
         }
     }
 }

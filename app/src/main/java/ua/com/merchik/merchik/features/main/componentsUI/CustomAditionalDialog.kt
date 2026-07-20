@@ -84,7 +84,7 @@ fun CustomAditionalDialog(
     content: @Composable ColumnScope.() -> Unit
 ) {
 
-    val address = "Адреса по которым вы можете создать новый визит. Если..."
+    val addressSubtitle = "Адреса по которым вы можете создать новый визит. Если нужного адреса в списке нет, обратитесь за помощью к своему руководителю или службу поддержки."
     val scrollState = rememberScrollState()
     var subTitleMaxLines by remember { mutableIntStateOf(1) }
     var showToolTip by remember { mutableStateOf(false) }
@@ -249,7 +249,7 @@ fun CustomAditionalWorkForm(
     address: String = "",
     order: String = "",
     onCustomerClick: (() -> Unit)? = null,
-    onDateSelected: (String) -> Unit = {},
+    onDateSelected: (displayDate: String, dateYmd: String) -> Unit = { _, _ -> },
     onAddressClick: (() -> Unit)? = null,
     onOrderClick: (() -> Unit)? = null
 ) {
@@ -350,7 +350,10 @@ fun CustomAditionalWorkForm(
             )
         ) { newDate ->
             selectedDate = newDate
-            onDateSelected(newDate.format(displayDateFormatter))
+            onDateSelected(
+                newDate.format(displayDateFormatter),
+                newDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            )
         }
     }
 }

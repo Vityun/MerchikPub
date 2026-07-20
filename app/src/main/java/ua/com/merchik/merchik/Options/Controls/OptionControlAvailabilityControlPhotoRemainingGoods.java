@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -19,11 +18,11 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -125,17 +124,25 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 groups = new Integer[]{434, 319};
 
             //2.0. получим данные о товарах в отчете (если она еще не рассчитана)
-            List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+            List<ReportPrepareDB> reportPrepareRaw = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+            if (reportPrepareRaw == null) {
+                reportPrepareRaw = new ArrayList<>();
+            }
+            List<ReportPrepareDB> reportPrepare = selectReportPrepareByTovar(reportPrepareRaw);
 
             //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID, null, null, null, null, null, null, null);
+            boolean hasExplicitRequirements = additionalRequirements != null && !additionalRequirements.isEmpty();
 
             //3.1. получаем список товаров для которых установлен признак ОСВ
-            if (additionalRequirements != null && !additionalRequirements.isEmpty()) {
+            if (hasExplicitRequirements) {
                 //3.4 мои наработки
 //                tovIds = new String[additionalRequirements.size()];
                 for (int i = 0; i < additionalRequirements.size(); i++) {
-                    tovIds.add(additionalRequirements.get(i).getTovarId());
+                    AdditionalRequirementsDB item = additionalRequirements.get(i);
+                    if (item != null) {
+                        addUniqueTovarId(tovIds, item.getTovarId());
+                    }
                 }
 //                Arrays.sort(tovIds);
             }
@@ -161,7 +168,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 if (tovIds.isEmpty()){
 
                     for (int i = 0; i < reportPrepare.size(); i++) {
-                        tovIds.add(reportPrepare.get(i).getTovarId());
+                        addUniqueTovarId(tovIds, reportPrepare.get(i).getTovarId());
                     }
 
                 }
@@ -173,10 +180,14 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             // Таким чином ми можемо у рамках одного кошторису по одним мережам надавати залишки, а по іншим ні.
             List<AdditionalRequirementsDB> additionalRequirementsGroup = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID);
             boolean found = true;
-            for (AdditionalRequirementsDB item : additionalRequirementsGroup) {
-                if (group.equals(item.getGrpId())) {
-                    found = false;
-                    break;
+            if (additionalRequirementsGroup == null) {
+                additionalRequirementsGroup = new ArrayList<>();
+            } else {
+                for (AdditionalRequirementsDB item : additionalRequirementsGroup) {
+                    if (item != null && group.equals(item.getGrpId())) {
+                        found = false;
+                        break;
+                    }
                 }
             }
 
@@ -190,48 +201,35 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 Log.e("!!!","-");
             } else {
                 tovs.append("Ви повинні завантажити в нашу систему світлину з залишком товару:").append("\n");
-                Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "reportPrepare size: " + reportPrepare.size());
+                Globals.writeToMLOG("INFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption",
+                        "reportPrepare raw size: " + reportPrepareRaw.size()
+                                + ", unique size: " + reportPrepare.size()
+                                + ", tovIds size: " + tovIds.size()
+                                + ", hasExplicitRequirements: " + hasExplicitRequirements);
                 for (ReportPrepareDB item : reportPrepare) {
-                    if (tovIds.isEmpty()) {
-                        int face = Integer.parseInt(item.face);
-                        if (face == 0 && !stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
-                            TovarDB tovar = TovarRealm.getById(item.getTovarId());
-                            ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
+                    if (item == null) continue;
+
+                    item.error = 0;
+                    String tovarId = item.getTovarId();
+                    if (!isControlledTovar(tovIds, tovarId)) {
+                        continue;
+                    }
+
+                    int face = parseIntSafe(item.face);
+                    if (face == 0 && !hasPhotoForTovar(stackPhotoList, tovarId)) {
+                        TovarDB tovar = TovarRealm.getById(tovarId);
+                        if (tovar != null) {
                             item.error = 1;
+                            item.errorNote = buildTovarErrorNote(tovar);
 
-                            String code = tovar.getiD();
-                            if (articleSDB != null && articleSDB.vendorCode != null)
-                                code = articleSDB.vendorCode;
-
-//                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
-                            item.errorNote = "(" + code + ") " + tovar.getNm();
-
-                            Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "step one: " + tovar.getiD() + " " + item.errorNote);
-
+                            Globals.writeToMLOG("INFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption",
+                                    "error tovar: " + tovar.getiD()
+                                            + ", rpId: " + item.getID()
+                                            + ", face: " + item.face
+                                            + ", oborotvedNum: " + item.oborotvedNum
+                                            + ", amount: " + item.amount
+                                            + ", " + item.errorNote);
                             tovs.append(createLinkedString(item.errorNote, item)).append("\n");
-                        } else {
-                            item.error = 0;
-                        }
-                    } else if (tovIds.contains(item.getTovarId())) {
-                        int face = Integer.parseInt(item.face);
-                        if (face == 0 && !stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
-                            TovarDB tovar = TovarRealm.getById(item.getTovarId());
-                            if (tovar != null) {
-                                ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
-                                item.error = 1;
-
-                                String code = tovar.getiD();
-                                if (articleSDB != null && articleSDB.vendorCode != null)
-                                    code = articleSDB.vendorCode;
-
-//                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
-                                item.errorNote = "(" + code + ") " + tovar.getNm();
-
-                                Globals.writeToMLOG("ONFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "step two: " + tovar.getiD() + " " + item.errorNote);
-                                tovs.append(createLinkedString(item.errorNote, item)).append("\n");
-                            }
-                        } else {
-                            item.error = 0;
                         }
                     }
                 }
@@ -303,6 +301,112 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "Exception e: " + e);
         }
+    }
+
+    private List<ReportPrepareDB> selectReportPrepareByTovar(List<ReportPrepareDB> reportPrepare) {
+        Map<String, ReportPrepareDB> map = new LinkedHashMap<>();
+
+        if (reportPrepare == null) {
+            return new ArrayList<>();
+        }
+
+        for (ReportPrepareDB item : reportPrepare) {
+            if (item == null || isEmpty(item.getTovarId())) continue;
+
+            String tovarId = item.getTovarId();
+            ReportPrepareDB current = map.get(tovarId);
+            if (current == null || shouldReplaceReportPrepare(current, item)) {
+                map.put(tovarId, item);
+            }
+        }
+
+        return new ArrayList<>(map.values());
+    }
+
+    private boolean shouldReplaceReportPrepare(ReportPrepareDB current, ReportPrepareDB candidate) {
+        int currentScore = getReportPrepareScore(current);
+        int candidateScore = getReportPrepareScore(candidate);
+
+        if (candidateScore != currentScore) {
+            return candidateScore > currentScore;
+        }
+
+        long currentDtChange = current != null ? current.getDtChange() : 0;
+        long candidateDtChange = candidate != null ? candidate.getDtChange() : 0;
+        if (candidateDtChange != currentDtChange) {
+            return candidateDtChange > currentDtChange;
+        }
+
+        long currentId = current != null && current.getID() != null ? current.getID() : 0;
+        long candidateId = candidate != null && candidate.getID() != null ? candidate.getID() : 0;
+        return candidateId > currentId;
+    }
+
+    private int getReportPrepareScore(ReportPrepareDB item) {
+        if (item == null) return 0;
+
+        int score = 0;
+        if (parseIntSafe(item.face) > 0) score += 1000;
+        if (parseIntSafe(item.oborotvedNum) > 0) score += 100;
+        if (item.amount > 0) score += 50;
+        if (parseIntSafe(item.up) > 0) score += 10;
+        return score;
+    }
+
+    private void addUniqueTovarId(List<String> tovIds, String tovarId) {
+        if (tovIds == null || isEmpty(tovarId) || tovIds.contains(tovarId)) return;
+        tovIds.add(tovarId);
+    }
+
+    private boolean isControlledTovar(List<String> tovIds, String tovarId) {
+        return !isEmpty(tovarId) && tovIds != null && tovIds.contains(tovarId);
+    }
+
+    private boolean hasPhotoForTovar(List<StackPhotoDB> stackPhotoList, String tovarId) {
+        if (stackPhotoList == null || isEmpty(tovarId)) return false;
+
+        for (StackPhotoDB stackPhoto : stackPhotoList) {
+            if (stackPhoto != null && tovarId.equals(stackPhoto.tovar_id)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String buildTovarErrorNote(TovarDB tovar) {
+        String code = tovar.getiD();
+        try {
+            ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
+            if (articleSDB != null && articleSDB.vendorCode != null && !articleSDB.vendorCode.trim().isEmpty()) {
+                code = articleSDB.vendorCode;
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/buildTovarErrorNote", "Exception e: " + e);
+        }
+
+        return "(" + code + ") " + tovar.getNm();
+    }
+
+    private int parseIntSafe(String value) {
+        if (isEmpty(value)) return 0;
+        String normalizedValue = value.trim().replace(',', '.');
+
+        try {
+            return Integer.parseInt(normalizedValue);
+        } catch (Exception e) {
+            try {
+                double result = Double.parseDouble(normalizedValue);
+                if (result > 0 && result < 1) return 1;
+                return (int) result;
+            } catch (Exception ignored) {
+                return 0;
+            }
+        }
+    }
+
+    private boolean isEmpty(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB rp) {

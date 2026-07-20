@@ -157,8 +157,18 @@ abstract class BaseMapViewModel(
 
 
     private fun onMarkerClicked(p: PointUi, positionOptions: LaunchOrigin? = null) {
-        val wp = p.point.wp ?: return
         val b = bridge
+        if (b?.addressSelectionMode == true) {
+            b.selectAddressFromMap(
+                stableId = p.point.dataItemsUI?.stableId,
+                addressId = p.point.id,
+                addressName = p.point.title
+            )
+            b.dismissHost()
+            return
+        }
+
+        val wp = p.point.wp ?: return
         if (wp.user_id != 14041 ) {
             if (p.count == 1) {
                 viewModelScope.launch {

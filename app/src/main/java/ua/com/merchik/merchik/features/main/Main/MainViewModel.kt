@@ -632,6 +632,11 @@ abstract class MainViewModel(
         _scrollToHash.tryEmit(itemHash)
     }
 
+    fun selectOneItemFromMap(stableId: Long) {
+        updateItemsSelect(listOf(stableId), true)
+        requestScrollToVisit(stableId)
+    }
+
     fun setStartDate(date: LocalDate) {
         _rangeDataStart.value = date
 

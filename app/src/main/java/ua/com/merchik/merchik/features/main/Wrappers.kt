@@ -149,6 +149,20 @@ object AddressSDBOverride {
         else -> null
     }
 
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "tp_id" -> {
+            try {
+                TradeMarkRealm.getTradeMarkRowById(value.toString()).nm
+            } catch (e: Exception) {
+                value.toString()
+            }
+
+        }
+
+        else -> value.toString()
+    }
+
+
 }
 
 object CustomerSDBOverride {

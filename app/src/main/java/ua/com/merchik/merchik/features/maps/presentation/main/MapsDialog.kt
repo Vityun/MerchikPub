@@ -57,6 +57,8 @@ import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
 import ua.com.merchik.merchik.features.main.Main.FilteringDialog
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -85,6 +87,13 @@ fun MapsDialog(
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
     val contextUI = mainViewModel.contextUI
+    val isCustomAditionalAddressMap =
+        mainViewModel is AddressSDBViewModel &&
+                CustomAditionalAddressSelectionHolder.mapSelectionEnabled
+    val customAditionalAddressMapSubtitle =
+        CustomAditionalAddressSelectionHolder.mapSubtitle.orEmpty()
+    val customAditionalAddressMapDistance =
+        CustomAditionalAddressSelectionHolder.mapDistanceMeters
 
     val distance by mainViewModel.offsetDistanceMeters.collectAsState()
 
@@ -385,7 +394,14 @@ fun MapsDialog(
     }
 
 
-    LaunchedEffect(vm, onDismiss, contextUI, highlightColor, sessionId) {
+    LaunchedEffect(
+        vm,
+        onDismiss,
+        contextUI,
+        highlightColor,
+        sessionId,
+        isCustomAditionalAddressMap
+    ) {
         vm.attachBridge(object : MapActionsBridge {
             override val contextUI: ContextUI = contextUI
             override val highlightColor: Color = highlightColor
@@ -394,6 +410,17 @@ fun MapsDialog(
 
             override fun highlightByAddrId(addrId: String, color: Color) =
                 mainViewModel.highlightByAddrId(addrId, color)
+
+            override val addressSelectionMode: Boolean = isCustomAditionalAddressMap
+
+            override fun selectAddressFromMap(
+                stableId: Long?,
+                addressId: String?,
+                addressName: String?
+            ) {
+                val targetStableId = stableId ?: addressId?.toLongOrNull()
+                targetStableId?.let { mainViewModel.selectOneItemFromMap(it) }
+            }
 
             override fun dismissHost() = onDismiss()
         })
@@ -534,6 +561,13 @@ fun MapsDialog(
     }
 
 
+    val effectiveMapSubheaderText =
+        if (isCustomAditionalAddressMap && customAditionalAddressMapSubtitle.isNotBlank()) {
+            customAditionalAddressMapSubtitle
+        } else {
+            mapSubheaderText
+        }
+
     // Effects handling
     val effects = vm.effects
     val cameraController = rememberCameraPositionState()
@@ -584,7 +618,9 @@ fun MapsDialog(
         Globals.CoordY,
         vm,
         sessionId,
-        distance
+        distance,
+        isCustomAditionalAddressMap,
+        customAditionalAddressMapDistance
     ) {
         vm.process(
             MapIntent.SetInput(
@@ -597,7 +633,9 @@ fun MapsDialog(
                 search = uiState.filters?.searchText,
                 userLat = Globals.CoordX,
                 userLon = Globals.CoordY,
-                distanceMeters = if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+                distanceMeters = if (isCustomAditionalAddressMap) {
+                    customAditionalAddressMapDistance
+                } else if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
                     distance
                 } else {
                     null
@@ -669,7 +707,7 @@ fun MapsDialog(
                         .animateContentSize()
                 ) {
                     Text(
-                        text = mapSubheaderText,
+                        text = effectiveMapSubheaderText,
                         maxLines = maxLinesSubTitle,
                         overflow = TextOverflow.Ellipsis,
                         color = if ((mainViewModel.typeWindow ?: "").equals(
@@ -700,7 +738,12 @@ fun MapsDialog(
                 ) {
                     StoresMap(
                         cameraPositionState = cameraController,
-                        vm = vm
+                        vm = vm,
+                        focusUserRadiusMeters = if (isCustomAditionalAddressMap) {
+                            customAditionalAddressMapDistance
+                        } else {
+                            null
+                        }
                     )
                 }
 

@@ -444,6 +444,13 @@ public interface RetrofitInterface {
                                               @Query("act") String act);
 
     @POST("mobile_app.php?")
+    Call<TradeMarkResponse> GET_TRADE_MARKS_T(
+            @Query("mod") String mod,
+            @Query("act") String act,
+            @Query("id[]") String[] ids
+    );
+
+    @POST("mobile_app.php?")
     Call<PPATableResponse> GET_PPA_T(@Query("mod") String mod,
                                      @Query("act") String act);
 

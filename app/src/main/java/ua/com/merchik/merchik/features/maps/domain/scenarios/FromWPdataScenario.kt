@@ -19,10 +19,13 @@ class FromWPdataScenario : MapScenario {
 
 
         var lat = f.stringByKey("addr_location_xd")?.parseDoubleSafe()
+            ?: f.stringByKey("location_xd")?.parseDoubleSafe()
             ?: f.stringByKey("CoordX")?.parseDoubleSafe()
         var lon = f.stringByKey("addr_location_yd")?.parseDoubleSafe()
+            ?: f.stringByKey("location_yd")?.parseDoubleSafe()
             ?: f.stringByKey("CoordY")?.parseDoubleSafe()
         var title = f.stringByKey("addr_txt")?.takeIf { it.isNotBlank() }
+            ?: f.stringByKey("nm")?.takeIf { it.isNotBlank() }
 
 
         if ((!isValidLatLon(lat, lon) || title.isNullOrBlank()) && idInt != null) {

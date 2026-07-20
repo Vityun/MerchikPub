@@ -106,6 +106,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import coil.compose.rememberAsyncImagePainter
 import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -123,6 +125,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.Utils.observeInternetState
+import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
@@ -185,10 +188,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showCustomAditionalConfirmDialog by remember { mutableStateOf(false) }
     var showCustomAditionalDialog by remember { mutableStateOf(false) }
     var customAditionalDate by remember { mutableStateOf("") }
+    var customAditionalDateYmd by remember { mutableStateOf("") }
     var customAditionalExecutorFirm by remember { mutableStateOf("") }
     var customAditionalCustomer by remember { mutableStateOf("") }
     var customAditionalAddress by remember { mutableStateOf("") }
+    var customAditionalAddressId by remember { mutableStateOf("") }
     var customAditionalOrder by remember { mutableStateOf("") }
+    var customAditionalOrderId by remember { mutableStateOf("") }
+    var customAditionalSubmitDialogState by remember {
+        mutableStateOf<CustomAditionalSubmitDialogState?>(null)
+    }
+    var customAditionalSubmitInProgress by remember { mutableStateOf(false) }
 
 
     val uiInstanceId = remember { System.identityHashCode(Any()) }
@@ -341,13 +351,18 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        val selectedOrder = CustomAditionalOrderSelectionHolder.consume()
+        val selectedAddress = CustomAditionalAddressSelectionHolder.consume()
+
         if (result.resultCode == Activity.RESULT_OK) {
-            CustomAditionalOrderSelectionHolder.consume()?.let { selection ->
+            selectedOrder?.let { selection ->
+                customAditionalOrderId = selection.id.orEmpty()
                 customAditionalOrder = selection.name
                     ?.takeIf { it.isNotBlank() }
                     ?: selection.id.orEmpty()
             }
-            CustomAditionalAddressSelectionHolder.consume()?.let { selection ->
+            selectedAddress?.let { selection ->
+                customAditionalAddressId = selection.id.orEmpty()
                 customAditionalAddress = selection.name
                     ?.takeIf { it.isNotBlank() }
                     ?: selection.id.orEmpty()
@@ -445,6 +460,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         coroutineScope.launch {
             val progress = ProgressViewModel(1)
             val loadingDialog = LoadingDialogWithPercent(activity, progress)
+            val startedAtMs = System.currentTimeMillis()
             val preloadJob = async(Dispatchers.IO) {
                 OrderDataPreloadRepository.preload(context.applicationContext)
             }
@@ -461,16 +477,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 progress.reset("Подготовка формы")
                 loadingDialog.show()
                 progress.setProgressPercent(
-                    progressPercent = 90f,
+                    progressPercent = 100f,
                     message = "Загрузка заказов и адресов",
-                    durationMillis = 2_000L
+                    durationMillis = 15_000L
                 )
-                delay(2_000L)
 
                 runCatching { preloadJob.await() }
                     .onSuccess { result ->
                         val message =
-                            "savedOrderCount=${result.savedOrderCount}, savedAddressCount=${result.savedAddressCount}, errors=${result.errors}"
+                            "savedOrderCount=${result.savedOrderCount}, savedAddressCount=${result.savedAddressCount}, savedTradeMarkCount=${result.savedTradeMarkCount}, missingTradeMarkIds=${result.missingTradeMarkIds}, errors=${result.errors}"
                         Log.e("CustomAditionalPreload", "completed: $message")
                         Globals.writeToMLOG("INFO", "CustomAditionalPreload/result", message)
                     }
@@ -483,10 +498,22 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         )
                     }
 
+                withContext(Dispatchers.IO) {
+                    RoomManager.SQL_DB.orderDataDao().all
+                        .takeIf { it.size == 1 }
+                        ?.firstOrNull()
+                }?.let { singleOrder ->
+                    customAditionalOrderId = singleOrder.toCustomAditionalOrderId()
+                    customAditionalOrder = singleOrder.toCustomAditionalOrderTitle()
+                }
+
                 if (!dismissedByUser) {
+                    val durationText = formatCustomAditionalDuration(
+                        System.currentTimeMillis() - startedAtMs
+                    )
                     progress.setProgressPercent(
                         progressPercent = 100f,
-                        message = "Готово",
+                        message = "Готово за $durationText",
                         durationMillis = 300L
                     )
                     delay(300L)
@@ -497,7 +524,118 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             }
 
             if (completed) {
+                if (customAditionalDate.isBlank() || customAditionalDateYmd.isBlank()) {
+                    val now = Date()
+                    customAditionalDate = formatCustomAditionalDisplayDate(now)
+                    customAditionalDateYmd = formatCustomAditionalYmdDate(now)
+                }
                 showCustomAditionalDialog = true
+            }
+        }
+    }
+
+    fun submitCustomAditionalVisit() {
+        if (customAditionalSubmitInProgress) {
+            return
+        }
+
+        val dateYmd = customAditionalDateYmd
+            .takeIf { it.isNotBlank() }
+            ?: formatCustomAditionalYmdDate(Date())
+        val addrId = customAditionalAddressId.toIntOrNull()
+        val orderId = customAditionalOrderId.toIntOrNull()
+        val missingFields = mutableListOf<String>()
+
+        if (customAditionalDate.isBlank() || customAditionalDateYmd.isBlank()) {
+            missingFields.add("дату")
+        }
+        if (addrId == null) {
+            missingFields.add("адрес")
+        }
+        if (orderId == null) {
+            missingFields.add("заказ")
+        }
+        if (Globals.userId <= 0) {
+            missingFields.add("пользователя")
+        }
+
+        if (missingFields.isNotEmpty()) {
+            customAditionalSubmitDialogState = CustomAditionalSubmitDialogState(
+                title = "Добавить новую работу",
+                status = DialogStatus.ERROR,
+                message = "Не удалось отправить заявку.<br>Заполните: ${missingFields.joinToString(", ")}."
+            )
+            return
+        }
+
+        val requestAddrId = addrId ?: return
+        val requestOrderId = orderId ?: return
+
+        customAditionalSubmitInProgress = true
+
+        coroutineScope.launch {
+            val progress = ProgressViewModel(1)
+            val loadingDialog = LoadingDialogWithPercent(activity, progress)
+
+            try {
+                progress.reset("Создание визита")
+                loadingDialog.show()
+                progress.setProgressPercent(
+                    progressPercent = 85f,
+                    message = "Отправка заявки на сервер",
+                    durationMillis = 400L
+                )
+
+                val response = withContext(Dispatchers.IO) {
+                    OrderDataPreloadRepository.createVisitOneTime(
+                        OrderDataPreloadRepository.VisitAddOneTimePayload(
+                            dateYmd = dateYmd,
+                            timeStart = CUSTOM_ADITIONAL_DEFAULT_TIME_START,
+                            timeStop = CUSTOM_ADITIONAL_DEFAULT_TIME_STOP,
+                            addrId = requestAddrId,
+                            userId = Globals.userId,
+                            docNum1cId = requestOrderId
+                        )
+                    )
+                }
+
+                progress.setProgressPercent(
+                    progressPercent = 100f,
+                    message = "Готово",
+                    durationMillis = 300L
+                )
+                delay(300L)
+
+                val success = response.optBoolean("state") == true
+                customAditionalSubmitDialogState = CustomAditionalSubmitDialogState(
+                    title = if (success) "Заявка отправлена" else "Заявка не отправлена",
+                    status = if (success) DialogStatus.NORMAL else DialogStatus.ERROR,
+                    message = formatVisitAddOneTimeResponse(response)
+                )
+
+                if (success) {
+                    showCustomAditionalDialog = false
+                    customAditionalAddress = ""
+                    customAditionalAddressId = ""
+                    customAditionalOrder = ""
+                    customAditionalOrderId = ""
+                    viewModel.updateContent()
+                }
+            } catch (throwable: Throwable) {
+                Log.e("CustomAditionalSubmit", "visit_add_one_time failed", throwable)
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "CustomAditionalSubmit/visit_add_one_time",
+                    throwable.message ?: throwable.toString()
+                )
+                customAditionalSubmitDialogState = CustomAditionalSubmitDialogState(
+                    title = "Заявка не отправлена",
+                    status = DialogStatus.ERROR,
+                    message = "Во время отправки заявки произошла ошибка.<br>${throwable.message.orEmpty()}"
+                )
+            } finally {
+                loadingDialog.dismiss()
+                customAditionalSubmitInProgress = false
             }
         }
     }
@@ -2021,17 +2159,24 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 "$text км"
             }
         }
+
         MessageDialog(
             title = "План работ",
             status = DialogStatus.NORMAL,
             subTitle = "Добавить новую работу",
             message = "Используя этот инструмент, вы можете создать новый визит и выполнить по нему работы. <br>" +
-                    "Внимание! Список адресов будет предложен в радиусе ${formatDistance(sotrudnikDistance)} от вашего текущего место положения.<br>" +
-                    "Если нужного адреса в списке нет, обратитесь за помощью к своему руководителю или службу поддержки.",
+                    "Внимание! Список адресов будет предложен в радиусе " +
+                    "3км " +
+//                    "${formatDistance(sotrudnikDistance)} " +
+                    "от вашего текущего место положения.<br>" +
+                    "Если нужного адреса в списке нет, обратитесь за помощью к своему руководителю или <a href=\"app://click\">службу поддержки</a>.",
             okButtonName = "Добавить",
             cancelButtonName = "Отмена",
             onDismiss = {
                 showCustomAditionalConfirmDialog = false
+            },
+            onTextLinkClick = {
+                Globals.telephoneCall(context, "+380674491265")
             },
             onCancelAction = {
                 showCustomAditionalConfirmDialog = false
@@ -2046,7 +2191,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     if (showCustomAditionalDialog) {
         CustomAditionalDialog(
             title = "Добавить новую работу",
-            subTitle = "Шаблон формы для создания новой работы.<br>" +
+            subTitle = "Шаблон формы для создания новой работы.\n" +
                     "Укажите дату, адрес и заказ (шаблон) по которым вы хотите сформировать и выполнить новый визит.",
             onDismiss = {
                 showCustomAditionalDialog = false
@@ -2065,9 +2210,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 CustomAditionalDialogButton(
                     text = "Сохранить",
                     onClick = {
-                        showCustomAditionalDialog = false
+                        submitCustomAditionalVisit()
                     },
                     colorResId = R.color.orange,
+                    enabled = !customAditionalSubmitInProgress,
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 6.dp)
@@ -2080,10 +2226,21 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 date = customAditionalDate,
                 address = customAditionalAddress,
                 order = customAditionalOrder,
-                onDateSelected = { selectedDate ->
+                onDateSelected = { selectedDate, selectedDateYmd ->
                     customAditionalDate = selectedDate
+                    customAditionalDateYmd = selectedDateYmd
                 },
                 onAddressClick = {
+                    val addressSubtitle =
+                        "Адреса по которым вы можете создать новый визит. Если нужного адреса в списке нет, обратитесь за помощью к своему руководителю или службу поддержки."
+                    CustomAditionalAddressSelectionHolder.set(
+                        id = customAditionalAddressId.takeIf { it.isNotBlank() },
+                        name = customAditionalAddress.takeIf { it.isNotBlank() }
+                    )
+                    CustomAditionalAddressSelectionHolder.configureMapSelection(
+                        subtitle = addressSubtitle,
+                        distanceMeters = CUSTOM_ADITIONAL_ADDRESS_MAP_DISTANCE_METERS
+                    )
                     launchFeaturesActivity(
                         launcher = launcher,
                         context = context,
@@ -2091,11 +2248,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         modeUI = ModeUI.ONE_SELECT,
                         contextUI = ContextUI.DEFAULT,
                         title = "Адрес",
-                        subTitle = "Выберите адрес для новой работы",
+                        subTitle = addressSubtitle,
                         origin = null
                     )
                 },
                 onOrderClick = {
+                    CustomAditionalOrderSelectionHolder.set(
+                        id = customAditionalOrderId.takeIf { it.isNotBlank() },
+                        name = customAditionalOrder.takeIf { it.isNotBlank() }
+                    )
                     launchFeaturesActivity(
                         launcher = launcher,
                         context = context,
@@ -2109,6 +2270,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
             )
         }
+    }
+
+    customAditionalSubmitDialogState?.let { dialogState ->
+        MessageDialog(
+            title = dialogState.title,
+            status = dialogState.status,
+            message = dialogState.message,
+            okButtonName = "Ok",
+            onDismiss = { customAditionalSubmitDialogState = null },
+            onConfirmAction = { customAditionalSubmitDialogState = null }
+        )
     }
 
     additionalEarningsDialogState?.let { dialogState ->
@@ -3174,6 +3346,124 @@ private data class RepeatComplaintDialogState(
     val createdAtSeconds: Long,
     val onConfirm: () -> Unit
 )
+
+private const val CUSTOM_ADITIONAL_DEFAULT_TIME_START = "00:00"
+private const val CUSTOM_ADITIONAL_DEFAULT_TIME_STOP = "00:00"
+private const val CUSTOM_ADITIONAL_ADDRESS_MAP_DISTANCE_METERS = 2_000f
+
+private data class CustomAditionalSubmitDialogState(
+    val title: String,
+    val status: DialogStatus,
+    val message: String
+)
+
+private fun formatCustomAditionalDisplayDate(date: Date): String {
+    return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
+}
+
+private fun formatCustomAditionalYmdDate(date: Date): String {
+    return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(date)
+}
+
+private fun formatCustomAditionalDuration(durationMs: Long): String {
+    val safeMs = durationMs.coerceAtLeast(0L)
+    return if (safeMs < 1_000L) {
+        "${safeMs} мс"
+    } else {
+        String.format(Locale.US, "%.1f сек", safeMs / 1_000.0)
+    }
+}
+
+private fun OrderDataSDB.toCustomAditionalOrderId(): String {
+    return orderId
+        ?.takeIf { it.isNotBlank() }
+        ?: id.takeIf { it.isNotBlank() }
+        ?: ""
+}
+
+private fun OrderDataSDB.toCustomAditionalOrderTitle(): String {
+    val number = toCustomAditionalOrderId()
+        .takeIf { it.isNotBlank() }
+        ?.let { "№$it" }
+    val description = orderStatusTxt
+        ?.takeIf { it.isNotBlank() }
+        ?: orderType?.takeIf { it.isNotBlank() }
+
+    return listOfNotNull(number, description)
+        .joinToString(" - ")
+        .ifBlank { "(нет данных)" }
+}
+
+private fun formatVisitAddOneTimeResponse(response: JsonObject): String {
+    val rows = mutableListOf<String>()
+    val serverRows = mutableListOf<String>()
+    val state = response.optBoolean("state")
+
+    rows.add(
+        when (state) {
+            true -> "Сервер получил заявку на создание нового визита."
+            false -> "Сервер не подтвердил создание нового визита."
+            null -> "Сервер вернул ответ без явного статуса."
+        }
+    )
+
+    response.optString("notice")?.let { serverRows.add(it.toHtmlMessage()) }
+    response.optString("message")?.let { serverRows.add(it.toHtmlMessage()) }
+    response.optString("error")?.let { serverRows.add("Ошибка: ${it.toHtmlMessage()}") }
+
+    response.get("result")
+        ?.takeIf { !it.isJsonNull }
+        ?.let { serverRows.add(it.toHtmlMessage()) }
+
+    response.get("data")
+        ?.takeIf { !it.isJsonNull }
+        ?.let { serverRows.add(it.toHtmlMessage()) }
+
+    if (serverRows.isNotEmpty()) {
+        rows.add("Вiдповiть вiд сервера:<br>${serverRows.joinToString("<br><br>")}")
+    }
+
+    if (rows.size == 1) {
+        rows.add(response.toString().toHtmlMessage())
+    }
+
+    return rows.joinToString("<br><br>")
+}
+
+private fun JsonObject.optString(key: String): String? {
+    val element = get(key) ?: return null
+    if (element.isJsonNull) return null
+    return runCatching {
+        if (element.isJsonPrimitive) {
+            element.asString
+        } else {
+            element.toString()
+        }
+    }.getOrNull()
+        ?.takeIf { it.isNotBlank() }
+}
+
+private fun JsonObject.optBoolean(key: String): Boolean? {
+    val element = get(key) ?: return null
+    if (element.isJsonNull) return null
+    return runCatching { element.asBoolean }.getOrNull()
+}
+
+private fun JsonElement.toHtmlMessage(): String {
+    return runCatching {
+        if (isJsonPrimitive) {
+            asString
+        } else {
+            toString()
+        }
+    }.getOrDefault(toString()).toHtmlMessage()
+}
+
+private fun String.toHtmlMessage(): String {
+    return android.text.Html
+        .escapeHtml(this)
+        .replace(Regex("\\s*\n\\s*"), "<br>")
+}
 
 
 @Composable

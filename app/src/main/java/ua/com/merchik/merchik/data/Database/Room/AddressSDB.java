@@ -103,7 +103,7 @@ public class AddressSDB implements DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return AddressSDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

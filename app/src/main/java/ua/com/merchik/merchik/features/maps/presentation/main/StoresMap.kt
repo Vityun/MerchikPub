@@ -56,7 +56,8 @@ import java.time.ZoneId
 @Composable
 fun StoresMap(
     cameraPositionState: com.google.maps.android.compose.CameraPositionState,
-    vm: BaseMapViewModel
+    vm: BaseMapViewModel,
+    focusUserRadiusMeters: Float? = null
 ) {
     val s by vm.state.collectAsState()
 
@@ -143,8 +144,31 @@ fun StoresMap(
     }
 
     // Fit camera bounds
-    LaunchedEffect(s.center, s.pointsUi, userLat, userLon) {
+    LaunchedEffect(s.center, s.pointsUi, userLat, userLon, focusUserRadiusMeters) {
         kotlinx.coroutines.delay(50)
+        if (focusUserRadiusMeters != null && isValidLatLon(userLat, userLon)) {
+            val center = LatLng(userLat!!, userLon!!)
+            val radius = focusUserRadiusMeters.toDouble()
+            val latDelta = radius / 111_320.0
+            val cosLat = kotlin.math.abs(
+                kotlin.math.cos(Math.toRadians(center.latitude))
+            ).coerceAtLeast(0.01)
+            val lonDelta = radius / (111_320.0 * cosLat)
+
+            try {
+                val bounds = LatLngBounds.builder()
+                    .include(LatLng(center.latitude - latDelta, center.longitude - lonDelta))
+                    .include(LatLng(center.latitude + latDelta, center.longitude + lonDelta))
+                    .build()
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngBounds(bounds, 80)
+                )
+            } catch (_: Throwable) {
+                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(center, 14f))
+            }
+            return@LaunchedEffect
+        }
+
         val latLngs = buildList {
             s.center?.let { add(it.pos) }
             s.pointsUi.forEach { add(LatLng(it.point.lat, it.point.lon)) }
@@ -318,7 +342,15 @@ fun StoresMap(
                 val uLon = userLon
                 val isUserRNO = s.pointsUi.any { it.point.wp?.user_id == 14041 }
 
-                if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
+                if (focusUserRadiusMeters != null && isValidLatLon(uLat, uLon)) {
+                    com.google.maps.android.compose.Circle(
+                        center = LatLng(uLat!!, uLon!!),
+                        radius = focusUserRadiusMeters.toDouble(),
+                        strokeColor = Color.Gray,
+                        fillColor = Color(0x221E88E5),
+                        strokeWidth = 2f
+                    )
+                } else if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
                     com.google.maps.android.compose.Circle(
                         center = LatLng(uLat!!, uLon!!),
                         radius = circleR,
