@@ -1643,7 +1643,7 @@ public class menu_login extends AppCompatActivity {
                                         progress.onCompleted();
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
-                                        Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
+                                        Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
                                         Globals.token = resp.websocketParam.token;
                                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
 
@@ -1814,7 +1814,7 @@ public class menu_login extends AppCompatActivity {
                         tablesLoadingUnloading.downloadAllTables(menu_login.this, cronchikViewModel);
                         new TablesLoadingUnloading().downloadMenu();
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
-                        Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
+                        Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
                         Globals.token = resp.websocketParam.token;
                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
                         // ------------
@@ -1852,7 +1852,7 @@ public class menu_login extends AppCompatActivity {
 
 
                 new TablesLoadingUnloading().downloadMenu();
-                Globals.userId = appUsersDB.getUserId();
+                Globals.setCurrentUserId(appUsersDB.getUserId());
                 if (appUsersDB.user_work_plan_status != null) {
                     Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
                 }

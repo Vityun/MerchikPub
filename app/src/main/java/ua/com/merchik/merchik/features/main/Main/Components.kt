@@ -31,11 +31,14 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedButton
@@ -70,12 +73,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -111,11 +116,15 @@ import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 @Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
 private const val PRODUCT_CODE_TAG = "PRODUCT_CODE_TAG"
+private val EDITOR_ISO_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+private val EDITOR_DISPLAY_DATE_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd.MM.uuuu").withResolverStyle(ResolverStyle.STRICT)
 
 
 @Composable
@@ -422,7 +431,7 @@ fun AnchoredAnimatedDialog(
         scope.launch { playClose() }
     }
 
-    val user: UsersSDB? = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+    val user: UsersSDB? = RoomManager.SQL_DB.usersDao().getUserById(Globals.getCurrentUserId())
     val animationTime = when {
         user == null -> 850
         user.reportDate05 == null -> 2650
@@ -930,11 +939,128 @@ fun DecimalNumberEditorRow(
 }
 
 private fun parseEditorDate(value: String): LocalDate? {
-    if (value.isBlank()) return null
+    val trimmed = value.trim()
+    if (trimmed.isBlank() || trimmed == "0000-00-00") return null
 
     return runCatching {
-        LocalDate.parse(value.trim(), DateTimeFormatter.ISO_LOCAL_DATE)
+        LocalDate.parse(trimmed, EDITOR_ISO_DATE_FORMATTER)
+    }.getOrElse {
+        runCatching {
+            LocalDate.parse(trimmed, EDITOR_DISPLAY_DATE_FORMATTER)
+        }.getOrNull()
+    }
+}
+
+private fun formatEditorDisplayDate(value: String): String {
+    return parseEditorDate(value)
+        ?.format(EDITOR_DISPLAY_DATE_FORMATTER)
+        .orEmpty()
+}
+
+private fun formatEditorDateDigits(digits: String): String {
+    return buildString {
+        digits.take(8).forEachIndexed { index, char ->
+            if (index == 2 || index == 4) append('.')
+            append(char)
+        }
+    }
+}
+
+private fun isValidEditorDateDigits(digits: String): Boolean {
+    if (digits.isEmpty()) return true
+
+    val dayFirst = digits.getOrNull(0)
+    if (dayFirst != null && dayFirst !in '0'..'3') return false
+
+    if (digits.length >= 2) {
+        val day = digits.substring(0, 2).toIntOrNull() ?: return false
+        if (day !in 1..31) return false
+    }
+
+    val monthFirst = digits.getOrNull(2)
+    if (monthFirst != null && monthFirst !in '0'..'1') return false
+
+    if (digits.length >= 4) {
+        val month = digits.substring(2, 4).toIntOrNull() ?: return false
+        if (month !in 1..12) return false
+    }
+
+    if (digits.length == 8) {
+        val day = digits.substring(0, 2).toIntOrNull() ?: return false
+        val month = digits.substring(2, 4).toIntOrNull() ?: return false
+        val year = digits.substring(4, 8).toIntOrNull() ?: return false
+        if (year <= 0) return false
+
+        runCatching {
+            LocalDate.of(year, month, day)
+        }.getOrNull() ?: return false
+    }
+
+    return true
+}
+
+private fun parseEditorDisplayDate(value: String): LocalDate? {
+    val digits = value.filter { it.isDigit() }
+    if (digits.length != 8 || !isValidEditorDateDigits(digits)) return null
+
+    val day = digits.substring(0, 2).toInt()
+    val month = digits.substring(2, 4).toInt()
+    val year = digits.substring(4, 8).toInt()
+
+    return runCatching {
+        LocalDate.of(year, month, day)
     }.getOrNull()
+}
+
+private fun editorDateSelectionOffset(formatted: String, digitCount: Int): Int {
+    if (digitCount <= 0) return 0
+
+    var seenDigits = 0
+    formatted.forEachIndexed { index, char ->
+        if (char.isDigit()) {
+            seenDigits++
+            if (seenDigits == digitCount) {
+                return index + 1
+            }
+        }
+    }
+
+    return formatted.length
+}
+
+private fun normalizeEditorDateInput(
+    input: TextFieldValue,
+    fallback: TextFieldValue
+): TextFieldValue {
+    val digits = input.text.filter { it.isDigit() }.take(8)
+    if (!isValidEditorDateDigits(digits)) return fallback
+
+    val formatted = formatEditorDateDigits(digits)
+    if (input.text == formatted) {
+        return input.copy(
+            selection = TextRange(input.selection.end.coerceIn(0, formatted.length))
+        )
+    }
+
+    val selectionEnd = input.selection.end.coerceIn(0, input.text.length)
+    val selectedDigitCount = input.text
+        .take(selectionEnd)
+        .count { it.isDigit() }
+        .coerceAtMost(digits.length)
+    val cursor = editorDateSelectionOffset(formatted, selectedDigitCount)
+
+    return TextFieldValue(
+        text = formatted,
+        selection = TextRange(cursor)
+    )
+}
+
+private fun createEditorDateFieldValue(value: String): TextFieldValue {
+    val text = formatEditorDisplayDate(value)
+    return TextFieldValue(
+        text = text,
+        selection = TextRange(text.length)
+    )
 }
 
 @Composable
@@ -943,11 +1069,11 @@ fun DateEditorRow(
     value: String,
     onDateSelected: (String) -> Unit
 ) {
-    val formatter = remember {
-        DateTimeFormatter.ISO_LOCAL_DATE
-    }
     var selectedDate by remember(value) {
         mutableStateOf(parseEditorDate(value) ?: LocalDate.now())
+    }
+    var displayValue by remember(value) {
+        mutableStateOf(createEditorDateFieldValue(value))
     }
     val dateDialog = rememberMaterialDialogState()
 
@@ -967,20 +1093,71 @@ fun DateEditorRow(
             modifier = Modifier
                 .height(38.dp)
                 .width(152.dp)
-//                .padding(horizontal = 16.dp)
                 .border(1.dp, Color.LightGray, RoundedCornerShape(6.dp))
-                .clickable {
-                    dateDialog.show()
-                }
-                .padding(horizontal = 8.dp),
+                .padding(start = 6.dp, end = 2.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = value.ifBlank { "Оберiть дату" },
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                color = if (value.isBlank()) Color.Gray else LocalContentColor.current
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BasicTextField(
+                    value = displayValue,
+                    onValueChange = { input ->
+                        val previousText = displayValue.text
+                        val normalized = normalizeEditorDateInput(input, displayValue)
+                        displayValue = normalized
+
+                        if (normalized.text != previousText) {
+                            parseEditorDisplayDate(normalized.text)?.let { date ->
+                                selectedDate = date
+                                onDateSelected(date.format(EDITOR_ISO_DATE_FORMATTER))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        color = LocalContentColor.current
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier
+                        .height(38.dp)
+                        .weight(1f),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (displayValue.text.isBlank()) {
+                                Text(
+                                    text = "ДД.ММ.ГГГГ",
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    color = Color.Gray
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+
+                Icon(
+                    imageVector = Icons.Filled.DateRange,
+                    contentDescription = "Открыть календарь",
+                    tint = Color.Gray,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable {
+                            dateDialog.show()
+                        }
+                        .padding(4.dp)
+                )
+            }
         }
     }
 
@@ -1015,7 +1192,12 @@ fun DateEditorRow(
             )
         ) { newDate ->
             selectedDate = newDate
-            onDateSelected(newDate.format(formatter))
+            val newDisplayValue = newDate.format(EDITOR_DISPLAY_DATE_FORMATTER)
+            displayValue = TextFieldValue(
+                text = newDisplayValue,
+                selection = TextRange(newDisplayValue.length)
+            )
+            onDateSelected(newDate.format(EDITOR_ISO_DATE_FORMATTER))
         }
     }
 }

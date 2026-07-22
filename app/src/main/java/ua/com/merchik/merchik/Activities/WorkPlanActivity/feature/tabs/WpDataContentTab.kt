@@ -47,7 +47,7 @@ fun WpDataContentTab(dataIsReady: Boolean) {
 
 //        var emptyScenario by rememberSaveable { mutableStateOf(false) }
         val user = remember {
-            RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+            RoomManager.SQL_DB.usersDao().getUserById(Globals.getCurrentUserId())
         }
         val isEmptyScenario =
             user?.clientId == "92106" &&

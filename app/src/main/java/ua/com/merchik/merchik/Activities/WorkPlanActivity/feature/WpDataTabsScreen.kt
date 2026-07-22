@@ -163,7 +163,7 @@ fun WpDataTabsScreen() {
                 break
             }
 
-            if (Globals.userId == 172906 || Globals.userId == 19653) {
+            if (Globals.getCurrentUserId() == 172906 || Globals.getCurrentUserId() == 19653) {
                 dataIsReady = true
                 progressModel.onCompleted()
                 break
@@ -377,7 +377,7 @@ fun WpDataTabsScreen() {
             isScrolling.value = false
         }
 
-        if (Globals.userId == 255247) {
+        if (Globals.getCurrentUserId() == 255247) {
             WpDataContentTab(dataIsReady = dataIsReady)
         } else {
             when (selectedTabIndex) {
@@ -389,7 +389,7 @@ fun WpDataTabsScreen() {
 
     if (showAdditionalIncomeDeniedDialog) {
         viewModel.setBlockMapsForAdditionalWork()
-        val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+        val user = RoomManager.SQL_DB.usersDao().getUserById(Globals.getCurrentUserId())
 
         user?.let {
             MessageDialog(

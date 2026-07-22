@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineStart;
 import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.GlobalScope;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Utils.LogCleaner;
@@ -42,6 +43,7 @@ public class MyApplication extends Application {
         Clock.initTime();
 
         MyApplication.context = getApplicationContext();
+        Globals.restoreCurrentUserIdFromPrefs(this);
         registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {

@@ -6,22 +6,31 @@ import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.realm.Realm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import ua.com.merchik.merchik.trecker
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
 
 object OrderDataPreloadRepository {
 
@@ -46,6 +55,21 @@ object OrderDataPreloadRepository {
         val savedAddressCount: Int,
         val savedTradeMarkCount: Int,
         val missingTradeMarkIds: List<String>,
+        val errors: List<String>
+    )
+
+    data class CreatedVisitsSyncResult(
+        val requestedDad2: List<Long>,
+        val foundVisits: List<WpDataDB>,
+        val missingDad2: List<Long>,
+        val attempts: Int,
+        val lastError: String? = null
+    )
+
+    data class CreatedVisitDetailsPreloadResult(
+        val requestedDad2: List<Long>,
+        val savedOptionsCount: Int,
+        val savedReportPrepareCount: Int,
         val errors: List<String>
     )
 
@@ -133,6 +157,372 @@ object OrderDataPreloadRepository {
             executeJsonRequest("order_data.visit_add_one_time", request)
         }
 
+    suspend fun syncCreatedVisitsByDad2(
+        codeDad2List: List<Long>,
+        dateYmd: String,
+        timeoutMs: Long = CREATED_VISIT_SYNC_TIMEOUT_MS,
+        pollIntervalMs: Long = CREATED_VISIT_SYNC_POLL_INTERVAL_MS
+    ): CreatedVisitsSyncResult {
+        val requestedDad2 = codeDad2List
+            .filter { it > 0L }
+            .distinct()
+
+        if (requestedDad2.isEmpty()) {
+            return CreatedVisitsSyncResult(
+                requestedDad2 = emptyList(),
+                foundVisits = emptyList(),
+                missingDad2 = emptyList(),
+                attempts = 0
+            )
+        }
+
+        val deadline = SystemClock.elapsedRealtime() + timeoutMs.coerceAtLeast(0L)
+        var attempts = 0
+        var lastFoundVisits = emptyList<WpDataDB>()
+        var lastError: String? = null
+
+        do {
+            attempts++
+
+            runCatching {
+                val serverVisits = downloadWpDataByDad2(requestedDad2, dateYmd)
+                if (serverVisits.isNotEmpty()) {
+                    saveWpDataPartial(serverVisits)
+                }
+                loadLocalVisitsByDad2(requestedDad2)
+            }.onSuccess { visits ->
+                lastFoundVisits = visits
+                lastError = null
+
+                val foundDad2 = visits.map { it.code_dad2 }.toSet()
+                if (requestedDad2.all { it in foundDad2 }) {
+                    return CreatedVisitsSyncResult(
+                        requestedDad2 = requestedDad2,
+                        foundVisits = visits,
+                        missingDad2 = emptyList(),
+                        attempts = attempts
+                    )
+                }
+            }.onFailure { throwable ->
+                lastError = throwable.message ?: throwable.toString()
+                logError("wp_data.created_visits", lastError.orEmpty())
+            }
+
+            val remainingMs = deadline - SystemClock.elapsedRealtime()
+            if (remainingMs > 0L) {
+                delay(pollIntervalMs.coerceAtMost(remainingMs).coerceAtLeast(250L))
+            }
+        } while (SystemClock.elapsedRealtime() < deadline)
+
+        val foundDad2 = lastFoundVisits.map { it.code_dad2 }.toSet()
+        return CreatedVisitsSyncResult(
+            requestedDad2 = requestedDad2,
+            foundVisits = lastFoundVisits,
+            missingDad2 = requestedDad2.filter { it !in foundDad2 },
+            attempts = attempts,
+            lastError = lastError
+        )
+    }
+
+    suspend fun preloadCreatedVisitDetailsByDad2(
+        codeDad2List: List<Long>
+    ): CreatedVisitDetailsPreloadResult = coroutineScope {
+        val requestedDad2 = codeDad2List
+            .filter { it > 0L }
+            .distinct()
+
+        if (requestedDad2.isEmpty()) {
+            return@coroutineScope CreatedVisitDetailsPreloadResult(
+                requestedDad2 = emptyList(),
+                savedOptionsCount = 0,
+                savedReportPrepareCount = 0,
+                errors = emptyList()
+            )
+        }
+
+        val optionsDeferred = async(Dispatchers.IO) {
+            runCatching { downloadCreatedVisitOptionsByDad2(requestedDad2) }
+        }
+        val reportPrepareDeferred = async(Dispatchers.IO) {
+            runCatching { downloadCreatedVisitReportPrepareByDad2(requestedDad2) }
+        }
+
+        val errors = mutableListOf<String>()
+        val options = optionsDeferred.await()
+            .onFailure { throwable ->
+                errors.add("options_list: ${throwable.message ?: throwable}")
+                logError("plan.options_list.created_visits", throwable.message ?: throwable.toString())
+            }
+            .getOrDefault(emptyList())
+        val reportPrepare = reportPrepareDeferred.await()
+            .onFailure { throwable ->
+                errors.add("report_prepare.list_data: ${throwable.message ?: throwable}")
+                logError(
+                    "report_prepare.list_data.created_visits",
+                    throwable.message ?: throwable.toString()
+                )
+            }
+            .getOrDefault(emptyList())
+
+        if (options.isNotEmpty()) {
+            saveOptionsPartial(options)
+        }
+        if (reportPrepare.isNotEmpty()) {
+            saveReportPreparePartial(reportPrepare)
+        }
+
+        CreatedVisitDetailsPreloadResult(
+            requestedDad2 = requestedDad2,
+            savedOptionsCount = options.size,
+            savedReportPrepareCount = reportPrepare.size,
+            errors = errors
+        ).also { result ->
+            logInfo(
+                "created_visit_details.preload",
+                "dad2=${result.requestedDad2.previewLongIds()}, options=${result.savedOptionsCount}, reportPrepare=${result.savedReportPrepareCount}, errors=${result.errors}"
+            )
+        }
+    }
+
+    suspend fun findExistingVisit(
+        dateYmd: String,
+        addrId: Int,
+        clientId: String
+    ): WpDataDB? = withContext(Dispatchers.IO) {
+        val normalizedClientId = clientId.trim()
+        val day = runCatching { LocalDate.parse(dateYmd) }.getOrNull()
+
+        if (normalizedClientId.isBlank() || day == null) {
+            logInfo(
+                "wp_data.duplicate_check",
+                "skip: dateYmd=$dateYmd, addrId=$addrId, clientId=$clientId"
+            )
+            return@withContext null
+        }
+
+        val zone = ZoneId.systemDefault()
+        val dayStart = Date.from(day.atStartOfDay(zone).toInstant())
+        val nextDayStart = Date.from(day.plusDays(1).atStartOfDay(zone).toInstant())
+        val realm = Realm.getDefaultInstance()
+
+        try {
+            val existing = realm.where(WpDataDB::class.java)
+                .equalTo("client_id", normalizedClientId)
+                .equalTo("addr_id", addrId)
+                .greaterThanOrEqualTo("dt", dayStart)
+                .lessThan("dt", nextDayStart)
+                .findFirst()
+
+            existing?.let { realm.copyFromRealm(it) }.also { result ->
+                logInfo(
+                    "wp_data.duplicate_check",
+                    "dateYmd=$dateYmd, addrId=$addrId, clientId=$normalizedClientId, existingId=${result?.id}"
+                )
+            }
+        } finally {
+            realm.close()
+        }
+    }
+
+    private fun downloadCreatedVisitOptionsByDad2(
+        codeDad2List: List<Long>
+    ): List<OptionsDB> {
+        val request = buildCreatedVisitOptionsRequest(codeDad2List)
+        val response = timeRequest("plan.options_list.created_visits") {
+            logInfo("plan.options_list.created_visits", "request=$request")
+            RetrofitBuilder.getRetrofitInterface()
+                .GET_OPTIONS(RetrofitBuilder.contentType, request)
+                .execute()
+        }
+
+        if (!response.isSuccessful) {
+            val message = "HTTP ${response.code()} ${response.message()}"
+            logError("plan.options_list.created_visits", message)
+            throw IllegalStateException(message)
+        }
+
+        val body = response.body()
+            ?: throw IllegalStateException("empty response body")
+
+        if (body.state != true) {
+            throw IllegalStateException(body.error ?: "state=${body.state}")
+        }
+
+        return body.list.orEmpty().also { options ->
+            logInfo(
+                "plan.options_list.created_visits",
+                "response options=${options.size}, requestedDad2=${codeDad2List.previewLongIds()}"
+            )
+        }
+    }
+
+    private fun downloadCreatedVisitReportPrepareByDad2(
+        codeDad2List: List<Long>
+    ): List<ReportPrepareDB> {
+        val request = buildCreatedVisitReportPrepareRequest(codeDad2List)
+        val response = timeRequest("report_prepare.list_data.created_visits") {
+            logInfo("report_prepare.list_data.created_visits", "request=$request")
+            RetrofitBuilder.getRetrofitInterface()
+                .ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, request)
+                .execute()
+        }
+
+        if (!response.isSuccessful) {
+            val message = "HTTP ${response.code()} ${response.message()}"
+            logError("report_prepare.list_data.created_visits", message)
+            throw IllegalStateException(message)
+        }
+
+        val body = response.body()
+            ?: throw IllegalStateException("empty response body")
+
+        if (body.state != true) {
+            throw IllegalStateException(body.error ?: "state=${body.state}")
+        }
+
+        return body.list.orEmpty().also { reportPrepare ->
+            logInfo(
+                "report_prepare.list_data.created_visits",
+                "response reportPrepare=${reportPrepare.size}, requestedDad2=${codeDad2List.previewLongIds()}"
+            )
+        }
+    }
+
+    private suspend fun saveOptionsPartial(options: List<OptionsDB>) {
+        withContext(Dispatchers.Main) {
+            RealmManager.setOptions2(options)
+        }
+    }
+
+    private suspend fun saveReportPreparePartial(reportPrepare: List<ReportPrepareDB>) {
+        withContext(Dispatchers.Main) {
+            RealmManager.setReportPrepare(reportPrepare)
+        }
+    }
+
+    private fun buildCreatedVisitOptionsRequest(codeDad2List: List<Long>): JsonObject {
+        return JsonObject().apply {
+            addProperty("mod", "plan")
+            addProperty("act", "options_list")
+            addCodeDad2Value(codeDad2List)
+        }
+    }
+
+    private fun buildCreatedVisitReportPrepareRequest(codeDad2List: List<Long>): JsonObject {
+        return JsonObject().apply {
+            addProperty("mod", "report_prepare")
+            addProperty("act", "list_data")
+            addCodeDad2Value(codeDad2List)
+        }
+    }
+
+    private suspend fun downloadWpDataByDad2(
+        codeDad2List: List<Long>,
+        dateYmd: String
+    ): List<WpDataDB> = withContext(Dispatchers.IO) {
+        val request = buildWpDataDad2Request(codeDad2List, dateYmd)
+        val response = timeRequest("plan.list.created_visits") {
+            logInfo("plan.list.created_visits", "request=$request")
+            RetrofitBuilder.getRetrofitInterface()
+                .WpDataServer_RESPONSE(RetrofitBuilder.contentType, request)
+                .execute()
+        }
+
+        if (!response.isSuccessful) {
+            val message = "HTTP ${response.code()} ${response.message()}"
+            logError("plan.list.created_visits", message)
+            throw IllegalStateException(message)
+        }
+
+        val body = response.body()
+            ?: throw IllegalStateException("empty response body")
+
+        if (body.state != true) {
+            throw IllegalStateException(body.error ?: "state=${body.state}")
+        }
+
+        body.list.orEmpty().also { visits ->
+            logInfo(
+                "plan.list.created_visits",
+                "response visits=${visits.size}, requestedDad2=${codeDad2List.previewLongIds()}"
+            )
+        }
+    }
+
+    private suspend fun saveWpDataPartial(wpData: List<WpDataDB>) {
+        withContext(Dispatchers.Main) {
+            RealmManager.updateWorkPlanFromServer(wpData)
+        }
+    }
+
+    private suspend fun loadLocalVisitsByDad2(codeDad2List: List<Long>): List<WpDataDB> =
+        withContext(Dispatchers.IO) {
+            val requestedDad2 = codeDad2List
+                .filter { it > 0L }
+                .distinct()
+            if (requestedDad2.isEmpty()) return@withContext emptyList()
+
+            val realm = Realm.getDefaultInstance()
+            try {
+                val orderByDad2 = requestedDad2
+                    .withIndex()
+                    .associate { it.value to it.index }
+                realm.where(WpDataDB::class.java)
+                    .apply {
+                        requestedDad2.forEachIndexed { index, dad2 ->
+                            if (index > 0) or()
+                            equalTo("code_dad2", dad2)
+                        }
+                    }
+                    .findAll()
+                    .let { realm.copyFromRealm(it) }
+                    .sortedBy { orderByDad2[it.code_dad2] ?: Int.MAX_VALUE }
+            } finally {
+                realm.close()
+            }
+        }
+
+    private fun buildWpDataDad2Request(
+        codeDad2List: List<Long>,
+        dateYmd: String
+    ): JsonObject {
+        val (dateFrom, dateTo) = dateRangeForCreatedVisit(dateYmd)
+        val dad2Array = JsonArray().apply {
+            codeDad2List.forEach { add(it) }
+        }
+
+        return JsonObject().apply {
+            addProperty("mod", "plan")
+            addProperty("act", "list")
+            addProperty("date_from", dateFrom)
+            addProperty("date_to", dateTo)
+            add("code_dad2", dad2Array)
+        }
+    }
+
+    private fun JsonObject.addCodeDad2Value(codeDad2List: List<Long>) {
+        val requestedDad2 = codeDad2List
+            .filter { it > 0L }
+            .distinct()
+
+        if (requestedDad2.size == 1) {
+            addProperty("code_dad2", requestedDad2.single().toString())
+        } else {
+            add("code_dad2", JsonArray().apply {
+                requestedDad2.forEach { add(it.toString()) }
+            })
+        }
+    }
+
+    private fun dateRangeForCreatedVisit(dateYmd: String): Pair<String, String> {
+        val day = runCatching { LocalDate.parse(dateYmd) }.getOrNull()
+        return if (day != null) {
+            day.minusDays(1).toString() to day.plusDays(1).toString()
+        } else {
+            Clock.getDatePeriod(-21) to Clock.getDatePeriod(5)
+        }
+    }
+
     suspend fun downloadNearbyAddresses(context: Context?): AddressPreloadResult =
         withContext(Dispatchers.IO) {
             val request = JsonObject().apply {
@@ -167,7 +557,7 @@ object OrderDataPreloadRepository {
                     downloadMissingTradeMarksForAddresses(addresses)
                 }.onSuccess { tradeMarkResult ->
                     savedTradeMarkCount = tradeMarkResult.savedCount
-                    missingTradeMarkIds = tradeMarkResult.requestedIds
+                    missingTradeMarkIds = tradeMarkResult.missingIds
                 }.onFailure { throwable ->
                     val message = throwable.message ?: throwable.toString()
                     errors.add("trade_marks: $message")
@@ -192,10 +582,11 @@ object OrderDataPreloadRepository {
     private suspend fun downloadMissingTradeMarksForAddresses(
         addresses: List<AddressSDB>
     ): TradeMarkPreloadResult {
-        val missingIds = findMissingTradeMarkIds(addresses)
-        if (missingIds.isEmpty()) {
-            logInfo("data_list.tovar_manufacturer_list", "skip: no missing trade marks")
-            return TradeMarkPreloadResult(requestedIds = emptyList(), savedCount = 0)
+        val idsCheck = checkTradeMarkIds(addresses)
+        val idsToRequest = idsCheck.requiredIds
+        if (idsToRequest.isEmpty()) {
+            logInfo("data_list.tovar_manufacturer_list", "skip: no tp_id in addresses")
+            return TradeMarkPreloadResult(missingIds = emptyList(), savedCount = 0)
         }
 
         val response = timeRequest("data_list.tovar_manufacturer_list") {
@@ -203,7 +594,7 @@ object OrderDataPreloadRepository {
                 .GET_TRADE_MARKS_T(
                     "data_list",
                     "tovar_manufacturer_list",
-                    missingIds.toTypedArray()
+                    idsToRequest.toTypedArray()
                 )
             logInfo(
                 "data_list.tovar_manufacturer_list",
@@ -232,25 +623,65 @@ object OrderDataPreloadRepository {
 
         logInfo(
             "data_list.tovar_manufacturer_list.save",
-            "requestedIds=$missingIds, saved TradeMarkDB count=${tradeMarks.size}"
+            "requestedIds=${idsToRequest.previewIds()}, localMissingIds=${idsCheck.missingIds.previewIds()}, saved TradeMarkDB count=${tradeMarks.size}"
         )
 
         return TradeMarkPreloadResult(
-            requestedIds = missingIds,
+            missingIds = idsCheck.missingIds,
             savedCount = tradeMarks.size
         )
     }
 
-    private suspend fun findMissingTradeMarkIds(addresses: List<AddressSDB>): List<String> =
-        withContext(Dispatchers.Main) {
-            addresses
+    private suspend fun checkTradeMarkIds(addresses: List<AddressSDB>): TradeMarkIdsCheck =
+        withContext(Dispatchers.IO) {
+            val uniqueIds = addresses
                 .asSequence()
-                .mapNotNull { it.tpId }
-                .filter { it > 0 }
-                .map { it.toString() }
+                .mapNotNull { address -> address.tpId }
+                .filter { id -> id > 0 }
+                .map { id -> id.toString() }
                 .distinct()
-                .filter { id -> TradeMarkRealm.getTradeMarkRowById(id) == null }
                 .toList()
+
+            if (uniqueIds.isEmpty()) {
+                logInfo(
+                    "data_list.tovar_manufacturer_list.check",
+                    "addresses=${addresses.size}, uniqueTpIds=0, missing=0"
+                )
+                return@withContext TradeMarkIdsCheck(
+                    requiredIds = emptyList(),
+                    missingIds = emptyList()
+                )
+            }
+
+            val realm = Realm.getDefaultInstance()
+            try {
+                val localNamesById = realm.where(TradeMarkDB::class.java)
+                    .`in`("iD", uniqueIds.toTypedArray())
+                    .findAll()
+                    .mapNotNull { tradeMark ->
+                        val id = tradeMark.id ?: return@mapNotNull null
+                        id to tradeMark.nm
+                    }
+                    .toMap()
+
+                val missingIds = uniqueIds
+                    .filter { id -> localNamesById[id].isNullOrBlank() }
+                val absentCount = uniqueIds.count { id -> !localNamesById.containsKey(id) }
+                val incompleteCount = missingIds.size - absentCount
+                val completeCount = uniqueIds.size - missingIds.size
+
+                logInfo(
+                    "data_list.tovar_manufacturer_list.check",
+                    "addresses=${addresses.size}, uniqueTpIds=${uniqueIds.size}, complete=$completeCount, absent=$absentCount, incomplete=$incompleteCount, missing=${missingIds.size}, missingIds=${missingIds.previewIds()}, willRefresh=${uniqueIds.size}"
+                )
+
+                TradeMarkIdsCheck(
+                    requiredIds = uniqueIds,
+                    missingIds = missingIds
+                )
+            } finally {
+                realm.close()
+            }
         }
 
     private suspend fun saveTradeMarksPartial(tradeMarks: List<TradeMarkDB>) {
@@ -366,6 +797,18 @@ object OrderDataPreloadRepository {
         Globals.writeToMLOG("ERROR", "$TAG/$place", message)
     }
 
+    private fun List<String>.previewIds(limit: Int = 50): String {
+        if (isEmpty()) return "[]"
+        val ids = take(limit).joinToString(",")
+        return if (size > limit) "[$ids,... +${size - limit}]" else "[$ids]"
+    }
+
+    private fun List<Long>.previewLongIds(limit: Int = 50): String {
+        if (isEmpty()) return "[]"
+        val ids = take(limit).joinToString(",")
+        return if (size > limit) "[$ids,... +${size - limit}]" else "[$ids]"
+    }
+
     data class AddressPreloadResult(
         val json: JsonObject,
         val savedCount: Int,
@@ -380,12 +823,20 @@ object OrderDataPreloadRepository {
     )
 
     private data class TradeMarkPreloadResult(
-        val requestedIds: List<String>,
+        val missingIds: List<String>,
         val savedCount: Int
+    )
+
+    private data class TradeMarkIdsCheck(
+        val requiredIds: List<String>,
+        val missingIds: List<String>
     )
 
     private data class Coordinate(
         val lat: Double,
         val lon: Double
     )
+
+    private const val CREATED_VISIT_SYNC_TIMEOUT_MS = 20_000L
+    private const val CREATED_VISIT_SYNC_POLL_INTERVAL_MS = 2_000L
 }

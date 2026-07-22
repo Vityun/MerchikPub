@@ -116,8 +116,10 @@ fun DataObjectUI.toItemUI(
 
     // ---- получение стабильного реального id ----
     val stableIdFromSource: Long? = try {
-        val idKey = jsonObject.keys().asSequence()
-            .firstOrNull { it.equals("id", ignoreCase = true) }
+        val idKey = listOf("id", "ID", "iD", "addr_id", "order_id")
+            .firstOrNull { key -> jsonObject.has(key) }
+            ?: jsonObject.keys().asSequence()
+                .firstOrNull { it.equals("id", ignoreCase = true) }
 
         if (idKey != null) {
             val rawValue = jsonObject.opt(idKey)

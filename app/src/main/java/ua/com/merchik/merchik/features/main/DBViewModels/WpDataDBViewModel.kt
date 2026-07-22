@@ -800,7 +800,10 @@ class WpDataDBViewModel @Inject constructor(
         val payloadIds = items.map { it.stableId }.toSet()
         val itemsTemp = uiState.value.items
 
-        val allItems =
+        val preparedItems = dataItems.value
+            .filter { it.rawAs<WpDataDB>() != null }
+
+        val allItems = preparedItems.ifEmpty {
             filterAndSortDataItems(
                 items = itemsTemp,
                 filters = uiState.value.filters,
@@ -810,6 +813,7 @@ class WpDataDBViewModel @Inject constructor(
                 rangeEnd = rangeDataEnd.value,
                 searchText = uiState.value.filters?.searchText
             ).items
+        }
 
 
         val selectedInPayload = allItems.filter { it.stableId in payloadIds && it.selected }

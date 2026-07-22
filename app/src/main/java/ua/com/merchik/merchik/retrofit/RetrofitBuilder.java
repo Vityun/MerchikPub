@@ -226,15 +226,17 @@ public class RetrofitBuilder {
                 .build();
         Log.i("WebSockets", "Headers: " + request.headers().toString());
 
-        if (Globals.userId == 0) {
+        int currentUserId = Globals.getCurrentUserId();
+        if (currentUserId == 0) {
             AppUsersDB appUsersDB = RealmManager.getAppUser();
             if (appUsersDB != null) {
-                Globals.userId = appUsersDB.getUserId();
+                Globals.setCurrentUserId(appUsersDB.getUserId());
+                currentUserId = Globals.getCurrentUserId();
                 Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
             }
         }
 
-        final int userId = Globals.userId;
+        final int userId = currentUserId;
         final String token = Globals.token;
         final String sessionId = Globals.session;
 

@@ -741,7 +741,7 @@ public class RealmManager {
     public static boolean setTradeMarks(List<TradeMarkDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(TradeMarkDB.class);
+//        INSTANCE.delete(TradeMarkDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         return true;

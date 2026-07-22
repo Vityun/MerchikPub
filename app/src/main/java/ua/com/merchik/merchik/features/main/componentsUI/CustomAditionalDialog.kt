@@ -256,8 +256,10 @@ fun CustomAditionalWorkForm(
     val displayDateFormatter = remember {
         DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
     }
-    var selectedDate by remember(date, displayDateFormatter) {
-        mutableStateOf(parseCustomAditionalDate(date, displayDateFormatter) ?: LocalDate.now())
+    val minDate = LocalDate.now()
+    var selectedDate by remember(date, displayDateFormatter, minDate) {
+        val initialDate = parseCustomAditionalDate(date, displayDateFormatter) ?: minDate
+        mutableStateOf(if (initialDate.isBefore(minDate)) minDate else initialDate)
     }
     val dateDialog = rememberMaterialDialogState()
 
@@ -341,6 +343,9 @@ fun CustomAditionalWorkForm(
         datepicker(
             initialDate = selectedDate,
             title = "Дата",
+            allowedDateValidator = { date ->
+                !date.isBefore(minDate)
+            },
             colors = DatePickerDefaults.colors(
                 headerBackgroundColor = Color(0xFFB1B1B1),
                 headerTextColor = Color.White,

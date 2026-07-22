@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -152,6 +153,7 @@ public class Globals {
     public static double lat, lon;
 
     //----------------------------------------------------------------------------------------------
+    public static final String PREF_KEY_USER_ID = "user_id";
     public static int userId;
     public static boolean userOwnership;    // В этом признаке буду хранить значение "Свой/Чужой"
     public static String token;
@@ -168,6 +170,100 @@ public class Globals {
     //----------------------------------------------------------------------------------------------
 
     // Режимы в которых должно работать приложение.
+    public static synchronized int getCurrentUserId() {
+        if (userId > 0) {
+            return userId;
+        }
+
+        int restoredUserId = readCurrentUserIdFromPrefs(MyApplication.getAppContext());
+        if (restoredUserId <= 0) {
+            restoredUserId = readCurrentUserIdFromRealm();
+        }
+        if (restoredUserId > 0) {
+            userId = restoredUserId;
+            saveCurrentUserIdToPrefs(MyApplication.getAppContext(), restoredUserId);
+        }
+
+        return userId;
+    }
+
+    public static synchronized void setCurrentUserId(int currentUserId) {
+        userId = Math.max(currentUserId, 0);
+        saveCurrentUserIdToPrefs(MyApplication.getAppContext(), userId);
+    }
+
+    public static synchronized void restoreCurrentUserIdFromPrefs(@Nullable Context context) {
+        int restoredUserId = readCurrentUserIdFromPrefs(context);
+        if (restoredUserId <= 0) {
+            restoredUserId = readCurrentUserIdFromRealm();
+        }
+        if (restoredUserId > 0) {
+            userId = restoredUserId;
+            saveCurrentUserIdToPrefs(context, restoredUserId);
+        }
+    }
+
+    public static synchronized void saveCurrentUserIdToPrefs(@Nullable Context context, int currentUserId) {
+        Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) {
+            return;
+        }
+
+        SharedPreferences.Editor editor = PreferenceManager
+                .getDefaultSharedPreferences(appContext)
+                .edit();
+
+        if (currentUserId > 0) {
+            editor.putString(PREF_KEY_USER_ID, String.valueOf(currentUserId));
+        } else {
+            editor.remove(PREF_KEY_USER_ID);
+        }
+
+        editor.apply();
+    }
+
+    private static int readCurrentUserIdFromPrefs(@Nullable Context context) {
+        Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) {
+            return 0;
+        }
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
+        try {
+            return parseCurrentUserId(preferences.getString(PREF_KEY_USER_ID, ""));
+        } catch (ClassCastException e) {
+            try {
+                return Math.max(preferences.getInt(PREF_KEY_USER_ID, 0), 0);
+            } catch (ClassCastException ignored) {
+                return 0;
+            }
+        }
+    }
+
+    private static int parseCurrentUserId(@Nullable String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return 0;
+        }
+
+        try {
+            return Math.max(Integer.parseInt(value.trim()), 0);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private static int readCurrentUserIdFromRealm() {
+        try {
+            AppUsersDB appUser = RealmManager.getAppUser();
+            if (appUser == null) {
+                return 0;
+            }
+            return Math.max(appUser.getUserId(), 0);
+        } catch (Throwable ignored) {
+            return 0;
+        }
+    }
+
     public enum AppWorkMode {
         ONLINE,
         OFFLINE

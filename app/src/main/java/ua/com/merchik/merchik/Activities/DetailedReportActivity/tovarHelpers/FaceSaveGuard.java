@@ -70,7 +70,7 @@ public final class FaceSaveGuard {
                 return FaceSaveCheckResult.error();
             }
 
-            long realWorkEndDateTime = wpDataDB.getVisit_end_dt();
+            long realWorkEndDateTime = getWorkEndDateTime(wpDataDB);
 
             if (realWorkEndDateTime <= 0L) {
                 return FaceSaveCheckResult.success();
@@ -128,6 +128,16 @@ public final class FaceSaveGuard {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static long getWorkEndDateTime(WpDataDB wpDataDB) {
+        long clientEndDateTime = wpDataDB.getClient_end_dt();
+
+        if (clientEndDateTime > 0L) {
+            return clientEndDateTime;
+        }
+
+        return wpDataDB.getVisit_end_dt();
     }
 
     public static final class FaceSaveCheckResult {

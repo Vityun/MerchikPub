@@ -26,6 +26,24 @@ class AddressSDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = AddressSDB::class
 
+    override fun getDefaultHideUserFields(): List<String>? {
+
+        return listOf(
+            "column_name",
+            "group_header",
+            "addr_id",
+            "city_id",
+            "obl_id",
+            "tt_id",
+            "dt_update",
+            "location_xd",
+            "location_yd",
+            "kol_kass",
+            "nomer_tt",
+            "kps"
+        )
+    }
+
     override suspend fun getItems(): List<DataItemUI> {
         val selectedId = CustomAditionalAddressSelectionHolder.selectedId
         val filterValues = FilteringDialogDataHolder.instance()

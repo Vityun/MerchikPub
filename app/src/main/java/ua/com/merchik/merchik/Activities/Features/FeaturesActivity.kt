@@ -108,8 +108,13 @@ class FeaturesActivity : AppCompatActivity() {
                         .fillMaxSize(),
                     color = Color.Transparent,
                 ) {
-                    val user: UsersSDB = RoomManager.SQL_DB.usersDao().getUserById(Globals.userId)
+                    val currentUserId = Globals.getCurrentUserId()
+                    val user: UsersSDB? = RoomManager.SQL_DB.usersDao().getUserById(currentUserId)
+                    if (user == null) {
+                        Log.e("FeaturesActivity", "Current user not found: userId=$currentUserId")
+                    }
                     val animationTime = when {
+                        user == null -> 850
                         user.reportDate05 == null -> 2650
                         user.reportDate20 == null -> 1550
                         else -> 850

@@ -371,7 +371,7 @@ class TovarDBViewModel @Inject constructor(
             val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2.toLong()) ?: return false
             val rp = getCachedReportPrepare(codeDad2, tovar.getiD())
 
-            operetionSaveRPToDB(
+            val saved = operetionSaveRPToDB(
                 tpl = row.option,
                 rp = rp,
                 data = newValue,
@@ -379,6 +379,10 @@ class TovarDBViewModel @Inject constructor(
                 tovarId = tovar.getiD(),
                 wpDataDB = wpDataDB
             )
+
+            if (!saved) {
+                return false
+            }
 
             invalidateProductCodeItemCache(
                 stableId = itemId,
@@ -2595,7 +2599,7 @@ class TovarDBViewModel @Inject constructor(
 //                return@forEach
 //            }
 
-            operetionSaveRPToDB(
+            val saved = operetionSaveRPToDB(
                 tpl = tpl,
                 rp = rpBefore,
                 data = value1,
@@ -2604,7 +2608,9 @@ class TovarDBViewModel @Inject constructor(
                 wpDataDB = wpDataDB
             )
 
-            changedAny = true
+            if (saved) {
+                changedAny = true
+            }
         }
 
         if (changedAny) {
@@ -3065,7 +3071,7 @@ class TovarDBViewModel @Inject constructor(
         data2: String?,
         tovarId: String,
         wpDataDB: WpDataDB
-    ) {
+    ): Boolean {
         var rp = rp
         if (rp == null) {
             rp = createNewRPRow(tovarId, wpDataDB)
@@ -3079,7 +3085,7 @@ class TovarDBViewModel @Inject constructor(
 
         if (valueRequired && data.isNullOrEmpty()) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         val table = rp
@@ -3097,10 +3103,10 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.FACE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
                 val result =
-                    FaceSaveGuard.canSaveFace(context,wpDataDB, rp, data)
+                    FaceSaveGuard.canSaveFace(context, wpDataDB, rp, data)
 
                 if (result.isError) {
-                    return
+                    return false
                 }
                 RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
                     table!!.setFace(data)
@@ -3204,8 +3210,10 @@ class TovarDBViewModel @Inject constructor(
                 })
             }
 
-            else -> {}
+            else -> return false
         }
+
+        return true
     }
 
     private fun createNewRPRow(tovarId: String, wpDataDB: WpDataDB): ReportPrepareDB {

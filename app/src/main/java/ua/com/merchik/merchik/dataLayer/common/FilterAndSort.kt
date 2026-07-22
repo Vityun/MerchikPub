@@ -32,6 +32,7 @@ fun filterAndSortDataItems(
     searchText: String?,                  // uiState.filters?.searchText
     zoneId: ZoneId = ZoneId.systemDefault()
 ): FilterAndSortResult {
+    val dateParser = DateParseCache(zoneId)
 
     // --- подготовка входных данных ---
     val searchTerms: List<String> = searchText
@@ -82,7 +83,7 @@ fun filterAndSortDataItems(
                 if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
 
                 val raw = fv.value.rawValue
-                val ts = parseToMillis(raw, zoneId)
+                val ts = dateParser.parse(raw)
                 if (ts == null) {
                     Log.d(
                         "DBG_DATE_PARSE",
@@ -119,9 +120,9 @@ fun filterAndSortDataItems(
 
     // общий компаратор для сортировки (если есть)
     val baseComparator: Comparator<DataItemUI>? = if (hasActiveSorting) {
-        makeComparator(sortingFields.getOrNull(0), zoneId)
-            .thenComparing(makeComparator(sortingFields.getOrNull(1), zoneId))
-            .thenComparing(makeComparator(sortingFields.getOrNull(2), zoneId))
+        makeComparator(sortingFields.getOrNull(0), dateParser)
+            .thenComparing(makeComparator(sortingFields.getOrNull(1), dateParser))
+            .thenComparing(makeComparator(sortingFields.getOrNull(2), dateParser))
     } else null
 
     // --- без группировки: как раньше ---
@@ -149,7 +150,7 @@ fun filterAndSortDataItems(
 
     // 1) группируем по значению первого поля группировки
     val grouped: Map<List<Comparable<*>?>, List<DataItemUI>> = filtered.groupBy { item ->
-        extractGroupKeyValues(item, groupingForTopLevel, zoneId)
+        extractGroupKeyValues(item, groupingForTopLevel, dateParser)
     }
 
     // 2) компаратор для ключей групп (список из одного элемента, но код универсальный)
@@ -242,6 +243,29 @@ fun filterAndSortDataItems(
  * Возвращает null, если не удалось распарсить.
  */
 
+private class DateParseCache(private val zoneId: ZoneId) {
+    private val cache = HashMap<String, Long?>()
+
+    fun parse(raw: Any?): Long? {
+        if (raw == null) return null
+        if (raw is Date || raw is Number) {
+            return parseToMillis(raw, zoneId)
+        }
+
+        val value = raw.toString().trim()
+        if (value.isEmpty()) return null
+
+        val key = "${raw::class.java.name}|$value"
+        if (cache.containsKey(key)) {
+            return cache[key]
+        }
+
+        val parsed = parseToMillis(value, zoneId)
+        cache[key] = parsed
+        return parsed
+    }
+}
+
 fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
     if (raw == null) return null
     try {
@@ -259,10 +283,12 @@ fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
                 if (s.isEmpty()) return null
 
                 // numeric timestamp string
-                if (s.matches(Regex("^\\d+$"))) {
+                if (s.all { it.isDigit() }) {
                     val v = s.toLongOrNull() ?: return null
                     return normalizeEpochToMillis(v) ?: v
                 }
+
+                parseIsoLikeDateFast(s, zoneId)?.let { return it }
 
                 // ISO instant / offset / zoned
                 try { return Instant.parse(s).toEpochMilli() } catch (_: DateTimeParseException) {}
@@ -403,6 +429,54 @@ fun parseToMillis(raw: Any?, zoneId: ZoneId = ZoneId.systemDefault()): Long? {
 //    }
 //}
 
+private fun parseIsoLikeDateFast(s: String, zoneId: ZoneId): Long? {
+    if (s.length != 10 && s.length != 16 && s.length != 19) return null
+    if (s.length < 10 || s[4] != '-' || s[7] != '-') return null
+
+    val year = parseFixedInt(s, 0, 4) ?: return null
+    val month = parseFixedInt(s, 5, 7) ?: return null
+    val day = parseFixedInt(s, 8, 10) ?: return null
+
+    return try {
+        if (s.length == 10) {
+            LocalDate.of(year, month, day)
+                .atStartOfDay(zoneId)
+                .toInstant()
+                .toEpochMilli()
+        } else {
+            val separator = s[10]
+            if (separator != ' ' && separator != 'T') return null
+            if (s[13] != ':') return null
+
+            val hour = parseFixedInt(s, 11, 13) ?: return null
+            val minute = parseFixedInt(s, 14, 16) ?: return null
+            val second = if (s.length == 19) {
+                if (s[16] != ':') return null
+                parseFixedInt(s, 17, 19) ?: return null
+            } else {
+                0
+            }
+
+            LocalDateTime.of(year, month, day, hour, minute, second)
+                .atZone(zoneId)
+                .toInstant()
+                .toEpochMilli()
+        }
+    } catch (_: DateTimeException) {
+        null
+    }
+}
+
+private fun parseFixedInt(s: String, start: Int, end: Int): Int? {
+    var result = 0
+    for (index in start until end) {
+        val digit = s[index] - '0'
+        if (digit !in 0..9) return null
+        result = result * 10 + digit
+    }
+    return result
+}
+
 private fun normalizeEpochToMillis(v: Long): Long? {
     val abs = kotlin.math.abs(v)
 
@@ -450,7 +524,7 @@ private fun getFieldRaw(item: DataItemUI, key: String): Any? =
 
 private fun makeComparator(
     sf: SortingField?,
-    zoneId: ZoneId
+    dateParser: DateParseCache
 ): Comparator<DataItemUI> {
     if (sf?.key == null || sf.key.isBlank() || (sf.order != 1 && sf.order != -1)) {
         return Comparator { _, _ -> 0 }
@@ -481,11 +555,11 @@ private fun makeComparator(
         // 1) Даты сортируем по raw/date millis.
         // Но только если ключ реально похож на дату.
         if (looksLikeDateKey(key)) {
-            val leftDate = parseToMillis(leftRaw, zoneId)
-                ?: parseToMillis(leftText, zoneId)
+            val leftDate = dateParser.parse(leftRaw)
+                ?: dateParser.parse(leftText)
 
-            val rightDate = parseToMillis(rightRaw, zoneId)
-                ?: parseToMillis(rightText, zoneId)
+            val rightDate = dateParser.parse(rightRaw)
+                ?: dateParser.parse(rightText)
 
             val dateCmp = compareValues(leftDate, rightDate)
             if (dateCmp != 0) {
@@ -525,7 +599,7 @@ private fun makeComparator(
 private fun extractGroupKeyValues(
     item: DataItemUI,
     grouping: List<GroupingField>,
-    zoneId: ZoneId
+    dateParser: DateParseCache
 ): List<Comparable<*>?> {
     return grouping.map { g ->
         val key = g.key.orEmpty()
@@ -538,8 +612,8 @@ private fun extractGroupKeyValues(
         val text = fv?.value?.value?.trim().orEmpty()
 
         if (looksLikeDateKey(key)) {
-            val ts = parseToMillis(raw, zoneId)
-                ?: parseToMillis(text, zoneId)
+            val ts = dateParser.parse(raw)
+                ?: dateParser.parse(text)
 
             if (ts != null) {
                 return@map ts as Comparable<*>
