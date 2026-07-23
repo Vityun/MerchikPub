@@ -38,14 +38,34 @@ public class QuestionExchange {
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
+            Log.e("downloadQuestionAnswer", "quest_data.list start");
             RetrofitBuilder.getRetrofitInterface().GET_QUESTION_LIST(RetrofitBuilder.contentType, convertedObject)
                     .enqueue(new Callback<QuestionAnswerResponse>() {
                         @Override
                         public void onResponse(Call<QuestionAnswerResponse> call, Response<QuestionAnswerResponse> response) {
-                            if ( response.isSuccessful() && response.body() != null && response.body().getState()
-                                    && response.body().getList() != null && !response.body().getList().isEmpty()) {
-                                SQL_DB.questionAnswerDao().insertAll(response.body().getList());
+                            Log.e("downloadQuestionAnswer", "quest_data.list onResponse");
+                            QuestionAnswerResponse body = response.body();
+                            int listSize = body != null && body.getList() != null ? body.getList().size() : 0;
+                            Boolean state = body != null ? body.getState() : null;
+                            String error = body != null ? body.getError() : null;
+
+                            Globals.writeToMLOG(
+                                    "INFO",
+                                    "downloadQuestionAnswer/onResponse",
+                                    "quest_data.list code=" + response.code()
+                                            + ", successful=" + response.isSuccessful()
+                                            + ", state=" + state
+                                            + ", listSize=" + listSize
+                                            + ", error=" + error
+                            );
+
+                            if (response.isSuccessful()
+                                    && body != null
+                                    && Boolean.TRUE.equals(body.getState())
+                                    && body.getList() != null
+                                    && !body.getList().isEmpty()) {
+                                Log.e("downloadQuestionAnswer", "quest_data.list size: " + listSize);
+                                SQL_DB.questionAnswerDao().insertAll(body.getList());
                             }
 //                            if (response.isSuccessful() && response.body() != null &&
 //                            response.body())
@@ -53,6 +73,12 @@ public class QuestionExchange {
 
                         @Override
                         public void onFailure(Call<QuestionAnswerResponse> call, Throwable t) {
+                            Log.e("downloadQuestionAnswer", "quest_data.list onFailure: " + t.getMessage());
+                            Globals.writeToMLOG(
+                                    "ERROR",
+                                    "downloadQuestionAnswer/onFailure",
+                                    "quest_data.list Throwable: " + t + "\n" + Log.getStackTraceString(t)
+                            );
 
                         }
                     });

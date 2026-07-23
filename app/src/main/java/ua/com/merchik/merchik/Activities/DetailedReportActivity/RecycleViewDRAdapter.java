@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.DAY_SEC;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_IDEA;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_MANAGER_WRONG;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_NO_COMPLAINTS;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_OTHER;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_PAYMENT_INCREASE;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
@@ -934,7 +935,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                     THEME_OTHER,              // 6
                                     THEME_IDEA,               // 607
                                     THEME_PAYMENT_INCREASE,   // 610
-                                    THEME_MANAGER_WRONG       // 612
+                                    THEME_MANAGER_WRONG,      // 612
+                                    THEME_NO_COMPLAINTS       // 600
                             );
 
                             List<QuestionAnswerDB> answerDBSList = SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(

@@ -462,6 +462,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val additionalEarningsDialogState by viewModel.additionalEarningsDialogState.collectAsState()
     val customAditionalDialogRequest by viewModel.customAditionalDialogRequest.collectAsState()
     val wpDataList = remember { mutableStateListOf<WpDataDB>() }
+    val selectedItemColor = colorResource(id = R.color.selected_item)
 
     var hasInternet by remember { mutableStateOf(true) }
     var pendingMainDialog by remember { mutableStateOf(false) }
@@ -500,6 +501,21 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 putExtra("WpDataDB_ID", wpDataId)
             }
         )
+    }
+
+    fun showCreatedCustomAditionalVisits(wpDataIds: List<Long>, dateYmd: String) {
+        val ids = wpDataIds
+            .filter { it > 0L }
+            .distinct()
+        if (ids.isEmpty()) return
+
+        customAditionalSubmitDialogState = null
+        ensureCustomAditionalDateVisible(viewModel, dateYmd)
+        ScrollDataHolder.instance().addIdsWithClear(ids)
+        ids.forEach { viewModel.highlightBId(it, selectedItemColor) }
+        viewModel.selectOnlyItemsByStableIds(ids)
+        viewModel.updateContent()
+        viewModel.requestScrollToVisit(ids.first())
     }
 
     fun preloadCustomAditionalVisitDetailsInBackground(codeDad2List: List<Long>) {
@@ -741,6 +757,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     emptyList()
                 }
                 var createdVisitsSyncResult: OrderDataPreloadRepository.CreatedVisitsSyncResult? = null
+                var createdVisitWpIds = emptyList<Long>()
 
                 if (createdDad2List.isNotEmpty()) {
                     progress.setProgressPercent(
@@ -764,6 +781,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         .distinct()
 
                     if (foundWpIds.isNotEmpty()) {
+                        createdVisitWpIds = foundWpIds
                         ensureCustomAditionalDateVisible(viewModel, dateYmd)
                         ScrollDataHolder.instance().setIds(foundWpIds)
                         viewModel.requestScrollToVisit(foundWpIds.first())
@@ -794,6 +812,16 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     subTitle = formatVisitAddOneTimeResponseSubTitle(response),
                     message = formatVisitAddOneTimeResponse(response)
                         .withCreatedVisitsSyncWarning(createdVisitsSyncResult)
+                        .withCreatedVisitsLink(createdVisitWpIds.size),
+                    onTextLinkClick = if (createdVisitWpIds.isNotEmpty()) {
+                        { url ->
+                            if (url == CUSTOM_ADITIONAL_CREATED_VISITS_LINK) {
+                                showCreatedCustomAditionalVisits(createdVisitWpIds, dateYmd)
+                            }
+                        }
+                    } else {
+                        null
+                    }
                 )
 
                 if (success) {
@@ -3481,6 +3509,7 @@ private data class RepeatComplaintDialogState(
 private const val CUSTOM_ADITIONAL_DEFAULT_TIME_START = "00:00"
 private const val CUSTOM_ADITIONAL_DEFAULT_TIME_STOP = "00:00"
 private const val CUSTOM_ADITIONAL_ADDRESS_MAP_DISTANCE_METERS = 2_000f
+private const val CUSTOM_ADITIONAL_CREATED_VISITS_LINK = "app://custom_additional_created_visits"
 
 private data class CustomAditionalSubmitDialogState(
     val title: String,
@@ -3600,6 +3629,18 @@ private fun String.withCreatedVisitsSyncWarning(
             "Новий візит створено на сервері, але поки не отримано в план робіт. " +
             "Повторіть синхронізацію трохи пізніше.<br>" +
             "code_dad2: ${missingDad2.joinToString(", ").toHtmlMessage()}"
+}
+
+private fun String.withCreatedVisitsLink(foundVisitCount: Int): String {
+    if (foundVisitCount <= 0) return this
+
+    val label = if (foundVisitCount == 1) {
+        "Отобразить посещение в Плане Работ"
+    } else {
+        "Отобразить посещения в Плане Работ"
+    }
+
+    return this + "<br><br><a href=\"$CUSTOM_ADITIONAL_CREATED_VISITS_LINK\">$label</a>"
 }
 
 private fun JsonObject.optString(key: String): String? {

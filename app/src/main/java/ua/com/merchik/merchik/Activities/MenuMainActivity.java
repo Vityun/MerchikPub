@@ -59,7 +59,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -257,11 +259,14 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+//        new WPDataPauseExchange().syncInCron();
+
+        new QuestionExchange().downloadQuestionAnswer();
 //        downloadTest();
 //        uploadQuestionAnswersTest();
 //        new Translate().uploadNewTranslate();
 
-        downloadTradeMarksTable();
+//        downloadTradeMarksTable();
 
 //        new TablesLoadingUnloading().donwloadPlanBudget();
 

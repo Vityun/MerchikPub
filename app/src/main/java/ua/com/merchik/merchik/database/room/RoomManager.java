@@ -12,6 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Utils.DatabaseInitializer;
+import ua.com.merchik.merchik.data.synchronization.TableName;
 
 public class RoomManager {
 
@@ -52,7 +53,8 @@ public class RoomManager {
                         MIGRATION_72_73,
                         MIGRATION_73_74,
                         MIGRATION_74_75,
-                        MIGRATION_77_78
+                        MIGRATION_77_78,
+                        MIGRATION_78_79
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -955,6 +957,32 @@ public class RoomManager {
                             "`comment` TEXT, " +
                             "PRIMARY KEY(`id`)" +
                             ")"
+            );
+        }
+    };
+
+    public static final Migration MIGRATION_78_79 = new Migration(78, 79) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `wp_data_pause` (" +
+                            "`code_dad2` INTEGER NOT NULL, " +
+                            "`dt_start` INTEGER NOT NULL, " +
+                            "`dt_end` INTEGER NOT NULL, " +
+                            "`dt_update_client` INTEGER NOT NULL, " +
+                            "`uploadStatus` INTEGER NOT NULL DEFAULT 0, " +
+                            "PRIMARY KEY(`code_dad2`, `dt_start`)" +
+                            ")"
+            );
+
+            database.execSQL(
+                    "INSERT OR IGNORE INTO `synchronization_timetable` " +
+                            "(`id`, `tableName`, `syncPeriodSeconds`, `lastDownloadTime`, `lastUploadTime`, " +
+                            "`downloadedItems`, `uploadedItems`, `description`, `isUserGenerated`, " +
+                            "`lastDownloadStatus`, `lastUploadStatus`) VALUES (" +
+                            TableName.WP_DATA_PAUSE.ordinal() + ", " +
+                            "'wp_data_pause', " +
+                            "600, 0, 0, 0, 0, 'Auto-generated', 1, 0, 0)"
             );
         }
     };

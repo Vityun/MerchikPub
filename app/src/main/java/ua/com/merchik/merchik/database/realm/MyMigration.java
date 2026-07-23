@@ -312,6 +312,28 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 28) {
+            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
+
+            if (wpDataSchema != null) {
+                if (!wpDataSchema.hasField("pause_duration")) {
+                    wpDataSchema.addField("pause_duration", int.class);
+                }
+
+                if (!wpDataSchema.hasField("pause_dt_start")) {
+                    wpDataSchema.addField("pause_dt_start", long.class);
+                }
+
+                if (!wpDataSchema.hasField("pause_dt_end")) {
+                    wpDataSchema.addField("pause_dt_end", long.class);
+                }
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "WpDataDB schema is null");
+            }
+
+            oldVersion++;
+        }
+
     }
 }
 

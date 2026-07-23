@@ -117,7 +117,8 @@ class QuestionAnswerSDBViewModel @Inject constructor(
                 OptionControlQuestionAnswer.THEME_OTHER,  // 6
                 OptionControlQuestionAnswer.THEME_IDEA,  // 607
                 OptionControlQuestionAnswer.THEME_PAYMENT_INCREASE,  // 610
-                OptionControlQuestionAnswer.THEME_MANAGER_WRONG // 612
+                OptionControlQuestionAnswer.THEME_MANAGER_WRONG, // 612
+                OptionControlQuestionAnswer.THEME_NO_COMPLAINTS  // 600
             )
 
             val data  = RoomManager.SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(

@@ -156,6 +156,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     private String controller_opinion_author_id;
 
     private String duration_plan;
+    private int pause_duration;
+    private long pause_dt_start;
+    private long pause_dt_end;
 
     @Ignore
     public String statusComment;
@@ -1110,6 +1113,30 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         this.controller_opinion_author_id = controller_opinion_author_id;
     }
 
+    public int getPause_duration() {
+        return pause_duration;
+    }
+
+    public void setPause_duration(int pause_duration) {
+        this.pause_duration = pause_duration;
+    }
+
+    public long getPause_dt_start() {
+        return pause_dt_start;
+    }
+
+    public void setPause_dt_start(long pause_dt_start) {
+        this.pause_dt_start = pause_dt_start;
+    }
+
+    public long getPause_dt_end() {
+        return pause_dt_end;
+    }
+
+    public void setPause_dt_end(long pause_dt_end) {
+        this.pause_dt_end = pause_dt_end;
+    }
+
 
     @Override
     public int describeContents() {
@@ -1236,6 +1263,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         controller_opinion_id = in.readString();
         controller_opinion_author_id = in.readString();
         duration_plan = in.readString();
+        pause_duration = in.readInt();
+        pause_dt_start = in.readLong();
+        pause_dt_end = in.readLong();
     }
 
     @Override
@@ -1358,6 +1388,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeString(controller_opinion_id);
         dest.writeString(controller_opinion_author_id);
         dest.writeString(duration_plan);
+        dest.writeInt(pause_duration);
+        dest.writeLong(pause_dt_start);
+        dest.writeLong(pause_dt_end);
     }
 
     public static final Parcelable.Creator<WpDataDB> CREATOR = new Parcelable.Creator<WpDataDB>() {
@@ -1393,7 +1426,8 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "addr_location_xd, addr_location_yd, action_short_txt, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
                 "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
-                "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id, statusComment, duration_plan";
+                "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id, statusComment, duration_plan, " +
+                "pause_duration, pause_dt_start, pause_dt_end";
 
 //        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
     }

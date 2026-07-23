@@ -31,6 +31,7 @@ public class DatabaseInitializer {
     public void initializeDefaultData() {
         List<SynchronizationTimeTable> defaultTables = Arrays.asList(
                 createDefaultEntry(TableName.WP_DATA, MINUTE_10, true),
+                createDefaultEntry(TableName.WP_DATA_PAUSE, MINUTE_10, true),
                 createDefaultEntry(TableName.IMAGE_TP, 600, false),
                 createDefaultEntry(TableName.CLIENT_GROUP_TP, 3600, false),
                 createDefaultEntry(TableName.LOG_MP, 600, false),

@@ -69,6 +69,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.ServerExchange.fcm.FcmTokenSenderRx;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
@@ -1074,6 +1075,12 @@ public class Exchange {
                             updateTAR(SQL_DB.tarDao().getByUploadStatusVotes());
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "startExchange/updateTAR", "Exception e: " + e);
+                        }
+
+                        try {
+                            new WPDataPauseExchange().syncInCron();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "startExchange/syncInCron.WPDataPauseSDB", "Exception e: " + e);
                         }
 
                         try {

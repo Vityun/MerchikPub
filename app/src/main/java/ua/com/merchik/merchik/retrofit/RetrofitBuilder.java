@@ -75,6 +75,10 @@ public class RetrofitBuilder {
         // Регистрация пользовательского адаптера для Date
         gsonBuilder.registerTypeAdapter(Date.class, new CustomDateTypeAdapter());
         gsonBuilder.registerTypeAdapter(String.class, new CleanStringAdapter());
+        gsonBuilder.registerTypeAdapter(Long.class, new FlexibleLongTypeAdapter(null));
+        gsonBuilder.registerTypeAdapter(long.class, new FlexibleLongTypeAdapter(0L));
+        gsonBuilder.registerTypeAdapter(Integer.class, new FlexibleIntegerTypeAdapter(null));
+        gsonBuilder.registerTypeAdapter(int.class, new FlexibleIntegerTypeAdapter(0));
 
 
         Gson gson = gsonBuilder.create();

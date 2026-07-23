@@ -388,6 +388,12 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             int firstCount = firstPartAnswers != null ? firstPartAnswers.size() : 0;
             int secondCount = secondPartAnswers != null ? secondPartAnswers.size() : 0;
 
+            if (firstCount > 0 && secondCount > 0) {
+                stringBuilderMsg
+                        .append(" Увага! Вам потрібно подавати зауваження ОКРІМ \"зауважень нема\".");
+                return;
+            }
+
             if (firstCount == 0 && secondCount > 0) {
                 long answerDateSec = getLatestQuestionAnswerDateSec(secondPartAnswers);
 
@@ -456,7 +462,8 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             }
 
             if (answer.getDt() != null) {
-                return answer.getDt() / 1000L;
+                long rawDate = answer.getDt();
+                return rawDate > 100000000000L ? rawDate / 1000L : rawDate;
             }
 
         } catch (Exception e) {

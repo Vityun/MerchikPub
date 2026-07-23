@@ -74,6 +74,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;

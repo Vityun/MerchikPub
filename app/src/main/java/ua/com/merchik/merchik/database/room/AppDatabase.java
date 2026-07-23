@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
+import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.synchronization.ConverterSynchronizationTimetable;
@@ -113,6 +114,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VacancyDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VideoViewDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
 
 @SuppressLint("RestrictedApi")
 @Database(
@@ -169,9 +171,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataAdditionalDao;
                 InitStateEntity.class,
                 LocationDevices.class,
                 QuestionAnswerDB.class,
-                OrderDataSDB.class
+                OrderDataSDB.class,
+                WPDataPauseSDB.class
         },
-        version = 78
+        version = 79
 )
 
 
@@ -281,6 +284,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract QuestionAnswerDao questionAnswerDao();
 
     public abstract OrderDataDao orderDataDao();
+
+    public abstract WPDataPauseDao wpDataPauseDao();
 
     public class MyAutoMigration {
     }
