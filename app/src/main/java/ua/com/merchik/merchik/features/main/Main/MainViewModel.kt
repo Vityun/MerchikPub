@@ -994,10 +994,11 @@ abstract class MainViewModel(
         items: List<DataItemUI>, selectedIds: Set<Long>
     ): List<DataItemUI> {
         return items.map { item ->
-            val isSelected = item.rawObj.any { raw ->
+            val isSelectedByWorkPlanHolder = item.rawObj.any { raw ->
                 (raw as? WpDataDB)?.id in selectedIds
             }
-            item.copy(selected = isSelected)
+            val isSelected = item.selected || isSelectedByWorkPlanHolder
+            if (item.selected == isSelected) item else item.copy(selected = isSelected)
         }
     }
 
