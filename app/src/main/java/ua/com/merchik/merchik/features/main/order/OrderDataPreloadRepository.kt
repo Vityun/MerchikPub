@@ -17,6 +17,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Utils.TrustedTime
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
@@ -703,12 +704,12 @@ object OrderDataPreloadRepository {
     }
 
     private fun defaultDtChangeFrom(): String {
-        val nowSeconds = System.currentTimeMillis() / 1000L
+        val nowSeconds = TrustedTime.nowServerSecOrLocalSec()
         return (nowSeconds - DEFAULT_ORDER_PERIOD_DAYS * 24L * 60L * 60L).toString()
     }
 
     private fun defaultDtChangeTo(): String {
-        return (System.currentTimeMillis() / 1000L).toString()
+        return TrustedTime.nowServerSecOrLocalSec().toString()
     }
 
     private fun executeJsonRequest(requestName: String, request: JsonObject): JsonObject {

@@ -87,6 +87,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
@@ -1893,6 +1894,10 @@ public class Options {
             case 151122:
                 OptionButtonQuestionAnswer<?> optionButtonQuestionAnswer = new OptionButtonQuestionAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
+            case 139337:
+                OptionButtonPauseWork<?> optionButtonPauseWork = new OptionButtonPauseWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
 
             case 157274:
             case 157275:

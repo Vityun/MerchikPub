@@ -251,7 +251,10 @@ public class DialogAchievement {
     // =============================================================================================
 
     public void setAchievement(AchievementsSDB achievement) {
-        setTitle("Досягнення (" + achievement.serverId + ")");
+        String achievementId = achievement.serverId == null || achievement.serverId <= 0
+                ? achievement.id + "*"
+                : String.valueOf(achievement.serverId);
+        setTitle("Досягнення (" + achievementId + ")");
         setPhotos(achievement);
         setAchievementData(achievement);
     }

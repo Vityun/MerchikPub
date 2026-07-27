@@ -34,6 +34,10 @@ public class TARFragmentHome extends Fragment {
     public TARSecondFrag secondFrag;
     private TARViewModel viewModel;
 
+    public TARFragmentHome() {
+    }
+
+    @Deprecated
     public TARFragmentHome(FragmentManager fragmentManager) {
         this.fragmentManager = fragmentManager;
         Log.d("test", "test");
@@ -46,7 +50,7 @@ public class TARFragmentHome extends Fragment {
     }
 
     public static TARFragmentHome newInstance(FragmentManager fragmentManager) {
-        TARFragmentHome fragment = new TARFragmentHome(fragmentManager);
+        TARFragmentHome fragment = new TARFragmentHome();
         fragment.setFragmentManager(fragmentManager);
         return fragment;
     }
@@ -83,9 +87,19 @@ public class TARFragmentHome extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Fragment existingFragment = getChildFragmentManager().findFragmentById(R.id.frame_layout);
+        if (existingFragment != null) {
+            if (existingFragment instanceof TARSecondFrag) {
+                secondFrag = (TARSecondFrag) existingFragment;
+                return;
+            }
+        }
+
         Fragment childFragment = setHomeFrag();
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_layout, childFragment).commit();
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frame_layout, childFragment)
+                .commit();
     }
 
 
@@ -117,7 +131,7 @@ public class TARFragmentHome extends Fragment {
             @Override
             public void onSuccess(TasksAndReclamationsSDB data) {
                 viewModel.setTasksAndReclamations(data);
-                secondFrag = new TARSecondFrag(fragmentManager, data);
+                secondFrag = TARSecondFrag.newInstance(data);
 
                 FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
                 transaction.replace(R.id.frame_layout, secondFrag, "TARSecondFrag").commit();

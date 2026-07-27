@@ -45,11 +45,15 @@ public class TARTab extends FragmentStateAdapter {
 //    }
 
     public void setDataToFrag3(Integer id) {
-        tab3Fragment.setPhoto(id);
+        if (tab3Fragment != null) {
+            tab3Fragment.setPhoto(id);
+        }
     }
 
     public void setDataToFrag3(Integer id, int tarCommentIndex) {
-        tab3Fragment.setPhotoTARComment(id, tarCommentIndex);
+        if (tab3Fragment != null) {
+            tab3Fragment.setPhotoTARComment(id, tarCommentIndex);
+        }
     }
 
 
@@ -63,11 +67,11 @@ public class TARTab extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0:
-                return new Tab1Fragment(data);
+                return Tab1Fragment.newInstance(data);
             case 1:
-                return new Tab2Fragment(data);
+                return Tab2Fragment.newInstance(data);
             case 3:
-                return tab3Fragment = new Tab3Fragment(data);
+                return tab3Fragment = Tab3Fragment.newInstance(data);
             case 2:
 //                return new DetailedReportTovarsFrag(myContext, data);
                 return DetailedReportTovarsFrag.newInstance(data);

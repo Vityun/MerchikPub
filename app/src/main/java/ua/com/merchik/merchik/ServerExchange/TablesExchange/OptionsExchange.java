@@ -48,7 +48,10 @@ public class OptionsExchange {
         call.enqueue(new retrofit2.Callback<OptionsServer>() {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
-                Log.e("downloadOptions", "response: " + response.body());
+                Log.e("downloadOptions", "response: code=" + response.code()
+                        + ", success=" + response.isSuccessful()
+                        + ", state=" + (response.body() != null ? response.body().getState() : null)
+                        + ", listSize=" + (response.body() != null && response.body().getList() != null ? response.body().getList().size() : 0));
                 if (response.isSuccessful() && response.body() != null
                         && response.body().getState() && response.body().getList() != null
                         && !response.body().getList().isEmpty())

@@ -241,8 +241,8 @@ public class RetrofitBuilder {
         }
 
         final int userId = currentUserId;
-        final String token = Globals.token;
-        final String sessionId = Globals.session;
+        final String token = Globals.getCurrentToken();
+        final String sessionId = Globals.getCurrentSessionId();
 
         Globals.writeToMLOG("INFO", "WebSocket/Headers", "Headers: " + request.headers().toString());
 

@@ -41,9 +41,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -849,18 +847,38 @@ public class PhotoReportActivity extends toolbar_menus {
      * */
     /***/
     public static File resaveBitmap(File img, int rotation) { //help for fix landscape photos
-        OutputStream outStream = null;
         File file = new File(img.toURI());
+        Bitmap bitmap = null;
+        Bitmap rotatedBitmap = null;
+        Bitmap scaledBitmap = null;
         try {
-            Bitmap bitmap = BitmapFactory.decodeFile(file.getPath());
-            bitmap = checkRotationFromCamera(bitmap, file.getPath(), rotation);
-            bitmap = Bitmap.createScaledBitmap(bitmap, (int) ((float) bitmap.getWidth() * 0.3f), (int) ((float) bitmap.getHeight() * 0.3f), false);
-            outStream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-            outStream.flush();
-            outStream.close();
+            bitmap = decodeSampledBitmapFromResource(file, 2000, 2000);
+            if (bitmap == null) {
+                return file;
+            }
+            rotatedBitmap = checkRotationFromCamera(bitmap, file.getPath(), rotation);
+            scaledBitmap = Bitmap.createScaledBitmap(
+                    rotatedBitmap,
+                    Math.max(1, (int) ((float) rotatedBitmap.getWidth() * 0.3f)),
+                    Math.max(1, (int) ((float) rotatedBitmap.getHeight() * 0.3f)),
+                    false
+            );
+            try (OutputStream outStream = new FileOutputStream(file)) {
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
+                outStream.flush();
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (scaledBitmap != null && !scaledBitmap.isRecycled()) {
+                scaledBitmap.recycle();
+            }
+            if (rotatedBitmap != null && rotatedBitmap != bitmap && !rotatedBitmap.isRecycled()) {
+                rotatedBitmap.recycle();
+            }
+            if (bitmap != null && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
         }
         return file;
     }
@@ -881,7 +899,6 @@ public class PhotoReportActivity extends toolbar_menus {
     // Создание уменьшеного файла
     public static File resizeImageFile(Context context, File image) {
         File f = null;
-        Bitmap res = null;
         int origWidth, origHeight;
         Bitmap readyToDecode;
 
@@ -900,37 +917,23 @@ public class PhotoReportActivity extends toolbar_menus {
         if (origWidth > destWidth) {
             int destHeight = origHeight / (origWidth / destWidth);
             Bitmap b2 = Bitmap.createScaledBitmap(readyToDecode, destWidth, destHeight, false);
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            b2.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
-            res = b2;
-
             try {
                 f = createImageFile(context);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            //write the bytes in file
-            FileOutputStream fo = null;
-            try {
-                fo = new FileOutputStream(f);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            try {
+            try (FileOutputStream fo = f != null ? new FileOutputStream(f) : null) {
                 if (fo != null) {
-                    fo.write(outStream.toByteArray());
+                    b2.compress(Bitmap.CompressFormat.JPEG, 90, fo);
+                    fo.flush();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            // remember close de FileOutput
-            try {
-                if (fo != null) {
-                    fo.close();
+            } finally {
+                if (b2 != readyToDecode && !b2.isRecycled()) {
+                    b2.recycle();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } else {
             //Globals.alertDialogMsg("Фото ужать не вышло. Оно слишком маленькое. (Ошибка №0)", this);
@@ -938,6 +941,9 @@ public class PhotoReportActivity extends toolbar_menus {
         }
 
         image.delete(); //Удаление полноразмерной фотографии
+        if (readyToDecode != null && !readyToDecode.isRecycled()) {
+            readyToDecode.recycle();
+        }
         return f;
     }
 
@@ -1047,6 +1053,8 @@ public class PhotoReportActivity extends toolbar_menus {
 
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            options.inDither = true;
             return BitmapFactory.decodeFile(res.getAbsolutePath(), options);
         } catch (Exception e) {
             e.printStackTrace();

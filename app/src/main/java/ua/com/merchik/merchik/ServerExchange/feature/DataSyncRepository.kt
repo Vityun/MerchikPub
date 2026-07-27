@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.ServerExchange.feature
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import ua.com.merchik.merchik.ServerExchange.feature.strategy.WpDataSyncStrategy
+import ua.com.merchik.merchik.Utils.TrustedTime
 import ua.com.merchik.merchik.data.SynchronizationTimeTable
 import ua.com.merchik.merchik.data.synchronization.DownloadStatus
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao
@@ -37,7 +38,11 @@ class DataSyncRepository {
 
             val result = strategy.sync(info.lastDownloadTime)
             val updated = info.copy(
-                lastDownloadTime = System.currentTimeMillis() / 1000,
+                lastDownloadTime = if (result.success) {
+                    TrustedTime.syncWatermarkSec(info.lastDownloadTime, 120)
+                } else {
+                    info.lastDownloadTime
+                },
                 lastDownloadStatus = if (result.success) DownloadStatus.SUCCESS else DownloadStatus.ERROR,
                 downloadedItems = result.downloadedItems
             )
@@ -56,7 +61,6 @@ class DataSyncRepository {
     }
 
     private fun isTimeToSync(info: SynchronizationTimeTable): Boolean {
-        val current = System.currentTimeMillis() / 1000
-        return (current - info.lastDownloadTime) >= info.syncPeriodSeconds
+        return TrustedTime.isSyncDue(info.lastDownloadTime, info.syncPeriodSeconds)
     }
 }

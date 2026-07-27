@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -14,6 +15,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -56,21 +58,22 @@ public class EKLExchange {
                 public void onResponse(Call<EKLResponse> call, Response<EKLResponse> response) {
                     try {
                         if (response.body() != null){
-                            Log.e("downloadEKLTable", "response.body(): " + response.body());
-                            Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
+                            List<EKL_SDB> list = response.body().list != null ? response.body().list : Collections.emptyList();
+                            Log.e("downloadEKLTable", "response: code=" + response.code() + ", listSize=" + list.size());
+                            Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): " + list.size());
                             Log.e("downloadEKLTable", "1");
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 Log.e("downloadEKLTable", "2");
                                 if (synchronizationTimetableDB != null){
                                     Log.e("downloadEKLTable", "3");
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                     Log.e("downloadEKLTable", "4");
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                     Log.e("downloadEKLTable", "5");
                                 }
                             });
                             Log.e("downloadEKLTable", "6");
-                            exchange.onSuccess(response.body().list);
+                            exchange.onSuccess(list);
                             Log.e("downloadEKLTable", "7");
                         }else {
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

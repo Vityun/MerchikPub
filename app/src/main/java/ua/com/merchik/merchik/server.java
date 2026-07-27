@@ -11,6 +11,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 
 
 public class server {
@@ -167,7 +168,15 @@ public class server {
                         }
                         test = response.body().getState();
                         RetrofitBuilder.setServerStatusUI(response.body().getState());
-                        RetrofitBuilder.setServerTime(response.body().getServer_time());
+                        Long serverTime = response.body().getServer_time();
+                        if (serverTime != null) {
+                            RetrofitBuilder.setServerTime(serverTime);
+                            TrustedTime.updateFromServer(serverTime);
+                            Log.e("TIME", "8======> " + serverTime);
+                        } else {
+                            RetrofitBuilder.setServerTime(0);
+                            Globals.writeToMLOG("WARN", "server/serverIsOn", "server_time is null");
+                        }
                         Globals.serverGetTime = System.currentTimeMillis();
                     }
                 }
@@ -293,11 +302,11 @@ public class server {
                             }
                         } else {
                             Globals.onlineStatus = true;
-                            Globals.session = response.body().getSessionId();
+                            Globals.setCurrentSessionId(response.body().getSessionId());
                             if (resp.websocketParam != null && resp.websocketParam.token != null) {
-                                Globals.token = resp.websocketParam.token;
+                                Globals.setCurrentToken(resp.websocketParam.token);
                             }
-                            Log.e("current_session","sessionId: " + Globals.session);
+                            Log.e("current_session","sessionId: " + Globals.getCurrentSessionId());
                             if (resp.getUserInfo() != null) {
                                 Log.e("sessionCheckAndLogin", "Сессия нормальная - работаем дальше" + " /Кто залогинен, если все ок:" + resp.getUserInfo().getFio());
                             }

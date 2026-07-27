@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
@@ -606,7 +607,7 @@ public class PhotoDownload {
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
                     if (size > 0) {
-                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                         RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                         savePhotoInfoToDB(response.body().getList());
 //                        savePhotoToDB(response.body().getList());
@@ -799,7 +800,7 @@ public class PhotoDownload {
             SynchronizationTimetableDB sync = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
 
             RealmManager.INSTANCE.executeTransaction((realm) -> {
-                sync.setVpi_app(System.currentTimeMillis() / 1000);
+                sync.setVpi_app(TrustedTime.syncWatermarkSec(sync.getVpi_app(), 120));
             });
 
             RealmManager.setToSynchronizationTimetableDB(sync);

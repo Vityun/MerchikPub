@@ -41,6 +41,7 @@ import java.util.Objects;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -239,9 +240,10 @@ public class DialogCreateAchievement {
         save.setOnClickListener(v -> {
             try {
                 AchievementsSDB achievementsSDB = new AchievementsSDB();
-                achievementsSDB.serverId = 0;
-                achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
-                achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
+                long nowSec = TrustedTime.nowServerSecOrLocalSec();
+                achievementsSDB.serverId = SQL_DB.achievementsDao().getNextLocalServerId();
+                achievementsSDB.dt = String.valueOf(nowSec);
+                achievementsSDB.dt_ut = nowSec;
                 achievementsSDB.addrId = addressId;
                 achievementsSDB.adresaNm = addressTxt;
                 achievementsSDB.dvi = 1;
@@ -255,7 +257,7 @@ public class DialogCreateAchievement {
                 achievementsSDB.codeDad2 = codeDad2;
                 achievementsSDB.sotrFio = userTxt;
                 if (comment != null && comment.getText() != null && comment.getText().toString().length() > 10) {
-                    achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
+                    achievementsSDB.commentDt = String.valueOf(nowSec);
                     achievementsSDB.commentUser = String.valueOf(userId);
                     achievementsSDB.commentTxt = comment.getText().toString();
                 } else {

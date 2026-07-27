@@ -8,6 +8,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CityResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -42,7 +43,7 @@ public class CityExchange {
                     try {
                         if (response.body() != null){
                             RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                             });
                             exchange.onSuccess(response.body().list);

@@ -286,24 +286,35 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             if (requestCode == 200) {
                 if (resultCode != 0){
-                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + MakePhoto.openCameraPhotoUri);
+                    String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + photoPath);
 
                     TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
 
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
 
-                    StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
+                    if (photoPath == null || photoPath.trim().isEmpty()) {
+                        Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.requestCode200", "Photo path is empty");
+                        MakePhoto.clearPendingPhoto(this);
+                        return;
+                    }
+
+                    StackPhotoDB stackPhotoDB = savePhoto(photoPath, tar);
                     String stackJson = new Gson().toJson(stackPhotoDB);
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
 
-                    MakePhoto.openCameraPhotoUri = null;
+                    MakePhoto.clearPendingPhoto(this);
 
                     List<Fragment> fragments = fragmentManager.getFragments();
                     TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
-                    fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                    if (stackPhotoDB != null) {
+                        fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                    }
                 }else {
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.resultCode", "resultCode.resultCode: " + resultCode);
+                    MakePhoto.deletePendingPhotoFileIfExists(this);
+                    MakePhoto.clearPendingPhoto(this);
                 }
             }
 
@@ -314,7 +325,15 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 AddressDB addr = fragmentHome.homeFrag.dialog.address;
                 CustomerDB client = fragmentHome.homeFrag.dialog.customer;
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client, fragmentHome.secondFrag.data);
+                String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+                if (photoPath == null || photoPath.trim().isEmpty()) {
+                    Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.requestCode202", "Photo path is empty");
+                    MakePhoto.clearPendingPhoto(this);
+                    return;
+                }
+
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client, fragmentHome.secondFrag.data);
+                MakePhoto.clearPendingPhoto(this);
 
                 fragmentHome.homeFrag.dialog.setData(stackPhotoDB);
                 fragmentHome.homeFrag.dialog.setDataUpdate();
@@ -356,10 +375,19 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "CustomerSDB: " + client);
                 Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "clientRealm: " + clientRealm);
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, clientRealm, fragmentHome.secondFrag.data);
-                MakePhoto.openCameraPhotoUri = null;
+                String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+                if (photoPath == null || photoPath.trim().isEmpty()) {
+                    Globals.writeToMLOG("ERROR", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Photo path is empty");
+                    MakePhoto.clearPendingPhoto(this);
+                    return;
+                }
 
-                fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, clientRealm, fragmentHome.secondFrag.data);
+                MakePhoto.clearPendingPhoto(this);
+
+                if (stackPhotoDB != null) {
+                    fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+                }
             }
 
 
@@ -471,7 +499,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setClient_id(client.getId());
             stackPhotoDB.setCustomerTxt(client.getNm());
 
-            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUser_id(Globals.getCurrentUserId());
             if (tar.themeId == 150){
                 stackPhotoDB.setPhoto_type(18);
                 stackPhotoDB.tovar_id = String.valueOf(tar.refId);
@@ -517,7 +545,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setClient_id(client.getId());
             stackPhotoDB.setCustomerTxt(client.getNm());
 
-            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUser_id(Globals.getCurrentUserId());
             if (tar.themeId == 150){
                 stackPhotoDB.setPhoto_type(18);
                 stackPhotoDB.tovar_id = String.valueOf(tar.refId);
@@ -567,8 +595,9 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             String GP = log != null ? log.gp : "";
             stackPhotoDB.gp = GP;
 
-            stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
+            int currentUserId = Globals.getCurrentUserId();
+            stackPhotoDB.setUser_id(currentUserId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(currentUserId));
             stackPhotoDB.setPhoto_type(18);      // Фото Товара
             stackPhotoDB.tovar_id = String.valueOf(tasksAndReclamationsSDB.refId);
 

@@ -681,7 +681,7 @@ public class menu_login extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getState()) {
                         Toast.makeText(menu_login.this, "Вы разлогинились.", Toast.LENGTH_SHORT).show();
-                        Globals.session = null;
+                        Globals.clearCurrentSessionData();
                     }
                 }
             }
@@ -1613,7 +1613,7 @@ public class menu_login extends AppCompatActivity {
 
                             // Сохраняем id сессии
                             if (resp.getSessionId() != null && !resp.getSessionId().equals("")) {
-                                Globals.session = resp.getSessionId();
+                                Globals.setCurrentSessionId(resp.getSessionId());
 //                                CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
                                 new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
                                 Log.e("APP_LOGIN", "AUTH SESSION: " + resp.getSessionId());
@@ -1644,7 +1644,7 @@ public class menu_login extends AppCompatActivity {
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
-                                        Globals.token = resp.websocketParam.token;
+                                        Globals.setCurrentToken(resp.websocketParam != null ? resp.websocketParam.token : null);
                                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
 
                                         intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
@@ -1771,7 +1771,7 @@ public class menu_login extends AppCompatActivity {
 
                     SessionCheck resp = RESPONSE.body();
 
-                    Globals.session = resp.getSessionId();
+                    Globals.setCurrentSessionId(resp.getSessionId());
 //                    CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
                     new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
 
@@ -1815,7 +1815,7 @@ public class menu_login extends AppCompatActivity {
                         new TablesLoadingUnloading().downloadMenu();
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                         Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
-                        Globals.token = resp.websocketParam.token;
+                        Globals.setCurrentToken(resp.websocketParam != null ? resp.websocketParam.token : null);
                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
                         // ------------
 

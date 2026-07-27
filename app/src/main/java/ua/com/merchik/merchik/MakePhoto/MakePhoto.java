@@ -359,6 +359,8 @@ public class MakePhoto {
 
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 ((DetailedReportActivity) mContext).startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
@@ -436,9 +438,12 @@ public class MakePhoto {
                 }
 
                 MakePhoto.openCameraPhotoUri = photo.getAbsolutePath();
+                persistPendingPhoto(activity, MakePhoto.openCameraPhotoUri);
 
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 intent.putExtra("photo_uri", contentUri);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 activity.startActivityForResult(intent, requestCode);
             }
@@ -605,6 +610,7 @@ public class MakePhoto {
         planogram_img_id = notNull(state.planogramImgId);
         example_id = notNull(state.exampleId);
         example_img_id = notNull(state.exampleImgId);
+        openCameraPhotoUri = state.photoNum;
         return state;
     }
 
@@ -617,12 +623,37 @@ public class MakePhoto {
         return state != null ? state.photoNum : null;
     }
 
+    public static String getOpenCameraPhotoPath(Context context) {
+        if (!isBlank(openCameraPhotoUri)) {
+            return openCameraPhotoUri;
+        }
+
+        PendingPhotoState state = restorePendingPhoto(context);
+        return state != null ? state.photoNum : null;
+    }
+
+    public static void deletePendingPhotoFileIfExists(Context context) {
+        String pendingPhotoNum = getPendingPhotoNum(context);
+        if (isBlank(pendingPhotoNum)) {
+            return;
+        }
+
+        try {
+            File file = new File(pendingPhotoNum);
+            if (file.exists() && file.length() <= 1) {
+                file.delete();
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     public static void clearPendingPhoto(Context context) {
         SharedPreferences prefs = pendingPhotoPrefs(context);
         if (prefs != null) {
             prefs.edit().clear().apply();
         }
         photoNum = null;
+        openCameraPhotoUri = null;
     }
 
     public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
@@ -646,8 +677,11 @@ public class MakePhoto {
             Uri uri = getPhotoUri(activity, photoFile);
 
             intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             photoNum = photoFile.getAbsolutePath();
+            openCameraPhotoUri = photoNum;
             persistPendingPhoto(activity, photoNum);
 
             boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile, clickVoid);

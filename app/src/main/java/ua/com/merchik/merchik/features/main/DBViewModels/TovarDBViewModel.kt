@@ -79,7 +79,6 @@ import ua.com.merchik.merchik.dataLayer.model.buildOptionCodeField
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
-import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm
@@ -484,22 +483,6 @@ class TovarDBViewModel @Inject constructor(
 //            data.map { it.nm },
 //            false
 //        )
-
-        val clientId = Gson().fromJson(dataJson, JSONObject::class.java).getString("clientId")
-        val client = CustomerRealm.getCustomerById(clientId)
-        val filterCustomerSDB = ItemFilter(
-            "Клиент",
-            CustomerSDB::class,
-            CustomerSDBViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "title",
-            "subTitle",
-            "client_id",
-            "id",
-            mutableListOf(client.id),
-            mutableListOf(client.nm),
-            false
-        )
 
 //        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_NEW)
 //            filters = Filters(

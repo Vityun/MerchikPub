@@ -9,6 +9,7 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,6 +20,8 @@ import ua.com.merchik.merchik.Globals;
 public class FlexibleLongTypeAdapter extends TypeAdapter<Long> {
 
     private static final String TAG = "FlexibleLongAdapter";
+    private static final BigInteger LONG_MIN = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
     private static final String[] DATE_PATTERNS = {
             "MMM d yyyy hh:mm:ss:a",
             "MMM dd yyyy hh:mm:ss:a",
@@ -90,7 +93,7 @@ public class FlexibleLongTypeAdapter extends TypeAdapter<Long> {
         }
 
         try {
-            return new BigDecimal(value).toBigIntegerExact().longValueExact();
+            return safeBigIntegerToLong(new BigDecimal(value).toBigIntegerExact(), value);
         } catch (ArithmeticException | NumberFormatException ignored) {
             // The server sometimes returns a textual date in fields declared as Long.
         }
@@ -102,6 +105,15 @@ public class FlexibleLongTypeAdapter extends TypeAdapter<Long> {
 
         logBadValue(value);
         return fallbackValue;
+    }
+
+    private Long safeBigIntegerToLong(BigInteger value, String rawValue) {
+        if (value.compareTo(LONG_MIN) < 0 || value.compareTo(LONG_MAX) > 0) {
+            logBadValue(rawValue);
+            return fallbackValue;
+        }
+
+        return value.longValue();
     }
 
     private static Long parseDateToSeconds(String value) {

@@ -310,21 +310,24 @@ public class OptionControlEKL<T> extends OptionControl {
                     Integer prev = cntBySotr.get(id);
                     cntBySotr.put(id, prev == null ? 1 : (prev + 1));
                 }
+                boolean shouldValidateSinglePtt = cntBySotr.size() == 1 || wpDataDB.ptt_user_id > 0;
 
 // 2) если сотрудников 1 — оставляем как было
                 if (cntBySotr.size() == 1) {
                     int onlyId = cntBySotr.keySet().iterator().next();
 
-                    if (usersSDBPTT == null || usersSDBPTT.id != onlyId) { // подставь правильное поле id
-                        usersSDBPTT = SQL_DB.usersDao().getById(onlyId);
+                    if (usersSDBPTT == null || !Objects.equals(usersSDBPTT.id, onlyId)) {
+                        usersSDBPTT = getUserByIdSafe(onlyId, "single_ekl_sotr");
                     }
 
                     optionMsg.append("За период с ")
                             .append(Clock.getHumanTime3(dateFrom)).append(" по ")
                             .append(Clock.getHumanTime3(dateTo))
-                            .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
-                            .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
-                            .append(", ").append(usersSDBPTT.tel2);
+                            .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ")
+                            .append(userName(usersSDBPTT, onlyId))
+                            .append(" (").append(userDepartment(usersSDBPTT)).append(") тел: ")
+                            .append(userPhone(usersSDBPTT))
+                            .append(", ").append(userPhone2(usersSDBPTT));
 
                 } else {
                     // 3) если сотрудников несколько — "ФИО (N), ФИО (N), ..."
@@ -339,8 +342,18 @@ public class OptionControlEKL<T> extends OptionControl {
                         int sotrId = e.getKey();
                         int count = e.getValue();
 
-                        UsersSDB u = SQL_DB.usersDao().getById(sotrId);
-                        if (u == null) continue;
+                        UsersSDB u = getUserByIdSafe(sotrId, "multi_ekl_sotr");
+                        if (u == null) {
+                            if (!first) optionMsg.append(",\n");
+                            first = false;
+                            optionMsg.append("ID ").append(sotrId)
+                                    .append(" (").append(count).append(")");
+                            continue;
+                        }
+
+                        if (usersSDBPTT == null) {
+                            usersSDBPTT = u;
+                        }
 
                         if (!first) optionMsg.append(",\n");
                         first = false;
@@ -371,11 +384,25 @@ public class OptionControlEKL<T> extends OptionControl {
                 
 
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
-                if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
-                } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
+                if (usersSDBPTT == null) {
+                    Globals.writeToMLOG(
+                            "WARN",
+                            "OptionControlEKL/createTZN",
+                            "usersSDBPTT is null after EKL found. ptt_user_id=" + wpDataDB.ptt_user_id
+                                    + ", eklSotrIds=" + cntBySotr.keySet()
+                    );
+                    optionMsg.append(", но данные ПТТ не найдены в БД.");
+                } else if (!shouldValidateSinglePtt) {
+                    Globals.writeToMLOG(
+                            "INFO",
+                            "OptionControlEKL/createTZN",
+                            "Skip single PTT validation because EKL was found for several users: " + cntBySotr.keySet()
+                    );
+                } else if (isUserFired(usersSDBPTT) && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
+                } else if (isUserFired(usersSDBPTT) && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
-                } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
+                } else if (!Objects.equals(usersSDBPTT.workAddrId, wpDataDB.getAddr_id()) && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
@@ -398,7 +425,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     Log.e("test", "test: " + test);
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
-                        if (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
+                        if (documentUser == null || documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
@@ -409,7 +436,7 @@ public class OptionControlEKL<T> extends OptionControl {
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
-                        if (documentUser.reportDate40 == null || documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
+                        if (documentUser == null || documentUser.reportDate40 == null || documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)");
@@ -434,7 +461,7 @@ public class OptionControlEKL<T> extends OptionControl {
         long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
         long ekl_date = -1L;
 
-        if (documentUser.last_ekl_date != null) {
+        if (documentUser != null && documentUser.last_ekl_date != null) {
             ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
             if (ekl_date != -1 && ekl_date > countDay) {
                 shtraf = 0.154f;
@@ -484,7 +511,7 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
-        if (signal && (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
+        if (signal && (documentUser == null || documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
             optionMsg.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
@@ -494,7 +521,7 @@ public class OptionControlEKL<T> extends OptionControl {
             optionMsg
                     .append("\n\n")
                     .append("Останній раз ви отримували ЕКЛ - ")
-                    .append(documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
+                    .append(documentUser != null && documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
                     .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
                     .append(DAYS + " днів, тому ваші преміальні ")
                     .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
@@ -542,7 +569,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     allowByDate = !wpDataDB.getDt().after(thresholdDate.getTime());
                 }
 
-                if (documentUser.reportCount >= threshold && allowByDate) {
+                if (documentUser != null && documentUser.reportCount != null && documentUser.reportCount >= threshold && allowByDate) {
                     signal = false;
                     optionMsg.append(", но сотрудник провел более ")
                             .append(threshold)
@@ -614,6 +641,49 @@ public class OptionControlEKL<T> extends OptionControl {
                 unlockCodeResultListener.onUnlockCodeFailure();
             }
         });
+    }
+
+    private UsersSDB getUserByIdSafe(int userId, String source) {
+        try {
+            UsersSDB user = SQL_DB.usersDao().getById(userId);
+            if (user == null) {
+                Globals.writeToMLOG(
+                        "WARN",
+                        "OptionControlEKL/getUserByIdSafe",
+                        "User not found. source=" + source + ", userId=" + userId
+                );
+            }
+            return user;
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlEKL/getUserByIdSafe",
+                    "Exception source=" + source + ", userId=" + userId + ", e=" + e
+            );
+            return null;
+        }
+    }
+
+    private boolean isUserFired(UsersSDB user) {
+        return user != null && user.fired != null && user.fired == 1;
+    }
+
+    private String userName(UsersSDB user, int fallbackId) {
+        return user != null && user.fio != null && !user.fio.trim().isEmpty()
+                ? user.fio
+                : "ID " + fallbackId;
+    }
+
+    private String userDepartment(UsersSDB user) {
+        return user != null && user.department != null ? String.valueOf(user.department) : "нет данных";
+    }
+
+    private String userPhone(UsersSDB user) {
+        return user != null && user.tel != null ? user.tel : "";
+    }
+
+    private String userPhone2(UsersSDB user) {
+        return user != null && user.tel2 != null ? user.tel2 : "";
     }
 
     private CharSequence counter2EKLText() {

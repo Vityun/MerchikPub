@@ -64,6 +64,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
@@ -591,7 +592,7 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 INSTANCE.executeTransaction(realm -> {
                                     if (sTable != null) {
-                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
+                                        sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
                                         realm.copyToRealmOrUpdate(sTable);
                                     }
                                 });

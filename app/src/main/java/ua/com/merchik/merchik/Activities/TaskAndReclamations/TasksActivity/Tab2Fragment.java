@@ -35,21 +35,40 @@ public class Tab2Fragment extends Fragment {
 
     private TasksAndReclamationsSDB data;
     private TARViewModel viewModel;
+    private static final String ARG_TAR_ID = "tar_id";
 
     RecyclerView recyclerView;
 
     public Tab2Fragment() {
     }
 
+    @Deprecated
     public Tab2Fragment(TasksAndReclamationsSDB data) {
         this.data = data;
     }
 
+    public static Tab2Fragment newInstance(TasksAndReclamationsSDB data) {
+        Tab2Fragment fragment = new Tab2Fragment();
+        fragment.data = data;
+
+        Bundle args = new Bundle();
+        if (data != null && data.id != null) {
+            args.putInt(ARG_TAR_ID, data.id);
+        }
+        fragment.setArguments(args);
+
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
+        data = resolveTarData();
+
+        if (data != null) {
+            viewModel.setTasksAndReclamations(data);
+        }
     }
 
     @Override
@@ -105,6 +124,11 @@ public class Tab2Fragment extends Fragment {
 //    }
 //
     private void updateList(List<OptionsDB> list) {
+        if (data == null) {
+            Globals.writeToMLOG("ERROR", "Tab2Fragment/updateList", "data is null");
+            return;
+        }
+
         Globals.writeToMLOG("INFO", "Tab2Fragment/onViewCreated/", "updateList: " + list.size());
         List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2)));
 
@@ -134,6 +158,29 @@ public class Tab2Fragment extends Fragment {
         });
         recyclerView.setAdapter(recycleViewDRAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false));
+    }
+
+    private TasksAndReclamationsSDB resolveTarData() {
+        if (data != null) {
+            return data;
+        }
+
+        try {
+            Bundle args = getArguments();
+            if (args != null && args.containsKey(ARG_TAR_ID)) {
+                int tarId = args.getInt(ARG_TAR_ID, 0);
+                if (tarId > 0) {
+                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(tarId);
+                    if (tar != null) {
+                        return tar;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "Tab2Fragment/resolveTarData", "Exception e: " + e);
+        }
+
+        return viewModel != null ? viewModel.getTasksAndReclamations().getValue() : null;
     }
 }
 

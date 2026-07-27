@@ -71,6 +71,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.ServerExchange.fcm.FcmTokenSenderRx;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -232,8 +233,8 @@ public class Exchange {
     public void startExchange() {
 
 //        if (false)
-        if (Globals.userId != 172906)
-            if (Globals.userId != 19653)
+        if (Globals.getCurrentUserId() != 172906)
+            if (Globals.getCurrentUserId() != 19653)
                 try {
                     Log.e("startExchange", "start");
 
@@ -289,7 +290,7 @@ public class Exchange {
                                     try {
                                         RealmManager.INSTANCE.executeTransaction(realm -> {
                                             if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                                samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                samplePhotoExchange.synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(samplePhotoExchange.synchronizationTimetableDB.getVpi_app(), 120));
                                                 realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
                                             }
                                         });
@@ -1722,7 +1723,8 @@ public class Exchange {
 //        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
 
 
-        WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
+        int currentUserId = Globals.getCurrentUserId();
+        WpDataRealm.UserPostRes info = WpDataRealm.userPost(currentUserId);
         switch (info) {
             case EMPTY:
                 Log.e("getPhotoFromSite", "EMPTY");
@@ -1731,7 +1733,7 @@ public class Exchange {
 
             case SUBORDINATE:
                 Log.e("getPhotoFromSite", "SUBORDINATE");
-                data.sotr_id = String.valueOf(Globals.userId);
+                data.sotr_id = String.valueOf(currentUserId);
                 globals.writeToMLOG("_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
                 server.getPhotoFromServer(data);
                 break;
@@ -1781,7 +1783,7 @@ public class Exchange {
                     }
                     SQL_DB.dossierSotrDao().insertAll(dossierSotrSDBList);
 
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                     RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
@@ -1813,7 +1815,7 @@ public class Exchange {
                     }
                     SQL_DB.vacancyDao().insertAll(vacancySDBList);
 
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                     RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
@@ -1845,7 +1847,7 @@ public class Exchange {
                     }
                     SQL_DB.bonusDao().insertAll(bonusSDBList);
 
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                     RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
@@ -1877,7 +1879,7 @@ public class Exchange {
                     }
                     SQL_DB.siteUrlDao().insertAll(siteUrlSDBList);
 
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                     RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
@@ -1907,7 +1909,7 @@ public class Exchange {
                         siteAccountSDBList.add(new SiteAccountSDB(item));
                     }
                     SQL_DB.siteAccountDao().insertAll(siteAccountSDBList);
-                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                     RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
@@ -2846,7 +2848,7 @@ public class Exchange {
                     if (response.isSuccessful() && response.code() == 200) {
                         if (response.body() != null && response.body().state) {
                             RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                             });
 
@@ -3201,7 +3203,7 @@ public class Exchange {
                                             Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
 
                                             RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                             });
                                         }
@@ -3260,7 +3262,7 @@ public class Exchange {
                                 public void onComplete() {
                                     Globals.writeToMLOG("OK", "downloadVoteTable/onResponse/onComplete", "OK");
                                     RealmManager.INSTANCE.executeTransaction(realm -> {
-                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                         realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                     });
                                 }
@@ -3506,7 +3508,7 @@ public class Exchange {
                                                 itemSDB.serverId = item.id;
                                                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                                 });
                                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");

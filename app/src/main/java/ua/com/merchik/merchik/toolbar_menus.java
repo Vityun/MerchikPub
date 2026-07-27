@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik;
 
-import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -59,8 +58,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -72,7 +69,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -92,6 +88,9 @@ import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.MyApplication;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.PauseWorkStateHolder;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.PauseWorkUiState;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -419,13 +418,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     MenuItemFromWebDB menuItem156 = RealmManager.getSiteMenuItem(156);
                     String menuItem156format = "mobile.php" + menuItem156.getUrl();
 
-                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    int currentUserId = Globals.getCurrentUserId();
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(currentUserId);
                     String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
                     hash = Globals.getSha1Hex(hash);
 
                     menuItem156format = menuItem156format.replace("&", "**");
 
-                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem156format);
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, menuItem156format);
 
                     Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem165browserIntent);
@@ -475,13 +475,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     MenuItemFromWebDB menuItem164 = RealmManager.getSiteMenuItem(164);
                     String menuItem164format = "mobile.php" + menuItem164.getUrl();
 
-                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    int currentUserId = Globals.getCurrentUserId();
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(currentUserId);
                     String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
                     hash = Globals.getSha1Hex(hash);
 
                     menuItem164format = menuItem164format.replace("&", "**");
 
-                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem164format);
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, menuItem164format);
 
                     Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem164browserIntent);
@@ -495,13 +496,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
                     String menuItem165format = "mobile.php" + menuItem165.getUrl();
 
-                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    int currentUserId = Globals.getCurrentUserId();
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(currentUserId);
                     String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
                     hash = Globals.getSha1Hex(hash);
 
                     menuItem165format = menuItem165format.replace("&", "**");
 
-                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem165format);
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, menuItem165format);
 
                     Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem165browserIntent);
@@ -512,13 +514,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             case 169:
 
-                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                int currentUserId = Globals.getCurrentUserId();
+                AppUsersDB appUser = AppUserRealm.getAppUserById(currentUserId);
                 String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
                 hash = Globals.getSha1Hex(hash);
 
                 String str = "mobile.php?mod=lessons**act=list**platform_id=5";
 
-                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, str);
+                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, str);
 
                 Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
 //                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=" + userId + "&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l="));
@@ -529,12 +532,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 String link = String.format("/mobile.php?mod=ticket**act=create**theme_id=611**client_id**addr_id");
                 link = link.replace("&", "**");
 
-                AppUsersDB appUser173 = AppUserRealm.getAppUserById(userId);
+                int currentUserId173 = Globals.getCurrentUserId();
+                AppUsersDB appUser173 = AppUserRealm.getAppUserById(currentUserId173);
 
                 String hash173 = String.format("%s%s%s", appUser173.getUserId(), appUser173.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
                 hash = Globals.getSha1Hex(hash173);
 
-                String format173 = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+                String format173 = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", currentUserId173, hash, link);
 
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format173));
                 this.startActivity(browserIntent);
@@ -643,6 +647,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 messageDialogBuilder.dismiss();
         }
         super.onResume();
+        invalidateOptionsMenu();
     }
 
     @Override
@@ -660,7 +665,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        loadingIndicator.hide();
+        if (loadingIndicator != null) {
+            loadingIndicator.hide();
+        }
 //        cronchikViewModel.stopTimer(); // Останавливаем при уничтожении Activity
 
         globals.handlerCount.removeCallbacks(runnableCron10);
@@ -731,6 +738,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         light = menu.findItem(R.id.action_check);
         drawable = light.getIcon();
+
+        MenuItem pauseWorkItem = menu.findItem(R.id.menu_toolbar_pause_work);
+        if (pauseWorkItem != null) {
+            pauseWorkItem.setVisible(PauseWorkStateHolder.hasActivePause());
+        }
 
         MenuItem item = menu.findItem(R.id.menu_toolbar_exchange);
         View actionView = MenuItemCompat.getActionView(item);
@@ -933,6 +945,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     }
 
     /**
+     * Updates pause button visibility before toolbar redraw.
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean result = super.onPrepareOptionsMenu(menu);
+        MenuItem pauseWorkItem = menu.findItem(R.id.menu_toolbar_pause_work);
+        if (pauseWorkItem != null) {
+            pauseWorkItem.setVisible(PauseWorkStateHolder.hasActivePause());
+        }
+        return result;
+    }
+
+    /**
      * Устанавливается в счётчик число фоток
      */
     void setupBadge(int countPhoto) {
@@ -960,6 +985,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
+        // ... "Пауза работы"
+        if (id == R.id.menu_toolbar_pause_work) {
+            return openPausedWorkFromToolbar();
+        }
 
         // ... "На главную"
         if (id == R.id.action_to_main) {
@@ -1086,7 +1116,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState()) {
                             Toast.makeText(toolbar_menus.this, "Вы разлогинились.", Toast.LENGTH_SHORT).show();
-                            Globals.session = null;
+                            Globals.clearCurrentSessionData();
                         }
                     }
                 }
@@ -1122,6 +1152,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private boolean openPausedWorkFromToolbar() {
+        PauseWorkUiState state = PauseWorkStateHolder.getActive();
+        if (state == null) {
+            invalidateOptionsMenu();
+            return true;
+        }
+
+        Intent intent = new Intent(this, DetailedReportActivity.class);
+        intent.putExtra("WpDataDB_ID", state.getWpDataId());
+        startActivity(intent);
+        return true;
     }
 
     private void sendEmail() {
@@ -1292,8 +1335,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private Runnable runnableCron10 = new Runnable() {
         public void run() {
 //            if (false)
-                if (Globals.userId != 172906)
-                    if (Globals.userId != 19653)
+                if (Globals.getCurrentUserId() != 172906)
+                    if (Globals.getCurrentUserId() != 19653)
                         try {
                             Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
                             callCounter++;
@@ -1311,7 +1354,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
                             }
 
-                            Log.e("КРОНЧИК", "SESSION: " + Globals.session);
+                            Log.e("КРОНЧИК", "SESSION: " + Globals.getCurrentSessionId());
                             Log.e("КРОНЧИК", "login: " + login);
                             Log.e("КРОНЧИК", "password: " + password);
 
@@ -1999,9 +2042,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             try {
                                                 Log.e("TAG_REALM_LOG", "ФОТО ВЫГРУЖЕНО с ID: " + photoDB.getId());
 
-                                                JSONObject j = new JSONObject(jsonR.get("move").toString());
-                                                Iterator keys = j.keys();
-                                                Move obj = new Gson().fromJson(jsonR.get("move").getAsJsonObject().get(keys.next().toString()), Move.class);
+                                                JsonObject move = jsonR.get("move").getAsJsonObject();
+                                                if (move.entrySet().isEmpty()) {
+                                                    callback.onFailure("move is empty");
+                                                    return;
+                                                }
+                                                String firstMoveKey = move.entrySet().iterator().next().getKey();
+                                                Move obj = new Gson().fromJson(move.get(firstMoveKey), Move.class);
 
                                                 Log.e("photoUploadToServer", "jsonR.get(\"move\"): " + jsonR.get("move"));
                                                 Log.e("photoUploadToServer", "obj.getRes(): " + obj.getRes());
@@ -2846,7 +2893,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     }
 
     private void ensureWebSocketConnectedForCurrentSession(Context context) {
-        if (!hasWebSocketSession(Globals.session)) {
+        String currentSession = Globals.getCurrentSessionId();
+        if (!hasWebSocketSession(currentSession)) {
             if (webSocket != null) {
                 resetWebSocket("session is empty");
             }
@@ -2857,7 +2905,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         boolean needReconnect;
         synchronized (WEB_SOCKET_LOCK) {
             needStart = webSocket == null;
-            needReconnect = webSocket != null && !isSameWebSocketSession(webSocketSession, Globals.session);
+            needReconnect = webSocket != null && !isSameWebSocketSession(webSocketSession, currentSession);
         }
 
         if (needReconnect) {
@@ -2874,7 +2922,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket", "Connection already in progress");
                 return;
             }
-            if (webSocket != null && isSameWebSocketSession(webSocketSession, Globals.session)) {
+            String currentSession = Globals.getCurrentSessionId();
+            if (webSocket != null && isSameWebSocketSession(webSocketSession, currentSession)) {
                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket", "WebSocket already connected for session: " + webSocketSession);
                 return;
             }
@@ -2890,13 +2939,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 return;
             }
 
-            if (!success || !hasWebSocketSession(Globals.session)) {
+            String currentSession = Globals.getCurrentSessionId();
+            if (!success || !hasWebSocketSession(currentSession)) {
                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/sessionCheck", "Session check failed");
                 scheduleWebSocketReconnect(context, "session check failed");
                 return;
             }
 
-            if (webSocket != null && !isSameWebSocketSession(webSocketSession, Globals.session)) {
+            if (webSocket != null && !isSameWebSocketSession(webSocketSession, currentSession)) {
                 resetWebSocket("session changed after check");
             }
 
@@ -2947,7 +2997,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 return;
             }
             if (webSocket == null) {
-                webSocketSession = Globals.session;
+                webSocketSession = Globals.getCurrentSessionId();
                 webSocketStatus = WebSocketStatus.NOT_ACTIVE;
                 webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
                     @Override

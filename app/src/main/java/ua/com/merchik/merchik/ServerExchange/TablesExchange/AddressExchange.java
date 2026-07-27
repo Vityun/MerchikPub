@@ -11,6 +11,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -57,11 +58,11 @@ public class AddressExchange {
                 public void onResponse(Call<AddressResponse> call, Response<AddressResponse> response) {
                     try {
                         if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()){
-                            Log.e("downloadAddressTable", "response.body(): " + response.body());
+                            Log.e("downloadAddressTable", "response: code=" + response.code() + ", listSize=" + response.body().list.size());
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 if (synchronizationTimetableDB != null){
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 }
 

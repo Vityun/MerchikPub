@@ -66,6 +66,9 @@ public interface AchievementsDao {
     List<AchievementsSDB> getAchievementsList(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
 
 
-    @Query("SELECT * FROM achievements WHERE serverId = 0")
+    @Query("SELECT * FROM achievements WHERE serverId IS NULL OR serverId <= 0")
     List<AchievementsSDB> getAllToDownload();
+
+    @Query("SELECT COALESCE(MIN(serverId), 0) - 1 FROM achievements WHERE serverId < 0")
+    int getNextLocalServerId();
 }

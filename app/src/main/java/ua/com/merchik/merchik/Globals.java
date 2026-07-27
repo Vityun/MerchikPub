@@ -154,6 +154,8 @@ public class Globals {
 
     //----------------------------------------------------------------------------------------------
     public static final String PREF_KEY_USER_ID = "user_id";
+    public static final String PREF_KEY_SESSION_ID = "session_id";
+    public static final String PREF_KEY_TOKEN = "websocket_token";
     public static int userId;
     public static boolean userOwnership;    // В этом признаке буду хранить значение "Свой/Чужой"
     public static String token;
@@ -203,6 +205,65 @@ public class Globals {
         }
     }
 
+    public static synchronized String getCurrentSessionId() {
+        if (session != null && !session.trim().isEmpty()) {
+            return session;
+        }
+
+        String restoredSession = readStringFromPrefs(MyApplication.getAppContext(), PREF_KEY_SESSION_ID);
+        if (restoredSession != null && !restoredSession.trim().isEmpty()) {
+            session = restoredSession;
+        }
+
+        return session;
+    }
+
+    public static synchronized void setCurrentSessionId(@Nullable String currentSessionId) {
+        session = currentSessionId != null && !currentSessionId.trim().isEmpty()
+                ? currentSessionId
+                : null;
+        saveStringToPrefs(MyApplication.getAppContext(), PREF_KEY_SESSION_ID, session);
+    }
+
+    public static synchronized void restoreCurrentSessionFromPrefs(@Nullable Context context) {
+        String restoredSession = readStringFromPrefs(context, PREF_KEY_SESSION_ID);
+        if (restoredSession != null && !restoredSession.trim().isEmpty()) {
+            session = restoredSession;
+        }
+    }
+
+    public static synchronized String getCurrentToken() {
+        if (token != null && !token.trim().isEmpty()) {
+            return token;
+        }
+
+        String restoredToken = readStringFromPrefs(MyApplication.getAppContext(), PREF_KEY_TOKEN);
+        if (restoredToken != null && !restoredToken.trim().isEmpty()) {
+            token = restoredToken;
+        }
+
+        return token;
+    }
+
+    public static synchronized void setCurrentToken(@Nullable String currentToken) {
+        token = currentToken != null && !currentToken.trim().isEmpty()
+                ? currentToken
+                : null;
+        saveStringToPrefs(MyApplication.getAppContext(), PREF_KEY_TOKEN, token);
+    }
+
+    public static synchronized void restoreCurrentTokenFromPrefs(@Nullable Context context) {
+        String restoredToken = readStringFromPrefs(context, PREF_KEY_TOKEN);
+        if (restoredToken != null && !restoredToken.trim().isEmpty()) {
+            token = restoredToken;
+        }
+    }
+
+    public static synchronized void clearCurrentSessionData() {
+        setCurrentSessionId(null);
+        setCurrentToken(null);
+    }
+
     public static synchronized void saveCurrentUserIdToPrefs(@Nullable Context context, int currentUserId) {
         Context appContext = context != null ? context.getApplicationContext() : null;
         if (appContext == null) {
@@ -238,6 +299,36 @@ public class Globals {
                 return 0;
             }
         }
+    }
+
+    private static String readStringFromPrefs(@Nullable Context context, @NonNull String key) {
+        Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) {
+            return null;
+        }
+
+        try {
+            return PreferenceManager.getDefaultSharedPreferences(appContext).getString(key, null);
+        } catch (ClassCastException ignored) {
+            return null;
+        }
+    }
+
+    private static void saveStringToPrefs(@Nullable Context context, @NonNull String key, @Nullable String value) {
+        Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) {
+            return;
+        }
+
+        SharedPreferences.Editor editor = PreferenceManager
+                .getDefaultSharedPreferences(appContext)
+                .edit();
+        if (value != null && !value.trim().isEmpty()) {
+            editor.putString(key, value);
+        } else {
+            editor.remove(key);
+        }
+        editor.apply();
     }
 
     private static int parseCurrentUserId(@Nullable String value) {

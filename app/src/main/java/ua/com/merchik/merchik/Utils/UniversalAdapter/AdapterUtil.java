@@ -461,7 +461,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                 title5.setText("Коментар:");
 
                 String id = "";
-                if (data.serverId == 0){
+                if (data.serverId == null || data.serverId <= 0){
                     id = data.id + "*";
                 }else {
                     id = String.valueOf(data.serverId);

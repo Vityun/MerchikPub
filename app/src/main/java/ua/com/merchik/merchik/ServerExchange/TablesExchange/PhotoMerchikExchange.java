@@ -41,7 +41,8 @@ public class PhotoMerchikExchange {
 
             Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "PhotoTableRequest data: " + new Gson().toJson(data));
 
-            WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
+            int currentUserId = Globals.getCurrentUserId();
+            WpDataRealm.UserPostRes info = WpDataRealm.userPost(currentUserId);
             switch (info) {
                 case EMPTY:
                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "EMPTY");
@@ -50,7 +51,7 @@ public class PhotoMerchikExchange {
                 /**MERCHIK_1
                  * Саме тут завантажуються фото за минулі роботи*/
                 case SUBORDINATE:
-                    data.sotr_id = String.valueOf(Globals.userId);
+                    data.sotr_id = String.valueOf(currentUserId);
                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "SUBORDINATE: " + data.sotr_id);
                     server.getPhotoFromServer(data);
                     break;

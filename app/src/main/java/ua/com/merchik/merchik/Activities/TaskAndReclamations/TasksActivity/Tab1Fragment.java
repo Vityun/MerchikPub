@@ -84,15 +84,38 @@ public class Tab1Fragment extends Fragment {
 
     private TasksAndReclamationsSDB data;
     private TARViewModel viewModel;
+    private static final String ARG_TAR_ID = "tar_id";
 
+    public Tab1Fragment() {
+    }
+
+    @Deprecated
     public Tab1Fragment(TasksAndReclamationsSDB data) {
         this.data = data;
+    }
+
+    public static Tab1Fragment newInstance(TasksAndReclamationsSDB data) {
+        Tab1Fragment fragment = new Tab1Fragment();
+        fragment.data = data;
+
+        Bundle args = new Bundle();
+        if (data != null && data.id != null) {
+            args.putInt(ARG_TAR_ID, data.id);
+        }
+        fragment.setArguments(args);
+
+        return fragment;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
+        data = resolveTarData();
+
+        if (data != null) {
+            viewModel.setTasksAndReclamations(data);
+        }
     }
 
     @Override
@@ -146,6 +169,29 @@ public class Tab1Fragment extends Fragment {
                 }
             });
         }
+    }
+
+    private TasksAndReclamationsSDB resolveTarData() {
+        if (data != null) {
+            return data;
+        }
+
+        try {
+            Bundle args = getArguments();
+            if (args != null && args.containsKey(ARG_TAR_ID)) {
+                int tarId = args.getInt(ARG_TAR_ID, 0);
+                if (tarId > 0) {
+                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(tarId);
+                    if (tar != null) {
+                        return tar;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "Tab1Fragment/resolveTarData", "Exception e: " + e);
+        }
+
+        return viewModel != null ? viewModel.getTasksAndReclamations().getValue() : null;
     }
 
     private void setFragmentsOnPhoto() {

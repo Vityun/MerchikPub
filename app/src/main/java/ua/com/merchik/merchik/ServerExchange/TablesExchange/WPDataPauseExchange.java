@@ -18,6 +18,7 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.synchronization.DownloadStatus;
@@ -65,9 +66,9 @@ public class WPDataPauseExchange {
 
         if ((pendingUpload == null || pendingUpload.isEmpty())
                 && syncInfo.getLastDownloadTime() > 0
-                && syncInfo.getLastDownloadTime() + syncPeriodSeconds > now) {
+                && !TrustedTime.isSyncDue(syncInfo.getLastDownloadTime(), syncPeriodSeconds)) {
             return "skip: next download in "
-                    + ((syncInfo.getLastDownloadTime() + syncPeriodSeconds) - now)
+                    + TrustedTime.secondsUntilSync(syncInfo.getLastDownloadTime(), syncPeriodSeconds)
                     + " sec";
         }
 
@@ -95,8 +96,8 @@ public class WPDataPauseExchange {
 
         saveSyncInfo(
                 syncInfo,
-                downloadOk ? now : syncInfo.getLastDownloadTime(),
-                uploadOk ? now : syncInfo.getLastUploadTime(),
+                downloadOk ? TrustedTime.syncWatermarkSec(syncInfo.getLastDownloadTime(), 0) : syncInfo.getLastDownloadTime(),
+                uploadOk ? TrustedTime.syncWatermarkSec(syncInfo.getLastUploadTime(), 0) : syncInfo.getLastUploadTime(),
                 downloadOk ? downloadedItems : syncInfo.getDownloadedItems(),
                 uploadOk ? uploadedItems : syncInfo.getUploadedItems(),
                 downloadOk ? DownloadStatus.SUCCESS : DownloadStatus.ERROR,
@@ -336,7 +337,7 @@ public class WPDataPauseExchange {
     }
 
     private long currentTimeSeconds() {
-        return System.currentTimeMillis() / 1000L;
+        return TrustedTime.nowServerSecOrLocalSec();
     }
 
     private String messageOf(Throwable throwable) {

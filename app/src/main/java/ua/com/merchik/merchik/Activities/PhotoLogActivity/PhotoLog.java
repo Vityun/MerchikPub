@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -271,15 +272,19 @@ public class PhotoLog {
                     try {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
-                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
-                                ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
-                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
+                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", JsonLogUtils.photoUploadResponse(response.body()));
+                                ImagesPrepareUploadPhoto info = new Gson().fromJson(response.body(), ImagesPrepareUploadPhoto.class);
+                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info", "state=" + info.state + ", listSize=" + (info.list != null ? info.list.size() : 0));
                                 if (info.state) {
+                                    if (info.list == null || info.list.isEmpty()) {
+                                        callback.onFailure(photoDB, "Список list - пустой!");
+                                        return;
+                                    }
                                     ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
                                     if (data.state) {
                                         callback.onSuccess(photoDB, "test");
                                     } else {
-                                        if (data.errorType.equals("photo_already_exist")) {
+                                        if ("photo_already_exist".equals(data.errorType)) {
                                             Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                             callback.onSuccess(photoDB, "Фото уже было загружено");
                                         } else {
@@ -290,11 +295,11 @@ public class PhotoLog {
                                     try {
                                         if (info.list != null && info.list.size() > 0) {
                                             ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
-                                            Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
+                                            Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "state=" + data.state + ", errorType=" + data.errorType + ", error=" + data.error);
                                             if (data.state) {
                                                 callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
                                             } else {
-                                                if (data.errorType.equals("photo_already_exist")) {
+                                                if ("photo_already_exist".equals(data.errorType)) {
                                                     Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                                     callback.onSuccess(photoDB, "Фото уже было загружено");
                                                 } else {

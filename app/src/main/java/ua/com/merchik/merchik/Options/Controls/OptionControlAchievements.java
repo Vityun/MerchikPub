@@ -219,11 +219,14 @@ public class OptionControlAchievements<T> extends OptionControl {
                         ThemeDB theme595 = ThemeRealm.getThemeById(String.valueOf(595));
                         if (theme != null) themeTxt = theme.getNm();
                         if (theme595 != null) theme595Txt = theme595.getNm();
+                        String achievementId = item.serverId == null || item.serverId <= 0
+                                ? item.id + "*"
+                                : String.valueOf(item.serverId);
 
                         item.error = 1;
                         item.note = new SpannableStringBuilder()
                                 .append("\n")
-                                .append(createLinkedString("Досягнення #" + item.serverId, item))
+                                .append(createLinkedString("Досягнення #" + achievementId, item))
                                 .append(" тема досягнення ")
                                 .append(String.valueOf(item.themeId)).append(" - ").append(themeTxt)
                                 .append(" не влаштовує! Повинна бути тема: ")

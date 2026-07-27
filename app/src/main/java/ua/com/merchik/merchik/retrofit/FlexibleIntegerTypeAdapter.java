@@ -9,12 +9,15 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import ua.com.merchik.merchik.Globals;
 
 public class FlexibleIntegerTypeAdapter extends TypeAdapter<Integer> {
 
     private static final String TAG = "FlexibleIntegerAdapter";
+    private static final BigInteger LONG_MIN = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigInteger LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
     private final Integer fallbackValue;
 
@@ -74,13 +77,30 @@ public class FlexibleIntegerTypeAdapter extends TypeAdapter<Integer> {
         }
 
         try {
-            return safeLongToInt(new BigDecimal(value).toBigIntegerExact().longValueExact());
+            return safeLongToInt(safeBigIntegerToLong(new BigDecimal(value).toBigIntegerExact(), value));
         } catch (ArithmeticException | NumberFormatException ignored) {
             // Some responses contain non-numeric placeholders in numeric fields.
         }
 
         logBadValue(value);
         return fallbackValue;
+    }
+
+    private Long safeBigIntegerToLong(BigInteger value, String rawValue) {
+        if (value.compareTo(LONG_MIN) < 0 || value.compareTo(LONG_MAX) > 0) {
+            logBadValue(rawValue);
+            return null;
+        }
+
+        return value.longValue();
+    }
+
+    private Integer safeLongToInt(Long value) {
+        if (value == null) {
+            return fallbackValue;
+        }
+
+        return safeLongToInt(value.longValue());
     }
 
     private Integer safeLongToInt(long value) {

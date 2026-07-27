@@ -41,7 +41,10 @@ public class WPDataExchange {
         call.enqueue(new retrofit2.Callback<WpDataServer>() {
             @Override
             public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
-                Log.e("downloadWPData", "response: " + response.body());
+                Log.e("downloadWPData", "response: code=" + response.code()
+                        + ", success=" + response.isSuccessful()
+                        + ", state=" + (response.body() != null ? response.body().getState() : null)
+                        + ", listSize=" + (response.body() != null && response.body().getList() != null ? response.body().getList().size() : 0));
                 if (response.isSuccessful() && response.body() != null && response.body().getState()
                         && response.body().getList() != null && !response.body().getList().isEmpty())
                     exchange.onSuccess(response.body().getList());

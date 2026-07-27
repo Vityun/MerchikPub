@@ -92,7 +92,7 @@ public class ReclamationsActivity extends toolbar_menus {
             public void onSuccess(TasksAndReclamationsSDB data) {
                 // Открываю новый фрагмент
 //                Toast.makeText(ReclamationsActivity.this, "Я нажал на кнопку: " + data.getID(), Toast.LENGTH_LONG).show();
-                secondFrag = new TARSecondFrag(fragmentManager, data);
+                secondFrag = TARSecondFrag.newInstance(data);
                 fragmentManager.beginTransaction()
                         .addToBackStack(null)
                         .hide(homeFrag)

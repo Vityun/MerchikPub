@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -51,7 +52,7 @@ public class ReportPrepareExchange {
                         response.body().getList() != null && !response.body().getList().isEmpty()) {
                     exchange.onSuccess(response.body().getList());
                     RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                         realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                     });
                 } else exchange.onFailure("Throwable: Список пуст");

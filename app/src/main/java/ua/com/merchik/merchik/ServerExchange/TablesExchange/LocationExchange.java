@@ -10,6 +10,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -83,7 +84,7 @@ public class LocationExchange {
                             Globals.writeToMLOG("INFO", "downloadLocationTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 if (synchronizationTimetableDB != null) {
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 }
                             });

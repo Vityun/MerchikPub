@@ -14,6 +14,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSLogResponse;
@@ -153,7 +154,7 @@ public class SMSExchange {
 //                                                    click.onSuccess(response.body().list);
 
                                                     RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                                         realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                                     });
                                                     Log.d("test", "test");

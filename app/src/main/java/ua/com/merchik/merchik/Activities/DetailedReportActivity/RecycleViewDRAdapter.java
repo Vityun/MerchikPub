@@ -336,6 +336,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 172100   // Фото вітрини з акційними цінниками
                         || optionId == 151122   // Жилетка: жалобы на условия работ
                         || optionId == 174213
+//                        || optionId == 139337   // тест
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);

@@ -9,6 +9,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
@@ -54,7 +55,7 @@ public class StandartExchange {
                         exchange.onSuccess(response.body().list);
 
                     RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                         realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                     });
                 }
@@ -117,7 +118,7 @@ public class StandartExchange {
                     exchange.onSuccess(response.body().list);
 
                     RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                         realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                     });
                 }

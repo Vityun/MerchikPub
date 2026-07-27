@@ -82,20 +82,43 @@ public class Tab3Fragment extends Fragment {
     private DialogCreateTAR dialog;
 
     private Integer photoId;
+    private static final String ARG_TAR_ID = "tar_id";
 
     public static int TARCommentIndex;  // 15.02.23. Для того что б ОБНОВЛЯТЬ комментарии (добавлять фото)
 
+
+    public Tab3Fragment() {
+    }
+
+    @Deprecated
+    public Tab3Fragment(TasksAndReclamationsSDB data) {
+        this.tarData = data;
+    }
+
+    public static Tab3Fragment newInstance(TasksAndReclamationsSDB data) {
+        Tab3Fragment fragment = new Tab3Fragment();
+        fragment.tarData = data;
+
+        Bundle args = new Bundle();
+        if (data != null && data.id != null) {
+            args.putInt(ARG_TAR_ID, data.id);
+        }
+        fragment.setArguments(args);
+
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
+        tarData = resolveTarData();
+
+        if (tarData != null) {
+            viewModel.setTasksAndReclamations(tarData);
+        }
     }
 
-
-    public Tab3Fragment(TasksAndReclamationsSDB data) {
-        this.tarData = data;
-    }
 
     public void setPhoto(Integer id) {
         photoId = id;
@@ -107,6 +130,14 @@ public class Tab3Fragment extends Fragment {
     public void setPhotoTARComment(Integer id, int tarCommentIndex) {
         photoId = id;
         StackPhotoDB photoDB = StackPhotoRealm.getById(id);
+        if (photoDB == null || dataComments == null || tarCommentIndex < 0 || tarCommentIndex >= dataComments.size()) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "Tab3Fragment/setPhotoTARComment",
+                    "Invalid state. photoDB=" + photoDB + ", dataComments=" + dataComments + ", tarCommentIndex=" + tarCommentIndex
+            );
+            return;
+        }
 
         TARCommentsDB tarCommentsDB = dataComments.get(tarCommentIndex);
         tarCommentsDB.photo_hash = photoDB.getPhoto_hash();
@@ -171,6 +202,11 @@ public class Tab3Fragment extends Fragment {
      * Заполнение начального текста и установка переписки в ресайклер
      */
     private void setFragmentData() {
+        if (tarData == null) {
+            Globals.writeToMLOG("ERROR", "Tab3Fragment/setFragmentData", "tarData is null");
+            return;
+        }
+
         setTextData();
         setAddButton();
         setRecycler();
@@ -481,5 +517,28 @@ public class Tab3Fragment extends Fragment {
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
+    }
+
+    private TasksAndReclamationsSDB resolveTarData() {
+        if (tarData != null) {
+            return tarData;
+        }
+
+        try {
+            Bundle args = getArguments();
+            if (args != null && args.containsKey(ARG_TAR_ID)) {
+                int tarId = args.getInt(ARG_TAR_ID, 0);
+                if (tarId > 0) {
+                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(tarId);
+                    if (tar != null) {
+                        return tar;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "Tab3Fragment/resolveTarData", "Exception e: " + e);
+        }
+
+        return viewModel != null ? viewModel.getTasksAndReclamations().getValue() : null;
     }
 }

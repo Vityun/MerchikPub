@@ -10,6 +10,8 @@ import okhttp3.ResponseBody;
 
 
 class HtmlEntityInterceptor implements Interceptor {
+    private static final long MAX_REWRITE_BODY_BYTES = 256L * 1024L;
+
     @Override
     public Response intercept(Chain chain) throws IOException {
         Response response = chain.proceed(chain.request());
@@ -29,10 +31,15 @@ class HtmlEntityInterceptor implements Interceptor {
             return response;
         }
 
+        long contentLength = responseBody.contentLength();
+        if (contentLength < 0 || contentLength > MAX_REWRITE_BODY_BYTES) {
+            return response;
+        }
+
         String bodyString = responseBody.string();
 
         if (bodyString.isEmpty()) {
-            return response;
+            return response.newBuilder().body(ResponseBody.create(bodyString, contentType)).build();
         }
 
         // Заменяем сущность

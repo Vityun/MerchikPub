@@ -11,8 +11,6 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import io.realm.Realm;
@@ -35,6 +32,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
@@ -564,10 +562,14 @@ public class PhotoReports {
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
-                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
-                            ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
-                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", JsonLogUtils.photoUploadResponse(response.body()));
+                            ImagesPrepareUploadPhoto info = new Gson().fromJson(response.body(), ImagesPrepareUploadPhoto.class);
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info", "state=" + info.state + ", listSize=" + (info.list != null ? info.list.size() : 0));
                             if (info.state) {
+                                if (info.list == null || info.list.isEmpty()) {
+                                    callback.onFailure(photoDB, "Список list - пустой!");
+                                    return;
+                                }
                                 ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
                                 if (data.state) {
                                     callback.onSuccess(photoDB, "test");
@@ -575,7 +577,7 @@ public class PhotoReports {
                                     if (data.errorType != null) {
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/errorType: ", data.errorType);
                                     }
-                                    if (data.errorType.equals("photo_already_exist")) {
+                                    if ("photo_already_exist".equals(data.errorType)) {
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                         if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
                                             new MessageDialogBuilder((Activity) mContext)
@@ -585,7 +587,7 @@ public class PhotoReports {
                                                     .setMessage(data.error + ". Ви повинні завантажити нове фото")
                                                     .show();
                                         callback.onSuccess(photoDB, data.error);
-                                    } else if (data.errorType.equals("missing_geo_coord")) {
+                                    } else if ("missing_geo_coord".equals(data.errorType)) {
                                         Globals.fixMP(null, null);
                                         new MessageDialogBuilder((Activity) mContext)
                                                 .setStatus(DialogStatus.ALERT)
@@ -614,11 +616,11 @@ public class PhotoReports {
                                 try {
                                     if (info.list != null && info.list.size() > 0) {
                                         ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
-                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "state=" + data.state + ", errorType=" + data.errorType + ", error=" + data.error);
                                         if (data.state) {
                                             callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
                                         } else {
-                                            if (data.errorType.equals("photo_already_exist")) {
+                                            if ("photo_already_exist".equals(data.errorType)) {
                                                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                                 if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
                                                     new MessageDialogBuilder((Activity) mContext)
@@ -629,7 +631,7 @@ public class PhotoReports {
                                                             .show();
 
                                                 callback.onSuccess(photoDB, data.error);
-                                            } else if (data.errorType.equals("missing_geo_coord")) {
+                                            } else if ("missing_geo_coord".equals(data.errorType)) {
                                                 Globals.fixMP(null, null);
                                                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/missing_geo_coord", "missing_geo_coord");
                                                 callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
@@ -693,9 +695,9 @@ public class PhotoReports {
 
         JsonObject jsonR = response.body();
 
-        Log.e("UPLOAD_PHOTO_R", "response: " + jsonR);
+        Log.e("UPLOAD_PHOTO_R", "response: " + JsonLogUtils.photoUploadResponse(jsonR));
         // todo надо удалить, избыточно в логе
-        Globals.writeToMLOG("INFO", "PhotoReports.responseTEST", "response: " + jsonR);
+        Globals.writeToMLOG("INFO", "PhotoReports.responseTEST", "response: " + JsonLogUtils.photoUploadResponse(jsonR));
 
         if (response.isSuccessful() && response.body() != null) {
             try {
@@ -704,9 +706,13 @@ public class PhotoReports {
                         if (!jsonR.get("move").isJsonNull()) {
                             try {
                                 // ОБРАБОТКА УСПЕШНОГО ОТВЕТА С СЕРВЕРА
-                                JSONObject j = new JSONObject(jsonR.get("move").toString());
-                                Iterator keys = j.keys();
-                                Move obj = new Gson().fromJson(jsonR.get("move").getAsJsonObject().get(keys.next().toString()), Move.class);
+                                JsonObject move = jsonR.get("move").getAsJsonObject();
+                                if (move.entrySet().isEmpty()) {
+                                    callback.onFailure(photoDB, "move is empty");
+                                    return;
+                                }
+                                String firstKey = move.entrySet().iterator().next().getKey();
+                                Move obj = new Gson().fromJson(move.get(firstKey), Move.class);
 
                                 if (obj.getRes().equals("true") || obj.getRes().equals("1")) {
                                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/responseTEST", "Success. StackPhotoDB id: " + photoDB.getId());

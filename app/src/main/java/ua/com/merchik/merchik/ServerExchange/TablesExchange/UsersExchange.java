@@ -1,17 +1,14 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.UsersResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -44,19 +41,6 @@ public class UsersExchange {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            callTest.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.e("downloadUsersTable", "response: " + response.body());
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.e("downloadUsersTable", "Throwable t: " + t);
-                }
-            });
-
             retrofit2.Call<UsersResponse> call = RetrofitBuilder.getRetrofitInterface().GET_USERS_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<UsersResponse>() {
                 @Override
@@ -67,7 +51,7 @@ public class UsersExchange {
 
                             try {
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 });
                             }catch (Exception e){

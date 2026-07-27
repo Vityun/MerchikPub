@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 
@@ -75,6 +76,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExch
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -219,8 +221,8 @@ public class TablesLoadingUnloading {
         sync = true;
         this.context = context;
 //if (false)
-        if (Globals.userId != 172906)
-            if (Globals.userId != 19653)
+        if (Globals.getCurrentUserId() != 172906)
+            if (Globals.getCurrentUserId() != 19653)
                 try {
 //            Exchange.sendWpData2();
 //            updateWpData();
@@ -517,7 +519,7 @@ public class TablesLoadingUnloading {
                                 downloadTovarTable(null, wpDataDBList);
                                 INSTANCE.executeTransaction(realm -> {
                                     if (sTable != null) {
-                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
+                                        sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
                                         realm.copyToRealmOrUpdate(sTable);
                                     }
                                 });
@@ -594,7 +596,7 @@ public class TablesLoadingUnloading {
         if (request == null || wpDataDB == null) return false;
         Long requestDad2 = request.getCodeDad2();
         if (requestDad2 != null && requestDad2 > 0L) return false;
-        if (wpDataDB.getUser_id() != Globals.userId) return false;
+        if (wpDataDB.getUser_id() != Globals.getCurrentUserId()) return false;
 
         Integer requestAddrId = request.getAdrId();
         Integer requestClientId = request.getClientId();
@@ -617,7 +619,7 @@ public class TablesLoadingUnloading {
         data.date_from = Clock.getDatePeriod(-1);
         data.date_to = Clock.getDatePeriod(3);
 
-        if (Globals.userId == 143565) // исключение дляя Балаба
+        if (Globals.getCurrentUserId() == 143565) // исключение дляя Балаба
             data.date_from = Clock.getDatePeriod(-3);
 
         long vpi;
@@ -797,7 +799,7 @@ public class TablesLoadingUnloading {
 
                         INSTANCE.executeTransaction(realm -> {
                             if (sTable != null) {
-                                sTable.setVpi_app((System.currentTimeMillis() / 1000) - 60);
+                                sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
                                 realm.copyToRealmOrUpdate(sTable);
                             }
                         });
@@ -1569,7 +1571,7 @@ public class TablesLoadingUnloading {
                     }
 
                     List<WPDataAdditionalServ> servs =
-                            WPDataAdditionalMapper.mapAll(list, Globals.userId);
+                            WPDataAdditionalMapper.mapAll(list, Globals.getCurrentUserId());
 
                     StandartData data = new StandartData();
                     data.mod = "plan_budget";
@@ -1726,7 +1728,7 @@ public class TablesLoadingUnloading {
             return;
         }
 
-        List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.userId);
+        List<WPDataAdditionalServ> servs = WPDataAdditionalMapper.mapAll(wpDataAdditionals, Globals.getCurrentUserId());
 
         StandartData data = new StandartData();
         data.mod = "plan_budget";
@@ -1846,7 +1848,7 @@ public class TablesLoadingUnloading {
         call.enqueue(new Callback<ImageTypes>() {
             @Override
             public void onResponse(Call<ImageTypes> call, Response<ImageTypes> response) {
-                Log.e("TAG_TEST", "RESPONSE_1" + response.body());
+                Log.e("TAG_TEST", "RESPONSE_1 " + compactBodyLog(response.body()));
                 Log.e("TAG_TEST", "RESPONSE_1"  + new Gson().toJson(response.body()));
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getMenuList() != null && response.body().getMenuList().getImagesTypeList() != null) {
@@ -1901,7 +1903,7 @@ public class TablesLoadingUnloading {
         call.enqueue(new Callback<CustomerGroups>() {
             @Override
             public void onResponse(Call<CustomerGroups> call, Response<CustomerGroups> response) {
-                Log.e("TAG_TEST", "RESPONSE_2: " + response.body());
+                Log.e("TAG_TEST", "RESPONSE_2: " + compactBodyLog(response.body()));
                 try {
                     if (response.isSuccessful() && response.body().getState()) {
 
@@ -2107,7 +2109,7 @@ public class TablesLoadingUnloading {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                         Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
                         INSTANCE.executeTransaction(realm -> {
-                            realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
                             realm.copyToRealmOrUpdate(realmResults);
                         });
                     } else {
@@ -2153,7 +2155,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<CustomerTableResponse> call, Response<CustomerTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSECustomerTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSECustomerTable: " + compactBodyLog(response.body()));
 
                     if (response.body().getState()) {
                         if (!response.body().getList().isEmpty()) {
@@ -2429,7 +2431,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<AddressTableResponse> call, Response<AddressTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEAddressTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEAddressTable: " + compactBodyLog(response.body()));
                     if (response.body().getState()) {
                         if (!response.body().getList().isEmpty()) {
                             // Запись в БД
@@ -2581,7 +2583,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSECityTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSECityTable: " + compactBodyLog(response.body()));
                 }
             }
 
@@ -2605,7 +2607,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEOblTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEOblTable: " + compactBodyLog(response.body()));
                 }
             }
 
@@ -2629,7 +2631,7 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEAddressTTTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEAddressTTTable: " + compactBodyLog(response.body()));
                 }
             }
 
@@ -2729,7 +2731,7 @@ id_exclude - иди товаров которые есть в приложени
             public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
-                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + compactBodyLog(response.body()));
                         if (response.body().getState()) {
                             List<TovarDB> list = response.body().getList();
 
@@ -2759,7 +2761,7 @@ id_exclude - иди товаров которые есть в приложени
                             RealmManager.setTovarAsync(list);
 
                             INSTANCE.executeTransaction(realm -> {
-                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                                realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
                                 realm.copyToRealmOrUpdate(realmResults);
                             });
 
@@ -2905,7 +2907,7 @@ id_exclude - иди товаров которые есть в приложени
             public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
-                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + compactBodyLog(response.body()));
                         if (response.body().getState()) {
                             List<TovarDB> list = response.body().getList();
 
@@ -2935,7 +2937,7 @@ id_exclude - иди товаров которые есть в приложени
                             RealmManager.setTovarAsync(list);
 
                             INSTANCE.executeTransaction(realm -> {
-                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                                realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
                                 realm.copyToRealmOrUpdate(realmResults);
                             });
 
@@ -3062,7 +3064,7 @@ id_exclude - иди товаров которые есть в приложени
             public void onResponse(Call<TovarTableResponse> call, Response<TovarTableResponse> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
-                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + compactBodyLog(response.body()));
                         if (response.body().getState()) {
                             List<TovarDB> list = response.body().getList();
                             try {
@@ -3218,7 +3220,7 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<PPATableResponse> call, Response<PPATableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEPPATable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEPPATable: " + compactBodyLog(response.body()));
                     if (response.body().getState()) {
                         RealmManager.setPPA(response.body().getList());
                     }
@@ -3245,7 +3247,7 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<ArticleTableResponse> call, Response<ArticleTableResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEArticleTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEArticleTable: " + compactBodyLog(response.body()));
                     if (response.body().getState()) {
                         RealmManager.setArticle(response.body().getList());
                     }
@@ -3297,7 +3299,7 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<ErrorTableResponce> call, Response<ErrorTableResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEdownloadErrorTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEdownloadErrorTable: " + compactBodyLog(response.body()));
                     if (response.body().getState()) {
                         RealmManager.setError(response.body().getList());
 //                        if (RealmManager.setError(response.body().getList()))
@@ -3344,7 +3346,7 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<PromoTableResponce> call, Response<PromoTableResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + response.body());
+                    Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + compactBodyLog(response.body()));
                     if (response.body().getState()) {
                         RealmManager.setPromo(response.body().getList());
 //                        if (RealmManager.setPromo(response.body().getList()))
@@ -3614,8 +3616,7 @@ id_exclude - иди товаров которые есть в приложени
                                     if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                                         RealmManager.updateWorkPlanFromServer(response.body().getList()); // Получаем данные для выгрузки
                                         INSTANCE.executeTransaction(realm -> {
-                                            long vpiApp = System.currentTimeMillis() / 1000;
-                                            sTable.setVpi_app(vpiApp - 60);
+                                            sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
                                             realm.copyToRealmOrUpdate(sTable);
                                         }); //
 
@@ -3646,9 +3647,9 @@ id_exclude - иди товаров которые есть в приложени
     }
 
     private boolean timeToUpdate(long lastUpdate, int updateFrequency) {
-        long time = (System.currentTimeMillis() / 1000) - (lastUpdate + updateFrequency);
+        long time = TrustedTime.nowServerSecOrLocalSec() - (lastUpdate + updateFrequency);
         Log.e("timeToUpdate", "Время до обмена Плана работ: " + time + "секунд.");
-        return System.currentTimeMillis() / 1000 > lastUpdate + updateFrequency;
+        return TrustedTime.isSyncDue(lastUpdate, updateFrequency);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -3762,7 +3763,7 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<ReportHint> call, Response<ReportHint> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.e("REPORT_HINT", "" + response.body());
+                    Log.e("REPORT_HINT", compactBodyLog(response.body()));
 
                 }
             }
@@ -3778,7 +3779,7 @@ id_exclude - иди товаров которые есть в приложени
     public void cronUpdateTables() {
         Log.e("cronUpdateTables", "ALL START");
 
-        long currentTime = System.currentTimeMillis() / 1000; // Текущее время
+        long currentTime = TrustedTime.nowServerSecOrLocalSec(); // Текущее время
 //        SynchronizationTimetableDB synchTableWp = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
 
         SynchronizationTimetableDB synchTableWp = INSTANCE.where(SynchronizationTimetableDB.class)
@@ -3798,7 +3799,7 @@ id_exclude - иди товаров которые есть в приложени
         Log.e("cronUpdateTables", "До синхронизации: " + sync);
 
 
-        if (l < currentTime) {
+        if (synchTableWp == null || TrustedTime.isSyncDue(synchTableWp.getVpi_app(), synchTableWp.getUpdate_frequency())) {
 //            downloadSiteHints("2");
             downloadVideoLessons();
             downloadOborotVed();
@@ -3850,7 +3851,7 @@ id_exclude - иди товаров которые есть в приложени
                 INSTANCE.executeTransaction(
                         realm -> {
                             if (synchTableWp != null) {
-                                synchTableWp.setVpi_app(System.currentTimeMillis() / 1000);
+                                synchTableWp.setVpi_app(TrustedTime.syncWatermarkSec(synchTableWp.getVpi_app(), 60));
                                 realm.insertOrUpdate(synchTableWp);
                                 Log.d("updateRealm", "here");
                             } else {
@@ -3881,7 +3882,7 @@ id_exclude - иди товаров которые есть в приложени
 
     public void updateTables(Context context) {
         Log.e("TAG_TEST_WP", "ALL START");
-        long currentTime = System.currentTimeMillis() / 1000; // Текущее время
+        long currentTime = TrustedTime.nowServerSecOrLocalSec(); // Текущее время
         RealmResults<SynchronizationTimetableDB> realmResults = getSynchronizationTimetable();
 
         for (int i = 0; i < realmResults.size(); i++) {
@@ -4098,7 +4099,7 @@ id_exclude - иди товаров которые есть в приложени
             call.enqueue(new Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.e("uploadLodMp", "RESPONSE: " + response.body());
+                    Log.e("uploadLodMp", "RESPONSE: " + compactBodyLog(response.body()));
 
                     // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
 //                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
@@ -4137,12 +4138,12 @@ id_exclude - иди товаров которые есть в приложени
                                             } catch (Exception e) {
                                                 Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "Exception e: " + e);
                                             }
-                                            Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "response.body(): " + response.body());
+                                            Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "response.body(): " + compactBodyLog(response.body()));
                                         }
                                     }
                                 }
                             } else {
-                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/state=false", "response.body(): " + response.body());
+                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/state=false", "response.body(): " + compactBodyLog(response.body()));
                             }
                         }
                     } catch (Exception e) {
@@ -4207,11 +4208,10 @@ id_exclude - иди товаров которые есть в приложени
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 Log.e("downloadMenu", "RESPONSE: " + response);
-                Log.e("downloadMenu", "RESPONSE.BODY: " + response.body());
+                Log.e("downloadMenu", "RESPONSE.BODY.keys: " + (response.body() != null ? response.body().entrySet().size() : 0));
                 try {
-                    JSONObject j = new JSONObject(response.body().toString());
-                    saveMenuDB(parseJsonMenu(j, false));
-                } catch (JSONException e) {
+                    saveMenuDB(parseJsonMenuGson(response.body(), false));
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -4225,6 +4225,133 @@ id_exclude - иди товаров которые есть в приложени
         });
     }
 
+
+    private ArrayList<MenuItemFromWebDB> parseJsonMenuGson(JsonObject jsonObject, boolean submenu) {
+//        Log.e("parseJsonMenu", "===========START============");
+        ArrayList<MenuItemFromWebDB> data = new ArrayList<>();
+        if (jsonObject == null) {
+            return data;
+        }
+
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            MenuItemFromWebDB item = new MenuItemFromWebDB();
+            try {
+                if (entry.getValue() == null || !entry.getValue().isJsonObject()) {
+                    continue;
+                }
+
+                JsonObject menuItem = entry.getValue().getAsJsonObject();
+
+                item.setID(getJsonInt(menuItem, "ID", 0));
+                item.setNm(getJsonString(menuItem, "nm"));
+                item.setUrl(getJsonString(menuItem, "url"));
+                item.setModule(getJsonString(menuItem, "module"));
+                item.setInternalName(getJsonString(menuItem, "internal_name"));
+                item.setParent(getJsonInt(menuItem, "parent", 0));
+
+                JsonElement submenuElement = menuItem.get("submenu");
+                if (submenuElement != null && submenuElement.isJsonObject()) {
+                    JsonObject obj = submenuElement.getAsJsonObject();
+                    RealmList<Integer> submenuIds = new RealmList<>();
+                    for (Map.Entry<String, JsonElement> submenuEntry : obj.entrySet()) {
+                        try {
+                            submenuIds.add(Integer.valueOf(submenuEntry.getKey()));
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                    item.setSubmenu(submenuIds);
+                    data.addAll(parseJsonMenuGson(obj, true));
+                }
+
+                item.setImg(getJsonString(menuItem, "img"));
+                item.setComment(getJsonString(menuItem, "comment"));
+
+                data.add(item);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+//        Log.e("parseJsonMenu", "===========END============");
+        return data;
+    }
+
+    private String getJsonString(JsonObject jsonObject, String key) {
+        JsonElement element = jsonObject.get(key);
+        return element != null && !element.isJsonNull() ? element.getAsString() : "";
+    }
+
+    private int getJsonInt(JsonObject jsonObject, String key, int defaultValue) {
+        try {
+            JsonElement element = jsonObject.get(key);
+            return element != null && !element.isJsonNull() ? element.getAsInt() : defaultValue;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private String compactBodyLog(Object body) {
+        if (body == null) {
+            return "null";
+        }
+
+        StringBuilder builder = new StringBuilder(body.getClass().getSimpleName());
+        appendCompactProperty(builder, "state", readProperty(body, "state"));
+        appendCompactProperty(builder, "error", readProperty(body, "error"));
+        appendCompactProperty(builder, "listSize", collectionSize(readProperty(body, "list")));
+        appendCompactProperty(builder, "objectListSize", collectionSize(readProperty(body, "objectList")));
+        return builder.toString();
+    }
+
+    private void appendCompactProperty(StringBuilder builder, String name, Object value) {
+        if (value == null) {
+            return;
+        }
+        builder.append(", ").append(name).append('=').append(value);
+    }
+
+    private Object readProperty(Object target, String propertyName) {
+        String suffix = Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+        Object value = invokeNoArg(target, "get" + suffix);
+        if (value != null) {
+            return value;
+        }
+
+        value = invokeNoArg(target, "is" + suffix);
+        if (value != null) {
+            return value;
+        }
+
+        Class<?> type = target.getClass();
+        while (type != null) {
+            try {
+                java.lang.reflect.Field field = type.getDeclaredField(propertyName);
+                field.setAccessible(true);
+                return field.get(target);
+            } catch (Exception ignored) {
+                type = type.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    private Object invokeNoArg(Object target, String methodName) {
+        try {
+            java.lang.reflect.Method method = target.getClass().getMethod(methodName);
+            return method.invoke(target);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Integer collectionSize(Object value) {
+        if (value instanceof java.util.Collection) {
+            return ((java.util.Collection<?>) value).size();
+        }
+        if (value != null && value.getClass().isArray()) {
+            return java.lang.reflect.Array.getLength(value);
+        }
+        return null;
+    }
 
     private ArrayList<MenuItemFromWebDB> parseJsonMenu(JSONObject jsonObject, boolean submenu) {
 //        Log.e("parseJsonMenu", "===========START============");
@@ -4637,7 +4764,7 @@ id_exclude - иди товаров которые есть в приложени
                 @Override
                 public void onResponse(Call<TARCommentsResponse> call, Response<TARCommentsResponse> response) {
                     try {
-                        Log.e("downloadTARComments", "response" + response.body());
+                        Log.e("downloadTARComments", "response " + compactBodyLog(response.body()));
                         if (response.body() != null && response.body().getList() != null && response.body().getList().size() > 0) {
                             Globals.writeToMLOG("ERROR", "downloadTARComments/onResponse", "response.body().getList(): " + response.body().getList().size());
                             TARCommentsRealm.setTARCommentsDB(response.body().getList());
@@ -4701,7 +4828,7 @@ id_exclude - иди товаров которые есть в приложени
                         if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
                             ThemeRealm.setThemeDBTable(response.body().getList());
                             INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                             });
                         }
@@ -4820,7 +4947,7 @@ id_exclude - иди товаров которые есть в приложени
             data.mod = "additional_requirements";
             data.act = "log";
 
-            data.sotr_id = String.valueOf(Globals.userId);
+            data.sotr_id = String.valueOf(Globals.getCurrentUserId());
 
             data.date_from = String.valueOf(Clock.getDateLong(-60).getTime() / 1000);
             data.date_to = String.valueOf(Clock.getDateLong(0).getTime() / 1000);
@@ -4879,7 +5006,7 @@ id_exclude - иди товаров которые есть в приложени
         call.enqueue(new Callback<OpinionResponse>() {
             @Override
             public void onResponse(Call<OpinionResponse> call, Response<OpinionResponse> response) {
-                Log.e("downloadOpinions", "Response: " + response.body());
+                Log.e("downloadOpinions", "Response: " + compactBodyLog(response.body()));
 
                 if (response.body() != null && response.body().list != null
                         && response.body().state && !response.body().list.isEmpty())
@@ -4907,7 +5034,7 @@ id_exclude - иди товаров которые есть в приложени
         call.enqueue(new Callback<OpinionThemeResponse>() {
             @Override
             public void onResponse(Call<OpinionThemeResponse> call, Response<OpinionThemeResponse> response) {
-                Log.e("downloadOpinions2", "Response: " + response.body());
+                Log.e("downloadOpinions2", "Response: " + compactBodyLog(response.body()));
                 if (response.body() != null && response.body().list != null
                         && response.body().state && !response.body().list.isEmpty())
                     SQL_DB.opinionThemeDao().insertAll(response.body().list);

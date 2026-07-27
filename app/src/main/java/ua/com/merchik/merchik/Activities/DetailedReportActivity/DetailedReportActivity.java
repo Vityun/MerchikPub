@@ -50,6 +50,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.compose.ui.platform.ComposeView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -74,6 +75,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -85,6 +87,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
+import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -166,6 +169,7 @@ public class DetailedReportActivity extends toolbar_menus {
     private CommentViewModel commentViewModel;
 
     private boolean isNavigationBlocked = false;
+    private PauseWorkComposeHost pauseWorkComposeHost;
 
 //    public static ImageView imageViewVideoRedDot;
 
@@ -227,6 +231,7 @@ public class DetailedReportActivity extends toolbar_menus {
             viewPager = findViewById(R.id.viewPager);
 
             imageView = findViewById(R.id.red_dot);
+            initPauseWorkUi();
 
 
             Log.e("TRANSLATES_DEBUG", "Globals.langId: " + Globals.langId);
@@ -335,6 +340,70 @@ public class DetailedReportActivity extends toolbar_menus {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "Exception e: " + e);
         }
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        syncPauseWorkUi();
+    }
+
+    public void startPauseWorkUi(WpDataDB sourceWpData) {
+        WpDataDB source = sourceWpData != null ? sourceWpData : wpDataDB;
+        if (source == null || source.getCode_dad2() == 0) {
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/startPauseWorkUi", "WpDataDB is empty or code_dad2 is 0");
+            Toast.makeText(this, "Не удалось включить паузу для этой работы.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        PauseWorkStateHolder.start(source.getCode_dad2(), source.getId());
+        syncPauseWorkUi();
+        invalidateOptionsMenu();
+    }
+
+    private void initPauseWorkUi() {
+        ComposeView pauseWorkOverlay = findViewById(R.id.pause_work_overlay);
+        if (pauseWorkOverlay == null) {
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/initPauseWorkUi", "pause_work_overlay not found");
+            return;
+        }
+
+        pauseWorkComposeHost = new PauseWorkComposeHost(
+                pauseWorkOverlay,
+                this::continuePausedWork,
+                this::openPlanWorksFromPauseDialog
+        );
+        syncPauseWorkUi();
+    }
+
+    private void syncPauseWorkUi() {
+        if (pauseWorkComposeHost == null || wpDataDB == null) {
+            return;
+        }
+
+        PauseWorkUiState state = PauseWorkStateHolder.get(wpDataDB.getCode_dad2());
+        if (state != null) {
+            pauseWorkComposeHost.show(state);
+        } else {
+            pauseWorkComposeHost.hide();
+        }
+        invalidateOptionsMenu();
+    }
+
+    private void continuePausedWork() {
+        if (wpDataDB != null) {
+            PauseWorkStateHolder.stop(wpDataDB.getCode_dad2());
+        }
+
+        if (pauseWorkComposeHost != null) {
+            pauseWorkComposeHost.hide();
+        }
+        invalidateOptionsMenu();
+    }
+
+    private void openPlanWorksFromPauseDialog() {
+        Intent intent = new Intent(this, WPDataActivity.class);
+        startActivity(intent);
+    }
 
     public static List<ViewListSDB> checkVideos(Integer[] ids, Clicks.clickVoid click) {
         List<ViewListSDB> viewListSDB = new ArrayList<>();
@@ -942,7 +1011,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 MakePhoto.clearPendingPhoto(this);
             }
 
-            if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
+            if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO && resultCode == RESULT_OK) {
                 try {
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     List<Fragment> fragments = fragmentManager.getFragments();
@@ -951,20 +1020,41 @@ public class DetailedReportActivity extends toolbar_menus {
                     AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
                     CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
 
-                    StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
-                    MakePhoto.openCameraPhotoUri = null;
+                    String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+                    if (TextUtils.isEmpty(photoPath)) {
+                        Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Photo path is empty");
+                        MakePhoto.clearPendingPhoto(this);
+                        return;
+                    }
 
-                    fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+                    StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client);
+                    MakePhoto.clearPendingPhoto(this);
+
+                    if (stackPhotoDB != null) {
+                        fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+                    }
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
                 }
             } else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK) {
                 try {
-                    savePhotoPromotionTov(new File(MakePhoto.openCameraPhotoUri), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
+                    String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+                    if (TextUtils.isEmpty(photoPath)) {
+                        Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Photo path is empty");
+                        MakePhoto.clearPendingPhoto(this);
+                        return;
+                    }
+
+                    savePhotoPromotionTov(new File(photoPath), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
+                    MakePhoto.clearPendingPhoto(this);
                     // Концептуально тут нужно эту фотку как-то обработать.
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Exception e: " + e);
                 }
+            } else if ((requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO || requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO)
+                    && resultCode == RESULT_CANCELED) {
+                MakePhoto.deletePendingPhotoFileIfExists(this);
+                MakePhoto.clearPendingPhoto(this);
             }
 
             try {
@@ -1054,9 +1144,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
                 StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(pendingPhoto);
 
-                JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + JsonLogUtils.stackPhoto(photo));
                 Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
 
                 final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
@@ -1113,9 +1201,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
                 }
 
-                JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + JsonLogUtils.stackPhoto(photo));
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
                 MakePhoto.clearPendingPhoto(activity);
@@ -1202,7 +1288,8 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setClient_id(client.id);
             stackPhotoDB.setCustomerTxt(client.nm);
 
-            stackPhotoDB.setUser_id(Globals.userId);
+            int currentUserId = Globals.getCurrentUserId();
+            stackPhotoDB.setUser_id(currentUserId);
             stackPhotoDB.setPhoto_type(0);
 
             stackPhotoDB.setDvi(1);
@@ -1251,8 +1338,9 @@ public class DetailedReportActivity extends toolbar_menus {
             String GP = log != null ? log.gp : "";
             stackPhotoDB.gp = GP;
 
-            stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
+            int currentUserId = Globals.getCurrentUserId();
+            stackPhotoDB.setUser_id(currentUserId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(currentUserId));
             stackPhotoDB.setPhoto_type(PHOTO_PROMOTION_TOV);
             stackPhotoDB.tovar_id = tovarDB.getiD();
 
@@ -1297,8 +1385,9 @@ public class DetailedReportActivity extends toolbar_menus {
             String GP = log != null ? log.gp : "";
             stackPhotoDB.gp = GP;
 
-            stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
+            int currentUserId = Globals.getCurrentUserId();
+            stackPhotoDB.setUser_id(currentUserId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(currentUserId));
 
             stackPhotoDB.setPhoto_type(photoType);
             stackPhotoDB.tovar_id = tovarId;
@@ -1322,8 +1411,7 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(file.getAbsolutePath());
 
-            String jo = new Gson().toJson(stackPhotoDB);
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + JsonLogUtils.stackPhoto(stackPhotoDB));
 
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             Toast.makeText(context, "Фото (" + id + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();

@@ -44,6 +44,8 @@ public class MyApplication extends Application {
 
         MyApplication.context = getApplicationContext();
         Globals.restoreCurrentUserIdFromPrefs(this);
+        Globals.restoreCurrentSessionFromPrefs(this);
+        Globals.restoreCurrentTokenFromPrefs(this);
         registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {

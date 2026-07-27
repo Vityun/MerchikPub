@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -466,6 +467,8 @@ public class PhotoLogActivity extends toolbar_menus {
                 if (resultCode == RESULT_OK) {
                     savePhoto();
                 } else {
+                    MakePhoto.deletePendingPhotoFileIfExists(this);
+                    MakePhoto.clearPendingPhoto(this);
                     // Тут надо будет обработать удаление, наверно, фотки.
                 }
                 break;
@@ -478,12 +481,29 @@ public class PhotoLogActivity extends toolbar_menus {
     private void savePhoto() {
         if (codeDad2 != 0) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
+            if (wp == null) {
+                Globals.writeToMLOG("ERROR", "PhotoLogActivity/savePhoto", "WpDataDB not found, codeDad2=" + codeDad2);
+                MakePhoto.clearPendingPhoto(this);
+                return;
+            }
 
             AddressSDB addr = SQL_DB.addressDao().getById(wp.getAddr_id());
             CustomerSDB client = SQL_DB.customerDao().getById(wp.getClient_id());
+            if (addr == null || client == null) {
+                Globals.writeToMLOG("ERROR", "PhotoLogActivity/savePhoto", "Address or client not found, addr=" + wp.getAddr_id() + ", client=" + wp.getClient_id());
+                MakePhoto.clearPendingPhoto(this);
+                return;
+            }
 
-            StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
-            MakePhoto.openCameraPhotoUri = null;
+            String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
+            if (TextUtils.isEmpty(photoPath)) {
+                Globals.writeToMLOG("ERROR", "PhotoLogActivity/savePhoto", "Photo path is empty");
+                MakePhoto.clearPendingPhoto(this);
+                return;
+            }
+
+            StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client);
+            MakePhoto.clearPendingPhoto(this);
         }
     }
 
@@ -502,7 +522,7 @@ public class PhotoLogActivity extends toolbar_menus {
             stackPhotoDB.setClient_id(client.id);
             stackPhotoDB.setCustomerTxt(client.nm);
 
-            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUser_id(Globals.getCurrentUserId());
             stackPhotoDB.setPhoto_type(5);
 
             stackPhotoDB.setDvi(1);
