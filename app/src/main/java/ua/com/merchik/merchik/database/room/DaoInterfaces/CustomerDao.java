@@ -15,6 +15,9 @@ public interface CustomerDao {
     @Query("SELECT * FROM client")
     List<CustomerSDB> getAll();
 
+    @Query("SELECT COUNT(*) FROM client")
+    int getCount();
+
     @Query("SELECT * FROM client ORDER BY nm DESC")
     List<CustomerSDB> getAllSortedByNm();
 

@@ -233,9 +233,11 @@ class SamplePhotoSDBViewModel @Inject constructor(
 //                            im
 //                        }
 //                        else ->
-                            RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
+                            PhotoTypeRealm.getPhotoTypeById(it)
 
 //                    }
+                val imagesTypeId = imagesType?.id ?: it
+                val imagesTypeName = imagesType?.nm ?: "Тип фото $it"
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",
                     ImagesTypeListDB::class,
@@ -245,8 +247,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "subTitle",
                     "photo_tp",
                     "id",
-                    mutableListOf(imagesType.id.toString()),
-                    mutableListOf(imagesType.nm),
+                    mutableListOf(imagesTypeId.toString()),
+                    mutableListOf(imagesTypeName),
                     true
                 )
                 itemsFilter.add(filterImagesTypeListDB)

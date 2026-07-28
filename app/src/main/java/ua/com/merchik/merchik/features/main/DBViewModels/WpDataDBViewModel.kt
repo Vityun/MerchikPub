@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -68,7 +69,9 @@ class WpDataDBViewModel @Inject constructor(
 // РНО 14041
 
     override fun getDefaultGroupUserFields(): List<String> {
-        return if (contextUI == ContextUI.WP_DATA)
+        return if (contextUI == ContextUI.WP_DATA ||
+            contextUI == ContextUI.WP_DATA_PAUSED
+        )
             emptyList()
         else
             listOf(
@@ -83,7 +86,8 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return if (contextUI == ContextUI.WP_DATA)
+        return if (contextUI == ContextUI.WP_DATA ||
+            contextUI == ContextUI.WP_DATA_PAUSED)
             "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta, status".split(
                 ","
             )
@@ -512,6 +516,10 @@ class WpDataDBViewModel @Inject constructor(
                 visits
             }
 
+            ContextUI.WP_DATA_PAUSED -> {
+                getPausedWpDataRows()
+            }
+
             else -> {
                 Globals.writeToMLOG(
                     "INFO",
@@ -594,6 +602,75 @@ class WpDataDBViewModel @Inject constructor(
                 }
             }
 
+    }
+
+    private fun getPausedWpDataRows(): List<WpDataDB> {
+        val codeDad2List = getPausedCodeDad2List()
+        if (codeDad2List.isEmpty()) {
+            Globals.writeToMLOG(
+                "INFO",
+                "WpDataDBViewModel.getPausedWpDataRows",
+                "codeDad2List is empty"
+            )
+            return emptyList()
+        }
+
+        return runCatching {
+            val orderByDad2 = codeDad2List
+                .mapIndexed { index, codeDad2 -> codeDad2 to index }
+                .toMap()
+
+            RealmManager.INSTANCE
+                .where(WpDataDB::class.java)
+                .`in`("code_dad2", codeDad2List.toTypedArray())
+                .findAll()
+                .let { RealmManager.INSTANCE.copyFromRealm(it) }
+                .sortedBy { orderByDad2[it.code_dad2] ?: Int.MAX_VALUE }
+        }.onFailure { error ->
+            Globals.writeToMLOG(
+                "ERROR",
+                "WpDataDBViewModel.getPausedWpDataRows",
+                "Exception: $error, codeDad2List=$codeDad2List"
+            )
+        }.getOrDefault(emptyList())
+    }
+
+    private fun getPausedCodeDad2List(): List<Long> {
+        val root = runCatching {
+            JsonParser.parseString(dataJson ?: "").asJsonObject
+        }.onFailure { error ->
+            Globals.writeToMLOG(
+                "ERROR",
+                "WpDataDBViewModel.getPausedCodeDad2List",
+                "Bad dataJson: $dataJson, error=$error"
+            )
+        }.getOrNull() ?: return emptyList()
+
+        val listElement = root.get("codeDad2List")
+            ?: root.getAsJsonObjectOrNull("nameValuePairs")?.get("codeDad2List")
+            ?: root.get("codeDad2")
+            ?: root.getAsJsonObjectOrNull("nameValuePairs")?.get("codeDad2")
+
+        return when {
+            listElement == null || listElement.isJsonNull -> emptyList()
+            listElement.isJsonArray -> listElement.asJsonArray
+                .mapNotNull { it.asLongOrNull() }
+                .filter { it > 0L }
+                .distinct()
+
+            else -> listOfNotNull(listElement.asLongOrNull())
+                .filter { it > 0L }
+                .distinct()
+        }
+    }
+
+    private fun JsonObject.getAsJsonObjectOrNull(key: String): JsonObject? {
+        val element = get(key)
+        return if (element != null && element.isJsonObject) element.asJsonObject else null
+    }
+
+    private fun JsonElement.asLongOrNull(): Long? {
+        return runCatching { asLong }.getOrNull()
     }
 
 

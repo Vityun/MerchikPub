@@ -63,10 +63,8 @@ public class  CustomerExchange <T>{
 
                             Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body() size: " + ((CustomerResponse) response.body()).list.size());
 
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                             exchange.onSuccess(cus.list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

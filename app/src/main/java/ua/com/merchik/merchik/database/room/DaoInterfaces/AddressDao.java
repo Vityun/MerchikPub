@@ -15,6 +15,9 @@ public interface AddressDao {
     @Query("SELECT * FROM address")
     List<AddressSDB> getAll();
 
+    @Query("SELECT COUNT(*) FROM address")
+    int getCount();
+
     @Query("SELECT * FROM address ORDER BY nm DESC")
     List<AddressSDB> getAllSortedByNm();
 

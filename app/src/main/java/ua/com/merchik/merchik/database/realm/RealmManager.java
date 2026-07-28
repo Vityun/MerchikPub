@@ -9,8 +9,6 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.util.Log;
 
-import androidx.preference.PreferenceManager;
-
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -36,7 +34,10 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.synchronization.SynchronizationTimetableRepository;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
+import ua.com.merchik.merchik.database.room.RoomManager;
+import ua.com.merchik.merchik.database.room.repository.ReferenceDictionaryRepository;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.ArticleDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
@@ -79,7 +80,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-                .schemaVersion(29)
+                .schemaVersion(30)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -90,17 +91,10 @@ public class RealmManager {
 
         sharedPreferences = context.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("realm", false)) {
-            List<SynchronizationTimetableDB> synchronizationTimetableDBList = RealmManager.getSynchronizationTimetable();
+            RealmResults<SynchronizationTimetableDB> synchronizationTimetableDBList =
+                    INSTANCE.where(SynchronizationTimetableDB.class).findAll();
             if (synchronizationTimetableDBList == null || synchronizationTimetableDBList.isEmpty()) {
                 addSynchronizationTimetable();
-                PreferenceManager.getDefaultSharedPreferences(context).edit()
-                        .putString("user_id", null).apply();
-
-                PreferenceManager.getDefaultSharedPreferences(context).edit()
-                        .putString("login", null).apply();
-
-                PreferenceManager.getDefaultSharedPreferences(context).edit()
-                        .putString("password", null).apply();
             }
         } else {
             sharedPreferences.edit().putBoolean("realm", true).apply();
@@ -110,6 +104,11 @@ public class RealmManager {
     }
 
     public static void addSynchronizationTimetable() {
+        if (RoomManager.SQL_DB != null) {
+            SynchronizationTimetableRepository.ensureDefaults();
+            return;
+        }
+
         INSTANCE.beginTransaction();
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(1, "wp_data", 600, 0, 0, 0, 0, "План робіт", 0));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(2, "image_tp", 36000, 0, 0, 0, 0, "Типи фото", 0));
@@ -520,10 +519,7 @@ public class RealmManager {
      */
     public static boolean setImagesTp(List<ImagesTypeListDB> ImageTp) {
         Log.e("REALM_DB_UPDATE", "TYPE_START");
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(ImagesTypeListDB.class);
-        INSTANCE.copyToRealmOrUpdate(ImageTp);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertImageTypes(ImageTp);
         Log.e("REALM_DB_UPDATE", "TYPE_END");
         return true;
     }
@@ -740,10 +736,7 @@ public class RealmManager {
      */
     public static boolean setTradeMarks(List<TradeMarkDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
-        INSTANCE.beginTransaction();
-//        INSTANCE.delete(TradeMarkDB.class);
-        INSTANCE.copyToRealmOrUpdate(list);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertTradeMarks(list);
         return true;
     }
 
@@ -1157,9 +1150,8 @@ public class RealmManager {
 
 
     // IMAGES TP:-----------------------------------------------------------------------------------
-    public static RealmResults<ImagesTypeListDB> getAllImagesTypeList() {
-        //"SELECT * FROM images_tp;"
-        return INSTANCE.where(ImagesTypeListDB.class).findAll();
+    public static List<ImagesTypeListDB> getAllImagesTypeList() {
+        return ReferenceDictionaryRepository.getImageTypes();
     }
 
     // STACK PHOTO:---------------------------------------------------------------------------------
@@ -1611,18 +1603,16 @@ public class RealmManager {
 
 
     // Synchronization Timetable:---------------------------------------------------------------------------------
-    public static RealmResults<SynchronizationTimetableDB> getSynchronizationTimetable() {
-        return INSTANCE.where(SynchronizationTimetableDB.class).findAll();
+    public static List<SynchronizationTimetableDB> getSynchronizationTimetable() {
+        return SynchronizationTimetableRepository.getAllLegacy();
     }
 
     public static SynchronizationTimetableDB getSynchronizationTimetableRowByTable(String tableName) {
-        return INSTANCE.where(SynchronizationTimetableDB.class).equalTo("table_name", tableName).findFirst();
+        return SynchronizationTimetableRepository.getByTableName(tableName);
     }
 
     public static void setToSynchronizationTimetableDB(SynchronizationTimetableDB synchronizationTimetableDB) {
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(synchronizationTimetableDB);
-        INSTANCE.commitTransaction();
+        SynchronizationTimetableRepository.upsertLegacy(synchronizationTimetableDB);
     }
 
 // Synchronization Timetable END:---------------------------------------------------------------------------------
@@ -1841,46 +1831,46 @@ public class RealmManager {
     // CUSTOMER:----------------------------START-----------------------------------------------
 
     public static boolean setRowToCustomer(List<CustomerDB> list) {
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(list);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertCustomers(list);
         return true;
     }
 
     public static String getCustomerNm(String id) {
-        CustomerDB realmResults = INSTANCE.where(CustomerDB.class).equalTo("id", id).findFirst();
-        return realmResults.getNm();
+        CustomerDB customer = ReferenceDictionaryRepository.getCustomerById(id);
+        return customer != null ? customer.getNm() : null;
     }
     // CUSTOMER:----------------------------END-----------------------------------------------
 
 
     // ADDRESS:----------------------------START-----------------------------------------------
     public static boolean setRowToAddress(List<AddressDB> list) {
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(list);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertAddresses(list);
         return true;
     }
 
     public static String getAddressNm(Integer id) {
-        AddressDB realmResults = INSTANCE.where(AddressDB.class).equalTo("addrId", id).findFirst();
-        return realmResults.getNm();
+        if (id == null) {
+            return null;
+        }
+        AddressDB address = ReferenceDictionaryRepository.getAddressById(id);
+        return address != null ? address.getNm() : null;
     }
     // ADDRESS:----------------------------END-----------------------------------------------
 
 
     // USERS:----------------------------START-----------------------------------------------
     public static boolean setRowToUsers(List<UsersDB> list) {
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(list);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertUsers(list);
         return true;
     }
 
     public static String getUsersNm(Integer id) {
-        UsersDB realmResults = INSTANCE.where(UsersDB.class).equalTo("id", id).findFirst();
-        Log.e("PHOTO_REPORT", "userNmText(0): " + realmResults.getNm());
-        return realmResults.getNm();
+        if (id == null) {
+            return null;
+        }
+        UsersDB user = ReferenceDictionaryRepository.getUserById(id);
+        Log.e("PHOTO_REPORT", "userNmText(0): " + (user != null ? user.getNm() : null));
+        return user != null ? user.getNm() : null;
     }
     // USERS:----------------------------END-----------------------------------------------
 
@@ -2172,7 +2162,7 @@ public class RealmManager {
      * Получение данных Manufacturer NM по ID
      */
     public static TradeMarkDB getNmById(String id) {
-        return INSTANCE.where(TradeMarkDB.class).equalTo("iD", id).findFirst();
+        return ReferenceDictionaryRepository.getTradeMarkById(id);
     }
 
 

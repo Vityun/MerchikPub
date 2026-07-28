@@ -41,10 +41,8 @@ public class OblastExchange {
                 public void onResponse(Call<OblastResponse> call, Response<OblastResponse> response) {
                     try {
                         if (response.body() != null){
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                             exchange.onSuccess(response.body().list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadOblastTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

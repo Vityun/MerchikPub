@@ -5,14 +5,11 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.room.Room;
-import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import ua.com.merchik.merchik.Utils.DatabaseInitializer;
-import ua.com.merchik.merchik.data.synchronization.TableName;
+import ua.com.merchik.merchik.data.synchronization.SynchronizationTimetableRepository;
+import ua.com.merchik.merchik.database.room.repository.ReferenceDictionaryRepository;
 
 public class RoomManager {
 
@@ -54,39 +51,13 @@ public class RoomManager {
                         MIGRATION_73_74,
                         MIGRATION_74_75,
                         MIGRATION_77_78,
-                        MIGRATION_78_79
+                        MIGRATION_78_79,
+                        MIGRATION_79_80
                 )
-                .addCallback(new RoomDatabase.Callback() {
-                    @Override
-                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
-                        super.onCreate(db);
-                        initializeDefaultData(SQL_DB);
-                    }
-
-                    @Override
-                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
-                        super.onOpen(db);
-                        checkAndInitialize(SQL_DB);
-                    }
-                })
-
                 .build();
-    }
 
-    private static void initializeDefaultData(AppDatabase database) {
-        new DatabaseInitializer(database.synchronizationTimetableDao())
-                .initializeDefaultData();
-    }
-
-    private static void checkAndInitialize(AppDatabase database) {
-        database.synchronizationTimetableDao().getCount()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(count -> {
-                    if (count == 0) {
-                        initializeDefaultData(database);
-                    }
-                });
+        SynchronizationTimetableRepository.migrateFromRealmIfNeeded();
+        ReferenceDictionaryRepository.migrateFromRealmIfNeeded();
     }
 
 //    ----------------------------------------------------------------------------------------------
@@ -980,9 +951,48 @@ public class RoomManager {
                             "(`id`, `tableName`, `syncPeriodSeconds`, `lastDownloadTime`, `lastUploadTime`, " +
                             "`downloadedItems`, `uploadedItems`, `description`, `isUserGenerated`, " +
                             "`lastDownloadStatus`, `lastUploadStatus`) VALUES (" +
-                            TableName.WP_DATA_PAUSE.ordinal() + ", " +
+                            "49, " +
                             "'wp_data_pause', " +
                             "600, 0, 0, 0, 0, 'Auto-generated', 1, 0, 0)"
+            );
+        }
+    };
+
+    public static final Migration MIGRATION_79_80 = new Migration(79, 80) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `theme_list` (" +
+                            "`id` TEXT NOT NULL, " +
+                            "`nm` TEXT, " +
+                            "`comment` TEXT, " +
+                            "`grp_id` TEXT, " +
+                            "`tp` TEXT, " +
+                            "`need_photo` INTEGER, " +
+                            "`need_report` INTEGER, " +
+                            "`dt_update` TEXT, " +
+                            "`opros_theme` INTEGER, " +
+                            "`audio_filter` INTEGER, " +
+                            "PRIMARY KEY(`id`)" +
+                            ")"
+            );
+
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `trade_mark` (" +
+                            "`id` TEXT NOT NULL, " +
+                            "`nm` TEXT, " +
+                            "`dt_update` TEXT, " +
+                            "`sort_type` TEXT, " +
+                            "PRIMARY KEY(`id`)" +
+                            ")"
+            );
+
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `images_type_list` (" +
+                            "`id` INTEGER NOT NULL, " +
+                            "`nm` TEXT, " +
+                            "PRIMARY KEY(`id`)" +
+                            ")"
             );
         }
     };

@@ -118,10 +118,10 @@ class JournalPhotoSDBViewModel @Inject constructor(
             val zirParams = getZirFilterParamsOrNull()
 
             val typePhoto = if (zirParams != null) {
-                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoType())
+                PhotoTypeRealm.getPhotoType()
                     .filter { it.id.toString().toIntOrNull() in ZIR_PHOTO_TYPES }
             } else {
-                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoType())
+                PhotoTypeRealm.getPhotoType()
             }
 
             val clients = if (zirParams != null) {

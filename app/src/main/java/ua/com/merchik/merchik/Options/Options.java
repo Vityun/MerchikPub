@@ -1894,7 +1894,7 @@ public class Options {
             case 151122:
                 OptionButtonQuestionAnswer<?> optionButtonQuestionAnswer = new OptionButtonQuestionAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
-            case 139337:
+            case 174546:
                 OptionButtonPauseWork<?> optionButtonPauseWork = new OptionButtonPauseWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 

@@ -56,6 +56,7 @@ import androidx.work.WorkInfo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.io.File;
@@ -90,7 +91,6 @@ import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.PauseWorkStateHolder;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.PauseWorkUiState;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -126,6 +126,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -138,6 +140,7 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
 import ua.com.merchik.merchik.features.rno.RnoRequestCoordinator;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
@@ -195,6 +198,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private String toolbarMwnuItemServer;
 
     TextView textCartItemCount; // Текст иконки кол-ва фоток в toolbar
+    TextView pauseWorkBadgeTextView;
+    View pauseWorkActionView;
     TextView serverStat;
     public static int internetStatus;
 
@@ -741,7 +746,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         MenuItem pauseWorkItem = menu.findItem(R.id.menu_toolbar_pause_work);
         if (pauseWorkItem != null) {
-            pauseWorkItem.setVisible(PauseWorkStateHolder.hasActivePause());
+            setupPauseWorkToolbarItem(pauseWorkItem);
         }
 
         MenuItem item = menu.findItem(R.id.menu_toolbar_exchange);
@@ -952,7 +957,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         boolean result = super.onPrepareOptionsMenu(menu);
         MenuItem pauseWorkItem = menu.findItem(R.id.menu_toolbar_pause_work);
         if (pauseWorkItem != null) {
-            pauseWorkItem.setVisible(PauseWorkStateHolder.hasActivePause());
+            updatePauseWorkToolbarItem(pauseWorkItem);
         }
         return result;
     }
@@ -960,6 +965,39 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     /**
      * Устанавливается в счётчик число фоток
      */
+    private void setupPauseWorkToolbarItem(MenuItem pauseWorkItem) {
+        pauseWorkActionView = MenuItemCompat.getActionView(pauseWorkItem);
+        if (pauseWorkActionView != null) {
+            pauseWorkBadgeTextView = pauseWorkActionView.findViewById(R.id.pause_work_badge);
+            pauseWorkActionView.setOnClickListener(v -> openPausedWorkFromToolbar());
+        }
+        updatePauseWorkToolbarItem(pauseWorkItem);
+    }
+
+    private void updatePauseWorkToolbarItem(MenuItem pauseWorkItem) {
+        int activePauseCount = PauseWorkStateHolder.activePauseCount();
+        pauseWorkItem.setVisible(activePauseCount > 0);
+        setupPauseWorkBadge(activePauseCount);
+    }
+
+    private void setupPauseWorkBadge(int countPause) {
+        if (pauseWorkBadgeTextView == null) {
+            return;
+        }
+
+        if (countPause <= 0) {
+            if (pauseWorkBadgeTextView.getVisibility() != View.GONE) {
+                pauseWorkBadgeTextView.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        pauseWorkBadgeTextView.setText(String.valueOf(Math.min(countPause, 99)));
+        if (pauseWorkBadgeTextView.getVisibility() != View.VISIBLE) {
+            pauseWorkBadgeTextView.setVisibility(View.VISIBLE);
+        }
+    }
+
     void setupBadge(int countPhoto) {
         Log.e("setupBadge", "countPhoto: " + countPhoto);
         if (textCartItemCount != null) {
@@ -1155,14 +1193,29 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     }
 
     private boolean openPausedWorkFromToolbar() {
-        PauseWorkUiState state = PauseWorkStateHolder.getActive();
-        if (state == null) {
+        List<Long> codeDad2List = PauseWorkStateHolder.getActivePausedCodeDad2List();
+        if (codeDad2List == null || codeDad2List.isEmpty()) {
             invalidateOptionsMenu();
             return true;
         }
 
-        Intent intent = new Intent(this, DetailedReportActivity.class);
-        intent.putExtra("WpDataDB_ID", state.getWpDataId());
+        JsonArray codeDad2Json = new JsonArray();
+        for (Long codeDad2 : codeDad2List) {
+            if (codeDad2 != null && codeDad2 > 0L) {
+                codeDad2Json.add(codeDad2);
+            }
+        }
+
+        JsonObject dataJson = new JsonObject();
+        dataJson.add("codeDad2List", codeDad2Json);
+
+        Intent intent = new Intent(this, FeaturesActivity.class);
+        intent.putExtra("viewModel", WpDataDBViewModel.class.getCanonicalName());
+        intent.putExtra("dataJson", dataJson.toString());
+        intent.putExtra("modeUI", ModeUI.DEFAULT.name());
+        intent.putExtra("contextUI", ContextUI.WP_DATA_PAUSED.name());
+        intent.putExtra("title", "Работы на паузе");
+        intent.putExtra("subTitle", "Визиты, по которым работа временно остановлена");
         startActivity(intent);
         return true;
     }

@@ -224,9 +224,9 @@ class StackPhotoDBViewModel @Inject constructor(
                     else -> 0
                 }
 
-                val imagesType = RealmManager.INSTANCE.copyFromRealm(
-                    PhotoTypeRealm.getPhotoTypeById(typePhotoId)
-                )
+                val imagesType = PhotoTypeRealm.getPhotoTypeById(typePhotoId)
+                val imagesTypeId = imagesType?.id ?: typePhotoId
+                val imagesTypeName = imagesType?.nm ?: "Тип фото $typePhotoId"
 
                 val filterImagesTypeListDB = ItemFilter(
                     "Тип фото",
@@ -237,8 +237,8 @@ class StackPhotoDBViewModel @Inject constructor(
                     "subTitle",
                     "photo_type",
                     "id",
-                    mutableListOf(imagesType.id.toString()),
-                    mutableListOf(imagesType.nm),
+                    mutableListOf(imagesTypeId.toString()),
+                    mutableListOf(imagesTypeName),
                     true
                 )
 

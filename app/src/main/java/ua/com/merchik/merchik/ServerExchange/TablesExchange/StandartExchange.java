@@ -32,7 +32,7 @@ public class StandartExchange {
             data.act = "list";
 
             // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("standart_table"));
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("standart_table");
 //            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 //            data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 142);
@@ -54,10 +54,8 @@ public class StandartExchange {
                             && response.body().list != null && !response.body().list.isEmpty())
                         exchange.onSuccess(response.body().list);
 
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                    });
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
 
                 @Override
@@ -95,7 +93,7 @@ public class StandartExchange {
             data.act = "content_list";
 
             // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("content_table"));
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("content_table");
             data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 //            data.dt_change_from = "0";
@@ -117,10 +115,8 @@ public class StandartExchange {
                     Log.e("test", "response: " + response);
                     exchange.onSuccess(response.body().list);
 
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                    });
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
 
                 @Override

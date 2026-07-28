@@ -517,12 +517,10 @@ public class TablesLoadingUnloading {
                                 Log.e("downloadWPData", "Added " + wpDataDBList.size() + " works");
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
                                 downloadTovarTable(null, wpDataDBList);
-                                INSTANCE.executeTransaction(realm -> {
-                                    if (sTable != null) {
-                                        sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                                        realm.copyToRealmOrUpdate(sTable);
-                                    }
-                                });
+                                if (sTable != null) {
+                                    sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
+                                    RealmManager.setToSynchronizationTimetableDB(sTable);
+                                }
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
                             } else {
 //                                Toast.makeText(context, "No works added", Toast.LENGTH_LONG).show();
@@ -797,12 +795,10 @@ public class TablesLoadingUnloading {
 
                         SQL_DB.locationDevicesDao().upsertAll(result.list);
 
-                        INSTANCE.executeTransaction(realm -> {
-                            if (sTable != null) {
-                                sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                                realm.copyToRealmOrUpdate(sTable);
-                            }
-                        });
+                        if (sTable != null) {
+                            sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
+                            RealmManager.setToSynchronizationTimetableDB(sTable);
+                        }
 
                         Globals.writeToMLOG("INFO", "TablesLoadingUnloading.downloadWiFi", "Data inserted successfully. Size: " + result.list.size());
                     } else
@@ -2063,7 +2059,7 @@ public class TablesLoadingUnloading {
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
         long lastUpdate = 0;
-        SynchronizationTimetableDB realmResults = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("report_prepare"));
+        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
 //        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
 //        if (realmResults != null) lastUpdate = realmResults.getVpo_export();
 
@@ -2108,10 +2104,8 @@ public class TablesLoadingUnloading {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                         Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-                        INSTANCE.executeTransaction(realm -> {
-                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                            realm.copyToRealmOrUpdate(realmResults);
-                        });
+                        realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
+                        RealmManager.setToSynchronizationTimetableDB(realmResults);
                     } else {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                     }
@@ -2760,10 +2754,8 @@ id_exclude - иди товаров которые есть в приложени
 
                             RealmManager.setTovarAsync(list);
 
-                            INSTANCE.executeTransaction(realm -> {
-                                realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(realmResults);
-                            });
+                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(realmResults);
 
 //                            getTovarImg(list, "small");
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
@@ -2936,10 +2928,8 @@ id_exclude - иди товаров которые есть в приложени
 
                             RealmManager.setTovarAsync(list);
 
-                            INSTANCE.executeTransaction(realm -> {
-                                realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(realmResults);
-                            });
+                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(realmResults);
 
 //                            getTovarImg(list, "small");
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
@@ -3615,10 +3605,8 @@ id_exclude - иди товаров которые есть в приложени
                                     Log.e("TAG_TEST_WP", "RESPONSE_OK");
                                     if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                                         RealmManager.updateWorkPlanFromServer(response.body().getList()); // Получаем данные для выгрузки
-                                        INSTANCE.executeTransaction(realm -> {
-                                            sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                                            realm.copyToRealmOrUpdate(sTable);
-                                        }); //
+                                        sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
+                                        RealmManager.setToSynchronizationTimetableDB(sTable);
 
                                     }
                                 }
@@ -3780,11 +3768,7 @@ id_exclude - иди товаров которые есть в приложени
         Log.e("cronUpdateTables", "ALL START");
 
         long currentTime = TrustedTime.nowServerSecOrLocalSec(); // Текущее время
-//        SynchronizationTimetableDB synchTableWp = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-
-        SynchronizationTimetableDB synchTableWp = INSTANCE.where(SynchronizationTimetableDB.class)
-                .equalTo("table_name", "wp_data")
-                .findFirst();
+        SynchronizationTimetableDB synchTableWp = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
 
 
         long l = 0;
@@ -3848,27 +3832,13 @@ id_exclude - иди товаров которые есть в приложени
 
             // Сохранение последнего обмена
             try {
-                INSTANCE.executeTransaction(
-                        realm -> {
-                            if (synchTableWp != null) {
-                                synchTableWp.setVpi_app(TrustedTime.syncWatermarkSec(synchTableWp.getVpi_app(), 60));
-                                realm.insertOrUpdate(synchTableWp);
-                                Log.d("updateRealm", "here");
-                            } else {
-                                Log.d("updateRealm", "?");
-                            }
-                        }/*,
-                        () -> {
-
-                            if (synchTableWp != null) {
-                                INSTANCE.insertOrUpdate(synchTableWp);
-                            }
-                        },
-                        error -> Log.d("updateRealm", "error: " + error)*/
-                );
-
-
-//                INSTANCE.insertOrUpdate(synchTableWp);
+                if (synchTableWp != null) {
+                    synchTableWp.setVpi_app(TrustedTime.syncWatermarkSec(synchTableWp.getVpi_app(), 60));
+                    RealmManager.setToSynchronizationTimetableDB(synchTableWp);
+                    Log.d("updateRealm", "here");
+                } else {
+                    Log.d("updateRealm", "?");
+                }
             } catch (Exception e) {
                 Log.d("updateRealm", "SAVE LAST UPDATE ERROR: " + e);
                 Log.e("cronUpdateTables", "SAVE LAST UPDATE ERROR: " + e);
@@ -3883,13 +3853,14 @@ id_exclude - иди товаров которые есть в приложени
     public void updateTables(Context context) {
         Log.e("TAG_TEST_WP", "ALL START");
         long currentTime = TrustedTime.nowServerSecOrLocalSec(); // Текущее время
-        RealmResults<SynchronizationTimetableDB> realmResults = getSynchronizationTimetable();
+        List<SynchronizationTimetableDB> realmResults = getSynchronizationTimetable();
 
         for (int i = 0; i < realmResults.size(); i++) {
-            long l = realmResults.get(i).getVpi_server() + realmResults.get(i).getUpdate_frequency();
+            SynchronizationTimetableDB row = realmResults.get(i);
+            long l = row.getVpi_app() + row.getUpdate_frequency();
             if (l < currentTime) {
-                switch (realmResults.get(i).getId()) {
-                    case 1:
+                switch (row.getTable_name()) {
+                    case "wp_data":
 //                        downloadWPData(context);
                         Log.e("TAG_TEST_WP", "ALL START/ GET WP");
 //                        updateWpData();
@@ -3939,13 +3910,13 @@ id_exclude - иди товаров которые есть в приложени
                         uploadReportPrepareToServer();
 
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
-                    case 2:
+                    case "image_tp":
                         downloadImagesTp();
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
-                    case 3:
+                    case "client_group_tp":
                         downloadTypeGrp();
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 36000, currentTime, currentTime, 0, 0));
-                    case 4:
+                    case "log_mp":
                         // Пока делать нечего
                 }
             }
@@ -4799,7 +4770,7 @@ id_exclude - иди товаров которые есть в приложени
             data.act = "theme_list";
 
             // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("theme_list"));
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("theme_list");
             data.dt = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
             Gson gson = new Gson();
@@ -4827,10 +4798,8 @@ id_exclude - иди товаров которые есть в приложени
                         RoomManager.SQL_DB.initStateDao().markThemeLoaded();
                         if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
                             ThemeRealm.setThemeDBTable(response.body().getList());
-                            INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                         }
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadTheme/onResponse", "Exception e: " + e);

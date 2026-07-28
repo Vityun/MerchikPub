@@ -12,6 +12,8 @@ import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -178,6 +180,8 @@ public class Exchange {
 
     //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ExecutorService executor = Executors.newFixedThreadPool(16);
+    private static final AtomicBoolean START_EXCHANGE_RUNNING = new AtomicBoolean(false);
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final PhotoDownload server;
 
@@ -231,6 +235,31 @@ public class Exchange {
      * Начало Обмена. Внутри находятся все Обмены
      */
     public void startExchange() {
+        if (shouldGuardRegularExchange()) {
+            if (!START_EXCHANGE_RUNNING.compareAndSet(false, true)) {
+                Globals.writeToMLOG("INFO", "Exchange/startExchange", "Skip duplicate startExchange while previous start is running");
+                return;
+            }
+
+            try {
+                startExchangeInternal();
+            } finally {
+                START_EXCHANGE_RUNNING.set(false);
+            }
+            return;
+        }
+
+        startExchangeInternal();
+    }
+
+    private boolean shouldGuardRegularExchange() {
+        return Globals.getCurrentUserId() != 172906
+                && Globals.getCurrentUserId() != 19653
+                && exchangeTime + retryTime < System.currentTimeMillis()
+                && internetStatus == 1;
+    }
+
+    private void startExchangeInternal() {
 
 //        if (false)
         if (Globals.getCurrentUserId() != 172906)
@@ -288,12 +317,10 @@ public class Exchange {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
 
                                     try {
-                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                                            if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                                samplePhotoExchange.synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(samplePhotoExchange.synchronizationTimetableDB.getVpi_app(), 120));
-                                                realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
-                                            }
-                                        });
+                                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
+                                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(samplePhotoExchange.synchronizationTimetableDB.getVpi_app(), 120));
+                                            RealmManager.setToSynchronizationTimetableDB(samplePhotoExchange.synchronizationTimetableDB);
+                                        }
                                     } catch (Exception e) {
                                         Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
                                     }
@@ -1310,18 +1337,7 @@ public class Exchange {
                     } else if (exchangeTime + retryTime < System.currentTimeMillis()
                             && toolbar_menus.internetStatusG == Globals.InternetStatus.NO_SERVER) {
 
-                        new MessageDialogBuilder(unwrap(context))
-                                .setStatus(DialogStatus.ALERT)
-                                .setTitle("Сервер сейчас занят")
-                                .setSubTitle("Время ответа от сервера может быть больше чем обычно")
-                                .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
-                                        "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут")
-                                .setOnConfirmAction(() -> {
-                                    exchangeTime = 0;
-                                    startExchange();
-                                    return Unit.INSTANCE;
-                                })
-                                .show();
+                        showServerBusyDialog();
 
                     } else {
                         long time = (System.currentTimeMillis() - exchangeTime) / 1000;
@@ -1331,6 +1347,31 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange", "Exception e: " + e);
                 }
 //        }).start();
+    }
+
+    private void showServerBusyDialog() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            MAIN_HANDLER.post(this::showServerBusyDialog);
+            return;
+        }
+
+        if (context == null) {
+            Globals.writeToMLOG("ERROR", "Exchange/showServerBusyDialog", "context == null");
+            return;
+        }
+
+        new MessageDialogBuilder(unwrap(context))
+                .setStatus(DialogStatus.ALERT)
+                .setTitle("Сервер сейчас занят")
+                .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+                .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
+                        "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут")
+                .setOnConfirmAction(() -> {
+                    exchangeTime = 0;
+                    startExchange();
+                    return Unit.INSTANCE;
+                })
+                .show();
     }
 
     private Activity unwrap(Context context) {
@@ -1763,7 +1804,7 @@ public class Exchange {
     }
 
     public void updateDossierSotr() {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr");
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
 
         JsonObject requestJson = new JsonObject();
@@ -1796,7 +1837,7 @@ public class Exchange {
     }
 
     public void updateVacancy() {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vacancy"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("vacancy");
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
 
         JsonObject requestJson = new JsonObject();
@@ -1828,7 +1869,7 @@ public class Exchange {
     }
 
     public void updateBonus() {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("bonus"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("bonus");
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
 
         JsonObject requestJson = new JsonObject();
@@ -1860,7 +1901,7 @@ public class Exchange {
     }
 
     void updateSiteURL() {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_url"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("site_url");
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
 
         JsonObject requestJson = new JsonObject();
@@ -1891,7 +1932,7 @@ public class Exchange {
     }
 
     void updateSiteAccount() {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_account"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("site_account");
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
 
         JsonObject requestJson = new JsonObject();
@@ -2847,10 +2888,8 @@ public class Exchange {
                 try {
                     if (response.isSuccessful() && response.code() == 200) {
                         if (response.body() != null && response.body().state) {
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
                             if (response.body().list != null && response.body().list.size() > 0) {
                                 exchange.onSuccess(response.body().list);
@@ -3169,7 +3208,7 @@ public class Exchange {
 //        data.date_from = Clock.getDatePeriod(-30);
 //        data.date_to = Clock.getDatePeriod(7);
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("achievements"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("achievements");
 
         StandartData.Filter filter = new StandartData.Filter();
         filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()) + 10;
@@ -3202,10 +3241,8 @@ public class Exchange {
                                         public void onComplete() {
                                             Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
 
-                                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                            });
+                                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                                         }
 
                                         @Override
@@ -3237,7 +3274,7 @@ public class Exchange {
         data.act = "images_vote";
 
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("photo_showcase");
         data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
@@ -3261,10 +3298,8 @@ public class Exchange {
                                 @Override
                                 public void onComplete() {
                                     Globals.writeToMLOG("OK", "downloadVoteTable/onResponse/onComplete", "OK");
-                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                    });
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                                 }
 
                                 @Override
@@ -3459,7 +3494,7 @@ public class Exchange {
             return;
         }
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("achievements"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("achievements");
 
         if (list != null && list.size() > 0) {
             List<AchievementsUpload> dataList = new ArrayList<>();
@@ -3507,10 +3542,8 @@ public class Exchange {
                                             if (itemSDB.id.equals(item.elementId)) {
                                                 itemSDB.serverId = item.id;
                                                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
-                                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                                });
+                                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");
                                             }
                                         }

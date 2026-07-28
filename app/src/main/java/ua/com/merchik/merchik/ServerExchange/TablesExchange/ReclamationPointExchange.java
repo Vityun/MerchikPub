@@ -64,12 +64,10 @@ public class ReclamationPointExchange {
                     try {
                         if (response.isSuccessful() && response.body() != null){
                             if (response.body().list != null && response.body().list.size()>0){
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    if (synchronizationTimetableDB != null) {
-                                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                    }
-                                });
+                                if (synchronizationTimetableDB != null) {
+                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                                }
 
                                 exchange.onSuccess(response.body().list);
                             }else {

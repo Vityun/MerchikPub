@@ -3,8 +3,7 @@ package ua.com.merchik.merchik.database.realm.tables;
 import java.util.List;
 
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import ua.com.merchik.merchik.database.room.repository.ReferenceDictionaryRepository;
 
 /**
  * 17.03.2021
@@ -17,15 +16,11 @@ public class CustomerRealm {
      *
      */
     public static void setAddressTable(List<CustomerDB> data) {
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(CustomerDB.class);
-        INSTANCE.copyToRealmOrUpdate(data);
-        INSTANCE.commitTransaction();
+        ReferenceDictionaryRepository.upsertCustomers(data);
     }
 
     public static List<CustomerDB> getAllCustomerDB(){
-        return INSTANCE.where(CustomerDB.class)
-                .findAll();
+        return ReferenceDictionaryRepository.getCustomers();
     }
 
 
@@ -34,26 +29,15 @@ public class CustomerRealm {
      * Получение строки из адресов по ID
      * */
     public static CustomerDB getCustomerById(String id){
-        CustomerDB result = INSTANCE.where(CustomerDB.class)
-                .equalTo("id", id)
-                .findFirst();
-        if (result != null )
-            result = INSTANCE.copyFromRealm(result);
-        return result;
+        return ReferenceDictionaryRepository.getCustomerById(id);
     }
 
     public static CustomerDB getCustomerByNm(String nm){
-        return INSTANCE.where(CustomerDB.class)
-                .equalTo("nm", nm)
-                .findFirst();
+        return ReferenceDictionaryRepository.getCustomerByNm(nm);
     }
 
     public static List<CustomerDB> getAll(){
-        List<CustomerDB> result = INSTANCE.where(CustomerDB.class)
-                .findAll();
-        if (result != null )
-            result = INSTANCE.copyFromRealm(result);
-        return result;
+        return ReferenceDictionaryRepository.getCustomers();
     }
 
 }

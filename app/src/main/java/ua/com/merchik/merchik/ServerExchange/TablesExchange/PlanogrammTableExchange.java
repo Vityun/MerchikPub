@@ -534,12 +534,10 @@ public class PlanogrammTableExchange {
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
-                                                INSTANCE.executeTransaction(realm -> {
-                                                    if (realmResult != null) {
-                                                        realmResult.setVpi_app(TrustedTime.syncWatermarkSec(realmResult.getVpi_app(), 120));
-                                                        realm.copyToRealmOrUpdate(realmResult);
-                                                    }
-                                                });
+                                                if (realmResult != null) {
+                                                    realmResult.setVpi_app(TrustedTime.syncWatermarkSec(realmResult.getVpi_app(), 120));
+                                                    RealmManager.setToSynchronizationTimetableDB(realmResult);
+                                                }
                                                 Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
 
                                             }

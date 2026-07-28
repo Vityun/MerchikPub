@@ -753,7 +753,7 @@ public class menu_main extends AppCompatActivity {
     private Spinner photoTypeSpinner() {
         Spinner s = findViewById(R.id.spinnerPhotoType);
         try {
-            RealmResults<ImagesTypeListDB> imagesTypeList = RealmManager.getAllImagesTypeList();
+            List<ImagesTypeListDB> imagesTypeList = RealmManager.getAllImagesTypeList();
             for (int i = 0; i < imagesTypeList.size(); i++) {
                 if (imagesTypeList.get(i).getNm() != null && !imagesTypeList.get(i).getNm().equals("")) {
                     mapSpinner.put(imagesTypeList.get(i).getId(), imagesTypeList.get(i).getNm());

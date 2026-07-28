@@ -31,14 +31,21 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
+import ua.com.merchik.merchik.data.RealmModels.UsersDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
+import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
@@ -63,6 +70,14 @@ class MainRepository(
 //    private val databaseRealm: Realm,
     val nameUIRepository: NameUIRepository
 ) {
+    private fun getRoomBackedLegacySample(klass: KClass<*>): DataObjectUI? =
+        when (klass) {
+            ThemeDB::class -> ThemeRealm.getAll().firstOrNull() ?: ThemeDB()
+            TradeMarkDB::class -> TradeMarkRealm.getAll().firstOrNull() ?: TradeMarkDB()
+            ImagesTypeListDB::class -> ImagesTypeListRealm.getAll().firstOrNull() ?: ImagesTypeListDB()
+            UsersDB::class -> UsersRealm.getAll().firstOrNull() ?: UsersDB()
+            else -> null
+        }
 
     private fun getSettingsUI(clazz: Class<*>, contextUI: ContextUI?) =
         try {
@@ -87,7 +102,7 @@ class MainRepository(
         modeUI: ModeUI
     ): List<SettingsItemUI> {
 
-        val item = (klass.java.newInstance() as? RealmObject)?.let {
+        val item = getRoomBackedLegacySample(klass) ?: (klass.java.newInstance() as? RealmObject)?.let {
             (RealmManager.INSTANCE
                 .where(it::class.java)
                 .findFirst()?.let {
@@ -248,7 +263,7 @@ class MainRepository(
         if (defaultSortKeys.isNullOrEmpty()) return emptyList()
 
         val sample: DataObjectUI? =
-            (klass.java.newInstance() as? RealmObject)?.let {
+            getRoomBackedLegacySample(klass) ?: (klass.java.newInstance() as? RealmObject)?.let {
                 (RealmManager.INSTANCE
                     .where(it::class.java)
                     .findFirst()?.let { found ->
@@ -357,6 +372,13 @@ class MainRepository(
 
     fun <T : RealmObject> getAllRealmDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
         Log.e("!!!!!!TEST!!!!!!", "getAllRealmDataObjectUI: start")
+        when (kClass) {
+            ThemeDB::class -> return ThemeRealm.getAll().map { it as DataObjectUI }
+            TradeMarkDB::class -> return TradeMarkRealm.getAll().map { it as DataObjectUI }
+            ImagesTypeListDB::class -> return ImagesTypeListRealm.getAll().map { it as DataObjectUI }
+            UsersDB::class -> return UsersRealm.getAll().map { it as DataObjectUI }
+        }
+
         return RealmManager.INSTANCE
             .copyFromRealm(
                 RealmManager.INSTANCE

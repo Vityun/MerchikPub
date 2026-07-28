@@ -62,16 +62,10 @@ public class EKLExchange {
                             Log.e("downloadEKLTable", "response: code=" + response.code() + ", listSize=" + list.size());
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): " + list.size());
                             Log.e("downloadEKLTable", "1");
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                Log.e("downloadEKLTable", "2");
-                                if (synchronizationTimetableDB != null){
-                                    Log.e("downloadEKLTable", "3");
-                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                    Log.e("downloadEKLTable", "4");
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                    Log.e("downloadEKLTable", "5");
-                                }
-                            });
+                            if (synchronizationTimetableDB != null) {
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                            }
                             Log.e("downloadEKLTable", "6");
                             exchange.onSuccess(list);
                             Log.e("downloadEKLTable", "7");

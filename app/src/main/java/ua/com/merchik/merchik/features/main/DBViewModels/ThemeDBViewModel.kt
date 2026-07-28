@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.Realm
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.ViewHolders.Clicks.click
 import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -19,7 +19,6 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -42,6 +41,8 @@ class ThemeDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = ThemeDB::class
 
+    private val defaultAchievementThemeIds = arrayOf("595", "1252", "1251", "1378")
+
     override fun getDefaultHideUserFields(): List<String>? {
         return "ID, comment, column_name".split(",")
     }
@@ -49,8 +50,7 @@ class ThemeDBViewModel @Inject constructor(
     override fun updateFilters() {
         val data = when(contextUI) {
             ContextUI.THEME_FROM_ACHIEVEMENT-> {
-                val themeIDs: Array<String> = Gson().fromJson(dataJson, Array<String>::class.java)
-                ThemeRealm.getThemeByIds(themeIDs)
+                loadThemesByIdsSafe(parseAchievementThemeIds())
             }
             else -> { emptyList() }
         }
@@ -78,16 +78,9 @@ class ThemeDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
-        try {
-            val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-            Log.e("!!!!!!!!", "codeDad2: $codeDad2")
-        } catch (e: Exception) {
-            Log.e("111111","err^ $e")
-        }
         return try
         {
-            val data = if (contextUI != ContextUI.ADD_THEME_QUESTION_ANSWER) ThemeRealm.getAll()
-            else ThemeRealm.getAllOpros()
+            val data = loadThemesSafe(oprosOnly = contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER)
             repository.toItemUIList(ThemeDB::class, data, contextUI, null)
                 .map {
                     when (contextUI) {
@@ -109,18 +102,31 @@ class ThemeDBViewModel @Inject constructor(
 
                 }
         } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "ThemeDBViewModel/getItems", "Exception: $e, contextUI=$contextUI")
             emptyList()
         }
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
-        Log.e("!!!!!!!!!!!","00000++++++++++")
         when (contextUI) {
             ContextUI.THEME_FROM_ACHIEVEMENT -> {
-                (itemsUI.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.let {
-                    AchievementDataHolder.instance().themeId = it.id.toInt()
-                    AchievementDataHolder.instance().themeName = it.nm
+                val theme = itemsUI.firstOrNull()?.rawObj?.firstOrNull { it is ThemeDB } as? ThemeDB
+                val themeId = theme?.id?.trim()?.toIntOrNull()
+
+                if (theme == null || themeId == null) {
+                    val message = "Не удалось выбрать тему достижения. Данные справочника тем повреждены или не загружены."
+                    Log.e("ThemeDBViewModel", "THEME_FROM_ACHIEVEMENT invalid theme=$theme, items=${itemsUI.size}")
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "ThemeDBViewModel/onSelectedItemsUI",
+                        "Invalid theme for achievement. themeId=${theme?.id}, themeName=${theme?.nm}, items=${itemsUI.size}"
+                    )
+                    Toast.makeText(getApplication<Application>(), message, Toast.LENGTH_LONG).show()
+                    return
                 }
+
+                AchievementDataHolder.instance().themeId = themeId
+                AchievementDataHolder.instance().themeName = theme.nm
             }
             ContextUI.DEFAULT -> {
                 FilteringDialogDataHolder.instance().filters.apply {
@@ -147,6 +153,60 @@ class ThemeDBViewModel @Inject constructor(
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun parseAchievementThemeIds(): Array<String> {
+        val json = dataJson
+        if (json.isNullOrBlank()) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "ThemeDBViewModel/parseAchievementThemeIds",
+                "dataJson is empty. Fallback to default theme ids."
+            )
+            return defaultAchievementThemeIds
+        }
+
+        return try {
+            Gson().fromJson(json, Array<String>::class.java)
+                ?.mapNotNull { it?.trim()?.takeIf(String::isNotBlank) }
+                ?.distinct()
+                ?.toTypedArray()
+                ?.takeIf { it.isNotEmpty() }
+                ?: defaultAchievementThemeIds
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "ThemeDBViewModel/parseAchievementThemeIds",
+                "Exception: $e, dataJson=$json"
+            )
+            defaultAchievementThemeIds
+        }
+    }
+
+    private fun loadThemesSafe(oprosOnly: Boolean): List<ThemeDB> {
+        return try {
+            if (oprosOnly) {
+                ThemeRealm.getAllOpros()
+            } else {
+                ThemeRealm.getAll()
+            }
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "ThemeDBViewModel/loadThemesSafe", "Exception: $e")
+            emptyList()
+        }
+    }
+
+    private fun loadThemesByIdsSafe(ids: Array<String>): List<ThemeDB> {
+        return try {
+            ThemeRealm.getThemeByIds(ids)
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "ThemeDBViewModel/loadThemesByIdsSafe",
+                "Exception: $e, ids=${ids.joinToString()}"
+            )
+            emptyList()
         }
     }
 }

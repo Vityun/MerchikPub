@@ -50,10 +50,10 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.realm.RealmResults;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.AddrId;
@@ -477,7 +477,7 @@ public class PhotoReportActivity extends toolbar_menus {
 
         try {
             // Получаем из БД все типы фото что б отобразить их в спинере
-            RealmResults<ImagesTypeListDB> imagesTypeList = RealmManager.getAllImagesTypeList();
+            List<ImagesTypeListDB> imagesTypeList = RealmManager.getAllImagesTypeList();
 
             // Добавляем в карту ключь:значение данные из БД
             for (ImagesTypeListDB imgType : imagesTypeList) {

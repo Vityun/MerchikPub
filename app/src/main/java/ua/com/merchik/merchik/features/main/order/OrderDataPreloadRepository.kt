@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.repository.ReferenceDictionaryRepository
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import ua.com.merchik.merchik.trecker
@@ -654,52 +655,34 @@ object OrderDataPreloadRepository {
                 )
             }
 
-            val realm = Realm.getDefaultInstance()
-            try {
-                val localNamesById = realm.where(TradeMarkDB::class.java)
-                    .`in`("iD", uniqueIds.toTypedArray())
-                    .findAll()
-                    .mapNotNull { tradeMark ->
-                        val id = tradeMark.id ?: return@mapNotNull null
-                        id to tradeMark.nm
-                    }
-                    .toMap()
+            val localNamesById = ReferenceDictionaryRepository
+                .getTradeMarksByIds(uniqueIds.toTypedArray())
+                .mapNotNull { tradeMark ->
+                    val id = tradeMark.id ?: return@mapNotNull null
+                    id to tradeMark.nm
+                }
+                .toMap()
 
-                val missingIds = uniqueIds
-                    .filter { id -> localNamesById[id].isNullOrBlank() }
-                val absentCount = uniqueIds.count { id -> !localNamesById.containsKey(id) }
-                val incompleteCount = missingIds.size - absentCount
-                val completeCount = uniqueIds.size - missingIds.size
+            val missingIds = uniqueIds
+                .filter { id -> localNamesById[id].isNullOrBlank() }
+            val absentCount = uniqueIds.count { id -> !localNamesById.containsKey(id) }
+            val incompleteCount = missingIds.size - absentCount
+            val completeCount = uniqueIds.size - missingIds.size
 
-                logInfo(
-                    "data_list.tovar_manufacturer_list.check",
-                    "addresses=${addresses.size}, uniqueTpIds=${uniqueIds.size}, complete=$completeCount, absent=$absentCount, incomplete=$incompleteCount, missing=${missingIds.size}, missingIds=${missingIds.previewIds()}, willRefresh=${uniqueIds.size}"
-                )
+            logInfo(
+                "data_list.tovar_manufacturer_list.check",
+                "addresses=${addresses.size}, uniqueTpIds=${uniqueIds.size}, complete=$completeCount, absent=$absentCount, incomplete=$incompleteCount, missing=${missingIds.size}, missingIds=${missingIds.previewIds()}, willRefresh=${uniqueIds.size}"
+            )
 
-                TradeMarkIdsCheck(
-                    requiredIds = uniqueIds,
-                    missingIds = missingIds
-                )
-            } finally {
-                realm.close()
-            }
+            TradeMarkIdsCheck(
+                requiredIds = uniqueIds,
+                missingIds = missingIds
+            )
         }
 
     private suspend fun saveTradeMarksPartial(tradeMarks: List<TradeMarkDB>) {
-        withContext(Dispatchers.Main) {
-            val realm = RealmManager.INSTANCE
-                ?: throw IllegalStateException("Realm is not initialized")
-
-            realm.beginTransaction()
-            try {
-                realm.copyToRealmOrUpdate(tradeMarks)
-                realm.commitTransaction()
-            } catch (throwable: Throwable) {
-                if (realm.isInTransaction) {
-                    realm.cancelTransaction()
-                }
-                throw throwable
-            }
+        withContext(Dispatchers.IO) {
+            ReferenceDictionaryRepository.upsertTradeMarks(tradeMarks)
         }
     }
 

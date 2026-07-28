@@ -50,12 +50,10 @@ public class UsersExchange {
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
 
                             try {
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                });
-                            }catch (Exception e){
-                                Globals.writeToMLOG("ERR", "downloadUsersTable/call.enqueue/onResponse/RealmManager.INSTANCE.executeTransaction", "Exception e: " + e);
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERR", "downloadUsersTable/call.enqueue/onResponse/setSyncTimetable", "Exception e: " + e);
                             }
 
                             exchange.onSuccess(response.body().list);

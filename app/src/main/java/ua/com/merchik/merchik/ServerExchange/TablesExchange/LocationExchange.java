@@ -82,12 +82,10 @@ public class LocationExchange {
                         if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()) {
                             Log.e("downloadLocationTable", "response.body(): " + response.body());
                             Globals.writeToMLOG("INFO", "downloadLocationTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (synchronizationTimetableDB != null) {
-                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                }
-                            });
+                            if (synchronizationTimetableDB != null) {
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                            }
                             exchange.onSuccess(response.body().list);
                         } else {
                             Globals.writeToMLOG("INFO", "downloadLocationTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

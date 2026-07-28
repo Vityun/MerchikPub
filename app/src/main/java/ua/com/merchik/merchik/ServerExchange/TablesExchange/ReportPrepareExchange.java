@@ -36,7 +36,7 @@ public class ReportPrepareExchange {
         data.date_to = date_to;
         data.code_dad2 = code_dad2;
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("report_prepare"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
         data.dt_change_to = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
@@ -51,10 +51,8 @@ public class ReportPrepareExchange {
                 if (response.isSuccessful() && response.body() != null && response.body().getState() &&
                         response.body().getList() != null && !response.body().getList().isEmpty()) {
                     exchange.onSuccess(response.body().getList());
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                    });
+                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 } else exchange.onFailure("Throwable: Список пуст");
 
 

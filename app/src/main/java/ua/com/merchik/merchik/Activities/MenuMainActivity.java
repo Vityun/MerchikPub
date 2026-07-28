@@ -590,12 +590,10 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
                                     return;
                                 }
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                                INSTANCE.executeTransaction(realm -> {
-                                    if (sTable != null) {
-                                        sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                                        realm.copyToRealmOrUpdate(sTable);
-                                    }
-                                });
+                                if (sTable != null) {
+                                    sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
+                                    RealmManager.setToSynchronizationTimetableDB(sTable);
+                                }
 
                             }
                         }

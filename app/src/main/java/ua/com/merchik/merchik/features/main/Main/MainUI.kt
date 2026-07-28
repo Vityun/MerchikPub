@@ -973,6 +973,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     return@LaunchedEffect
                 }
 
+                if (viewModel.contextUI == ContextUI.WP_DATA_PAUSED) {
+                    viewModel.modeUI = ModeUI.DEFAULT
+                    return@LaunchedEffect
+                }
+
                 viewModel.modeUI = if (!filterSelectMode) {
                     ModeUI.DEFAULT
                 } else {

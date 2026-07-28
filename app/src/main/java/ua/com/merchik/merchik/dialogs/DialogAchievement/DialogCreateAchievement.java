@@ -143,7 +143,7 @@ public class DialogCreateAchievement {
                 bundle.putString("title", "Предложение");
                 bundle.putString("subTitle", "Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов");
                 intent.putExtras(bundle);
-                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                startFeatureActivity(intent);
             });
 
             comment = dialog.findViewById(R.id.comment);
@@ -169,7 +169,7 @@ public class DialogCreateAchievement {
                 bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
                 intent.putExtras(bundle);
                 FilteringDialogDataHolder.Companion.instance().init();
-                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                startFeatureActivity(intent);
             });
 //            spinnerClient = dialog.findViewById(R.id.spinner_client);
 //            spinnerManufacture = dialog.findViewById(R.id.spinner_trade_mark);
@@ -189,7 +189,7 @@ public class DialogCreateAchievement {
                 bundle.putString("title", "Вiтрини");
                 bundle.putString("subTitle", "Оберiть поточну Вiтрину");
                 intent.putExtras(bundle);
-                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                startFeatureActivity(intent);
             });
 
             tradeMarkItem = dialog.findViewById(R.id.tradeMarkItem);
@@ -204,7 +204,7 @@ public class DialogCreateAchievement {
                 bundle.putString("title", "Торговые марки");
                 bundle.putString("subTitle", "Выберите торговые марки");
                 intent.putExtras(bundle);
-                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                startFeatureActivity(intent);
             });
             tovarTxt = dialog.findViewById(R.id.tovar_choose);
             tovarTxt.setText(underLineText("Натисніть для обрання Товару"));
@@ -225,7 +225,7 @@ public class DialogCreateAchievement {
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Выберите товар");
                 intent.putExtras(bundle);
-                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                startFeatureActivity(intent);
             });
 
 //            setTextUI();
@@ -604,12 +604,7 @@ public class DialogCreateAchievement {
 
             intent.putExtras(bundle);
 
-            ActivityCompat.startActivityForResult(
-                    (Activity) context,
-                    intent,
-                    NEED_UPDATE_UI_REQUEST,
-                    null
-            );
+            startFeatureActivity(intent);
         });
     }
 
@@ -648,7 +643,7 @@ public class DialogCreateAchievement {
             bundle.putString("subTitle", "Справочник Фото: " +
                     ImagesTypeListRealm.getByID(0).getNm());
             intent.putExtras(bundle);
-            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+            startFeatureActivity(intent);
         });
 
     }
@@ -749,12 +744,33 @@ public class DialogCreateAchievement {
         return spannableString;
     }
 
+    private void startFeatureActivity(Intent intent) {
+        try {
+            Activity activity = unwrap(context);
+            if (activity == null) {
+                Globals.writeToMLOG(
+                        "ERROR",
+                        "DialogCreateAchievement/startFeatureActivity",
+                        "Cannot unwrap Activity from context: " + context
+                );
+                Toast.makeText(context, "Не удалось открыть экран выбора.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            ActivityCompat.startActivityForResult(activity, intent, NEED_UPDATE_UI_REQUEST, null);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DialogCreateAchievement/startFeatureActivity", "Exception e: " + e);
+            Toast.makeText(context, "Не удалось открыть экран выбора.", Toast.LENGTH_LONG).show();
+        }
+    }
+
     private Activity unwrap(Context context) {
         while (!(context instanceof Activity) && context instanceof ContextWrapper) {
             context = ((ContextWrapper) context).getBaseContext();
         }
-        assert context instanceof Activity;
-        return (Activity) context;
+        if (context instanceof Activity) {
+            return (Activity) context;
+        }
+        return null;
     }
 
 }

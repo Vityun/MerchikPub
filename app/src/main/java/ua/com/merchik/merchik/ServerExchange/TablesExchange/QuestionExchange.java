@@ -119,7 +119,7 @@ public class QuestionExchange {
             data.mod = "quest_data";
             data.act = "add_row";
 
-            SynchronizationTimetableDB synchronizationTimetableDB = INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("question_answer"));
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("question_answer");
 
             final List<QuestionAnswerDB> list =
                     SQL_DB.questionAnswerDao().getAllForUploadTest(synchronizationTimetableDB.getVpi_app());
@@ -204,10 +204,8 @@ public class QuestionExchange {
                             } else {
                                 lastId = 10000000L;
                             }
-                            INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(lastId);
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            synchronizationTimetableDB.setVpi_app(lastId);
+                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
                         } else {
                             String error = body != null ? body.error : "body is null";

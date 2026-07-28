@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.data.Database.Room.DateConverter;
 import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
+import ua.com.merchik.merchik.data.Database.Room.ImagesTypeListSDB;
 import ua.com.merchik.merchik.data.Database.Room.InitStateEntity;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.LocationDevices;
@@ -50,8 +51,10 @@ import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteUrlSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.ThemeSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
+import ua.com.merchik.merchik.data.Database.Room.TradeMarkSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
@@ -77,6 +80,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.DossierSotrDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ImagesTypeListDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.InitStateDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LanguagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LocationDevicesDao;
@@ -106,8 +110,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteUrlDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ThemeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.TradeMarkDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TranslatesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VacancyDao;
@@ -172,9 +178,12 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 LocationDevices.class,
                 QuestionAnswerDB.class,
                 OrderDataSDB.class,
-                WPDataPauseSDB.class
+                WPDataPauseSDB.class,
+                ThemeSDB.class,
+                TradeMarkSDB.class,
+                ImagesTypeListSDB.class
         },
-        version = 79
+        version = 80
 )
 
 
@@ -217,6 +226,10 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract TarDao tarDao();
 
+    public abstract ThemeDao themeDao();
+
+    public abstract TradeMarkDao tradeMarkDao();
+
     public abstract AdditionalMaterialsAddressDao additionalMaterialsAddressDao();
 
     public abstract AdditionalMaterialsGroupsDao additionalMaterialsGroupsDao();
@@ -240,6 +253,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ShelfSizeDao shelfSizeDao();
 
     public abstract FragmentDao fragmentDao();
+
+    public abstract ImagesTypeListDao imagesTypeListDao();
 
     public abstract VideoViewDao videoViewDao();
 

@@ -151,8 +151,6 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     continue;    // То самое изменение
                 // конец изменений за 11.10.22
 
-
-//                ThemeDB test = RealmManager.INSTANCE.copyFromRealm(ThemeRealm.getThemeById(String.valueOf(item.themeId)));
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
 
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "item: " + item.id);

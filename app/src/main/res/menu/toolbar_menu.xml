@@ -16,6 +16,7 @@
         android:icon="@drawable/ic_pause_work_toolbar"
         android:title="Пауза работы"
         android:visible="false"
+        app:actionLayout="@layout/pause_work_toolbar_layout"
         app:showAsAction="always" />
 
     <item

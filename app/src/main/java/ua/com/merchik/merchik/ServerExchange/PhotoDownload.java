@@ -584,7 +584,7 @@ public class PhotoDownload {
      * Получение списка фотографий(таблички) для дальнейшего скачивания.
      */
     public void getPhotoFromServer(PhotoTableRequest data) {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
         data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 //        data.dt_upload = "0";
@@ -799,11 +799,10 @@ public class PhotoDownload {
             // Сохранение Впемени последнего изменения таблички
             SynchronizationTimetableDB sync = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
 
-            RealmManager.INSTANCE.executeTransaction((realm) -> {
+            if (sync != null) {
                 sync.setVpi_app(TrustedTime.syncWatermarkSec(sync.getVpi_app(), 120));
-            });
-
-            RealmManager.setToSynchronizationTimetableDB(sync);
+                RealmManager.setToSynchronizationTimetableDB(sync);
+            }
         } catch (Exception e) {
             Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB", "Exception e: " + e);
             checkFinish(); // Проверяем, закончились ли все задачи

@@ -16,7 +16,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class OptionButtonPauseWork<T> extends OptionControl {
-    public static final int OPTION_BUTTON_PAUSE_WORK_ID = 139337;
+    public static final int OPTION_BUTTON_PAUSE_WORK_ID = 174546;
 
     private WpDataDB wpDataDB;
 

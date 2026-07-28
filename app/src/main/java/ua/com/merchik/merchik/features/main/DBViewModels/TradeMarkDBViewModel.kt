@@ -4,11 +4,6 @@ import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import org.json.JSONObject
-import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
-import ua.com.merchik.merchik.data.RealmModels.ThemeDB
-import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -17,8 +12,6 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
-import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -36,22 +29,15 @@ class TradeMarkDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
+    private var achievementTradeMarksCache: List<TradeMarkDB>? = null
+
     override val table: KClass<out DataObjectUI>
         get() = TradeMarkDB::class
 
     override fun updateFilters() {
         val data = when(contextUI) {
             ContextUI.TRADE_MARK_FROM_ACHIEVEMENT -> {
-                val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-                val tovarDBList = RealmManager.INSTANCE.copyFromRealm(
-                    RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)
-                )
-                val ids = arrayOfNulls<String>(tovarDBList.size)
-                var j = 0
-                for (item in tovarDBList) {
-                    ids[j++] = item.manufacturerId
-                }
-                TradeMarkRealm.getTradeMarkByIds(ids)
+                getAchievementTradeMarks()
             }
             else -> { TradeMarkRealm.getAll() }
         }
@@ -83,7 +69,10 @@ class TradeMarkDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return try
         {
-            val data = repository.getAllRealmDataObjectUI(TradeMarkDB::class)
+            val data = when (contextUI) {
+                ContextUI.TRADE_MARK_FROM_ACHIEVEMENT -> getAchievementTradeMarks()
+                else -> repository.getAllRealmDataObjectUI(TradeMarkDB::class)
+            }
 
             repository.toItemUIList(TradeMarkDB::class, data, contextUI, null)
                 .map {
@@ -107,6 +96,28 @@ class TradeMarkDBViewModel @Inject constructor(
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    private fun getAchievementTradeMarks(): List<TradeMarkDB> {
+        achievementTradeMarksCache?.let { return it }
+
+        val codeDad2 = runCatching {
+            Gson().fromJson(dataJson, Long::class.java)
+        }.getOrNull() ?: return emptyList()
+
+        val tovarDBList = RealmManager.INSTANCE.copyFromRealm(
+            RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)
+        )
+
+        val ids = tovarDBList
+            .mapNotNull { it.manufacturerId }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .toTypedArray()
+
+        return TradeMarkRealm.getTradeMarkByIds(ids)
+            .also { achievementTradeMarksCache = it }
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {

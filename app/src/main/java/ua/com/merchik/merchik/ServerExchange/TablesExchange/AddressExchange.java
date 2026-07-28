@@ -60,13 +60,10 @@ public class AddressExchange {
                         if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()){
                             Log.e("downloadAddressTable", "response: code=" + response.code() + ", listSize=" + response.body().list.size());
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (synchronizationTimetableDB != null){
-                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                }
-
-                            });
+                            if (synchronizationTimetableDB != null) {
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                            }
                             exchange.onSuccess(response.body().list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

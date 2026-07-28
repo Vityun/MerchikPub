@@ -110,7 +110,7 @@ public class SMSExchange {
         data.nolimit = "1";
 
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("photo_showcase");
         data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 
@@ -153,10 +153,8 @@ public class SMSExchange {
                                                     Globals.writeToMLOG("INFO", "SMSExchange/smsLogExchange/onResponse/onComplete", "OK: " + response.body().list.size());
 //                                                    click.onSuccess(response.body().list);
 
-                                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                                    });
+                                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                                                     Log.d("test", "test");
 
                                                 }
