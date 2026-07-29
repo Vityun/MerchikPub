@@ -430,6 +430,35 @@ class WpDataDBViewModel @Inject constructor(
                 updateFilters(newFilters)
             }
 
+            ContextUI.WP_DATA_PAUSED -> {
+                val codeDad2Values = getPausedCodeDad2List()
+                    .map { it.toString() }
+
+                val filterPausedDad2 = ItemFilter(
+                    "код дад2",
+                    WpDataDB::class,
+                    WpDataDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Dad2",
+                    "Paused visits",
+                    "code_dad2",
+                    "code_dad2",
+                    codeDad2Values,
+                    codeDad2Values,
+                    enabled = false
+                )
+
+                val newFilters = prev.copy(
+                    items = if (codeDad2Values.isEmpty()) {
+                        emptyList()
+                    } else {
+                        listOf(filterPausedDad2)
+                    },
+                    rangeDataByKey = null
+                )
+                updateFilters(newFilters)
+            }
+
             else -> {
                 super.updateFilters()
             }
