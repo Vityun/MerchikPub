@@ -901,8 +901,21 @@ public class PhotoReportActivity extends toolbar_menus {
         File f = null;
         int origWidth, origHeight;
         Bitmap readyToDecode;
+        final int destWidth = 1500;//width you need
 
-        readyToDecode = decodeSampledBitmapFromResource(image, 1500, 1500);
+        if (context == null || image == null || !image.exists()) {
+            return image;
+        }
+
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(image.getAbsolutePath(), bounds);
+
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0 || bounds.outWidth <= destWidth) {
+            return image;
+        }
+
+        readyToDecode = decodeSampledBitmapFromResource(image, destWidth, destWidth);
 
         try {
             origWidth = readyToDecode.getWidth();
@@ -912,10 +925,8 @@ public class PhotoReportActivity extends toolbar_menus {
             return image;
         }
 
-        final int destWidth = 1500;//width you need
-
-        if (origWidth > destWidth) {
-            int destHeight = origHeight / (origWidth / destWidth);
+        if (bounds.outWidth > destWidth) {
+            int destHeight = Math.max(1, Math.round(origHeight * (destWidth / (float) origWidth)));
             Bitmap b2 = Bitmap.createScaledBitmap(readyToDecode, destWidth, destHeight, false);
             try {
                 f = createImageFile(context);
@@ -925,11 +936,25 @@ public class PhotoReportActivity extends toolbar_menus {
 
             try (FileOutputStream fo = f != null ? new FileOutputStream(f) : null) {
                 if (fo != null) {
-                    b2.compress(Bitmap.CompressFormat.JPEG, 90, fo);
+                    if (!b2.compress(Bitmap.CompressFormat.JPEG, 90, fo)) {
+                        if (readyToDecode != null && !readyToDecode.isRecycled()) {
+                            readyToDecode.recycle();
+                        }
+                        return image;
+                    }
                     fo.flush();
+                } else {
+                    if (readyToDecode != null && !readyToDecode.isRecycled()) {
+                        readyToDecode.recycle();
+                    }
+                    return image;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                if (readyToDecode != null && !readyToDecode.isRecycled()) {
+                    readyToDecode.recycle();
+                }
+                return image;
             } finally {
                 if (b2 != readyToDecode && !b2.isRecycled()) {
                     b2.recycle();
@@ -1016,15 +1041,16 @@ public class PhotoReportActivity extends toolbar_menus {
         final int width = options.outWidth;
         int inSampleSize = 1;
 
+        if (height <= 0 || width <= 0 || reqWidth <= 0 || reqHeight <= 0) {
+            return inSampleSize;
+        }
+
         if (height > reqHeight || width > reqWidth) {
+            int heightRatio = Math.max(1, height / reqHeight);
+            int widthRatio = Math.max(1, width / reqWidth);
+            int requiredRatio = Math.max(heightRatio, widthRatio);
 
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
+            while ((inSampleSize * 2) <= requiredRatio) {
                 inSampleSize *= 2;
             }
         }

@@ -302,6 +302,7 @@ abstract class MainViewModel(
     }
 
     private var pending: PendingOp? = null
+    private var updateContentJob: Job? = null
 
 
     var context: Context? = null
@@ -1145,7 +1146,8 @@ abstract class MainViewModel(
 
 
     fun updateContent() {
-        viewModelScope.launch {
+        updateContentJob?.cancel()
+        updateContentJob = viewModelScope.launch {
 
             val list = getDefaultHideUserFields()
             val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
@@ -1223,6 +1225,8 @@ abstract class MainViewModel(
             val groupingKeys: List<String> =
                 sortingFields.filter { it.group && !it.key.isNullOrBlank() }.map { it.key!! }
 
+            val dataItemUIS = getItems()
+
             _uiState.update { old ->
                 val titleResolved = title?.split(",")?.map { it.trim() }?.let {
                     it[0].toIntOrNull()?.let { intRes ->
@@ -1233,8 +1237,6 @@ abstract class MainViewModel(
                         }
                     }
                 } ?: title
-
-                val dataItemUIS = getItems()
 
                 val selectedIds: Set<Long> = buildSet {
                     addAll(old.items.filter { it.selected }.map { it.stableId })

@@ -80,11 +80,21 @@ class RnoRequestCoordinator @JvmOverloads constructor(
                             }.subscribeOn(Schedulers.io())
                         }
                         .onErrorReturn { error ->
-                            batch.toResult(
-                                status = RnoRequestStatus.SUBMITTED,
-                                rows = loadRowsForKeys(RoomManager.SQL_DB.wpDataAdditionalDao(), batch.keys),
-                                errorMessage = error.message
-                            )
+                            Log.e(TAG, "uploadPlanBudgetRx failed, checking request state", error)
+                            try {
+                                waitForDecisionBlocking(
+                                    batch = batch,
+                                    timeoutMs = decisionTimeoutMs,
+                                    notice = null
+                                )
+                            } catch (t: Throwable) {
+                                Log.e(TAG, "upload fallback decision check failed", t)
+                                batch.toResult(
+                                    status = RnoRequestStatus.TIMEOUT,
+                                    rows = loadRowsForKeys(RoomManager.SQL_DB.wpDataAdditionalDao(), batch.keys),
+                                    errorMessage = t.message ?: error.message
+                                )
+                            }
                         }
                 }
             }

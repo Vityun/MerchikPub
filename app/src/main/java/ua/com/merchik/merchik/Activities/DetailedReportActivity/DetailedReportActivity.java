@@ -357,6 +357,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
         PauseWorkStateHolder.start(source.getCode_dad2(), source.getId());
         syncPauseWorkUi();
+        refreshAdapterFragmentB();
         invalidateOptionsMenu();
     }
 
@@ -397,6 +398,7 @@ public class DetailedReportActivity extends toolbar_menus {
         if (pauseWorkComposeHost != null) {
             pauseWorkComposeHost.hide();
         }
+        refreshAdapterFragmentB();
         invalidateOptionsMenu();
     }
 

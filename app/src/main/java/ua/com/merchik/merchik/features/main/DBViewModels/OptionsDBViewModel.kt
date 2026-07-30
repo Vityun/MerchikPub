@@ -41,8 +41,8 @@ class OptionsDBViewModel @Inject constructor(
 
     override fun getDefaultHideUserFields(): List<String> {
         return (
-                "option_control_id, is_signal, sum_premiya, amount, amount_min, option_txt, " +
-                        "option_id, amount_max, option_control_descr, column_name, option_descr"
+                "option_control_id, is_signal, sum_premiya, amount, amount_min, option_control_txt, " +
+                        "amount_max, option_control_descr, column_name, option_descr"
                 ).split(",").map { it.trim() }    }
 
     override fun getDefaultGroupUserFields(): List<String> {
@@ -60,8 +60,6 @@ class OptionsDBViewModel @Inject constructor(
             val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
 
             val data = RealmManager.getOptionsByDad2(codeDad2).take(1)
-
-
 
             val filterThemeDB = ItemFilter(
                 "dad2",
@@ -95,7 +93,7 @@ class OptionsDBViewModel @Inject constructor(
             Log.e("OpinionSDBViewModel", "codeDad2: $codeDad2")
 
             val data = RealmManager.getOptionsByDad2(codeDad2)
-                .filter { !it.optionControlTxt.isNullOrBlank() }
+//                .filter { !it.optionControlTxt.isNullOrBlank() }
                 .onEach { option ->
                     if (option.sumPenalty != "0.00")
                         option.timeColor = "FFC4C4"

@@ -41,11 +41,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import io.realm.Realm
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.TrustedTime
 import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -114,6 +116,11 @@ object PauseWorkStateHolder {
 
         states[codeDad2] = state
         activeCodeDad2 = codeDad2
+        updateWpDataPauseState(
+            codeDad2 = codeDad2,
+            startSeconds = state.startedAtMillis / 1_000L,
+            endSeconds = 0L
+        )
         return state
     }
 
@@ -121,6 +128,12 @@ object PauseWorkStateHolder {
     fun stop(codeDad2: Long) {
         if (codeDad2 <= 0L) return
 
+        val activeRow = runCatching {
+            dao()?.getActiveByCodeDad2Sync(codeDad2)
+        }.onFailure {
+            logError("stop.getActiveByCodeDad2Sync", it)
+        }.getOrNull()
+        val stateBeforeStop = states[codeDad2]
         val nowSeconds = currentTimeSeconds()
         runCatching {
             dao()?.finishActivePauseSync(
@@ -136,6 +149,15 @@ object PauseWorkStateHolder {
         if (activeCodeDad2 == codeDad2) {
             activeCodeDad2 = states.keys.firstOrNull()
         }
+
+        val startSeconds = activeRow?.dtStart
+            ?: stateBeforeStop?.startedAtMillis?.div(1_000L)
+            ?: 0L
+        updateWpDataPauseState(
+            codeDad2 = codeDad2,
+            startSeconds = startSeconds,
+            endSeconds = nowSeconds
+        )
     }
 
     @JvmStatic
@@ -267,6 +289,40 @@ object PauseWorkStateHolder {
         }
 
         return candidate
+    }
+
+    private fun updateWpDataPauseState(codeDad2: Long, startSeconds: Long, endSeconds: Long) {
+        if (codeDad2 <= 0L || startSeconds <= 0L) return
+
+        runCatching {
+            val duration = if (endSeconds > 0L) {
+                (endSeconds - startSeconds)
+                    .coerceAtLeast(0L)
+                    .coerceAtMost(Int.MAX_VALUE.toLong())
+                    .toInt()
+            } else {
+                0
+            }
+
+            val realm = Realm.getDefaultInstance()
+            try {
+                realm.executeTransaction { transactionRealm ->
+                    val wpData = transactionRealm
+                        .where(WpDataDB::class.java)
+                        .equalTo("code_dad2", codeDad2)
+                        .findFirst()
+                        ?: return@executeTransaction
+
+                    wpData.setPause_dt_start(startSeconds)
+                    wpData.setPause_dt_end(endSeconds)
+                    wpData.setPause_duration(duration)
+                }
+            } finally {
+                realm.close()
+            }
+        }.onFailure {
+            logError("updateWpDataPauseState", it)
+        }
     }
 
     private fun logError(place: String, throwable: Throwable) {

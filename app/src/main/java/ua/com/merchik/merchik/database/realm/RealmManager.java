@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -835,6 +836,20 @@ public class RealmManager {
         }
     }
 
+    public static List<WpDataDB> getAllWorkPlanForRNO_LIST() {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            RealmResults<WpDataDB> res = realm.where(WpDataDB.class)
+                    .equalTo("user_id", 14041)
+                    .sort(new String[]{"dt_start", "addr_id"},
+                            new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
+                    .findAll();
+            return realm.copyFromRealm(res);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager.getAllWorkPlanForRNO_LIST", "Exception: " + e);
+            return new ArrayList<>();
+        }
+    }
+
     public static List<WpDataDB> getAllWorkPlanForRNOWithDate() {
         try (Realm realm = Realm.getDefaultInstance()) {
 
@@ -927,6 +942,9 @@ public class RealmManager {
                             new Sort[]{Sort.ASCENDING, Sort.ASCENDING})
                     .findAll();
             return realm.copyFromRealm(res); // <- unmanaged
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager.getAllWorkPlanWithOutRNO_LIST", "Exception: " + e);
+            return new ArrayList<>();
         }
     }
 
@@ -935,6 +953,17 @@ public class RealmManager {
             RealmResults<WpDataDB> res = realm.where(WpDataDB.class)
                     .equalTo("addr_id", addrId)
                     .equalTo("user_id", 14041)
+                    .sort("dt_start", Sort.ASCENDING)
+                    .findAll();
+            return realm.copyFromRealm(res);
+        }
+    }
+
+    public static List<WpDataDB> getAllWorkPlanByAddress(int addrId) {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            RealmResults<WpDataDB> res = realm.where(WpDataDB.class)
+                    .equalTo("addr_id", addrId)
+//                    .equalTo("user_id", 14041)
                     .sort("dt_start", Sort.ASCENDING)
                     .findAll();
             return realm.copyFromRealm(res);
@@ -953,6 +982,64 @@ public class RealmManager {
     public static WpDataDB getWorkPlanRowByCodeDad2(long codeDad2) {
         //"SELECT * FROM wp_data WHERE id = " + wpId + ";"
         return INSTANCE.where(WpDataDB.class).equalTo("code_dad2", codeDad2).findFirst();
+    }
+
+    @Nullable
+    public static WpDataDB getWorkPlanRowByCodeDad2Detached(long codeDad2) {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            WpDataDB row = realm.where(WpDataDB.class)
+                    .equalTo("code_dad2", codeDad2)
+                    .findFirst();
+            return row == null ? null : realm.copyFromRealm(row);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager.getWorkPlanRowByCodeDad2Detached", "Exception: " + e + ", codeDad2=" + codeDad2);
+            return null;
+        }
+    }
+
+    public static List<WpDataDB> getWorkPlanRowsByCodeDad2List(List<Long> codeDad2List) {
+        if (codeDad2List == null || codeDad2List.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try (Realm realm = Realm.getDefaultInstance()) {
+            Long[] ids = codeDad2List.toArray(new Long[0]);
+            RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
+                    .in("code_dad2", ids)
+                    .findAll();
+            return realm.copyFromRealm(results);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager.getWorkPlanRowsByCodeDad2List", "Exception: " + e + ", codeDad2List=" + codeDad2List);
+            return new ArrayList<>();
+        }
+    }
+
+    public static List<WpDataDB> getAllWorkPlanByAddressClientAndDateRange(
+            int addrId,
+            @Nullable String clientId,
+            Date periodFromDate,
+            Date periodToDate
+    ) {
+        if (clientId == null || clientId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try (Realm realm = Realm.getDefaultInstance()) {
+            RealmResults<WpDataDB> results = realm.where(WpDataDB.class)
+                    .equalTo("addr_id", addrId)
+                    .equalTo("client_id", clientId)
+                    .greaterThanOrEqualTo("dt", periodFromDate)
+                    .lessThanOrEqualTo("dt", periodToDate)
+                    .findAll();
+            return realm.copyFromRealm(results);
+        } catch (Exception e) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "RealmManager.getAllWorkPlanByAddressClientAndDateRange",
+                    "Exception: " + e + ", addrId=" + addrId + ", clientId=" + clientId
+            );
+            return new ArrayList<>();
+        }
     }
 
     public static int getWpDataDate(String dt) {
@@ -1045,28 +1132,42 @@ public class RealmManager {
                 .findAll();
     }
 
+//    public static List<OptionsDB> getOptionsByDad2(long codeDad2) {
+//        String sOtchetId = String.valueOf(codeDad2);
+//        RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
+//                .beginGroup()
+//                .equalTo("codeDad2", sOtchetId)
+//                .and()
+//                .equalTo("optionGroup", "3161")
+//                .and()
+//                .equalTo("deleted", "0")
+//                .endGroup()
+//                .or()
+//                .equalTo("codeDad2", sOtchetId)
+//                .and()
+//                .equalTo("deleted", "0")
+//                .and()
+//                .equalTo("optionId", "2243")
+//                .findAll();
+//        if (realmResults != null && !realmResults.isEmpty()) {
+//            return INSTANCE.copyFromRealm(realmResults);
+//        } else {
+//            return null;
+//        }
+//    }
+
     public static List<OptionsDB> getOptionsByDad2(long codeDad2) {
-        String sOtchetId = String.valueOf(codeDad2);
-        RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
-                .beginGroup()
-                .equalTo("codeDad2", sOtchetId)
-                .and()
-                .equalTo("optionGroup", "3161")
-                .and()
+        RealmResults<OptionsDB> results = INSTANCE
+                .where(OptionsDB.class)
+                .equalTo("codeDad2", String.valueOf(codeDad2))
+                .notEqualTo("optionGroup", "3161")
                 .equalTo("deleted", "0")
-                .endGroup()
-                .or()
-                .equalTo("codeDad2", sOtchetId)
-                .and()
-                .equalTo("deleted", "0")
-                .and()
-                .equalTo("optionId", "2243")
                 .findAll();
-        if (realmResults != null && !realmResults.isEmpty()) {
-            return INSTANCE.copyFromRealm(realmResults);
-        } else {
-            return null;
+
+        if (results.isEmpty()) {
+            return Collections.emptyList();
         }
+        return INSTANCE.copyFromRealm(results);
     }
 
     public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {

@@ -11,7 +11,9 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -37,8 +39,10 @@ import ua.com.merchik.merchik.dataLayer.model.ContextMenuPayload
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuPresets
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MenuLeading
 import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
+import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -63,6 +67,12 @@ class WpDataDBViewModel @Inject constructor(
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
+
+    private companion object {
+        const val PAUSE_WORK_FILTER_FIELD = "pause_work_state"
+        const val PAUSE_WORK_STATE_ACTIVE = "1"
+        const val PAUSE_WORK_STATE_INACTIVE = "0"
+    }
 
     override val table: KClass<out DataObjectUI>
         get() = WpDataDB::class
@@ -111,16 +121,12 @@ class WpDataDBViewModel @Inject constructor(
                 -> {
 
 
-                val rawData =
-                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) RealmManager.getAllWorkPlanWithOutRNO()
-                    else RealmManager.getAllWorkPlanForRNO()
-
-
-                val data: List<WpDataDB> = if (rawData.isNullOrEmpty()) {
-                    emptyList()
-                } else {
-                    RealmManager.INSTANCE.copyFromRealm(rawData)
-                }
+                val data: List<WpDataDB> =
+                    if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                        RealmManager.getAllWorkPlanWithOutRNO_LIST()
+                    } else {
+                        RealmManager.getAllWorkPlanForRNO_LIST()
+                    }
 
                 val dataUniqUser = data.distinctBy { it.user_id }
                     .let { list ->
@@ -243,14 +249,31 @@ class WpDataDBViewModel @Inject constructor(
                 )
 
 
+                val filterPauseWorkStatus = ItemFilter(
+                    "Пауза роботи",
+                    WpDataDB::class,
+                    WpDataDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Пауза роботи",
+                    "Роботи на паузі або без активної паузи",
+                    PAUSE_WORK_FILTER_FIELD,
+                    PAUSE_WORK_FILTER_FIELD,
+                    listOf(PAUSE_WORK_STATE_ACTIVE, PAUSE_WORK_STATE_INACTIVE),
+                    listOf("Роботи на паузі", "Без паузи"),
+                    enabled = true
+                )
+
                 val newFilters = prev.copy(
                     items =
-                        mutableListOf(
-                            filterUsersSDB,
-                            filterAddressSDB,
-                            filterClientSDB,
-                            filterWPDataStatus
-                        ),
+                        buildList {
+                            add(filterUsersSDB)
+                            add(filterAddressSDB)
+                            add(filterClientSDB)
+                            if (contextUI == ContextUI.WP_DATA_IN_CONTAINER) {
+                                add(filterPauseWorkStatus)
+                            }
+                            add(filterWPDataStatus)
+                        },
                     rangeDataByKey = RangeDate(
                         key = "dt",
                         start = rangeDataStart.value,
@@ -465,16 +488,14 @@ class WpDataDBViewModel @Inject constructor(
         }
     }
 
-    override suspend fun getItems(): List<DataItemUI> {
+    override suspend fun getItems(): List<DataItemUI> = withContext(Dispatchers.Default) {
         Log.e("!!!!!!TEST!!!!!!", "getItems: start")
+        Log.e("&&&&&&&&&&&&&&&", contextUI.name)
         val raw: List<WpDataDB> = when (contextUI) {
 
 
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
-                val data = RealmManager.getAllWorkPlanForRNO()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
-                    ?: emptyList()
+                val data = RealmManager.getAllWorkPlanForRNO_LIST()
 
                 for (wp in data) {
                     Log.e("@@@@@@@@@@@@@@@@@@@@@@@@@", "date: ${wp.dt}")
@@ -503,7 +524,7 @@ class WpDataDBViewModel @Inject constructor(
 
             ContextUI.WP_DATA -> {
                 val root = Gson().fromJson(dataJson, JsonObject::class.java)
-
+                Log.e("&&&&&&&&&&&&&&&","HEAR")
                 val addrId = (
                         root.get("addressId")
                             ?: root.getAsJsonObject("nameValuePairs")?.get("addressId")
@@ -511,7 +532,7 @@ class WpDataDBViewModel @Inject constructor(
                         if (el == null || el.isJsonNull) null else el.asInt
                     } ?: error("addressId missing in dataJson: $root")
 
-                val data = RealmManager.getAllWorkPlanByAddressForRNO(addrId)
+                val data = RealmManager.getAllWorkPlanByAddress(addrId)
                 data
             }
 
@@ -527,22 +548,20 @@ class WpDataDBViewModel @Inject constructor(
 
 
                 val periodDays = 30
-                val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(dad2)
+                val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2Detached(dad2)
+                    ?: return@withContext emptyList()
                 val documentDateMs = wpDataDB.dt?.time ?: System.currentTimeMillis()
                 val periodFromMs = documentDateMs - periodDays * 24L * 60L * 60L * 1000L
 
                 val periodFromDate = Date(periodFromMs)
                 val periodToDate = Date(documentDateMs)
 
-                val visits = RealmManager.INSTANCE
-                    .where(WpDataDB::class.java)
-                    .equalTo("addr_id", wpDataDB.addr_id)
-                    .equalTo("client_id", wpDataDB.client_id)
-                    .greaterThanOrEqualTo("dt", periodFromDate)
-                    .lessThanOrEqualTo("dt", periodToDate)
-                    .findAll()
-                    .let { RealmManager.INSTANCE.copyFromRealm(it) }
-                visits
+                RealmManager.getAllWorkPlanByAddressClientAndDateRange(
+                    wpDataDB.addr_id,
+                    wpDataDB.client_id,
+                    periodFromDate,
+                    periodToDate
+                )
             }
 
             ContextUI.WP_DATA_PAUSED -> {
@@ -555,10 +574,7 @@ class WpDataDBViewModel @Inject constructor(
                     "WpDataDBViewModel.getItems",
                     "ContextUI is not WP_DATA_ADDITIONAL_IN_CONTAINER"
                 )
-                RealmManager.getAllWorkPlanWithOutRNO()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
-                    ?: emptyList()
+                RealmManager.getAllWorkPlanWithOutRNO_LIST()
             }
         }
 
@@ -606,7 +622,10 @@ class WpDataDBViewModel @Inject constructor(
         Globals.writeToMLOG("INFO", "WpDataDBViewModel.getItems", "raw size: ${raw.size}")
         val filter = FilteringDialogDataHolder.instance().filters
 
-        return repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
+        val itemsWithPauseState = repository.toItemUIList(WpDataDB::class, raw, contextUI, 0, groupingKeys)
+            .map { it.withPauseWorkFilterField() }
+
+        itemsWithPauseState
             .map {
                 when (contextUI) {
                     ContextUI.WP_DATA -> {
@@ -633,6 +652,33 @@ class WpDataDBViewModel @Inject constructor(
 
     }
 
+    private fun DataItemUI.withPauseWorkFilterField(): DataItemUI {
+        val wpData = rawObj.firstOrNull { it is WpDataDB } as? WpDataDB ?: return this
+        val rawValue = if (wpData.isPauseWorkActive()) {
+            PAUSE_WORK_STATE_ACTIVE
+        } else {
+            PAUSE_WORK_STATE_INACTIVE
+        }
+        val valueText = if (rawValue == PAUSE_WORK_STATE_ACTIVE) {
+            "Роботи на паузі"
+        } else {
+            "Без паузи"
+        }
+        val pauseField = FieldValue(
+            key = PAUSE_WORK_FILTER_FIELD,
+            field = TextField(PAUSE_WORK_FILTER_FIELD, "Пауза роботи:"),
+            value = TextField(rawValue, valueText)
+        )
+        val rawFieldsWithoutOld = rawFields.filterNot {
+            it.key.equals(PAUSE_WORK_FILTER_FIELD, ignoreCase = true)
+        }
+        return copy(rawFields = rawFieldsWithoutOld + pauseField)
+    }
+
+    private fun WpDataDB.isPauseWorkActive(): Boolean {
+        return pause_dt_start > 0L && pause_dt_end == 0L
+    }
+
     private fun getPausedWpDataRows(): List<WpDataDB> {
         val codeDad2List = getPausedCodeDad2List()
         if (codeDad2List.isEmpty()) {
@@ -649,11 +695,7 @@ class WpDataDBViewModel @Inject constructor(
                 .mapIndexed { index, codeDad2 -> codeDad2 to index }
                 .toMap()
 
-            RealmManager.INSTANCE
-                .where(WpDataDB::class.java)
-                .`in`("code_dad2", codeDad2List.toTypedArray())
-                .findAll()
-                .let { RealmManager.INSTANCE.copyFromRealm(it) }
+            RealmManager.getWorkPlanRowsByCodeDad2List(codeDad2List)
                 .sortedBy { orderByDad2[it.code_dad2] ?: Int.MAX_VALUE }
         }.onFailure { error ->
             Globals.writeToMLOG(

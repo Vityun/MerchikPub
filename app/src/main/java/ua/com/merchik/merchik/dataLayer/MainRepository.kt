@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
+import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
@@ -122,6 +123,7 @@ class MainRepository(
                     SMSPlanSDB::class -> roomManager.smsPlanDao().all.firstOrNull() as DataObjectUI
                     QuestionAnswerDB::class -> roomManager.questionAnswerDao().all.firstOrNull() as DataObjectUI
                     OrderDataSDB::class -> roomManager.orderDataDao().all.firstOrNull() as DataObjectUI
+                    WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all.firstOrNull() as DataObjectUI
                     else -> null
                 }
             }.getOrNull()
@@ -412,6 +414,7 @@ class MainRepository(
             ErrorDB::class -> RealmManager.getAllErrorDbNotZero()
             QuestionAnswerDB::class -> roomManager.questionAnswerDao().all
             OrderDataSDB::class -> roomManager.orderDataDao().all
+            WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all
             else -> {
                 emptyList()
             }

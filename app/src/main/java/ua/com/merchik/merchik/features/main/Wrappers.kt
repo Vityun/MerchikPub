@@ -964,6 +964,52 @@ object LogMPDBDBOverride {
     }
 }
 
+object WPDataPauseSDBOverride {
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt_start" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis * 1000)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter)
+                } catch (e: Exception) {
+                    "Робота не розпочата"
+                }
+        }
+
+        "dt_end" -> {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            if (value.toString() == "0")
+                "-"
+            else
+                try {
+                    val millis = value.toString().toLong()
+                    Instant.ofEpochMilli(millis * 1000)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter).toString()
+                } catch (e: Exception) {
+                    "Робота не закінчена"
+                }
+        }
+        else -> value.toString()
+    }
+
+    fun getTranslateId(key: String): Long? = when (key) {
+
+        "dt_start" -> 9062
+        "dt_end" -> 9063
+
+        else -> null
+    }
+
+}
+
+
 
 object WPDataBDOverride {
     fun getValueUI(key: String, value: Any, wpDataDB: WpDataDB): String = when (key) {

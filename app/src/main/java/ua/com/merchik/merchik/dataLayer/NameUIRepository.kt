@@ -1,7 +1,8 @@
 package ua.com.merchik.merchik.dataLayer
 
+import io.realm.Realm
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
-import ua.com.merchik.merchik.database.realm.RealmManager
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -32,12 +33,23 @@ class NameUIRepository(
     private val cache = MemoryCache<String>()
 
     private fun getNameUIById(id: Long): String? {
-        return RealmManager.INSTANCE
-            .where(SiteObjectsDB::class.java)
-            .equalTo("id", id)
-            .findFirst()?.let {
-                RealmManager.INSTANCE.copyFromRealm(it)?.commentsTranslation
+        return runCatching {
+            val realm = Realm.getDefaultInstance()
+            try {
+                realm.where(SiteObjectsDB::class.java)
+                    .equalTo("id", id)
+                    .findFirst()
+                    ?.commentsTranslation
+            } finally {
+                realm.close()
             }
+        }.onFailure { error ->
+            Globals.writeToMLOG(
+                "ERROR",
+                "NameUIRepository.getNameUIById",
+                "Exception: $error, id=$id"
+            )
+        }.getOrNull()
     }
 
     fun getTranslateString(text: String, translateId: Long?): String {

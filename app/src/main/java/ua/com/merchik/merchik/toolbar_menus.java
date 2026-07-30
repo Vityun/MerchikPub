@@ -1214,8 +1214,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         intent.putExtra("dataJson", dataJson.toString());
         intent.putExtra("modeUI", ModeUI.DEFAULT.name());
         intent.putExtra("contextUI", ContextUI.WP_DATA_PAUSED.name());
-        intent.putExtra("title", "Работы на паузе");
-        intent.putExtra("subTitle", "Визиты, по которым работа временно остановлена");
+        intent.putExtra("title", "План рабiт");
+        intent.putExtra("subTitle", "Візити, за якими робота поставлена на паузу");
         startActivity(intent);
         return true;
     }

@@ -4,7 +4,6 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Options.Options.ConductMode.SALARY_CUT;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -31,21 +30,14 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import dagger.hilt.android.AndroidEntryPoint;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
@@ -66,10 +58,10 @@ import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModel;
 
 
 @SuppressLint("ValidFragment")
@@ -128,7 +120,7 @@ public class DetailedReportHomeFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate");
 
         viewModel = new ViewModelProvider(requireActivity()).get(CommentViewModel.class);
-        
+
         OpinionDataHolder.Companion.instance().init();
     }
 
@@ -294,14 +286,46 @@ public class DetailedReportHomeFrag extends Fragment {
     /*Заполнение данных над картой*/
     private List<KeyValueData> createKeyValueData(WpDataDB wpDataDB) {
         List<KeyValueData> result = new ArrayList<>();
+        String totalPenaltyString = "0.00";
+        if (wpDataDB.getDt_start() > 10000) {
+            List<OptionsDB> optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
+            for (OptionsDB optionsDB : optionsDBList)
+                new Options().optionControl(getContext(), wpDataDB, optionsDB, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
+            optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
+            BigDecimal totalPenalty = optionsDBList.stream()
+                    .map(OptionsDB::getSumPenalty)
+                    .filter(value -> value != null && !value.trim().isEmpty())
+                    .map(value -> {
+                        try {
+                            return new BigDecimal(value.replace(",", "."));
+                        } catch (NumberFormatException e) {
+                            return BigDecimal.ZERO;
+                        }
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            totalPenaltyString = totalPenalty.toPlainString();
+
+        }
 
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + wpDataDB.cash_penalty + "</u></font>" + " грн."), this::openOptionsUFMD));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + totalPenaltyString + "</u></font>" + " грн."), this::openOptionsUFMD));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
-               CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
+                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
 
@@ -402,6 +426,7 @@ public class DetailedReportHomeFrag extends Fragment {
         ActivityCompat.startActivityForResult(requireActivity(), intent, NEED_UPDATE_UI_REQUEST, null);
 
     }
+
     private void openConductDialog() {
         WorkPlan workPlan = new WorkPlan();
         List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());

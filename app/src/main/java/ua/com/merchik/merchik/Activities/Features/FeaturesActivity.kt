@@ -82,6 +82,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.TradeMarkDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 import ua.com.merchik.merchik.toolbar_menus
 
@@ -152,6 +153,7 @@ class FeaturesActivity : AppCompatActivity() {
                                         OptionsDBViewModel::class -> viewModel() as OptionsDBViewModel
                                         OrderDataSDBViewModel::class -> viewModel() as OrderDataSDBViewModel
                                         AddressSDBViewModel::class -> viewModel() as AddressSDBViewModel
+                                        WpDataPauseSDBViewModel::class -> viewModel() as WpDataPauseSDBViewModel
                                                 else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")

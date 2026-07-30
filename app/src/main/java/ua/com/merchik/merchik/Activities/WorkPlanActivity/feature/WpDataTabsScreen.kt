@@ -114,8 +114,8 @@ fun WpDataTabsScreen() {
     LaunchedEffect(dataIsReady, hasAdditionalIncomeAccess) {
         if (!dataIsReady || initialTabResolved) return@LaunchedEffect
 
-        val hasFirstTabData = RealmManager.getAllWorkPlanWithOutRNO().isNotEmpty()
-        val hasSecondTabData = RealmManager.getAllWorkPlanForRNO().isNotEmpty()
+        val hasFirstTabData = RealmManager.getAllWorkPlanWithOutRNO_LIST().isNotEmpty()
+        val hasSecondTabData = RealmManager.getAllWorkPlanForRNO_LIST().isNotEmpty()
 
         selectedTabIndex = when {
             hasFirstTabData -> 0

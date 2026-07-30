@@ -75,6 +75,7 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
@@ -97,6 +98,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
@@ -128,6 +130,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewMo
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel;
 
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
@@ -336,7 +339,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 172100   // Фото вітрини з акційними цінниками
                         || optionId == 151122   // Жилетка: жалобы на условия работ
                         || optionId == 174213
-                        || optionId == 174546   // тест
+                        || optionId == 174546   // кнопка пауза
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -446,6 +449,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     setCheck.setVisibility(View.INVISIBLE);
                     setCheck.setImageResource(R.drawable.ic_round);
                     setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorUnselectedTab));
+                }
+                if (optionId == OptionButtonPauseWork.OPTION_BUTTON_PAUSE_WORK_ID && describedOption) {
+                    applyPauseWorkSignalIcon(setCheck);
                 }
 
                 WpDataDB wp = (WpDataDB) dataDB;
@@ -651,6 +657,36 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             });
                             break;
 
+                        case (174546):
+                            int pauseCount174546 = dad2 > 0 ? SQL_DB.wpDataPauseDao().getAllByDad2(dad2).size() : 0;
+                            boolean pauseActive174546 = isPauseWorkActiveForCurrentVisit();
+                            SpannableString spannableString174546 = new SpannableString(String.valueOf(pauseCount174546));
+                            spannableString174546.setSpan(new UnderlineSpan(), 0, spannableString174546.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            spannableString174546.setSpan(
+                                    new ForegroundColorSpan(textInteger.getContext().getResources().getColor(
+                                            pauseActive174546 ? R.color.green_default : R.color.shadow
+                                    )),
+                                    0,
+                                    spannableString174546.length(),
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                            );
+
+                            textInteger.setText(spannableString174546);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                JsonObject dataJson = new JsonObject();
+                                dataJson.addProperty("codeDad2", dad2);
+                                bundle.putString("viewModel", WpDataPauseSDBViewModel.class.getCanonicalName());
+//                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", dataJson.toString());
+                                bundle.putString("title", "Перелік пауз у роботі");
+                                bundle.putString("subTitle", "Довідник всіх пауз з поточної роботи");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+                            break;
                         case (158606):
                             SpannableString spannableString158606 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36));
                             spannableString158606.setSpan(new UnderlineSpan(), 0, spannableString158606.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -1312,15 +1348,37 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
                 // Нажатие на СИГНАЛ Кнопки Опции.
-                setCheck.setOnClickListener(v -> {
-                    Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
-                    setCheck(POS, optionsButtons, CHECK_CLICK);
-                });
+                if (optionId == OptionButtonPauseWork.OPTION_BUTTON_PAUSE_WORK_ID) {
+                    setCheck.setOnClickListener(v -> optionButton.performClick());
+                } else {
+                    setCheck.setOnClickListener(v -> {
+                        Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
+                        setCheck(POS, optionsButtons, CHECK_CLICK);
+                    });
+                }
             } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception e: " + e);
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception exception: " + Arrays.toString(e.getStackTrace()));
             }
         }
+    }
+
+    private void applyPauseWorkSignalIcon(ImageView setCheck) {
+        boolean pauseActive = isPauseWorkActiveForCurrentVisit();
+
+        setCheck.setVisibility(View.VISIBLE);
+        setCheck.setImageResource(pauseActive ? R.drawable.ic_play_circle_solid : R.drawable.ic_pause_work_toolbar);
+        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(
+                pauseActive ? R.color.green_default : R.color.shadow
+        ));
+    }
+
+    private boolean isPauseWorkActiveForCurrentVisit() {
+        if (dataDB instanceof WpDataDB) {
+            long codeDad2 = ((WpDataDB) dataDB).getCode_dad2();
+            return codeDad2 > 0 && PauseWorkStateHolder.hasPauseFor(codeDad2);
+        }
+        return false;
     }
 
     private CharSequence counter2Text() {
@@ -1392,9 +1450,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             }
         });
 
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            realm.insertOrUpdate(optionsButtons);
-        });
+//        RealmManager.INSTANCE.executeTransaction(realm -> {
+//            realm.insertOrUpdate(optionsButtons);
+//        });
         updateSignal(POS);
     }
 
