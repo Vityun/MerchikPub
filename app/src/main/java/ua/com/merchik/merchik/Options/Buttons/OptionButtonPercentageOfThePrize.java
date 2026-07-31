@@ -41,7 +41,11 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());
+            WpDataDB wp = (WpDataDB) document;
+            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(wp.getCode_dad2());
+            if (this.wpDataDB == null) {
+                this.wpDataDB = wp;
+            }
         }
     }
 
@@ -54,11 +58,12 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append("\n\n");
 
                 CharSequence valBonus = counter2Text();
+                double reclamPercent = reclamPer != null ? reclamPer : 0.00;
 
                 spannableStringBuilder.append(Html.fromHtml("<b>Період: </b>")).append(date).append("\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Вик. робіт: </b>")).append(String.valueOf(kps)).append(" кпс\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Отримано. рек.: </b>")).append(String.valueOf(reclam)).append(" шт.\n");
-                spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек.: </b>")).append(String.format("%.2f", reclamPer)).append("%\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек.: </b>")).append(String.format("%.2f", reclamPercent)).append("%\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток.: </b>")).append(String.valueOf(maxPer)).append("%\n");
                 spannableStringBuilder.append(Html.fromHtml(bonus >= 0 ? "<b>Бонус: </b>" : "<b>Зниження: </b>"))
                         .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
@@ -69,10 +74,10 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append(Html.fromHtml("<b>Вик. робіт (кпс)</b>")).append(" - кількість виконаних робіт\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Отримано. рек. (шт)</b>")).append(" - кількість отриманих рекламацій \n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек. (%)</b>")).append(" - 100% * ").append(String.valueOf(reclam)).append("/")
-                        .append(String.valueOf(kps)).append(" = ").append(String.format("%.2f", reclamPer)).append("%").append("\n");
+                        .append(String.valueOf(kps)).append(" = ").append(String.format("%.2f", reclamPercent)).append("%").append("\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток. (%)</b>")).append(" - макс. допустимий відсоток рекламацій ").append(String.valueOf(maxPer)).append(" %\n\n");
 
-                spannableStringBuilder.append("Ви отримали ").append(String.format("%.2f", reclamPer))
+                spannableStringBuilder.append("Ви отримали ").append(String.format("%.2f", reclamPercent))
                         .append("% рекламацій (при максимально допустимому показнику ").append(String.valueOf(maxPer)).append("%)").append(" тому ваші преміальні ")
                         .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
                         .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
@@ -94,7 +99,8 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
     private CharSequence counter2Text() {
         CharSequence res = "";
-        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
+        double cashZakaz = wpDataDB != null ? wpDataDB.getCash_zakaz() : 0.00;
+        res = "~" + String.format("%.2f", cashZakaz * 0.07693);
         res = Html.fromHtml("" + res + "");
         return res;
     }

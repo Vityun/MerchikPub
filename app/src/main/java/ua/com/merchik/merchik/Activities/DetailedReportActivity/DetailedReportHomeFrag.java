@@ -289,8 +289,8 @@ public class DetailedReportHomeFrag extends Fragment {
         String totalPenaltyString = "0.00";
         if (wpDataDB.getDt_start() > 10000) {
             List<OptionsDB> optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
-            for (OptionsDB optionsDB : optionsDBList)
-                new Options().optionControl(getContext(), wpDataDB, optionsDB, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+            for (OptionsDB optionsDB : optionsDBList) {
+                new Options().optionControl(getContext(), wpDataDB, optionsDB, null, Options.NNKMode.NULL_AND_COLLUM_A_B, new OptionControl.UnlockCodeResultListener() {
                     @Override
                     public void onUnlockCodeSuccess() {
 
@@ -301,6 +301,7 @@ public class DetailedReportHomeFrag extends Fragment {
 
                     }
                 });
+            }
             optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
             BigDecimal totalPenalty = optionsDBList.stream()
                     .map(OptionsDB::getSumPenalty)

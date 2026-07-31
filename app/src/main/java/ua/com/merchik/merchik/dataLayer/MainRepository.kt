@@ -251,18 +251,24 @@ class MainRepository(
 
         // 1) если в настройках уже есть сортировка — отдаем её,
         // но без полей, которые запрещены для сортировки/группировки
-        getSettingsUI(klass.java, contextUI)?.sortFields?.let { saved ->
-            val filteredSaved = saved.filterNot { sortField ->
+        val savedSortingFields = getSettingsUI(klass.java, contextUI)?.sortFields
+            ?.filterNot { sortField ->
                 hiddenSortKeys.any { hiddenKey ->
                     hiddenKey.equals(sortField.key?.trim().orEmpty(), ignoreCase = true)
                 }
             }
+            ?.takeIf { it.isNotEmpty() }
 
-            if (filteredSaved.isNotEmpty()) return filteredSaved
+        savedSortingFields?.let { saved ->
+            val hasActiveSavedSorting = saved.any { sortField ->
+                !sortField.key.isNullOrBlank() && (sortField.order == 1 || sortField.order == -1)
+            }
+
+            if (hasActiveSavedSorting || defaultSortKeys.isNullOrEmpty()) return saved
         }
 
         // 2) иначе пробуем собрать из дефолтных ключей
-        if (defaultSortKeys.isNullOrEmpty()) return emptyList()
+        if (defaultSortKeys.isNullOrEmpty()) return savedSortingFields ?: emptyList()
 
         val sample: DataObjectUI? =
             getRoomBackedLegacySample(klass) ?: (klass.java.newInstance() as? RealmObject)?.let {
@@ -288,7 +294,7 @@ class MainRepository(
                 }.getOrNull()
             }
 
-        return defaultSortKeys
+        val defaultSortingFields = defaultSortKeys
             .flatMap { it.split(",") }
             .map { it.trim() }
             .filter { it.isNotEmpty() }
@@ -310,6 +316,41 @@ class MainRepository(
                         || (key.equals("dt", ignoreCase = true) && klass == QuestionAnswerDB::class)) -1 else 1
                 )
             }
+
+        return savedSortingFields?.let { saved ->
+            val result = saved.map { savedField ->
+                val defaultField = defaultSortingFields.firstOrNull { defaultField ->
+                    defaultField.key?.trim()?.equals(
+                        savedField.key?.trim().orEmpty(),
+                        ignoreCase = true
+                    ) == true
+                }
+
+                if (defaultField != null && (savedField.order != 1 && savedField.order != -1)) {
+                    savedField.copy(
+                        title = savedField.title ?: defaultField.title,
+                        order = defaultField.order
+                    )
+                } else {
+                    savedField
+                }
+            }.toMutableList()
+
+            defaultSortingFields.forEach { defaultField ->
+                val alreadyExists = result.any { savedField ->
+                    savedField.key?.trim()?.equals(
+                        defaultField.key?.trim().orEmpty(),
+                        ignoreCase = true
+                    ) == true
+                }
+
+                if (!alreadyExists) {
+                    result.add(defaultField)
+                }
+            }
+
+            result
+        } ?: defaultSortingFields
     }
 
     suspend fun hasUserSorting(
@@ -331,7 +372,9 @@ class MainRepository(
         return settings?.sortFields?.any { sortField ->
             val key = sortField.key?.trim().orEmpty()
 
-            key.isNotEmpty() && hiddenSortKeys.none { hiddenKey ->
+            key.isNotEmpty() &&
+                    (sortField.order == 1 || sortField.order == -1) &&
+                    hiddenSortKeys.none { hiddenKey ->
                 hiddenKey.equals(key, ignoreCase = true)
             }
         } == true

@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
-import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.DAY_SEC;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_IDEA;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_MANAGER_WRONG;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer.THEME_NO_COMPLAINTS;
@@ -13,7 +12,6 @@ import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModelKt.COMPLAINT_REPEAT_WINDOW_SECONDS;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -98,7 +96,6 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
-import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
@@ -347,7 +344,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         if (optionId == 132666 || optionId == 132812)
                             textInteger2.setVisibility(View.INVISIBLE);
                         else
-                            textInteger2.setText(counter2Text());
+                            textInteger2.setText(counter2Text(optionId));
                     } else {
                         if (optionId == 133382) {
                             textInteger2.setVisibility(View.VISIBLE);
@@ -978,8 +975,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             List<QuestionAnswerDB> answerDBSList = SQL_DB.questionAnswerDao().getComplaintsByUserAndPeriod(
                                     Globals.userId,
-                                    wp.getDt().getTime()/1000 - 30 * 24L * 60L * 60L,
-                                    wp.getDt().getTime()/1000 + 3 * 24L * 60L * 60L,
+                                    wp.getDt().getTime() / 1000 - 30 * 24L * 60L * 60L,
+                                    wp.getDt().getTime() / 1000 + 3 * 24L * 60L * 60L,
                                     themeIds
                             );
 
@@ -1381,11 +1378,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         return false;
     }
 
-    private CharSequence counter2Text() {
+    private CharSequence counter2Text(int optionId) {
         CharSequence res = "";
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
-            res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
+            if (optionId == 135412)
+                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693 * 2);
+            else
+                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
             res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
         return res;
@@ -1848,14 +1848,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         try {
             for (OptionsDB optionsDB : butt) {
                 // б - контроля
-                Log.e("showOrScrollAndWait","control optionsDB: " + optionsDB.getOptionControlId());
+                Log.e("showOrScrollAndWait", "control optionsDB: " + optionsDB.getOptionControlId());
                 if (optionsDB.getOptionControlId().equals(item.getOptionId())
                 ) {
-                    Log.e("showOrScrollAndWait","item.getOptionId(): " + item.getOptionId());
-                    Log.e("showOrScrollAndWait","item.getOptionControlId(): " + item.getOptionControlId());
+                    Log.e("showOrScrollAndWait", "item.getOptionId(): " + item.getOptionId());
+                    Log.e("showOrScrollAndWait", "item.getOptionControlId(): " + item.getOptionControlId());
                     Log.e("showOrScrollAndWait", "getItemPositionForOptionControl optionsDB 0: " + new Gson().toJson(optionsDB));
                     Log.e("showOrScrollAndWait", "getItemPositionForOptionControl optionsDB 1: " + new Gson().toJson(item));
-                    Log.e("showOrScrollAndWait", "butt.indexOf(optionsDB) - " + butt.indexOf(optionsDB) );
+                    Log.e("showOrScrollAndWait", "butt.indexOf(optionsDB) - " + butt.indexOf(optionsDB));
 
                     return butt.indexOf(optionsDB);
                 }

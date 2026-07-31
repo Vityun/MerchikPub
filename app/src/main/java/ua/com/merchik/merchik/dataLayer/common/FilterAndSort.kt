@@ -63,8 +63,11 @@ fun filterAndSortDataItems(
     }
 
     // есть ли вообще активные инструкции сортировки?
-    val hasActiveSorting =
-        sortingFields.any { it?.key?.isNotBlank() == true && (it.order == 1 || it.order == -1) }
+    val activeSorting: List<SortingField> = sortingFields
+        .filter { it?.key?.isNotBlank() == true && (it.order == 1 || it.order == -1) }
+        .map { it!! }
+
+    val hasActiveSorting = activeSorting.isNotEmpty()
 
     // активные инструкции группировки (уже отсортированы по priority)
     val activeGrouping: List<GroupingField> = groupingFields
@@ -119,11 +122,10 @@ fun filterAndSortDataItems(
     }
 
     // общий компаратор для сортировки (если есть)
-    val baseComparator: Comparator<DataItemUI>? = if (hasActiveSorting) {
-        makeComparator(sortingFields.getOrNull(0), dateParser)
-            .thenComparing(makeComparator(sortingFields.getOrNull(1), dateParser))
-            .thenComparing(makeComparator(sortingFields.getOrNull(2), dateParser))
-    } else null
+    val baseComparator: Comparator<DataItemUI>? = activeSorting
+        .take(3)
+        .map { makeComparator(it, dateParser) }
+        .reduceOrNull { comparator, next -> comparator.thenComparing(next) }
 
     // --- без группировки: как раньше ---
     if (!hasActiveGrouping) {

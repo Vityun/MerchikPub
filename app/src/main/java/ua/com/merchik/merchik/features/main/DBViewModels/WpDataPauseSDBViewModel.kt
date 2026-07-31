@@ -34,6 +34,12 @@ class WpDataPauseSDBViewModel @Inject constructor(
         return "code_dad2, dt_update_client, uploadStatus".split(",")
     }
 
+    override fun getDefaultSortUserFields(): List<String>? {
+        return listOf(
+            "dt_start", "dt_end"
+        )
+    }
+
     override fun updateFilters() {
         val codeDad2 = getCodeDad2FromDataJson() ?: return
         val codeDad2Text = codeDad2.toString()

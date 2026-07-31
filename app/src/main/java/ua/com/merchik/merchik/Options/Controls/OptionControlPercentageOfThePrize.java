@@ -85,6 +85,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             WpDataDB wp = (WpDataDB) document;
+            wpDataDB = wp;
 
             dt = wp.getDt();
             dateFrom = Clock.getDatePeriodLong(wp.getDt().getTime(), -15);
@@ -100,13 +101,26 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     }
 
     private void executeOption() {
-        reclamations = filterReclamationAuthorNotUserSupervisor(SQL_DB.tarDao().getTARForOptionControl135061(0, dateFrom / 1000, dateTo / 1000, Globals.userId));
+        if (wpDataDB == null || dt == null || usersSDB == null) {
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControlPercentageOfThePrize/executeOption",
+                    "required data is null, wpDataDB=" + wpDataDB + ", dt=" + dt + ", usersSDB=" + usersSDB
+            );
+            signal = false;
+            saveOptionResultInDB();
+            setIsBlockOption(false);
+            return;
+        }
 
-        if (usersSDB.department == 3 || usersSDB.department == 8) {
+        List<TasksAndReclamationsSDB> sourceReclamations = SQL_DB.tarDao().getTARForOptionControl135061(0, dateFrom / 1000, dateTo / 1000, Globals.userId);
+        reclamations = filterReclamationAuthorNotUserSupervisor(sourceReclamations != null ? sourceReclamations : Collections.emptyList());
+
+        if (Objects.equals(usersSDB.department, 3) || Objects.equals(usersSDB.department, 8)) {
             java.sql.Date dateF = new java.sql.Date(dateFrom);
             java.sql.Date dateT = new java.sql.Date(dateTo);
             List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 1);
-            if (percentageSDBS != null) {
+            if (percentageSDBS != null && !percentageSDBS.isEmpty()) {
                 percentReclamationConst = percentageSDBS.get(0).percent;
             } else {
                 percentReclamationConst = 1.6f;
@@ -117,7 +131,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             java.sql.Date dateF = new java.sql.Date(dateFrom);
             java.sql.Date dateT = new java.sql.Date(dateTo);
             List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 2);
-            if (percentageSDBS != null) {
+            if (percentageSDBS != null && !percentageSDBS.isEmpty()) {
                 percentReclamationConst = percentageSDBS.get(0).percent;
             } else {
                 percentReclamationConst = 1.8f;
@@ -132,6 +146,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
         if (kps > 0) {
             percentReclamation = 100.0 * reclamations.size() / kps;
             percentReclamation2 = percentReclamation;
+        } else {
+            percentReclamation = 0.00;
+            percentReclamation2 = 0.00;
         }
 
         formula.append("\n\nВідсоток рекламацій = ( 100 * Кількість рекламацій / Кількість звітів )");
@@ -253,9 +270,19 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
      */
     private void saveOptionResultInDB() {
         RealmManager.INSTANCE.executeTransaction(realm -> {
+            Log.e("OptionControlPercentageOfThePrize","signal: " + signal);
             if (optionDB != null) {
                 if (signal) {
-                    double penalty = wpDataDB.getCash_zakaz() * 0.07693;
+                    double penalty = 0.00;
+                    if (wpDataDB != null) {
+                        penalty = wpDataDB.getCash_zakaz() * 0.07693 * 2;
+                    } else {
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "OptionControlPercentageOfThePrize/saveOptionResultInDB",
+                                "wpDataDB is null, optionId=" + optionDB.getOptionId() + ", codeDad2=" + optionDB.getCodeDad2()
+                        );
+                    }
                     optionDB.setIsSignal("1");
                     optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {

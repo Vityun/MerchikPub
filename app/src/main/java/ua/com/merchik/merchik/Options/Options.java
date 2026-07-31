@@ -244,14 +244,12 @@ public class Options {
             Log.e("OPTION_CONTROL", "optionsDB/getOptionControlTxt: " + optionsDB.getOptionControlTxt());
 
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
-
-            if (optionControlId == 165276 || optionControlId == 84005
-                    || optionControlId == 84967 || optionControlId == 164985)
-                Log.e("!!!", "+");
+            if (mode == NNKMode.NULL_AND_COLLUM_A_B && optionControlId == 0)
+                optionControlId = Integer.parseInt(optionsDB.getOptionId());
 
             OptionMassageType newOptionType = new OptionMassageType();
             switch (mode) {
-                case NULL:
+                case NULL_AND_COLLUM_A_B, NULL:
                     break;
 
                 case CHECK_CLICK:
@@ -607,6 +605,7 @@ public class Options {
         CHECK_COLLECT_MSG,
         MAKE,   // Выполнения функциональности кнопки
         NULL,    // Ничего не делаем
+        NULL_AND_COLLUM_A_B,
         BLOCK   // для блокирующих опций
     }
 

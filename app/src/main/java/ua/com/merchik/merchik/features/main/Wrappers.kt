@@ -968,7 +968,7 @@ object WPDataPauseSDBOverride {
 
     fun getValueUI(key: String, value: Any): String = when (key) {
         "dt_start" -> {
-            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss", Locale.getDefault())
             if (value.toString() == "0")
                 "-"
             else
@@ -983,7 +983,7 @@ object WPDataPauseSDBOverride {
         }
 
         "dt_end" -> {
-            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.getDefault())
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss", Locale.getDefault())
             if (value.toString() == "0")
                 "-"
             else

@@ -1190,25 +1190,64 @@ abstract class MainViewModel(
             val sortingFields: List<SortingField> =
                 if (!hasUserSorting && !hasUserGrouping && defaultGroupKeys.isNotEmpty()) {
                     // 👆 Только если НЕТ пользовательских сортировок (первый запуск)
-                    sortingFieldsFromRepo.map { sf ->
-                        val k = sf.key
-                        if (!k.isNullOrBlank() && defaultGroupKeys.any { def ->
-                                def.equals(
-                                    k,
-                                    ignoreCase = true
-                                )
-                            }) {
-                            sf.copy(group = true)
-                        } else {
-                            sf
-                        }
+                    val repoFieldsByKey = sortingFieldsFromRepo
+                        .filter { !it.key.isNullOrBlank() }
+                        .associateBy { it.key!!.trim().lowercase(Locale.ROOT) }
+
+                    val defaultGroupKeySet = defaultGroupKeys
+                        .map { it.lowercase(Locale.ROOT) }
+                        .toSet()
+
+                    val defaultGroupFields = defaultGroupKeys.map { key ->
+                        repoFieldsByKey[key.lowercase(Locale.ROOT)]?.copy(group = true)
+                            ?: SortingField(
+                                key = key,
+                                title = settingsItems.firstOrNull {
+                                    it.key.equals(key, ignoreCase = true)
+                                }?.text ?: key,
+                                group = true
+                            )
                     }
+
+                    val restFields = sortingFieldsFromRepo.filterNot { sf ->
+                        sf.key?.trim()?.lowercase(Locale.ROOT) in defaultGroupKeySet
+                    }
+
+                    defaultGroupFields + restFields
                 } else {
                     // Есть пользовательские настройки -> уважаем их, ничего не навязываем
                     sortingFieldsFromRepo
                 }
 
             // дальше твой код без изменений
+            val groupingKeys: List<String> =
+                sortingFields.filter { it.group && !it.key.isNullOrBlank() }.map { it.key!! }
+
+            val cardTopKeys: List<String> = sortingFields
+                .filter {
+                    !it.key.isNullOrBlank() &&
+                            (it.group || it.order == 1 || it.order == -1)
+                }
+                .map { it.key!!.trim() }
+                .distinctBy { it.lowercase(Locale.ROOT) }
+
+            if (table.java.simpleName == "WPDataPauseSDB") {
+                fun List<SortingField>.debugKeys(): String = joinToString(
+                    prefix = "[",
+                    postfix = "]"
+                ) { "${it.key}:order=${it.order}:group=${it.group}" }
+
+                Globals.writeToMLOG(
+                    "INFO",
+                    "MainViewModel.updateContent.grouping",
+                    "table=${table.java.simpleName}, contextUI=$contextUI, defaultGroupKeys=$defaultGroupKeys, groupingKeys=$groupingKeys, cardTopKeys=$cardTopKeys, hasUserSorting=$hasUserSorting, hasUserGrouping=$hasUserGrouping, repo=${sortingFieldsFromRepo.debugKeys()}, final=${sortingFields.debugKeys()}"
+                )
+                Log.e(
+                    "MainViewModelGrouping",
+                    "table=${table.java.simpleName}, defaultGroupKeys=$defaultGroupKeys, groupingKeys=$groupingKeys, cardTopKeys=$cardTopKeys, repo=${sortingFieldsFromRepo.debugKeys()}, final=${sortingFields.debugKeys()}"
+                )
+            }
+
             val groupingFields: List<GroupingField> = sortingFields.mapIndexedNotNull { index, sf ->
                 sf.takeIf { it.group && !it.key.isNullOrBlank() }?.let {
                     GroupingField(
@@ -1221,9 +1260,6 @@ abstract class MainViewModel(
             }
 
             updateFilters()
-
-            val groupingKeys: List<String> =
-                sortingFields.filter { it.group && !it.key.isNullOrBlank() }.map { it.key!! }
 
             val dataItemUIS = getItems()
 
@@ -1268,10 +1304,10 @@ abstract class MainViewModel(
                 }
 
 
-                val finalItems = if (groupingKeys.isEmpty()) {
+                val finalItems = if (cardTopKeys.isEmpty()) {
                     filteredSelectedItems
                 } else {
-                    filteredSelectedItems.map { it.withGroupingOnTop(groupingKeys) }
+                    filteredSelectedItems.map { it.withGroupingOnTop(cardTopKeys) }
                 }
 
                 if (finalItems.isEmpty()) {
