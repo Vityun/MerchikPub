@@ -74,6 +74,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         if (document instanceof WpDataDB) {
 //            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());   // ЧТО ЭТО? ЗАЧЕМ???
             this.wp = (WpDataDB) document;
+            this.wpDataDB = wp;
             dad2 = wp.getCode_dad2();
             clientId = wp.getClient_id();
             docStatus = wp.getStatus();
@@ -248,7 +249,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
-                    double penalty = wp.getCash_zakaz() * 0.07693;
+                    double penalty = calculatePenalty(wpDataDB);
                     optionDB.setIsSignal("1");
                     optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {

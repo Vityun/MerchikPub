@@ -113,7 +113,7 @@ public class OptionControlOpinionByController<T> extends OptionControl {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
-                        double penalty = wpDataDB.getCash_zakaz() * 0.07693;
+                        double penalty = calculatePenalty(wpDataDB);
                         optionDB.setIsSignal("1");
                         optionDB.setSumPenalty(String.valueOf(penalty));
                     } else {

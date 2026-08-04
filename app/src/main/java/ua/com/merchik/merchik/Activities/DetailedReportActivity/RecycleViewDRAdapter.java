@@ -1384,9 +1384,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             if (optionId == 135412)
-                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693 * 2);
+                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE * 2);
             else
-                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
+                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
             res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
         return res;

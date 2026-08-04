@@ -163,6 +163,25 @@ public class OptionControl<T> {
         return block;
     }
 
+    protected double calculatePenalty(WpDataDB optionWpDataDB) {
+        return calculatePenalty(optionWpDataDB, 1.00);
+    }
+
+    protected double calculatePenalty(WpDataDB optionWpDataDB, double multiplier) {
+        if (optionWpDataDB == null) {
+            String optionId = optionDB != null ? optionDB.getOptionId() : "null";
+            String codeDad2 = optionDB != null ? optionDB.getCodeDad2() : "null";
+            Globals.writeToMLOG(
+                    "ERROR",
+                    "OptionControl/calculatePenalty",
+                    "wpDataDB is null, optionId=" + optionId + ", codeDad2=" + codeDad2
+            );
+            return 0.00;
+        }
+
+        return optionWpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE * multiplier;
+    }
+
 
     public void showUnlockCodeDialogInMainThread(WpDataDB wpDataDB, boolean signal) {
         new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {

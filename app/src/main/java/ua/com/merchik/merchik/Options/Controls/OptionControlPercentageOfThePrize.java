@@ -275,7 +275,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
                 if (signal) {
                     double penalty = 0.00;
                     if (wpDataDB != null) {
-                        penalty = wpDataDB.getCash_zakaz() * 0.07693 * 2;
+                        penalty = calculatePenalty(wpDataDB, 2);
                     } else {
                         Globals.writeToMLOG(
                                 "ERROR",

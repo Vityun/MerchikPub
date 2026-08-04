@@ -1348,7 +1348,7 @@ public class Options {
                         if (item.getOptionControlId().equals("84006"))
                             optionSumRes += wp.getCash_zakaz() * 0.16;
                         else
-                            optionSumRes += wp.getCash_zakaz() * 0.07693;
+                            optionSumRes += wp.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE;
                     }
                 }
 
@@ -1572,7 +1572,7 @@ public class Options {
 
     private CharSequence counter2Text(WpDataDB wpDataDB) {
         CharSequence res = "";
-        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.07693);
+        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
         res = Html.fromHtml("<font color=red>" + res + "</font>");
         return res;
     }

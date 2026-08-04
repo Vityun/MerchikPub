@@ -83,6 +83,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) document;
+            this.wpDataDB = wpDataDB;
 
             wp = wpDataDB;
 
@@ -321,7 +322,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
-                    double penalty = wpDataDB.getCash_zakaz() * 0.07693;
+                    double penalty = calculatePenalty(wpDataDB);
                     optionDB.setIsSignal("1");
                     optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {

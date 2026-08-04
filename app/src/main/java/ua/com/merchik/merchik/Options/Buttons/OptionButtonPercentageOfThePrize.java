@@ -99,8 +99,7 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
     private CharSequence counter2Text() {
         CharSequence res = "";
-        double cashZakaz = wpDataDB != null ? wpDataDB.getCash_zakaz() : 0.00;
-        res = "~" + String.format("%.2f", cashZakaz * 0.07693);
+        res = "~" + String.format("%.2f", calculatePenalty(wpDataDB));
         res = Html.fromHtml("" + res + "");
         return res;
     }
