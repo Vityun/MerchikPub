@@ -72,13 +72,13 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());   // ЧТО ЭТО? ЗАЧЕМ???
+//            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());   // ЧТО ЭТО? ЗАЧЕМ???
+            this.wp = (WpDataDB) document;
             dad2 = wp.getCode_dad2();
             clientId = wp.getClient_id();
             docStatus = wp.getStatus();
             comment = wp.user_comment;
             addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
-            this.wp = wp;
         } else if (document instanceof TasksAndReclamationsSDB) {
             TasksAndReclamationsSDB tasksAndReclamationsSDB = (TasksAndReclamationsSDB) document;
             dad2 = tasksAndReclamationsSDB.codeDad2;
@@ -185,7 +185,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 signal = false;
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
             } else if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
-                if (wpDataDB.getDot_user_id() > 0) {
+                if (wp.getDot_user_id() > 0) {
                     signal = false;
                     stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ, ОФС ДЗ не перевіряємо.");
                 }
@@ -248,7 +248,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
-                    double penalty = wpDataDB.getCash_zakaz() * 0.07693;
+                    double penalty = wp.getCash_zakaz() * 0.07693;
                     optionDB.setIsSignal("1");
                     optionDB.setSumPenalty(String.valueOf(penalty));
                 } else {

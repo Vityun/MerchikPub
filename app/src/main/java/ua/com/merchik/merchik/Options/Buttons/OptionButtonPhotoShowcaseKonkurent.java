@@ -53,8 +53,8 @@ public class OptionButtonPhotoShowcaseKonkurent<T> extends OptionControl {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
             try {
-                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+//                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
 
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();

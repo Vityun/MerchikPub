@@ -5,6 +5,7 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -262,7 +263,7 @@ public class MenuMainActivity extends toolbar_menus {
 
 //        new WPDataPauseExchange().syncInCron();
 
-        new QuestionExchange().downloadQuestionAnswer();
+//        new QuestionExchange().downloadQuestionAnswer();
 //        downloadTest();
 //        uploadQuestionAnswersTest();
 //        new Translate().uploadNewTranslate();
@@ -277,6 +278,7 @@ public class MenuMainActivity extends toolbar_menus {
 
 
     }
+
 
 
 

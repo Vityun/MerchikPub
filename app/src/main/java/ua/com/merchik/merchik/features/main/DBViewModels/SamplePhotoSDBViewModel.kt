@@ -95,25 +95,11 @@ class SamplePhotoSDBViewModel @Inject constructor(
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
         val wpDataDB =
             RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong()))
-        val id = dataJsonObject.get("optionDBId").asString
+//        val id = dataJsonObject.get("optionDBId").asString
         val optionDB =
             RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
         if (wpDataDB != null && optionDB != null) {
-            val typePhotoId = when (contextUI) {
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
-                else -> {
-                    null
-                }
-            }
+            val typePhotoId = resolvePhotoTypeId()
 
             when (contextUI) {
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
@@ -146,16 +132,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     callback.invoke()
                 }
 
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213
-                    -> {
+                else -> {
                     typePhotoId?.let {
                         val workPlan = WorkPlan()
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
@@ -188,31 +165,42 @@ class SamplePhotoSDBViewModel @Inject constructor(
                         callback.invoke()
                     }
                 }
-
-                else -> {}
             }
         }
+    }
+
+    private fun resolvePhotoTypeId(): Int? {
+        return when (contextUI) {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_GENERIC -> dataJsonInt("photoType")
+            else -> dataJsonInt("photoType")
+        }
+    }
+
+    private fun dataJsonInt(key: String): Int? {
+        return runCatching {
+            val root = Gson().fromJson(dataJson, JsonObject::class.java)
+            val value = root?.get(key)?.takeIf { !it.isJsonNull } ?: return@runCatching null
+            value.asString.toIntOrNull()
+        }.getOrNull()
     }
 
     override fun updateFilters() {
 
         try {
 
-            val typePhotoId = when (contextUI) {
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
-                else -> {
-                    null
-                }
-            }
+            val typePhotoId = resolvePhotoTypeId()
 
             val itemsFilter = mutableListOf<ItemFilter>()
 

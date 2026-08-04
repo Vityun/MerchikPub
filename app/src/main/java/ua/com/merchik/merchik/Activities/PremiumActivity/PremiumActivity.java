@@ -1,8 +1,10 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,6 +36,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableHeader;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableHeaderAdapter;
 import ua.com.merchik.merchik.Clock;
@@ -45,6 +49,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremiu
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremiumList;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
@@ -53,6 +59,7 @@ import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -171,14 +178,32 @@ public class PremiumActivity extends toolbar_menus {
 
     private void setButtonErr() {
         buttonErr.setOnClickListener(view -> {
-            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-            hash = Globals.getSha1Hex(hash);
 
-            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=ticket**act=create**theme_id=997**page=premium", userId, hash);
+            Intent intent2 = new Intent(this, FeaturesActivity.class);
+            Bundle bundle2 = new Bundle();
+            bundle2.putString("viewModel", ThemeDBViewModel.class.getCanonicalName());
+            bundle2.putString("contextUI", ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER.toString());
+            bundle2.putString("modeUI", ModeUI.ONE_SELECT.toString());
+//            bundle2.putString("dataJson", new Gson().toJson(wpDataDB.getCode_dad2()));
+            bundle2.putString("title", "Жалобы, Замечания, Предложения (Жилетка)");
+            bundle2.putString("subTitle", "Выберите тему из списка. Благодаря анализу вашего мнения мы сможем улучшить работу нашего предприятия и тем самым увеличить ваши доходы.");
 
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-            this.startActivity(browserIntent);
+            intent2.putExtras(bundle2);
+
+            ActivityCompat.startActivityForResult(
+                    this,
+                    intent2,
+                    NEED_UPDATE_UI_REQUEST,
+                    null
+            );
+//            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+//            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+//            hash = Globals.getSha1Hex(hash);
+//
+//            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=ticket**act=create**theme_id=997**page=premium", userId, hash);
+//
+//            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+//            this.startActivity(browserIntent);
         });
     }
 

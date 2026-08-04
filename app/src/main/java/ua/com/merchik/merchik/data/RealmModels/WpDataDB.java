@@ -163,6 +163,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Ignore
     public String statusComment;
 
+    @Ignore
+    private long duration_fact;
+
     public WpDataDB() {
     }
 
@@ -1497,5 +1500,13 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Override
     public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
+    }
+
+    public long getDuration_fact() {
+        return duration_fact;
+    }
+
+    public void setDuration_fact(long duration_fact) {
+        this.duration_fact = duration_fact;
     }
 }

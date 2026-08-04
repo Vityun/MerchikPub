@@ -956,6 +956,11 @@ fun buildGroupSummaryItem(
                 sum?.let { "${it.toLong()} хв." }
             }
 
+            "duration_fact" -> {
+                val sum = aggregateNumberOrCount(rawValues)
+                sum?.let { "${it.toLong()} хв." }
+            }
+
             "user_txt" -> {
                 val distinct = displayValues
                     .map { it.trim() }

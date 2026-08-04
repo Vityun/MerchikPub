@@ -302,6 +302,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     var showSavedMessage by remember { mutableStateOf(false) }
     var validationErrorMessage by remember { mutableStateOf<String?>(null) }
+    var premiumQuestionAnswerDialogAutoShown by remember { mutableStateOf(false) }
 
     var repeatComplaintDialogState by remember {
         mutableStateOf<RepeatComplaintDialogState?>(null)
@@ -353,6 +354,48 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //        ## проверим, как будет работать без него
     val dataItemsUI_ by viewModel.dataItems.collectAsState()
     val groupsUI by viewModel.groups.collectAsState()
+
+    LaunchedEffect(viewModel.contextUI, dataItemsUI_) {
+        if (viewModel.contextUI != ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER ||
+            premiumQuestionAnswerDialogAutoShown
+        ) {
+            return@LaunchedEffect
+        }
+
+        if (dataItemsUI_.isEmpty()) return@LaunchedEffect
+
+        val premiumThemeItem = dataItemsUI_.firstOrNull { item ->
+            (item.rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)
+                ?.id
+                ?.trim() == PREMIUM_QUESTION_ANSWER_THEME_ID
+        }
+
+        if (premiumThemeItem == null) {
+            premiumQuestionAnswerDialogAutoShown = true
+            validationErrorMessage = "Не вдалося знайти тему $PREMIUM_QUESTION_ANSWER_THEME_ID для звернення по преміальних"
+            return@LaunchedEffect
+        }
+
+        premiumQuestionAnswerDialogAutoShown = true
+        showQuestionAnswerThemeDialog(
+            viewModel = viewModel,
+            context = context,
+            itemsUI = premiumThemeItem.rawObj,
+            onValidationError = { message ->
+                validationErrorMessage = message
+            },
+            onSavedSuccess = {
+                showSavedMessage = true
+            },
+            onRepeatComplaint = { themeName, createdAtSeconds, onConfirm ->
+                repeatComplaintDialogState = RepeatComplaintDialogState(
+                    themeName = themeName,
+                    createdAtSeconds = createdAtSeconds,
+                    onConfirm = onConfirm
+                )
+            }
+        )
+    }
 
     var flying by remember { mutableStateOf<Flying<DataItemUI>?>(null) }
     // === 2) Новый режим: призрак для перетаскивания + сжатие при отпускании ===
@@ -1711,10 +1754,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     val waitForAdditionalEarningsDialog =
                                         viewModel.additionalEarningsDialogState.value != null
                                     if (viewModel.typeWindow != "container" && !waitForAdditionalEarningsDialog) {
-                                        if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER) {
+                                        if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER ||
+                                            viewModel.contextUI == ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER
+                                        ) {
                                             val theme =
                                                 selectedItems.first().rawObj.firstOrNull { it is ThemeDB } as? ThemeDB
-                                            if (theme != null && theme.id == "610")
+                                            if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER &&
+                                                theme != null &&
+                                                theme.id == "610"
+                                            )
                                                 showQuestionAnswerDialog = true
                                             else
                                                 showQuestionAnswerThemeDialog(
@@ -3432,7 +3480,7 @@ private fun saveQuestionAnswerTheme(
             adrId = ""
             kliId = ""
 
-            objectDate = nowSeconds
+            objectDate = 0L
 
             elementId = ""
         }
@@ -3446,6 +3494,7 @@ private fun saveQuestionAnswerTheme(
 
 private const val COMPLAINT_REPEAT_WINDOW_SECONDS =
     7L * 24L * 60L * 60L
+private const val PREMIUM_QUESTION_ANSWER_THEME_ID = "421"
 
 private data class ComplaintCheckKey(
     val themeId: Int,

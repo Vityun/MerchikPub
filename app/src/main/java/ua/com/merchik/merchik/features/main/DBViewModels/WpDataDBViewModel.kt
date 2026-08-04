@@ -98,11 +98,11 @@ class WpDataDBViewModel @Inject constructor(
     override fun getDefaultHideUserFields(): List<String>? {
         return if (contextUI == ContextUI.WP_DATA ||
             contextUI == ContextUI.WP_DATA_PAUSED)
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta, status".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, status".split(
                 ","
             )
         else
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration, doc_num_otchet, main_option_id, smeta".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta".split(
                 ","
             )
     }
@@ -607,6 +607,10 @@ class WpDataDBViewModel @Inject constructor(
             }
             // Устанавливаем статус комментарий
             wpDataDB.statusComment = statusComment
+        }
+        raw.forEach { wpDataDB ->
+            val duration = (wpDataDB.client_end_dt - wpDataDB.client_start_dt) / 60
+            wpDataDB.duration_fact = duration
         }
 
         val state = uiState.value

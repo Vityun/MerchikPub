@@ -236,7 +236,8 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         // 15.06.2026 временное решение +1 ко всем фоткам, кроме исключений, сделал специаьно так коряво, что бы читалось лучше
         if (optionId.equals("159707") || optionId.equals("1470") || optionId.equals("158361")
-                || optionId.equals("141361") || optionId.equals("132971"))
+                || optionId.equals("141361") || optionId.equals("132971") ||
+                (wpDataDB != null && wpDataDB.getSku() < 5))
             m = m;
         else
             m = m + 1;

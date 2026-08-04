@@ -58,7 +58,6 @@ import java.util.Locale;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -71,6 +70,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
@@ -210,6 +210,7 @@ public class menu_login extends AppCompatActivity {
             badgeTextView = findViewById(R.id.badge_text_view_tar);
 
             globals = new Globals();
+            SiteObjectsLocalDefaults.ensureDurationObjects();
 
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
@@ -1656,8 +1657,7 @@ public class menu_login extends AppCompatActivity {
                                     } else {
                                         AUTH();
                                     }
-                                } else
-                                    if (!resp.getAuth()) {
+                                } else if (!resp.getAuth()) {
                                     // login
                                     AUTH(); // Вход через Бд или через Логин/Пароль
                                 } else {
@@ -2660,7 +2660,7 @@ public class menu_login extends AppCompatActivity {
                 .subscribe(
                         result -> {
                             Log.e("@#!!!!!!", "8===> ");
-                            if (result != null && result.notice != null){
+                            if (result != null && result.notice != null) {
                                 new MessageDialogBuilder(this)
                                         .setTitle("Відновлення пароля")
                                         .setStatus(DialogStatus.NORMAL)
@@ -2683,6 +2683,9 @@ public class menu_login extends AppCompatActivity {
                 );
 
 
+    }
 
+    private void createTranslate() {
+        SiteObjectsLocalDefaults.ensureDurationObjects();
+    }
 }
-}// END CLASS..380677777777/777718353

@@ -124,6 +124,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.QuestionAnswerSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
@@ -2025,7 +2026,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     ss.append("\n\n");
                     break;
             }
-            ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
+            ss.append(createLinkedString(mContext, "Показать образец фото", photoType, option));
             ss.append("\n");
         }
 
@@ -2057,7 +2058,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         return res;
     }
 
-    private SpannableString createLinkedString(Context context, String msg, int photoType) {
+    private SpannableString createLinkedString(Context context, String msg, int photoType, OptionsDB optionsDB) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -2066,14 +2067,39 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     WpDataDB wp = (WpDataDB) dataDB;
                     AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
 
+                    ImagesTypeListDB imagesTypeDB = ImagesTypeListRealm.getByID(photoType);
+                    String imagesTypeName = imagesTypeDB != null && imagesTypeDB.getNm() != null
+                            ? imagesTypeDB.getNm()
+                            : "Тип фото " + photoType;
+
                     List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType, addressSDB.tpId);
                     if (samplePhotoSDBList != null && samplePhotoSDBList.size() > 1) {
-                        Intent intent = new Intent(context, PhotoLogActivity.class);
-                        intent.putExtra("SamplePhoto", true);
-                        intent.putExtra("SamplePhotoActivity", false);
-                        intent.putExtra("photoTp", photoType);
-                        intent.putExtra("grpId", addressSDB.tpId);
-                        context.startActivity(intent);
+//                        Intent intent = new Intent(context, PhotoLogActivity.class);
+//                        intent.putExtra("SamplePhoto", true);
+//                        intent.putExtra("SamplePhotoActivity", false);
+//                        intent.putExtra("photoTp", photoType);
+//                        intent.putExtra("grpId", addressSDB.tpId);
+//                        context.startActivity(intent);
+
+                        ContextUI samplePhotoContextUI = resolveSamplePhotoContextUI(photoType, optionsDB);
+                        Intent intent = new Intent(context, FeaturesActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
+                        bundle.putString("contextUI", samplePhotoContextUI.toString());
+                        JsonObject dataJson = new JsonObject();
+                        dataJson.addProperty("tradeMarkDBId", String.valueOf(addressSDB.tpId));
+                        dataJson.addProperty("photoType", photoType);
+                        dataJson.addProperty("optionId", optionsDB != null ? optionsDB.getOptionId() : "");
+                        dataJson.addProperty("wpDataDBId", String.valueOf(wp.getId()));
+                        dataJson.addProperty("optionDBId", optionsDB != null ? String.valueOf(optionsDB.getID()) : "");
+                        bundle.putString("dataJson", new Gson().toJson(dataJson));
+                        bundle.putString("title", context.getString(R.string.title_samplephotosdb) + " " + imagesTypeName);
+                        bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
+                                "Для того, чтобы изготовить '" + imagesTypeName + "' нажмите на соответствующую фотографию. " +
+                                "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
+                        intent.putExtras(bundle);
+                        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1) {
                         // Pika
                         // Если фото образца одно, то тут должен отобразить фото на весь экран и на этом все...
@@ -2122,6 +2148,30 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         };
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
+    }
+
+    private ContextUI resolveSamplePhotoContextUI(int photoType, OptionsDB optionsDB) {
+        String optionId = optionsDB != null ? optionsDB.getOptionId() : null;
+
+        if ("135158".equals(optionId) || photoType == 4) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158;
+        if ("164355".equals(optionId) || photoType == 5) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355;
+        if ("141360".equals(optionId) || photoType == 31) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360;
+        if ("132969".equals(optionId) || photoType == 10) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969;
+        if ("135809".equals(optionId) || photoType == 14) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809;
+        if ("158309".equals(optionId) || photoType == 39) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309;
+        if ("158604".equals(optionId) || photoType == 41) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604;
+        if ("157277".equals(optionId) || photoType == 28) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277;
+        if ("157354".equals(optionId) || photoType == 42) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354;
+        if ("169108".equals(optionId) || photoType == 47) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108;
+        if ("172100".equals(optionId) || photoType == 48) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100;
+        if ("174213".equals(optionId) || photoType == 49) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213;
+
+        Globals.writeToMLOG(
+                "INFO",
+                "RecycleViewDRAdapter.resolveSamplePhotoContextUI",
+                "Use generic contextUI, optionId=" + optionId + ", photoType=" + photoType
+        );
+        return ContextUI.SAMPLE_PHOTO_FROM_OPTION_GENERIC;
     }
 
     private SpannableString createLinkedStringGal(Context context, String msg, int photoType, Clicks.clickVoid click) {
@@ -2217,10 +2267,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
         int maxPhotos = Integer.parseInt(min);
-        if (option.getOptionId().equals("135158") || option.getOptionId().equals("141360") || option.getOptionId().equals("132969"))
+        if (option.getOptionId().equals("135158") || option.getOptionId().equals("141360") || option.getOptionId().equals("132969") ||
+                (dataDB != null && dataDB instanceof WpDataDB && ((WpDataDB) dataDB).getSku() < 5))
             maxPhotos = maxPhotos;
         else
             maxPhotos = maxPhotos + 1;
+
 
         if (option.getOptionId().equals("158308"))
             maxPhotos = maxPhotos + 1;

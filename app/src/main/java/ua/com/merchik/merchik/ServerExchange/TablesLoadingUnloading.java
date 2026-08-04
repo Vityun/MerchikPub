@@ -87,6 +87,7 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults;
 import ua.com.merchik.merchik.data.PPAonResponse;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
@@ -4454,6 +4455,7 @@ id_exclude - иди товаров которые есть в приложени
                 INSTANCE.delete(SiteObjectsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
             });
+            SiteObjectsLocalDefaults.ensureDurationObjects();
         } else {
             Log.e("saveSiteObjectsDB", "data-");
         }

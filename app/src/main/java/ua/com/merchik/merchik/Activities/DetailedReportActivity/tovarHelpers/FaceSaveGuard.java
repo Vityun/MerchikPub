@@ -86,12 +86,25 @@ public final class FaceSaveGuard {
                 return FaceSaveCheckResult.success();
             }
 
-            return checkOption159707ForSingleProduct(
+            Integer oldFace = parseFace(rp.getFace());
+
+            if (oldFace == null || oldFace <= 0) {
+                return FaceSaveCheckResult.success();
+            }
+
+            /*
+             * 2026-08-04: face reset to 0 is blocked for every completed work,
+             * not only for option 159707. This protects both the Compose editor
+             * and the old requisites dialog, because both paths call this guard.
+             */
+            showCompletedWorkFaceZeroBlockedDialog(
                     context,
                     wpDataDB,
                     rp,
-                    newFace
+                    oldFace
             );
+
+            return FaceSaveCheckResult.error();
 
         } catch (Exception e) {
             Globals.writeToMLOG(
@@ -108,6 +121,28 @@ public final class FaceSaveGuard {
 
             return FaceSaveCheckResult.error();
         }
+    }
+
+    private static void showCompletedWorkFaceZeroBlockedDialog(
+            Context context,
+            WpDataDB wpDataDB,
+            ReportPrepareDB rp,
+            int oldFace
+    ) {
+        Globals.writeToMLOG(
+                "INFO",
+                "FaceSaveGuard/showCompletedWorkFaceZeroBlockedDialog",
+                "Blocked finished work face reset to zero. codeDad2="
+                        + (wpDataDB != null ? wpDataDB.getCode_dad2() : null)
+                        + ", tovarId=" + (rp != null ? rp.getTovarId() : null)
+                        + ", oldFace=" + oldFace
+        );
+
+        showSimpleErrorDialog(
+                context,
+                "Зміни не збережені",
+                "Робота вже завершена. Якщо кількість фейсів була вказана, її не можна змінити на 0. Вкажіть значення більше 0."
+        );
     }
 
 

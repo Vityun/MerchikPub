@@ -42,6 +42,8 @@ class ThemeDBViewModel @Inject constructor(
         get() = ThemeDB::class
 
     private val defaultAchievementThemeIds = arrayOf("595", "1252", "1251", "1378")
+    private val premiumQuestionAnswerThemeId = "421"
+    private val paymentIncreaseThemeId = "610"
 
     override fun getDefaultHideUserFields(): List<String>? {
         return "ID, comment, column_name".split(",")
@@ -80,7 +82,7 @@ class ThemeDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return try
         {
-            val data = loadThemesSafe(oprosOnly = contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER)
+            val data = loadThemesForContext()
             repository.toItemUIList(ThemeDB::class, data, contextUI, null)
                 .map {
                     when (contextUI) {
@@ -96,6 +98,13 @@ class ThemeDBViewModel @Inject constructor(
                                 ?.rightValuesRaw
                                 ?.contains((it.rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.id.toString())
                             it.copy(selected = selected == true)
+                        }
+                        ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER -> {
+                            val selected =
+                                (it.rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)
+                                    ?.id
+                                    ?.trim() == premiumQuestionAnswerThemeId
+                            it.copy(selected = selected)
                         }
                         else -> { it }
                     }
@@ -193,6 +202,41 @@ class ThemeDBViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             Globals.writeToMLOG("ERROR", "ThemeDBViewModel/loadThemesSafe", "Exception: $e")
+            emptyList()
+        }
+    }
+
+    private fun loadThemesForContext(): List<ThemeDB> {
+        return when (contextUI) {
+            ContextUI.ADD_THEME_QUESTION_ANSWER -> loadThemesSafe(oprosOnly = true)
+            ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER -> loadPremiumQuestionAnswerThemesSafe()
+            else -> loadThemesSafe(oprosOnly = false)
+        }
+    }
+
+    private fun loadPremiumQuestionAnswerThemesSafe(): List<ThemeDB> {
+        return try {
+            val premiumTheme = ThemeRealm.getThemeById(premiumQuestionAnswerThemeId)
+            val themes = ThemeRealm.getAllOpros()
+                .filterNot { it.id?.trim() == paymentIncreaseThemeId }
+                .filterNot { it.id?.trim() == premiumQuestionAnswerThemeId }
+
+            if (premiumTheme == null) {
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "ThemeDBViewModel/loadPremiumQuestionAnswerThemesSafe",
+                    "Theme $premiumQuestionAnswerThemeId not found"
+                )
+                themes
+            } else {
+                listOf(premiumTheme) + themes
+            }
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "ThemeDBViewModel/loadPremiumQuestionAnswerThemesSafe",
+                "Exception: $e"
+            )
             emptyList()
         }
     }

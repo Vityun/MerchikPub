@@ -1066,6 +1066,12 @@ object WPDataBDOverride {
             value.toString()
         }
 
+        "duration_fact" -> try {
+            "$value хв."
+        } catch (e: Exception) {
+            value.toString()
+        }
+
         "status" -> try {
             when (value) {
                 0 -> "Робота не розпочата (звiт не проведено)"
@@ -1115,7 +1121,8 @@ object WPDataBDOverride {
         "client_start_dt" -> 9062
         "client_end_dt" -> 9063
         "sku" -> 9065
-        "duration" -> 9064
+        "duration" -> 100998
+        "duration_fact" -> 100999
         "smeta" -> 9154
         "doc_num_otchet" -> 9155
 

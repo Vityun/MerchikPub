@@ -16,6 +16,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteObjectsResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.room.RoomManager;
@@ -67,6 +68,7 @@ public class SiteObjectsExchange {
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
+                                                        SiteObjectsLocalDefaults.ensureDurationObjects();
                                                         exchangeInterface.onSuccess("Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
 
                                                     }
