@@ -6,6 +6,12 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Цвет отмеченного CheckBox -->
+        <item name="colorControlActivated">@color/blue</item>
+
+        <!-- Цвет неотмеченного CheckBox -->
+        <item name="colorControlNormal">@color/hintColorDefault</item>
     </style>
 
     <style name="AppTheme.FullScreen" >

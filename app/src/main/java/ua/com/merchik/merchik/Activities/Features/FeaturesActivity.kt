@@ -81,6 +81,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TradeMarkDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.VideoLessonsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
@@ -154,6 +155,7 @@ class FeaturesActivity : AppCompatActivity() {
                                         OrderDataSDBViewModel::class -> viewModel() as OrderDataSDBViewModel
                                         AddressSDBViewModel::class -> viewModel() as AddressSDBViewModel
                                         WpDataPauseSDBViewModel::class -> viewModel() as WpDataPauseSDBViewModel
+                                        VideoLessonsDBViewModel::class -> viewModel() as VideoLessonsDBViewModel
                                                 else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")

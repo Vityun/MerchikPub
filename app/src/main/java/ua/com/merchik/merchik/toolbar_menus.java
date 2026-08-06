@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -38,6 +39,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
@@ -140,7 +142,9 @@ import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.VideoLessonsDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel;
 import ua.com.merchik.merchik.features.rno.RnoRequestCoordinator;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
@@ -519,18 +523,31 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             case 169:
 
+
+                Intent intent = new Intent(this, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                JsonObject dataJson = new JsonObject();
+                bundle.putString("viewModel", VideoLessonsDBViewModel.class.getCanonicalName());
+//                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//                bundle.putString("dataJson", dataJson.toString());
+                bundle.putString("title", "Перелік видео уроков");
+                bundle.putString("subTitle", "Довідник видео уроков");
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) this, intent, NEED_UPDATE_UI_REQUEST, null);
+
                 int currentUserId = Globals.getCurrentUserId();
                 AppUsersDB appUser = AppUserRealm.getAppUserById(currentUserId);
                 String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                hash = Globals.getSha1Hex(hash);
-
-                String str = "mobile.php?mod=lessons**act=list**platform_id=5";
-
-                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, str);
-
-                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+//                hash = Globals.getSha1Hex(hash);
+//
+//                String str = "mobile.php?mod=lessons**act=list**platform_id=5";
+//
+//                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", currentUserId, hash, str);
+//
+//                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
 //                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=" + userId + "&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l="));
-                this.startActivity(menuItem169browserIntent);
+//                ###################################
+//                this.startActivity(menuItem169browserIntent);
                 break;
 
             case 173:

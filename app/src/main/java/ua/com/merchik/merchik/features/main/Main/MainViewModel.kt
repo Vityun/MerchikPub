@@ -85,6 +85,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
+import ua.com.merchik.merchik.features.main.componentsUI.YouTubePlayerDialogUiState
 import ua.com.merchik.merchik.features.rno.RnoRequestCoordinator
 import ua.com.merchik.merchik.features.rno.RnoRequestResult
 import ua.com.merchik.merchik.features.rno.RnoRequestStatus
@@ -609,8 +610,18 @@ abstract class MainViewModel(
     val tovarPhotoDialogState: StateFlow<TovarPhotoDialogUiState?> =
         _tovarPhotoDialogState.asStateFlow()
 
+    private val _youtubeDialogState =
+        MutableStateFlow<YouTubePlayerDialogUiState?>(null)
+
+    val youtubeDialogState: StateFlow<YouTubePlayerDialogUiState?> =
+        _youtubeDialogState.asStateFlow()
+
     protected fun showTovarPhotoDialog(state: TovarPhotoDialogUiState) {
         _tovarPhotoDialogState.value = state
+    }
+
+    protected fun showYouTubeDialog(state: YouTubePlayerDialogUiState) {
+        _youtubeDialogState.value = state
     }
 
     protected fun updateTovarPhotoDialog(
@@ -623,6 +634,10 @@ abstract class MainViewModel(
 
     fun hideTovarPhotoDialog() {
         _tovarPhotoDialogState.value = null
+    }
+
+    fun hideYouTubeDialog() {
+        _youtubeDialogState.value = null
     }
 
     fun requestExpandGroup(groupId: String) {

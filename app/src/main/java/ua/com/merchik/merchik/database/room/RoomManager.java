@@ -52,7 +52,8 @@ public class RoomManager {
                         MIGRATION_74_75,
                         MIGRATION_77_78,
                         MIGRATION_78_79,
-                        MIGRATION_79_80
+                        MIGRATION_79_80,
+                        MIGRATION_80_81
                 )
                 .build();
 
@@ -994,6 +995,13 @@ public class RoomManager {
                             "PRIMARY KEY(`id`)" +
                             ")"
             );
+        }
+    };
+
+    public static final Migration MIGRATION_80_81 = new Migration(80, 81) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE address ADD COLUMN kol_kass_so INTEGER");
         }
     };
 }

@@ -6,6 +6,8 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,11 +48,17 @@ public class AddressExchange {
                 data.dt_change_from = "0";
             }
 
-
-
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(addressTableResponse -> {
+//                        Log.e("!!!!!!!downloadAddressTable!!!!!!!","8====> " + addressTableResponse);
+//                            }
+//                    );
 
             retrofit2.Call<AddressResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<AddressResponse>() {

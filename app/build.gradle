@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 35
         //noinspection HighAppVersionCode
-        versionCode  2026080400
-        versionName "2026080400"
+        versionCode  2026080600
+        versionName "2026080600"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -223,4 +223,7 @@ dependencies {
 
     debugImplementation 'com.github.amitshekhariitbhu.Android-Debug-Database:debug-db:1.0.7'
     implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.2'
+
 }

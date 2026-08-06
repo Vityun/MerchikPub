@@ -44,7 +44,7 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 
 public class DetailedReportTARFrag extends Fragment {
 
@@ -292,11 +292,7 @@ public class DetailedReportTARFrag extends Fragment {
      */
     private void setFabVideo(Context context, Clicks.clickVoid click) {
         fab.setOnClickListener(view -> {
-            DialogVideo dialogVideo = new DialogVideo(context);
-            dialogVideo.setTitle("Перелік відео уроків");
-            dialogVideo.setVideos(getSiteHints(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS), click);
-            dialogVideo.setClose(dialogVideo::dismiss);
-            dialogVideo.show();
+            VideoLessonsLauncher.openByObjectIds(context, DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS);
         });
     }
 

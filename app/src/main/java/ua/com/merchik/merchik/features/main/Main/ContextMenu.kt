@@ -89,8 +89,7 @@ import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialog
-import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
-import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoQuality
+import ua.com.merchik.merchik.features.main.componentsUI.YouTubePlayerDialog
 
 
 @Composable
@@ -103,6 +102,7 @@ fun rememberContextMenuHost(
     var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
 
     val photoDialogState by viewModel.tovarPhotoDialogState.collectAsStateWithLifecycle()
+    val youtubeDialogState by viewModel.youtubeDialogState.collectAsStateWithLifecycle()
 
     val focusManager = LocalFocusManager.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -209,6 +209,15 @@ fun rememberContextMenuHost(
             state = state,
             onDismiss = {
                 viewModel.hideTovarPhotoDialog()
+            }
+        )
+    }
+
+    youtubeDialogState?.let { state ->
+        YouTubePlayerDialog(
+            state = state,
+            onDismiss = {
+                viewModel.hideYouTubeDialog()
             }
         )
     }

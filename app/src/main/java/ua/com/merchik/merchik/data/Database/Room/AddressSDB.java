@@ -77,6 +77,11 @@ public class AddressSDB implements DataObjectUI {
     @ColumnInfo(name = "kol_kass")
     public Integer kolKass;
 
+    @SerializedName("kol_kass_so")
+    @Expose
+    @ColumnInfo(name = "kol_kass_so")
+    public Integer kolKassSo;
+
     @SerializedName("nomer_tt")
     @Expose
     @ColumnInfo(name = "nomer_tt")

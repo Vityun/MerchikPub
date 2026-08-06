@@ -72,6 +72,7 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 
 public class DialogData {
 
@@ -518,11 +519,7 @@ public class DialogData {
                 if (finalData != null) {
                     Log.e("setVideoLesson", "click1");
                     if (clickListener == null) {
-                        DialogVideo dialogVideo = new DialogVideo(context);
-                        dialogVideo.setTitle("Перелік відео уроків");
-                        dialogVideo.setVideos(finalData, click);
-                        dialogVideo.setClose(dialogVideo::dismiss);
-                        dialogVideo.show();
+                        VideoLessonsLauncher.openByObjectIds(context, objectIds);
                     }
                 } else {
                     Log.e("setVideoLesson", "click4");

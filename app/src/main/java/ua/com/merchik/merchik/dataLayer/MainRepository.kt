@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB
 import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
@@ -124,6 +125,7 @@ class MainRepository(
                     QuestionAnswerDB::class -> roomManager.questionAnswerDao().all.firstOrNull() as DataObjectUI
                     OrderDataSDB::class -> roomManager.orderDataDao().all.firstOrNull() as DataObjectUI
                     WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all.firstOrNull() as DataObjectUI
+                    SiteHintsDB::class -> RealmManager.getAllVideoLessons().firstOrNull() as DataObjectUI
                     else -> null
                 }
             }.getOrNull()
@@ -458,6 +460,7 @@ class MainRepository(
             QuestionAnswerDB::class -> roomManager.questionAnswerDao().all
             OrderDataSDB::class -> roomManager.orderDataDao().all
             WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all
+            SiteHintsDB::class -> RealmManager.getAllVideoLessons()
             else -> {
                 emptyList()
             }

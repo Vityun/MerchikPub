@@ -17,25 +17,25 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = CheckboxBlue,
+    onPrimary = Color.White,
+
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+
+    // Неотмеченный Checkbox
+    onSurfaceVariant = CheckboxGray
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = CheckboxBlue,
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+
+    secondary = PurpleGrey40,
+    tertiary = Pink40,
+
+    // Неотмеченный Checkbox
+    onSurfaceVariant = CheckboxGray
 )
 
     @Composable
@@ -65,7 +65,7 @@ private val LightColorScheme = lightColorScheme(
         }
 
         MaterialTheme(
-            colorScheme = colorScheme,
+            colorScheme = DarkColorScheme,
             typography = Typography,
             content = content
         )

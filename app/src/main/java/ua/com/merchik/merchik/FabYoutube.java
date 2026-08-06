@@ -17,17 +17,13 @@ import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 
 public class FabYoutube {
 
     public void setFabVideo(FloatingActionButton fabYouTube, Integer[] lessons, Clicks.clickVoid click){
         fabYouTube.setOnClickListener(view -> {
-            DialogVideo dialogVideo = new DialogVideo(view.getContext());
-            dialogVideo.setTitle("Перелік відео уроків");
-            dialogVideo.setVideos(getSiteHints(lessons), click);
-            dialogVideo.setClose(dialogVideo::dismiss);
-            dialogVideo.show();
+            VideoLessonsLauncher.openByObjectIds(view.getContext(), lessons);
         });
     }
 

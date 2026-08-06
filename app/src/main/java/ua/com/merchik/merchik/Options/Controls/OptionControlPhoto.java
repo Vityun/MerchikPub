@@ -10,8 +10,6 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
-import com.google.gson.Gson;
-
 import java.util.Date;
 import java.util.List;
 
@@ -234,6 +232,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
+
         // 15.06.2026 временное решение +1 ко всем фоткам, кроме исключений, сделал специаьно так коряво, что бы читалось лучше
         if (optionId.equals("159707") || optionId.equals("1470") || optionId.equals("158361")
                 || optionId.equals("141361") || optionId.equals("132971") ||
@@ -244,6 +243,22 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         if (optionDB.getOptionId().equals("134583") || optionDB.getOptionId().equals("158308"))
             m = m + 1;
+
+        if ("164352".equals(optionDB.getOptionId())
+                && "77190".equals(wpDataDB.getClient_id())
+                && addressSDB != null) {
+
+            int kolKass = addressSDB.kolKass != null
+                    ? addressSDB.kolKass
+                    : 0;
+
+            int kolKassSo = addressSDB.kolKassSo != null
+                    ? addressSDB.kolKassSo
+                    : 0;
+
+            m = Math.max(m, kolKass - kolKassSo);
+        }
+
 
         int adress = ((WpDataDB) document).getAddr_id();
 //        получаем данные из таблицы фото

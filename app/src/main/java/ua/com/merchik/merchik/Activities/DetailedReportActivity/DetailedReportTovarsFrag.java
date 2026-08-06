@@ -72,7 +72,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
@@ -383,11 +383,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void setFabVideo(Clicks.clickVoid click) {
         fab.setOnClickListener(view -> {
-            DialogVideo dialogVideo = new DialogVideo(requireContext());
-            dialogVideo.setTitle("Перелік відео уроків");
-            dialogVideo.setVideos(getSiteHints(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS), click);
-            dialogVideo.setClose(dialogVideo::dismiss);
-            dialogVideo.show();
+            VideoLessonsLauncher.openByObjectIds(requireContext(), DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS);
         });
     }
 
