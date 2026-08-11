@@ -96,6 +96,8 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public int showcaseId;
     @Ignore
     public String showcaseName;
+    @Ignore
+    public int statusShowcase;
 
     public StackPhotoDB() {
     }

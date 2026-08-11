@@ -32,6 +32,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     private int tech_sup_active;
     private int addr_id;
     private int user_id;// пользователь который выполняет работы (ИСПОЛНИТЕЛЬ работ)
+    private int user_id_previous; // если работа переписана ид предыдущего пользователя
     private long dt_start;
     private long dt_stop;
     private int action;
@@ -354,6 +355,14 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
     public void setUser_id(int user_id) {
         this.user_id = user_id;
+    }
+
+    public int getUser_id_previous() {
+        return user_id_previous;
+    }
+
+    public void setUser_id_previous(int user_id_previous) {
+        this.user_id_previous = user_id_previous;
     }
 
     public long getDt_start() {
@@ -1156,6 +1165,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         tech_sup_active = in.readInt();
         addr_id = in.readInt();
         user_id = in.readInt();
+        user_id_previous = in.readInt();
         dt_start = in.readLong();
         dt_stop = in.readLong();
         action = in.readInt();
@@ -1281,6 +1291,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeInt(tech_sup_active);
         dest.writeInt(addr_id);
         dest.writeInt(user_id);
+        dest.writeInt(user_id_previous);
         dest.writeLong(dt_start);
         dest.writeLong(dt_stop);
         dest.writeInt(action);
@@ -1414,7 +1425,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     public String getHidedFieldsOnUI() {
         return "ID, isp, isp_fact, tech_sup_active, addr_id, dt_start, client_id, dt_stop, action, action_txt, action_type, stajirovka_stage, " +
                 "one_time_work, theme_grp, code_dda, code_ddas, codedad, code_dad2, smeta_1c, doc_num, " +
-                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, signal_cnt, doc_num_otchet_id, user_id, " +
+                "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, signal_cnt, doc_num_otchet_id, user_id, user_id_previous, " +
                 "smeta_active, super_id, territorial_id, regional_id, nop_id, starsh_tt_id, contacter_id, fot_user_id, " +
                 "dot_user_id, visit_start_dt, visit_start_dt_receive, visit_start_geo_distance, visit_start_geo_accuracy, " +
                 "visit_start_geo_id, visit_end_dt, visit_end_dt_receive, visit_end_geo_distance, visit_end_geo_accuracy, " +

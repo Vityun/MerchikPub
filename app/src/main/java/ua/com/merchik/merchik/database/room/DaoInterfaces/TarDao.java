@@ -92,6 +92,9 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations WHERE id = :id")
     TasksAndReclamationsSDB getById(int id);
 
+    @Query("DELETE FROM tasks_and_reclamations WHERE code_dad2 = :codeDad2 OR code_dad2_src_doc = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertData(List<TasksAndReclamationsSDB> data);
 

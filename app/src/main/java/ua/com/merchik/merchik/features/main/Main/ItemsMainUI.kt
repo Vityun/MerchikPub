@@ -522,7 +522,15 @@ fun GroupDeck(
                                 contextUI = viewModel.modeUI,
                                 onClickItem = {
                                     // клик по карте действует как по заголовку
-                                    expanded = !expanded
+                                    if (viewModel.shouldOpenContextMenuOnCardClick()) {
+                                        viewModel.onClickItems(
+                                            items = items,
+                                            context = context,
+                                            clickedItem = topItem
+                                        )
+                                    } else {
+                                        expanded = !expanded
+                                    }
                                 },
                                 onLongClickItem = {
                                     if (items.size > 1) {
@@ -586,7 +594,15 @@ fun GroupDeck(
                             settingsItemUI = settingsItems,
                             contextUI = viewModel.modeUI,
                             onClickItem = {
-                                expanded = !expanded
+                                if (viewModel.shouldOpenContextMenuOnCardClick()) {
+                                    viewModel.onClickItems(
+                                        items = items,
+                                        context = context,
+                                        clickedItem = topItem
+                                    )
+                                } else {
+                                    expanded = !expanded
+                                }
                             },
                             onLongClickItem = {
                                 viewModel.onLongClickItem(it, context)
@@ -809,9 +825,12 @@ private fun BoxScope.DeckCardBack(
     )
 }
 
+private const val TOVAR_REPORT_PREPARE_CHANGED_FIELD = "tovar_report_prepare_changed"
+
 private val GROUP_ALWAYS_HIDDEN_KEYS = setOf(
     "client_start_dt",
-    "client_end_dt"
+    "client_end_dt",
+    TOVAR_REPORT_PREPARE_CHANGED_FIELD
 )
 
 private fun aggregateNumberOrCount(rawValues: List<Any?>): Double? {
@@ -854,6 +873,27 @@ private fun aggregateNumberOrCount(rawValues: List<Any?>): Double? {
         // всё пустое
         else -> null
     }
+}
+
+private fun formatTovarElementWord(count: Int): String {
+    val normalized = count % 100
+    return if (normalized in 11..14) {
+        "элементов"
+    } else {
+        when (count % 10) {
+            1 -> "элемент"
+            2, 3, 4 -> "элемента"
+            else -> "элементов"
+        }
+    }
+}
+
+private fun formatTotalTovarCount(count: Int): String {
+    return "Всего $count ${formatTovarElementWord(count)}"
+}
+
+private fun formatChangedTovarCount(count: Int): String {
+    return "Изменено $count ${formatTovarElementWord(count)}"
 }
 
 
@@ -1079,6 +1119,7 @@ fun buildGroupSummaryItem(
             ?.any { it is TovarDB } == true
 
         if (isTovarGroup) {
+            val totalCountText = formatTotalTovarCount(groupItems.size)
             val totalField = FieldValue(
                 key = "tovar_total_count",
                 field = TextField(
@@ -1086,13 +1127,48 @@ fun buildGroupSummaryItem(
                     value = "Всего:"
                 ),
                 value = TextField(
-                    rawValue = "${groupItems.size} элементов",
-                    value = "${groupItems.size} элементов"
+                    rawValue = totalCountText,
+                    value = totalCountText
                 )
             )
 
             summaryRawFields += totalField
             summaryFields += totalField
+
+            val hasChangedMarker = groupItems.any { item ->
+                item.rawFields.any { field ->
+                    field.key.equals(TOVAR_REPORT_PREPARE_CHANGED_FIELD, ignoreCase = true)
+                }
+            }
+
+            if (hasChangedMarker) {
+                val changedCount = groupItems.count { item ->
+                    item.rawFields
+                        .firstOrNull {
+                            it.key.equals(TOVAR_REPORT_PREPARE_CHANGED_FIELD, ignoreCase = true)
+                        }
+                        ?.value
+                        ?.rawValue
+                        ?.toString()
+                        ?.trim() == "1"
+                }
+
+                val changedField = FieldValue(
+                    key = "tovar_total_count",
+                    field = TextField(
+                        rawValue = "",
+                        value = ""
+                    ),
+                    value = TextField(
+                        rawValue = formatChangedTovarCount(changedCount),
+                        value = formatChangedTovarCount(changedCount),
+                        modifierValue = MerchModifier(textColor = Color.Red)
+                    )
+                )
+
+                summaryRawFields += changedField
+                summaryFields += changedField
+            }
         }
     }
     val allRawObjects = groupItems.flatMap { it.rawObj }

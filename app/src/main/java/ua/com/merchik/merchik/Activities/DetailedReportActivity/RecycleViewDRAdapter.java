@@ -2153,18 +2153,30 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     private ContextUI resolveSamplePhotoContextUI(int photoType, OptionsDB optionsDB) {
         String optionId = optionsDB != null ? optionsDB.getOptionId() : null;
 
-        if ("135158".equals(optionId) || photoType == 4) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158;
-        if ("164355".equals(optionId) || photoType == 5) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355;
-        if ("141360".equals(optionId) || photoType == 31) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360;
-        if ("132969".equals(optionId) || photoType == 10) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969;
-        if ("135809".equals(optionId) || photoType == 14) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809;
-        if ("158309".equals(optionId) || photoType == 39) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309;
-        if ("158604".equals(optionId) || photoType == 41) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604;
-        if ("157277".equals(optionId) || photoType == 28) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277;
-        if ("157354".equals(optionId) || photoType == 42) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354;
-        if ("169108".equals(optionId) || photoType == 47) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108;
-        if ("172100".equals(optionId) || photoType == 48) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100;
-        if ("174213".equals(optionId) || photoType == 49) return ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213;
+        if ("135158".equals(optionId) || photoType == 4)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158;
+        if ("164355".equals(optionId) || photoType == 5)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355;
+        if ("141360".equals(optionId) || photoType == 31)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360;
+        if ("132969".equals(optionId) || photoType == 10)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969;
+        if ("135809".equals(optionId) || photoType == 14)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809;
+        if ("158309".equals(optionId) || photoType == 39)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309;
+        if ("158604".equals(optionId) || photoType == 41)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604;
+        if ("157277".equals(optionId) || photoType == 28)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277;
+        if ("157354".equals(optionId) || photoType == 42)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354;
+        if ("169108".equals(optionId) || photoType == 47)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108;
+        if ("172100".equals(optionId) || photoType == 48)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100;
+        if ("174213".equals(optionId) || photoType == 49)
+            return ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213;
 
         Globals.writeToMLOG(
                 "INFO",
@@ -2257,6 +2269,26 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     if (ad != null && ad.size() > 0) {
                         min = String.valueOf(count);
+                    }
+                }
+
+                if (dataDB != null && ((dataDB instanceof WpDataDB && "164352".equals(option.getOptionId())
+                        || (dataDB instanceof WpDataDB && "164351".equals(option.getOptionId()))))) {
+                    WpDataDB wpDataDB = (WpDataDB) dataDB;
+                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                    if ("77190".equals(wpDataDB.getClient_id())
+                            && addressSDB != null) {
+                        int m = 0;
+                        int kolKass = addressSDB.kolKass != null
+                                ? addressSDB.kolKass
+                                : 0;
+
+                        int kolKassSo = addressSDB.kolKassSo != null
+                                ? addressSDB.kolKassSo
+                                : 0;
+
+                        m = Math.max(m, kolKass - kolKassSo);
+                        min = String.valueOf(m);
                     }
                 }
             } catch (Exception e) {

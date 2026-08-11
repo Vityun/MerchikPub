@@ -288,7 +288,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 @Override
                 public <T> void onSuccess(List<T> data) {
                     if (data != null && data.size() > 0) {
-                        WpDataRealm.setWpData((List<WpDataDB>) data);
+                        RealmManager.updateWorkPlanFromServer((List<WpDataDB>) data);
                         Toast.makeText(itemView.getContext(), dataDownload200 + " План робіт", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(itemView.getContext(), dataDownloadError + " План робіт", Toast.LENGTH_LONG).show();

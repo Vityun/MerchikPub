@@ -42,6 +42,9 @@ public interface PlanogrammVizitShowcaseDao {
     @Query("SELECT * FROM planogram_vizit_showcase WHERE code_dad2 = :codeDad2")
     List<PlanogrammVizitShowcaseSDB> getByCodeDad2(Long codeDad2);
 
+    @Query("DELETE FROM planogram_vizit_showcase WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(Long codeDad2);
+
     @Update
     void update(PlanogrammVizitShowcaseSDB planogrammVizitShowcase);
 

@@ -29,6 +29,9 @@ public interface AchievementsDao {
     @Query("SELECT * FROM achievements WHERE code_dad2 = :dad2")
     List<AchievementsSDB> getByDad2(long dad2);
 
+    @Query("DELETE FROM achievements WHERE code_dad2 = :dad2")
+    void deleteByDad2Sync(long dad2);
+
     /*Получение Достижений для Опции контроля Достижений*/
 //    @Query("SELECT * FROM achievements WHERE (theme_id IS NOT NULL AND theme_id = :themeId) AND client_id = :clientId AND addr_id = :addressId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
     @Query("SELECT * FROM achievements WHERE (theme_id IS NOT NULL AND (theme_id = :themeId OR :themeId IS NULL)) AND client_id = :clientId AND addr_id = :addressId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")

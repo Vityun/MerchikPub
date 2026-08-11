@@ -121,6 +121,7 @@ import kotlin.reflect.KClass
 
 
 private const val FIELD_OPTION_CODE = "option_code"
+private const val FIELD_TOVAR_REPORT_PREPARE_CHANGED = "tovar_report_prepare_changed"
 
 enum class AkciyaPresence {
     HAS,
@@ -614,8 +615,13 @@ class TovarDBViewModel @Inject constructor(
 
 
 
+                                val itemWithChangedMarker =
+                                    item.addTovarReportPrepareChangedMarker(
+                                        optionString.hasChangedProductCode()
+                                    )
+
                                 if (optionString.isBlank()) {
-                                    item
+                                    itemWithChangedMarker
                                 } else {
                                     val optionField = buildOptionCodeField(
                                         optionHtmlOrText = optionString,
@@ -623,7 +629,7 @@ class TovarDBViewModel @Inject constructor(
                                         title = "Шифр",
                                         actionId = "open_option_code"
                                     )
-                                    item.addOrReplaceField(optionField)
+                                    itemWithChangedMarker.addOrReplaceField(optionField)
                                 }
                             }
 
@@ -631,16 +637,19 @@ class TovarDBViewModel @Inject constructor(
                         }
                     }
                     .map { itemUI ->
-                        val tovar = itemUI.rawAs<TovarDB>() ?: return@map itemUI
+                        if (contextUI != ContextUI.TOVAR_FROM_ACHIEVEMENT) {
+                            val tovar = itemUI.rawAs<TovarDB>() ?: return@map itemUI
 
-                        val rp = ReportPrepareRealm.getReportPrepareByTov(
-                            codeDad2.toString(),
-                            tovar.getiD()
-                        )
+                            val rp = ReportPrepareRealm.getReportPrepareByTov(
+                                codeDad2.toString(),
+                                tovar.getiD()
+                            )
 
-                        val commentField = buildTovarBalanceImageCommentField(rp)
+                            val commentField = buildTovarBalanceImageCommentField(rp)
 
-                        itemUI.addOrReplaceImageCommentField(commentField)
+                            itemUI.addOrReplaceImageCommentField(commentField)
+                        } else
+                            itemUI
                     }
                     .map { item ->
                         when (contextUI) {
@@ -917,6 +926,7 @@ class TovarDBViewModel @Inject constructor(
         val deletePromoOption = false
 
         var updatedItem = originalItem
+        var hasChangedProductCode = false
 
         if (reportPrepare != null) {
             val optionString = Options().getOptionString(
@@ -924,6 +934,7 @@ class TovarDBViewModel @Inject constructor(
                 reportPrepare,
                 deletePromoOption
             )
+            hasChangedProductCode = optionString.hasChangedProductCode()
 
             if (optionString.isNotBlank()) {
                 val optionField = buildOptionCodeField(
@@ -940,6 +951,7 @@ class TovarDBViewModel @Inject constructor(
             updatedItem = updatedItem.addOrReplaceImageCommentField(commentField)
         }
 
+        updatedItem = updatedItem.addTovarReportPrepareChangedMarker(hasChangedProductCode)
         replaceCurrentItemByStableId(updatedItem)
     }
 
@@ -3811,6 +3823,31 @@ class TovarDBViewModel @Inject constructor(
             fields = fields
                 .filterNot { it.key.equals(field.key, ignoreCase = true) } + field
         )
+    }
+
+    private fun DataItemUI.addTovarReportPrepareChangedMarker(
+        isChanged: Boolean
+    ): DataItemUI {
+        val marker = FieldValue(
+            key = FIELD_TOVAR_REPORT_PREPARE_CHANGED,
+            field = TextField(
+                rawValue = FIELD_TOVAR_REPORT_PREPARE_CHANGED,
+                value = FIELD_TOVAR_REPORT_PREPARE_CHANGED
+            ),
+            value = TextField(
+                rawValue = if (isChanged) 1 else 0,
+                value = if (isChanged) "1" else "0"
+            )
+        )
+
+        return copy(
+            rawFields = rawFields
+                .filterNot { it.key.equals(marker.key, ignoreCase = true) } + marker
+        )
+    }
+
+    private fun String.hasChangedProductCode(): Boolean {
+        return contains("<font", ignoreCase = true)
     }
 
     private fun buildOborotVedText(

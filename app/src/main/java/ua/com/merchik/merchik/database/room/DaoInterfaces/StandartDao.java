@@ -18,6 +18,9 @@ public interface StandartDao {
     @Query("SELECT * FROM standart WHERE code_dad2 = :dad2")
     List<StandartSDB> getByDad2(long dad2);
 
+    @Query("DELETE FROM standart WHERE code_dad2 = :dad2")
+    void deleteByDad2Sync(long dad2);
+
     @Query("SELECT * FROM standart WHERE id = :id")
     StandartSDB getById(int id);
 

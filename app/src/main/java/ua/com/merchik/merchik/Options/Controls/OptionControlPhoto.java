@@ -244,10 +244,11 @@ public class OptionControlPhoto<T> extends OptionControl {
         if (optionDB.getOptionId().equals("134583") || optionDB.getOptionId().equals("158308"))
             m = m + 1;
 
-        if ("164352".equals(optionDB.getOptionId())
+        if (("164352".equals(optionDB.getOptionId())
+                && "77190".equals(wpDataDB.getClient_id())
+                && addressSDB != null) || "164351".equals(optionDB.getOptionId())
                 && "77190".equals(wpDataDB.getClient_id())
                 && addressSDB != null) {
-
             int kolKass = addressSDB.kolKass != null
                     ? addressSDB.kolKass
                     : 0;

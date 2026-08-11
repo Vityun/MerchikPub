@@ -31,6 +31,9 @@ public interface EKLDao {
     @Query("SELECT * FROM ekl WHERE dad2 = :dad2")
     List<EKL_SDB> getByDad2(long dad2);
 
+    @Query("DELETE FROM ekl WHERE dad2 = :dad2")
+    void deleteByDad2Sync(long dad2);
+
     @Query("SELECT * FROM ekl WHERE client_id = :clientId")
     List<EKL_SDB> getByClientId(String clientId);
 

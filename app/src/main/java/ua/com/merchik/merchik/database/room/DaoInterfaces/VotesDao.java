@@ -21,6 +21,9 @@ public interface VotesDao {
     @Query("SELECT * FROM votes WHERE photo_id IN (:ids)")
     List<VoteSDB> getByIds(List<Integer> ids);
 
+    @Query("DELETE FROM votes WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<VoteSDB> data);
 

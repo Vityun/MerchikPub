@@ -49,6 +49,9 @@ public interface WPDataPauseDao {
     @Query("UPDATE wp_data_pause SET dt_end = :dtEnd, dt_update_client = :dtUpdateClient, uploadStatus = 1 WHERE code_dad2 = :codeDad2 AND dt_end = 0")
     int finishActivePauseSync(long codeDad2, long dtEnd, long dtUpdateClient);
 
+    @Query("DELETE FROM wp_data_pause WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Transaction
     default void markUploadedSync(List<WPDataPauseSDB> items) {
         if (items == null || items.isEmpty()) return;

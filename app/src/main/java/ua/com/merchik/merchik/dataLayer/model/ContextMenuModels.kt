@@ -145,6 +145,9 @@ object ContextMenuActionIds {
     const val ADDITIONAL_CONTENT_ADD_PPA = "additional_content_add_ppa"
     const val ADDITIONAL_CONTENT_ADD_ALL = "additional_content_add_all"
     const val ADDITIONAL_CONTENT_ADD_ONE = "additional_content_add_one"
+
+    const val SHOWCASE_VIEW_PHOTO = "showcase_view_photo"
+    const val SHOWCASE_NOT_ACTUAL = "showcase_not_actual"
 }
 
 @Immutable

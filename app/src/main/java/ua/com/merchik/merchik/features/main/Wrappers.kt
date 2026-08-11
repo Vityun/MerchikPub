@@ -206,11 +206,13 @@ object OrderDataSDBOverride {
 
     fun getValueUI(key: String, value: Any): String = when (key) {
         "dt_create" -> formatUnixSeconds(value.toString()) ?: value.toString()
-        "date_from_ymd", "date_to_ymd", "dt_smeta_ymd" -> formatYmd(value.toString()) ?: value.toString()
+        "date_from_ymd", "date_to_ymd", "dt_smeta_ymd" -> formatYmd(value.toString())
+            ?: value.toString()
+
         "price_plan", "price_act", "price_paid" -> formatMoney(value.toString()) ?: value.toString()
         "client_id", "isp_id" -> try {
             RoomManager.SQL_DB.customerDao().getById(value.toString()).nm
-        } catch (_: Exception){
+        } catch (_: Exception) {
             value.toString()
         }
 
@@ -241,9 +243,11 @@ object OrderDataSDBOverride {
 
     private fun formatMoney(value: String): String? {
         if (value.isBlank()) return null
-        return "${value.toBigDecimalOrNull()
-            ?.setScale(2, RoundingMode.HALF_UP)
-            ?.toPlainString()} грн"
+        return "${
+            value.toBigDecimalOrNull()
+                ?.setScale(2, RoundingMode.HALF_UP)
+                ?.toPlainString()
+        } грн"
     }
 }
 
@@ -799,8 +803,9 @@ object StackPhotoDBOverride {
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         try {
             val specialCol = jsonObject.optInt("specialCol", 0)
+            Log.e("!!!!Stack!!!!", "specialCol: $specialCol")
             if (specialCol == -1)
-                return MerchModifier()
+                return MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77")))
             if (specialCol == 2)
                 return MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
             if (specialCol == 1)
@@ -813,12 +818,14 @@ object StackPhotoDBOverride {
             return if (uploadTime > 0)
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
             else
-                MerchModifier(background = Color(android.graphics.Color.parseColor("#FAF7BB"))) //FAF7BB
+                MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4"))) //FAF7BB
 
 
-        } catch (_: Exception) {
-
+        } catch (e: Exception) {
+            Log.e("!!!!Stack!!!!", "Exception: ${e.message}")
         }
+        Log.e("!!!!Stack!!!!", " 0")
+
         return MerchModifier()
     }
 
@@ -935,6 +942,15 @@ object StackPhotoDBOverride {
                 }
         }
 
+        "statusShowcase" -> try {
+            if (value.toString() == "1")
+                "Актуальна"
+            else
+                "Не актуальна"
+        } catch (e: Exception) {
+            "Не визначено"
+        }
+
         else -> value.toString()
     }
 
@@ -996,6 +1012,7 @@ object WPDataPauseSDBOverride {
                     "Робота не закінчена"
                 }
         }
+
         else -> value.toString()
     }
 
@@ -1008,7 +1025,6 @@ object WPDataPauseSDBOverride {
     }
 
 }
-
 
 
 object WPDataBDOverride {
@@ -1201,6 +1217,7 @@ object OptionsDBOverride {
                 value.toString()
             }
         }
+
         "sum_premiya" -> {
             try {
                 val sum = formatUah(value.toString())
@@ -1212,6 +1229,7 @@ object OptionsDBOverride {
                 value.toString()
             }
         }
+
         else -> value.toString()
 
     }
@@ -1235,7 +1253,6 @@ object OptionsDBOverride {
                 "author_id, dt_change, " +
                 "amount_max, price, percent, block_pns, key_option, " +
                 "option_group, option_group_txt, timeColor"
-
 
 
     private fun formatUah(value: String?): String {

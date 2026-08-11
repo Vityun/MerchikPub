@@ -19,6 +19,9 @@ public interface SMSPlanDao {
     @Query("SELECT * FROM sms_plan WHERE id = :id")
     SMSPlanSDB getById(int id);
 
+    @Query("DELETE FROM sms_plan WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<SMSPlanSDB> data);
 

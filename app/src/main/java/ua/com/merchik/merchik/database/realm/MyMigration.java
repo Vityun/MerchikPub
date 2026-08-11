@@ -19,6 +19,9 @@ public class MyMigration implements RealmMigration {
         Log.e("MyMigration", "oldVersion: " + oldVersion);
         Log.e("MyMigration", "newVersion: " + newVersion);
 
+        if (oldVersion < newVersion) {
+            RealmManager.markRealmSchemaMigrated();
+        }
 
         if (oldVersion == 7) {
             schema.get("StackPhotoDB")
@@ -332,6 +335,22 @@ public class MyMigration implements RealmMigration {
             }
 
             oldVersion++;
+        }
+
+        if (newVersion >= 31) {
+            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
+
+            if (wpDataSchema != null) {
+                if (!wpDataSchema.hasField("user_id_previous")) {
+                    wpDataSchema.addField("user_id_previous", int.class);
+                }
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "WpDataDB schema is null");
+            }
+
+            if (oldVersion < 31) {
+                oldVersion = 31;
+            }
         }
 
     }

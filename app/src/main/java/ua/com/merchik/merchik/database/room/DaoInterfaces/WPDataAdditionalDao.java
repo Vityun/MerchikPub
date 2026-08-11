@@ -78,6 +78,9 @@ public interface WPDataAdditionalDao {
     @Query("DELETE FROM wp_data_additional WHERE ID = :id")
     void deleteByIdSync(long id);
 
+    @Query("DELETE FROM wp_data_additional WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Query("SELECT `action` FROM wp_data_additional WHERE code_dad2 = :dad2 ORDER BY dt DESC LIMIT 1")
     Integer getLastActionByDad2(long dad2);
 

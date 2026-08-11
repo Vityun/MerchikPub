@@ -597,7 +597,7 @@ class StackPhotoDBViewModel @Inject constructor(
                 "get_on_server, id, markUpload, object_id, photo_hash, photo_num, photo_type, " +
                 "premiyaUpload, specialCol, commentUpload, upload_time, upload_to_server, vpi, " +
                 "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt, code_iza, " +
-                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id").split(",")
+                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id, statusShowcase").split(",")
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

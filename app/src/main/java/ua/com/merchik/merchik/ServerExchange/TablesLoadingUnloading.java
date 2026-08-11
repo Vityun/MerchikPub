@@ -426,7 +426,9 @@ public class TablesLoadingUnloading {
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
         if (sTable != null) {
             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app() - 60 * 75;
+            vpi = sTable.getVpi_app();
+            if (vpi != 0)
+                vpi -= 60 * 75;
             Log.e("updateWpData", "vpi: " + vpi);
         } else
             vpi = 0;
@@ -535,6 +537,11 @@ public class TablesLoadingUnloading {
                         isdownloadWPData = false;
                         readyWPData = true;
                     } catch (Exception e) {
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "TablesLoadingUnloading/downloadWPData/onResponse",
+                                "Exception while processing wp_data response: " + e
+                        );
                         isdownloadWPData = false;
                         readyWPData = true;
                     }
@@ -546,6 +553,11 @@ public class TablesLoadingUnloading {
 //                    if (pg != null)
 //                        if (pg.isShowing())
 //                            pg.dismiss();
+                    Globals.writeToMLOG(
+                            "ERROR",
+                            "TablesLoadingUnloading/downloadWPData/onFailure",
+                            "Throwable while loading wp_data: " + t
+                    );
                     readyWPData = false;
                     syncInternetError = true;
                     isdownloadWPData = false;

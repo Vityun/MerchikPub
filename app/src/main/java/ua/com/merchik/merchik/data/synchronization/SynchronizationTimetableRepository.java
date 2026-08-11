@@ -125,9 +125,26 @@ public final class SynchronizationTimetableRepository {
         }
     }
 
+    public static void resetToDefaults() {
+        SynchronizationTimetableDao dao = dao();
+        if (dao == null) {
+            return;
+        }
+
+        dao.clear();
+        for (SynchronizationTimetableDB row : defaultLegacyRows()) {
+            upsertLegacy(row);
+        }
+    }
+
     public static void migrateFromRealmIfNeeded() {
         SynchronizationTimetableDao dao = dao();
         if (dao == null) {
+            return;
+        }
+        if (RealmManager.consumeRealmSchemaMigrated()) {
+            resetToDefaults();
+            Log.i(TAG, "Synchronization timetable was reset after Realm schema migration");
             return;
         }
         if (RealmManager.INSTANCE == null) {

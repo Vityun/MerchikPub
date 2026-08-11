@@ -279,7 +279,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
-        return "abbr, grp_id, ID, photo_id, photo_tp, column_name, showcaseName, showcaseId".split(",")
+        return "abbr, grp_id, ID, photo_id, photo_tp, column_name, showcaseName, showcaseId, statusShowcase".split(",")
     }
 
     override suspend fun getItems(): List<DataItemUI> {

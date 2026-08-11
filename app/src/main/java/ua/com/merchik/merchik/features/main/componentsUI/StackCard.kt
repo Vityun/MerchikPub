@@ -43,7 +43,9 @@ fun StackCard(
             .fillMaxSize()
             .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
             .offset(y = offsetY)
-            .clickable { onExpand() } // клик по стопке -> разворачиваем
+            .clickable {
+                onExpand()
+            } // клик по стопке -> разворачиваем
     ) {
         previewItems.forEachIndexed { index, item ->
             val cardOffset = (index * 6).dp     // смещение вниз
@@ -69,11 +71,21 @@ fun StackCard(
                     contextUI = viewModel.modeUI,
                     onClickItem = {
                         // При клике по конкретному элементу тоже можно разворачивать
-                        onExpand()
-                        viewModel.onClickItem(it, context)
+                        if (viewModel.shouldOpenContextMenuOnCardClick()) {
+                            viewModel.onClickItems(
+                                items = items,
+                                context = context,
+                                clickedItem = it
+                            )
+                        } else {
+                            onExpand()
+                            viewModel.onClickItem(it, context)
+                        }
                     },
                     onLongClickItem = {
-                        onExpand()
+                        if (!viewModel.shouldOpenContextMenuOnCardClick()) {
+                            onExpand()
+                        }
                         viewModel.onLongClickItem(it, context)
                     },
                     onClickItemImage = { viewModel.onClickItemImage(it, context) },

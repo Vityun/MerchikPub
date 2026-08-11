@@ -33,6 +33,9 @@ public interface SynchronizationTimetableDao {
     @Update
     void update(SynchronizationTimeTable entity);
 
+    @Query("DELETE FROM synchronization_timetable")
+    void clear();
+
     @Query("DELETE FROM synchronization_timetable WHERE id = :id")
     void deleteById(int id);
 

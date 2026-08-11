@@ -18,6 +18,9 @@ public interface SMSLogDao {
     @Query("SELECT * FROM sms_log WHERE id = :id")
     SMSLogSDB getById(int id);
 
+    @Query("DELETE FROM sms_log WHERE code_dad2 = :codeDad2")
+    void deleteByCodeDad2Sync(long codeDad2);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<SMSLogSDB> data);
 

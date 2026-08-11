@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
+import ua.com.merchik.merchik.data.RealmModels.TasksAndReclamationsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
@@ -72,6 +74,7 @@ public class RealmManager {
 
     public static Realm INSTANCE;
     private static Globals globals = new Globals();
+    private static boolean realmSchemaMigrated;
 
 
     private static SharedPreferences sharedPreferences;
@@ -81,7 +84,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-                .schemaVersion(30)
+                .schemaVersion(31)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -102,6 +105,16 @@ public class RealmManager {
             addSynchronizationTimetable();
         }
 
+    }
+
+    static void markRealmSchemaMigrated() {
+        realmSchemaMigrated = true;
+    }
+
+    public static boolean consumeRealmSchemaMigrated() {
+        boolean result = realmSchemaMigrated;
+        realmSchemaMigrated = false;
+        return result;
     }
 
     public static void addSynchronizationTimetable() {
@@ -183,19 +196,71 @@ public class RealmManager {
         // Создаем мапу существующих данных для быстрого поиска по code_dad2
         Map<Long, WpDataDB> localDataMap = new HashMap<>();
         for (WpDataDB item : localData) {
-            localDataMap.put(item.getCode_dad2(), item);
+            WpDataDB previous = localDataMap.put(item.getCode_dad2(), item);
+            if (previous != null && item.getCode_dad2() > 0) {
+                Globals.writeToMLOG(
+                        "WARNING",
+                        "updateWorkPlanFromServer.localDuplicateDad2",
+                        "duplicate local dad2=" + item.getCode_dad2()
+                                + ", previousId=" + previous.getId()
+                                + ", currentId=" + item.getId()
+                                + ", previousAssignments=" + workAssignmentSummary(previous)
+                                + ", currentAssignments=" + workAssignmentSummary(item)
+                );
+            }
         }
 
         // Создаем список данных для обновления/добавления
         List<WpDataDB> dataToUpdate = new ArrayList<>();
+        Set<Long> dad2ToDelete = new HashSet<>();
+        int currentUserId = Globals.getCurrentUserId();
+        Globals.writeToMLOG(
+                "INFO",
+                "updateWorkPlanFromServer.reassigned.start",
+                "currentUserId=" + currentUserId
+                        + ", serverDataSize=" + serverData.size()
+                        + ", localDataSize=" + localData.size()
+        );
 
         for (WpDataDB serverItem : serverData) {
-            long codeDad2 = serverItem.getCode_dad2();
+            if (serverItem == null) {
+                Globals.writeToMLOG(
+                        "ERROR",
+                        "updateWorkPlanFromServer.reassigned.nullServerItem",
+                        "skip null server item"
+                );
+                continue;
+            }
 
-            Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "serverItem codeDad2: " + codeDad2);
-            // Проверяем, есть ли такая запись в локальной базе
+            long codeDad2 = serverItem.getCode_dad2();
             WpDataDB localItem = localDataMap.get(codeDad2);
 
+            Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "serverItem codeDad2: " + codeDad2);
+            if (dad2ToDelete.contains(codeDad2)) {
+                Globals.writeToMLOG(
+                        "INFO",
+                        "updateWorkPlanFromServer.reassigned.duplicateDeletedDad2",
+                        "skip duplicated server item because dad2 already marked for delete: " + reassignedWorkSummary(serverItem, localItem, currentUserId)
+                );
+                continue;
+            }
+
+            ReassignedWorkDecision reassignedDecision = evaluateReassignedWork(serverItem, localItem, currentUserId);
+            if (reassignedDecision.shouldLog) {
+                Globals.writeToMLOG(
+                        reassignedDecision.shouldDelete ? "INFO" : "WARNING",
+                        reassignedDecision.shouldDelete
+                                ? "updateWorkPlanFromServer.reassigned.delete"
+                                : "updateWorkPlanFromServer.reassigned.keep",
+                        reassignedDecision.reason + ", " + reassignedDecision.summary
+                );
+            }
+
+            if (reassignedDecision.shouldDelete) {
+                dad2ToDelete.add(codeDad2);
+                continue;
+            }
+            // Проверяем, есть ли такая запись в локальной базе
             if (localItem != null) {
                 // Проверяем, начал ли пользователь работы по этой записи
                 boolean workStarted = (localItem.getVisit_start_dt() > 0 &&
@@ -219,13 +284,232 @@ public class RealmManager {
 
             dataToUpdate.add(serverItem);
         }
-        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.final", "List<WpDataDB>.size: " + dataToUpdate.size());
+
+        if (!dad2ToDelete.isEmpty()) {
+            dataToUpdate.removeIf(item -> item != null && dad2ToDelete.contains(item.getCode_dad2()));
+        }
+
+        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.final", "List<WpDataDB>.size: " + dataToUpdate.size() + ", dad2ToDelete: " + dad2ToDelete.size());
 
         // Сохраняем данные в Realm в транзакции
         INSTANCE.executeTransaction(r -> {
+            if (!dad2ToDelete.isEmpty()) {
+                for (Long codeDad2 : dad2ToDelete) {
+                    if (codeDad2 == null || codeDad2 <= 0) continue;
+                    deleteWorkPlanDataByDad2(r, codeDad2);
+                }
+            }
             // Вставляем или обновляем данные
-            r.insertOrUpdate(dataToUpdate);
+            if (!dataToUpdate.isEmpty()) {
+                r.insertOrUpdate(dataToUpdate);
+            }
         });
+
+        deleteRoomWorkPlanDataByDad2(dad2ToDelete);
+    }
+
+    private static ReassignedWorkDecision evaluateReassignedWork(WpDataDB serverItem, WpDataDB localItem, int currentUserId) {
+        if (serverItem == null) {
+            return new ReassignedWorkDecision(
+                    false,
+                    true,
+                    "not_deleted_server_item_null",
+                    "serverItem=null"
+            );
+        }
+
+        int previousUserId = serverItem.getUser_id_previous();
+        boolean serverAssignedToCurrent = isWorkAssignedToUser(serverItem, currentUserId);
+        boolean localAssignedToCurrent = isWorkAssignedToUser(localItem, currentUserId);
+        String summary = reassignedWorkSummary(serverItem, localItem, currentUserId);
+
+        if (currentUserId <= 0) {
+            return new ReassignedWorkDecision(
+                    false,
+                    true,
+                    "not_deleted_current_user_id_empty",
+                    summary
+            );
+        }
+
+        if (previousUserId <= 0) {
+            boolean suspicious = localItem != null && localAssignedToCurrent && !serverAssignedToCurrent;
+            return new ReassignedWorkDecision(
+                    false,
+                    suspicious,
+                    suspicious
+                            ? "not_deleted_user_id_previous_empty_but_local_was_assigned_and_server_is_not_assigned"
+                            : "not_reassigned_user_id_previous_empty",
+                    summary
+            );
+        }
+
+        if (previousUserId != currentUserId) {
+            boolean suspicious = localItem != null && localAssignedToCurrent && !serverAssignedToCurrent;
+            return new ReassignedWorkDecision(
+                    false,
+                    true,
+                    suspicious
+                            ? "not_deleted_previous_user_is_other_but_local_was_assigned_and_server_is_not_assigned"
+                            : "not_deleted_previous_user_is_other",
+                    summary
+            );
+        }
+
+        if (serverAssignedToCurrent) {
+            return new ReassignedWorkDecision(
+                    false,
+                    true,
+                    "not_deleted_previous_user_is_current_but_work_still_assigned_to_current_user",
+                    summary
+            );
+        }
+
+        return new ReassignedWorkDecision(
+                true,
+                true,
+                "delete_previous_user_is_current_and_server_is_not_assigned_to_current_user",
+                summary
+        );
+    }
+
+    private static String reassignedWorkSummary(WpDataDB serverItem, WpDataDB localItem, int currentUserId) {
+        return "dad2=" + (serverItem != null ? serverItem.getCode_dad2() : null)
+                + ", currentUserId=" + currentUserId
+                + ", localExists=" + (localItem != null)
+                + ", serverPreviousUserId=" + (serverItem != null ? serverItem.getUser_id_previous() : null)
+                + ", serverAssignedToCurrent=" + isWorkAssignedToUser(serverItem, currentUserId)
+                + ", localAssignedToCurrent=" + isWorkAssignedToUser(localItem, currentUserId)
+                + ", serverAssignments=" + workAssignmentSummary(serverItem)
+                + ", localAssignments=" + workAssignmentSummary(localItem)
+                + ", serverClientId=" + (serverItem != null ? serverItem.getClient_id() : null)
+                + ", serverAddrId=" + (serverItem != null ? serverItem.getAddr_id() : null)
+                + ", serverStatus=" + (serverItem != null ? serverItem.getStatus() : null)
+                + ", serverDoc=" + (serverItem != null ? serverItem.getDoc_num() : null);
+    }
+
+    private static String workAssignmentSummary(WpDataDB wpData) {
+        if (wpData == null) {
+            return "null";
+        }
+
+        return "{user_id=" + wpData.getUser_id()
+                + ", dot_user_id=" + wpData.getDot_user_id()
+                + ", fot_user_id=" + wpData.getFot_user_id()
+                + ", contacter_id=" + wpData.getContacter_id()
+                + ", starsh_tt_id=" + wpData.getStarsh_tt_id()
+                + ", regional_id=" + wpData.getRegional_id()
+                + ", territorial_id=" + wpData.getTerritorial_id()
+                + ", super_id=" + wpData.getSuper_id()
+                + ", ptt_user_id=" + wpData.ptt_user_id
+                + "}";
+    }
+
+    private static class ReassignedWorkDecision {
+        final boolean shouldDelete;
+        final boolean shouldLog;
+        final String reason;
+        final String summary;
+
+        ReassignedWorkDecision(boolean shouldDelete, boolean shouldLog, String reason, String summary) {
+            this.shouldDelete = shouldDelete;
+            this.shouldLog = shouldLog;
+            this.reason = reason;
+            this.summary = summary;
+        }
+    }
+
+    private static boolean isWorkAssignedToUser(WpDataDB wpData, int userId) {
+        if (wpData == null || userId <= 0) {
+            return false;
+        }
+
+        return wpData.getUser_id() == userId
+                || wpData.getDot_user_id() == userId
+                || wpData.getFot_user_id() == userId
+                || wpData.getContacter_id() == userId
+                || wpData.getStarsh_tt_id() == userId
+                || wpData.getRegional_id() == userId
+                || wpData.getTerritorial_id() == userId
+                || wpData.getSuper_id() == userId
+                || wpData.ptt_user_id == userId;
+    }
+
+    private static void deleteWorkPlanDataByDad2(Realm realm, long codeDad2) {
+        String codeDad2Text = String.valueOf(codeDad2);
+        RealmResults<WpDataDB> wpDataRows = realm.where(WpDataDB.class).equalTo("code_dad2", codeDad2).findAll();
+        RealmResults<OptionsDB> optionRows = realm.where(OptionsDB.class).equalTo("codeDad2", codeDad2Text).findAll();
+        RealmResults<ReportPrepareDB> reportPrepareRows = realm.where(ReportPrepareDB.class).equalTo("codeDad2", codeDad2Text).findAll();
+        RealmResults<StackPhotoDB> photoRows = realm.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).findAll();
+        RealmResults<LogMPDB> locationRows = realm.where(LogMPDB.class).equalTo("codeDad2", codeDad2).findAll();
+        RealmResults<TasksAndReclamationsDB> tarRows = realm.where(TasksAndReclamationsDB.class)
+                .beginGroup()
+                .equalTo("codeDad2", codeDad2Text)
+                .or()
+                .equalTo("codeDad2SrcDoc", codeDad2Text)
+                .endGroup()
+                .findAll();
+
+        Globals.writeToMLOG(
+                "INFO",
+                "updateWorkPlanFromServer.deleteRealm",
+                "dad2=" + codeDad2
+                        + ", wpData=" + wpDataRows.size()
+                        + ", options=" + optionRows.size()
+                        + ", reportPrepare=" + reportPrepareRows.size()
+                        + ", photos=" + photoRows.size()
+                        + ", logMp=" + locationRows.size()
+                        + ", tar=" + tarRows.size()
+        );
+
+        wpDataRows.deleteAllFromRealm();
+        optionRows.deleteAllFromRealm();
+        reportPrepareRows.deleteAllFromRealm();
+        photoRows.deleteAllFromRealm();
+        locationRows.deleteAllFromRealm();
+        tarRows.deleteAllFromRealm();
+    }
+
+    private static void deleteRoomWorkPlanDataByDad2(Set<Long> dad2ToDelete) {
+        if (dad2ToDelete == null || dad2ToDelete.isEmpty() || RoomManager.SQL_DB == null) {
+            if (dad2ToDelete != null && !dad2ToDelete.isEmpty()) {
+                Globals.writeToMLOG(
+                        "WARNING",
+                        "updateWorkPlanFromServer.deleteRoom.skip",
+                        "RoomManager.SQL_DB is null, dad2ToDelete=" + dad2ToDelete
+                );
+            }
+            return;
+        }
+
+        for (Long codeDad2 : dad2ToDelete) {
+            if (codeDad2 == null || codeDad2 <= 0) continue;
+
+            try {
+                Globals.writeToMLOG(
+                        "INFO",
+                        "updateWorkPlanFromServer.deleteRoom.start",
+                        "dad2=" + codeDad2
+                );
+                RoomManager.SQL_DB.wpDataPauseDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.wpDataAdditionalDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.achievementsDao().deleteByDad2Sync(codeDad2);
+                RoomManager.SQL_DB.tarDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.standartDao().deleteByDad2Sync(codeDad2);
+                RoomManager.SQL_DB.planogrammVizitShowcaseDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.smsPlanDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.smsLogDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.votesDao().deleteByCodeDad2Sync(codeDad2);
+                RoomManager.SQL_DB.eklDao().deleteByDad2Sync(codeDad2);
+                Globals.writeToMLOG(
+                        "INFO",
+                        "updateWorkPlanFromServer.deleteRoom.finish",
+                        "dad2=" + codeDad2
+                );
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "updateWorkPlanFromServer.deleteRoom", "dad2=" + codeDad2 + ", exception=" + e);
+            }
+        }
     }
 
     /**

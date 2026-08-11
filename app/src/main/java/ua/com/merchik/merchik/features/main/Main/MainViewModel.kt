@@ -344,6 +344,16 @@ abstract class MainViewModel(
 
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
+    open fun shouldOpenContextMenuOnCardClick(): Boolean = false
+
+    open fun onClickItems(
+        items: List<DataItemUI>,
+        context: Context,
+        clickedItem: DataItemUI
+    ) {
+        onClickItem(clickedItem, context)
+    }
+
     open fun onLongClickItem(itemUI: DataItemUI, context: Context) {
     }
 
