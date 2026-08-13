@@ -53,7 +53,8 @@ public class RoomManager {
                         MIGRATION_77_78,
                         MIGRATION_78_79,
                         MIGRATION_79_80,
-                        MIGRATION_80_81
+                        MIGRATION_80_81,
+                        MIGRATION_81_82
                 )
                 .build();
 
@@ -280,6 +281,7 @@ public class RoomManager {
                     "`dt_update` TEXT, " +
                     "`nm` TEXT, " +
                     "`tovar_grp` INTEGER, " +
+                    "`main_option_id` INTEGER, " +
                     "`isp` TEXT, " +
                     "`photo_planogram_id_author` INTEGER, " +
                     "`photo_planogram_id_dt_update` INTEGER, " +
@@ -1002,6 +1004,14 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE address ADD COLUMN kol_kass_so INTEGER");
+        }
+    };
+
+    public static final Migration MIGRATION_81_82 = new Migration(81, 82) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE showcase ADD COLUMN main_option_id INTEGER");
+            SynchronizationTimetableRepository.markRoomSchemaMigrated();
         }
     };
 }

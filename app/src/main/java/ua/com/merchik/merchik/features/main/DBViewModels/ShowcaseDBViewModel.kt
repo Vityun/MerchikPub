@@ -18,6 +18,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.RealmModels.LogDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -40,6 +41,7 @@ import ua.com.merchik.merchik.dataLayer.model.MenuLeading
 import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
@@ -76,12 +78,11 @@ class ShowcaseDBViewModel @Inject constructor(
                 return listOf(
                     "column_name",
                     "group_header",
-
                     "id", "photoServerId", "dt", "object_id", "user_id", "addr_id", "client_id", "theme_id", "tovar_id", "time_event", "vpi", "create_time",
                     "upload_to_server", "get_on_server", "code_dad2", "photo_num", "photo_hash", "photo_type", "photo_size", "photo_user_id", "photo_group_id",
                     "doc_id", "comment", "gp", "upload_time", "upload_status", "error", "errorTime", "errorTxt", "userTxt", "customerTxt", "addressTxt",
                     "photo_typeTxt", "dvi", "mark", "premiya", "photoServerURL", "dviUpload", "commentUpload", "markUpload", "premiyaUpload", "img_src_id",
-                    "showcase_id", "approve", "status", "code_iza", "planogram_id", "planogram_img_id", "example_id", "example_img_id", "specialCol"
+                    "showcase_id", "approve", "status", "code_iza", "planogram_id", "planogram_img_id", "example_id", "example_img_id", "specialCol", "mainOption"
                 )
 //                ("column_name, group_header").split(",")
 
@@ -154,12 +155,20 @@ class ShowcaseDBViewModel @Inject constructor(
                 true
             )
 
+            val mainOptionFilter = if (contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK) {
+                buildMainOptionFilter(wpDataDB)
+            } else {
+                null
+            }
+
             filters = Filters(
                 rangeDataByKey = null,
                 items = mutableListOf(
                     filterWpDataDB,
                     filterImagesTypeListDB
-                )
+                ).apply {
+                    mainOptionFilter?.let { add(it) }
+                }
             )
 
         } catch (e: Exception) {
@@ -254,6 +263,7 @@ class ShowcaseDBViewModel @Inject constructor(
 
                         photo.showcaseId = showcase?.id ?: 0
                         photo.showcaseName = showcase?.nm.orEmpty()
+                        photo.mainOption = showcase?.mainOptionId ?: 0
                         photo.specialCol = -1
                     }
 
@@ -342,6 +352,8 @@ class ShowcaseDBViewModel @Inject constructor(
                             photo.showcaseId = showcase?.id ?: 0
                             photo.showcaseName = showcase?.nm.orEmpty()
                             photo.statusShowcase = showcase?.status ?: 0
+                            photo.mainOption = showcase?.mainOptionId ?: 0
+
                         }
 
                     val listOfStackPhotoCOMPLETED = buildList {
@@ -1038,6 +1050,56 @@ class ShowcaseDBViewModel @Inject constructor(
                 ?.toString()
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }
+    }
+
+    private fun buildMainOptionFilter(wpDataDB: WpDataDB): ItemFilter? {
+        val gson = Gson()
+        Log.d("ShowcaseDBViewModel", "WpDataDB: ${gson.toJson(wpDataDB)}")
+        val mainOptionId = wpDataDB.main_option_id
+            ?.trim()
+            ?.toIntOrNull()
+            ?.takeIf { it > 0 }
+            ?: return null
+
+        Log.d("ShowcaseDBViewModel", "WpDataDB mainOptionId: $mainOptionId")
+
+        val showcaseTypes = listOf(0, 1, 2)
+        val hasMatchingShowcase = RoomManager.SQL_DB
+            .showcaseDao()
+            .getByDocTP(
+                wpDataDB.client_id,
+                wpDataDB.addr_id,
+                showcaseTypes
+            )
+            .any { it.mainOptionId == mainOptionId }
+
+//        if (!hasMatchingShowcase) {
+//            return null
+//        }
+
+        val optionName = getMainOptionName(mainOptionId)
+
+        return ItemFilter(
+            "Основна опція",
+            OptionsDB::class,
+            OptionsDBViewModel::class,
+            ModeUI.MULTI_SELECT,
+            "Основна опція",
+            "Оберіть основну опцію",
+            "mainOption",
+            "iD",
+            mutableListOf(mainOptionId.toString()),
+            mutableListOf(optionName),
+            true
+        )
+    }
+
+    private fun getMainOptionName(mainOptionId: Int): String {
+        return OptionsRealm.getOptionById(mainOptionId.toString())
+            ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
+            ?.optionTxt
+            ?.takeIf { it.isNotBlank() }
+            ?: "Опція $mainOptionId"
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {

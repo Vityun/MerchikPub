@@ -593,11 +593,10 @@ class StackPhotoDBViewModel @Inject constructor(
     }
 
     override fun getDefaultHideUserFields(): List<String> {
-        return ("addr_id, approve, code_dad2, dviUpload, errorTime, dvi, upload_status, " +
-                "get_on_server, id, markUpload, object_id, photo_hash, photo_num, photo_type, " +
-                "premiyaUpload, specialCol, commentUpload, upload_time, upload_to_server, vpi, " +
-                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id, photo_typeTxt, code_iza, " +
-                "example_id, example_img_id, planogram_id, planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id, statusShowcase").split(",")
+        return ("addr_id, approve, code_dad2, dviUpload, errorTime, dvi, upload_status, premiyaUpload, specialCol, " +
+                "commentUpload, upload_time, upload_to_server, vpi, client_id, dt, photoServerURL, showcase_id, " +
+                "time_event, tovar_id, user_id, photo_typeTxt, code_iza, example_id, example_img_id, planogram_id, " +
+                "planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id, statusShowcase, mainOption").split(",")
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

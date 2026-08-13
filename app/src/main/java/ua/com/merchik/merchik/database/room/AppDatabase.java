@@ -183,7 +183,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 TradeMarkSDB.class,
                 ImagesTypeListSDB.class
         },
-        version = 81
+        version = 82
 )
 
 

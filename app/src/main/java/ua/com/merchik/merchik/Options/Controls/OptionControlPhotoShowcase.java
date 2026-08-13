@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogPhotoAdapter;
 import ua.com.merchik.merchik.Globals;
@@ -108,6 +109,19 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), shwAR);
             } else {
                 showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+            }
+
+            Integer mainOptionId = parseIntOrNull(wpDataDB.getMain_option_id());
+
+            if (mainOptionId != null && showcaseSDBList != null) {
+
+                List<ShowcaseSDB> filteredList = showcaseSDBList.stream()
+                        .filter(item -> item != null && Objects.equals(item.mainOptionId, mainOptionId))
+                        .collect(Collectors.toList());
+
+                if (!filteredList.isEmpty()) {
+                    showcaseSDBList = filteredList;
+                }
             }
 
             // 3.1
@@ -369,4 +383,11 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
         return list.size() + "/" + showcaseSDBList.size();
     }
 
+    private static Integer parseIntOrNull(String value) {
+        try {
+            return value != null ? Integer.parseInt(value.trim()) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

@@ -38,8 +38,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +49,7 @@ import java.util.regex.Pattern;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
+import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import okhttp3.Headers;
@@ -73,6 +76,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.PPAonResponse;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -261,19 +265,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-//        new WPDataPauseExchange().syncInCron();
+        logPpaUniqueStats();
 
-//        new QuestionExchange().downloadQuestionAnswer();
-//        downloadTest();
-//        uploadQuestionAnswersTest();
 //        new Translate().uploadNewTranslate();
 
-//        downloadTradeMarksTable();
-
-//        new TablesLoadingUnloading().donwloadPlanBudget();
-
-
-//        new TablesLoadingUnloading().downloadWiFi();
 
 
 
@@ -537,6 +532,136 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
             }*/
+
+    public static void logPpaUniqueStats() {
+
+        RealmResults<PPADB> items = INSTANCE.where(PPADB.class)
+                .findAll();
+
+        Set<String> clients = new HashSet<>();
+        Set<String> addresses = new HashSet<>();
+        Set<String> clientAddresses = new HashSet<>();
+
+        // Количество записей по каждой связке client + addrId
+        Map<String, Integer> clientAddressCount = new HashMap<>();
+
+        for (PPADB item : items) {
+
+            String client = item.getClient();
+            String addrId = item.getAddrId();
+
+            if (client != null) {
+                client = client.trim();
+            }
+
+            if (addrId != null) {
+                addrId = addrId.trim();
+            }
+
+            // Уникальные клиенты
+            if (client != null && !client.isEmpty()) {
+                clients.add(client);
+            }
+
+            // Уникальные адреса
+            if (addrId != null && !addrId.isEmpty()) {
+                addresses.add(addrId);
+            }
+
+            // Уникальные связки клиент + адрес
+            if (client != null
+                    && !client.isEmpty()
+                    && addrId != null
+                    && !addrId.isEmpty()) {
+
+                String key = client + "|" + addrId;
+
+                clientAddresses.add(key);
+
+                // Считаем количество записей этой связки
+                Integer currentCount = clientAddressCount.get(key);
+
+                if (currentCount == null) {
+                    clientAddressCount.put(key, 1);
+                } else {
+                    clientAddressCount.put(key, currentCount + 1);
+                }
+            }
+        }
+
+        Log.d("PPA_STATS", "======================================");
+        Log.d("PPA_STATS", "ВСЕГО ЗАПИСЕЙ: " + items.size());
+        Log.d("PPA_STATS", "УНИКАЛЬНЫХ КЛИЕНТОВ: " + clients.size());
+        Log.d("PPA_STATS", "УНИКАЛЬНЫХ АДРЕСОВ: " + addresses.size());
+        Log.d("PPA_STATS", "УНИКАЛЬНЫХ КЛИЕНТ-АДРЕС: " + clientAddresses.size());
+        Log.d("PPA_STATS", "======================================");
+
+
+        // ============================================================
+        // TOP-10 самых популярных связок CLIENT + ADDRESS
+        // ============================================================
+
+        List<Map.Entry<String, Integer>> sortedList =
+                new ArrayList<>(clientAddressCount.entrySet());
+
+        sortedList.sort((o1, o2) ->
+                Integer.compare(o2.getValue(), o1.getValue())
+        );
+
+        Log.d("PPA_STATS", "");
+        Log.d("PPA_STATS", "========== TOP 10 CLIENT + ADDRESS ==========");
+
+        int limit = Math.min(10, sortedList.size());
+
+        for (int i = 0; i < limit; i++) {
+
+            Map.Entry<String, Integer> entry = sortedList.get(i);
+
+            String[] parts = entry.getKey().split("\\|", -1);
+
+            String client = parts[0];
+            String addrId = parts.length > 1 ? parts[1] : "";
+
+            Log.d(
+                    "PPA_STATS",
+                    (i + 1)
+                            + ". CLIENT: " + client
+                            + " | ADDR_ID: " + addrId
+                            + " | RECORDS: " + entry.getValue()
+            );
+        }
+
+        Log.d("PPA_STATS", "=============================================");
+    }
+
+    private static class PpaStat {
+
+        final String value;
+        final long count;
+
+        PpaStat(String value, long count) {
+            this.value = value;
+            this.count = count;
+        }
+    }
+
+    private static class PpaClientAddressStat {
+
+        final String client;
+        final String addrId;
+        final long count;
+
+        PpaClientAddressStat(
+                String client,
+                String addrId,
+                long count
+        ) {
+            this.client = client;
+            this.addrId = addrId;
+            this.count = count;
+        }
+    }
+
     public void swoeDialogSW() {
         DialogShowcase dialog = new DialogShowcase(this);
         dialog.setClose(dialog::dismiss);

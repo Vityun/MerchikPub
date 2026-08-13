@@ -175,6 +175,11 @@ public class ShowcaseSDB implements DataObjectUI {
     @ColumnInfo(name = "tovar_grp")
     public Integer tovarGrp;
 
+    @SerializedName("main_option_id")
+    @Expose
+    @ColumnInfo(name = "main_option_id")
+    public Integer mainOptionId;
+
     @SerializedName("isp")
     @Expose
     @ColumnInfo(name = "isp")

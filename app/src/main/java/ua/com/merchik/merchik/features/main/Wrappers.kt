@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
@@ -852,6 +853,7 @@ object StackPhotoDBOverride {
         "theme_id" -> 8724
         "status" -> 3167
         "main_option_id" -> 8725
+        "mainOption" -> 8725
         "cash_ispolnitel" -> 8751
         //группа 2340
 
@@ -949,6 +951,22 @@ object StackPhotoDBOverride {
                 "Не актуальна"
         } catch (e: Exception) {
             "Не визначено"
+        }
+
+        "mainOption" -> {
+            val optionId = value.toString().toIntOrNull()?.takeIf { it > 0 }
+            if (optionId == null) {
+                "-"
+            } else {
+                try {
+                    OptionsRealm.getOptionById(optionId.toString())
+                        ?.optionTxt
+                        ?.takeIf { it.isNotBlank() }
+                        ?: optionId.toString()
+                } catch (e: Exception) {
+                    optionId.toString()
+                }
+            }
         }
 
         else -> value.toString()

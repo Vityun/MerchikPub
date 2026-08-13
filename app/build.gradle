@@ -14,15 +14,15 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     namespace "ua.com.merchik.merchik"
-    compileSdk 35
+    compileSdk 36
     defaultConfig {
         applicationId "ua.com.merchik.merchik_test"
 //        applicationId "ua.com.merchik.merchik"
         minSdkVersion 26
-        targetSdkVersion 35
+        targetSdkVersion 36
         //noinspection HighAppVersionCode
-        versionCode  2026081100
-        versionName "2026081100"
+        versionCode  2026081200
+        versionName "2026081200"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true

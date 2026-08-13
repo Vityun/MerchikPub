@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -46,6 +48,8 @@ public class ShowcaseExchange {
             Set<String> uniqueClientIds = new HashSet<>();
             Set<String> uniqueAdressId = new HashSet<>();
             Set<String> uniqueShowcaseId = new HashSet<>();
+            int missingMainOptionCount = countShowcasesWithoutMainOptionId(showcaseSDBSList);
+            boolean needsMainOptionBackfill = !showcaseSDBSList.isEmpty() && missingMainOptionCount > 0;
 
             // Проходим по каждому элементу списка wpDataDBList
             if (wpDataDBList.isEmpty())
@@ -57,10 +61,23 @@ public class ShowcaseExchange {
                 uniqueAdressId.add(String.valueOf(wpDataDB.getAddr_id()));
             }
 
-            if (!showcaseSDBSList.isEmpty())
-                for (ShowcaseSDB sdb : showcaseSDBSList){
-                    uniqueShowcaseId.add(sdb.selectId);
+            if (!showcaseSDBSList.isEmpty()) {
+                if (needsMainOptionBackfill) {
+                    Globals.writeToMLOG(
+                            "INFO",
+                            "downloadShowcaseTable/mainOptionBackfill",
+                            "showcaseCount: " + showcaseSDBSList.size()
+                                    + ", missingMainOptionCount: " + missingMainOptionCount
+                                    + ". Skip id_exclude to load main_option_id."
+                    );
+                } else {
+                    for (ShowcaseSDB sdb : showcaseSDBSList) {
+                        if (sdb != null && sdb.selectId != null && !sdb.selectId.trim().isEmpty()) {
+                            uniqueShowcaseId.add(sdb.selectId);
+                        }
+                    }
                 }
+            }
             uniqueShowcaseId.remove("444");
             uniqueShowcaseId.remove("1028");
 
@@ -71,7 +88,9 @@ public class ShowcaseExchange {
             data.active_only = "1";
             data.client_id = new ArrayList<>(uniqueClientIds);
             data.addr_id = new ArrayList<>(uniqueAdressId);
-            data.id_exclude = new ArrayList<>(uniqueShowcaseId);
+            if (!uniqueShowcaseId.isEmpty()) {
+                data.id_exclude = new ArrayList<>(uniqueShowcaseId);
+            }
 
                     // #### TODO
 //            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
@@ -84,6 +103,16 @@ public class ShowcaseExchange {
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
             Log.e("checkRequest", "checkRequest: " + convertedObject);
+
+//            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(jsonObject ->{
+//                        Log.e("RESULT", ">> " + jsonObject);
+//                    }, throwable -> {
+//                        Log.e("Error","error: " +throwable.getMessage());
+//                    });
+
 
             retrofit2.Call<ShowcaseResponse> call = RetrofitBuilder.getRetrofitInterface().SHOWCASE_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<ShowcaseResponse>() {
@@ -145,6 +174,20 @@ public class ShowcaseExchange {
             Globals.writeToMLOG("ERR", "downloadShowcaseTable/catch", "Exception e: " + e);
 //            exchange.onFailure("Ошибка при обновлении Сотрудников. Передайте код ошибки Вашему руководителю. Код ошибки: " + e);
         }
+    }
+
+    private int countShowcasesWithoutMainOptionId(List<ShowcaseSDB> showcaseList) {
+        if (showcaseList == null || showcaseList.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        for (ShowcaseSDB showcase : showcaseList) {
+            if (showcase == null || showcase.mainOptionId == null) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public void downloadShowcasePhoto(List<ShowcaseSDB> data) {

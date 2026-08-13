@@ -18,8 +18,13 @@ import ua.com.merchik.merchik.database.room.RoomManager;
 public final class SynchronizationTimetableRepository {
 
     private static final String TAG = "SyncTimetableRoom";
+    private static boolean roomSchemaMigrated;
 
     private SynchronizationTimetableRepository() {
+    }
+
+    public static void markRoomSchemaMigrated() {
+        roomSchemaMigrated = true;
     }
 
     public static List<SynchronizationTimetableDB> getAllLegacy() {
@@ -142,9 +147,9 @@ public final class SynchronizationTimetableRepository {
         if (dao == null) {
             return;
         }
-        if (RealmManager.consumeRealmSchemaMigrated()) {
+        if (consumeRoomSchemaMigrated() || RealmManager.consumeRealmSchemaMigrated()) {
             resetToDefaults();
-            Log.i(TAG, "Synchronization timetable was reset after Realm schema migration");
+            Log.i(TAG, "Synchronization timetable was reset after schema migration");
             return;
         }
         if (RealmManager.INSTANCE == null) {
@@ -274,6 +279,12 @@ public final class SynchronizationTimetableRepository {
 
     private static long maxPositive(long first, long second) {
         return Math.max(Math.max(first, second), 0L);
+    }
+
+    private static boolean consumeRoomSchemaMigrated() {
+        boolean result = roomSchemaMigrated;
+        roomSchemaMigrated = false;
+        return result;
     }
 
     private static TableName resolveTableName(String tableName) {
