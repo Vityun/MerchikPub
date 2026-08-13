@@ -368,7 +368,6 @@ public class AdditionalRequirementsRealm {
 
         AddressDB addressDB = AddressRealm.getAddressById(addressId);
 
-
         RealmResults realmResults = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
                 .equalTo("not_approve", "0")

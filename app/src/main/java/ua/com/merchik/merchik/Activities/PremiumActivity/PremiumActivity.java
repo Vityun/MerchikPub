@@ -6,6 +6,8 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -145,6 +147,8 @@ public class PremiumActivity extends toolbar_menus {
         date.setText("Дата");
         col1.setText("Поч. Зал.");
         col5.setText("Дохід План");
+        ColorStateList textColor = col1.getTextColors();
+        col5.setTextColor(textColor);
         col2.setText("Дохід Факт");
         col3.setText("Витрати");
         col4.setText("Кін. Зал.");
@@ -387,15 +391,15 @@ public class PremiumActivity extends toolbar_menus {
     private void makeTableDataSecondMonth() {
 //        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(this, "Преміальні", "Завантажую поточний місяць.");
 
-        progress.onNextEvent("Завантажую поточний місяць.", 35_000);
+        progress.onNextEvent("Завантажую минулий місяць.", 35_000);
 
-        downloadPremium(Clock.getStartOfMonth(), Clock.getEndOfMonth(), new PremiumRespListener() {
+        downloadPremium(Clock.getStartOfPreviousMonth(), Clock.getEndOfPreviousMonth(), new PremiumRespListener() {
             @Override
             public void onSuccess(PremiumPremiumList res) {
 //                if (progressDialog.isShowing()) {
 //                    progressDialog.dismiss();
 //                }
-                prepareTableData(getPeriodString(Clock.getStartOfMonth(), Clock.getEndOfMonth()), res);
+                prepareTableData(getPeriodString(Clock.getStartOfPreviousMonth(), Clock.getEndOfPreviousMonth()), res);
                 makeTableDataFirstWeek();
             }
 

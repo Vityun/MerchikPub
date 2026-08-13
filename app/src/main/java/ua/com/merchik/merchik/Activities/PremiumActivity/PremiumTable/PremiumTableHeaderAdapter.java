@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -81,7 +82,7 @@ public class PremiumTableHeaderAdapter extends RecyclerView.Adapter<PremiumTable
             name.setText(premiumTableHeader.detailedHeader.date);
             column1.setText("" + (int) premiumTableHeader.detailedHeader.sumInitialBalance);
             column5.setText("" + (int) premiumTableHeader.detailedHeader.sumPlan);
-            column5.setTextColor(-10987432);
+            column5.setTextColor(Color.WHITE);
             column2.setText("" + (int) premiumTableHeader.detailedHeader.sumComing);
             column3.setText("" + (int) premiumTableHeader.detailedHeader.sumConsumption);
             column4.setText("" + (int) premiumTableHeader.detailedHeader.sumEndBalance);

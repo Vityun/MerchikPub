@@ -4552,6 +4552,8 @@ id_exclude - иди товаров которые есть в приложени
 
     private void downloadPPA() {
         try {
+            if (true) return; // заглушка, пока не нужна таблица 13.08.2026
+
             PPARequest data = new PPARequest();
             data.mod = "ppa";
             data.act = "list";

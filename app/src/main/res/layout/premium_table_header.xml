@@ -52,6 +52,7 @@
             android:layout_marginRight="8dp"
             android:gravity="right"
             android:text="TextView"
+            android:textColor="@color/defaultTextColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/col2"
             app:layout_constraintTop_toTopOf="parent" />

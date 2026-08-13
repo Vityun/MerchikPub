@@ -32,7 +32,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.DialogVideo
 
-class DialogShowcase(private val context: Context?) : DialogData() {
+class DialogShowcase(private val context: Context) : DialogData() {
 
     private var dialog: Dialog? = null
     var click: click? = null
@@ -233,7 +233,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
         recyclerView = dialog!!.findViewById(R.id.recyclerView)
         searchView = dialog!!.findViewById(R.id.filterEditText)
         merchikIco = dialog!!.findViewById<ImageButton>(R.id.merchik_ico)
-        merchikIco.setImageDrawable(context.resources.getDrawable(R.drawable.ic_caution))
+        merchikIco!!.setImageDrawable(context.resources.getDrawable(R.drawable.ic_caution))
     }
 
     fun setCurrTitle(title: String){
@@ -276,6 +276,21 @@ class DialogShowcase(private val context: Context?) : DialogData() {
             var showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
                 wpDataDB!!.client_id, wpDataDB!!.addr_id, list
             )
+
+            // добавил проверку по главной опции 13.08.2026
+            val mainOptionId = wpDataDB!!.main_option_id
+                ?.trim()
+                ?.toIntOrNull()
+
+            if (mainOptionId != null && showcaseDataList != null) {
+                val filteredList = showcaseDataList.filter { item ->
+                    item.mainOptionId == mainOptionId
+                }
+
+                if (filteredList.isNotEmpty()) {
+                    showcaseDataList = filteredList
+                }
+            }
 
             Log.e("setRecyclerView", "showcaseDataList: $showcaseDataList")
             try {

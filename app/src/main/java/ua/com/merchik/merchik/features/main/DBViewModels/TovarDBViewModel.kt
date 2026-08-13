@@ -79,14 +79,12 @@ import ua.com.merchik.merchik.dataLayer.model.buildOptionCodeField
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
-import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
-import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -96,13 +94,11 @@ import ua.com.merchik.merchik.dialogs.DialogData.DialogClickListener
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
-import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.InlineChoiceUi
 import ua.com.merchik.merchik.features.main.Main.InlineEditorKind
-import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorMode
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorRowUi
@@ -579,7 +575,34 @@ class TovarDBViewModel @Inject constructor(
                 val baseTovars = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
                 val tovarList = mergeBaseAndManualTovars(baseTovars)
                 val manuallyAddedIds = getManuallyAddedIds()
-//            val tovarList = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
+                val additionalRequirementsDBList = AdditionalRequirementsRealm.getData3(
+                    wpDataDB,
+                    AdditionalRequirementsModENUM.DEFAULT,
+                    null,
+                    null,
+                    0
+                )
+
+
+                if (additionalRequirementsDBList != null && additionalRequirementsDBList.isNotEmpty()) {
+//                    Log.e("DEL_TIME_NOTE", "additionalRequirementsDBList size: ${additionalRequirementsDBList.size}")
+                    tovarList.map {
+                        val ad = showTovarAdditionalRequirement(it, additionalRequirementsDBList)
+//                        Log.e("DEL_TIME_NOTE", "ad color: ${ad?.color}")
+
+                        if (ad != null && ad.color != null && ad.color != "") {
+//                            Log.e("DEL_TIME_NOTE","ad.color: ${ad.color}")
+                            it.timeColor = ad.color
+                        }
+//                        Log.e("DEL_TIME_NOTE", "it timeColor: ${it.timeColor}")
+
+                        it
+                    }
+                }
+
+
+
+
 
                 val baseItems = repository.toItemUIList(
                     TovarDB::class,
@@ -612,7 +635,6 @@ class TovarDBViewModel @Inject constructor(
                                         reportPrepare,
                                         deletePromoOption
                                     )
-
 
 
                                 val itemWithChangedMarker =
@@ -3469,6 +3491,7 @@ class TovarDBViewModel @Inject constructor(
             val newPpaTovars = ppaTovars.filter { it.getiD() !in currentIds }
             val newPpaTovars2 = emptyList<String>()
 
+            // заглушка на товары из ппа
             if (newPpaTovars2.isEmpty()) {
                 emitEvent(
                     MainEvent.ShowMessageDialog(
@@ -4024,11 +4047,6 @@ class TovarDBViewModel @Inject constructor(
             ?: fallback
     }
 
-    private fun getPhotoCount(rp: ReportPrepareDB?): Int {
-        val tovarId = rp?.tovarId ?: return 0
-        val photos = StackPhotoRealm.getPhotoByTypeAndTovar(4, tovarId)
-        return photos?.size ?: 0
-    }
 }
 
 

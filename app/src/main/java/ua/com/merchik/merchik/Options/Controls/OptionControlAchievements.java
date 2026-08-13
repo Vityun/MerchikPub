@@ -326,7 +326,14 @@ public class OptionControlAchievements<T> extends OptionControl {
             StringBuilder period = new StringBuilder();
             period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo - 86400L)); // добавил вычитание 1 дня, что бы привести к 1С потому, что функция работает до НАЧАЛА дня, а не до конца
             //4.0. готовим сообщение и сигнал
-            if (sumOptionError == 0 && traineeSignal == 0) {
+            if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
+                spannableStringBuilder.append(period).append(" нема жодного досягнення. ");
+                signal = true;
+            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0) {
+                spannableStringBuilder.append(period).append(" створено ").append(String.valueOf(achievementsSDBList.size())).append(" досягнень.");
+                signal = false;
+            }
+            else if (sumOptionError == 0 && traineeSignal == 0) {
                 spannableStringBuilder.append(period).append(" Є досягнення (з оцінкою ").append(String.valueOf(minScore)).append(" чи більш) ")
                         .append(wpDataDB.getAddr_txt()).append(" по ").append(customerSDBDocument.nm).append(". Та передані кліенту для нарахування премії.");
 
@@ -352,21 +359,9 @@ public class OptionControlAchievements<T> extends OptionControl {
                                     .findFirst()
                                     .orElse(new SpannableStringBuilder()));
                 signal = true;
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
-                spannableStringBuilder.append(period).append(" нема жодного досягнення. ");
-                signal = true;
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0) {
-                spannableStringBuilder.append(period).append(" створено ").append((char) achievementsSDBList.size()).append(" досягнень.");
-                signal = false;
-            }
-//            else if (traineeSignal > 0) {
-//                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-//                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
-//                signal = false;
-//            }
-            else {
+            } else  {
                 spannableStringBuilder.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-                        .append((char) minScore).append(" чи більш) по ").append(SPIS).append(".");
+                        .append(String.valueOf(minScore)).append(" чи більш) по ").append(SPIS).append(".");
                 signal = true;
             }
 
@@ -374,6 +369,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                 spannableStringBuilder.append(trainee);
                 signal = false;
             }
+
+            Log.e("DEL_ACHIVV", "option A: " + optionDB.getOptionId() +
+                    "option B: " + optionDB.getOptionControlId() +
+                    "message: " + spannableStringBuilder);
 
             // Сохранение
             RealmManager.INSTANCE.executeTransaction(realm -> {
