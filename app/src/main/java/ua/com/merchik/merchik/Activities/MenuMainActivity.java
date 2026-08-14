@@ -2,16 +2,12 @@ package ua.com.merchik.merchik.Activities;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
-import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -46,10 +42,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
-import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import okhttp3.Headers;
@@ -63,17 +56,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Data;
-import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
-import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
-import ua.com.merchik.merchik.data.PPAonResponse;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.PPADB;
@@ -83,15 +68,12 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
-import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUpload;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -265,7 +247,6 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        logPpaUniqueStats();
 
 //        new Translate().uploadNewTranslate();
 

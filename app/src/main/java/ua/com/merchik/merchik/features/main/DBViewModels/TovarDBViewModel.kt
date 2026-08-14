@@ -586,17 +586,21 @@ class TovarDBViewModel @Inject constructor(
 
                 if (additionalRequirementsDBList != null && additionalRequirementsDBList.isNotEmpty()) {
 //                    Log.e("DEL_TIME_NOTE", "additionalRequirementsDBList size: ${additionalRequirementsDBList.size}")
-                    tovarList.map {
-                        val ad = showTovarAdditionalRequirement(it, additionalRequirementsDBList)
-//                        Log.e("DEL_TIME_NOTE", "ad color: ${ad?.color}")
+                    tovarList.map { item ->
 
-                        if (ad != null && ad.color != null && ad.color != "") {
-//                            Log.e("DEL_TIME_NOTE","ad.color: ${ad.color}")
-                            it.timeColor = ad.color
+                        val adIt = additionalRequirementsDBList.firstOrNull { adIt ->
+                            adIt.tovarId == item.getiD()
                         }
-//                        Log.e("DEL_TIME_NOTE", "it timeColor: ${it.timeColor}")
 
-                        it
+                        if (adIt != null) {
+                            item.timeColor = if (!adIt.color.isNullOrEmpty()) {
+                                adIt.color
+                            } else {
+                                "FAF7BB"
+                            }
+                        }
+
+                        item
                     }
                 }
 

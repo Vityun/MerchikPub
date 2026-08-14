@@ -81,6 +81,8 @@ class DownloadImagesWorker(
         // 2. Находим ID товаров, которых нет в StackPhotoDB
         val tovarsPhotoToDownload = StackPhotoRealm.findTovarIds(tovarIdsList)
 
+        if (tovarsPhotoToDownload.isEmpty())
+            return emptyList()
         // 3. Формируем запрос и получаем список фотографий
         return getTovarPhotoInfoFromServer(tovarsPhotoToDownload)
     }
