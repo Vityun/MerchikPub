@@ -225,7 +225,8 @@ public class OptionControlMP<T> extends OptionControl {
                                 distanceType = " км ";
                             }
 
-                            if (nnkMode == Options.NNKMode.MAKE && latestVpiLog != null) {
+                            if (nnkMode == Options.NNKMode.MAKE && latestVpiLog != null
+                                    && latestVpiLog.distance > distanceMin) {
                                 distance = latestVpiLog.distance;
                                 if (distance > 1000) {
                                     distance = distance / 1000;
@@ -243,7 +244,7 @@ public class OptionControlMP<T> extends OptionControl {
                                         .append(" поточне розташування присторою знаходится на вiдстанi ")
                                         .append((int) distance).append("").append(distanceType)
                                         .append(" вiд ТТ. ")
-                                        .append("<font color=red>Местоположение в ТТ не подтверждено<font>");
+                                        .append("<font color=red>Местоположение в ТТ не пiдтвержено<font>");
                             } else {
                                 stringBuilder.append(String.format("Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ.", logMPList.size(), validDistanceCount))
                                         .append("\n");

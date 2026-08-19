@@ -24,6 +24,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public static final int PHOTO_SHOWCASE_BEFORE_START_WORK = 14;   // Фото витрины  до начала работ
     public static final int PHOTO_PROMOTION_TOV = 28;   // Фото Акционного Товара + ценник
     public static final int PHOTO_ACTION_SHOWCASE = 48;   // Фото Акционной витрины
+    public static final int PHOTO_EXPIRATION_DATE = 50;   // Фото товара с истекающим сроком годности
 
     @PrimaryKey
     private int id;

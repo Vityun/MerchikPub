@@ -112,6 +112,7 @@ fun InfoBalloon(
 fun InfoBalloonText(
     title: String,
     subtitle: String? = null,
+    actionText: String? = null,
     modifier: Modifier = Modifier,
     tailAlignment: Float = 0.5f,
     tailOnBottom: Boolean = true
@@ -127,7 +128,8 @@ fun InfoBalloonText(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             textAlign = TextAlign.Center
             )
-        if (!subtitle.isNullOrBlank()) {
+        val effectiveActionText = actionText ?: if (!subtitle.isNullOrBlank()) "Докладніше.." else null
+        if (!subtitle.isNullOrBlank() || !effectiveActionText.isNullOrBlank()) {
             Spacer(Modifier.height(1.dp))
 
             // Подзаголовок у левого края
@@ -144,11 +146,18 @@ fun InfoBalloonText(
 //                Spacer(Modifier.width(6.dp))
                 Text(
                     text = buildAnnotatedString {
-                        append(subtitle)
-                        append(" ")
-                        withStyle(
-                            SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
-                        ) { append("\nДокладніше..") }
+                        if (!subtitle.isNullOrBlank()) {
+                            append(subtitle)
+                            append(" ")
+                        }
+                        if (!effectiveActionText.isNullOrBlank()) {
+                            withStyle(
+                                SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)
+                            ) {
+                                if (!subtitle.isNullOrBlank()) append("\n")
+                                append(effectiveActionText)
+                            }
+                        }
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )

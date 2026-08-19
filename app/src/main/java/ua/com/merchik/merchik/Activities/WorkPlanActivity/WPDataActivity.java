@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.RecycleViewWPAdapter;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalWorksMapSearchLocationHolder;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -96,6 +97,7 @@ public class WPDataActivity extends toolbar_menus {
         setComposeView();
 
 
+        AdditionalWorksMapSearchLocationHolder.INSTANCE.clear();
 
         videoLessons = null;
         setFab(this, findViewById(R.id.fab), () -> {

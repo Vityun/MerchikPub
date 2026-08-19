@@ -376,12 +376,11 @@ public class OptionControlEKL<T> extends OptionControl {
                 if (tovarGroupSDB1 != null) {
                     otdelName = tovarGroupSDB1.nm;
                     otdelId = tovarGroupSDB1.id.toString();
-                }
-                else {
+                } else {
                     otdelName = "Відділ не визначено";
                     otdelId = "0";
                 }
-                
+
 
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 if (usersSDBPTT == null) {
@@ -580,6 +579,17 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         }
 
+        if (signal && wpDataDB.getUser_id() == 143565 && wpDataDB.getClient_id().equals("9382")) // исключения для одного пользователя Балаба)//
+        {
+            signal = false;
+            optionMsg.append("\nАле виконавець Балаба має виключення по Вiтмарк до 30.09.2026");
+        }
+
+        if (signal && wpDataDB.getUser_id() == 243997 && wpDataDB.getClient_id().equals("9382")) // исключения для одного пользователя Балаба)//
+        {
+            signal = false;
+            optionMsg.append("\nАле виконавець Катрук має виключення по Вiтмарк до 30.09.2026");
+        }
 
         spannableStringBuilder.append(optionMsg);
 

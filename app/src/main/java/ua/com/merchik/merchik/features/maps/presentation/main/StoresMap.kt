@@ -52,11 +52,21 @@ import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import java.time.ZoneId
 
+data class MapSearchMarker(
+    val position: LatLng,
+    val title: String,
+    val subtitle: String? = null,
+    val actionText: String? = null
+)
+
 @OptIn(MapsComposeExperimentalApi::class)
 @Composable
 fun StoresMap(
     cameraPositionState: com.google.maps.android.compose.CameraPositionState,
     vm: BaseMapViewModel,
+    searchMarker: MapSearchMarker? = null,
+    onMapClick: ((LatLng) -> Unit)? = null,
+    onSearchAreaClick: ((MapSearchMarker) -> Unit)? = null,
     focusUserRadiusMeters: Float? = null
 ) {
     val s by vm.state.collectAsState()
@@ -133,6 +143,38 @@ fun StoresMap(
         pinTint = ContextCompat.getColor(context, R.color.selected_item)
     )
 
+    val searchIcon = rememberBadgePinCache(
+        pinRes = R.drawable.ic_3,
+        pinHeightDp = 44f,
+        badgeDiameter = 22.dp,
+        badgeYOffsetK = 0.40f,
+        badgeIconRes = R.drawable.ic_crosshair,
+        badgeBg = android.graphics.Color.LTGRAY,
+        badgeBorder = android.graphics.Color.DKGRAY,
+        pinTint = ContextCompat.getColor(context, R.color.red_error)
+    )
+
+    suspend fun animateCameraToRadius(center: LatLng, radiusMeters: Double) {
+        val radius = radiusMeters.coerceAtLeast(100.0)
+        val latDelta = radius / 111_320.0
+        val cosLat = kotlin.math.abs(
+            kotlin.math.cos(Math.toRadians(center.latitude))
+        ).coerceAtLeast(0.01)
+        val lonDelta = radius / (111_320.0 * cosLat)
+
+        try {
+            val bounds = LatLngBounds.builder()
+                .include(LatLng(center.latitude - latDelta, center.longitude - lonDelta))
+                .include(LatLng(center.latitude + latDelta, center.longitude + lonDelta))
+                .build()
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngBounds(bounds, 80)
+            )
+        } catch (_: Throwable) {
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(center, 14f))
+        }
+    }
+
     // Route polyline (MapFromMaps)
     val pathPoints = remember(s.pointsUi) {
         s.pointsUi
@@ -144,28 +186,27 @@ fun StoresMap(
     }
 
     // Fit camera bounds
-    LaunchedEffect(s.center, s.pointsUi, userLat, userLon, focusUserRadiusMeters) {
+    LaunchedEffect(
+        s.center,
+        s.pointsUi,
+        userLat,
+        userLon,
+        focusUserRadiusMeters,
+        searchMarker?.position,
+        circleR
+    ) {
         kotlinx.coroutines.delay(50)
+        searchMarker?.position?.let { position ->
+            animateCameraToRadius(
+                center = position,
+                radiusMeters = circleR ?: focusUserRadiusMeters?.toDouble() ?: 5_000.0
+            )
+            return@LaunchedEffect
+        }
+
         if (focusUserRadiusMeters != null && isValidLatLon(userLat, userLon)) {
             val center = LatLng(userLat!!, userLon!!)
-            val radius = focusUserRadiusMeters.toDouble()
-            val latDelta = radius / 111_320.0
-            val cosLat = kotlin.math.abs(
-                kotlin.math.cos(Math.toRadians(center.latitude))
-            ).coerceAtLeast(0.01)
-            val lonDelta = radius / (111_320.0 * cosLat)
-
-            try {
-                val bounds = LatLngBounds.builder()
-                    .include(LatLng(center.latitude - latDelta, center.longitude - lonDelta))
-                    .include(LatLng(center.latitude + latDelta, center.longitude + lonDelta))
-                    .build()
-                cameraPositionState.animate(
-                    CameraUpdateFactory.newLatLngBounds(bounds, 80)
-                )
-            } catch (_: Throwable) {
-                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(center, 14f))
-            }
+            animateCameraToRadius(center, focusUserRadiusMeters.toDouble())
             return@LaunchedEffect
         }
 
@@ -247,6 +288,9 @@ fun StoresMap(
     val markerStates = remember {
         mutableMapOf<String, com.google.maps.android.compose.MarkerState>()
     }
+    val searchMarkerState = remember {
+        com.google.maps.android.compose.MarkerState(position = LatLng(0.0, 0.0))
+    }
 
     fun stateFor(key: String, pos: LatLng): com.google.maps.android.compose.MarkerState {
         val st = markerStates.getOrPut(key) { com.google.maps.android.compose.MarkerState(pos) }
@@ -264,10 +308,18 @@ fun StoresMap(
         st.showInfoWindow()
     }
 
+    LaunchedEffect(searchMarker?.position, searchMarker?.title) {
+        val marker = searchMarker ?: return@LaunchedEffect
+        searchMarkerState.position = marker.position
+        withFrameNanos { }
+        searchMarkerState.showInfoWindow()
+    }
+
     Box(Modifier.fillMaxSize()) {
         com.google.maps.android.compose.GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            onMapClick = { latLng -> onMapClick?.invoke(latLng) }
         ) {
             MapEffect(Unit) { map ->
                 googleMapRef = map
@@ -281,6 +333,26 @@ fun StoresMap(
                 ) {
                     InfoBalloonText(
                         title = "Ваше местоположение",
+                        tailAlignment = 0.5f,
+                        tailOnBottom = true
+                    )
+                }
+            }
+
+            searchMarker?.let { marker ->
+                searchMarkerState.position = marker.position
+                com.google.maps.android.compose.MarkerInfoWindow(
+                    state = searchMarkerState,
+                    icon = searchIcon(1),
+                    zIndex = 20f,
+                    onInfoWindowClick = {
+                        onSearchAreaClick?.invoke(marker)
+                    }
+                ) {
+                    InfoBalloonText(
+                        title = marker.title,
+                        subtitle = marker.subtitle,
+                        actionText = marker.actionText,
                         tailAlignment = 0.5f,
                         tailOnBottom = true
                     )
@@ -480,347 +552,6 @@ fun StoresMap(
         }
     }
 }
-
-
-//@Composable
-//fun StoresMap(
-//    cameraPositionState: com.google.maps.android.compose.CameraPositionState,
-//    vm: BaseMapViewModel
-//) {
-//    val s by vm.state.collectAsState()
-//
-//    val userLat = s.userLat
-//    val userLon = s.userLon
-//    val circleR = s.circleRadiusMeters
-//
-//    // === Выбор точки для дистанции/линии (живёт пока открыт InfoWindow) ===
-//    var selectedKey by remember { mutableStateOf<String?>(null) }
-//    var selectedPos by remember { mutableStateOf<LatLng?>(null) }
-//    var showDistance by remember { mutableStateOf(false) }
-//
-//    val context = LocalContext.current
-//
-//    // 1) Инициализация Maps SDK (безопасно вызывать многократно)
-//    LaunchedEffect(context) {
-//        try {
-//            com.google.android.gms.maps.MapsInitializer.initialize(
-//                context.applicationContext,
-//                com.google.android.gms.maps.MapsInitializer.Renderer.LATEST
-//            ) { /* no-op */ }
-//        } catch (_: Throwable) {
-//        }
-//    }
-//
-//    // user LatLng
-//    val userLatLng = remember(userLat, userLon) {
-//        if (isValidLatLon(userLat, userLon)) LatLng(userLat!!, userLon!!) else null
-//    }
-//
-//    // distance text (derived)
-//    val distanceText: String? by remember(userLatLng, selectedPos, showDistance) {
-//        derivedStateOf {
-//            val you = userLatLng ?: return@derivedStateOf null
-//            val target = if (showDistance) selectedPos else null ?: return@derivedStateOf null
-//
-//            val meters = haversine(you.latitude, you.longitude, target!!.latitude, target.longitude)
-//            if (meters >= 1000.0) String.format("%.2f км", meters / 1000.0)
-//            else String.format("%.0f м", meters)
-//        }
-//    }
-//
-//    // Icons/badges
-//    val greenDefault = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-//    val redDefault = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-//
-//    val greenDot = rememberDotIcon(
-//        dotDp = 12f,
-//        colorInt = ContextCompat.getColor(context, R.color.maps_green)
-//    )
-//    val redDot = rememberDotIcon(
-//        dotDp = 12f,
-//        colorInt = ContextCompat.getColor(context, R.color.red_error)
-//    )
-//
-//    val getBadgePin = rememberBadgePinCache(
-//        pinRes = R.drawable.ic_3,
-//        pinHeightDp = 44f,
-//        badgeDiameter = 22.dp,
-//        badgeYOffsetK = 0.40f,
-//        badgeBg = android.graphics.Color.LTGRAY,
-//        badgeBorder = android.graphics.Color.DKGRAY,
-//        badgeText = android.graphics.Color.DKGRAY,
-//        pinTint = ContextCompat.getColor(context, R.color.maps_green)
-//    )
-//
-//    val getBadgeYou = rememberBadgePinCache(
-//        pinRes = R.drawable.ic_3,
-//        pinHeightDp = 44f,
-//        badgeDiameter = 22.dp,
-//        badgeYOffsetK = 0.40f,
-//        badgeIconRes = R.drawable.ic_60,
-//        badgeBg = android.graphics.Color.LTGRAY,
-//        badgeBorder = android.graphics.Color.DKGRAY,
-//        pinTint = ContextCompat.getColor(context, R.color.maps_dark_blue)
-//    )
-//
-//    val storeIcon = rememberBadgePinCache(
-//        pinRes = R.drawable.ic_3,
-//        pinHeightDp = 44f,
-//        badgeDiameter = 22.dp,
-//        badgeYOffsetK = 0.40f,
-//        badgeIconRes = R.drawable.ic_store,
-//        badgeBg = android.graphics.Color.LTGRAY,
-//        badgeBorder = android.graphics.Color.DKGRAY,
-//        pinTint = ContextCompat.getColor(context, R.color.selected_item)
-//    )
-//
-//    // Route polyline (MapFromMaps)
-//    val pathPoints = remember(s.pointsUi) {
-//        s.pointsUi
-//            .asSequence()
-//            .filter { it.point.coordTimeMillis != null }
-//            .sortedBy { it.point.coordTimeMillis }
-//            .map { LatLng(it.point.lat, it.point.lon) }
-//            .toList()
-//    }
-//
-//    // Fit camera bounds
-//    LaunchedEffect(s.center, s.pointsUi, userLat, userLon) {
-//        kotlinx.coroutines.delay(50)
-//        val latLngs = buildList {
-//            s.center?.let { add(it.pos) }
-//            s.pointsUi.forEach { add(LatLng(it.point.lat, it.point.lon)) }
-//            if (isValidLatLon(userLat, userLon)) add(LatLng(userLat!!, userLon!!))
-//        }
-//        if (latLngs.isEmpty()) return@LaunchedEffect
-//        try {
-//            if (latLngs.size >= 2) {
-//                val builder = LatLngBounds.builder()
-//                latLngs.forEach { builder.include(it) }
-//                cameraPositionState.animate(
-//                    CameraUpdateFactory.newLatLngBounds(builder.build(), 80)
-//                )
-//            } else {
-//                cameraPositionState.animate(
-//                    CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14f)
-//                )
-//            }
-//        } catch (_: Throwable) {
-//            latLngs.firstOrNull()?.let {
-//                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(it, 12f))
-//            }
-//        }
-//    }
-//
-//    Box(Modifier.fillMaxSize()) {
-//        com.google.maps.android.compose.GoogleMap(
-//            modifier = Modifier.fillMaxSize(),
-//            cameraPositionState = cameraPositionState
-//        ) {
-//            // === YOU marker ===
-//            userLatLng?.let { youPos ->
-//                com.google.maps.android.compose.MarkerInfoWindow(
-//                    state = com.google.maps.android.compose.MarkerState(position = youPos),
-//                    icon = getBadgeYou(1)
-//                ) {
-//                    InfoBalloonText(
-//                        title = "Ваше местоположение",
-//                        tailAlignment = 0.5f,
-//                        tailOnBottom = true
-//                    )
-//                }
-//            }
-//
-//            // === Scenario 1: MapFromMaps ===
-//            if (s.center != null) {
-//                val c = s.center!!
-//
-//                com.google.maps.android.compose.Circle(
-//                    center = c.pos,
-//                    radius = Globals.distanceMin.toDouble(),
-//                    strokeColor = Color.Gray,
-//                    fillColor = Color(0x3300FF00),
-//                    strokeWidth = 2f
-//                )
-//
-//                com.google.maps.android.compose.MarkerInfoWindow(
-//                    state = com.google.maps.android.compose.MarkerState(position = c.pos),
-//                    icon = storeIcon(1)
-//                ) {
-//                    InfoBalloonText(
-//                        title = c.title ?: "Магазин",
-//                        tailAlignment = 0.5f,
-//                        tailOnBottom = true
-//                    )
-//                }
-//
-//                // Small dots (no distance logic here, as per your requirements)
-//                s.pointsUi.forEachIndexed { index, pUi ->
-//                    val iconDesc = if (pUi.insideRadius) greenDot else redDot
-//                    val markerKey = pUi.point.id ?: "${pUi.point.lat}_${pUi.point.lon}_$index"
-//                    androidx.compose.runtime.key(markerKey) {
-//                        com.google.maps.android.compose.MarkerInfoWindow(
-//                            state = com.google.maps.android.compose.MarkerState(
-//                                position = LatLng(pUi.point.lat, pUi.point.lon)
-//                            ),
-//                            onInfoWindowClick = { vm.process(MapIntent.MarkerClicked(pUi)) },
-//                            icon = iconDesc,
-//                            anchor = Offset(0.5f, 0.5f),
-//                            zIndex = if (pUi.insideRadius) 1f else 0f
-//                        ) {
-//                            InfoBalloonText(title = pUi.point.title ?: "Магазин")
-//                        }
-//                    }
-//                }
-//
-//                if (pathPoints.size >= 2) {
-//                    com.google.maps.android.compose.Polyline(
-//                        points = pathPoints,
-//                        color = Color(0xFF1976D2),
-//                        width = 6f,
-//                        geodesic = true
-//                    )
-//                }
-//
-//            } else {
-//                // === Scenario 2: FromWPdata (distance + line while InfoWindow is open) ===
-//                val uLat = userLat
-//                val uLon = userLon
-//
-//                val isUserRNO = s.pointsUi.any { it.point.wp?.user_id == 14041 }
-//
-//                if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
-//                    com.google.maps.android.compose.Circle(
-//                        center = LatLng(uLat!!, uLon!!),
-//                        radius = circleR,
-//                        strokeColor = Color.Gray,
-//                        fillColor = Color(0x221E88E5),
-//                        strokeWidth = 2f
-//                    )
-//                }
-//
-//                // Markers
-//                // Markers
-//                s.pointsUi.forEachIndexed { index, pUi ->
-//                    val pos = LatLng(pUi.point.lat, pUi.point.lon)
-////                    val key = pUi.point.id ?: "${pUi.point.lat}_${pUi.point.lon}_$index"
-//
-//                    val key = stableKey(pUi)
-//
-//
-//                    val iconDesc = when {
-//                        pUi.insideRadius && pUi.count > 0 -> getBadgePin(pUi.count)
-//                        pUi.insideRadius -> greenDefault
-//                        !pUi.insideRadius && pUi.count > 0 -> redDefault
-//                        else -> redDefault
-//                    }
-//
-//                    val alpha = if (isUserRNO && isValidLatLon(uLat, uLon) && circleR != null) {
-//                        val d = haversine(uLat!!, uLon!!, pUi.point.lat, pUi.point.lon)
-//                        if (d <= circleR) 1f else 0.4f
-//                    } else 1f
-//
-//                    // ВАЖНО: свой MarkerState на каждый маркер
-//                    val markerState =
-//                        remember(key) { com.google.maps.android.compose.MarkerState(position = pos) }
-//                    // если вдруг pos меняется — обновим
-//                    markerState.position = pos
-//
-//                    val isSelected = showDistance && selectedKey == key
-//
-//                    val subtitle = remember(
-//                        key,
-//                        pUi.count,
-//                        pUi.sum,
-//                        isSelected,
-//                        distanceText
-//                    ) {
-//                        buildString {
-//                            if (pUi.count > 0) {
-//                                append("${pUi.count} кпс")
-//                                append("\nпремия: ${formatSum(pUi.sum)}")
-//                            }
-//                            if (isSelected && !distanceText.isNullOrBlank()) {
-//                                if (isNotEmpty()) append('\n')
-//                                append("расстояние: ")
-//                                append(distanceText)
-//                            }
-//                        }
-//                    }
-//
-//                    LaunchedEffect(isSelected, distanceText) {
-//                        if (isSelected) {
-//                            // ждём, чтобы Compose успел пересобрать content
-//                            withFrameNanos { }
-////                            markerState.hideInfoWindow()
-//                            markerState.showInfoWindow()
-//                        }
-//                    }
-//
-//
-//                    com.google.maps.android.compose.MarkerInfoWindow(
-//                        state = markerState,
-//                        onClick = {
-//                            selectedKey = key
-//                            selectedPos = pos
-//                            showDistance = true
-//
-//                            // сами покажем окно после апдейта стейта
-////                            markerState.showInfoWindow()
-//                            true // <- важно: не даём карте открыть окно "раньше времени"
-//                        },
-//                        onInfoWindowClick = {
-//                            vm.process(MapIntent.MarkerClicked(pUi))
-//                            showDistance = false
-//                            selectedKey = null
-//                            selectedPos = null
-//                        },
-//                        onInfoWindowClose = {
-//                            showDistance = false
-//                            selectedKey = null
-//                            selectedPos = null
-//                        },
-//                        icon = iconDesc,
-//                        alpha = alpha
-//                    ) {
-//                        InfoBalloonText(
-//                            title = pUi.point.title ?: "Позиция",
-//                            subtitle = subtitle,
-//                            tailAlignment = 0.5f,
-//                            tailOnBottom = true
-//                        )
-//                    }
-//                }
-//
-//                // Line + distance label over the line (only while InfoWindow is open)
-//                val you = userLatLng
-//                val target = selectedPos
-//                if (showDistance && you != null && target != null && distanceText != null) {
-//                    com.google.maps.android.compose.Polyline(
-//                        points = listOf(you, target),
-//                        width = 6f,
-//                        geodesic = true,
-//                        color = Color(0xFF00ACC1)
-//                    )
-//
-//                    val mid = LatLng(
-//                        (you.latitude + target.latitude) / 2.0,
-//                        (you.longitude + target.longitude) / 2.0
-//                    )
-//
-//                    val textIcon = rememberDistanceTextIcon(distanceText!!)
-//
-//                    com.google.maps.android.compose.Marker(
-//                        state = com.google.maps.android.compose.MarkerState(position = mid),
-//                        icon = textIcon,
-//                        anchor = Offset(0.5f, 0.5f),
-//                        zIndex = 10f
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
 
 
 @Composable

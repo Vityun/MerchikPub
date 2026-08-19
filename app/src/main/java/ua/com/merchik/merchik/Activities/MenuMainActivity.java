@@ -30,6 +30,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -65,6 +67,7 @@ import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
@@ -75,6 +78,8 @@ import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
+import ua.com.merchik.merchik.features.main.componentsUI.PhotoListCallback;
+import ua.com.merchik.merchik.features.main.componentsUI.PhotoManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -247,6 +252,19 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+
+        PhotoManager.getPhotoListToDownloadAsync(new PhotoListCallback() {
+            @Override
+            public void onSuccess(@NotNull List<? extends @NotNull TovarImgList> list) {
+                Log.e("test_photo_oo", "Количество: " + list.size());
+            }
+
+            @Override
+            public void onError(@NotNull Throwable error) {
+                Log.e("test_photo_oo", "Throwable: " + error.getMessage());
+
+            }
+        });
 
 //        new Translate().uploadNewTranslate();
 

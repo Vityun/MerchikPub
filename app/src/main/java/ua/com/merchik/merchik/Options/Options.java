@@ -131,6 +131,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOverTimelinessOfReporting;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
@@ -213,7 +214,7 @@ public class Options {
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
-            84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288, 141067};
+            84005, 84967, 164985, 165276, 174877, 165275, 165482, 166528, 157288, 141067};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -267,6 +268,11 @@ public class Options {
                 case 84005, 84967, 164985, 165276:
                     OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckingForAnAchievement.showOptionMassage("");
+                    break;
+
+                case 174877:
+                    OptionControlPhotoExpirationDate<?> optionControlPhotoExpirationDate = new OptionControlPhotoExpirationDate<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlPhotoExpirationDate.showOptionMassage("");
                     break;
 
                 case 160568:
@@ -1647,6 +1653,17 @@ public class Options {
                     optionControlCheckingForAnAchievement.showOptionMassage(block);
                 }
                 return optionControlCheckingForAnAchievement.isBlockOption2() ? 1 : 0;
+
+            case 174877:
+                OptionControlPhotoExpirationDate<?> optionControlPhotoExpirationDate =
+                        new OptionControlPhotoExpirationDate<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoExpirationDate.isBlockOption()))
+                    optionControlPhotoExpirationDate.showOptionMassage(block);
+
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoExpirationDate.signal && optionControlPhotoExpirationDate.isBlockOption()) {
+                    optionControlPhotoExpirationDate.showOptionMassage(block);
+                }
+                return optionControlPhotoExpirationDate.isBlockOption2() ? 1 : 0;
 
             case 132812:    // Хочу увеличение оплаты
 
@@ -4309,7 +4326,7 @@ public class Options {
             list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591, 165275));
             list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));
             list.add(new TovarOptions(UP, "П", "Поднято товара", "up", "main", 138644));
-            list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967, 164985, 165276));
+            list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967, 164985, 165276, 174877));
             list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));
             list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242));
             list.add(new TovarOptions(AKCIYA_ID, "А", "Акция", "akciya_id", "main", 80977));

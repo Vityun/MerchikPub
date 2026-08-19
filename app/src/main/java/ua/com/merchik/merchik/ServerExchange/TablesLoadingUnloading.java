@@ -14,6 +14,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
@@ -622,6 +624,14 @@ public class TablesLoadingUnloading {
     }
 
     public void downloadWPDataWithCords() {
+        downloadWPDataWithCords(null, null, null);
+    }
+
+    public void downloadWPDataWithCords(double coordX, double coordY, Runnable onComplete) {
+        downloadWPDataWithCords(Double.valueOf(coordX), Double.valueOf(coordY), onComplete);
+    }
+
+    private void downloadWPDataWithCords(@Nullable Double overrideCoordX, @Nullable Double overrideCoordY, @Nullable Runnable onComplete) {
 
         StandartData data = new StandartData();
 
@@ -633,45 +643,51 @@ public class TablesLoadingUnloading {
         if (Globals.getCurrentUserId() == 143565) // исключение дляя Балаба
             data.date_from = Clock.getDatePeriod(-3);
 
-        long vpi;
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else
-            vpi = 0;
-
-        data.dt_change_from = String.valueOf(vpi);
+//        long vpi;
+//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+//        if (sTable != null) {
+//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+//            vpi = sTable.getVpi_app();
+//            Log.e("updateWpData", "vpi: " + vpi);
+//        } else
+//            vpi = 0;
+//
+//        data.dt_change_from = String.valueOf(vpi);
 
 
         try {
 
             double coordX, coordY;
-            // X (широта)
-            if (Globals.CoordX == 0) {
-                if (imHereGPS != null) {
-                    coordX = imHereGPS.getLatitude();
-                } else if (imHereNET != null) {
-                    coordX = imHereNET.getLatitude();
-                } else {
-                    coordX = 0; // fallback если нет координат
-                }
+            if (overrideCoordX != null && overrideCoordY != null) {
+                coordX = overrideCoordX;
+                coordY = overrideCoordY;
+                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPDataWithCords/override", "coordX: " + coordX + ", coordY: " + coordY);
             } else {
-                coordX = Globals.CoordX;
-            }
+                // X (широта)
+                if (Globals.CoordX == 0) {
+                    if (imHereGPS != null) {
+                        coordX = imHereGPS.getLatitude();
+                    } else if (imHereNET != null) {
+                        coordX = imHereNET.getLatitude();
+                    } else {
+                        coordX = 0; // fallback если нет координат
+                    }
+                } else {
+                    coordX = Globals.CoordX;
+                }
 
 // Y (долгота)
-            if (Globals.CoordY == 0) {
-                if (imHereGPS != null) {
-                    coordY = imHereGPS.getLongitude();
-                } else if (imHereNET != null) {
-                    coordY = imHereNET.getLongitude();
+                if (Globals.CoordY == 0) {
+                    if (imHereGPS != null) {
+                        coordY = imHereGPS.getLongitude();
+                    } else if (imHereNET != null) {
+                        coordY = imHereNET.getLongitude();
+                    } else {
+                        coordY = 0;
+                    }
                 } else {
-                    coordY = 0;
+                    coordY = Globals.CoordY;
                 }
-            } else {
-                coordY = Globals.CoordY;
             }
 
             if (coordX == 0) {
@@ -718,10 +734,10 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
                                 List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
+                                Log.e("!!!!!!!!!!wpdata","size: " + wpDataDBList.size());
                                 for (WpDataDB wpDataDB : wpDataDBList) {
                                     if (wpDataDB.getUser_id() == 14041) {
-                                        Log.e("!!!!!!!!!!", "+++++++++++");
-                                        Log.e("!!!!!!!!!!", "wpdata: " + wpDataDB.getDt());
+                                        Log.e("!!!!!!!!!!wpdata", "wpdata: " + wpDataDB.getAddr_id());
                                     }
                                 }
                                 HashElements he = response.body().getHashElements();
@@ -760,20 +776,38 @@ public class TablesLoadingUnloading {
                             }
                         }
                     } catch (Exception e) {
-                        Log.e("Exception", "");
+                        Log.e("!!!!!!!!!!wpdata","size: " + "Exception: " + e.getMessage());
+                        Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPDataWithCords/onResponse", "exception: " + e.getMessage());
+                    } finally {
+                        notifyDownloadWPDataWithCordsComplete(onComplete);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<WpDataServer> call, Throwable t) {
-
+                    Log.e("!!!!!!!!!!wpdata","size: " + "Throwable: " + t.getMessage());
+                    Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPDataWithCords/onFailure", "error: " + t.getMessage());
+                    notifyDownloadWPDataWithCordsComplete(onComplete);
                 }
             });
         } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPDataWithCords", "exception: " + e.getMessage());
+            notifyDownloadWPDataWithCordsComplete(onComplete);
         }
 
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
 
+    }
+
+    private void notifyDownloadWPDataWithCordsComplete(@Nullable Runnable onComplete) {
+        if (onComplete == null) return;
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                onComplete.run();
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPDataWithCords/onComplete", "exception: " + e.getMessage());
+            }
+        });
     }
 
     public void downloadWiFi() {

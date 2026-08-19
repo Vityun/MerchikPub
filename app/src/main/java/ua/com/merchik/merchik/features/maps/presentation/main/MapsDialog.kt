@@ -2,6 +2,11 @@ package ua.com.merchik.merchik.features.maps.presentation.main
 
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.PackageManager
+import android.location.Geocoder
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -33,11 +38,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
@@ -46,17 +53,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalWorksMapSearchLocationHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
@@ -64,6 +79,9 @@ import ua.com.merchik.merchik.features.main.Main.FilteringDialog
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
+import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRoundedSuggestion
+import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.domain.stringByKey
 import ua.com.merchik.merchik.features.maps.presentation.MapActionsBridge
@@ -72,11 +90,31 @@ import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromWPdataViewModel
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.concurrent.TimeUnit
+import java.util.UUID
 
+
+private const val MAP_SEARCH_MAX_SUGGESTIONS = 5
+private const val MAP_SEARCH_BIAS_RADIUS_METERS = 50_000.0
+private const val MAP_SEARCH_AREA_ACTION_TEXT = "Искать работу в этом районе"
+
+private val mapSearchHttpClient: OkHttpClient by lazy {
+    OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .callTimeout(8, TimeUnit.SECONDS)
+        .build()
+}
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "StateFlowValueCalledInComposition")
 @Composable
@@ -86,7 +124,11 @@ fun MapsDialog(
     onOpenContextMenu: (WpDataDB, ContextUI, LaunchOrigin?) -> Unit
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val contextUI = mainViewModel.contextUI
+    val isAdditionalWorksMap =
+        contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER ||
+                contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
     val isCustomAditionalAddressMap =
         mainViewModel is AddressSDBViewModel &&
                 CustomAditionalAddressSelectionHolder.mapSelectionEnabled
@@ -115,6 +157,21 @@ fun MapsDialog(
     val scope = rememberCoroutineScope()  // <-- добавили
 
     var maxLinesSubTitle by remember { mutableStateOf(1) }
+    var mapSearchText by remember { mutableStateOf("") }
+    var mapSearchMarker by remember { mutableStateOf<MapSearchMarker?>(null) }
+    var mapSearchError by remember { mutableStateOf<String?>(null) }
+    var mapSearchSuggestions by remember { mutableStateOf<List<MapSearchPrediction>>(emptyList()) }
+    var mapSearchLockedText by remember { mutableStateOf<String?>(null) }
+    var mapSearchSessionToken by remember { mutableStateOf(UUID.randomUUID().toString()) }
+    var additionalWorksSearchOrigin by remember {
+        mutableStateOf(
+            AdditionalWorksMapSearchLocationHolder.get()?.let { point ->
+                LatLng(point.latitude, point.longitude)
+            }
+        )
+    }
+    var pendingAdditionalWorksSearchMarker by remember { mutableStateOf<MapSearchMarker?>(null) }
+    var additionalWorksMapSearchInProgress by remember { mutableStateOf(false) }
 
     val formatterDDmmYYYY = DateTimeFormatter
         .ofPattern("dd MMM yyyy")
@@ -138,249 +195,9 @@ fun MapsDialog(
     val vm: BaseMapViewModel =
         if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>() else hiltViewModel<MapFromWPdataViewModel>()
 
-//    LaunchedEffect(vm, distance, mainViewModel.contextUI) {
-//        if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
-//            vm.setDistance(distance)
-//        }
-//    }
-
     // 1) Подписываемся на состояние карты
     val mapState by vm.state.collectAsState()
 
-
-    val allUserIs14041 by remember(mapState.pointsUi) {
-        derivedStateOf {
-            val pts = mapState.pointsUi
-            pts.isNotEmpty() && pts.all { it.point.wp?.user_id == 14041 }
-        }
-    }
-
-
-
-//    val holder = WpSelectionDataHolder.instance()
-//    val version = holder.version
-//    val wpDataList = remember { mutableStateListOf<WpDataDB>() }
-//
-//    var hasInternet by remember { mutableStateOf(true) }
-//    var pendingMainDialog by remember { mutableStateOf(false) }
-
-//    LaunchedEffect(version) {
-//        val wpList = holder.consumePendingSelected()
-//        if (wpList.isNotEmpty()) {
-//            wpDataList.clear()
-//            wpDataList.addAll(wpList)
-//
-//            Toast.makeText(
-//                mainViewModel.context,
-//                "Знайдено результатів: ${wpDataList.size}",
-//                Toast.LENGTH_LONG
-//            ).show()
-//
-//            if (wpDataList.size == 1)
-//                MessageDialogBuilder(mainViewModel.context as Activity)
-//                    .setTitle("Додатковий заробіток")
-//                    .setStatus(DialogStatus.NORMAL)
-//                    .setSubTitle(wpDataList.first().addr_txt)
-//                    .setMessage(String.format(
-//                        "Подать заявку на выполнение этих работ\n" +
-//                                "<font color='gray'>Відвідування від</font> %s" +
-//                                "<br><font color='gray'>Клієнт:</font> %s" +
-//                                "<br><font color='gray'>Адреса:</font> %s" +
-//                                "<br><font color='gray'>Премія (план):</font> %s грн." +
-//                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
-//                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
-//                        Clock.getHumanTime_dd_MMMM(wpDataList.first().dt.time),
-//                        wpDataList.first().client_txt,
-//                        wpDataList.first().addr_txt,
-//                        wpDataList.first().cash_ispolnitel,
-//                        wpDataList.first().sku,
-//                        wpDataList.first().duration
-//                    ))
-//                    .setOnConfirmAction("Выполнять всегда") {
-//                        notReadyMenu = true
-//                    }
-//                    .setOnCancelAction("Выполнить один раз") {
-//                        mainViewModel.doAcceptOneTime(wp = wpDataList.first())
-//                    }
-//                    .show()
-//            else
-//                MessageDialogBuilder(mainViewModel.context as Activity)
-//                    .setTitle("Додатковий заробіток")
-//                    .setStatus(DialogStatus.NORMAL)
-//                    .setSubTitle(wpDataList.first().addr_txt)
-//                    .setMessage( "Подати заявку на виконання обранних ${wpDataList.size} робiт за цією адресою?"
-//                    )
-//                    .setOnConfirmAction("Выполнять всегда") {
-////                        notReadyMenu = true
-//
-////                        mainViewModel.dialogtest3(wpDataList)
-////                        notReadyMenu = true
-////                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.NO_CONNECTION)
-////                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.WEAK_CONNECTION)
-////                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.WEAK_CONNECTION)
-//                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.INTERNET_DISABLED)
-//                    }
-//                    .setOnCancelAction("Выполнить один раз") {
-////                        if (wpList.size == 1)
-////                            mainViewModel.doAcceptOneTime(wpList.first())
-////                        else
-////                            mainViewModel.doAcceptOneTime(wpList)
-//                        mainViewModel.doAcceptOneTime(wpList = wpDataList)
-////                        mainViewModel.dialogtest3(wpDataList)
-////                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.NO_CONNECTION)
-//
-////                        mainViewModel.showServerIssueDialog(wpList, ServerIssueScenario.INTERNET_DISABLED)
-//                    }
-//                    .show()
-//        }
-//    }
-
-//    fun showMainAdditionalEarningsDialog(wpList: List<WpDataDB>) {
-//        if (wpList.isEmpty()) return
-//
-//        if (wpList.size == 1) {
-//            val wp = wpList.first()
-//
-//            MessageDialogBuilder(mainViewModel.context as Activity)
-//                .setTitle("Додатковий заробіток")
-//                .setStatus(DialogStatus.NORMAL)
-//                .setSubTitle(wp.addr_txt)
-//                .setMessage(
-//                    String.format(
-//                        "Подать заявку на выполнение этих работ\n" +
-//                                "<font color='gray'>Відвідування від</font> %s" +
-//                                "<br><font color='gray'>Клієнт:</font> %s" +
-//                                "<br><font color='gray'>Адреса:</font> %s" +
-//                                "<br><font color='gray'>Премія (план):</font> %s грн." +
-//                                "<br><font color='gray'>СКЮ (кількість товарних позицій):</font> %s" +
-//                                "<br><font color='gray'>Середній час роботи:</font> %s хв",
-//                        Clock.getHumanTime_dd_MMMM(wp.dt.time),
-//                        wp.client_txt,
-//                        wp.addr_txt,
-//                        wp.cash_ispolnitel,
-//                        wp.sku,
-//                        wp.duration
-//                    )
-//                )
-//                .setOnConfirmAction("Выполнять всегда") {
-//                    if (!hasInternet) {
-//                        pendingMainDialog = true
-//                        mainViewModel.showServerIssueDialog(
-//                            wpDataList,
-//                            ServerIssueScenario.INTERNET_DISABLED
-//                        )
-//                    } else {
-//                        notReadyMenu = true
-//                    }
-//                }
-//                .setOnCancelAction("Выполнить один раз") {
-//                    if (!hasInternet) {
-//                        pendingMainDialog = true
-//                        mainViewModel.showServerIssueDialog(
-//                            wpDataList,
-//                            ServerIssueScenario.INTERNET_DISABLED
-//                        )
-//                    } else {
-//                        mainViewModel.doAcceptOneTime(wp = wp)
-//                    }
-//                }
-//                .show()
-//        } else {
-//            MessageDialogBuilder(mainViewModel.context as Activity)
-//                .setTitle("Додатковий заробіток")
-//                .setStatus(DialogStatus.NORMAL)
-//                .setSubTitle(wpList.first().addr_txt)
-//                .setMessage(
-//                    "Подати заявку на виконання обранних ${wpList.size} робiт за цією адресою?"
-//                )
-//                .setOnConfirmAction("Выполнять всегда") {
-//                    if (!hasInternet) {
-//                        pendingMainDialog = true
-//                        mainViewModel.showServerIssueDialog(
-//                            wpDataList,
-//                            ServerIssueScenario.INTERNET_DISABLED
-//                        )
-//                    } else {
-////                        notReadyMenu = true
-//                        mainViewModel.doAcceptOneTime(wpList = wpDataList)
-//
-//                    }
-//                }
-//                .setOnCancelAction("Выполнить один раз") {
-//                    if (!hasInternet) {
-//                        pendingMainDialog = true
-//                        mainViewModel.showServerIssueDialog(
-//                            wpDataList,
-//                            ServerIssueScenario.INTERNET_DISABLED
-//                        )
-//                    } else {
-//                        mainViewModel.doAcceptOneTime(wp = wpDataList.first())
-////                        mainViewModel.showServerIssueDialog(
-////                            wpDataList,
-////                            ServerIssueScenario.WEAK_CONNECTION
-////                        )
-//                    }
-//                }
-//                .show()
-//        }
-//    }
-
-//    LaunchedEffect(Unit) {
-//        mainViewModel.context?.let { ctx ->
-//            observeInternetState(ctx).collect { isConnected ->
-//                Log.d("InternetStateWatcher", "Internet changed: $isConnected")
-//                hasInternet = isConnected
-//
-//                if (!isConnected && wpDataList.isNotEmpty()) {
-//                    pendingMainDialog = true
-//                    mainViewModel.showServerIssueDialog(
-//                        wpDataList,
-//                        ServerIssueScenario.INTERNET_DISABLED
-//                    )
-//                } else if (isConnected && pendingMainDialog && wpDataList.isNotEmpty()) {
-//                    pendingMainDialog = false
-//                    mainViewModel.hideServerIssueDialog()
-//                    showMainAdditionalEarningsDialog(wpDataList)
-//
-//                }
-//            }
-//        }
-//    }
-
-//    LaunchedEffect(version) {
-//        val wpList = holder.consumePendingSelected()
-//        if (wpList.isNotEmpty()) {
-//            wpDataList.clear()
-//            wpDataList.addAll(wpList)
-//
-//            Toast.makeText(
-//                mainViewModel.context,
-//                "Знайдено результатів: ${wpDataList.size}",
-//                Toast.LENGTH_LONG
-//            ).show()
-//
-//            if (hasInternet) {
-//                pendingMainDialog = false
-//                showMainAdditionalEarningsDialog(wpDataList)
-//            } else {
-//                pendingMainDialog = true
-//                mainViewModel.showServerIssueDialog(
-//                    wpDataList,
-//                    ServerIssueScenario.INTERNET_DISABLED
-//                )
-//            }
-//        }
-//    }
-//    LaunchedEffect(Unit) {
-//        mainViewModel.context?.let {
-//            observeInternetState(it).collect { isConnected ->
-//                Log.d("InternetStateWatcher", "Internet changed: $isConnected")
-//                if (!isConnected && wpDataList.isNotEmpty()) {
-//                    mainViewModel.showServerIssueDialog(wpDataList, ServerIssueScenario.INTERNET_DISABLED)
-//                }
-//            }
-//        }
-//    }
 
     if (notReadyMenu) {
         MessageDialog(
@@ -439,21 +256,11 @@ fun MapsDialog(
         } ?: "не визначено"
     }
 
-//    val end by mainViewModel.rangeDataEnd.collectAsState()
-//    val periodEnd = end?.format(formatterDDmmYYYY) ?: "не визначено"
 
     val periodEnd = mainViewModel.rangeDataEnd.value
         ?.format(formatterDDmmYYYY)
         ?: "не визначено"
 
-//    val periodEnd = remember { mainViewModel.rangeDataEnd.value?.let {
-//        it.format(formatterDDmmYYYY) ?:  "не визначено"}
-//    } ?: "не визначено"
-//    val periodEnd = remember(uiState.filters?.rangeDataByKey) {
-//        uiState.filters?.rangeDataByKey?.let { range ->
-//            range.end?.format(formatterDDmmYYYY)
-//        } ?: "не визначено"
-//    }
 
     // время для fromMaps
     val validTime = 1_800_000L // 30 минут в миллисекундах
@@ -572,6 +379,145 @@ fun MapsDialog(
     val effects = vm.effects
     val cameraController = rememberCameraPositionState()
 
+    fun setAdditionalWorksSearchMarker(marker: MapSearchMarker) {
+        mapSearchMarker = marker
+        mapSearchText = marker.title
+        mapSearchLockedText = marker.title
+        mapSearchSuggestions = emptyList()
+        mapSearchError = null
+    }
+
+    fun runAdditionalWorksMapSearch(marker: MapSearchMarker) {
+        if (!isAdditionalWorksMap || additionalWorksMapSearchInProgress) return
+
+        additionalWorksMapSearchInProgress = true
+        additionalWorksSearchOrigin = marker.position
+        AdditionalWorksMapSearchLocationHolder.set(
+            latitude = marker.position.latitude,
+            longitude = marker.position.longitude
+        )
+        val progress = ProgressViewModel(1)
+        val loadingDialog = context.findActivity()?.let { activity ->
+            LoadingDialogWithPercent(activity, progress)
+        }
+
+        progress.reset("Пошук робіт")
+        loadingDialog?.show()
+        progress.setProgressPercent(
+            progressPercent = 92f,
+            message = "Завантаження робіт в обраному районі",
+            durationMillis = 15_000L
+        )
+
+        try {
+            TablesLoadingUnloading().downloadWPDataWithCords(
+                marker.position.latitude,
+                marker.position.longitude,
+                Runnable {
+                    additionalWorksSearchOrigin = marker.position
+                    AdditionalWorksMapSearchLocationHolder.set(
+                        latitude = marker.position.latitude,
+                        longitude = marker.position.longitude
+                    )
+                    mainViewModel.updateContent()
+                    progress.setProgressPercent(
+                        progressPercent = 98f,
+                        message = "Оновлення карти",
+                        durationMillis = 600L
+                    )
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        progress.onCompleted()
+                        additionalWorksMapSearchInProgress = false
+                    }, 700L)
+                }
+            )
+        } catch (e: Throwable) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "MapsDialog/runAdditionalWorksMapSearch",
+                "lat=${marker.position.latitude}, lon=${marker.position.longitude}, error=${e.message}"
+            )
+            progress.onCanceled()
+            additionalWorksMapSearchInProgress = false
+        }
+    }
+
+    LaunchedEffect(mapSearchText, context, isAdditionalWorksMap) {
+        if (!isAdditionalWorksMap) {
+            mapSearchMarker = null
+            mapSearchError = null
+            mapSearchSuggestions = emptyList()
+            mapSearchLockedText = null
+            return@LaunchedEffect
+        }
+
+        val query = mapSearchText.trim()
+        if (query.isBlank()) {
+            mapSearchMarker = null
+            mapSearchError = null
+            mapSearchSuggestions = emptyList()
+            mapSearchLockedText = null
+            return@LaunchedEffect
+        }
+
+        if (mapSearchLockedText == query) {
+            mapSearchSuggestions = emptyList()
+            mapSearchError = null
+            return@LaunchedEffect
+        }
+
+        if (query.length < 3) {
+            mapSearchMarker = null
+            mapSearchError = null
+            mapSearchSuggestions = emptyList()
+            return@LaunchedEffect
+        }
+
+        mapSearchMarker = null
+        mapSearchError = null
+        delay(650)
+        val searchCenter = currentMapSearchCenter(
+            cameraTarget = cameraController.position.target,
+            mapCenter = mapState.center?.pos,
+            userLat = mapState.userLat,
+            userLon = mapState.userLon
+        )
+        val suggestions = findMapSearchSuggestions(
+            context = context,
+            query = query,
+            center = searchCenter,
+            sessionToken = mapSearchSessionToken
+        )
+        if (mapSearchText.trim() != query || mapSearchLockedText == query) return@LaunchedEffect
+
+        mapSearchSuggestions = suggestions
+        mapSearchError = if (suggestions.isEmpty()) {
+            mainViewModel.getTranslateString("Адресу не знайдено")
+        } else {
+            null
+        }
+    }
+
+    if (isAdditionalWorksMap && pendingAdditionalWorksSearchMarker != null) {
+        val marker = pendingAdditionalWorksSearchMarker!!
+        MessageDialog(
+            title = "Пошук робіт",
+            subTitle = marker.title,
+            status = DialogStatus.NORMAL,
+            message = "Встановити цю адресу як точку відліку та шукати роботи в цьому районі?",
+            okButtonName = "Так",
+            cancelButtonName = "Ні",
+            onDismiss = { pendingAdditionalWorksSearchMarker = null },
+            onConfirmAction = {
+                pendingAdditionalWorksSearchMarker = null
+                runAdditionalWorksMapSearch(marker)
+            },
+            onCancelAction = {
+                pendingAdditionalWorksSearchMarker = null
+            }
+        )
+    }
+
 
     LaunchedEffect(vm, sessionId) {
         effects.collectLatest { e ->
@@ -616,6 +562,8 @@ fun MapsDialog(
         uiState.filters?.searchText,
         Globals.CoordX,
         Globals.CoordY,
+        additionalWorksSearchOrigin,
+        isAdditionalWorksMap,
         vm,
         sessionId,
         distance,
@@ -631,11 +579,19 @@ fun MapsDialog(
                 rangeStartLocalDate = mainViewModel.rangeDataStart.value,
                 rangeEndLocalDate = mainViewModel.rangeDataEnd.value,
                 search = uiState.filters?.searchText,
-                userLat = Globals.CoordX,
-                userLon = Globals.CoordY,
+                userLat = if (isAdditionalWorksMap) {
+                    additionalWorksSearchOrigin?.latitude ?: Globals.CoordX
+                } else {
+                    Globals.CoordX
+                },
+                userLon = if (isAdditionalWorksMap) {
+                    additionalWorksSearchOrigin?.longitude ?: Globals.CoordY
+                } else {
+                    Globals.CoordY
+                },
                 distanceMeters = if (isCustomAditionalAddressMap) {
                     customAditionalAddressMapDistance
-                } else if (mainViewModel.contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER) {
+                } else if (isAdditionalWorksMap) {
                     distance
                 } else {
                     null
@@ -728,6 +684,74 @@ fun MapsDialog(
 //                    CollapsibleSubtitle(text = mapSubheaderText)
                 Spacer(Modifier.height(8.dp))
 
+                if (isAdditionalWorksMap) {
+                    TextFieldInputRounded(
+                        viewModel = mainViewModel,
+                        value = mapSearchText,
+                        onValueChange = {
+                            mapSearchLockedText = null
+                            mapSearchText = it
+                        },
+                        suggestions = mapSearchSuggestions.map { suggestion ->
+                            TextFieldInputRoundedSuggestion(
+                                id = suggestion.id,
+                                title = suggestion.title,
+                                subtitle = suggestion.subtitle
+                            )
+                        },
+                        onSuggestionClick = { selectedUiSuggestion ->
+                            val selectedSuggestion = mapSearchSuggestions
+                                .firstOrNull { it.id == selectedUiSuggestion.id }
+                            if (selectedSuggestion != null) {
+                                val selectedText = selectedSuggestion.fullText
+
+                                mapSearchLockedText = selectedText
+                                mapSearchText = selectedText
+                                mapSearchSuggestions = emptyList()
+                                mapSearchError = null
+
+                                scope.launch {
+                                    val searchCenter = currentMapSearchCenter(
+                                        cameraTarget = cameraController.position.target,
+                                        mapCenter = mapState.center?.pos,
+                                        userLat = mapState.userLat,
+                                        userLon = mapState.userLon
+                                    )
+                                    val marker = resolveMapSearchSuggestion(
+                                        context = context,
+                                        suggestion = selectedSuggestion,
+                                        center = searchCenter,
+                                        sessionToken = mapSearchSessionToken
+                                    )
+                                    if (mapSearchLockedText != selectedText) return@launch
+
+                                    if (marker != null) {
+                                        setAdditionalWorksSearchMarker(marker)
+                                    } else {
+                                        mapSearchMarker = null
+                                        mapSearchError =
+                                            mainViewModel.getTranslateString("Адресу не знайдено")
+                                    }
+                                    mapSearchSessionToken = UUID.randomUUID().toString()
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(3.dp, RoundedCornerShape(8.dp))
+                    )
+
+                    mapSearchError?.takeIf { it.isNotBlank() }?.let { errorText ->
+                        Text(
+                            text = errorText,
+                            color = Color(0xFFD32F2F),
+                            modifier = Modifier.padding(top = 6.dp, start = 2.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
+
 
                 Box(
                     modifier = Modifier
@@ -739,6 +763,35 @@ fun MapsDialog(
                     StoresMap(
                         cameraPositionState = cameraController,
                         vm = vm,
+                        searchMarker = if (isAdditionalWorksMap) mapSearchMarker else null,
+                        onMapClick = if (isAdditionalWorksMap) {
+                            { latLng ->
+                                val clickedMarker = createAdditionalWorksSearchMarker(
+                                    position = latLng,
+                                    title = formatMapPoint(latLng)
+                                )
+                                setAdditionalWorksSearchMarker(clickedMarker)
+                                scope.launch {
+                                    val markerWithAddress = createAdditionalWorksSearchMarker(
+                                        position = latLng,
+                                        title = findAddressTitleByLatLng(context, latLng)
+                                            ?: formatMapPoint(latLng)
+                                    )
+                                    if (mapSearchMarker?.position.sameLatLng(latLng)) {
+                                        setAdditionalWorksSearchMarker(markerWithAddress)
+                                    }
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                        onSearchAreaClick = if (isAdditionalWorksMap) {
+                            { marker ->
+                                pendingAdditionalWorksSearchMarker = marker
+                            }
+                        } else {
+                            null
+                        },
                         focusUserRadiusMeters = if (isCustomAditionalAddressMap) {
                             customAditionalAddressMapDistance
                         } else {
@@ -788,6 +841,432 @@ fun MapsDialog(
 
 }
 
+private data class MapSearchPrediction(
+    val id: String,
+    val title: String,
+    val subtitle: String?,
+    val fullText: String,
+    val placeId: String? = null,
+    val position: LatLng? = null
+)
+
+private suspend fun findMapSearchSuggestions(
+    context: Context,
+    query: String,
+    center: LatLng?,
+    sessionToken: String
+): List<MapSearchPrediction> = withContext(Dispatchers.IO) {
+    val placesSuggestions = findPlacesAutocompleteSuggestions(
+        context = context,
+        query = query,
+        center = center,
+        sessionToken = sessionToken
+    )
+    if (placesSuggestions.isNotEmpty()) return@withContext placesSuggestions
+
+    findGeocoderSuggestions(
+        context = context,
+        query = query,
+        center = center
+    )
+}
+
+private suspend fun resolveMapSearchSuggestion(
+    context: Context,
+    suggestion: MapSearchPrediction,
+    center: LatLng?,
+    sessionToken: String
+): MapSearchMarker? = withContext(Dispatchers.IO) {
+    suggestion.position?.let { position ->
+        return@withContext createAdditionalWorksSearchMarker(
+            position = position,
+            title = suggestion.fullText
+        )
+    }
+
+    val placeMarker = suggestion.placeId?.let { placeId ->
+        findPlaceDetailsMarker(
+            context = context,
+            placeId = placeId,
+            fallbackTitle = suggestion.fullText,
+            sessionToken = sessionToken
+        )
+    }
+    if (placeMarker != null) return@withContext placeMarker
+
+    findGeocoderSuggestions(
+        context = context,
+        query = suggestion.fullText,
+        center = center
+    ).firstOrNull()?.position?.let { position ->
+        createAdditionalWorksSearchMarker(
+            position = position,
+            title = suggestion.fullText
+        )
+    }
+}
+
+private fun findPlacesAutocompleteSuggestions(
+    context: Context,
+    query: String,
+    center: LatLng?,
+    sessionToken: String
+): List<MapSearchPrediction> {
+    val apiKey = readGoogleMapsApiKey(context) ?: return emptyList()
+
+    return try {
+        val urlBuilder = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+            .toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("input", query)
+            .addQueryParameter("key", apiKey)
+            .addQueryParameter("types", "geocode")
+            .addQueryParameter("language", mapSearchLanguage())
+            .addQueryParameter("sessiontoken", sessionToken)
+
+        center?.takeIf { it.isUsefulMapSearchPoint() }?.let {
+            urlBuilder
+                .addQueryParameter("location", "${it.latitude},${it.longitude}")
+                .addQueryParameter("radius", MAP_SEARCH_BIAS_RADIUS_METERS.toInt().toString())
+        }
+
+        mapSearchHttpClient.newCall(
+            Request.Builder()
+                .url(urlBuilder.build())
+                .get()
+                .build()
+        ).execute().use { response ->
+            if (!response.isSuccessful) {
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "MapsDialog/findPlacesAutocompleteSuggestions",
+                    "http=${response.code}, query=$query"
+                )
+                return emptyList()
+            }
+
+            val body = response.body?.string().orEmpty()
+            val root = JsonParser.parseString(body).asJsonObject
+            val status = root.optString("status")
+            if (status != "OK") {
+                if (status != "ZERO_RESULTS") {
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "MapsDialog/findPlacesAutocompleteSuggestions",
+                        "status=$status, error=${root.optString("error_message")}, query=$query"
+                    )
+                }
+                return emptyList()
+            }
+
+            root.optArray("predictions")
+                .take(MAP_SEARCH_MAX_SUGGESTIONS)
+                .mapNotNull { item ->
+                    val prediction = item.asJsonObjectOrNull() ?: return@mapNotNull null
+                    val placeId = prediction.optString("place_id") ?: return@mapNotNull null
+                    val description = prediction.optString("description") ?: return@mapNotNull null
+                    val structured = prediction.optObject("structured_formatting")
+                    val title = structured?.optString("main_text") ?: description
+                    val subtitle = structured?.optString("secondary_text")
+
+                    MapSearchPrediction(
+                        id = "places_$placeId",
+                        title = title,
+                        subtitle = subtitle,
+                        fullText = description,
+                        placeId = placeId
+                    )
+                }
+        }
+    } catch (e: Throwable) {
+        Globals.writeToMLOG(
+            "ERROR",
+            "MapsDialog/findPlacesAutocompleteSuggestions",
+            "query=$query, error=${e.message}"
+        )
+        emptyList()
+    }
+}
+
+private fun findPlaceDetailsMarker(
+    context: Context,
+    placeId: String,
+    fallbackTitle: String,
+    sessionToken: String
+): MapSearchMarker? {
+    val apiKey = readGoogleMapsApiKey(context) ?: return null
+
+    return try {
+        val url = "https://maps.googleapis.com/maps/api/place/details/json"
+            .toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("place_id", placeId)
+            .addQueryParameter("fields", "geometry,formatted_address,name")
+            .addQueryParameter("key", apiKey)
+            .addQueryParameter("language", mapSearchLanguage())
+            .addQueryParameter("sessiontoken", sessionToken)
+            .build()
+
+        mapSearchHttpClient.newCall(
+            Request.Builder()
+                .url(url)
+                .get()
+                .build()
+        ).execute().use { response ->
+            if (!response.isSuccessful) {
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "MapsDialog/findPlaceDetailsMarker",
+                    "http=${response.code}, placeId=$placeId"
+                )
+                return null
+            }
+
+            val root = JsonParser.parseString(response.body?.string().orEmpty()).asJsonObject
+            val status = root.optString("status")
+            if (status != "OK") {
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "MapsDialog/findPlaceDetailsMarker",
+                    "status=$status, error=${root.optString("error_message")}, placeId=$placeId"
+                )
+                return null
+            }
+
+            val result = root.optObject("result") ?: return null
+            val location = result
+                .optObject("geometry")
+                ?.optObject("location")
+                ?: return null
+            val lat = location.optDouble("lat") ?: return null
+            val lon = location.optDouble("lng") ?: return null
+
+            createAdditionalWorksSearchMarker(
+                position = LatLng(lat, lon),
+                title = result.optString("formatted_address")
+                    ?: result.optString("name")
+                    ?: fallbackTitle
+            )
+        }
+    } catch (e: Throwable) {
+        Globals.writeToMLOG(
+            "ERROR",
+            "MapsDialog/findPlaceDetailsMarker",
+            "placeId=$placeId, error=${e.message}"
+        )
+        null
+    }
+}
+
+private fun findGeocoderSuggestions(
+    context: Context,
+    query: String,
+    center: LatLng?
+): List<MapSearchPrediction> {
+    if (!Geocoder.isPresent()) return emptyList()
+
+    try {
+        val geocoder = Geocoder(context.applicationContext, Locale.getDefault())
+        @Suppress("DEPRECATION")
+        val boundedAddresses = center
+            ?.takeIf { it.isUsefulMapSearchPoint() }
+            ?.let { usefulCenter ->
+                val bounds = usefulCenter.toSearchBounds(MAP_SEARCH_BIAS_RADIUS_METERS)
+                geocoder.getFromLocationName(
+                    query,
+                    MAP_SEARCH_MAX_SUGGESTIONS,
+                    bounds.south,
+                    bounds.west,
+                    bounds.north,
+                    bounds.east
+                )
+            }
+
+        @Suppress("DEPRECATION")
+        val addresses = boundedAddresses
+            ?.takeIf { it.isNotEmpty() }
+            ?: geocoder.getFromLocationName(query, MAP_SEARCH_MAX_SUGGESTIONS)
+
+        return addresses
+            .orEmpty()
+            .mapIndexedNotNull { index, address ->
+                val position = LatLng(address.latitude, address.longitude)
+                if (!position.isUsefulMapSearchPoint()) return@mapIndexedNotNull null
+
+                val addressLine = runCatching { address.getAddressLine(0) }.getOrNull()
+                    ?.takeIf { it.isNotBlank() }
+                val title = address.featureName
+                    ?.takeIf { it.isNotBlank() }
+                    ?: address.thoroughfare
+                        ?.takeIf { it.isNotBlank() }
+                    ?: addressLine
+                    ?: query
+                val subtitle = addressLine
+                    ?.takeIf { it.isNotBlank() && it != title }
+                    ?: listOfNotNull(address.locality, address.adminArea, address.countryName)
+                        .filter { it.isNotBlank() && it != title }
+                        .distinct()
+                        .joinToString(", ")
+                        .ifBlank { null }
+
+                MapSearchPrediction(
+                    id = "geocoder_${position.latitude}_${position.longitude}_$index",
+                    title = title,
+                    subtitle = subtitle,
+                    fullText = addressLine ?: title,
+                    position = position
+                )
+            }
+            .distinctBy { "${it.position?.latitude}_${it.position?.longitude}_${it.fullText}" }
+    } catch (e: Throwable) {
+        Globals.writeToMLOG(
+            "ERROR",
+            "MapsDialog/findGeocoderSuggestions",
+            "query=$query, error=${e.message}"
+        )
+        return emptyList()
+    }
+}
+
+private fun currentMapSearchCenter(
+    cameraTarget: LatLng?,
+    mapCenter: LatLng?,
+    userLat: Double?,
+    userLon: Double?
+): LatLng? = when {
+    cameraTarget.isUsefulMapSearchPoint() -> cameraTarget
+    mapCenter.isUsefulMapSearchPoint() -> mapCenter
+    isValidLatLon(userLat, userLon) -> LatLng(userLat!!, userLon!!)
+    else -> null
+}
+
+private fun createAdditionalWorksSearchMarker(
+    position: LatLng,
+    title: String
+): MapSearchMarker =
+    MapSearchMarker(
+        position = position,
+        title = title,
+        subtitle = null,
+        actionText = MAP_SEARCH_AREA_ACTION_TEXT
+    )
+
+private suspend fun findAddressTitleByLatLng(
+    context: Context,
+    position: LatLng
+): String? = withContext(Dispatchers.IO) {
+    if (!Geocoder.isPresent()) return@withContext null
+
+    try {
+        val geocoder = Geocoder(context.applicationContext, Locale.getDefault())
+        @Suppress("DEPRECATION")
+        val address = geocoder
+            .getFromLocation(position.latitude, position.longitude, 1)
+            ?.firstOrNull()
+            ?: return@withContext null
+
+        runCatching { address.getAddressLine(0) }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: listOfNotNull(
+                address.thoroughfare,
+                address.featureName,
+                address.locality,
+                address.countryName
+            )
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString(", ")
+                .ifBlank { null }
+    } catch (e: Throwable) {
+        Globals.writeToMLOG(
+            "ERROR",
+            "MapsDialog/findAddressTitleByLatLng",
+            "lat=${position.latitude}, lon=${position.longitude}, error=${e.message}"
+        )
+        null
+    }
+}
+
+private fun formatMapPoint(position: LatLng): String =
+    String.format(Locale.US, "%.6f, %.6f", position.latitude, position.longitude)
+
+private fun LatLng?.sameLatLng(other: LatLng): Boolean {
+    val point = this ?: return false
+    return kotlin.math.abs(point.latitude - other.latitude) < 0.000001 &&
+            kotlin.math.abs(point.longitude - other.longitude) < 0.000001
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+private data class SearchBounds(
+    val south: Double,
+    val west: Double,
+    val north: Double,
+    val east: Double
+)
+
+private fun LatLng.toSearchBounds(radiusMeters: Double): SearchBounds {
+    val latDelta = radiusMeters / 111_320.0
+    val cosLat = kotlin.math.abs(kotlin.math.cos(Math.toRadians(latitude))).coerceAtLeast(0.01)
+    val lonDelta = radiusMeters / (111_320.0 * cosLat)
+    return SearchBounds(
+        south = (latitude - latDelta).coerceIn(-90.0, 90.0),
+        west = (longitude - lonDelta).coerceIn(-180.0, 180.0),
+        north = (latitude + latDelta).coerceIn(-90.0, 90.0),
+        east = (longitude + lonDelta).coerceIn(-180.0, 180.0)
+    )
+}
+
+private fun LatLng?.isUsefulMapSearchPoint(): Boolean {
+    val point = this ?: return false
+    return point.latitude in -90.0..90.0 &&
+            point.longitude in -180.0..180.0 &&
+            !(point.latitude == 0.0 && point.longitude == 0.0)
+}
+
+private fun mapSearchLanguage(): String =
+    Locale.getDefault().language.takeIf { it.isNotBlank() } ?: "uk"
+
+private fun readGoogleMapsApiKey(context: Context): String? =
+    runCatching {
+        @Suppress("DEPRECATION")
+        context.applicationContext.packageManager
+            .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+            .metaData
+            ?.getString("com.google.android.geo.API_KEY")
+    }.getOrNull()
+        ?.takeIf { it.isNotBlank() }
+
+private fun JsonObject.optString(name: String): String? =
+    get(name)
+        ?.takeIf { !it.isJsonNull }
+        ?.let { runCatching { it.asString }.getOrNull() }
+        ?.takeIf { it.isNotBlank() }
+
+private fun JsonObject.optDouble(name: String): Double? =
+    get(name)
+        ?.takeIf { !it.isJsonNull }
+        ?.let { runCatching { it.asDouble }.getOrNull() }
+
+private fun JsonObject.optObject(name: String): JsonObject? =
+    get(name)
+        ?.takeIf { !it.isJsonNull }
+        ?.asJsonObjectOrNull()
+
+private fun JsonObject.optArray(name: String) =
+    get(name)
+        ?.takeIf { !it.isJsonNull }
+        ?.let { runCatching { it.asJsonArray.toList() }.getOrDefault(emptyList()) }
+        ?: emptyList()
+
+private fun com.google.gson.JsonElement.asJsonObjectOrNull(): JsonObject? =
+    runCatching { asJsonObject }.getOrNull()
+
 
 @Composable
 fun ImageButton(
@@ -817,5 +1296,3 @@ fun ImageButton(
         )
     }
 }
-
-

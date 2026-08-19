@@ -60,6 +60,31 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
+object AdditionalWorksMapSearchLocationHolder {
+    data class Point(val latitude: Double, val longitude: Double)
+
+    @Volatile
+    private var point: Point? = null
+
+    fun set(latitude: Double, longitude: Double) {
+        point = if (
+            latitude in -90.0..90.0 &&
+            longitude in -180.0..180.0 &&
+            !(latitude == 0.0 && longitude == 0.0)
+        ) {
+            Point(latitude, longitude)
+        } else {
+            null
+        }
+    }
+
+    fun get(): Point? = point
+
+    fun clear() {
+        point = null
+    }
+}
+
 @HiltViewModel
 class WpDataDBViewModel @Inject constructor(
     application: Application,
@@ -118,6 +143,7 @@ class WpDataDBViewModel @Inject constructor(
         when (contextUI) {
             ContextUI.WP_DATA_IN_CONTAINER,
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER,
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT,
                 -> {
 
 
@@ -489,36 +515,60 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> = withContext(Dispatchers.Default) {
-        Log.e("!!!!!!TEST!!!!!!", "getItems: start")
-        Log.e("&&&&&&&&&&&&&&&", contextUI.name)
+
         val raw: List<WpDataDB> = when (contextUI) {
 
 
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER -> {
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER,
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> {
                 val data = RealmManager.getAllWorkPlanForRNO_LIST()
 
-                for (wp in data) {
-                    Log.e("@@@@@@@@@@@@@@@@@@@@@@@@@", "date: ${wp.dt}")
-                }
+
                 Globals.writeToMLOG(
                     "INFO",
                     "WpDataDBViewModel.getItems",
-                    "ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER"
+                    "contextUI=${contextUI.name}, source=RNO"
                 )
-                var location: Location? = null
-                if (trecker.imHereGPS != null) {
-                    location = trecker.imHereGPS
-                } else if (trecker.imHereNET != null) {
-                    location = trecker.imHereNET
-                } else if (context != null) {
-                    val client = LocationServices.getFusedLocationProviderClient(context!!)
-                    val last = runCatching { client.lastLocation.await() }.getOrNull()
-                    location = last
+
+                val selectedMapPoint = AdditionalWorksMapSearchLocationHolder.get()
+                var location: Location? = selectedMapPoint?.let { point ->
+                    Location("additional_works_map_search").apply {
+                        latitude = point.latitude
+                        longitude = point.longitude
+                    }
                 }
-                if (location != null)
+                var locationSource = if (location != null) "map_search" else ""
+
+                if (location == null) {
+                    if (trecker.imHereGPS != null) {
+                        location = trecker.imHereGPS
+                        locationSource = "gps"
+                    } else if (trecker.imHereNET != null) {
+                        location = trecker.imHereNET
+                        locationSource = "net"
+                    } else if (context != null) {
+                        val client = LocationServices.getFusedLocationProviderClient(context!!)
+                        val last = runCatching { client.lastLocation.await() }.getOrNull()
+                        location = last
+                        locationSource = if (last != null) "fused_last" else "none"
+                    } else {
+                        locationSource = "none"
+                    }
+                }
+
+                val filtered = if (location != null) {
                     filterByDistance(location, data, offsetDistanceMeters.value)
-                else
+                } else {
                     data
+                }
+
+                Globals.writeToMLOG(
+                    "INFO",
+                    "WpDataDBViewModel.getItems/filterByDistance",
+                    "contextUI=${contextUI.name}, source=$locationSource, lat=${location?.latitude}, lon=${location?.longitude}, radius=${offsetDistanceMeters.value}, before=${data.size}, after=${filtered.size}"
+                )
+
+                filtered
 
             }
 
