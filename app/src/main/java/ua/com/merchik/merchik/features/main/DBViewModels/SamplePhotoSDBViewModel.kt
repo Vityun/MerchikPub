@@ -183,6 +183,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> 50
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_GENERIC -> dataJsonInt("photoType")
             else -> dataJsonInt("photoType")
         }

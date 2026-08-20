@@ -734,12 +734,11 @@ public class TablesLoadingUnloading {
                                     && !response.body().getList().isEmpty()) {
                                 List<WpDataDB> wpDataDBList = response.body().getList();
                                 List<WpDataDB> wpDataDBListRNO = new ArrayList<>();
-                                Log.e("!!!!!!!!!!wpdata","size: " + wpDataDBList.size());
-                                for (WpDataDB wpDataDB : wpDataDBList) {
-                                    if (wpDataDB.getUser_id() == 14041) {
-                                        Log.e("!!!!!!!!!!wpdata", "wpdata: " + wpDataDB.getAddr_id());
-                                    }
-                                }
+//                                for (WpDataDB wpDataDB : wpDataDBList) {
+//                                    if (wpDataDB.getUser_id() == 14041) {
+//                                        Log.e("!!!!!!!!!!wpdata", "wpdata: " + wpDataDB.getAddr_id());
+//                                    }
+//                                }
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;

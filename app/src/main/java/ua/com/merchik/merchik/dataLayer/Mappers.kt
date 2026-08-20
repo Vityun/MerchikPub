@@ -500,7 +500,8 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_164355,    // Фото планограмы (5)
     SAMPLE_PHOTO_FROM_OPTION_169108,    // фото POS материалов (47) +
     SAMPLE_PHOTO_FROM_OPTION_172100,    // Фото вітрини з акційними цінниками (48)
-    SAMPLE_PHOTO_FROM_OPTION_174213,     // Фото вітрини конкурентов (49)
+    SAMPLE_PHOTO_FROM_OPTION_174213,    // Фото вітрини конкурентов (49)
+    SAMPLE_PHOTO_FROM_OPTION_174878,    // фото товаров СИСГ (с истекающим/истекшим сроком годности) (50)
     SAMPLE_PHOTO_FROM_OPTION_GENERIC,
     ERROR_FROM_TEXT_EDITOR,
     AKCIYA_FROM_TEXT_EDITOR,

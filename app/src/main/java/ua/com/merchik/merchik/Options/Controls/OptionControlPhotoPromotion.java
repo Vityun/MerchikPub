@@ -1,8 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
-import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_ACTION_SHOWCASE;
-import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 
 import android.app.Activity;
 import android.content.Context;

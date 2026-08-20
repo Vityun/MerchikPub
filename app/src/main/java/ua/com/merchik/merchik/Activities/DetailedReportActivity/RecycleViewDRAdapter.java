@@ -63,6 +63,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.realm.RealmResults;
@@ -77,6 +78,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
@@ -338,7 +340,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 151122   // Жилетка: жалобы на условия работ
                         || optionId == 174213
                         || optionId == 174546   // кнопка пауза
-                        || optionId == 174878
+                        || optionId == 174878   // фото товаров СИСГ (с истекающим/истекшим сроком годности)
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -609,17 +611,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case (157277):  // Вставляем количество выполненных Фото Акционного Товара
-//                            textInteger.setText(
-//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
-//                                    TextView.BufferType.SPANNABLE
-//                            );
 
-//                            textInteger.setOnClickListener(view -> {
-//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-//                                intent.putExtra("report_prepare", true);
-//                                intent.putExtra("dad2", dad2);
-//                                view.getContext().startActivity(intent);
-//                            });
                             SpannableString spannableString157277 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28));
                             spannableString157277.setSpan(new UnderlineSpan(), 0, spannableString157277.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -654,6 +646,33 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 intent.putExtra("dad2", dad2);
                                 view.getContext().startActivity(intent);
                             });
+                            break;
+
+                        case (174878):
+                            int photoCount174878 = RealmManager.stackPhotoShowcasePhotoCount(dad2, StackPhotoDB.PHOTO_EXPIRATION_DATE);
+                            int requiredPhotoCount174878 = dataDB instanceof WpDataDB
+                                    ? OptionControlPhotoExpirationDate.getRequiredExpirationDatePhotoCount((WpDataDB) dataDB, optionsButtons)
+                                    : 0;
+                            SpannableString spannableString174878 = setPhotoCountsMakeAndMust(optionsButtons, photoCount174878, requiredPhotoCount174878);
+                            spannableString174878.setSpan(new UnderlineSpan(), 0, spannableString174878.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString174878);
+
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " +
+                                        "Фото товаров СИСГ (с истекающим/истекшим сроком годности)");
+//                                        Objects.requireNonNullElse(ImagesTypeListRealm.getByID(50).getNm(),"# Фото товаров СИСГ (с истекающим/истекшим сроком годности)"));
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
                             break;
 
                         case (174546):
@@ -2212,6 +2231,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
      * Отображение кол-ва фоток которые были сделаны и нужно сделать по каждому типу фото.
      */
     private SpannableString setPhotoCountsMakeAndMust(OptionsDB option, int dataBaseCount) {
+        return setPhotoCountsMakeAndMust(option, dataBaseCount, null);
+    }
+
+    private SpannableString setPhotoCountsMakeAndMust(OptionsDB option, int dataBaseCount, Integer exactRequiredCount) {
         SpannableString res = new SpannableString("");
         String data = "";
 
@@ -2222,8 +2245,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId()
                 + " | code_dad2: " + option.getCodeDad2());
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
-        String min = option.getAmountMin();
-        if (min.equals("0")) {
+        String min = exactRequiredCount != null ? String.valueOf(Math.max(0, exactRequiredCount)) : option.getAmountMin();
+        if (min == null || min.trim().isEmpty()) {
+            min = "0";
+        }
+        if (exactRequiredCount == null && min.equals("0")) {
             min = "3";
 
             if (option.getOptionId().equals("151139")
@@ -2300,14 +2326,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
         int maxPhotos = Integer.parseInt(min);
-        if (option.getOptionId().equals("135158") || option.getOptionId().equals("141360") || option.getOptionId().equals("132969") ||
+        if (exactRequiredCount != null)
+            maxPhotos = Math.max(0, exactRequiredCount);
+        else if (option.getOptionId().equals("135158") || option.getOptionId().equals("141360") || option.getOptionId().equals("132969") ||
                 (dataDB != null && dataDB instanceof WpDataDB && ((WpDataDB) dataDB).getSku() < 5))
             maxPhotos = maxPhotos;
         else
             maxPhotos = maxPhotos + 1;
 
 
-        if (option.getOptionId().equals("158308"))
+        if (exactRequiredCount == null && option.getOptionId().equals("158308"))
             maxPhotos = maxPhotos + 1;
 
 

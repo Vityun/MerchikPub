@@ -12,6 +12,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -48,9 +49,10 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 Контроль наличия фото товаров СИСГ (с истекающим/истекшим сроком годности).
  */
 public class OptionControlPhotoExpirationDate<T> extends OptionControl {
-    public int OPTION_CONTROL_EXPIRATION_DATE_ID = 174877;
+    public static final int OPTION_CONTROL_EXPIRATION_DATE_ID = 174877;
 
-    private static final int DEFAULT_EXPIRATION_DAYS = 30;
+    public static final int DEFAULT_EXPIRATION_DAYS = 30;
+    private static final String LOG_TAG = "ExpirationDate";
 
     private WpDataDB wp;
     private String documentDate, clientId, optionId;
@@ -101,7 +103,6 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         long dad2ForGetStackPhotoDB = dad2;
-        int photoType = PHOTO_EXPIRATION_DATE;
         int colMax = getExpirationDaysLimit();
         Date planDay = startOfDay(wp.getDt());
         Date expirationLimitDate = addDays(planDay, colMax);
@@ -142,10 +143,25 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = selectReportPrepareByTovarAndExpire(reportPrepareRaw);
 
         // 5.0
-        List<StackPhotoDB> stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, photoType);
+        List<StackPhotoDB> stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, PHOTO_EXPIRATION_DATE);
         if (stackPhotoDBS == null) {
             stackPhotoDBS = new ArrayList<>();
         }
+
+        logSummary(
+                "start",
+                "dad2=" + dad2
+                        + ", optionId=" + safeOptionValue(optionDB != null ? optionDB.getOptionId() : null)
+                        + ", optionControlId=" + safeOptionValue(optionDB != null ? optionDB.getOptionControlId() : null)
+                        + ", wpDate=" + formatDate(planDay)
+                        + ", expirationLimit=" + formatDate(expirationLimitDate)
+                        + ", days=" + colMax
+                        + ", reportRaw=" + reportPrepareRaw.size()
+                        + ", reportSelected=" + reportPrepare.size()
+                        + ", osvCount=" + spisTovOSV.size()
+                        + ", osvPreview=" + previewIds(spisTovOSV)
+                        + ", photoType50=" + stackPhotoDBS.size()
+        );
 
         // 6.0
         // Тут должна формироваться более подробная информация о том с какими Товарами есть проблема
@@ -154,30 +170,14 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
             if (item == null) continue;
 
             // 6.1
-            int OSV = 0;
-            if (spisTovOSV.contains(item.getTovarId())) {
-                OSV = 1;
-            }
-
-            // 6.2
-            Date dtExpire = parseExpireDate(item.getDtExpire());
-            int colSKU = parseIntSafe(item.face) > 0 ? 1 : 0;
-
-            if (dtExpire == null) {
-                continue;
-            } else if (colSKU == 0) {
-                continue;
-            } else if (!dtExpire.before(expirationLimitDate)) {
-                continue;
-            }
-
-            if (!spisTovOSV.isEmpty() && OSV == 0) {
-                continue;
-            }
+            ExpirationRequirementCheck requirementCheck = checkExpirationDatePhotoRequired(item, spisTovOSV, expirationLimitDate);
+            logItemDecision(item, requirementCheck, planDay, expirationLimitDate);
+            if (!requirementCheck.required) continue;
 
             totalTovSISG++;
 
             // 6.3
+            Date dtExpire = requirementCheck.dtExpire;
             StackPhotoDB currentTovPhoto = findPhotoByTovar(stackPhotoDBS, item.getTovarId());
             if (currentTovPhoto != null) {
                 totalPhoto++;
@@ -252,10 +252,50 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         if (signalInt == 1) {
             setIsBlockOption(true);
         }
+        logSummary(
+                "result",
+                "dad2=" + dad2
+                        + ", totalRequired=" + totalTovSISG
+                        + ", totalPhoto=" + totalPhoto
+                        + ", missing=" + err
+                        + ", signal=" + signal
+                        + ", signalInt=" + signalInt
+        );
         checkUnlockCode(optionDB);
     }
 
+    public static int getRequiredExpirationDatePhotoCount(WpDataDB wpDataDB, OptionsDB optionDB) {
+        try {
+            if (wpDataDB == null || wpDataDB.getDt() == null) return 0;
+
+            int colMax = getExpirationDaysLimit(optionDB);
+            Date expirationLimitDate = addDays(startOfDay(wpDataDB.getDt()), colMax);
+            List<String> spisTovOSV = getAdditionalRequirementTovarIds(wpDataDB, optionDB);
+
+            List<ReportPrepareDB> reportPrepareRaw = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
+            if (reportPrepareRaw == null) {
+                reportPrepareRaw = new ArrayList<>();
+            }
+
+            int count = 0;
+            for (ReportPrepareDB item : selectReportPrepareByTovarAndExpire(reportPrepareRaw)) {
+                if (isExpirationDatePhotoRequired(item, spisTovOSV, expirationLimitDate)) {
+                    count++;
+                }
+            }
+
+            return count;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlPhotoExpirationDate/getRequiredExpirationDatePhotoCount", "Exception e: " + e);
+            return 0;
+        }
+    }
+
     private int resolveOptionForAdditionalRequirements() {
+        return resolveOptionForAdditionalRequirements(optionDB);
+    }
+
+    private static int resolveOptionForAdditionalRequirements(OptionsDB optionDB) {
         int option = parseIntSafe(optionDB != null ? optionDB.getOptionId() : null);
         if (option > 0) {
             return option;
@@ -265,7 +305,69 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return optionControl > 0 ? optionControl : OPTION_CONTROL_EXPIRATION_DATE_ID;
     }
 
-    private List<ReportPrepareDB> selectReportPrepareByTovarAndExpire(List<ReportPrepareDB> reportPrepare) {
+    private static List<String> getAdditionalRequirementTovarIds(WpDataDB wpDataDB, OptionsDB optionDB) {
+        List<String> result = new ArrayList<>();
+        if (wpDataDB == null || wpDataDB.getDt() == null) return result;
+
+        int optionId = resolveOptionForAdditionalRequirements(optionDB);
+        List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(
+                wpDataDB,
+                true,
+                optionId,
+                null,
+                wpDataDB.getDt(),
+                wpDataDB.getDt(),
+                null,
+                null,
+                null,
+                null
+        );
+
+        if (additionalRequirements != null) {
+            for (AdditionalRequirementsDB item : additionalRequirements) {
+                if (item != null) {
+                    addUniqueTovarId(result, item.getTovarId());
+                }
+            }
+            result.sort(null);
+        }
+
+        return result;
+    }
+
+    private static boolean isExpirationDatePhotoRequired(ReportPrepareDB item, List<String> spisTovOSV, Date expirationLimitDate) {
+        return checkExpirationDatePhotoRequired(item, spisTovOSV, expirationLimitDate).required;
+    }
+
+    private static ExpirationRequirementCheck checkExpirationDatePhotoRequired(ReportPrepareDB item, List<String> spisTovOSV, Date expirationLimitDate) {
+        ExpirationRequirementCheck result = new ExpirationRequirementCheck();
+        if (item == null) {
+            result.reason = "skip_item_null";
+            return result;
+        }
+
+        result.dtExpire = parseExpireDate(item.getDtExpire());
+        result.face = parseIntSafe(item.face);
+        result.hasOsvFilter = spisTovOSV != null && !spisTovOSV.isEmpty();
+        result.inOsv = !result.hasOsvFilter || spisTovOSV.contains(item.getTovarId());
+
+        if (result.dtExpire == null) {
+            result.reason = "skip_empty_or_bad_expire_date";
+        } else if (result.face <= 0) {
+            result.reason = "skip_face_zero";
+        } else if (!result.dtExpire.before(expirationLimitDate)) {
+            result.reason = "skip_out_of_period";
+        } else if (!result.inOsv) {
+            result.reason = "skip_not_in_osv";
+        } else {
+            result.required = true;
+            result.reason = "required";
+        }
+
+        return result;
+    }
+
+    private static List<ReportPrepareDB> selectReportPrepareByTovarAndExpire(List<ReportPrepareDB> reportPrepare) {
         Map<String, ReportPrepareDB> map = new LinkedHashMap<>();
 
         for (ReportPrepareDB item : reportPrepare) {
@@ -281,7 +383,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return new ArrayList<>(map.values());
     }
 
-    private boolean shouldReplaceReportPrepare(ReportPrepareDB current, ReportPrepareDB candidate) {
+    private static boolean shouldReplaceReportPrepare(ReportPrepareDB current, ReportPrepareDB candidate) {
         int currentScore = getReportPrepareScore(current);
         int candidateScore = getReportPrepareScore(candidate);
 
@@ -300,7 +402,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return candidateId > currentId;
     }
 
-    private int getReportPrepareScore(ReportPrepareDB item) {
+    private static int getReportPrepareScore(ReportPrepareDB item) {
         if (item == null) return 0;
 
         int score = 0;
@@ -311,7 +413,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return score;
     }
 
-    private void addUniqueTovarId(List<String> tovIds, String tovarId) {
+    private static void addUniqueTovarId(List<String> tovIds, String tovarId) {
         if (tovIds == null || isEmpty(tovarId) || "0".equals(tovarId) || tovIds.contains(tovarId)) return;
         tovIds.add(tovarId);
     }
@@ -328,11 +430,15 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
     }
 
     private int getExpirationDaysLimit() {
+        return getExpirationDaysLimit(optionDB);
+    }
+
+    private static int getExpirationDaysLimit(OptionsDB optionDB) {
         int amountMax = parseIntSafe(optionDB != null ? optionDB.getAmountMax() : null);
         return amountMax > 0 ? amountMax : DEFAULT_EXPIRATION_DAYS;
     }
 
-    private int parseIntSafe(String value) {
+    private static int parseIntSafe(String value) {
         if (isEmpty(value)) return 0;
         String normalizedValue = value.trim().replace(',', '.');
 
@@ -349,7 +455,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         }
     }
 
-    private Date parseExpireDate(String value) {
+    private static Date parseExpireDate(String value) {
         if (isEmpty(value) || "0000-00-00".equals(value.trim())) {
             return null;
         }
@@ -372,7 +478,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return null;
     }
 
-    private Date startOfDay(Date date) {
+    private static Date startOfDay(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -382,14 +488,14 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return calendar.getTime();
     }
 
-    private Date addDays(Date date, int days) {
+    private static Date addDays(Date date, int days) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.DAY_OF_YEAR, days);
         return calendar.getTime();
     }
 
-    private String normalizeDateKey(String rawValue) {
+    private static String normalizeDateKey(String rawValue) {
         Date expireDate = parseExpireDate(rawValue);
         if (expireDate == null) {
             return isEmpty(rawValue) ? "" : rawValue.trim();
@@ -398,8 +504,56 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(expireDate);
     }
 
-    private boolean isEmpty(String value) {
+    private static boolean isEmpty(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private static void logSummary(String stage, String message) {
+        String fullMessage = stage + ": " + message;
+        Log.e(LOG_TAG, fullMessage);
+        Globals.writeToMLOG("INFO", "OptionControlPhotoExpirationDate/" + stage, message);
+    }
+
+    private static void logItemDecision(ReportPrepareDB item, ExpirationRequirementCheck check, Date planDay, Date expirationLimitDate) {
+        if (item == null || check == null) return;
+
+        Log.e(LOG_TAG, "item: tovarId=" + item.getTovarId()
+                + ", faceRaw=" + safeOptionValue(item.face)
+                + ", face=" + check.face
+                + ", dtExpireRaw=" + safeOptionValue(item.getDtExpire())
+                + ", dtExpire=" + formatDate(check.dtExpire)
+                + ", wpDate=" + formatDate(planDay)
+                + ", expirationLimit=" + formatDate(expirationLimitDate)
+                + ", hasOsvFilter=" + check.hasOsvFilter
+                + ", inOsv=" + check.inOsv
+                + ", required=" + check.required
+                + ", reason=" + check.reason);
+    }
+
+    private static String formatDate(Date date) {
+        if (date == null) return "null";
+        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
+    }
+
+    private static String previewIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) return "[]";
+
+        int limit = Math.min(ids.size(), 10);
+        List<String> preview = ids.subList(0, limit);
+        return preview + (ids.size() > limit ? "...+" + (ids.size() - limit) : "");
+    }
+
+    private static String safeOptionValue(String value) {
+        return value == null ? "null" : value;
+    }
+
+    private static class ExpirationRequirementCheck {
+        boolean required = false;
+        Date dtExpire = null;
+        int face = 0;
+        boolean hasOsvFilter = false;
+        boolean inOsv = false;
+        String reason = "unknown";
     }
 
     /**

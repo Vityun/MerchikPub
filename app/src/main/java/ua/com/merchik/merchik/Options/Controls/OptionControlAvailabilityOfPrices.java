@@ -6,6 +6,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 import io.realm.RealmResults;
@@ -26,6 +27,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,8 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.*;
+
+import com.google.gson.Gson;
 
 
 /**
@@ -100,12 +104,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
         // Получение Доп. Требований с дополнительными фильтрами.
-        List<AdditionalRequirementsDB> additionalRequirements;
+        List<AdditionalRequirementsDB> additionalRequirements = Collections.emptyList();
         String[] tovIds;
         if (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579")) {
             additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
             tovIds = new String[additionalRequirements.size()];
-
             for (int i = 0; i < additionalRequirements.size(); i++) {
                 tovIds[i] = additionalRequirements.get(i).getTovarId();
             }
@@ -125,6 +128,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
         for (ReportPrepareDB item : reportPrepare) {
             boolean isOSV = Arrays.asList(tovIds).contains(item.getTovarId());
+
+            if (!isOSV) continue;
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
             if (tov != null) {
@@ -151,9 +156,10 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     continue;
                 }
 
-                if (isOSV) {
-                    totalOSV++;
-                }
+//                if (isOSV) {
+//                    totalOSV++;
+//                    Log.e("AvailabilityOfPrices", "");
+//                }
 
                 // Проверяем наличие цены
                 boolean hasPrice = false;
@@ -165,6 +171,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
                 if (isOSV && !hasPrice) {
                     // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
+                    totalOSV++;
                     err++;
                     missingPriceCount++;
                     errMsg.append(createLinkedString(msg, item, tov)).append("\n");

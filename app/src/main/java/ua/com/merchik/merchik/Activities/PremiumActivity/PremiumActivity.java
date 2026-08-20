@@ -35,6 +35,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -347,14 +349,16 @@ public class PremiumActivity extends toolbar_menus {
 
             @Override
             public void onFailure(String err) {
-                if (loadingDialog.isShowing())
-                    progress.onCanceled();
+//                if (loadingDialog.isShowing())
+//                    progress.onCanceled();
 
-                DialogData dialog = new DialogData(PremiumActivity.this);
-                dialog.setTitle("Помилка!");
-                dialog.setText(err);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+//                DialogData dialog = new DialogData(PremiumActivity.this);
+//                dialog.setTitle("Помилка!");
+//                dialog.setText(err);
+//                dialog.setClose(dialog::dismiss);
+//                dialog.show();
+                makeTableDataSecondWeek();
+
             }
         });
     }
@@ -405,16 +409,17 @@ public class PremiumActivity extends toolbar_menus {
 
             @Override
             public void onFailure(String err) {
-                if (loadingDialog.isShowing())
-                    progress.onCanceled();
+//                if (loadingDialog.isShowing())
+//                    progress.onCanceled();
 //                if (progressDialog.isShowing()) {
 //                    progressDialog.dismiss();
 //                }
-                DialogData dialog = new DialogData(PremiumActivity.this);
-                dialog.setTitle("Помилка!");
-                dialog.setText(err);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+//                DialogData dialog = new DialogData(PremiumActivity.this);
+//                dialog.setTitle("Помилка!");
+//                dialog.setText(err);
+//                dialog.setClose(dialog::dismiss);
+//                dialog.show();
+                makeTableDataFirstWeek();
             }
         });
     }
@@ -433,11 +438,19 @@ public class PremiumActivity extends toolbar_menus {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(jsonObject ->{
+                    Log.e("RESULT", ">> " + jsonObject);
+                }, throwable -> {
+                    Log.e("Error","error: " +throwable.getMessage());
+                });
+
         retrofit2.Call<PremiumPremium> call = RetrofitBuilder.getRetrofitInterface().GET_PREMIUM_PREMIUM(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PremiumPremium>() {
             @Override
             public void onResponse(Call<PremiumPremium> call, Response<PremiumPremium> response) {
-                Log.e("test", "onResponse: " + response);
                 if (response.isSuccessful()) {
                     if (response.body() != null && response.body().state) {
                         if (response.body().list.state) {
