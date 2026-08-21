@@ -180,6 +180,23 @@ class ShowcaseDBViewModel @Inject constructor(
     override fun getItemsFooter(): List<DataItemUI> {
         return when (contextUI) {
             ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
+                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                val codeDad2 = dataJsonObject["wpDataDBId"].asString.toLong()
+                val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
+                    RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+                ) ?: return emptyList()
+
+                val showcaseTypes = listOf(0, 1, 2)
+
+                val showcaseDataList = RoomManager.SQL_DB
+                    .showcaseDao()
+                    .getByDocTP(
+                        wpDataDB.client_id,
+                        wpDataDB.addr_id,
+                        showcaseTypes
+                    )
+                if (showcaseDataList.isNotEmpty()) return emptyList()
+
                 val data = StackPhotoDB::class.java.newInstance()
                 data.comment = "Це досягнення не відноситься до жодної з пропозицій замовника"
                 data.id = -999

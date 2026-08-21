@@ -284,6 +284,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val mapsPulse = rememberPulseController()
     var mapsBtnRect by remember { mutableStateOf<Rect?>(null) }
 
+    LaunchedEffect(viewModel.openMapsOnStart, mapsBtnRect, uiState.lastUpdate) {
+        if (viewModel.openMapsOnStart && mapsBtnRect != null && uiState.lastUpdate != 0L) {
+            delay(80)
+            showMapsDialog = true
+            viewModel.openMapsOnStart = false
+        }
+    }
+
 //    var showMessageDialog by remember { mutableStateOf<MessageDialogData?>(null) }
 
     var showEmptyDataDialogLocal by remember { mutableStateOf(false) }
@@ -2222,7 +2230,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         visible = showMapsDialog,
         anchorRect = mapsBtnRect,
         onDismissRequest = { showMapsDialog = false },
-        onClosed = { mapsPulse.pulse() }
+        onClosed = {
+            mapsPulse.pulse()
+            if (viewModel.finishOnMapsDismiss) {
+                viewModel.finishOnMapsDismiss = false
+                (context as? Activity)?.finish()
+            }
+        }
     ) { requestClose ->
         // биндим текущий requestClose
         DisposableEffect(requestClose) {

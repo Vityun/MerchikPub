@@ -140,7 +140,7 @@ fun StoresMap(
         badgeIconRes = R.drawable.ic_store,
         badgeBg = android.graphics.Color.LTGRAY,
         badgeBorder = android.graphics.Color.DKGRAY,
-        pinTint = ContextCompat.getColor(context, R.color.selected_item)
+        pinTint = ContextCompat.getColor(context, R.color.colorInetGreen)
     )
 
     val searchIcon = rememberBadgePinCache(

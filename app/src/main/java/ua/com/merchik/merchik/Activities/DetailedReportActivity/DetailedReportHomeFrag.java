@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -93,6 +95,7 @@ public class DetailedReportHomeFrag extends Fragment {
     private ComposeView composeView;
     private ComposeView composeMap;
     private static CommentViewModel viewModel;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public DetailedReportHomeFrag() {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
@@ -156,6 +159,7 @@ public class DetailedReportHomeFrag extends Fragment {
 
     @Override
     public void onDestroyView() {
+        mainHandler.removeCallbacksAndMessages(null);
         super.onDestroyView();
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onDestroyView");
     }
@@ -223,10 +227,13 @@ public class DetailedReportHomeFrag extends Fragment {
                     textDRCustV.setText(wpDataDB.getClient_txt());
                     textDRMercV.setText(wpDataDB.getUser_txt());
 
+                    option_signal_layout2.removeAllViews();
                     option_signal_layout2.addView(ll);
 
-                    recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
-                    recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+                    if (recycler.getLayoutManager() == null) {
+                        recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+                    }
+                    recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB, calculateTotalPenaltyString(wpDataDB, false))));
 
                     try {
                         spotLat = Float.parseFloat(wpDataDB.getAddr_location_xd());
@@ -261,6 +268,7 @@ public class DetailedReportHomeFrag extends Fragment {
                     setTransleted();
                     ComposeFunctions.setContentOpinion(composeView, wpDataDB, viewModel);
                     StoresMapFromMapsHostKt.attachStoresMapFromMaps(composeMap, wpDataDB);
+                    refreshPenaltyAfterFirstRender(wpDataDB);
 
 
                     fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
@@ -284,11 +292,42 @@ public class DetailedReportHomeFrag extends Fragment {
 
 
     /*Заполнение данных над картой*/
-    private List<KeyValueData> createKeyValueData(WpDataDB wpDataDB) {
+    private List<KeyValueData> createKeyValueData(WpDataDB wpDataDB, String totalPenaltyString) {
         List<KeyValueData> result = new ArrayList<>();
-        String totalPenaltyString = "0.00";
-        if (wpDataDB.getClient_start_dt() > 10000) {
-            List<OptionsDB> optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
+
+        result.add(themeData(wpDataDB));
+        result.add(statusData(wpDataDB));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + totalPenaltyString + "</u></font>" + " грн."), this::openOptionsUFMD));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
+                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
+
+        return result;
+    }
+
+    private void refreshPenaltyAfterFirstRender(WpDataDB sourceWpDataDB) {
+        long sourceDad2 = sourceWpDataDB.getCode_dad2();
+        mainHandler.removeCallbacksAndMessages(null);
+        mainHandler.postDelayed(() -> {
+            if (!isAdded() || recycler == null || wpDataDB == null || wpDataDB.getCode_dad2() != sourceDad2) {
+                return;
+            }
+
+            String totalPenaltyString = calculateTotalPenaltyString(wpDataDB, true);
+            recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB, totalPenaltyString)));
+        }, 350);
+    }
+
+    private String calculateTotalPenaltyString(WpDataDB wpDataDB, boolean refreshOptionControls) {
+        if (wpDataDB == null || wpDataDB.getClient_start_dt() <= 10000) {
+            return "0.00";
+        }
+
+        List<OptionsDB> optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
+        if (refreshOptionControls) {
             for (OptionsDB optionsDB : optionsDBList) {
                 new Options().optionControl(getContext(), wpDataDB, optionsDB, null, Options.NNKMode.NULL_AND_COLLUM_A_B, new OptionControl.UnlockCodeResultListener() {
                     @Override
@@ -303,34 +342,22 @@ public class DetailedReportHomeFrag extends Fragment {
                 });
             }
             optionsDBList = RealmManager.getOptionsByDad2(wpDataDB.getCode_dad2());
-            BigDecimal totalPenalty = optionsDBList.stream()
-                    .map(OptionsDB::getSumPenalty)
-                    .filter(value -> value != null && !value.trim().isEmpty())
-                    .map(value -> {
-                        try {
-                            return new BigDecimal(value.replace(",", "."));
-                        } catch (NumberFormatException e) {
-                            return BigDecimal.ZERO;
-                        }
-                    })
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            totalPenaltyString = totalPenalty.toPlainString();
-
         }
 
-        result.add(themeData(wpDataDB));
-        result.add(statusData(wpDataDB));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + totalPenaltyString + "</u></font>" + " грн."), this::openOptionsUFMD));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
-                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
+        BigDecimal totalPenalty = optionsDBList.stream()
+                .map(OptionsDB::getSumPenalty)
+                .filter(value -> value != null && !value.trim().isEmpty())
+                .map(value -> {
+                    try {
+                        return new BigDecimal(value.replace(",", "."));
+                    } catch (NumberFormatException e) {
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
 
-        return result;
+        return totalPenalty.toPlainString();
     }
 
     /*Заполнение строки: Тема*/

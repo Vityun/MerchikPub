@@ -32,6 +32,8 @@ import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -505,6 +507,8 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                     dialogAchievement.setAchievement(data);
                     dialogAchievement.setOk("Створити ДІНДОС", ()->{
                         try {
+                            Log.e("!!!!!updateFilters!!!!!!", "0 wpDataDB: " +new Gson().toJson(data));
+
                             DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(mContext);
                             dialogCreateAchievement.setData(data);
                             dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);

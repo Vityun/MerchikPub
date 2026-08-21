@@ -5,6 +5,9 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity
 // ComposeHosts.kt
 
 
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -13,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.colorResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,12 +27,16 @@ import io.realm.Realm
 import io.realm.Sort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.maps.domain.StoreCenter
 import ua.com.merchik.merchik.features.maps.domain.StorePoint
@@ -36,7 +44,6 @@ import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.presentation.MainMapActionsBridge
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
-import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import ua.com.merchik.merchik.features.maps.presentation.main.StoresMap
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
@@ -46,20 +53,20 @@ import java.util.Date
 import java.util.Locale
 
 private const val LOG_MP_VALID_TIME_SEC = 1_800L
-private const val MAX_LOG_MP_MAP_POINTS = 2_000
+private const val MAX_LOG_MP_MAP_POINTS = 500
 
 @Composable
 private fun StoresMapFromMapsHost(wpData: WpDataDB) {
     val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
-    mainVm.dataJson = Gson().toJson(wpData)
+    val context = LocalContext.current
+    val wpDataJson = remember(wpData) { Gson().toJson(wpData) }
+    mainVm.dataJson = wpDataJson
     val mapVm: MapFromMapsViewModel = hiltViewModel()
 
     val camera = rememberCameraPositionState()
 
     val highlightColor = colorResource(id = R.color.selected_item)
     val contextUI = mainVm.contextUI
-
-    var showMapsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(mapVm, mainVm, highlightColor, contextUI) {
         mapVm.attachBridge(
@@ -117,28 +124,13 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            showMapsDialog = true
-                        },
-                        onPress = {
-                            showMapsDialog = true
-                        }
-                    )
+                .pointerInput(wpDataJson) {
+                    detectTapGestures {
+                        openLogMpMap(context, wpData, wpDataJson)
+                    }
                 }
         )
     }
-
-//    if (showMapsDialog) {
-//        MapsDialog(
-//            mainViewModel = mainVm,
-//            onDismiss = { showMapsDialog = false },
-//            onOpenContextMenu = { wp, ctxUI, _ ->
-//                mainVm.openContextMenu(wp, ctxUI)
-//            }
-//        )
-//    }
 }
 
 private data class LogMpMapInput(
@@ -254,13 +246,36 @@ private fun formatDistance(distance: Int): String =
         "$distance m"
     }
 
+private fun openLogMpMap(context: Context, wpData: WpDataDB, wpDataJson: String) {
+    val intent = Intent(context, FeaturesActivity::class.java)
+    val bundle = Bundle().apply {
+        putString("viewModel", LogMPDBViewModel::class.java.canonicalName)
+        putString("dataJson", wpDataJson)
+        putString("contextUI", ContextUI.DEFAULT.name)
+        putString("modeUI", ModeUI.DEFAULT.name)
+        putString("title", "Історія місцеположення")
+        putString("subTitle", buildLogMpFeatureSubtitle(wpData))
+        putBoolean("openMapsOnStart", true)
+        putBoolean("finishOnMapsDismiss", true)
+    }
+    intent.putExtras(bundle)
+    context.startActivity(intent)
+}
+
+private fun buildLogMpFeatureSubtitle(wpData: WpDataDB): String {
+    val request = buildLogMpMapRequest(wpData)
+    val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+    val address = wpData.addr_txt?.takeIf { it.isNotBlank() }.orEmpty()
+    return "Дані розташування по ТТ: $address за період з " +
+            "${formatter.format(Date(request.startMillis))} по ${formatter.format(Date(request.endMillis))}"
+}
+
 /** Расширение для удобного вызова из Java. */
 @JvmOverloads
 fun attachStoresMapFromMaps(
     composeView: ComposeView,
     wpData: WpDataDB
 ) {
-
     composeView.setViewCompositionStrategy(
         ViewCompositionStrategy.DisposeOnDetachedFromWindow
     )

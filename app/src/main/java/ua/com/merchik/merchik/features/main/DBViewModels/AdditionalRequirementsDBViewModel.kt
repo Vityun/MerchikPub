@@ -66,7 +66,9 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
         when (contextUI) {
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
+                Log.e("!!!!!updateFilters!!!!!!", "wpDataDB: ${Gson().toJson(wpDataDB)}")
                 val client = RoomManager.SQL_DB.customerDao().getById(wpDataDB.client_id)
+                Log.e("!!!!!updateFilters!!!!!!", "client: ${Gson().toJson(client)}")
                 val filterCustomerSDB = ItemFilter(
                     "Клиент",
                     CustomerSDB::class,

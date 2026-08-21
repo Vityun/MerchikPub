@@ -176,6 +176,10 @@ class FeaturesActivity : AppCompatActivity() {
                                         viewModel.title = bundle.getString("title")
                                         viewModel.typeWindow = bundle.getString("typeWindow") ?: ""
                                         viewModel.subTitle = bundle.getString("subTitle")
+                                        viewModel.openMapsOnStart =
+                                            bundle.getBoolean("openMapsOnStart", false)
+                                        viewModel.finishOnMapsDismiss =
+                                            bundle.getBoolean("finishOnMapsDismiss", false)
                                         viewModel.idResImage =
                                             if (bundle.getInt("idResImage") == 0) null else bundle.getInt(
                                                 "idResImage"

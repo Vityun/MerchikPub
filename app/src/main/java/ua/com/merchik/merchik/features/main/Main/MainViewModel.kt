@@ -313,6 +313,8 @@ abstract class MainViewModel(
     var subTitle: String? = null
     var subTitleLong: String? = null
     var idResImage: Int? = null
+    var openMapsOnStart: Boolean = false
+    var finishOnMapsDismiss: Boolean = false
     var modeUI: ModeUI = ModeUI.DEFAULT
     var contextUI: ContextUI = ContextUI.DEFAULT
     var launcher: ActivityResultLauncher<Intent>? = null
