@@ -252,6 +252,78 @@ object OrderDataSDBOverride {
     }
 }
 
+object AchievementsSDBOverride {
+    fun getTranslateId(key: String): Long? = when (key) {
+        "id" -> 5909
+        "dt", "dt_ut" -> 1100
+        "addr_id" -> 1101
+        "client_id" -> 1102
+        "theme_id" -> 8724
+        "user_id" -> 1103
+        "comment_txt" -> 5911
+        else -> null
+    }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt" -> formatDateString(cleanValue(value)).ifBlank { cleanValue(value) }
+        "dt_ut" -> formatUnixSeconds(cleanValue(value)) ?: cleanValue(value)
+        "addr_id" -> formatAddress(cleanValue(value))
+        "client_id" -> formatCustomer(cleanValue(value))
+        "theme_id" -> formatTheme(cleanValue(value))
+        "user_id" -> formatUser(cleanValue(value))
+        else -> value.toString()
+    }
+
+    private fun cleanValue(value: Any): String =
+        value.toString()
+            .trim()
+            .takeUnless { it.equals("null", ignoreCase = true) }
+            ?: ""
+
+    private fun formatUnixSeconds(value: String): String? {
+        val seconds = value.toLongOrNull() ?: return null
+        if (seconds <= 0L) return null
+        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(seconds * 1_000L))
+    }
+
+    private fun formatAddress(value: String): String {
+        val id = value.toIntOrNull() ?: return value
+        return runCatching {
+            RoomManager.SQL_DB.addressDao().getById(id)?.nm
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: "Адреса ($value) не визначена"
+    }
+
+    private fun formatCustomer(value: String): String {
+        if (value.isBlank()) return value
+        return runCatching {
+            RoomManager.SQL_DB.customerDao().getById(value)?.nm
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: "Клієнт ($value) не визначений"
+    }
+
+    private fun formatTheme(value: String): String {
+        if (value.isBlank()) return value
+        return runCatching {
+            ThemeRealm.getThemeById(value).nm
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { "($value) $it" }
+            ?: "Тема ($value) не визначена"
+    }
+
+    private fun formatUser(value: String): String {
+        val id = value.toIntOrNull() ?: return value
+        return runCatching {
+            RoomManager.SQL_DB.usersDao().getUserById(id)?.fio
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: "Користувач ($value) не визначений"
+    }
+}
+
 object AdditionalRequirementsDBOverride {
     fun getValueUI(key: String, value: Any): String = when (key) {
         "dt_change" -> {

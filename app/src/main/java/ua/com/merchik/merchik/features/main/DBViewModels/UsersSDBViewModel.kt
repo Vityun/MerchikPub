@@ -74,14 +74,7 @@ class UsersSDBViewModel @Inject constructor(
 
         try {
 
-
-            Log.e("!!!!!!!!!", "updateFilters")
             val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-            Log.e("!!!!!!!!!", "updateFilters ${dataJsonObject.get("wpDataDBId")}")
-
-            Log.e("!!!!!!!!!", "updateFilters1")
-
-            Log.e("!!!!!!!!!", "updateFilters2")
 
             val addrId = dataJsonObject.get("addr_id")?.asInt
                 ?: EKLDataHolder.instance().usersPTTWorkAddressId
@@ -101,10 +94,6 @@ class UsersSDBViewModel @Inject constructor(
             if (addrId != null && wpClientId != null && wpPttUserId != null
                 && wpDataTime != null && wpDataUserId != null
             ) {
-
-//            val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
-//            val tovar = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
-//            val uniqueGroupIds: List<String> = tovar.map { it.groupId }.distinct()
 
                 if (EKLDataHolder.instance().usersPTTWorkAddressId == null)
                     EKLDataHolder.instance().usersPTTWorkAddressId = addrId

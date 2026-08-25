@@ -51,6 +51,7 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -58,6 +59,9 @@ import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement
+import ua.com.merchik.merchik.dialogs.EKL.DialogEKL
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
@@ -156,6 +160,7 @@ class FeaturesActivity : AppCompatActivity() {
                                         AddressSDBViewModel::class -> viewModel() as AddressSDBViewModel
                                         WpDataPauseSDBViewModel::class -> viewModel() as WpDataPauseSDBViewModel
                                         VideoLessonsDBViewModel::class -> viewModel() as VideoLessonsDBViewModel
+                                        AchievementsSDBViewModel::class -> viewModel() as AchievementsSDBViewModel
                                                 else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")
@@ -217,7 +222,11 @@ class FeaturesActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == MakePhoto.PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
+        if (requestCode == DetailedReportActivity.NEED_UPDATE_UI_REQUEST && resultCode == RESULT_OK) {
+            DialogCreateAchievement.onUpdateUI?.update()
+            DialogEKL.onUpdateUI?.update()
+            OptionButtonUserOpinion.onUpdateUI?.update()
+        } else if (requestCode == MakePhoto.PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
             try {
 //                    int photoType = data.getIntExtra("photo_type", 4); // Получаем тип фотографии из Intent
                 val photoType = MakePhotoFromGalery.photoType // Получаем тип фотографии из Intent

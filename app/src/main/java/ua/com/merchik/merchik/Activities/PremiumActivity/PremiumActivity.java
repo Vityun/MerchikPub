@@ -438,14 +438,14 @@ public class PremiumActivity extends toolbar_menus {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(jsonObject ->{
-                    Log.e("RESULT", ">> " + jsonObject);
-                }, throwable -> {
-                    Log.e("Error","error: " +throwable.getMessage());
-                });
+//        RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(jsonObject ->{
+//                    Log.e("RESULT", ">> " + jsonObject);
+//                }, throwable -> {
+//                    Log.e("Error","error: " +throwable.getMessage());
+//                });
 
         retrofit2.Call<PremiumPremium> call = RetrofitBuilder.getRetrofitInterface().GET_PREMIUM_PREMIUM(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PremiumPremium>() {

@@ -850,29 +850,19 @@ public class PhotoReportActivity extends toolbar_menus {
         File file = new File(img.toURI());
         Bitmap bitmap = null;
         Bitmap rotatedBitmap = null;
-        Bitmap scaledBitmap = null;
         try {
             bitmap = decodeSampledBitmapFromResource(file, 2000, 2000);
             if (bitmap == null) {
                 return file;
             }
             rotatedBitmap = checkRotationFromCamera(bitmap, file.getPath(), rotation);
-            scaledBitmap = Bitmap.createScaledBitmap(
-                    rotatedBitmap,
-                    Math.max(1, (int) ((float) rotatedBitmap.getWidth() * 0.3f)),
-                    Math.max(1, (int) ((float) rotatedBitmap.getHeight() * 0.3f)),
-                    false
-            );
             try (OutputStream outStream = new FileOutputStream(file)) {
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
                 outStream.flush();
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (scaledBitmap != null && !scaledBitmap.isRecycled()) {
-                scaledBitmap.recycle();
-            }
             if (rotatedBitmap != null && rotatedBitmap != bitmap && !rotatedBitmap.isRecycled()) {
                 rotatedBitmap.recycle();
             }

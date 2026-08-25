@@ -49,12 +49,11 @@ import com.google.gson.Gson;
 public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
     public int OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID = 579;
+    public int OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID = 174974;
+
 
     public boolean signal = true;
 
-
-    private String documentDate, clientId, optionId;
-    private int addressId, userId;
     private long dad2;
 
     private Integer colMin = 1;
@@ -82,17 +81,13 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) document;
 
-//            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000); //+TODO CHANGE DATE
-
-            clientId = wpDataDB.getClient_id();
-            addressId = wpDataDB.getAddr_id();
-            userId = wpDataDB.getUser_id();
             dad2 = wpDataDB.getCode_dad2();
             try {
                 colMin = Integer.valueOf(optionDB.getAmountMin());
             } catch (Exception e) {
                 colMin = 1;
             }
+            Log.e("AvailabilityOfPrices", "col min " + colMin);
         }
     }
 
@@ -122,83 +117,68 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         errMsg.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) вы должны обязательно указать ЦЕНУ:").append("\n\n");
 
         // 5.0
+        List<String> osvTovarIds = Arrays.asList(tovIds);
+        boolean hasOsvList = !osvTovarIds.isEmpty();
         int totalOSV = 0;
         int foundWithPrice = 0;
         int missingPriceCount = 0;
 
         for (ReportPrepareDB item : reportPrepare) {
-            boolean isOSV = Arrays.asList(tovIds).contains(item.getTovarId());
+            boolean isOSV = osvTovarIds.contains(item.getTovarId());
+//            Log.e("AvailabilityOfPrices", "ReportPrepareDB: " + new Gson().toJson(item));
 
-            if (!isOSV) continue;
+//            if (!isOSV) continue;
+//            Log.e("AvailabilityOfPrices", "1");
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
             if (tov != null) {
                 String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
 
                 // Если товар на витрине (face > 0) — нас он интересует
-                boolean onFace = false;
-                try {
-                    // face может быть строкой, проверяем безопасно
-                    String face = item.getFace();
-                    if (face != null && !face.equals("")) {
-                        try {
-                            onFace = Integer.parseInt(face) > 0;
-                        } catch (Exception e) {
-                            // если не число, пробуем проверить не пустую строку
-                            onFace = true;
-                        }
-                    }
-                } catch (Exception ignored) {
-                }
-
-                if (!onFace) {
+                if (!hasPositiveFace(item)) {
                     // пропускаем товары, которых нет на витрине
                     continue;
                 }
 
-//                if (isOSV) {
-//                    totalOSV++;
-//                    Log.e("AvailabilityOfPrices", "");
-//                }
-
-                // Проверяем наличие цены
-                boolean hasPrice = false;
-                try {
-                    String price = item.getPrice();
-                    hasPrice = price != null && !price.trim().equals("") && !price.trim().equals("0");
-                } catch (Exception ignored) {
+                if (optionDB.getOptionId().equals("174974") || optionDB.getOptionControlId().equals("174974")){
+                    Log.e("AvailabilityOfPrices","OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID");
                 }
 
-                if (isOSV && !hasPrice) {
-                    // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
+                boolean hasPrice = hasPositivePrice(item);
+
+                if (hasOsvList) {
+                    if (!isOSV) {
+                        // Если список ОСВ заполнен, товары без ОСВ пропускаем, как в 1С.
+                        continue;
+                    }
+
                     totalOSV++;
-                    err++;
-                    missingPriceCount++;
-                    errMsg.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if (!isOSV) {
-                    // Если список ОСВ пуст (в 1С: проверка по всей витрине в зависимости от colMin)
-                    // но у нас товар имеет цену -> считаем найденным
                     if (hasPrice) {
                         foundWithPrice++;
                         item.find = 1;
                     } else {
-                        // товар без ОСВ и без цены — если colMin == 0 (требуется у всех) то это нарушение,
-                        // но эту логику учтём ниже при суммарных подсчётах
+                        // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
+                        err++;
                         missingPriceCount++;
                         errMsg.append(createLinkedString(msg, item, tov)).append("\n");
                     }
                 } else {
-                    // товар с ОСВ и есть цена
+                    // Если список ОСВ пуст, проверяем цены по товарам на витрине с учетом КолМин.
                     if (hasPrice) {
                         foundWithPrice++;
                         item.find = 1;
+                    } else if (colMin == 0) {
+                        // КолМин=0 означает, что цена обязательна у всех товаров на витрине.
+                        err++;
+                        missingPriceCount++;
+                        errMsg.append(createLinkedString(msg, item, tov)).append("\n");
                     }
                 }
             }
         }
 
         // 5.1. Если менеджер указал КолМин > числа записей — используем фактическое количество
-        colMin = reportPrepare.size() < colMin ? reportPrepare.size() : colMin;
+//        colMin = reportPrepare.size() < colMin ? reportPrepare.size() : colMin;
 
         // Формирование сообщения общего вида
         if (missingPriceCount > 0) {
@@ -208,16 +188,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         // 6.0 Логика коротких сообщений (приближённо соответствует 1С)
         int totalRelevant = 0; // количество товаров, присутствующих на витрине (face>0)
         for (ReportPrepareDB rp : reportPrepare) {
-            try {
-                String face = rp.getFace();
-                if (face != null && !face.equals("")) {
-                    try {
-                        if (Integer.parseInt(face) > 0) totalRelevant++;
-                    } catch (Exception e) {
-                        totalRelevant++;
-                    }
-                }
-            } catch (Exception ignored) {
+            if (hasPositiveFace(rp)) {
+                totalRelevant++;
             }
         }
 
@@ -227,10 +199,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (reportPrepare.size() == 0 || totalRelevant == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия ЦЕН, не обнаружено.");
             signal = false; // нет товаров — замечаний нет
-        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */ else if (missingPriceCount > 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
+        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */
+        else if (missingPriceCount > 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
 //            spannableStringBuilder.append("Не предоставлена информация о ЦЕНАХ по товару (" + missingPriceCount + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signal = true;
-        } else if (totalOSV == 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
+        } else if (hasOsvList && totalOSV == 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
             signal = false;
         } else if (found == 0) {
@@ -281,6 +254,31 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         checkUnlockCode(optionDB);
         // Если есть какой-то сигнал - нужно вывести сообщение
 
+    }
+
+    private boolean hasPositiveFace(ReportPrepareDB item) {
+        return parsePositiveNumber(item != null ? item.getFace() : null);
+    }
+
+    private boolean hasPositivePrice(ReportPrepareDB item) {
+        return parsePositiveNumber(item != null ? item.getPrice() : null);
+    }
+
+    private boolean parsePositiveNumber(String value) {
+        if (value == null) {
+            return false;
+        }
+
+        String normalized = value.trim().replace(",", ".");
+        if (normalized.isEmpty()) {
+            return false;
+        }
+
+        try {
+            return Double.parseDouble(normalized) > 0d;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {

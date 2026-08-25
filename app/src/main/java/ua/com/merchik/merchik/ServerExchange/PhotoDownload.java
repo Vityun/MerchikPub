@@ -908,6 +908,8 @@ public class PhotoDownload {
                                                   data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+        String requestJson = object.toString();
+        Globals.writeToMLOG("INFO", "PhotoDownload/getPhotoInfoAndSaveItToDB/request", "request=" + requestJson);
 
         {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
@@ -929,6 +931,14 @@ public class PhotoDownload {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
                 try {
+                    Globals.writeToMLOG(
+                            "INFO",
+                            "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
+                            "request=" + requestJson +
+                                    ", httpCode=" + response.code() +
+                                    ", successful=" + response.isSuccessful() +
+                                    ", body=" + new Gson().toJson(response.body())
+                    );
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             if (response.body().getState() && response.body().getList() != null && response.body().getList().size() > 0) {
@@ -936,25 +946,45 @@ public class PhotoDownload {
                             } else {
                                 clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
                                 Globals.writeToMLOG("INFO", "getPhotoInfoAndSaveItToDB",
-                                        "response.body().getState(): " + response.body().getState() +
-                                                "response.body().getList() == NULL OR 0");
+                                        "request=" + requestJson +
+                                                ", response.body().getState(): " + response.body().getState() +
+                                                ", response.body().getList() == NULL OR 0" +
+                                                ", body=" + new Gson().toJson(response.body()));
                             }
                         } else {
+                            Globals.writeToMLOG(
+                                    "ERROR",
+                                    "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
+                                    "request=" + requestJson + ", response.body() == null"
+                            );
                             clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
                         }
                     } else {
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
+                                "request=" + requestJson +
+                                        ", httpCode=" + response.code() +
+                                        ", message=" + response.message()
+                        );
                         clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
                     }
 
                 } catch (Exception e) {
                     clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
-                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "Не удалось сохранить фото в БД. Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "request=" + requestJson + ", Не удалось сохранить фото в БД. Exception e: " + e);
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
                 Log.e("getPhotoInfo2", "test.t:" + t);
+                Globals.writeToMLOG(
+                        "ERROR",
+                        "PhotoDownload/getPhotoInfoAndSaveItToDB/onFailure",
+                        "request=" + requestJson + ", throwable=" + t
+                );
+                clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Throwable: " + t);
             }
         });
     }

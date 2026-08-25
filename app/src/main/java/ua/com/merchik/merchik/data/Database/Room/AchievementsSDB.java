@@ -12,9 +12,20 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
+import java.util.List;
+
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AchievementsSDBOverride;
+
 //@PrimaryKey(autoGenerate = true)
 @Entity(tableName = "achievements", indices = {@Index(value = {"serverId"}, unique = true)})
-public class AchievementsSDB {
+public class AchievementsSDB implements DataObjectUI {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
@@ -217,4 +228,78 @@ public class AchievementsSDB {
     @Ignore
     public Integer currentVisit;
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ КОНЕЦ---------------
+
+
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return AchievementsSDBOverride.INSTANCE.getTranslateId(key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return AchievementsSDBOverride.INSTANCE.getValueUI(key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return R.drawable.merchik;
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return "img_before_id, img_after_id";
+    }
+
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+    }
+
+    @Override
+    public @NotNull String getCommentsForImage() {
+        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+    }
+
+
+    @Override
+    public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
+    }
 }

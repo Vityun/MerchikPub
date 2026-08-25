@@ -140,7 +140,7 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         if (signal && planDay.isBefore(EXCEPTION_BEFORE_DATE)) {
             massageToUser = massageToUser + " Але, до '29.12.2025' надане виключення.";
             signal = false;
-        } else if (wpDataDB.getUser_id() == 143565) {
+        } else if (wpDataDB.getUser_id() == 143565 || wpDataDB.getUser_id() == 243997) {
             massageToUser = massageToUser + " Але, для спiвробiтника " + wpDataDB.getUser_txt() + " зроблено виключення";
             signal = false;
         }

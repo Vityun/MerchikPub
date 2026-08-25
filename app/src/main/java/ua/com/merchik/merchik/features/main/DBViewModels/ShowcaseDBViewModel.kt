@@ -4,19 +4,17 @@ import MessageDialogData
 import android.app.Application
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
@@ -65,6 +63,7 @@ class ShowcaseDBViewModel @Inject constructor(
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     private var contextForPhotoAction: WeakReference<Context>? = null
+    private val loggedShowcaseDiagnostics = mutableSetOf<String>()
 
     private val planogrammId = mutableStateOf(0)
 
@@ -112,18 +111,9 @@ class ShowcaseDBViewModel @Inject constructor(
 //                )
 
         try {
+            planogrammId.value = getPlanogrammVizitShowcaseIdOrDefault()
 
-            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-
-            val codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
-
-            planogrammId.value = if (dataJsonObject.has("planogrammVizitShowcaseId"))
-                dataJsonObject["planogrammVizitShowcaseId"].asInt
-            else 0
-
-            val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-            )
+            val wpDataDB = getCurrentWpDataOrLog("updateFilters") ?: return
 
 
             val filterWpDataDB = ItemFilter(
@@ -172,7 +162,13 @@ class ShowcaseDBViewModel @Inject constructor(
             )
 
         } catch (e: Exception) {
-            Log.e("!!!!!", "err: ${e.message}")
+            logShowcaseDiagnosticOnce(
+                key = "updateFilters_exception_${dataJson.previewForLog()}",
+                level = "ERROR",
+                stage = "updateFilters",
+                message = "Cannot build filters. contextUI=$contextUI, dataJson=${dataJson.previewForLog()}",
+                error = e
+            )
         }
     }
 
@@ -180,25 +176,18 @@ class ShowcaseDBViewModel @Inject constructor(
     override fun getItemsFooter(): List<DataItemUI> {
         return when (contextUI) {
             ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
-                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                val codeDad2 = dataJsonObject["wpDataDBId"].asString.toLong()
-                val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                    RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                ) ?: return emptyList()
+                val wpDataDB = getCurrentWpDataOrLog("getItemsFooter") ?: return emptyList()
+                val showcaseDataList = getShowcaseDataList(wpDataDB, "getItemsFooter")
 
-                val showcaseTypes = listOf(0, 1, 2)
+                val canCreatePhotoWithoutShowcase =
+                    showcaseDataList.isEmpty() || workedWithClientLessThanOptionalPeriod(wpDataDB)
 
-                val showcaseDataList = RoomManager.SQL_DB
-                    .showcaseDao()
-                    .getByDocTP(
-                        wpDataDB.client_id,
-                        wpDataDB.addr_id,
-                        showcaseTypes
-                    )
-                if (showcaseDataList.isNotEmpty()) return emptyList()
+                if (!canCreatePhotoWithoutShowcase) {
+                    return emptyList()
+                }
 
+                // сама пустая витрина
                 val data = StackPhotoDB::class.java.newInstance()
-                data.comment = "Це досягнення не відноситься до жодної з пропозицій замовника"
                 data.id = -999
                 data.photoServerId = "-999"
                 data.photo_hash = "-999"
@@ -226,30 +215,9 @@ class ShowcaseDBViewModel @Inject constructor(
             when (contextUI) {
                 ContextUI.SHOWCASE,
                 ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
-
-                    val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                    val codeDad2 = dataJsonObject["wpDataDBId"].asString.toLong()
-
-                    val planogrammVizitShowcaseId =
-                        dataJsonObject
-                            .takeIf { it.has("planogrammVizitShowcaseId") }
-                            ?.get("planogrammVizitShowcaseId")
-                            ?.asInt
-                            ?: 0
-
-                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    ) ?: return emptyList()
-
-                    val showcaseTypes = listOf(0, 1, 2)
-
-                    val showcaseDataList = RoomManager.SQL_DB
-                        .showcaseDao()
-                        .getByDocTP(
-                            wpDataDB.client_id,
-                            wpDataDB.addr_id,
-                            showcaseTypes
-                        )
+                    val planogrammVizitShowcaseId = getPlanogrammVizitShowcaseIdOrDefault()
+                    val wpDataDB = getCurrentWpDataOrLog("getItems/$contextUI") ?: return emptyList()
+                    val showcaseDataList = getShowcaseDataList(wpDataDB, "getItems/$contextUI")
 
                     /*
                      * Сопоставляем photoId фотографии с соответствующей витриной.
@@ -257,21 +225,22 @@ class ShowcaseDBViewModel @Inject constructor(
                      * Ключ приводим к String, потому что photoServerId в StackPhotoDB
                      * ниже также сравнивается как строка.
                      */
-                    val showcaseByPhotoId = showcaseDataList
-                        .mapNotNull { showcase ->
-                            showcase.photoId
-                                ?.toString()
-                                ?.takeIf { it.isNotBlank() }
-                                ?.let { photoId ->
-                                    photoId to showcase
-                                }
-                        }
-                        .toMap()
+                    val showcaseByPhotoId = buildShowcaseByPhotoId(
+                        showcaseDataList = showcaseDataList,
+                        stage = "getItems/$contextUI",
+                        wpDataDB = wpDataDB
+                    )
 
                     val photoIds = showcaseByPhotoId.keys.toTypedArray()
 
-                    val photos = RealmManager.INSTANCE.copyFromRealm(
-                        StackPhotoRealm.getByIds2(photoIds)
+                    val photos = alignPhotosToShowcases(
+                        loadedPhotos = loadShowcasePhotos(
+                            photoIds = photoIds.toList(),
+                            stage = "getItems/$contextUI",
+                            wpDataDB = wpDataDB
+                        ),
+                        showcaseByPhotoId = showcaseByPhotoId,
+                        wpDataDB = wpDataDB
                     ).onEach { photo ->
 
                         val showcase = showcaseByPhotoId[
@@ -310,43 +279,18 @@ class ShowcaseDBViewModel @Inject constructor(
                         }
                 }
                 ContextUI.SHOWCASE_COMPLETED_CHECK -> {
-                    val dataJsonObject = Gson().fromJson(
-                        dataJson,
-                        JsonObject::class.java
-                    )
-
-                    val codeDad2 = dataJsonObject
-                        .get("wpDataDBId")
-                        .asString
-                        .toLong()
-
-                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    ) ?: return emptyList()
-
-                    val showcaseTypes = listOf(0, 1, 2)
-
-                    val showcaseDataList = RoomManager.SQL_DB
-                        .showcaseDao()
-                        .getByDocTP(
-                            wpDataDB.client_id,
-                            wpDataDB.addr_id,
-                            showcaseTypes
-                        )
+                    val wpDataDB = getCurrentWpDataOrLog("getItems/$contextUI") ?: return emptyList()
+                    val codeDad2 = wpDataDB.code_dad2
+                    val showcaseDataList = getShowcaseDataList(wpDataDB, "getItems/$contextUI")
 
                     /*
                      * Связываем ID фотографии с витриной.
                      */
-                    val showcaseByPhotoId = showcaseDataList
-                        .mapNotNull { showcase ->
-                            showcase.photoId
-                                ?.toString()
-                                ?.takeIf { it.isNotBlank() && it != "0" }
-                                ?.let { photoId ->
-                                    photoId to showcase
-                                }
-                        }
-                        .toMap()
+                    val showcaseByPhotoId = buildShowcaseByPhotoId(
+                        showcaseDataList = showcaseDataList,
+                        stage = "getItems/$contextUI",
+                        wpDataDB = wpDataDB
+                    )
 
                     val photoIds = showcaseByPhotoId
                         .keys
@@ -359,8 +303,14 @@ class ShowcaseDBViewModel @Inject constructor(
                      * specialCol здесь не меняем.
                      */
                     val data: List<StackPhotoDB> =
-                        RealmManager.INSTANCE.copyFromRealm(
-                            StackPhotoRealm.getByIds2(photoIds)
+                        alignPhotosToShowcases(
+                            loadedPhotos = loadShowcasePhotos(
+                                photoIds = photoIds.toList(),
+                                stage = "getItems/$contextUI",
+                                wpDataDB = wpDataDB
+                            ),
+                            showcaseByPhotoId = showcaseByPhotoId,
+                            wpDataDB = wpDataDB
                         ).onEach { photo ->
                             val showcase = showcaseByPhotoId[
                                 photo.photoServerId?.toString()
@@ -375,20 +325,18 @@ class ShowcaseDBViewModel @Inject constructor(
 
                     val listOfStackPhotoCOMPLETED = buildList {
                         addAll(
-                            RealmManager.INSTANCE.copyFromRealm(
-                                StackPhotoRealm.getPhotosByDAD2(
-                                    codeDad2,
-                                    0
-                                )
+                            loadCompletedPhotos(
+                                codeDad2 = codeDad2,
+                                photoType = 0,
+                                stage = "getItems/$contextUI"
                             )
                         )
 
                         addAll(
-                            RealmManager.INSTANCE.copyFromRealm(
-                                StackPhotoRealm.getPhotosByDAD2(
-                                    codeDad2,
-                                    45
-                                )
+                            loadCompletedPhotos(
+                                codeDad2 = codeDad2,
+                                photoType = 45,
+                                stage = "getItems/$contextUI"
                             )
                         )
                     }
@@ -475,6 +423,13 @@ class ShowcaseDBViewModel @Inject constructor(
             }
 
         } catch (e: Exception) {
+            logShowcaseDiagnosticOnce(
+                key = "getItems_exception_${contextUI}_${dataJson.previewForLog()}",
+                level = "ERROR",
+                stage = "getItems",
+                message = "Cannot build showcase items. contextUI=$contextUI, dataJson=${dataJson.previewForLog()}",
+                error = e
+            )
             emptyList()
         }
     }
@@ -989,6 +944,30 @@ class ShowcaseDBViewModel @Inject constructor(
         return RealmManager.getWorkPlanRowByCodeDad2Detached(codeDad2)
     }
 
+    private fun getCurrentWpDataOrLog(stage: String): WpDataDB? {
+        val codeDad2 = getCurrentCodeDad2ForShowcaseAction()
+        if (codeDad2 == null) {
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_missing_dad2_${dataJson.previewForLog()}",
+                level = "ERROR",
+                stage = stage,
+                message = "Cannot resolve codeDad2. contextUI=$contextUI, dataJson=${dataJson.previewForLog()}"
+            )
+            return null
+        }
+
+        val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2Detached(codeDad2)
+        if (wpDataDB == null) {
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_missing_wp_$codeDad2",
+                level = "ERROR",
+                stage = stage,
+                message = "WpDataDB not found. contextUI=$contextUI, codeDad2=$codeDad2"
+            )
+        }
+        return wpDataDB
+    }
+
     private fun getCurrentCodeDad2ForShowcaseAction(): Long? {
         return runCatching {
             val rawDataJson = dataJson?.trim()?.takeIf { it.isNotEmpty() } ?: return null
@@ -1010,6 +989,304 @@ class ShowcaseDBViewModel @Inject constructor(
                 else -> null
             }
         }.getOrNull()
+    }
+
+    private fun getPlanogrammVizitShowcaseIdOrDefault(): Int {
+        return runCatching {
+            val rawDataJson = dataJson?.trim()?.takeIf { it.isNotEmpty() } ?: return 0
+            val root = JsonParser.parseString(rawDataJson)
+            if (!root.isJsonObject) return 0
+
+            root.asJsonObject
+                .get("planogrammVizitShowcaseId")
+                ?.takeIf { !it.isJsonNull }
+                ?.asString
+                ?.toIntOrNull()
+                ?: 0
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "planogramm_id_parse_${dataJson.previewForLog()}",
+                level = "ERROR",
+                stage = "getPlanogrammVizitShowcaseIdOrDefault",
+                message = "Cannot parse planogrammVizitShowcaseId. dataJson=${dataJson.previewForLog()}",
+                error = error
+            )
+        }.getOrDefault(0)
+    }
+
+    private fun getShowcaseDataList(wpDataDB: WpDataDB, stage: String): List<ShowcaseSDB> {
+        val clientId = wpDataDB.client_id
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+
+        if (clientId == null || wpDataDB.addr_id <= 0) {
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_invalid_wp_${wpDataDB.code_dad2}",
+                level = "ERROR",
+                stage = stage,
+                message = "Cannot load showcases: invalid wp fields. codeDad2=${wpDataDB.code_dad2}, clientId=$clientId, addrId=${wpDataDB.addr_id}"
+            )
+            return emptyList()
+        }
+
+        return runCatching {
+            RoomManager.SQL_DB
+                .showcaseDao()
+                .getByDocTP(
+                    clientId,
+                    wpDataDB.addr_id,
+                    SHOWCASE_TYPES
+                )
+        }.onSuccess { showcases ->
+            if (showcases.isEmpty()) {
+                logShowcaseDiagnosticOnce(
+                    key = "${stage}_empty_showcases_${wpDataDB.code_dad2}_${clientId}_${wpDataDB.addr_id}",
+                    level = "INFO",
+                    stage = stage,
+                    message = "ShowcaseSDB list is empty. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, clientId=$clientId, addrId=${wpDataDB.addr_id}, tpIds=$SHOWCASE_TYPES"
+                )
+            }
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_showcase_query_exception_${wpDataDB.code_dad2}",
+                level = "ERROR",
+                stage = stage,
+                message = "ShowcaseSDB query failed. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, clientId=$clientId, addrId=${wpDataDB.addr_id}",
+                error = error
+            )
+        }.getOrDefault(emptyList())
+    }
+
+    private fun buildShowcaseByPhotoId(
+        showcaseDataList: List<ShowcaseSDB>,
+        stage: String,
+        wpDataDB: WpDataDB
+    ): Map<String, ShowcaseSDB> {
+        val rowsWithPhotoId = showcaseDataList.mapNotNull { showcase ->
+            val photoId = showcase.photoId
+                ?.takeIf { it > 0 }
+                ?.toString()
+                ?.takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
+
+            photoId to showcase
+        }
+
+        val invalidPhotoIdCount = showcaseDataList.size - rowsWithPhotoId.size
+        if (showcaseDataList.isNotEmpty() && invalidPhotoIdCount > 0) {
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_invalid_photo_ids_${wpDataDB.code_dad2}_$invalidPhotoIdCount",
+                level = "INFO",
+                stage = stage,
+                message = "Some ShowcaseSDB rows have empty photo_id. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, showcaseCount=${showcaseDataList.size}, invalidPhotoIdCount=$invalidPhotoIdCount"
+            )
+        }
+
+        val duplicates = rowsWithPhotoId
+            .groupingBy { it.first }
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
+
+        if (duplicates.isNotEmpty()) {
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_duplicate_photo_ids_${wpDataDB.code_dad2}_${duplicates.size}",
+                level = "INFO",
+                stage = stage,
+                message = "Duplicate ShowcaseSDB photo_id values. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, duplicatePhotoIds=${duplicates.previewIds()}"
+            )
+        }
+
+        return rowsWithPhotoId.toMap()
+    }
+
+    private fun loadShowcasePhotos(
+        photoIds: Collection<String>,
+        stage: String,
+        wpDataDB: WpDataDB
+    ): List<StackPhotoDB> {
+        val cleanPhotoIds = photoIds
+            .mapNotNull { it.trim().takeIf { id -> id.isNotEmpty() && id != "0" } }
+            .distinct()
+
+        if (cleanPhotoIds.isEmpty()) {
+            if (photoIds.isNotEmpty()) {
+                logShowcaseDiagnosticOnce(
+                    key = "${stage}_photo_ids_cleaned_empty_${wpDataDB.code_dad2}",
+                    level = "INFO",
+                    stage = stage,
+                    message = "Showcase photo ids became empty after cleanup. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, rawCount=${photoIds.size}"
+                )
+            }
+            return emptyList()
+        }
+
+        return runCatching {
+            RealmManager.INSTANCE.copyFromRealm(
+                StackPhotoRealm.getByIds2(cleanPhotoIds.toTypedArray())
+            )
+        }.onSuccess { photos ->
+            val loadedIds = photos
+                .mapNotNull { it.photoServerId?.trim()?.takeIf { id -> id.isNotEmpty() } }
+                .toSet()
+            val missingIds = cleanPhotoIds.filterNot { it in loadedIds }
+
+            if (missingIds.isNotEmpty()) {
+                logShowcaseDiagnosticOnce(
+                    key = "${stage}_missing_stack_photos_${wpDataDB.code_dad2}_${missingIds.size}",
+                    level = "INFO",
+                    stage = stage,
+                    message = "ShowcaseSDB references photos not loaded in StackPhotoDB. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, clientId=${wpDataDB.client_id}, addrId=${wpDataDB.addr_id}, expected=${cleanPhotoIds.size}, loaded=${photos.size}, missing=${missingIds.size}, missingIds=${missingIds.previewIds()}"
+                )
+            }
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_stack_photo_query_exception_${wpDataDB.code_dad2}",
+                level = "ERROR",
+                stage = stage,
+                message = "StackPhotoDB query failed. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, expectedPhotoIds=${cleanPhotoIds.previewIds()}",
+                error = error
+            )
+        }.getOrDefault(emptyList())
+    }
+
+    private fun alignPhotosToShowcases(
+        loadedPhotos: List<StackPhotoDB>,
+        showcaseByPhotoId: Map<String, ShowcaseSDB>,
+        wpDataDB: WpDataDB
+    ): List<StackPhotoDB> {
+        if (showcaseByPhotoId.isEmpty()) return loadedPhotos
+
+        val photosByServerId = loadedPhotos
+            .mapNotNull { photo ->
+                val photoServerId = photo.photoServerId
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: return@mapNotNull null
+
+                photoServerId to photo
+            }
+            .toMap()
+
+        return showcaseByPhotoId.map { (photoId, showcase) ->
+            photosByServerId[photoId]
+                ?: createShowcasePhotoPlaceholder(
+                    showcase = showcase,
+                    photoId = photoId,
+                    wpDataDB = wpDataDB
+                )
+        }
+    }
+
+    private fun createShowcasePhotoPlaceholder(
+        showcase: ShowcaseSDB,
+        photoId: String,
+        wpDataDB: WpDataDB
+    ): StackPhotoDB {
+        val showcaseId = showcase.id ?: 0
+        val showcaseName = showcase.nm
+            ?.takeIf { it.isNotBlank() }
+            ?: showcase.selectName
+                ?.takeIf { it.isNotBlank() }
+            ?: ""
+
+        return StackPhotoDB().apply {
+            id = fallbackPhotoRowId(showcaseId, photoId)
+            photoServerId = photoId
+            photo_hash = ""
+            photoServerURL = showcase.photoBig ?: showcase.photo
+            comment = "Фото витрины не загружено"
+            addr_id = wpDataDB.addr_id
+            client_id = wpDataDB.client_id
+            code_dad2 = wpDataDB.code_dad2
+            setCode_iza(wpDataDB.code_iza)
+            showcase_id = showcaseId.toString()
+            this.showcaseId = showcaseId
+            this.showcaseName = showcaseName
+            statusShowcase = showcase.status ?: 0
+            mainOption = showcase.mainOptionId ?: 0
+        }
+    }
+
+    private fun fallbackPhotoRowId(showcaseId: Int, photoId: String): Int {
+        if (showcaseId > 0) return -showcaseId
+
+        val hash = photoId.hashCode()
+        val fallback = if (hash == Int.MIN_VALUE) {
+            -1
+        } else {
+            -kotlin.math.abs(hash)
+        }
+
+        return fallback.takeIf { it != 0 } ?: -1
+    }
+
+    private fun loadCompletedPhotos(
+        codeDad2: Long,
+        photoType: Int,
+        stage: String
+    ): List<StackPhotoDB> {
+        return runCatching {
+            RealmManager.INSTANCE.copyFromRealm(
+                StackPhotoRealm.getPhotosByDAD2(
+                    codeDad2,
+                    photoType
+                )
+            )
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "${stage}_completed_photos_exception_${codeDad2}_$photoType",
+                level = "ERROR",
+                stage = stage,
+                message = "Cannot load completed photos. contextUI=$contextUI, codeDad2=$codeDad2, photoType=$photoType",
+                error = error
+            )
+        }.getOrDefault(emptyList())
+    }
+
+    private fun workedWithClientLessThanOptionalPeriod(wpDataDB: WpDataDB): Boolean {
+        return runCatching {
+            val dossier = RoomManager.SQL_DB
+                .dossierSotrDao()
+                .getData(null, SHOWCASE_DOSSIER_THEME_ID, wpDataDB.code_iza)
+                .firstOrNull()
+                ?: run {
+                    logShowcaseDiagnosticOnce(
+                        key = "dossier_missing_${wpDataDB.code_dad2}_${wpDataDB.code_iza}",
+                        level = "INFO",
+                        stage = "workedWithClientLessThanOptionalPeriod",
+                        message = "DossierSotrSDB not found, allow create photo without showcase. codeDad2=${wpDataDB.code_dad2}, codeIza=${wpDataDB.code_iza}, themeId=$SHOWCASE_DOSSIER_THEME_ID"
+                    )
+                    return true
+                }
+
+            val workDateSec = wpDataDB.dt
+                ?.time
+                ?.div(1_000L)
+                ?: run {
+                    logShowcaseDiagnosticOnce(
+                        key = "wp_dt_missing_${wpDataDB.code_dad2}",
+                        level = "ERROR",
+                        stage = "workedWithClientLessThanOptionalPeriod",
+                        message = "WpDataDB.dt is empty, cannot calculate optional showcase period. codeDad2=${wpDataDB.code_dad2}"
+                    )
+                    return false
+                }
+
+            val clientWorkStartSec = dossier.priznak
+                ?.takeIf { it > UNIX_1971_SEC }
+                ?: workDateSec
+
+            clientWorkStartSec > workDateSec - SHOWCASE_OPTIONAL_WORK_DAYS * SECONDS_IN_DAY
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "dossier_period_exception_${wpDataDB.code_dad2}",
+                level = "ERROR",
+                stage = "workedWithClientLessThanOptionalPeriod",
+                message = "Cannot calculate optional showcase period, allow create photo without showcase. codeDad2=${wpDataDB.code_dad2}, codeIza=${wpDataDB.code_iza}",
+                error = error
+            )
+        }.getOrDefault(true)
     }
 
     private fun DataItemUI.showcaseIdText(): String? {
@@ -1070,29 +1347,28 @@ class ShowcaseDBViewModel @Inject constructor(
     }
 
     private fun buildMainOptionFilter(wpDataDB: WpDataDB): ItemFilter? {
-        val gson = Gson()
-        Log.d("ShowcaseDBViewModel", "WpDataDB: ${gson.toJson(wpDataDB)}")
         val mainOptionId = wpDataDB.main_option_id
             ?.trim()
             ?.toIntOrNull()
             ?.takeIf { it > 0 }
             ?: return null
 
-        Log.d("ShowcaseDBViewModel", "WpDataDB mainOptionId: $mainOptionId")
+        val showcaseDataList = getShowcaseDataList(wpDataDB, "buildMainOptionFilter")
+        val hasMatchingShowcase = showcaseDataList.any { it.mainOptionId == mainOptionId }
 
-        val showcaseTypes = listOf(0, 1, 2)
-        val hasMatchingShowcase = RoomManager.SQL_DB
-            .showcaseDao()
-            .getByDocTP(
-                wpDataDB.client_id,
-                wpDataDB.addr_id,
-                showcaseTypes
+        if (!hasMatchingShowcase) {
+            val localMainOptions = showcaseDataList
+                .mapNotNull { it.mainOptionId?.takeIf { optionId -> optionId > 0 } }
+                .distinct()
+
+            logShowcaseDiagnosticOnce(
+                key = "main_option_filter_skip_${wpDataDB.code_dad2}_$mainOptionId",
+                level = "INFO",
+                stage = "buildMainOptionFilter",
+                message = "Skip mainOption filter: local showcases do not contain wp main option. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, wpMainOptionId=$mainOptionId, showcaseCount=${showcaseDataList.size}, localMainOptions=${localMainOptions.map { it.toString() }.previewIds()}"
             )
-            .any { it.mainOptionId == mainOptionId }
-
-//        if (!hasMatchingShowcase) {
-//            return null
-//        }
+            return null
+        }
 
         val optionName = getMainOptionName(mainOptionId)
 
@@ -1120,11 +1396,30 @@ class ShowcaseDBViewModel @Inject constructor(
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
-        (itemsUI.first().rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB)?.let {
+        val stackPhotoDB = itemsUI
+            .firstOrNull()
+            ?.rawObj
+            ?.firstOrNull { it is StackPhotoDB } as? StackPhotoDB
+
+        if (stackPhotoDB == null) {
+            logShowcaseDiagnosticOnce(
+                key = "onSelectedItemsUI_empty_${contextUI}_${itemsUI.size}",
+                level = "ERROR",
+                stage = "onSelectedItemsUI",
+                message = "Cannot apply showcase selection: StackPhotoDB not found. contextUI=$contextUI, itemsSize=${itemsUI.size}"
+            )
+            return
+        }
+
+        stackPhotoDB.let {
             when (contextUI) {
                 ContextUI.SHOWCASE -> {
                     val dataHolder = VizitShowcaseDataHolder.getInstance()
-                    dataHolder[planogrammId.value].showcaseId = it.showcase_id?.toIntOrNull() ?: 0
+                    dataHolder[planogrammId.value].showcaseId =
+                        it.showcase_id?.toIntOrNull()
+                            ?: it.showcaseId
+                                .takeIf { showcaseId -> showcaseId > 0 }
+                            ?: 0
                     dataHolder[planogrammId.value].showcasePhotoId =
                         it.photoServerId?.toIntOrNull() ?: 0
                 }
@@ -1140,9 +1435,59 @@ class ShowcaseDBViewModel @Inject constructor(
         }
     }
 
+    private fun logShowcaseDiagnosticOnce(
+        key: String,
+        level: String,
+        stage: String,
+        message: String,
+        error: Throwable? = null
+    ) {
+        val normalizedKey = "$stage|$key"
+        if (!loggedShowcaseDiagnostics.add(normalizedKey)) return
+
+        val errorMessage = error?.let {
+            ", error=${it::class.java.simpleName}: ${it.message}"
+        }.orEmpty()
+
+        Globals.writeToMLOG(
+            level,
+            "ShowcaseDBViewModel/$stage",
+            "$message$errorMessage"
+        )
+    }
+
+    private fun String?.previewForLog(limit: Int = 300): String {
+        val value = this
+            ?.replace('\n', ' ')
+            ?.replace('\r', ' ')
+            ?.trim()
+            .orEmpty()
+
+        return if (value.length <= limit) {
+            value
+        } else {
+            value.take(limit) + "..."
+        }
+    }
+
+    private fun Collection<String>.previewIds(limit: Int = 20): String {
+        if (isEmpty()) return "[]"
+
+        val result = take(limit).joinToString(
+            prefix = "[",
+            postfix = if (size > limit) ", ...]" else "]"
+        )
+        return result
+    }
+
     private companion object {
         const val SHOWCASE_NOT_ACTUAL_LOG_THEME_ID = 1403
         const val SHOWCASE_NOT_ACTUAL_MIN_COMMENT_LENGTH = 10
+        const val SHOWCASE_DOSSIER_THEME_ID = 982L
+        const val SHOWCASE_OPTIONAL_WORK_DAYS = 60L
+        const val SECONDS_IN_DAY = 86_400L
+        const val UNIX_1971_SEC = 31_536_000L
+        val SHOWCASE_TYPES = listOf(0, 1, 2)
     }
 
 }

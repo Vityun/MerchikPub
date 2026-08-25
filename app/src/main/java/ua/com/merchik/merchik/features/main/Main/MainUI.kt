@@ -33,6 +33,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -54,6 +55,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -2692,7 +2694,8 @@ fun ItemUI(
     onProductCodeValueChange: ((String, String) -> Unit)? = null,
     onProductCodeValue2Change: ((String, String) -> Unit)? = null,
     onProductCodeTakePhoto: ((DataItemUI) -> Unit)? = null,
-    onClickImageComment: (DataItemUI, FieldValue) -> Unit = { _, _ -> }
+    onClickImageComment: (DataItemUI, FieldValue) -> Unit = { _, _ -> },
+    loadingImageIndexes: Set<Int> = emptySet()
 ) {
 //    index++
 //    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
@@ -2751,8 +2754,8 @@ fun ItemUI(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (item.images?.size == 3)
-            // Новый блок для трех изображений в ряд
+            if (item.images?.size == 3) {
+                // Новый блок для трех изображений в ряд
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -2863,7 +2866,21 @@ fun ItemUI(
                         }
                     }
                 }
-            else
+            } else if (item.images?.size == 2) {
+                TwoImagesItemContent(
+                    item = item,
+                    visibleFields = visibleFields,
+                    settingsItemUI = settingsItemUI,
+                    visibilityColumName = visibilityColumName,
+                    contextUI = contextUI,
+                    imageCommentFields = imageCommentFields,
+                    loadingImageIndexes = loadingImageIndexes,
+                    onMultipleClickItemImage = onMultipleClickItemImage,
+                    onClickImageComment = onClickImageComment,
+                    onClickProductCode = onClickProductCode,
+                    onLongClickProductCode = onLongClickProductCode
+                )
+            } else
                 Row(Modifier.padding(7.dp)) {
                     item.fields.firstOrNull {
                         it.key.equals(
@@ -2939,67 +2956,15 @@ fun ItemUI(
                         modifier = Modifier
                             .weight(if (item.images?.size == 3) 1f else 2f)
                     ) {
-                        if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT)
-
-                            item.fields.forEachIndexed { index, field ->
-                                if (settingsItemUI.firstOrNull {
-                                        it.key.equals(
-                                            field.key,
-                                            true
-                                        )
-                                    }?.isEnabled == false) {
-                                } else {
-                                    if (!field.key.equals("id_res_image", true)) {
-//                                    ItemFieldValue(field, visibilityColumName)
-                                        ItemFieldValue(
-                                            item = item,
-                                            fieldValue = field,
-                                            visibilityField = visibilityColumName,
-                                            onClickProductCode = onClickProductCode,
-                                            onLongClickProductCode = onLongClickProductCode
-                                        )
-                                        if (index < visibleFields.size - 1) {
-                                            val bg = item.modifierContainer?.background
-                                            val color = when {
-                                                // если контейнера нет → LightGray
-                                                bg == null -> Color.LightGray
-                                                // если фон светлее, чем LightGray → LightGray
-                                                bg.isLighterThan(Color.LightGray) -> Color.LightGray
-                                                // если такой же или темнее → White
-                                                else -> Color.White
-                                            }
-                                            HorizontalDivider(
-                                                color = color
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        else
-                            visibleFields.forEachIndexed { index, field ->
-                                if (!field.key.equals("id_res_image", true)) {
-//                                ItemFieldValue(field, visibilityColumName)
-                                    ItemFieldValue(
-                                        item = item,
-                                        fieldValue = field,
-                                        visibilityField = visibilityColumName,
-                                        onClickProductCode = onClickProductCode,
-                                        onLongClickProductCode = onLongClickProductCode
-                                    )
-                                    if (index < visibleFields.lastIndex) {
-                                        val bg = item.modifierContainer?.background
-                                        val color = when {
-                                            // если контейнера нет → LightGray
-                                            bg == null -> Color.LightGray
-                                            // если фон светлее, чем LightGray → LightGray
-                                            bg.isLighterThan(Color.LightGray) -> Color.LightGray
-                                            // если такой же или темнее → White
-                                            else -> Color.White
-                                        }
-                                        HorizontalDivider(color = color)
-                                    }
-                                }
-                            }
+                        ItemFieldsColumn(
+                            item = item,
+                            visibleFields = visibleFields,
+                            settingsItemUI = settingsItemUI,
+                            visibilityColumName = visibilityColumName,
+                            contextUI = contextUI,
+                            onClickProductCode = onClickProductCode,
+                            onLongClickProductCode = onLongClickProductCode
+                        )
                     }
                 }
 
@@ -3074,6 +3039,180 @@ fun ItemUI(
         }
     }
 }
+
+@Composable
+private fun TwoImagesItemContent(
+    item: DataItemUI,
+    visibleFields: List<FieldValue>,
+    settingsItemUI: List<SettingsItemUI>,
+    visibilityColumName: Int,
+    contextUI: ModeUI,
+    imageCommentFields: List<FieldValue>,
+    loadingImageIndexes: Set<Int>,
+    onMultipleClickItemImage: (DataItemUI, Int) -> Unit,
+    onClickImageComment: (DataItemUI, FieldValue) -> Unit,
+    onClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit,
+    onLongClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit
+) {
+    val idResImage = (item.fields.firstOrNull {
+        it.key.equals("id_res_image", ignoreCase = true)
+    }?.value?.rawValue as? Int) ?: R.drawable.merchik
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(7.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            repeat(2) { index ->
+                val painter = imagePainterForPath(
+                    pathImage = item.images?.getOrNull(index),
+                    idResImage = idResImage
+                )
+                val isLoading = index in loadingImageIndexes
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(2.dp)
+                        .aspectRatio(1f)
+                        .border(1.dp, Color.LightGray)
+                        .background(Color.White)
+                ) {
+                    ImageWithText(
+                        item = item,
+                        index = index,
+                        painter = painter,
+                        imageText = TWO_IMAGE_LABELS[index]
+                    ) { clickedItem, clickedIndex ->
+                        onMultipleClickItemImage(clickedItem, clickedIndex)
+                    }
+
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.18f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                color = colorResource(id = R.color.blue),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        ImageCommentFieldsBlock(
+            item = item,
+            fields = imageCommentFields,
+            onClick = onClickImageComment
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 5.dp)
+        ) {
+            ItemFieldsColumn(
+                item = item,
+                visibleFields = visibleFields,
+                settingsItemUI = settingsItemUI,
+                visibilityColumName = visibilityColumName,
+                contextUI = contextUI,
+                onClickProductCode = onClickProductCode,
+                onLongClickProductCode = onLongClickProductCode
+            )
+        }
+    }
+}
+
+@Composable
+private fun imagePainterForPath(
+    pathImage: String?,
+    idResImage: Int
+): Painter {
+    val defaultImage = painterResource(idResImage)
+    val file = pathImage
+        ?.takeIf { it.isNotBlank() }
+        ?.let { File(it) }
+
+    return if (file?.exists() == true) {
+        rememberAsyncImagePainter(model = file)
+    } else {
+        defaultImage
+    }
+}
+
+@Composable
+private fun ItemFieldsColumn(
+    item: DataItemUI,
+    visibleFields: List<FieldValue>,
+    settingsItemUI: List<SettingsItemUI>,
+    visibilityColumName: Int,
+    contextUI: ModeUI,
+    onClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit,
+    onLongClickProductCode: (DataItemUI, FieldValue, ClickTextAction) -> Unit
+) {
+    if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT) {
+        item.fields.forEachIndexed { index, field ->
+            if (settingsItemUI.firstOrNull {
+                    it.key.equals(
+                        field.key,
+                        true
+                    )
+                }?.isEnabled == false) {
+            } else {
+                if (!field.key.equals("id_res_image", true)) {
+                    ItemFieldValue(
+                        item = item,
+                        fieldValue = field,
+                        visibilityField = visibilityColumName,
+                        onClickProductCode = onClickProductCode,
+                        onLongClickProductCode = onLongClickProductCode
+                    )
+                    if (index < visibleFields.size - 1) {
+                        ItemFieldDivider(item)
+                    }
+                }
+            }
+        }
+    } else {
+        visibleFields.forEachIndexed { index, field ->
+            if (!field.key.equals("id_res_image", true)) {
+                ItemFieldValue(
+                    item = item,
+                    fieldValue = field,
+                    visibilityField = visibilityColumName,
+                    onClickProductCode = onClickProductCode,
+                    onLongClickProductCode = onLongClickProductCode
+                )
+                if (index < visibleFields.lastIndex) {
+                    ItemFieldDivider(item)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ItemFieldDivider(item: DataItemUI) {
+    val bg = item.modifierContainer?.background
+    val color = when {
+        bg == null -> Color.LightGray
+        bg.isLighterThan(Color.LightGray) -> Color.LightGray
+        else -> Color.White
+    }
+    HorizontalDivider(color = color)
+}
+
+private val TWO_IMAGE_LABELS = listOf("Фото до", "Фото після")
 
 fun Color.isLighterThan(other: Color): Boolean =
     this.luminance() < other.luminance()

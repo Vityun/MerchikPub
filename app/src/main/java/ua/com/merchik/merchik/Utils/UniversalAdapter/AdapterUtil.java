@@ -507,8 +507,6 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                     dialogAchievement.setAchievement(data);
                     dialogAchievement.setOk("Створити ДІНДОС", ()->{
                         try {
-                            Log.e("!!!!!updateFilters!!!!!!", "0 wpDataDB: " +new Gson().toJson(data));
-
                             DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(mContext);
                             dialogCreateAchievement.setData(data);
                             dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);

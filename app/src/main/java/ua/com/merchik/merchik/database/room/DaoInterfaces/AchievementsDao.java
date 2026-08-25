@@ -68,6 +68,15 @@ public interface AchievementsDao {
             "ORDER BY dt_ut DESC")
     List<AchievementsSDB> getAchievementsList(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
 
+    @Query("SELECT * FROM achievements " +
+            "WHERE (:clientId IS NULL OR client_id = :clientId) " +
+            "AND (:addressId IS NULL OR addr_id = :addressId) " +
+            "AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) " +
+            "AND (:themeId IS NULL OR theme_id = :themeId) " +
+            "AND theme_id IS NOT NULL " +
+            "ORDER BY dt_ut DESC")
+    List<AchievementsSDB> getAchievementsListByFilters(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
+
 
     @Query("SELECT * FROM achievements WHERE serverId IS NULL OR serverId <= 0")
     List<AchievementsSDB> getAllToDownload();

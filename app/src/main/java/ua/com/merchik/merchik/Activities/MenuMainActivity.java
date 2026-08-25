@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
@@ -253,18 +255,7 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
 
-        PhotoManager.getPhotoListToDownloadAsync(new PhotoListCallback() {
-            @Override
-            public void onSuccess(@NotNull List<? extends @NotNull TovarImgList> list) {
-                Log.e("test_photo_oo", "Количество: " + list.size());
-            }
-
-            @Override
-            public void onError(@NotNull Throwable error) {
-                Log.e("test_photo_oo", "Throwable: " + error.getMessage());
-
-            }
-        });
+        downloadTest();
 
 //        new Translate().uploadNewTranslate();
 
@@ -275,262 +266,6 @@ public class MenuMainActivity extends toolbar_menus {
 
 
 
-
-/*
-
-
-            PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-            planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
-                @Override
-                public void onSuccess(Object data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-
-
-
-try {
-        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-        planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
-            @Override
-            public void onSuccess(Object data) {
-
-            }
-
-            @Override
-            public void onFailure(String error) {
-
-            }
-        });
-        planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
-            @Override
-            public void onSuccess(Object data) {
-
-            }
-
-            @Override
-            public void onFailure(String error) {
-
-            }
-        });
-        planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
-            @Override
-            public void onSuccess(Object data) {
-
-            }
-
-            @Override
-            public void onFailure(String error) {
-
-            }
-        });
-        planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
-            @Override
-            public void onSuccess(Object data) {
-
-            }
-
-            @Override
-            public void onFailure(String error) {
-
-            }
-        });
-    }catch (Exception e){
-        Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
-    }*/
-
-/*
-
-        Globals.writeToMLOG("INFO", "uploadAchievemnts", "test");
-        new Exchange().uploadAchievemnts();
-
-        new Exchange().planogram(new ExchangeInterface.ExchangeResponseInterface() {
-            @Override
-            public <T> void onSuccess(List<T> data) {
-                try {
-                    List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
-                    PhotoDownload.savePhotoToDB2(datalist);
-                    Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Globals.writeToMLOG("FAIL", "startExchange/planogram/onFailure", error);
-            }
-        }); // Получение планограмм
-
-
-new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus() {
-        @Override
-        public void onSuccess(Object data) {
-
-        }
-
-        @Override
-        public void onFailure(String error) {
-
-        }
-    });*/
-
-/*    // Просто планограммы
-    StandartData data = new StandartData();
-    data.mod = "planogram";
-    data.act = "list";
-    data.nolimit = "1";
-
-    Gson gson = new Gson();
-    String json = gson.toJson(data);
-    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-        Log.e("MAIN_test", "Просто планограммы convertedObject: " + convertedObject);
-
-    retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
-        @Override
-        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-            Log.e("MAIN_test", "Просто планограммы: " + response);
-            Log.e("MAIN_test", "Просто планограммы body: " + response.body());
-        }
-
-        @Override
-        public void onFailure(Call<JsonObject> call, Throwable t) {
-            Log.e("MAIN_test", "Просто планограммы: " + t);
-        }
-    });*/
-
-
-
-
-/*                try {
-        StandartData data = new StandartData();
-        data.mod = "additional_requirements";
-        data.act = "list";
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        retrofit2.Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<AdditionalRequirementsServerData>() {
-            @Override
-            public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
-                try {
-                    AdditionalRequirementsRealm.setDataToDB(response.body().getList());
-                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
-                Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
-            }
-        });
-    } catch (Exception e) {
-        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
-    }*/
-
-
-
-    /*        String mod = "location";
-        String act = "track";
-
-        List<LogMPDB> logMp = RealmManager.getNOTUploadLogMPDBTEST(31, 32);
-
-            Log.e("LogMp", "LogMpUploadText. LogSize: " + logMp.size());
-
-            HashMap<String, String> map = new HashMap<>();
-            for (LogMPDB list : logMp) {
-                map.put("gp[" + list.getId() + "]", list.getGp());
-            }
-
-            Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());
-
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
-                @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                    Log.e("LogMp", "RESPONSE: " + response.body());
-
-                    // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
-//                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
-
-                    try {
-                        JsonObject resp = response.body();
-                        if (resp != null) {
-                            if (!resp.get("state").isJsonNull() && resp.get("state").getAsBoolean()) {
-                                JsonObject arr = resp.get("geo_result").getAsJsonObject();
-                                if (arr != null) {
-                                    for (LogMPDB list : logMp) {
-                                        JsonObject geoInfo = arr.getAsJsonObject(String.valueOf(list.getId()));
-                                        if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
-                                            try {
-                                                RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                                    list.deleteFromRealm();
-                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
-                                                });
-
-                                                res.onSuccess("ОК");
-                                            } catch (Exception e) {
-                                                Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/executeTransaction", "Exception e: " + e);
-                                                res.onFailure("Exception e: " + e);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/onResponse", "Exception e: " + e);
-                        res.onFailure("2_Exception e: " + e);
-                    }
-
-                }
-
-                @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    Globals.writeToMLOG("ERROR", "uploadLodMp/onFailure", "Throwable t: " + t);
-                    Log.e("LogMp", "FAILURE_E: " + t.getMessage());
-                    Log.e("LogMp", "FAILURE_E2: " + t);
-                    res.onFailure("onFailure: " + t);
-                }
-            });*/
-
-
-    /*        try {
-                StandartData data = new StandartData();
-                data.mod = "data_list";
-                data.act = "tovar_vendor_code_list";
-
-                Gson gson = new Gson();
-                String json = gson.toJson(data);
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-                call.enqueue(new Callback<JsonObject>() {
-                    @Override
-                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                        Log.e("test", "response" + response.body());
-                    }
-
-                    @Override
-                    public void onFailure(Call<JsonObject> call, Throwable t) {
-                        Log.e("test", "test" + t);
-                    }
-                });
-
-
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
-            }*/
 
     public static void logPpaUniqueStats() {
 
@@ -757,45 +492,21 @@ new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus(
     private void downloadTest() {
         try {
             StandartData data = new StandartData();
-            data.mod = "quest_data";
-            data.act = "list";
-//            data.code_iza = getIZAList();
+            data.mod = "images_achieve";
+            data.act = "dynamic";
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            RetrofitBuilder.getRetrofitInterface().GET_QUESTION_LIST(RetrofitBuilder.contentType, convertedObject)
-                    .enqueue(new Callback<QuestionAnswerResponse>() {
-                        @Override
-                        public void onResponse(Call<QuestionAnswerResponse> call, Response<QuestionAnswerResponse> response) {
-                            if ( response.isSuccessful() && response.body() != null && response.body().getState()
-                                    && response.body().getList() != null && !response.body().getList().isEmpty()) {
-                                SQL_DB.questionAnswerDao().insertAll(response.body().getList());
-                            }
-//                            if (response.isSuccessful() && response.body() != null &&
-//                            response.body())
-                        }
-
-                        @Override
-                        public void onFailure(Call<QuestionAnswerResponse> call, Throwable t) {
-
-                        }
+            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(jsonObject ->{
+                        Log.e("RESULT", ">> " + jsonObject);
+                    }, throwable -> {
+                        Log.e("Error","error: " +throwable.getMessage());
                     });
-//            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
-//                    .enqueue(new Callback<JsonObject>() {
-//                        @Override
-//                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                            Log.e("!!!!!!!!","+++++++++++");
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Call<JsonObject> call, Throwable t) {
-//                            Log.e("!!!!!!!!","+++++++++++");
-//
-//                        }
-//                    });
-
 
 
         } catch (Exception e) {

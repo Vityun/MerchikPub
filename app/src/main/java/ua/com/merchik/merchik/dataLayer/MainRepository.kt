@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -126,6 +127,7 @@ class MainRepository(
                     OrderDataSDB::class -> roomManager.orderDataDao().all.firstOrNull() as DataObjectUI
                     WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all.firstOrNull() as DataObjectUI
                     SiteHintsDB::class -> RealmManager.getAllVideoLessons().firstOrNull() as DataObjectUI
+                    AchievementsSDB::class -> roomManager.achievementsDao().all.firstOrNull() as DataObjectUI
                     else -> null
                 }
             }.getOrNull()
@@ -461,6 +463,7 @@ class MainRepository(
             OrderDataSDB::class -> roomManager.orderDataDao().all
             WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all
             SiteHintsDB::class -> RealmManager.getAllVideoLessons()
+            AchievementsSDB::class -> roomManager.achievementsDao().all
             else -> {
                 emptyList()
             }

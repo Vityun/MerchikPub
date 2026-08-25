@@ -1,19 +1,27 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -27,11 +35,15 @@ import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 
 public class OptionButtAchievements<T> extends OptionControl {
     public int OPTION_BUTTON_ACHIEVEMENTS_ID = 135159;
@@ -70,7 +82,21 @@ public class OptionButtAchievements<T> extends OptionControl {
 
     private void executeOption() {
         try {
-            showAchievementDialog();
+//            showAchievementDialog();
+            Intent intent = new Intent(context, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", AchievementsSDBViewModel.class.getCanonicalName());
+            bundle.putString("contextUI", ContextUI.ACHIEVEMENT.toString());
+            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+            JsonObject dataJson = new JsonObject();
+            dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
+            bundle.putString("dataJson", new Gson().toJson(dataJson));
+            bundle.putString("title", "Досягнення");
+            bundle.putString("subTitle", "Представлені досягнення за обраною адресою, клієнтом та періодом");
+            intent.putExtras(bundle);
+            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtAchievements/executeOption", "Exception e: " + e);
         }
@@ -79,7 +105,7 @@ public class OptionButtAchievements<T> extends OptionControl {
     private void showAchievementDialog() {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Досягнення");
-        dialog.setText("Оиберіть досягнення, або створіть нове!");
+        dialog.setText("Оберіть досягнення, або створіть нове!");
         dialog.setClose(dialog::dismiss);
         dialog.showFilter(() -> {
             // Тут я должен обработать данные, что я внёс в фильтре и закинуть их на обновление

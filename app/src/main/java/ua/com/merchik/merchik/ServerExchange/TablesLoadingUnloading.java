@@ -1983,6 +1983,7 @@ public class TablesLoadingUnloading {
         call.enqueue(new Callback<OptionsServer>() {
             @Override
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
+                Log.e("OptionsByDAD2","8===>  " + new Gson().toJson(response.body()));
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState() && response.body().getList() != null && !response.body().getList().isEmpty()) {

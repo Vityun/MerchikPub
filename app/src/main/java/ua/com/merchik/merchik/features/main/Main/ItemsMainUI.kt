@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -77,6 +78,7 @@ fun ItemRowCard(
 ) {
     val rows = productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
     val expanded = productCodeEditorState.expanded && rows.isNotEmpty()
+    val achievementPhotoLoadingIds = rememberAchievementPhotoLoadingIds(viewModel)
 
     Box(
         modifier = Modifier
@@ -115,6 +117,10 @@ fun ItemRowCard(
             },
             productCodeExpanded = expanded,
             productCodeRows = rows,
+            loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                item,
+                achievementPhotoLoadingIds
+            ),
             onProductCodeMinus = { rowId ->
                 viewModel.decreaseProductCodeValue(item.stableId, rowId)
             },
@@ -159,6 +165,7 @@ fun GroupDeck(
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
     val uiState by viewModel.uiState.collectAsState()
     val productCodeEditorState by viewModel.productCodeEditorState.collectAsState()
+    val achievementPhotoLoadingIds = rememberAchievementPhotoLoadingIds(viewModel)
 
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
@@ -520,6 +527,10 @@ fun GroupDeck(
                                 settingsItemUI = topCardSettings,
                                 showRoundCheckbox = !(viewModel.modeUI == ModeUI.ONE_SELECT && level == 0),
                                 contextUI = viewModel.modeUI,
+                                loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                                    topItem,
+                                    achievementPhotoLoadingIds
+                                ),
                                 onClickItem = {
                                     // клик по карте действует как по заголовку
                                     if (viewModel.shouldOpenContextMenuOnCardClick()) {
@@ -593,6 +604,10 @@ fun GroupDeck(
                             visibilityColumName = visibilityColumName,
                             settingsItemUI = settingsItems,
                             contextUI = viewModel.modeUI,
+                            loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                                topItem,
+                                achievementPhotoLoadingIds
+                            ),
                             onClickItem = {
                                 if (viewModel.shouldOpenContextMenuOnCardClick()) {
                                     viewModel.onClickItems(
@@ -721,6 +736,10 @@ fun GroupDeck(
                                         },
                                         productCodeExpanded = expanded,
                                         productCodeRows = rows,
+                                        loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                                            item,
+                                            achievementPhotoLoadingIds
+                                        ),
                                         onProductCodeMinus = { rowId ->
                                             viewModel.decreaseProductCodeValue(item.stableId, rowId)
                                         },
@@ -1314,6 +1333,22 @@ private fun List<SettingsItemUI>.withForcedKeys(keys: Set<String>): List<Setting
 
 private fun List<SettingsItemUI>.isGroupHeaderEnabled(): Boolean {
     return firstOrNull { it.key.equals("group_header", ignoreCase = true) }?.isEnabled ?: true
+}
+
+@Composable
+private fun rememberAchievementPhotoLoadingIds(viewModel: MainViewModel): Set<String> {
+    val achievementViewModel = viewModel as? AchievementsSDBViewModel ?: return emptySet()
+    val loadingIds by achievementViewModel.achievementPhotoLoadingIds.collectAsState()
+    return loadingIds
+}
+
+private fun MainViewModel.getAchievementLoadingImageIndexes(
+    item: DataItemUI,
+    loadingPhotoIds: Set<String>
+): Set<Int> {
+    return (this as? AchievementsSDBViewModel)
+        ?.getLoadingImageIndexes(item, loadingPhotoIds)
+        .orEmpty()
 }
 
 private const val GROUP_DECK_DEBUG = "GROUP_DECK_DEBUG"

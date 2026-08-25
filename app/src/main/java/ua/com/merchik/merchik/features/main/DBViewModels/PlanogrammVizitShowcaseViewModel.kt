@@ -111,23 +111,6 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
         val endbAddr: CharSequence = Html.fromHtml(bAddr.toString())
 
 
-//                val bGrp = StringBuilder()
-//                val grp = "<b>Мережа: </b>"
-//                bGrp.append(grp)
-//                try {
-//                    Log.e("AdditionalRequirements", "Сеть: " + data.)
-//                    if (data.getGrpId() == "0") {
-//                        bGrp.append("Для всех сетей")
-//                    } else {
-//                        val grp2 = String.format("%s", data.getGrpId())
-//                        bGrp.append(grp2)
-//                    }
-//                } catch (e: Exception) {
-//                    bGrp.append("Для всех сетей")
-//                }
-//                val endbGrp: CharSequence = Html.fromHtml(bGrp.toString())
-
-
         val bNum = StringBuilder()
         val number = "<b>Номер: </b>"
         bNum.append(number)

@@ -484,8 +484,6 @@ abstract class MainViewModel(
     }
 
     open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
-        if (index != 0) return
-
         dialog = DialogFullPhoto(context)
 
         val photoLogData = mutableListOf<StackPhotoDB>()
