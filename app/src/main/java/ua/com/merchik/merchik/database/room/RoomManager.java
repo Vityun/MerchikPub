@@ -54,7 +54,8 @@ public class RoomManager {
                         MIGRATION_78_79,
                         MIGRATION_79_80,
                         MIGRATION_80_81,
-                        MIGRATION_81_82
+                        MIGRATION_81_82,
+                        MIGRATION_82_83
                 )
                 .build();
 
@@ -1011,6 +1012,78 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE showcase ADD COLUMN main_option_id INTEGER");
+            SynchronizationTimetableRepository.markRoomSchemaMigrated();
+        }
+    };
+
+    public static final Migration MIGRATION_82_83 = new Migration(82, 83) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `dynamic_achievements` (" +
+                            "`ID` TEXT NOT NULL, " +
+                            "`select_id` TEXT, " +
+                            "`select_name` TEXT, " +
+                            "`rack_photo_id` TEXT, " +
+                            "`rack_photo` TEXT, " +
+                            "`rack_photo_big` TEXT, " +
+                            "`client_id` TEXT, " +
+                            "`client_nm` TEXT, " +
+                            "`isp` TEXT, " +
+                            "`isp_nm` TEXT, " +
+                            "`addr_id` TEXT, " +
+                            "`addr_tp` TEXT, " +
+                            "`addr_city` TEXT, " +
+                            "`addr_addr` TEXT, " +
+                            "`addr_nomer_tt` TEXT, " +
+                            "`rack_id` TEXT, " +
+                            "`rack_nm` TEXT, " +
+                            "`rack_form_nm` TEXT, " +
+                            "`tovar_grp_id` TEXT, " +
+                            "`tovar_grp_nm` TEXT, " +
+                            "`date_from` TEXT, " +
+                            "`date_to` TEXT, " +
+                            "`achieve_photo_count` TEXT, " +
+                            "`nm` TEXT, " +
+                            "`theme_id` TEXT, " +
+                            "`theme_nm` TEXT, " +
+                            "`planogram_id` TEXT, " +
+                            "`planogram_nm` TEXT, " +
+                            "`manufacturer_id` TEXT, " +
+                            "`manufacturer_nm` TEXT, " +
+                            "`tovar_id` TEXT, " +
+                            "`tovar_nm` TEXT, " +
+                            "`ative` TEXT, " +
+                            "`active` TEXT, " +
+                            "`dvi` TEXT, " +
+                            "`about` TEXT, " +
+                            "`author_id` TEXT, " +
+                            "`author_fio` TEXT, " +
+                            "`dt_update` TEXT, " +
+                            "`achieve_photo_count__title` TEXT, " +
+                            "PRIMARY KEY(`ID`)" +
+                            ")"
+            );
+
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `dynamic_photo` (" +
+                            "`ID` TEXT NOT NULL, " +
+                            "`achieve_dynamics_id` TEXT, " +
+                            "`photo_id` TEXT, " +
+                            "`active` TEXT, " +
+                            "`dvi` TEXT, " +
+                            "`about` TEXT, " +
+                            "`author_id` TEXT, " +
+                            "`dt_update` TEXT, " +
+                            "PRIMARY KEY(`ID`)" +
+                            ")"
+            );
+
+            database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_dynamic_photo_achieve_dynamics_id` " +
+                            "ON `dynamic_photo` (`achieve_dynamics_id`)"
+            );
+
             SynchronizationTimetableRepository.markRoomSchemaMigrated();
         }
     };

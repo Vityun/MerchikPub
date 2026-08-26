@@ -256,6 +256,7 @@ public class MenuMainActivity extends toolbar_menus {
 
 
         downloadTest();
+        downloadTest2();
 
 //        new Translate().uploadNewTranslate();
 
@@ -503,9 +504,34 @@ public class MenuMainActivity extends toolbar_menus {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(jsonObject ->{
-                        Log.e("RESULT", ">> " + jsonObject);
+                        Log.e("RESULT", "dynamic >> " + jsonObject);
                     }, throwable -> {
-                        Log.e("Error","error: " +throwable.getMessage());
+                        Log.e("Error","dynamic error: " +throwable.getMessage());
+                    });
+
+
+        } catch (Exception e) {
+            Log.e("MenuMainTest", "Exception e.t:" + e);
+        }
+    }
+
+    private void downloadTest2() {
+        try {
+            StandartData data = new StandartData();
+            data.mod = "images_achieve";
+            data.act = "dynamic_photo";
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(jsonObject ->{
+                        Log.e("RESULT", "dynamic_photo >> " + jsonObject);
+                    }, throwable -> {
+                        Log.e("Error","dynamic_photo error: " +throwable.getMessage());
                     });
 
 

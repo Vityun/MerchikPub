@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -49,7 +50,7 @@ class UsersSDBViewModel @Inject constructor(
     override fun getDefaultHideUserFields(): List<String>? {
         return when (contextUI) {
             ContextUI.USERS_SDB_FROM_EKL ->
-                ("client_id, work_addr_id, tel2").split(",")
+                ("client_id, work_addr_id, tel2, teritorial_id, regional_id, instructor_id, supervisor_id, nach_otd_proizv_id, zamestitel_id").split(",")
 
             else -> null
         }
@@ -61,16 +62,6 @@ class UsersSDBViewModel @Inject constructor(
 
 
     override fun updateFilters() {
-//        val dataAddress = when(contextUI) {
-//            ContextUI.USERS_SDB_FROM_EKL -> {
-//                val addrId = Gson().fromJson(dataJson, Int::class.java)
-//                    ?: EKLDataHolder.instance().usersPTTWorkAddressId
-//                if (EKLDataHolder.instance().usersPTTWorkAddressId == null)
-//                    EKLDataHolder.instance().usersPTTWorkAddressId = addrId
-//                RoomManager.SQL_DB.addressDao().getById(addrId)
-//            } else -> {
-//            }
-//        }
 
         try {
 
@@ -194,7 +185,19 @@ class UsersSDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
-        val data = repository.getAllRoom(table, contextUI, null)
+
+        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+
+        val addrId = dataJsonObject.get("addr_id")?.asInt
+            ?: EKLDataHolder.instance().usersPTTWorkAddressId
+
+        val usersSDBList: List<UsersSDB> = if (addrId != null) {
+            RoomManager.SQL_DB.usersDao().getPTT(addrId)
+        } else {
+            RoomManager.SQL_DB.usersDao().all2
+        }
+
+        val data = repository.toItemUIList(TradeMarkDB::class, usersSDBList, contextUI, null)
             .map {
                 val selected = FilteringDialogDataHolder.instance()
                     .filters

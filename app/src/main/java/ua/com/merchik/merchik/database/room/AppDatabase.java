@@ -21,6 +21,8 @@ import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.DateConverter;
 import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
+import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB;
+import ua.com.merchik.merchik.data.Database.Room.DynamicPhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.ImagesTypeListSDB;
@@ -78,6 +80,8 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.CityDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ContentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.DossierSotrDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.DynamicAchievementsDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.DynamicPhotoDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ImagesTypeListDao;
@@ -181,9 +185,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 WPDataPauseSDB.class,
                 ThemeSDB.class,
                 TradeMarkSDB.class,
-                ImagesTypeListSDB.class
+                ImagesTypeListSDB.class,
+                DynamicAchievementSDB.class,
+                DynamicPhotoSDB.class
         },
-        version = 82
+        version = 83
 )
 
 
@@ -301,6 +307,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract OrderDataDao orderDataDao();
 
     public abstract WPDataPauseDao wpDataPauseDao();
+
+    public abstract DynamicAchievementsDao dynamicAchievementsDao();
+
+    public abstract DynamicPhotoDao dynamicPhotoDao();
 
     public class MyAutoMigration {
     }

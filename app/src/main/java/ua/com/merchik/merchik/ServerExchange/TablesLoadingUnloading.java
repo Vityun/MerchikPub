@@ -77,6 +77,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.DynamicAchievementsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -333,6 +334,7 @@ public class TablesLoadingUnloading {
             downloadtovar_grp_client();
 
             downloadWiFi();
+            downloadDynamicAchievementsTables();
 
             downloadTovarGroupTable(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -410,6 +412,14 @@ public class TablesLoadingUnloading {
 
 
         globals.testMSG(context);
+    }
+
+    public void downloadDynamicAchievementsTables() {
+        try {
+            new DynamicAchievementsExchange().syncInCron();
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadDynamicAchievementsTables", "Exception: " + e);
+        }
     }
 
     private static boolean isdownloadWPData = false;

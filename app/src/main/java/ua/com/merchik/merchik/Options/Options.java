@@ -405,6 +405,7 @@ public class Options {
                     break;
 
                 case 579:
+                case 174974:
                     OptionMassageType type579 = new OptionMassageType();
                     switch (mode) {
                         case NULL:
@@ -2156,6 +2157,7 @@ public class Options {
                 return optionControlPromotion.isBlockOption2() ? 1 : 0;
 
             case 579:
+            case 174974:
                 OptionControlAvailabilityOfPrices<?> optionControlAvailabilityOfPrices = new OptionControlAvailabilityOfPrices<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityOfPrices.isBlockOption()))
                     optionControlAvailabilityOfPrices.showOptionMassage(block);

@@ -1,44 +1,52 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
+
 import android.content.Context;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-import io.realm.RealmResults;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
-import ua.com.merchik.merchik.Clock;
-import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.Options.OptionControl;
-import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.data.OptionMassageType;
-import ua.com.merchik.merchik.data.PhotoDescriptionText;
-import ua.com.merchik.merchik.data.RealmModels.*;
-import ua.com.merchik.merchik.data.TovarOptions;
-import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
-import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
-import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
-import ua.com.merchik.merchik.dialogs.DialogData;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
-import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.*;
-
-import com.google.gson.Gson;
-
+import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.OptionControl;
+import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.PromoDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.TovarOptions;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
  * 24.09.2025
@@ -87,7 +95,6 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             } catch (Exception e) {
                 colMin = 1;
             }
-            Log.e("AvailabilityOfPrices", "col min " + colMin);
         }
     }
 
@@ -97,16 +104,28 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
         // Получение RP по данному документу.
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+        boolean isPriceOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID);
+        boolean isOsvOnlyOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID);
 
         // Получение Доп. Требований с дополнительными фильтрами.
         List<AdditionalRequirementsDB> additionalRequirements = Collections.emptyList();
+        int requirementsOptionId = isOsvOnlyOption
+                ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID
+                : OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID;
         String[] tovIds;
-        if (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579")) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
-            tovIds = new String[additionalRequirements.size()];
+        if (isPriceOption || isOsvOnlyOption) {
+            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, requirementsOptionId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
+            List<String> tovIdList = new ArrayList<>();
             for (int i = 0; i < additionalRequirements.size(); i++) {
-                tovIds[i] = additionalRequirements.get(i).getTovarId();
+                String tovId = additionalRequirements.get(i).getTovarId();
+                if (tovId != null) {
+                    tovId = tovId.trim();
+                }
+                if (tovId != null && !tovId.isEmpty() && !tovId.equals("0") && !tovIdList.contains(tovId)) {
+                    tovIdList.add(tovId);
+                }
             }
+            tovIds = tovIdList.toArray(new String[0]);
             Arrays.sort(tovIds);
         } else {
             tovIds = new String[0];
@@ -122,26 +141,20 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         int totalOSV = 0;
         int foundWithPrice = 0;
         int missingPriceCount = 0;
+        List<String> missingPriceTovarIds = new ArrayList<>();
 
         for (ReportPrepareDB item : reportPrepare) {
-            boolean isOSV = osvTovarIds.contains(item.getTovarId());
-//            Log.e("AvailabilityOfPrices", "ReportPrepareDB: " + new Gson().toJson(item));
+            String itemTovarId = normalizeId(item.getTovarId());
+            boolean isOSV = osvTovarIds.contains(itemTovarId);
 
-//            if (!isOSV) continue;
-//            Log.e("AvailabilityOfPrices", "1");
-
-            TovarDB tov = TovarRealm.getById(item.getTovarId());
+            TovarDB tov = getTovarByIdSafe(itemTovarId);
             if (tov != null) {
-                String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
+                String msg = String.format("(%s) %s (%s)", itemTovarId, tov.getNm(), tov.getWeight());
 
                 // Если товар на витрине (face > 0) — нас он интересует
                 if (!hasPositiveFace(item)) {
                     // пропускаем товары, которых нет на витрине
                     continue;
-                }
-
-                if (optionDB.getOptionId().equals("174974") || optionDB.getOptionControlId().equals("174974")){
-                    Log.e("AvailabilityOfPrices","OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID");
                 }
 
                 boolean hasPrice = hasPositivePrice(item);
@@ -160,9 +173,16 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
                         err++;
                         missingPriceCount++;
+                        missingPriceTovarIds.add(itemTovarId);
                         errMsg.append(createLinkedString(msg, item, tov)).append("\n");
                     }
                 } else {
+                    if (isOsvOnlyOption) {
+                        // 174974 работает только по ОСВ. Если ОСВ для текущей ТТ нет,
+                        // проверять остальные товары не нужно.
+                        continue;
+                    }
+
                     // Если список ОСВ пуст, проверяем цены по товарам на витрине с учетом КолМин.
                     if (hasPrice) {
                         foundWithPrice++;
@@ -171,6 +191,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         // КолМин=0 означает, что цена обязательна у всех товаров на витрине.
                         err++;
                         missingPriceCount++;
+                        missingPriceTovarIds.add(itemTovarId);
                         errMsg.append(createLinkedString(msg, item, tov)).append("\n");
                     }
                 }
@@ -199,12 +220,17 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (reportPrepare.size() == 0 || totalRelevant == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия ЦЕН, не обнаружено.");
             signal = false; // нет товаров — замечаний нет
-        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */
-        else if (missingPriceCount > 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
+        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */ else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
 //            spannableStringBuilder.append("Не предоставлена информация о ЦЕНАХ по товару (" + missingPriceCount + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signal = true;
-        } else if (hasOsvList && totalOSV == 0 && (optionDB.getOptionId().equals("579") || optionDB.getOptionControlId().equals("579"))) {
+        } else if (isOsvOnlyOption && !hasOsvList) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
+            signal = false;
+        } else if (hasOsvList && totalOSV == 0 && (isPriceOption || isOsvOnlyOption)) {
+            spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
+            signal = false;
+        } else if (isOsvOnlyOption) {
+            spannableStringBuilder.append("Замечаний по предоставлению информации о Ценах по товарам с ОСВ (Особым Вниманием) нет.");
             signal = false;
         } else if (found == 0) {
             spannableStringBuilder.append("Ни у одного товара не указана Цена.");
@@ -215,6 +241,10 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         } else {
             spannableStringBuilder.append("Замечаний по предоставлению информации о Ценах по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
             signal = false;
+        }
+
+        if (isOsvOnlyOption) {
+            logOsvOnlySummary(requirementsOptionId, tovIds, reportPrepare.size(), totalOSV, foundWithPrice, missingPriceCount, missingPriceTovarIds, signal);
         }
 
 
@@ -279,6 +309,90 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    private boolean isOptionOrControl(int id) {
+        if (optionDB == null) {
+            return false;
+        }
+
+        String expected = String.valueOf(id);
+        return expected.equals(optionDB.getOptionId()) || expected.equals(optionDB.getOptionControlId());
+    }
+
+    private void logOsvOnlySummary(
+            int requirementsOptionId,
+            String[] tovIds,
+            int reportPrepareCount,
+            int totalOsvWithFace,
+            int foundWithPrice,
+            int missingPriceCount,
+            List<String> missingPriceTovarIds,
+            boolean signal
+    ) {
+        Globals.writeToMLOG(
+                "INFO",
+                "AvailabilityOfPrices/174974",
+                "dad2=" + dad2
+                        + ", addrId=" + (wpDataDB != null ? wpDataDB.getAddr_id() : 0)
+                        + ", clientId=" + safe(wpDataDB != null ? wpDataDB.getClient_id() : null)
+                        + ", themeId=" + (wpDataDB != null ? wpDataDB.getTheme_id() : 0)
+                        + ", mainOption=" + safe(wpDataDB != null ? wpDataDB.getMain_option_id() : null)
+                        + ", requirementsOptionId=" + requirementsOptionId
+                        + ", reportPrepare=" + reportPrepareCount
+                        + ", osvIds=" + previewIds(tovIds)
+                        + ", totalOsvWithFace=" + totalOsvWithFace
+                        + ", prices=" + foundWithPrice
+                        + ", missing=" + missingPriceCount
+                        + ", missingIds=" + previewIds(missingPriceTovarIds)
+                        + ", signal=" + signal
+        );
+    }
+
+    private String previewIds(String[] ids) {
+        if (ids == null || ids.length == 0) {
+            return "";
+        }
+
+        int limit = Math.min(ids.length, 10);
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                result.append(",");
+            }
+            result.append(ids[i]);
+        }
+        if (ids.length > limit) {
+            result.append(",...");
+        }
+        return result.toString();
+    }
+
+    private String previewIds(List<String> ids) {
+        return ids != null ? previewIds(ids.toArray(new String[0])) : "";
+    }
+
+    private TovarDB getTovarByIdSafe(String tovId) {
+        try {
+            String id = normalizeId(tovId);
+            if (id == null || id.isEmpty() || id.equals("0")) {
+                return null;
+            }
+            return TovarRealm.getById(id);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String normalizeId(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private String safe(String value) {
+        return value != null ? value : "";
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {

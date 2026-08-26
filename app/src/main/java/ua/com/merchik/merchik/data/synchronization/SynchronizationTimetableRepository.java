@@ -224,7 +224,9 @@ public final class SynchronizationTimetableRepository {
                 row(46, "wifi_mac_location", 86400, 0, 0, "wifi_mac_location", 0),
                 row(47, "planogramm_vizit_showcase", 86400, 0, 0, "planogramm_vizit_showcase", 0),
                 row(48, "question_answer", 86400, 0, 10000000, "question_answer", 0),
-                row(49, "wp_data_pause", 600, 0, 0, "wp_data_pause", 1)
+                row(49, "wp_data_pause", 600, 0, 0, "wp_data_pause", 1),
+                row(50, "dynamic_achievements", 600, 0, 0, "dynamic_achievements", 0),
+                row(51, "dynamic_photo", 600, 0, 0, "dynamic_photo", 0)
         );
     }
 

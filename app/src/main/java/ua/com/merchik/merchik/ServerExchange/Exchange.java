@@ -1112,6 +1112,12 @@ public class Exchange {
                         }
 
                         try {
+                            new TablesLoadingUnloading().downloadDynamicAchievementsTables();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "startExchange/downloadDynamicAchievementsTables", "Exception e: " + e);
+                        }
+
+                        try {
                             new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
                                 @Override
                                 public <T> void onSuccess(List<T> data) {
