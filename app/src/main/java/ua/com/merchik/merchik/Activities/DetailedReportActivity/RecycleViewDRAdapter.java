@@ -341,6 +341,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 174213
                         || optionId == 174546   // кнопка пауза
                         || optionId == 174878   // фото товаров СИСГ (с истекающим/истекшим сроком годности)
+//                        || optionId == 139337   // для теста кнопка Индульгенция
+                        || optionId == 175014
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);

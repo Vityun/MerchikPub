@@ -285,6 +285,8 @@ public class DialogCreateAchievement {
                     Toast.makeText(v.getContext(), "Ви не вказали вiтрину, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
+                achievementsSDB.showcaseId = AchievementDataHolder.Companion.instance().getShowcaseId();
+                achievementsSDB.showcaseNm = AchievementDataHolder.Companion.instance().getShowcaseName();
 
                 if (AchievementDataHolder.Companion.instance().getManufactureId() != null) {
                     achievementsSDB.manufacturer = AchievementDataHolder.Companion.instance().getManufactureId();

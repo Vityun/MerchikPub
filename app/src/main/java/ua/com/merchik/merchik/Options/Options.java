@@ -31,15 +31,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -88,7 +91,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
@@ -106,6 +108,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonQuestionAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonTestClick;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
@@ -220,6 +223,7 @@ public class Options {
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
     в будущем, их пересчитать*/
     private List<OptionsDB> optionNotConduct = new ArrayList();
+    private List<OptionsDB> optionConductWithPenalty = new ArrayList();
 
     private static List<TovarOptions> list = new ArrayList<>();
     private static List<Integer> ids = new ArrayList<>();
@@ -358,10 +362,10 @@ public class Options {
                     optionControlRegistrationPotentialFriend.showOptionMassage("");
                     break;
 
-//                case 151594:
-//                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
-//                    optionControlPhotoBeforeStartWork.showOptionMassage("");
-//                    break;
+                case 135330:
+                    OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlReclamationAnswer.showOptionMassage("");
+                    break;
 
                 case 132624:
                     OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -1301,7 +1305,7 @@ public class Options {
                     "WpDataDB From Realm: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
 
             Log.e("!", "ConductMode: " + mode.name() +
-                    "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
+                    " WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
                     "List<OptionsDB> size: " + options.size());
             for (OptionsDB item : options) {
                 Log.e("conduct", "------------------------------START----------------------------------");
@@ -1351,11 +1355,12 @@ public class Options {
                     if (item.getIsSignal().equals("1")) {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
-                                msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
+                                msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
                         if (item.getOptionControlId().equals("84006"))
                             optionSumRes += wp.getCash_zakaz() * 0.16;
                         else
                             optionSumRes += wp.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE;
+                        optionConductWithPenalty.add(item);
                     }
                 }
 
@@ -1384,11 +1389,44 @@ public class Options {
                     break;
 
                 case DEFAULT_CONDUCT:
-                    if (!optionNotConduct.isEmpty()) {
+                    if (!optionNotConduct.isEmpty() || optionsSum.length() > 5) {
                         // Не все опции(действия) выполнены
                         // Не выполнены:
                         dialog.setDialogIco();
-                        dialog.setTitle("Не всі опції (дії) виконані.\n\nВаш звіт не буде проведено і не буде нараховано за нього оплату!");
+                        if (!optionNotConduct.isEmpty()) {
+                            String message =
+                                    "Не всі опції (дії) виконані.\n\n" +
+                                            "Ваш звіт не буде проведено і не буде нараховано за нього оплату!";
+
+                            SpannableString spannable = new SpannableString(message);
+                            String redText = "звіт не буде проведено";
+                            int start = message.indexOf(redText);
+                            int end = start + redText.length();
+                            spannable.setSpan(
+                                    new ForegroundColorSpan(Color.RED),
+                                    start,
+                                    end,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                            );
+                            dialog.setTitle(spannable);
+
+                        } else {
+                            String message =
+                                    "Не всі опції (дії) виконані.\n\n" +
+                                            "Ваш звіт може бути проведеним зі зниженям";
+
+                            SpannableString spannable = new SpannableString(message);
+                            String redText = "проведеним зі зниженям";
+                            int start = message.indexOf(redText);
+                            int end = start + redText.length();
+                            spannable.setSpan(
+                                    new ForegroundColorSpan(Color.RED),
+                                    start,
+                                    end,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                            );
+                            dialog.setTitle(spannable);
+                        }
 
                         SpannableStringBuilder resStr = new SpannableStringBuilder();
                         resStr.append("Не выполнены: \n\n");
@@ -1402,12 +1440,94 @@ public class Options {
                             Log.e("optionNotConduct", "------------------------------END----------------------------------");
                         }
                         resStr.append(optionsSum);
-                        resStr.append("\n\nУсуньте зазначені помилки та повторіть спробу проведення." + "\n\nВи можете отримати ще: " + "~")
-                                .append(String.format("%.2f", optionSumRes)).append("грн, якщо виконаєте опції вище.");
+                        String penalty = String.format("%.2f", optionSumRes);
+                        resStr.append("\n\nУсуньте зазначені помилки та повторіть спробу проведення.");
+                        if (!penalty.equals("0,00"))
+                            resStr.append("\n\nВи можете отримати ще: ")
+                                    .append(Html.fromHtml("<font color=red>~" + penalty + "грн</font>")).append(", якщо виконаєте опції вище.");
 
                         dialog.setText(resStr, () -> {
                         });
+                        if (optionNotConduct.isEmpty()) {
+                            dialog.setCancel2("Виправити зауваження", () -> {
+                                click.click(optionConductWithPenalty.get(0));
+                                dialog.dismiss();
+                            });
+                            dialog.setOk("Провести звiт зі зниженням", () -> {
+                                        {
+//                            new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                                            new TablesLoadingUnloading().uploadReportPrepareToServer();
+                                            Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
+                                                @Override
+                                                public <T> void onSuccess(T data) {
+//                                    dialogData.setTitle("Команда на проведення звіту. ");
+                                                    try {
+//                                        Spanned spanned = Html.fromHtml((String) data);
+                                                        Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
+
+                                                        if (data instanceof String)
+                                                            new MessageDialogBuilder(unwrap(context))
+                                                                    .setTitle("Команда на проведення звіту.")
+                                                                    .setSubTitle("Відповідь від сервера")
+                                                                    .setMessage((String) data)
+                                                                    .setOnConfirmAction(() -> {
+                                                                        if (((String) data).contains("#134583")) {
+                                                                            DialogData dialogData = new DialogData(context);
+                                                                            dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
+                                                                            dialogData.show();
+                                                                        }
+                                                                        return Unit.INSTANCE;
+                                                                    })
+                                                                    .show();
+                                                        else
+                                                            new MessageDialogBuilder(unwrap(context))
+                                                                    .setTitle("Команда на проведення звіту.")
+                                                                    .setStatus(DialogStatus.NORMAL)
+                                                                    .setSubTitle("Надіслано на сервер")
+                                                                    .setMessage("Запит на проведення звіту успішно прийнятий сервером та буде автоматично проведений")
+                                                                    .setOnConfirmAction(() -> {
+                                                                        return Unit.INSTANCE;
+                                                                    })
+                                                                    .show();
+                                                    } catch (Exception e) {
+                                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception e: " + e);
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(String error) {
+                                                    Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
+                                                    new MessageDialogBuilder(unwrap(context))
+                                                            .setTitle("Проведення звіту...")
+                                                            .setStatus(DialogStatus.ERROR)
+                                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними." +
+                                                                    "<br> Ответ от сервера: " + error)
+                                                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                                                            .show();
+
+//                                    dialogData.setTitle("Проведення звіту...");
+//                                    dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
+//                                    dialogData.show();
+
+                                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                        if (wp != null) {
+                                                            wp.startUpdate = true;
+                                                            wp.setSetStatus(1);
+                                                            wp.setDt_update(System.currentTimeMillis() / 1000);
+                                                            realm.insertOrUpdate(wp);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            new Exchange().startExchange();
+
+                                        }
+                                    }
+
+                            );
+                        }
                         dialog.show();
+                        Log.e("optionNotConduct", "3 " + resStr);
 
                     } else {
 //                        dialog.setTitle("Блокирующие опции не обнаружены.");
@@ -1430,9 +1550,9 @@ public class Options {
                         }
                         if (!existing.isEmpty()) {
                             new MessageDialogBuilder(unwrap(context))
-                                    .setTitle("## Дані не вивантажені на сервер")
+                                    .setTitle("Дані не вивантажені на сервер")
                                     .setStatus(DialogStatus.ALERT)
-                                    .setMessage("## " +
+                                    .setMessage("" +
                                             "Увага! Перед проведенням документа рекомендуємо виконати процедуру вивантаження фото-звітів (" + res.size() + "шт.) на Сервер.\n" +
                                             "Поки ця процедура не буде виконана, сервер не зможе перевірити та провести ваш звіт.\n" +
                                             "\n" +
@@ -1495,23 +1615,9 @@ public class Options {
                                                         return Unit.INSTANCE;
                                                     })
                                                     .show();
-//                                    String regex = "- ?[Oo]пц[иi]я";
-//                                    // Компилируем регулярное выражение
-//                                    Pattern pattern = Pattern.compile(regex);
-//                                    Matcher matcher = pattern.matcher(spanned);
-//
-//                                    // Строим новую строку с заменами
-//                                    StringBuffer result = new StringBuffer();
-//                                    while (matcher.find()) {
-//                                        matcher.appendReplacement(result, "\n" + matcher.group());
-//                                    }
-//                                    matcher.appendTail(result);
-
-//                                        dialogData.setText(spanned);
                                     } catch (Exception e) {
                                         Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception e: " + e);
                                     }
-//                                    dialogData.show();
                                 }
 
                                 @Override
@@ -2025,13 +2131,19 @@ public class Options {
                 break;
 
             case 135330:
+                Log.e("optionNotConduct","135330");
                 OptionControlReclamationAnswer<?> optionControlReclamationAnswer =
                         new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReclamationAnswer.isBlockOption()))
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReclamationAnswer.isBlockOption())) {
                     optionControlReclamationAnswer.showOptionMassage(block);
+                    Log.e("optionNotConduct","135330 block 0");
+                }
                 if (mode.equals(NNKMode.BLOCK) && optionControlReclamationAnswer.signal && optionControlReclamationAnswer.isBlockOption()) {
                     optionControlReclamationAnswer.showOptionMassage(block);
+                    Log.e("optionNotConduct","135330 block 1");
                 }
+                Log.e("optionNotConduct","135330 ttt " + (optionControlReclamationAnswer.isBlockOption2() ? 1 : 0));
+
                 return optionControlReclamationAnswer.isBlockOption2() ? 1 : 0;
 
             case 132624:
@@ -2249,6 +2361,10 @@ public class Options {
                 break;
 
             // ---
+
+            case 175014:
+                new OptionButtonTestClick<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
 
             case 168598:
                 new OptionButtonUserOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);

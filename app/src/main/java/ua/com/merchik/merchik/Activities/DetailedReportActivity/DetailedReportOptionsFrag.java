@@ -306,7 +306,9 @@ public class DetailedReportOptionsFrag extends Fragment {
 
                                         }
                                     });
-                                    rvContacts.smoothScrollToPosition(scrollPosition);
+//                                    rvContacts.smoothScrollToPosition(scrollPosition);
+                                    waitForViewAndHighlight(scrollPosition, rvContacts);
+
                                 }
                             });
 
@@ -568,8 +570,11 @@ public class DetailedReportOptionsFrag extends Fragment {
                     highlightAndTada(vh.itemView, pos);
                 } else if (attempts.get() < MAX_ATTEMPTS) {
                     handler.postDelayed(this, DELAY_MS);
+//                    recyclerView.smoothScrollToPosition(pos);
                 } else {
                     // Не удалось найти view за отведённое время — ничего не делаем
+                    recyclerView.smoothScrollToPosition(pos);
+
                 }
             }
         };

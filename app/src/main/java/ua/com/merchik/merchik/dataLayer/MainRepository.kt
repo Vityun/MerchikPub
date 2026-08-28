@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
@@ -50,6 +51,7 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
@@ -73,6 +75,12 @@ class MainRepository(
 //    private val databaseRealm: Realm,
     val nameUIRepository: NameUIRepository
 ) {
+    private fun fieldTitleSource(obj: DataObjectUI, key: String): String =
+        when (obj) {
+            is DynamicAchievementSDB -> DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
+            else -> key
+        }
+
     private fun getRoomBackedLegacySample(klass: KClass<*>): DataObjectUI? =
         when (klass) {
             ThemeDB::class -> ThemeRealm.getAll().firstOrNull() ?: ThemeDB()
@@ -128,6 +136,8 @@ class MainRepository(
                     WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all.firstOrNull() as DataObjectUI
                     SiteHintsDB::class -> RealmManager.getAllVideoLessons().firstOrNull() as DataObjectUI
                     AchievementsSDB::class -> roomManager.achievementsDao().all.firstOrNull() as DataObjectUI
+                    DynamicAchievementSDB::class -> roomManager.dynamicAchievementsDao().all.firstOrNull()
+                        ?: DynamicAchievementSDB()
                     else -> null
                 }
             }.getOrNull()
@@ -208,7 +218,7 @@ class MainRepository(
                             ).takeIf { it.isNotBlank() } ?: "Опис зображення"
 
                             else -> nameUIRepository.getTranslateString(
-                                key,
+                                fieldTitleSource(obj, key),
                                 obj.getFieldTranslateId(key)
                             )
                         },
@@ -293,6 +303,8 @@ class MainRepository(
                         AddressSDB::class -> room.addressDao().all.firstOrNull() as DataObjectUI
                         SMSPlanSDB::class -> room.smsPlanDao().all.firstOrNull() as DataObjectUI
                         OrderDataSDB::class -> room.orderDataDao().all.firstOrNull() as DataObjectUI
+                        DynamicAchievementSDB::class -> room.dynamicAchievementsDao().all.firstOrNull()
+                            ?: DynamicAchievementSDB()
                         else -> null
                     }
                 }.getOrNull()
@@ -312,7 +324,7 @@ class MainRepository(
                     key = key,
                     title = sample?.let {
                         nameUIRepository.getTranslateString(
-                            key,
+                            fieldTitleSource(it, key),
                             it.getFieldTranslateId(key)
                         )
                     } ?: key,
@@ -464,6 +476,7 @@ class MainRepository(
             WPDataPauseSDB::class -> roomManager.wpDataPauseDao().all
             SiteHintsDB::class -> RealmManager.getAllVideoLessons()
             AchievementsSDB::class -> roomManager.achievementsDao().all
+            DynamicAchievementSDB::class -> roomManager.dynamicAchievementsDao().all
             else -> {
                 emptyList()
             }

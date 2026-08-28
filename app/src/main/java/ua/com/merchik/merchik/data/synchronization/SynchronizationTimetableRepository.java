@@ -142,6 +142,41 @@ public final class SynchronizationTimetableRepository {
         }
     }
 
+    public static void resetDownloadState(String tableName) {
+        SynchronizationTimetableDao dao = dao();
+        TableName table = resolveTableName(tableName);
+        if (dao == null || table == null) {
+            return;
+        }
+
+        SynchronizationTimeTable existing = dao.getByTableName(table);
+        if (existing == null) {
+            SynchronizationTimetableDB defaultRow = findDefaultLegacy(tableName);
+            if (defaultRow != null) {
+                upsertLegacy(defaultRow);
+                existing = dao.getByTableName(table);
+            }
+        }
+        if (existing == null) {
+            return;
+        }
+
+        SynchronizationTimeTable resetEntity = new SynchronizationTimeTable(
+                existing.getId(),
+                existing.getTableName(),
+                existing.getSyncPeriodSeconds(),
+                0L,
+                existing.getLastUploadTime(),
+                0,
+                existing.getUploadedItems(),
+                existing.getDescription(),
+                existing.isUserGenerated(),
+                DownloadStatus.SUCCESS,
+                existing.getLastUploadStatus()
+        );
+        dao.insert(resetEntity);
+    }
+
     public static void migrateFromRealmIfNeeded() {
         SynchronizationTimetableDao dao = dao();
         if (dao == null) {

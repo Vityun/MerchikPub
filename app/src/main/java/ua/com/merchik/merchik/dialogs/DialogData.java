@@ -235,6 +235,16 @@ public class DialogData {
         }
     }
 
+    public void setTitle(CharSequence title) {
+        this.title.setVisibility(View.VISIBLE);
+        if (title != null) {
+            this.title.setText(title);
+        } else {
+            this.title.setVisibility(View.GONE);
+        }
+    }
+
+
     public void setText(CharSequence text) {
         this.text.setVisibility(View.VISIBLE);
         // Pika

@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.database.room.repository.ReferenceDictionaryReposi
 public class RoomManager {
 
     public static AppDatabase SQL_DB;
+    private static boolean achievementsSchemaMigrated;
 
     public static void init(Context context) {
         SQL_DB = Room.databaseBuilder(context,
@@ -55,11 +56,16 @@ public class RoomManager {
                         MIGRATION_79_80,
                         MIGRATION_80_81,
                         MIGRATION_81_82,
-                        MIGRATION_82_83
+                        MIGRATION_82_83,
+                        MIGRATION_83_84
                 )
                 .build();
 
         SynchronizationTimetableRepository.migrateFromRealmIfNeeded();
+        if (achievementsSchemaMigrated) {
+            SynchronizationTimetableRepository.resetDownloadState("achievements");
+            achievementsSchemaMigrated = false;
+        }
         ReferenceDictionaryRepository.migrateFromRealmIfNeeded();
     }
 
@@ -1085,6 +1091,20 @@ public class RoomManager {
             );
 
             SynchronizationTimetableRepository.markRoomSchemaMigrated();
+        }
+    };
+
+    public static final Migration MIGRATION_83_84 = new Migration(83, 84) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE achievements ADD COLUMN showcase_id INTEGER");
+            database.execSQL("ALTER TABLE achievements ADD COLUMN showcase_nm TEXT");
+            database.execSQL(
+                    "UPDATE synchronization_timetable " +
+                            "SET lastDownloadTime = 0, downloadedItems = 0, lastDownloadStatus = 0 " +
+                            "WHERE tableName = 'achievements'"
+            );
+            achievementsSchemaMigrated = true;
         }
     };
 }

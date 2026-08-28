@@ -75,7 +75,7 @@ class AchievementsSDBViewModel @Inject constructor(
 
     override fun getDefaultSortUserFields(): List<String>? {
         return listOf(
-            "dt", "addr_id", "client_id", "theme_id", "user_id", "comment_txt"
+            "dt", "addr_id", "client_id", "theme_id", "user_id", "showcase_nm", "comment_txt"
         )
     }
 
@@ -116,7 +116,8 @@ class AchievementsSDBViewModel @Inject constructor(
         "dt_change",
         "error",
         "note",
-        "currentVisit"
+        "currentVisit",
+        "showcase_id"
     )
 
     override suspend fun getItems(): List<DataItemUI> {

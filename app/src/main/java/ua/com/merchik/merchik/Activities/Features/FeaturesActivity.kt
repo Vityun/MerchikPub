@@ -66,6 +66,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsD
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.DynamicAchievementSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewModel
@@ -161,7 +162,8 @@ class FeaturesActivity : AppCompatActivity() {
                                         WpDataPauseSDBViewModel::class -> viewModel() as WpDataPauseSDBViewModel
                                         VideoLessonsDBViewModel::class -> viewModel() as VideoLessonsDBViewModel
                                         AchievementsSDBViewModel::class -> viewModel() as AchievementsSDBViewModel
-                                                else -> null
+                                        DynamicAchievementSDBViewModel::class -> viewModel() as DynamicAchievementSDBViewModel
+                                        else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")
                                         viewModel.contextUI =

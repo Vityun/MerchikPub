@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -81,6 +82,14 @@ interface DataObjectUI {
 
     fun getPreferredFieldOrder(): List<String> = emptyList()
 }
+
+private fun DataObjectUI.fieldTitleSource(key: String): String =
+    when (this) {
+        is ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB ->
+            DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
+
+        else -> key
+    }
 
 private fun logException(tag: String, where: String, e: Throwable, extra: String? = null) {
     val sw = StringWriter()
@@ -164,7 +173,7 @@ fun DataObjectUI.toItemUI(
     val idResImage = this.getIdResImage()
     if (idResImage != null) {
         val label = nameUIRepository.getTranslateString(
-            "id_res_image",
+            fieldTitleSource("id_res_image"),
             this.getFieldTranslateId("id_res_image")
         )
         fields.add(
@@ -200,7 +209,7 @@ fun DataObjectUI.toItemUI(
             ?: return
 
         val label = nameUIRepository.getTranslateString(
-            key,
+            fieldTitleSource(key),
             this.getFieldTranslateId(key)
         )
 
@@ -230,7 +239,7 @@ fun DataObjectUI.toItemUI(
 
     fun updateFields(key: String) {
         val valueRaw = jsonObject.opt(key) ?: return
-        val label = nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))
+        val label = nameUIRepository.getTranslateString(fieldTitleSource(key), this.getFieldTranslateId(key))
         val fieldModifier = this.getFieldModifier(key, jsonObject)
         val valueText = this.getValueUI(key, valueRaw)
         val valueModifier = this.getValueModifier(key, jsonObject)
@@ -478,6 +487,7 @@ enum class ContextUI {
     PLANOGRAMM_VIZIT_SHOWCASE,
     SHOWCASE,
     ACHIEVEMENT,
+    DYNAMIC_ACHIEVEMENT,
     SHOWCASE_FROM_ACHIEVEMENT,
     SHOWCASE_COMPLETED_CHECK,
     WP_DATA,

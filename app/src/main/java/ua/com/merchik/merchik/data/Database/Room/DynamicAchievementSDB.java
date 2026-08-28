@@ -8,8 +8,19 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
+import java.util.List;
+
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride;
+
 @Entity(tableName = "dynamic_achievements")
-public class DynamicAchievementSDB {
+public class DynamicAchievementSDB implements DataObjectUI {
 
     @PrimaryKey
     @NonNull
@@ -212,4 +223,77 @@ public class DynamicAchievementSDB {
     @Expose
     @ColumnInfo(name = "achieve_photo_count__title")
     public String achievePhotoCountTitle;
+
+
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DynamicAchievementSDBOverride.INSTANCE.getTranslateId(key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DynamicAchievementSDBOverride.INSTANCE.getValueUI(key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DynamicAchievementSDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DynamicAchievementSDBOverride.INSTANCE.getValueModifier(key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DynamicAchievementSDBOverride.INSTANCE.getContainerModifier(jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return R.drawable.merchik;
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return "rack_photo_id";
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    @NonNull
+    @Override
+    public List<String> getPreferredFieldOrder() {
+        return DynamicAchievementSDBOverride.INSTANCE.getPreferredFieldOrder();
+    }
+
+    @Override
+    public @NotNull String getCommentsForImage() {
+        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+    }
+
+
+    @Override
+    public @Nullable String getCommentForImageValue(@NotNull String key, @NotNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getCommentForImageValue(this, key, jsonObject);
+    }
 }

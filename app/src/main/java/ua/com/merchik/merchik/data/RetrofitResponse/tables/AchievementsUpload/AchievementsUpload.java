@@ -16,4 +16,6 @@ public class AchievementsUpload {
     public Integer add_requirement_id;
     public Integer tovar_id;
     public Integer manufacturer;
+    public Integer showcase_id;
+    public String showcase_nm;
 }

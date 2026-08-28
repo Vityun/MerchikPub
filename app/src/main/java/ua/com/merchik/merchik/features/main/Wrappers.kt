@@ -261,6 +261,8 @@ object AchievementsSDBOverride {
         "theme_id" -> 8724
         "user_id" -> 1103
         "comment_txt" -> 5911
+        "showcase_id" -> 4632
+        "showcase_nm" -> 4396
         else -> null
     }
 
@@ -271,6 +273,7 @@ object AchievementsSDBOverride {
         "client_id" -> formatCustomer(cleanValue(value))
         "theme_id" -> formatTheme(cleanValue(value))
         "user_id" -> formatUser(cleanValue(value))
+        "showcase_nm" -> value.toString().ifEmpty { "Вiтрина не зазначена" }
         else -> value.toString()
     }
 
@@ -321,6 +324,112 @@ object AchievementsSDBOverride {
         }.getOrNull()
             ?.takeIf { it.isNotBlank() }
             ?: "Користувач ($value) не визначений"
+    }
+}
+
+object DynamicAchievementSDBOverride {
+    private val fallbackTitles = mapOf(
+        "rack_nm" to "Стелаж",
+        "nm" to "Назва",
+        "achieve_photo_count" to "Кількість фото",
+        "theme_nm" to "Тема",
+        "tovar_nm" to "Товар",
+        "date_to" to "Дата по",
+        "dt_update" to "Дата оновлення"
+    )
+
+    fun getFallbackTitle(key: String): String? = fallbackTitles[key]
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "ID" -> 5909
+        "addr_id", "addr_nm", "addr_tp", "addr_city", "addr_addr" -> 1101
+        "client_id", "client_nm" -> 1102
+        "date_from", "date_to" -> 1100
+        "dt_update" -> 5926
+        "theme_id", "theme_nm" -> 8724
+        "nm" -> 1813
+        else -> null
+    }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "date_from", "date_to", "dt_update" -> formatDynamicDate(cleanValue(value))
+            .ifBlank { cleanValue(value).ifBlank { "-" } }
+
+        "client_id" -> formatCustomer(cleanValue(value))
+        "addr_id" -> formatAddress(cleanValue(value))
+        "achieve_photo_count" -> cleanValue(value).ifBlank { "0" }
+        else -> cleanValue(value).ifBlank { "-" }
+    }
+
+    fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+//        "rack_nm", "nm" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+        "5345345" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp)) // заглушка
+        else -> MerchModifier(textColor = Color.Gray, padding = Padding(end = 10.dp))
+    }
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = null
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier? = null
+
+    fun getPreferredFieldOrder(): List<String> = listOf(
+        "rack_nm",
+        "nm",
+        "achieve_photo_count",
+        "theme_nm",
+        "tovar_nm",
+        "date_to",
+        "dt_update"
+    )
+
+    private fun cleanValue(value: Any): String =
+        value.toString()
+            .trim()
+            .takeUnless { it.equals("null", ignoreCase = true) }
+            ?: ""
+
+    private fun formatCustomer(value: String): String {
+        if (value.isBlank()) return ""
+        return runCatching {
+            RoomManager.SQL_DB.customerDao().getById(value)?.nm
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: value
+    }
+
+    private fun formatAddress(value: String): String {
+        val id = value.toIntOrNull() ?: return value
+        return runCatching {
+            RoomManager.SQL_DB.addressDao().getById(id)?.nm
+        }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?: value
+    }
+
+    private fun formatDynamicDate(value: String): String {
+        if (value.isBlank() || value == "0") return ""
+
+        value.toLongOrNull()?.let { raw ->
+            if (raw > 0L) {
+                val millis = if (raw > 10_000_000_000L) raw else raw * 1_000L
+                return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(millis))
+            }
+        }
+
+        val patterns = listOf(
+            "yyyy-MM-dd",
+            "yyyy-MM-dd HH:mm:ss",
+            "dd.MM.yyyy",
+            "dd.MM.yyyy HH:mm",
+            "dd.MM.yyyy HH:mm:ss"
+        )
+
+        return patterns.firstNotNullOfOrNull { pattern ->
+            runCatching {
+                SimpleDateFormat(pattern, Locale.ENGLISH).parse(value)
+            }.getOrNull()
+        }?.let { date ->
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
+        }.orEmpty()
     }
 }
 

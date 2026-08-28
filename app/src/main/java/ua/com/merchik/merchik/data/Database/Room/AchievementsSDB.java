@@ -212,6 +212,16 @@ public class AchievementsSDB implements DataObjectUI {
     @ColumnInfo(name = "tovar_id")
     public Integer tovar_id;
 
+    @SerializedName("showcase_id")
+    @Expose
+    @ColumnInfo(name = "showcase_id")
+    public Integer showcaseId;
+
+    @SerializedName("showcase_nm")
+    @Expose
+    @ColumnInfo(name = "showcase_nm")
+    public String showcaseNm;
+
     @SerializedName("dt_change")
     @Expose
     @ColumnInfo(name = "dt_change")

@@ -146,7 +146,48 @@ public class DynamicAchievementsExchange {
         }
     }
 
+    public int downloadDynamicAchievementsForVisitSync(String clientId, String addrId) throws Exception {
+        if (isBlank(clientId) || isBlank(addrId)) {
+            logWarn(
+                    "images_achieve.dynamic.visit",
+                    "skip: clientId or addrId is empty, clientId=" + clientId + ", addrId=" + addrId
+            );
+            return 0;
+        }
+
+        JsonObject response = executeJsonRequest(
+                "images_achieve.dynamic.visit",
+                buildDownloadRequest("dynamic", 0L, currentTimeSeconds(), clientId, addrId)
+        );
+
+        if (!isStateSuccessful(response)) {
+            throw new IllegalStateException(serverError(response));
+        }
+
+        DynamicAchievementsResponse parsed = gson.fromJson(response, DynamicAchievementsResponse.class);
+        List<DynamicAchievementSDB> rows = sanitizeDynamicAchievements(parsed != null ? parsed.list : null);
+        if (!rows.isEmpty()) {
+            SQL_DB.dynamicAchievementsDao().insertAll(rows);
+        }
+
+        logInfo(
+                "images_achieve.dynamic.visit",
+                "clientId=" + clientId + ", addrId=" + addrId + ", " + responseSummary(response, rows.size())
+        );
+        return rows.size();
+    }
+
     private JsonObject buildDownloadRequest(String act, long dtChangeFrom, long dtChangeTo) {
+        return buildDownloadRequest(act, dtChangeFrom, dtChangeTo, null, null);
+    }
+
+    private JsonObject buildDownloadRequest(
+            String act,
+            long dtChangeFrom,
+            long dtChangeTo,
+            String clientId,
+            String addrId
+    ) {
         JsonObject request = new JsonObject();
         request.addProperty("mod", "images_achieve");
         request.addProperty("act", act);
@@ -154,6 +195,12 @@ public class DynamicAchievementsExchange {
         JsonObject filter = new JsonObject();
         filter.addProperty("dt_change_from", String.valueOf(dtChangeFrom));
         filter.addProperty("dt_change_to", String.valueOf(dtChangeTo));
+        if (!isBlank(clientId)) {
+            filter.addProperty("client_id", clientId);
+        }
+        if (!isBlank(addrId)) {
+            filter.addProperty("addr_id", addrId);
+        }
         request.add("filter", filter);
 
         return request;

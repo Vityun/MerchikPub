@@ -3217,7 +3217,8 @@ public class Exchange {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("achievements");
 
         StandartData.Filter filter = new StandartData.Filter();
-        filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()) + 10;
+        long achievementsVpi = synchronizationTimetableDB != null ? synchronizationTimetableDB.getVpi_app() : 0L;
+        filter.dt_change_from = String.valueOf(achievementsVpi > 0L ? achievementsVpi + 10L : 0L);
 //        filter.date_from = Clock.getDatePeriod(-30);
 //        filter.date_to = Clock.getDatePeriod(7);
 //        filter.confirm = "";
@@ -3247,8 +3248,13 @@ public class Exchange {
                                         public void onComplete() {
                                             Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
 
-                                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                                            SynchronizationTimetableDB syncRow = synchronizationTimetableDB != null
+                                                    ? synchronizationTimetableDB
+                                                    : RealmManager.getSynchronizationTimetableRowByTable("achievements");
+                                            if (syncRow != null) {
+                                                syncRow.setVpi_app(TrustedTime.syncWatermarkSec(syncRow.getVpi_app(), 120));
+                                                RealmManager.setToSynchronizationTimetableDB(syncRow);
+                                            }
                                         }
 
                                         @Override
@@ -3521,6 +3527,8 @@ public class Exchange {
                 uploadData.add_requirement_id = item.addRequirementId;
                 uploadData.tovar_id = item.tovar_id;
                 uploadData.manufacturer = item.manufacturer;
+                uploadData.showcase_id = item.showcaseId;
+                uploadData.showcase_nm = item.showcaseNm;
                 dataList.add(uploadData);
             }
 
@@ -3548,8 +3556,13 @@ public class Exchange {
                                             if (itemSDB.id.equals(item.elementId)) {
                                                 itemSDB.serverId = item.id;
                                                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
-                                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                                                SynchronizationTimetableDB syncRow = synchronizationTimetableDB != null
+                                                        ? synchronizationTimetableDB
+                                                        : RealmManager.getSynchronizationTimetableRowByTable("achievements");
+                                                if (syncRow != null) {
+                                                    syncRow.setVpi_app(TrustedTime.syncWatermarkSec(syncRow.getVpi_app(), 120));
+                                                    RealmManager.setToSynchronizationTimetableDB(syncRow);
+                                                }
                                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");
                                             }
                                         }

@@ -10,6 +10,8 @@ import android.widget.Toast;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 
+import com.google.gson.Gson;
+
 import java.util.Arrays;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
@@ -137,6 +139,7 @@ public class OptionControl<T> {
         dialog.setImgBtnCall(context);
         if (block)
             dialog.setCancel("Исправить замечание", () -> {
+                Log.e("optionNotConduct", "optionDB: " + new Gson().toJson(optionDB));
                 DetailedReportViewModel viewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(DetailedReportViewModel.class);
                 viewModel.postScrollToId(optionDB);
                 DialogManager.dismissAll();
