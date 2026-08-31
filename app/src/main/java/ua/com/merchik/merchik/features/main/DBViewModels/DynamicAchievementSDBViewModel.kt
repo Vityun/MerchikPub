@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -220,6 +221,10 @@ class DynamicAchievementSDBViewModel @Inject constructor(
             }
     }
 
+    override fun onClickItem(itemUI: DataItemUI, context: Context) {
+//        super.onClickItem(itemUI, context)
+        Log.e("!!!!!!!!!!!!","++++++++++++++++++++++++++++++")
+    }
     private fun preloadDynamicAchievementsForVisitIfNeeded(clientId: String?, addressId: String?) {
         if (clientId.isNullOrBlank() || addressId.isNullOrBlank()) return
 

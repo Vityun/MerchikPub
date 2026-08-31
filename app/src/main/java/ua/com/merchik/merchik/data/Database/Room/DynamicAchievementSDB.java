@@ -247,7 +247,7 @@ public class DynamicAchievementSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DynamicAchievementSDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
     }
 
     @Nullable

@@ -6,6 +6,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
@@ -329,7 +330,7 @@ object AchievementsSDBOverride {
 
 object DynamicAchievementSDBOverride {
     private val fallbackTitles = mapOf(
-        "rack_nm" to "Стелаж",
+//        "rack_nm" to "Стелаж",
         "nm" to "Назва",
         "achieve_photo_count" to "Кількість фото",
         "theme_nm" to "Тема",
@@ -343,11 +344,12 @@ object DynamicAchievementSDBOverride {
     fun getTranslateId(key: String): Long? = when (key) {
         "ID" -> 5909
         "addr_id", "addr_nm", "addr_tp", "addr_city", "addr_addr" -> 1101
+        "rack_nm" -> 4632
         "client_id", "client_nm" -> 1102
         "date_from", "date_to" -> 1100
         "dt_update" -> 5926
         "theme_id", "theme_nm" -> 8724
-        "nm" -> 1813
+        "nm" -> 5911
         else -> null
     }
 
@@ -361,13 +363,13 @@ object DynamicAchievementSDBOverride {
         else -> cleanValue(value).ifBlank { "-" }
     }
 
-    fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
-//        "rack_nm", "nm" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
-        "5345345" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp)) // заглушка
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        "achieve_photo_count" -> MerchModifier(fontWeight = FontWeight.SemiBold,
+            textColor = Color.Blue,
+            textDecoration = TextDecoration.Underline,
+            padding = Padding(end = 10.dp))
         else -> MerchModifier(textColor = Color.Gray, padding = Padding(end = 10.dp))
     }
-
-    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = null
 
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier? = null
 

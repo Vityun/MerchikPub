@@ -103,6 +103,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseKonkurent;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonQuestionAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
@@ -136,6 +137,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
@@ -217,7 +219,7 @@ public class Options {
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
-            84005, 84967, 164985, 165276, 174877, 165275, 165482, 166528, 157288, 141067};
+            84005, 84967, 164985, 165276, 174877, 175016, 165275, 165482, 166528, 157288, 141067};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -277,6 +279,11 @@ public class Options {
                 case 174877:
                     OptionControlPhotoExpirationDate<?> optionControlPhotoExpirationDate = new OptionControlPhotoExpirationDate<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoExpirationDate.showOptionMassage("");
+                    break;
+
+                case 175016:
+                    OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice = new OptionControlPhotoTovarAndPrice<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlPhotoTovarAndPrice.showOptionMassage("");
                     break;
 
                 case 160568:
@@ -1772,6 +1779,17 @@ public class Options {
                 }
                 return optionControlPhotoExpirationDate.isBlockOption2() ? 1 : 0;
 
+            case 175016:
+                OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice =
+                        new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarAndPrice.isBlockOption()))
+                    optionControlPhotoTovarAndPrice.showOptionMassage(block);
+
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarAndPrice.signal && optionControlPhotoTovarAndPrice.isBlockOption()) {
+                    optionControlPhotoTovarAndPrice.showOptionMassage(block);
+                }
+                return optionControlPhotoTovarAndPrice.isBlockOption2() ? 1 : 0;
+
             case 132812:    // Хочу увеличение оплаты
 
                 WpDataDB wp = (WpDataDB) dataDB;
@@ -2234,6 +2252,20 @@ public class Options {
                 new OptionButtonPhotoShowcaseKonkurent<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
+            case 175015:
+//                new OptionButtonPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice1 =
+                        new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (optionControlPhotoTovarAndPrice1.isBlockOption()) {
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarAndPrice1.isBlockOption()))
+                        optionControlPhotoTovarAndPrice1.showOptionMassage(block);
+                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarAndPrice1.signal && optionControlPhotoTovarAndPrice1.isBlockOption()) {
+                        optionControlPhotoTovarAndPrice1.showOptionMassage(block);
+                    }
+                }
+                return optionControlPhotoTovarAndPrice1.isBlockOption2() ? 1 : 0;
+//                break;
+
             case 157277:
 //                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
 //                break;
@@ -2362,6 +2394,7 @@ public class Options {
 
             // ---
 
+            case 139337:
             case 175014:
                 new OptionButtonTestClick<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;

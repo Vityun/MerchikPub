@@ -79,6 +79,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
@@ -341,8 +342,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 174213
                         || optionId == 174546   // кнопка пауза
                         || optionId == 174878   // фото товаров СИСГ (с истекающим/истекшим сроком годности)
-//                        || optionId == 139337   // для теста кнопка Индульгенция
+                        || optionId == 139337   // для теста кнопка Индульгенция
                         || optionId == 175014
+                        || optionId == 175015   //  фото единиці товара+ценик
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -671,6 +673,35 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("subTitle", "Справочник Фото" + ": " +
                                         "Фото товаров СИСГ (с истекающим/истекшим сроком годности)");
 //                                        Objects.requireNonNullElse(ImagesTypeListRealm.getByID(50).getNm(),"# Фото товаров СИСГ (с истекающим/истекшим сроком годности)"));
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
+                            break;
+
+                        case (175015):
+                            int photoCount175015 = RealmManager.stackPhotoShowcasePhotoCount(dad2, StackPhotoDB.PHOTO_TOVAR_AND_PRICE);
+                            int requiredPhotoCount175015 = dataDB instanceof WpDataDB
+                                    ? OptionControlPhotoTovarAndPrice.getRequiredTovarAndPricePhotoCount((WpDataDB) dataDB, optionsButtons)
+                                    : 0;
+                            SpannableString spannableString175015 = setPhotoCountsMakeAndMust(optionsButtons, photoCount175015, requiredPhotoCount175015);
+                            spannableString175015.setSpan(new UnderlineSpan(), 0, spannableString175015.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString175015);
+
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                ImagesTypeListDB photoType = ImagesTypeListRealm.getByID(StackPhotoDB.PHOTO_TOVAR_AND_PRICE);
+                                String photoTypeName = photoType != null && photoType.getNm() != null
+                                        ? photoType.getNm()
+                                        : "# фото единиці товара+ценик";
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + photoTypeName);
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });

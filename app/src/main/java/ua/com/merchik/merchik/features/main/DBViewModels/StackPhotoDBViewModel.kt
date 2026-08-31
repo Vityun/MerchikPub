@@ -106,7 +106,8 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100,
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015 -> {
 
                 var showcaseId: Int? = null
 
@@ -222,6 +223,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> 50
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015 -> 51
 
                     else -> 0
                 }
@@ -314,7 +316,8 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015 -> {
 
                     var planogrammVizitShowcaseId = 0
                     var receivedShowcaseId: Int? = null
@@ -398,6 +401,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> 50
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015 -> 51
 
                         else -> 0
                     }
