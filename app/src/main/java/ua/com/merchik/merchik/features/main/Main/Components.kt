@@ -84,6 +84,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -108,6 +109,8 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -319,8 +322,14 @@ private fun ItemTextField(
 }
 
 @Composable
-fun SettingsItemView(item: SettingsItemUI) {
-    var isChecked by remember { mutableStateOf(item.isEnabled) }
+fun SettingsItemView(
+    item: SettingsItemUI,
+    onItemChanged: (SettingsItemUI) -> Unit = {}
+) {
+    var isChecked by remember(item.key, item.isEnabled) { mutableStateOf(item.isEnabled) }
+    var imageDisplayMode by remember(item.key, item.imageDisplayMode) {
+        mutableStateOf(item.imageDisplayMode ?: ImageDisplayMode.DEFAULT)
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -334,13 +343,130 @@ fun SettingsItemView(item: SettingsItemUI) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = { checked ->
-                isChecked = checked
-                item.isEnabled = checked
+        if (item.key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+            ImageDisplayModeIcon(
+                mode = imageDisplayMode,
+                modifier = Modifier
+                    .padding(end = 8.dp, top = 6.dp, bottom = 6.dp)
+                    .clickable {
+                        val nextMode = imageDisplayMode.next()
+                        imageDisplayMode = nextMode
+                        item.imageDisplayMode = nextMode
+                        onItemChanged(item.copy(imageDisplayMode = nextMode))
+                    }
+            )
+        } else {
+            Checkbox(
+                checked = isChecked,
+                onCheckedChange = { checked ->
+                    isChecked = checked
+                    item.isEnabled = checked
+                    onItemChanged(item.copy(isEnabled = checked))
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ImageDisplayModeIcon(
+    mode: ImageDisplayMode,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 32.dp,
+    showFrame: Boolean = true,
+    strokeColor: Color = Color.Gray,
+    lineColor: Color = Color(0xFF777777)
+) {
+    val fillColor = Color(0xFFECECEC)
+    val iconModifier = if (showFrame) {
+        modifier
+            .size(iconSize)
+            .clip(RoundedCornerShape(6.dp))
+            .border(1.dp, strokeColor, RoundedCornerShape(6.dp))
+            .background(Color.White)
+            .padding(4.dp)
+    } else {
+        modifier.size(iconSize)
+    }
+    val defaultImageSize = if (showFrame) 11.dp else 15.dp
+    val defaultLineWidth = if (showFrame) 10.dp else 11.dp
+    val defaultLineHeight = if (showFrame) 2.dp else 1.5.dp
+    val singleImageSize = if (showFrame) 19.dp else 25.dp
+    val twoTileSize = if (showFrame) 10.dp else 12.dp
+    val threeTileSize = if (showFrame) 6.dp else 7.dp
+
+    Box(
+        modifier = iconModifier,
+        contentAlignment = Alignment.Center
+    ) {
+        when (mode) {
+            ImageDisplayMode.DEFAULT -> Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(defaultImageSize)
+                        .border(1.dp, strokeColor, RoundedCornerShape(2.dp))
+                        .background(fillColor)
+                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    repeat(3) {
+                        Box(
+                            modifier = Modifier
+                                .width(defaultLineWidth)
+                                .height(defaultLineHeight)
+                                .background(lineColor, RoundedCornerShape(2.dp))
+                        )
+                    }
+                }
             }
-        )
+
+            ImageDisplayMode.SINGLE_IMAGE -> Box(
+                modifier = Modifier
+                    .size(singleImageSize)
+                    .border(1.dp, strokeColor, RoundedCornerShape(3.dp))
+                    .background(fillColor)
+            )
+
+            ImageDisplayMode.TWO_COLUMNS -> ImageDisplayModeTiles(
+                count = 2,
+                strokeColor = strokeColor,
+                fillColor = fillColor,
+                tileSize = twoTileSize
+            )
+
+            ImageDisplayMode.THREE_COLUMNS -> ImageDisplayModeTiles(
+                count = 3,
+                strokeColor = strokeColor,
+                fillColor = fillColor,
+                tileSize = threeTileSize
+            )
+        }
+    }
+}
+
+@Composable
+private fun ImageDisplayModeTiles(
+    count: Int,
+    strokeColor: Color,
+    fillColor: Color,
+    tileSize: Dp
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(count) {
+            Box(
+                modifier = Modifier
+                    .size(tileSize)
+                    .border(1.dp, strokeColor, RoundedCornerShape(2.dp))
+                    .background(fillColor)
+            )
+        }
     }
 }
 

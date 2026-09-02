@@ -38,18 +38,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.DynamicRealm;
-import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 import okhttp3.Headers;
@@ -67,7 +64,6 @@ import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
-import ua.com.merchik.merchik.data.Database.Room.DynamicPhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -91,10 +87,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class MenuMainActivity extends toolbar_menus {
 
-    private static final String DYNAMIC_PHOTO_STACK_TAG = "DynamicPhotoStackPhotoTest";
-
     CronchikViewModel cronchikViewModel;
-    private boolean dynamicPhotoStackPhotoDownloadInProgress = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -261,8 +254,6 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        downloadMissingDynamicPhotoStackPhotosFromRoom();
-
         downloadTest();
         downloadTest2();
 
@@ -271,224 +262,6 @@ public class MenuMainActivity extends toolbar_menus {
 
 
 
-    }
-
-    private void downloadMissingDynamicPhotoStackPhotosFromRoom() {
-        if (dynamicPhotoStackPhotoDownloadInProgress) {
-            String skip = "skip: previous dynamic_photo StackPhoto download is still running";
-            Log.e(DYNAMIC_PHOTO_STACK_TAG, skip);
-            Globals.writeToMLOG(
-                    "INFO",
-                    "MenuMainActivity/downloadMissingDynamicPhotoStackPhotosFromRoom/skip",
-                    skip
-            );
-            return;
-        }
-
-        dynamicPhotoStackPhotoDownloadInProgress = true;
-
-        Single.fromCallable(this::collectMissingDynamicPhotoStackPhotoIds)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
-                    String checkMessage = result.toLogMessage(previewIds(result.missingPhotoIds));
-                    Log.e(DYNAMIC_PHOTO_STACK_TAG, checkMessage);
-                    Globals.writeToMLOG(
-                            "INFO",
-                            "MenuMainActivity/downloadMissingDynamicPhotoStackPhotosFromRoom/check",
-                            checkMessage
-                    );
-
-                    if (result.missingPhotoIds.isEmpty()) {
-                        dynamicPhotoStackPhotoDownloadInProgress = false;
-                        return;
-                    }
-
-                    downloadDynamicPhotoStackPhotosByIds(result.missingPhotoIds);
-                }, throwable -> {
-                    String error = "error=" + throwable;
-                    Log.e(DYNAMIC_PHOTO_STACK_TAG, error);
-                    Globals.writeToMLOG(
-                            "ERROR",
-                            "MenuMainActivity/downloadMissingDynamicPhotoStackPhotosFromRoom/check",
-                            error
-                    );
-                    dynamicPhotoStackPhotoDownloadInProgress = false;
-                });
-    }
-
-    private DynamicPhotoStackPhotoCheckResult collectMissingDynamicPhotoStackPhotoIds() {
-        if (SQL_DB == null) {
-            throw new IllegalStateException("SQL_DB == null");
-        }
-
-        List<DynamicPhotoSDB> rows = SQL_DB.dynamicPhotoDao().getAll();
-        LinkedHashSet<String> uniquePhotoIds = new LinkedHashSet<>();
-
-        if (rows != null) {
-            for (DynamicPhotoSDB row : rows) {
-                String photoId = normalizeDynamicPhotoId(row != null ? row.photoId : null);
-                if (photoId != null) {
-                    uniquePhotoIds.add(photoId);
-                }
-            }
-        }
-
-        List<String> missingPhotoIds = new ArrayList<>();
-        int existingCount = 0;
-
-        if (uniquePhotoIds.isEmpty()) {
-            return new DynamicPhotoStackPhotoCheckResult(
-                    rows != null ? rows.size() : 0,
-                    0,
-                    0,
-                    missingPhotoIds
-            );
-        }
-
-        Set<String> existingPhotoIds = new HashSet<>();
-        Realm realm = Realm.getDefaultInstance();
-        try {
-            RealmResults<StackPhotoDB> existingPhotos = realm.where(StackPhotoDB.class)
-                    .in("photoServerId", uniquePhotoIds.toArray(new String[0]))
-                    .findAll();
-            for (StackPhotoDB photo : existingPhotos) {
-                if (photo.photoServerId != null) {
-                    existingPhotoIds.add(photo.photoServerId);
-                }
-            }
-        } finally {
-            realm.close();
-        }
-
-        for (String photoId : uniquePhotoIds) {
-            if (existingPhotoIds.contains(photoId)) {
-                existingCount++;
-            } else {
-                missingPhotoIds.add(photoId);
-            }
-        }
-
-        return new DynamicPhotoStackPhotoCheckResult(
-                rows != null ? rows.size() : 0,
-                uniquePhotoIds.size(),
-                existingCount,
-                missingPhotoIds
-        );
-    }
-
-    private void downloadDynamicPhotoStackPhotosByIds(List<String> missingPhotoIds) {
-        try {
-            PhotoTableRequest request = new PhotoTableRequest();
-            request.mod = "images_view";
-            request.act = "list_image";
-            request.nolimit = "1";
-            request.id_list = String.join(",", missingPhotoIds);
-
-            String requestJson = new Gson().toJson(request);
-            String requestMessage = "missingCount=" + missingPhotoIds.size()
-                    + ", missingIds=" + previewIds(missingPhotoIds)
-                    + ", request=" + requestJson;
-
-            Log.e(DYNAMIC_PHOTO_STACK_TAG, "request: " + requestMessage);
-            Globals.writeToMLOG(
-                    "INFO",
-                    "MenuMainActivity/downloadDynamicPhotoStackPhotosByIds/request",
-                    requestMessage
-            );
-
-            new PhotoDownload().getPhotoInfoAndSaveItToDB(
-                    request,
-                    new Clicks.clickObjectAndStatus<StackPhotoDB>() {
-                        @Override
-                        public void onSuccess(StackPhotoDB data) {
-                            String photoServerId = data != null ? data.photoServerId : null;
-                            String success = "requestedCount=" + missingPhotoIds.size()
-                                    + ", firstSavedPhotoServerId=" + photoServerId
-                                    + ", requestedIds=" + previewIds(missingPhotoIds);
-                            Log.e(DYNAMIC_PHOTO_STACK_TAG, "success: " + success);
-                            Globals.writeToMLOG(
-                                    "INFO",
-                                    "MenuMainActivity/downloadDynamicPhotoStackPhotosByIds/onSuccess",
-                                    success
-                            );
-                            dynamicPhotoStackPhotoDownloadInProgress = false;
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            String failure = "requestedCount=" + missingPhotoIds.size()
-                                    + ", requestedIds=" + previewIds(missingPhotoIds)
-                                    + ", error=" + error;
-                            Log.e(DYNAMIC_PHOTO_STACK_TAG, "failure: " + failure);
-                            Globals.writeToMLOG(
-                                    "ERROR",
-                                    "MenuMainActivity/downloadDynamicPhotoStackPhotosByIds/onFailure",
-                                    failure
-                            );
-                            dynamicPhotoStackPhotoDownloadInProgress = false;
-                        }
-                    }
-            );
-        } catch (Exception e) {
-            String error = "requestedCount=" + missingPhotoIds.size()
-                    + ", requestedIds=" + previewIds(missingPhotoIds)
-                    + ", error=" + e;
-            Log.e(DYNAMIC_PHOTO_STACK_TAG, error);
-            Globals.writeToMLOG(
-                    "ERROR",
-                    "MenuMainActivity/downloadDynamicPhotoStackPhotosByIds/start",
-                    error
-            );
-            dynamicPhotoStackPhotoDownloadInProgress = false;
-        }
-    }
-
-    private String normalizeDynamicPhotoId(String rawPhotoId) {
-        if (rawPhotoId == null) {
-            return null;
-        }
-
-        String photoId = rawPhotoId.trim();
-        if (photoId.isEmpty() || photoId.equals("0")) {
-            return null;
-        }
-
-        return photoId;
-    }
-
-    private String previewIds(List<String> ids) {
-        int limit = Math.min(ids.size(), 25);
-        List<String> preview = ids.subList(0, limit);
-        String suffix = ids.size() > limit ? "... +" + (ids.size() - limit) : "";
-        return preview + suffix;
-    }
-
-    private static class DynamicPhotoStackPhotoCheckResult {
-        final int dynamicPhotoRowsCount;
-        final int uniquePhotoIdsCount;
-        final int existingPhotoIdsCount;
-        final List<String> missingPhotoIds;
-
-        DynamicPhotoStackPhotoCheckResult(
-                int dynamicPhotoRowsCount,
-                int uniquePhotoIdsCount,
-                int existingPhotoIdsCount,
-                List<String> missingPhotoIds
-        ) {
-            this.dynamicPhotoRowsCount = dynamicPhotoRowsCount;
-            this.uniquePhotoIdsCount = uniquePhotoIdsCount;
-            this.existingPhotoIdsCount = existingPhotoIdsCount;
-            this.missingPhotoIds = missingPhotoIds;
-        }
-
-        String toLogMessage(String missingIdsPreview) {
-            return "dynamicPhotoRows=" + dynamicPhotoRowsCount
-                    + ", uniquePhotoIds=" + uniquePhotoIdsCount
-                    + ", existingStackPhotos=" + existingPhotoIdsCount
-                    + ", missingStackPhotos=" + missingPhotoIds.size()
-                    + ", missingIds=" + missingIdsPreview;
-        }
     }
 
 

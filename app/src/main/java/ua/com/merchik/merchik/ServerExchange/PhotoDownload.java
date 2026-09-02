@@ -196,7 +196,16 @@ public class PhotoDownload {
             executorService.submit(() -> {
                 try {
 
-                    String url = item.getPhotoUrl().replace("thumb_", "");
+                    String url = PhotoUrlUtils.prepareDownloadUrl(
+                            item.getPhotoUrl(),
+                            true,
+                            "PhotoDownload/downloadPhoto/list",
+                            item.getID()
+                    );
+                    if (url == null) {
+                        result.onFailure("downloadPhotoTest/invalidPhotoUrl: " + item.getID());
+                        return;
+                    }
                     retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterfaceForImage().DOWNLOAD_PHOTO_BY_URL(url);
                     call.enqueue(new Callback<ResponseBody>() {
                         @Override
@@ -497,7 +506,16 @@ public class PhotoDownload {
             if (photoTP == 18) {
                 count++;
 //                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse.downloadPhoto", "convertedObject: " + new Gson().toJson(item));
-                retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
+                String url = PhotoUrlUtils.prepareDownloadUrl(
+                        item.getPhotoUrl(),
+                        false,
+                        "PhotoDownload/downloadPhoto/type18",
+                        item.getID()
+                );
+                if (url == null) {
+                    continue;
+                }
+                retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
                 int finalCount = count;
                 long finalCountTP = countTP;
                 call.enqueue(new Callback<ResponseBody>() {
@@ -828,17 +846,26 @@ public class PhotoDownload {
 
         Log.e("FULL_PHOTO", "size: " + size);
 
-        String url = data.getPhotoServerURL();
         String photoSize;   // Думаю это стоит на енумчик зменить
 
-        Log.e("FULL_PHOTO", "url: " + url);
+        Log.e("FULL_PHOTO", "url: " + data.getPhotoServerURL());
 
 
         if (size) {
-            url = url.replace("thumb_", "");
             photoSize = "Full";
         } else {
             photoSize = "Small";
+        }
+
+        String url = PhotoUrlUtils.prepareDownloadUrl(
+                data.getPhotoServerURL(),
+                size,
+                "PhotoDownload/downloadPhoto/stackPhoto",
+                data.getPhotoServerId()
+        );
+        if (url == null) {
+            downloadPhotoInterface.onFailure("Некорректная ссылка на фото: " + data.getPhotoServerId());
+            return;
         }
 
         Log.e("FULL_PHOTO", "url2: " + url);
@@ -1190,14 +1217,23 @@ public class PhotoDownload {
      */
     public void downloadPhoto(boolean photoSize, StackPhotoDB dbRow, String
             folderName, downloadPhotoInterface downloadPhotoInterface) {
-        String url = dbRow.getPhotoServerURL();
         String size;   // Думаю это стоит на енумчик зменить
 
         if (photoSize) {
-            url = url.replace("thumb_", "");
             size = "Full";
         } else {
             size = "Small";
+        }
+
+        String url = PhotoUrlUtils.prepareDownloadUrl(
+                dbRow.getPhotoServerURL(),
+                photoSize,
+                "PhotoDownload/downloadPhoto/folder",
+                dbRow.getPhotoServerId()
+        );
+        if (url == null) {
+            downloadPhotoInterface.onFailure("Некорректная ссылка на фото: " + dbRow.getPhotoServerId());
+            return;
         }
 
         retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
@@ -1249,11 +1285,17 @@ public class PhotoDownload {
 //            @Override
 //            public void run() {
         try {
-            if (photoUrl == null || photoUrl.isEmpty()) {
+            String url = PhotoUrlUtils.prepareDownloadUrl(
+                    photoUrl,
+                    true,
+                    "PhotoDownload/downloadPhoto/url",
+                    null
+            );
+            if (url == null) {
                 exchange.onFailure("Ссылка на фото отсутствует");
                 return;
             }
-            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterfaceForImage().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
+            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterfaceForImage().DOWNLOAD_PHOTO_BY_URL(url);
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {

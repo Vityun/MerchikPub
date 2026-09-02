@@ -19,6 +19,9 @@ public interface DynamicAchievementsDao {
     @Query("SELECT * FROM dynamic_achievements WHERE ID = :id LIMIT 1")
     DynamicAchievementSDB getById(String id);
 
+    @Query("SELECT * FROM dynamic_achievements WHERE select_id = :selectId LIMIT 1")
+    DynamicAchievementSDB getBySelectId(String selectId);
+
     @Query("SELECT * FROM dynamic_achievements " +
             "WHERE (:clientId IS NULL OR :clientId = '' OR client_id = :clientId) " +
             "AND (:addrId IS NULL OR :addrId = '' OR addr_id = :addrId) " +

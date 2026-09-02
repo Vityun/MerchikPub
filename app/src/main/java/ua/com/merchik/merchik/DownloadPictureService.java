@@ -29,6 +29,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import okhttp3.ResponseBody;
+import ua.com.merchik.merchik.ServerExchange.PhotoUrlUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
@@ -115,15 +116,26 @@ public class DownloadPictureService extends Service {
 
 
         Observable.fromIterable(data)
-                .filter(tovarImgList -> tovarImgList.getPhotoTp().equals("18") && tovarImgList.getPhotoUrl() != null && tovarImgList.getPhotoUrl().length() > 1)
-                .flatMap(tovarImgList ->
-                                RetrofitBuilder.getRetrofitInterface()
-                                        .DOWNLOAD_PHOTO_BY_URL_TEST(tovarImgList.getPhotoUrl())
+                .filter(tovarImgList -> Objects.equals(tovarImgList.getPhotoTp(), "18"))
+                .flatMap(tovarImgList -> {
+                            String url = PhotoUrlUtils.prepareDownloadUrl(
+                                    tovarImgList.getPhotoUrl(),
+                                    false,
+                                    "DownloadPictureService/downloadPhoto",
+                                    tovarImgList.getID()
+                            );
+                            if (url == null) {
+                                return Observable.<SumTestObj>empty();
+                            }
+
+                            return RetrofitBuilder.getRetrofitInterface()
+                                        .DOWNLOAD_PHOTO_BY_URL_TEST(url)
 //                                .map(jsonObject -> new SumTestObj(jsonObject, tovarImgList))
 //                                .map(responseBody -> new SumTestObj(Single.just(responseBody), tovarImgList))
                                         .map(responseBody -> new SumTestObj(responseBody, tovarImgList))
                                         .subscribeOn(Schedulers.io())
-                                        .toObservable()
+                                        .toObservable();
+                        }
                         , 10)  // добавил ограничение на одновременных 10 запросов
                 .doOnNext(sumTestObj -> {
                     try {

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -56,10 +57,13 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.DynamicAchievementSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -78,7 +82,7 @@ fun ItemRowCard(
 ) {
     val rows = productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
     val expanded = productCodeEditorState.expanded && rows.isNotEmpty()
-    val achievementPhotoLoadingIds = rememberAchievementPhotoLoadingIds(viewModel)
+    val photoLoadingIds = rememberPhotoLoadingIds(viewModel)
 
     Box(
         modifier = Modifier
@@ -117,9 +121,9 @@ fun ItemRowCard(
             },
             productCodeExpanded = expanded,
             productCodeRows = rows,
-            loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+            loadingImageIndexes = viewModel.getLoadingImageIndexes(
                 item,
-                achievementPhotoLoadingIds
+                photoLoadingIds
             ),
             onProductCodeMinus = { rowId ->
                 viewModel.decreaseProductCodeValue(item.stableId, rowId)
@@ -142,8 +146,117 @@ fun ItemRowCard(
                     fieldValue = fieldValue,
                     context = context
                 )
-            }
+            },
+            imageDisplayMode = uiState.imageDisplayMode,
+            imageOverlayTextKeys = viewModel.contextUI.imageOverlayTextKeys()
         )
+    }
+}
+
+@Composable
+fun ImageDisplayModeItemRows(
+    items: List<DataItemUI>,
+    columns: Int,
+    uiState: StateUI,
+    viewModel: MainViewModel,
+    context: Context,
+    visibilityColumName: Int,
+    productCodeEditorState: ProductCodeEditorState,
+    modifier: Modifier = Modifier
+) {
+    val safeColumns = columns.coerceIn(2, 3)
+    val photoLoadingIds = rememberPhotoLoadingIds(viewModel)
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        items.chunked(safeColumns).forEach { rowItems ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 6.dp, end = 6.dp)
+            ) {
+                rowItems.forEach { item ->
+                    val rows = productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
+                    val expanded = productCodeEditorState.expanded && rows.isNotEmpty()
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 4.dp, end = 4.dp, bottom = 8.dp)
+                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                    ) {
+                        ItemUI(
+                            item = item,
+                            visibilityColumName = visibilityColumName,
+                            settingsItemUI = uiState.settingsItems,
+                            contextUI = viewModel.modeUI,
+                            onClickItem = { viewModel.onClickItem(it, context) },
+                            onLongClickItem = { viewModel.onLongClickItem(it, context) },
+                            onClickItemImage = { viewModel.onClickItemImage(it, context) },
+                            onMultipleClickItemImage = { dataItem, index ->
+                                viewModel.onClickItemImage(dataItem, context, index)
+                            },
+                            onCheckItem = { checked, it ->
+                                viewModel.updateItemSelect(checked, it)
+                            },
+                            onClickProductCode = { clickedItem, fieldValue, action ->
+                                viewModel.onClickProductCode(
+                                    itemUI = clickedItem,
+                                    fieldValue = fieldValue,
+                                    action = action,
+                                    context = context
+                                )
+                            },
+                            onLongClickProductCode = { clickedItem, fieldValue, action ->
+                                viewModel.onLongClickProductCode(
+                                    itemUI = clickedItem,
+                                    fieldValue = fieldValue,
+                                    action = action,
+                                    context = context
+                                )
+                            },
+                            productCodeExpanded = expanded,
+                            productCodeRows = rows,
+                            loadingImageIndexes = viewModel.getLoadingImageIndexes(
+                                item,
+                                photoLoadingIds
+                            ),
+                            onProductCodeMinus = { rowId ->
+                                viewModel.decreaseProductCodeValue(item.stableId, rowId)
+                            },
+                            onProductCodePlus = { rowId ->
+                                viewModel.increaseProductCodeValue(item.stableId, rowId)
+                            },
+                            onProductCodeValueChange = { rowId, value ->
+                                viewModel.updateProductCodeValue(item.stableId, rowId, value)
+                            },
+                            onProductCodeValue2Change = { rowId, value ->
+                                viewModel.updateProductCodeSecondValue(item.stableId, rowId, value)
+                            },
+                            onProductCodeTakePhoto = { clickedItem ->
+                                viewModel.onProductCodeTakePhoto(clickedItem, context)
+                            },
+                            onClickImageComment = { clickedItem, fieldValue ->
+                                viewModel.onClickImageComment(
+                                    itemUI = clickedItem,
+                                    fieldValue = fieldValue,
+                                    context = context
+                                )
+                            },
+                            imageDisplayMode = uiState.imageDisplayMode,
+                            imageOverlayTextKeys = viewModel.contextUI.imageOverlayTextKeys()
+                        )
+                    }
+                }
+
+                repeat(safeColumns - rowItems.size) {
+                    Spacer(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 4.dp, end = 4.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -165,7 +278,7 @@ fun GroupDeck(
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
     val uiState by viewModel.uiState.collectAsState()
     val productCodeEditorState by viewModel.productCodeEditorState.collectAsState()
-    val achievementPhotoLoadingIds = rememberAchievementPhotoLoadingIds(viewModel)
+    val photoLoadingIds = rememberPhotoLoadingIds(viewModel)
 
     // stable key группы, чтобы rememberSaveable держал состояние именно этой группы
     val groupId = remember(groupMeta?.groupKey, level) {
@@ -527,9 +640,9 @@ fun GroupDeck(
                                 settingsItemUI = topCardSettings,
                                 showRoundCheckbox = !(viewModel.modeUI == ModeUI.ONE_SELECT && level == 0),
                                 contextUI = viewModel.modeUI,
-                                loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                                loadingImageIndexes = viewModel.getLoadingImageIndexes(
                                     topItem,
-                                    achievementPhotoLoadingIds
+                                    photoLoadingIds
                                 ),
                                 onClickItem = {
                                     // клик по карте действует как по заголовку
@@ -583,6 +696,8 @@ fun GroupDeck(
                                         context = context
                                     )
                                 },
+                                imageDisplayMode = uiState.imageDisplayMode,
+                                imageOverlayTextKeys = viewModel.contextUI.imageOverlayTextKeys()
                             )
                         }
                     }
@@ -604,9 +719,9 @@ fun GroupDeck(
                             visibilityColumName = visibilityColumName,
                             settingsItemUI = settingsItems,
                             contextUI = viewModel.modeUI,
-                            loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
+                            loadingImageIndexes = viewModel.getLoadingImageIndexes(
                                 topItem,
-                                achievementPhotoLoadingIds
+                                photoLoadingIds
                             ),
                             onClickItem = {
                                 if (viewModel.shouldOpenContextMenuOnCardClick()) {
@@ -651,6 +766,8 @@ fun GroupDeck(
                                     context = context
                                 )
                             },
+                            imageDisplayMode = uiState.imageDisplayMode,
+                            imageOverlayTextKeys = viewModel.contextUI.imageOverlayTextKeys()
                         )
                     }
                 }
@@ -677,96 +794,113 @@ fun GroupDeck(
                     val nextGroupingKey = groupingFields.getOrNull(nextLevel)?.key
 
                     if (nextGroupingKey.isNullOrBlank()) {
-                        // ❌ больше группировок нет — просто список карточек
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items.forEach { item ->
-                                Box(
-                                    modifier = Modifier
-                                        .padding(
-                                            start = 10.dp, end = 10.dp,
-                                            bottom = 6.dp, top = 6.dp
-                                        )
-                                        .shadow(4.dp, RoundedCornerShape(8.dp))
-                                ) {
-                                    val rows =
-                                        productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
-                                    val expanded = productCodeEditorState.expanded
+                        val imageGridColumns = uiState.imageDisplayMode.columns
+                            ?.takeIf { it > 1 && settingsItems.canUseImageDisplayMode() }
 
-                                    ItemUI(
-                                        item = item,
-                                        visibilityColumName = visibilityColumName,
-                                        settingsItemUI = uiState.settingsItems,
-                                        contextUI = viewModel.modeUI,
-                                        onClickItem = { viewModel.onClickItem(it, context) },
-                                        onLongClickItem = {
-                                            viewModel.onLongClickItem(
-                                                it,
-                                                context
+                        if (imageGridColumns != null) {
+                            ImageDisplayModeItemRows(
+                                items = items,
+                                columns = imageGridColumns,
+                                uiState = uiState,
+                                viewModel = viewModel,
+                                context = context,
+                                visibilityColumName = visibilityColumName,
+                                productCodeEditorState = productCodeEditorState
+                            )
+                        } else {
+                            // ❌ больше группировок нет — просто список карточек
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items.forEach { item ->
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(
+                                                start = 10.dp, end = 10.dp,
+                                                bottom = 6.dp, top = 6.dp
                                             )
-                                        },
-                                        onClickItemImage = {
-                                            viewModel.onClickItemImage(
-                                                it,
-                                                context
-                                            )
-                                        },
-                                        onMultipleClickItemImage = { dataItem, index ->
-                                            viewModel.onClickItemImage(dataItem, context, index)
-                                        },
-                                        onCheckItem = { checked, it ->
-                                            viewModel.updateItemSelect(checked, it)
-                                        },
-                                        onClickProductCode = { clickedItem, fieldValue, action ->
-                                            viewModel.onClickProductCode(
-                                                itemUI = clickedItem,
-                                                fieldValue = fieldValue,
-                                                action = action,
-                                                context = context
-                                            )
-                                        },
-                                        onLongClickProductCode = { clickedItem, fieldValue, action ->
-                                            viewModel.onLongClickProductCode(
-                                                itemUI = clickedItem,
-                                                fieldValue = fieldValue,
-                                                action = action,
-                                                context = context
-                                            )
-                                        },
-                                        productCodeExpanded = expanded,
-                                        productCodeRows = rows,
-                                        loadingImageIndexes = viewModel.getAchievementLoadingImageIndexes(
-                                            item,
-                                            achievementPhotoLoadingIds
-                                        ),
-                                        onProductCodeMinus = { rowId ->
-                                            viewModel.decreaseProductCodeValue(item.stableId, rowId)
-                                        },
-                                        onProductCodePlus = { rowId ->
-                                            viewModel.increaseProductCodeValue(item.stableId, rowId)
-                                        },
-                                        onProductCodeValueChange = { rowId, value ->
-                                            viewModel.updateProductCodeValue(
-                                                item.stableId,
-                                                rowId,
-                                                value
-                                            )
-                                        },
-                                        onProductCodeValue2Change = { rowId, value ->
-                                            viewModel.updateProductCodeSecondValue(item.stableId, rowId, value)
-                                        },
-                                        onProductCodeTakePhoto = { clickedItem ->
-                                            viewModel.onProductCodeTakePhoto(clickedItem, context)
-                                        },
-                                        onClickImageComment = { clickedItem, fieldValue ->
-                                            viewModel.onClickImageComment(
-                                                itemUI = clickedItem,
-                                                fieldValue = fieldValue,
-                                                context = context
-                                            )
-                                        }
-                                    )
+                                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                                    ) {
+                                        val rows =
+                                            productCodeEditorState.rowsByItemId[item.stableId].orEmpty()
+                                        val expanded = productCodeEditorState.expanded
+
+                                        ItemUI(
+                                            item = item,
+                                            visibilityColumName = visibilityColumName,
+                                            settingsItemUI = uiState.settingsItems,
+                                            contextUI = viewModel.modeUI,
+                                            onClickItem = { viewModel.onClickItem(it, context) },
+                                            onLongClickItem = {
+                                                viewModel.onLongClickItem(
+                                                    it,
+                                                    context
+                                                )
+                                            },
+                                            onClickItemImage = {
+                                                viewModel.onClickItemImage(
+                                                    it,
+                                                    context
+                                                )
+                                            },
+                                            onMultipleClickItemImage = { dataItem, index ->
+                                                viewModel.onClickItemImage(dataItem, context, index)
+                                            },
+                                            onCheckItem = { checked, it ->
+                                                viewModel.updateItemSelect(checked, it)
+                                            },
+                                            onClickProductCode = { clickedItem, fieldValue, action ->
+                                                viewModel.onClickProductCode(
+                                                    itemUI = clickedItem,
+                                                    fieldValue = fieldValue,
+                                                    action = action,
+                                                    context = context
+                                                )
+                                            },
+                                            onLongClickProductCode = { clickedItem, fieldValue, action ->
+                                                viewModel.onLongClickProductCode(
+                                                    itemUI = clickedItem,
+                                                    fieldValue = fieldValue,
+                                                    action = action,
+                                                    context = context
+                                                )
+                                            },
+                                            productCodeExpanded = expanded,
+                                            productCodeRows = rows,
+                                            loadingImageIndexes = viewModel.getLoadingImageIndexes(
+                                                item,
+                                                photoLoadingIds
+                                            ),
+                                            onProductCodeMinus = { rowId ->
+                                                viewModel.decreaseProductCodeValue(item.stableId, rowId)
+                                            },
+                                            onProductCodePlus = { rowId ->
+                                                viewModel.increaseProductCodeValue(item.stableId, rowId)
+                                            },
+                                            onProductCodeValueChange = { rowId, value ->
+                                                viewModel.updateProductCodeValue(
+                                                    item.stableId,
+                                                    rowId,
+                                                    value
+                                                )
+                                            },
+                                            onProductCodeValue2Change = { rowId, value ->
+                                                viewModel.updateProductCodeSecondValue(item.stableId, rowId, value)
+                                            },
+                                            onProductCodeTakePhoto = { clickedItem ->
+                                                viewModel.onProductCodeTakePhoto(clickedItem, context)
+                                            },
+                                            onClickImageComment = { clickedItem, fieldValue ->
+                                                viewModel.onClickImageComment(
+                                                    itemUI = clickedItem,
+                                                    fieldValue = fieldValue,
+                                                    context = context
+                                                )
+                                            },
+                                            imageDisplayMode = uiState.imageDisplayMode,
+                                            imageOverlayTextKeys = viewModel.contextUI.imageOverlayTextKeys()
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1335,20 +1469,49 @@ private fun List<SettingsItemUI>.isGroupHeaderEnabled(): Boolean {
     return firstOrNull { it.key.equals("group_header", ignoreCase = true) }?.isEnabled ?: true
 }
 
-@Composable
-private fun rememberAchievementPhotoLoadingIds(viewModel: MainViewModel): Set<String> {
-    val achievementViewModel = viewModel as? AchievementsSDBViewModel ?: return emptySet()
-    val loadingIds by achievementViewModel.achievementPhotoLoadingIds.collectAsState()
-    return loadingIds
+private fun List<SettingsItemUI>.canUseImageDisplayMode(): Boolean {
+    val hasDisplayModeSetting = any {
+        it.key.equals(IMAGE_DISPLAY_MODE_SETTINGS_KEY, ignoreCase = true)
+    }
+    val imageEnabled = firstOrNull {
+        it.key.equals("id_res_image", ignoreCase = true)
+    }?.isEnabled != false
+
+    return hasDisplayModeSetting && imageEnabled
 }
 
-private fun MainViewModel.getAchievementLoadingImageIndexes(
+@Composable
+private fun rememberPhotoLoadingIds(viewModel: MainViewModel): Set<String> {
+    return when (viewModel) {
+        is AchievementsSDBViewModel -> {
+            val loadingIds by viewModel.achievementPhotoLoadingIds.collectAsState()
+            loadingIds
+        }
+
+        is DynamicAchievementSDBViewModel -> {
+            val loadingIds by viewModel.rackPhotoLoadingIds.collectAsState()
+            loadingIds
+        }
+
+        is StackPhotoDBViewModel -> {
+            val loadingIds by viewModel.stackPhotoLoadingIds.collectAsState()
+            loadingIds
+        }
+
+        else -> emptySet()
+    }
+}
+
+private fun MainViewModel.getLoadingImageIndexes(
     item: DataItemUI,
     loadingPhotoIds: Set<String>
 ): Set<Int> {
-    return (this as? AchievementsSDBViewModel)
-        ?.getLoadingImageIndexes(item, loadingPhotoIds)
-        .orEmpty()
+    return when (this) {
+        is AchievementsSDBViewModel -> getLoadingImageIndexes(item, loadingPhotoIds)
+        is DynamicAchievementSDBViewModel -> getLoadingImageIndexes(item, loadingPhotoIds)
+        is StackPhotoDBViewModel -> getLoadingImageIndexes(item, loadingPhotoIds)
+        else -> emptySet()
+    }
 }
 
 private const val GROUP_DECK_DEBUG = "GROUP_DECK_DEBUG"

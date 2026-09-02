@@ -103,16 +103,17 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 if (wpDataDB.getTheme_id() == 95) {
                     vote.note = "Вы нашли " + uniqueVotes.size() + " нарушений в ДетОтчете " + wpDataDB.getDoc_num_otchet() + ". За это Вам положена премия.";
                 } else {
-                    UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
-                    vote.authorVote = userScore.fio;
+                    UsersSDB userScore = getUserByIdSafe(vote.voterId);
+                    String userScoreName = userName(userScore, vote.voterId);
+                    vote.authorVote = userScoreName;
                     vote.note = "Вы получили низкую оценку " + vote.score + " " + Clock.getHumanTimeSecPattern(vote.dt, "dd.MM.yy") +
-                            " по своему ДетОтчету от " + userScore.fio + " (" + vote.comments + ")";
+                            " по своему ДетОтчету от " + userScoreName + " (" + vote.comments + ")";
                 }
             }
 
             if ((uniqueVotes == null || uniqueVotes.size() == 0) && wpDataDB.getTheme_id() == 95) {
                 signal = true;
-                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(userName(usersSDBDocument, wpDataDB.getUser_id())).append(" нет.");
             } else if (uniqueVotes.size() == 0 && wpDataDB.getTheme_id() == 95) {
                 signal = false;
                 spannableStringBuilder.append("Нарушений в оценивании ФО за период с ")
@@ -120,10 +121,10 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                         .append(Clock.getHumanTimeSecPattern(dateTo, "dd.MM.yy")).append(" нет.");
             } else if (uniqueVotes.size() == 0) {
                 signal = false;
-                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(userName(usersSDBDocument, wpDataDB.getUser_id())).append(" нет.");
             } else if (vote == null) {
                 signal = false;
-                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(userName(usersSDBDocument, wpDataDB.getUser_id())).append(" нет.");
             } else if (wpDataDB.getTheme_id() == 1147) {
                 signal = true;
                 spannableStringBuilder.append("Обнаружено ").append(String.valueOf(uniqueVotes.size())).append(" нарушение в оценивании ФотоОтчетов (подробности см. в таблице)");
@@ -133,7 +134,6 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                         .append(" низких оценок по ДетОтчетам от ").append(vote.authorVote).append("\n\n");
 
                 for (VoteSDB item : uniqueVotes){
-                    UsersSDB userScore = SQL_DB.usersDao().getUserById(item.voterId);
                     SpannableStringBuilder link = new SpannableStringBuilder();
                     link.append("(").append(String.valueOf(item.id)).append(") ").append(item.comments);
                     spannableStringBuilder.append(createLinkedString(link, item)).append("\n\n");
@@ -171,6 +171,22 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/executeOption", "Exception e: " + e);
         }
+    }
+
+    private UsersSDB getUserByIdSafe(Integer userId) {
+        if (userId == null) {
+            return null;
+        }
+
+        return SQL_DB.usersDao().getUserById(userId);
+    }
+
+    private String userName(UsersSDB user, Integer userId) {
+        if (user != null && user.fio != null && !user.fio.trim().isEmpty()) {
+            return user.fio;
+        }
+
+        return "сотрудник не определен (id " + userId + ")";
     }
 
     private SpannableStringBuilder createLinkedString(SpannableStringBuilder msg, VoteSDB vote) {

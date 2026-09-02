@@ -4472,7 +4472,7 @@ public class Options {
     public static List<TovarOptions> getTovarOptins() {
         if (list == null || list.isEmpty()) {
             list = new ArrayList<>();
-            list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579));
+            list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579, 174974));
             list.add(new TovarOptions(FACE, "Ф", "Кол. фейсов", "face", "main", 576, 76815));
             list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591, 165275));
             list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));
@@ -4602,7 +4602,7 @@ $options_list_tpl=array(
         )
 
 
-(PRICE,         "Ц", "Цена товара"              , "price", "main", 579));
+(PRICE,         "Ц", "Цена товара"              , "price", "main", 579, 174974));
 (FACE,          "Ф", "Кол. фейсов"              , "face", "main", 576, 76815));
 (EXPIRE_LEFT,   "В", "Возврат"                  , "expire_left", "main", 135591, 165275));
 (AMOUNT,        "К", "Кол. на витрине"          , "amount", "main", 578, 1465));

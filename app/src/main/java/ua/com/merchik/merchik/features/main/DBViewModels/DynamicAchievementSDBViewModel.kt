@@ -12,6 +12,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,6 +41,7 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolde
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -58,6 +62,8 @@ class DynamicAchievementSDBViewModel @Inject constructor(
     private val scheduledRackPhotoIds = ConcurrentHashMap.newKeySet<String>()
     private val rackPhotoDownloadsInProgress = ConcurrentHashMap.newKeySet<String>()
     private val rackPhotoDownloadFailures = ConcurrentHashMap.newKeySet<String>()
+    private val _rackPhotoLoadingIds = MutableStateFlow<Set<String>>(emptySet())
+    val rackPhotoLoadingIds: StateFlow<Set<String>> = _rackPhotoLoadingIds.asStateFlow()
 
     override fun getDefaultSortUserFields(): List<String> = DYNAMIC_ACHIEVEMENT_VISIBLE_FIELDS
 
@@ -200,7 +206,7 @@ class DynamicAchievementSDBViewModel @Inject constructor(
 
         scheduleMissingRackPhotos(data)
 
-        return repository.toItemUIList(
+        val items = repository.toItemUIList(
             DynamicAchievementSDB::class,
             data,
             contextUI,
@@ -216,15 +222,47 @@ class DynamicAchievementSDBViewModel @Inject constructor(
                         (it.rawObj.firstOrNull { raw -> raw is DynamicAchievementSDB } as? DynamicAchievementSDB)
                             ?.id
                             .toString()
-                    )
+                )
                 it.copy(selected = selected == true)
             }
+
+        return items
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
-//        super.onClickItem(itemUI, context)
-        Log.e("!!!!!!!!!!!!","++++++++++++++++++++++++++++++")
+        val dynamicAchievement = itemUI.rawObj
+            .filterIsInstance<DynamicAchievementSDB>()
+            .firstOrNull()
+
+        val selectId = dynamicAchievement
+            ?.selectId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
+
+        if (selectId == null) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "DynamicAchievementSDBViewModel/onClickItem",
+                "select_id is empty, item=${dynamicAchievement?.id}, dataJson=$dataJson"
+            )
+            return
+        }
+
+        launcher?.let {
+            launchFeaturesActivity(
+                launcher = it,
+                context = context,
+                viewModelClass = StackPhotoDBViewModel::class,
+                dataJson = selectId,
+                modeUI = ModeUI.DEFAULT,
+                contextUI = ContextUI.STACK_PHOTO_DYNAMIC_ACHIEVEMENT,
+                title = "Фото динаміки досягнення",
+                subTitle = dynamicAchievement.nm?.takeIf { nm -> nm.isNotBlank() } ?: selectId,
+                origin = null
+            )
+        }
     }
+
     private fun preloadDynamicAchievementsForVisitIfNeeded(clientId: String?, addressId: String?) {
         if (clientId.isNullOrBlank() || addressId.isNullOrBlank()) return
 
@@ -268,20 +306,31 @@ class DynamicAchievementSDBViewModel @Inject constructor(
     }
 
     private fun requestRackPhotoIfNeeded(rawPhotoServerId: String?) {
-        val photoServerId = rawPhotoServerId.normalizePhotoServerId() ?: return
+        val photoServerId = rawPhotoServerId.normalizePhotoServerId()
+        if (photoServerId == null) return
         if (rackPhotoDownloadFailures.contains(photoServerId)) return
 
         val localPhoto = getLocalStackPhotoByServerId(photoServerId)
-        if (localPhoto?.hasFullLocalPhotoFile() == true) return
+        if (localPhoto?.hasLocalPhotoFile() == true) return
         if (!rackPhotoDownloadsInProgress.add(photoServerId)) return
+        updateRackPhotoLoadingState()
 
         scheduleRackPhotoDownloadTimeout(photoServerId)
 
-        if (localPhoto != null && !localPhoto.getPhotoServerURL().isNullOrBlank()) {
-            downloadRackPhotoFile(photoServerId, localPhoto)
-        } else {
-            downloadRackPhotoInfoById(photoServerId)
+        if (localPhoto != null) {
+            if (localPhoto.getPhotoServerURL().isNullOrBlank()) {
+                finishRackPhotoDownload(
+                    photoServerId = photoServerId,
+                    success = false,
+                    error = "StackPhotoDB exists without photoServerURL"
+                )
+            } else {
+                downloadRackPhotoFile(photoServerId, localPhoto)
+            }
+            return
         }
+
+        downloadRackPhotoInfoById(photoServerId)
     }
 
     private fun downloadRackPhotoInfoById(photoServerId: String) {
@@ -340,15 +389,17 @@ class DynamicAchievementSDBViewModel @Inject constructor(
             rackPhotoDownloadsInProgress.remove(photoServerId)
             if (success) {
                 rackPhotoDownloadFailures.remove(photoServerId)
-                updateContent()
+                updateRackPhotoLoadingState()
             } else {
                 rackPhotoDownloadFailures.add(photoServerId)
+                updateRackPhotoLoadingState()
                 Globals.writeToMLOG(
                     "ERROR",
                     "DynamicAchievementSDBViewModel/downloadRackPhoto",
                     "photoServerId=$photoServerId, error=$error"
                 )
             }
+            if (success) updateContent()
         }
     }
 
@@ -357,6 +408,7 @@ class DynamicAchievementSDBViewModel @Inject constructor(
             delay(DYNAMIC_ACHIEVEMENT_PHOTO_DOWNLOAD_TIMEOUT_MS)
             if (rackPhotoDownloadsInProgress.remove(photoServerId)) {
                 rackPhotoDownloadFailures.add(photoServerId)
+                updateRackPhotoLoadingState()
                 Globals.writeToMLOG(
                     "ERROR",
                     "DynamicAchievementSDBViewModel/downloadRackPhoto",
@@ -364,6 +416,10 @@ class DynamicAchievementSDBViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun updateRackPhotoLoadingState() {
+        _rackPhotoLoadingIds.value = rackPhotoDownloadsInProgress.toSet()
     }
 
     private fun getLocalStackPhotoByServerId(photoServerId: String): StackPhotoDB? {
@@ -386,16 +442,24 @@ class DynamicAchievementSDBViewModel @Inject constructor(
         }.getOrNull()
     }
 
-    private fun StackPhotoDB.hasFullLocalPhotoFile(): Boolean {
+    fun getLoadingImageIndexes(itemUI: DataItemUI, loadingPhotoIds: Set<String>): Set<Int> {
+        val dynamicAchievement = itemUI.rawObj
+            .filterIsInstance<DynamicAchievementSDB>()
+            .firstOrNull()
+            ?: return emptySet()
+        val photoServerId = dynamicAchievement.rackPhotoId.normalizePhotoServerId()
+            ?: return emptySet()
+
+        return if (photoServerId in loadingPhotoIds) setOf(0) else emptySet()
+    }
+
+    private fun StackPhotoDB.hasLocalPhotoFile(): Boolean {
         val photoPath = getPhoto_num()
             ?.trim()
             ?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
             ?: return false
 
-        val isFullPhoto = getPhoto_size()?.equals("Full", ignoreCase = true) == true ||
-                photoPath.contains("_Full", ignoreCase = true)
-
-        return isFullPhoto && File(photoPath).exists()
+        return File(photoPath).exists()
     }
 
     private fun String?.normalizePhotoServerId(): String? {

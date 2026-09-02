@@ -42,6 +42,8 @@ import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.data.RealmModels.UsersDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -150,6 +152,12 @@ class MainRepository(
         item?.let { obj ->
             val jsonObject = JSONObject(gson.toJson(obj))
             val imageCommentKeys = obj.getCommentsForImageKeys()
+            val settingsUI = getSettingsUI(obj::class.java, contextUI)
+            val imageKeys = obj.getFieldsImageOnUI()
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+            val canConfigureImageDisplayMode = obj.getIdResImage() != null && imageKeys.size <= 1
 
             val fields = linkedSetOf<String>()
 
@@ -161,6 +169,9 @@ class MainRepository(
             }
 
             obj.getIdResImage()?.let {
+                if (canConfigureImageDisplayMode) {
+                    fields.add(IMAGE_DISPLAY_MODE_SETTINGS_KEY)
+                }
                 fields.add("id_res_image")
             }
 
@@ -171,9 +182,6 @@ class MainRepository(
             jsonObject.keys().forEach { key ->
                 fields.add(key)
             }
-
-            // 👇 сначала забираем сохранённые настройки (если есть)
-            val settingsUI = getSettingsUI(obj::class.java, contextUI)
 
             // базовый список скрытых (или дефолтный)
             val baseHide = settingsUI?.hideFields ?: defaultHideUserFields
@@ -206,9 +214,10 @@ class MainRepository(
                 }
                 .map { key ->
                     SettingsItemUI(
-                        key,
-                        when (key) {
+                        key = key,
+                        text = when (key) {
                             "column_name" -> "Назва реквізитів"
+                            IMAGE_DISPLAY_MODE_SETTINGS_KEY -> "Режим відображення"
                             "id_res_image" -> "Зображення"
                             "group_header" -> "Заголовок групи"
                             "filter_select" -> "Можливість вибору елемента"
@@ -223,12 +232,26 @@ class MainRepository(
                             )
                         },
                         // 👇 логика видимости оставлена как была
-                        hideUserFields?.contains(key) != true,
-                        0
+                        isEnabled = if (key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+                            true
+                        } else {
+                            hideUserFields?.contains(key) != true
+                        },
+                        index = 0,
+                        imageDisplayMode = if (key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+                            settingsUI?.imageDisplayMode ?: ImageDisplayMode.DEFAULT
+                        } else {
+                            null
+                        }
                     )
                 }
         } ?: return emptyList()
     }
+
+    fun getImageDisplayMode(
+        klass: KClass<out DataObjectUI>,
+        contextUI: ContextUI?
+    ): ImageDisplayMode? = getSettingsUI(klass.java, contextUI)?.imageDisplayMode
 
     fun <T : DataObjectUI> saveSettingsUI(
         klass: KClass<T>,

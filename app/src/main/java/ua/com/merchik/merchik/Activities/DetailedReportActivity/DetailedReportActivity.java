@@ -864,14 +864,16 @@ public class DetailedReportActivity extends toolbar_menus {
                     commentViewModel.setSave(false);
 
                     long startTime = System.currentTimeMillis() / 1000;
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        wpDataDB.setDt_update(startTime);
-                        wpDataDB.user_comment = commentViewModel.getComment().getValue();
-                        wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
-                        wpDataDB.user_comment_dt_update = startTime;
-                        wpDataDB.startUpdate = true;
-                        realm.insertOrUpdate(wpDataDB);
-                    });
+                    WpDataDB savedWpDataDB = RealmManager.saveWpDataCommentSafely(
+                            wpDataDB,
+                            commentViewModel.getComment().getValue(),
+                            startTime
+                    );
+                    if (savedWpDataDB != null) {
+                        wpDataDB = savedWpDataDB;
+                        commentViewModel.setWpDataDB(savedWpDataDB);
+                        detailedReportViewModel.setWpDataDB(savedWpDataDB);
+                    }
 
                     // Это жосткие костыли
                     Exchange exchange = new Exchange();

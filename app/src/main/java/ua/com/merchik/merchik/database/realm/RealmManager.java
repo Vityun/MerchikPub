@@ -1269,6 +1269,85 @@ public class RealmManager {
     }
 
     @Nullable
+    public static WpDataDB saveWpDataCommentSafely(WpDataDB source, String comment, long updateTimeSec) {
+        if (source == null) {
+            return null;
+        }
+
+        final WpDataDB[] saved = new WpDataDB[1];
+
+        INSTANCE.executeTransaction(realm -> {
+            WpDataDB target = null;
+            if (source.getId() != 0) {
+                target = realm.where(WpDataDB.class)
+                        .equalTo("ID", source.getId())
+                        .findFirst();
+            }
+            if (target == null && source.getCode_dad2() != 0) {
+                target = realm.where(WpDataDB.class)
+                        .equalTo("code_dad2", source.getCode_dad2())
+                        .findFirst();
+            }
+            if (target == null) {
+                Globals.writeToMLOG(
+                        "ERROR",
+                        "RealmManager.saveWpDataCommentSafely",
+                        "wpData row not found, id=" + source.getId() + ", dad2=" + source.getCode_dad2()
+                );
+                return;
+            }
+
+            if ((source.getVisit_end_dt() <= 0 && target.getVisit_end_dt() > 0)
+                    || (source.getClient_end_dt() <= 0 && target.getClient_end_dt() > 0)) {
+                Globals.writeToMLOG(
+                        "INFO",
+                        "RealmManager.saveWpDataCommentSafely",
+                        "stale wpData source ignored, dad2=" + target.getCode_dad2()
+                                + ", sourceVisitEnd=" + source.getVisit_end_dt()
+                                + ", dbVisitEnd=" + target.getVisit_end_dt()
+                                + ", sourceClientEnd=" + source.getClient_end_dt()
+                                + ", dbClientEnd=" + target.getClient_end_dt()
+                );
+            }
+
+            mergeNonZeroWorkProgress(target, source);
+            target.setDt_update(updateTimeSec);
+            target.user_comment = comment;
+            target.user_comment_author_id = target.getUser_id();
+            target.user_comment_dt_update = updateTimeSec;
+            target.startUpdate = true;
+
+            saved[0] = realm.copyFromRealm(target);
+        });
+
+        return saved[0];
+    }
+
+    private static void mergeNonZeroWorkProgress(WpDataDB target, WpDataDB source) {
+        if (target == null || source == null) {
+            return;
+        }
+
+        if (target.getVisit_start_dt() <= 0 && source.getVisit_start_dt() > 0) {
+            target.setVisit_start_dt(source.getVisit_start_dt());
+        }
+        if (target.getClient_start_dt() <= 0 && source.getClient_start_dt() > 0) {
+            target.setClient_start_dt(source.getClient_start_dt());
+        }
+        if (target.getVisit_end_dt() <= 0 && source.getVisit_end_dt() > 0) {
+            target.setVisit_end_dt(source.getVisit_end_dt());
+        }
+        if (target.getClient_end_dt() <= 0 && source.getClient_end_dt() > 0) {
+            target.setClient_end_dt(source.getClient_end_dt());
+        }
+        if ((target.client_work_duration == null || target.client_work_duration <= 0)
+                && source.client_work_duration != null
+                && source.client_work_duration > 0) {
+            target.client_work_duration = source.client_work_duration;
+        }
+    }
+
+    @Nullable
     public static WpDataDB getWorkPlanRowByCodeDad2Detached(long codeDad2) {
         try (Realm realm = Realm.getDefaultInstance()) {
             WpDataDB row = realm.where(WpDataDB.class)

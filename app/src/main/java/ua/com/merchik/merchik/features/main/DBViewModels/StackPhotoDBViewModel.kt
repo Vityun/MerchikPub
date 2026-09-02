@@ -7,18 +7,29 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.Realm
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload
+import ua.com.merchik.merchik.ViewHolders.Clicks
 import ua.com.merchik.merchik.WorkPlan
+import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest
 import ua.com.merchik.merchik.data.WPDataObj
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -38,7 +49,10 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.reflect.KClass
 
 @HiltViewModel
@@ -54,6 +68,11 @@ class StackPhotoDBViewModel @Inject constructor(
 
     private val EXAMPLE_ID = "id_1c"
     private val EXAMPLE_IMG_ID = "photo_id"
+    private val DYNAMIC_ACHIEVEMENT_SELECT_ID_FILTER_KEY = "dynamic_achievement_select_id"
+    private val stackPhotoDownloadsInProgress = ConcurrentHashMap.newKeySet<String>()
+    private val stackPhotoDownloadFailures = ConcurrentHashMap.newKeySet<String>()
+    private val _stackPhotoLoadingIds = MutableStateFlow<Set<String>>(emptySet())
+    val stackPhotoLoadingIds: StateFlow<Set<String>> = _stackPhotoLoadingIds.asStateFlow()
 
     override val table: KClass<out DataObjectUI>
         get() = StackPhotoDB::class
@@ -66,6 +85,15 @@ class StackPhotoDBViewModel @Inject constructor(
 
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+        val stackPhoto = clickedDataItemUI.rawObj
+            .filterIsInstance<StackPhotoDB>()
+            .firstOrNull()
+        if (stackPhoto != null && !stackPhoto.hasLocalPhotoFile()) {
+            requestStackPhotoIfNeeded(stackPhoto.photoServerId)
+            Toast.makeText(context, "Фото завантажується", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         super.onClickItemImage(clickedDataItemUI, context)
         dialog?.setCamera {
             openCamera(null) {
@@ -90,6 +118,52 @@ class StackPhotoDBViewModel @Inject constructor(
 
     override fun updateFilters() {
         when (contextUI) {
+            ContextUI.STACK_PHOTO_DYNAMIC_ACHIEVEMENT -> {
+                val selectId = getDynamicAchievementSelectIdFromDataJson()
+                if (selectId == null) {
+                    Globals.writeToMLOG(
+                        "ERROR",
+                        "StackPhotoDBViewModel.updateFilters",
+                        "Не вдалося отримати select_id з dataJson: $dataJson"
+                    )
+                    return
+                }
+
+                val achievement = RoomManager.SQL_DB
+                    .dynamicAchievementsDao()
+                    .getBySelectId(selectId)
+                    ?: RoomManager.SQL_DB
+                        .dynamicAchievementsDao()
+                        .getById(selectId)
+
+                val achievementName = achievement
+                    ?.nm
+                    ?.takeIf { it.isNotBlank() }
+                    ?: achievement
+                        ?.selectName
+                        ?.takeIf { it.isNotBlank() }
+                    ?: selectId
+
+                val filterDynamicAchievement = ItemFilter(
+                    "Динамічне досягнення",
+                    DynamicAchievementSDB::class,
+                    DynamicAchievementSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Динамічне досягнення",
+                    "Оберіть динамічне досягнення",
+                    DYNAMIC_ACHIEVEMENT_SELECT_ID_FILTER_KEY,
+                    "select_id",
+                    emptyList(),
+                    mutableListOf(achievementName),
+                    false
+                )
+
+                filters = Filters(
+                    rangeDataByKey = null,
+                    items = mutableListOf(filterDynamicAchievement)
+                )
+            }
+
             ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
             ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
             ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
@@ -300,6 +374,27 @@ class StackPhotoDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return try {
             when (contextUI) {
+                ContextUI.STACK_PHOTO_DYNAMIC_ACHIEVEMENT -> {
+                    val selectId = getDynamicAchievementSelectIdFromDataJson()
+                    if (selectId == null) {
+                        Globals.writeToMLOG(
+                            "ERROR",
+                            "StackPhotoDBViewModel.getItems",
+                            "Не вдалося отримати select_id з dataJson: $dataJson"
+                        )
+                        return emptyList()
+                    }
+
+                    val data = getDynamicAchievementStackPhotos(selectId)
+
+                    repository.toItemUIList(
+                        StackPhotoDB::class,
+                        data,
+                        contextUI,
+                        null
+                    )
+                }
+
                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
@@ -444,6 +539,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         }
                     }
 
+                    scheduleMissingStackPhotoFiles(data)
                     data.reverse()
 
                     repository
@@ -503,6 +599,300 @@ class StackPhotoDBViewModel @Inject constructor(
 
             emptyList()
         }
+    }
+
+    private fun getDynamicAchievementSelectIdFromDataJson(): String? {
+        val raw = dataJson?.trim() ?: return null
+        if (raw.isEmpty() || raw == "0" || raw.equals("null", ignoreCase = true)) {
+            return null
+        }
+
+        return runCatching {
+            val jsonObject = Gson().fromJson(raw, JsonObject::class.java)
+            jsonObject
+                ?.get("select_id")
+                ?.takeUnless { it.isJsonNull }
+                ?.asString
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
+                ?: jsonObject
+                    ?.get("selectId")
+                    ?.takeUnless { it.isJsonNull }
+                    ?.asString
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
+                ?: raw.trim('"')
+        }.getOrElse {
+            raw.trim('"')
+        }?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
+    }
+
+    private fun getDynamicAchievementStackPhotos(selectId: String): List<StackPhotoDB> {
+        val achievement = runCatching {
+            RoomManager.SQL_DB.dynamicAchievementsDao().getBySelectId(selectId)
+        }.getOrNull()
+        val achievementId = achievement
+            ?.id
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && it != selectId }
+
+        val dynamicPhotos = runCatching {
+            val bySelectId = RoomManager.SQL_DB.dynamicPhotoDao().getByDynamicAchievementId(selectId)
+            if (bySelectId.isNotEmpty() || achievementId == null) {
+                bySelectId
+            } else {
+                RoomManager.SQL_DB.dynamicPhotoDao().getByDynamicAchievementId(achievementId)
+            }
+        }.onFailure { error ->
+            Globals.writeToMLOG(
+                "ERROR",
+                "StackPhotoDBViewModel.getDynamicAchievementStackPhotos",
+                "selectId=$selectId, dynamic_photo read error=$error"
+            )
+        }.getOrDefault(emptyList())
+
+        val photoIds = dynamicPhotos
+            .mapNotNull { it.photoId.normalizePhotoServerId() }
+            .distinct()
+
+        if (photoIds.isEmpty()) {
+            Globals.writeToMLOG(
+                "INFO",
+                "StackPhotoDBViewModel.getDynamicAchievementStackPhotos",
+                "selectId=$selectId, dynamicPhotoRows=${dynamicPhotos.size}, photoIds=0"
+            )
+            return emptyList()
+        }
+
+        val photosByServerId = LinkedHashMap<String, StackPhotoDB>()
+        val realm = Realm.getDefaultInstance()
+        try {
+            val realmPhotos = realm.where(StackPhotoDB::class.java)
+                .`in`("photoServerId", photoIds.toTypedArray())
+                .findAll()
+
+            realm.copyFromRealm(realmPhotos).forEach { photo ->
+                photo.photoServerId
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { photosByServerId[it] = photo }
+            }
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "StackPhotoDBViewModel.getDynamicAchievementStackPhotos",
+                "selectId=$selectId, StackPhotoDB read error=$e"
+            )
+        } finally {
+            realm.close()
+        }
+
+        val result = photoIds.map { photoServerId ->
+            val stackPhoto = photosByServerId[photoServerId]
+            if (stackPhoto == null || !stackPhoto.hasLocalPhotoFile()) {
+                requestStackPhotoIfNeeded(photoServerId)
+            }
+
+            stackPhoto ?: createLoadingStackPhotoPlaceholder(photoServerId)
+        }
+        val missingIds = photoIds.filterNot { photosByServerId.containsKey(it) }
+        if (missingIds.isNotEmpty()) {
+            Globals.writeToMLOG(
+                "WARN",
+                "StackPhotoDBViewModel.getDynamicAchievementStackPhotos",
+                "selectId=$selectId, dynamicPhotoRows=${dynamicPhotos.size}, photoIds=${photoIds.size}, " +
+                        "found=${photosByServerId.size}, missing=${missingIds.size}, missingIds=${missingIds.previewIds()}"
+            )
+        } else {
+            Globals.writeToMLOG(
+                "INFO",
+                "StackPhotoDBViewModel.getDynamicAchievementStackPhotos",
+                "selectId=$selectId, dynamicPhotoRows=${dynamicPhotos.size}, photoIds=${photoIds.size}, found=${photosByServerId.size}"
+            )
+        }
+
+        return result
+    }
+
+    fun getLoadingImageIndexes(itemUI: DataItemUI, loadingPhotoIds: Set<String>): Set<Int> {
+        val stackPhoto = itemUI.rawObj.firstOrNull { it is StackPhotoDB } as? StackPhotoDB
+            ?: return emptySet()
+        val photoServerId = stackPhoto.photoServerId.normalizePhotoServerId()
+            ?: return emptySet()
+
+        return if (photoServerId in loadingPhotoIds) setOf(0) else emptySet()
+    }
+
+    private fun scheduleMissingStackPhotoFiles(data: List<StackPhotoDB>) {
+        data.forEach { stackPhoto ->
+            if (!stackPhoto.hasLocalPhotoFile()) {
+                requestStackPhotoIfNeeded(stackPhoto.photoServerId)
+            }
+        }
+    }
+
+    private fun requestStackPhotoIfNeeded(rawPhotoServerId: String?) {
+        val photoServerId = rawPhotoServerId.normalizePhotoServerId() ?: return
+        if (stackPhotoDownloadFailures.contains(photoServerId)) return
+
+        val localPhoto = getLocalStackPhotoByServerId(photoServerId)
+        if (localPhoto?.hasLocalPhotoFile() == true) return
+        if (!stackPhotoDownloadsInProgress.add(photoServerId)) return
+        updateStackPhotoLoadingState()
+
+        scheduleStackPhotoDownloadTimeout(photoServerId)
+
+        if (localPhoto != null) {
+            if (localPhoto.photoServerURL.isNullOrBlank()) {
+                finishStackPhotoDownload(
+                    photoServerId = photoServerId,
+                    success = false,
+                    error = "StackPhotoDB exists without photoServerURL"
+                )
+            } else {
+                downloadStackPhotoFile(photoServerId, localPhoto)
+            }
+            return
+        }
+
+        val request = PhotoTableRequest().apply {
+            mod = "images_view"
+            act = "list_image"
+            nolimit = "1"
+            id_list = photoServerId
+        }
+
+        PhotoDownload().getPhotoInfoAndSaveItToDB(
+            request,
+            object : Clicks.clickObjectAndStatus<StackPhotoDB> {
+                override fun onSuccess(data: StackPhotoDB) {
+                    if (data.photoServerURL.isNullOrBlank()) {
+                        finishStackPhotoDownload(
+                            photoServerId = photoServerId,
+                            success = false,
+                            error = "images_view.list_image returned empty photoServerURL"
+                        )
+                    } else {
+                        downloadStackPhotoFile(photoServerId, data)
+                    }
+                }
+
+                override fun onFailure(error: String) {
+                    finishStackPhotoDownload(photoServerId, success = false, error = error)
+                }
+            }
+        )
+    }
+
+    private fun downloadStackPhotoFile(photoServerId: String, stackPhotoDB: StackPhotoDB) {
+        PhotoDownload().downloadPhoto(
+            true,
+            stackPhotoDB,
+            STACK_PHOTO_DOWNLOAD_FOLDER,
+            object : PhotoDownload.downloadPhotoInterface {
+                override fun onSuccess(data: StackPhotoDB) {
+                    finishStackPhotoDownload(photoServerId, success = true)
+                }
+
+                override fun onFailure(s: String) {
+                    finishStackPhotoDownload(photoServerId, success = false, error = s)
+                }
+            }
+        )
+    }
+
+    private fun finishStackPhotoDownload(
+        photoServerId: String,
+        success: Boolean,
+        error: String? = null
+    ) {
+        viewModelScope.launch {
+            stackPhotoDownloadsInProgress.remove(photoServerId)
+            if (success) {
+                stackPhotoDownloadFailures.remove(photoServerId)
+            } else {
+                stackPhotoDownloadFailures.add(photoServerId)
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "StackPhotoDBViewModel/downloadStackPhoto",
+                    "photoServerId=$photoServerId, error=$error"
+                )
+            }
+            updateStackPhotoLoadingState()
+            if (success) updateContent()
+        }
+    }
+
+    private fun scheduleStackPhotoDownloadTimeout(photoServerId: String) {
+        viewModelScope.launch {
+            delay(STACK_PHOTO_DOWNLOAD_TIMEOUT_MS)
+            if (stackPhotoDownloadsInProgress.remove(photoServerId)) {
+                stackPhotoDownloadFailures.add(photoServerId)
+                updateStackPhotoLoadingState()
+                Globals.writeToMLOG(
+                    "ERROR",
+                    "StackPhotoDBViewModel/downloadStackPhoto",
+                    "photoServerId=$photoServerId, timeout=${STACK_PHOTO_DOWNLOAD_TIMEOUT_MS}ms"
+                )
+            }
+        }
+    }
+
+    private fun updateStackPhotoLoadingState() {
+        _stackPhotoLoadingIds.value = stackPhotoDownloadsInProgress.toSet()
+    }
+
+    private fun getLocalStackPhotoByServerId(photoServerId: String): StackPhotoDB? {
+        val realm = Realm.getDefaultInstance()
+        return try {
+            realm.where(StackPhotoDB::class.java)
+                .equalTo("photoServerId", photoServerId)
+                .findFirst()
+                ?.let { realm.copyFromRealm(it) }
+        } catch (e: Exception) {
+            Globals.writeToMLOG(
+                "ERROR",
+                "StackPhotoDBViewModel/getLocalStackPhotoByServerId",
+                "photoServerId=$photoServerId, error=$e"
+            )
+            null
+        } finally {
+            realm.close()
+        }
+    }
+
+    private fun createLoadingStackPhotoPlaceholder(photoServerId: String): StackPhotoDB {
+        return StackPhotoDB().apply {
+            id = createLoadingStackPhotoId(photoServerId)
+            this.photoServerId = photoServerId
+        }
+    }
+
+    private fun createLoadingStackPhotoId(photoServerId: String): Int {
+        val hash = photoServerId.hashCode()
+        val positiveHash = if (hash == Int.MIN_VALUE) Int.MAX_VALUE else abs(hash)
+        return -(if (positiveHash == 0) 1 else positiveHash)
+    }
+
+    private fun StackPhotoDB.hasLocalPhotoFile(): Boolean {
+        val path = photo_num?.takeIf { it.isNotBlank() } ?: return false
+        return File(path).exists()
+    }
+
+    private fun String?.normalizePhotoServerId(): String? {
+        return this
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && it != "0" && !it.equals("null", ignoreCase = true) }
+    }
+
+    private fun List<String>.previewIds(limit: Int = 25): String {
+        val preview = take(limit)
+        val suffix = if (size > limit) "... +${size - limit}" else ""
+        return "$preview$suffix"
+    }
+
+    private companion object {
+        private const val STACK_PHOTO_DOWNLOAD_FOLDER = "/StackPhoto"
+        private const val STACK_PHOTO_DOWNLOAD_TIMEOUT_MS = 45_000L
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
@@ -604,7 +994,8 @@ class StackPhotoDBViewModel @Inject constructor(
         return ("addr_id, approve, code_dad2, dviUpload, errorTime, dvi, upload_status, premiyaUpload, specialCol, " +
                 "commentUpload, upload_time, upload_to_server, vpi, client_id, dt, photoServerURL, showcase_id, " +
                 "time_event, tovar_id, user_id, photo_typeTxt, code_iza, example_id, example_img_id, planogram_id, " +
-                "planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id, statusShowcase, mainOption").split(",")
+                "planogram_img_id, photoServerId, showcaseName, showcaseId, showcase_id, statusShowcase, mainOption," +
+                "get_on_server, photo_hash").split(",")
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

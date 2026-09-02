@@ -3516,7 +3516,17 @@ id_exclude - иди товаров которые есть в приложени
             Log.e("downloadTovarImg", "TP: " + tp);
 
             if (tp == 18) {
-                Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(list.get(i).getPhotoUrl());
+                String url = PhotoUrlUtils.prepareDownloadUrl(
+                        list.get(i).getPhotoUrl(),
+                        false,
+                        "TablesLoadingUnloading/downloadTovarImg",
+                        list.get(i).getID()
+                );
+                if (url == null) {
+                    continue;
+                }
+
+                Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
                 int finalI = i;
                 call.enqueue(new Callback<ResponseBody>() {
                     @Override

@@ -29,7 +29,8 @@ fun LineSpinFadeLoaderIndicator(
     radius: Float = 55f,
     elementHeight: Float = 20f,
     minAlpha: Float = 0.2f,
-    maxAlpha: Float = 1.0f
+    maxAlpha: Float = 1.0f,
+    modifier: Modifier = Modifier
 ) {
 
     val angleStep = 360f / rectCount
@@ -76,7 +77,7 @@ fun LineSpinFadeLoaderIndicator(
 
 // ----------------------------- UI --------------------------
 
-    Canvas(modifier = Modifier) {
+    Canvas(modifier = modifier) {
 
         val center = Offset(size.width / 2, size.height / 2)
 

@@ -34,6 +34,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -46,6 +47,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -55,8 +57,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -77,9 +79,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
@@ -95,6 +100,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -145,6 +151,8 @@ import ua.com.merchik.merchik.dataLayer.getCommentsForImageKeys
 import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
@@ -154,6 +162,7 @@ import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
+import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
@@ -230,6 +239,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val isActiveGrouped = remember(uiState.groupingFields) {
         uiState.groupingFields.any { it.key?.isNotBlank() == true }
+    }
+
+    val isImageDisplayModeToolbarContext = remember(viewModel.contextUI) {
+        viewModel.contextUI.isImageDisplayModeToolbarContext()
+    }
+
+    val showImageDisplayModeButton = remember(isImageDisplayModeToolbarContext, uiState.settingsItems) {
+        isImageDisplayModeToolbarContext && uiState.settingsItems.canUseImageDisplayMode()
     }
 
     var showAdditionalContent by remember { mutableStateOf(false) }
@@ -1186,74 +1203,121 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     ) {
                         Row {
 
-                            ImageButton(
-                                id = R.drawable.ic_maps,
-                                shape = RoundedCornerShape(4.dp),
-                                sizeButton = 40.dp,
-                                sizeImage = 24.dp,
-                                modifier = Modifier
-                                    .padding(start = 7.dp)
-                                    .pulseOn(mapsPulse)
-                                    .captureBoundsInWindow { mapsBtnRect = it },
-                                onClick = {
-                                    showMapsDialog = true
-//                                        Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-
-                            if ((viewModel.typeWindow ?: "").equals("container", true)) {
+                            if (isImageDisplayModeToolbarContext) {
                                 ImageButton(
-                                    id = R.drawable.ic_settings_empt,
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier.padding(start = 7.dp),
+                                    onClick = {
+//                                    ##
+                                        showAdditionalContent = true
+                                    },
                                     shape = RoundedCornerShape(4.dp),
+                                    id = R.drawable.ic_plus
+                                )
+
+                                if (showImageDisplayModeButton) {
+                                    ImageDisplayModeToolbarButton(
+                                        imageDisplayMode = uiState.imageDisplayMode,
+                                        modifier = Modifier.padding(start = 7.dp),
+                                        onClick = {
+                                            viewModel.updateImageDisplayMode(
+                                                uiState.imageDisplayMode.next()
+                                            )
+                                        }
+                                    )
+                                }
+
+                                ImageButton(
+                                    id = if (isActiveSorted) R.drawable.ic_sort_down_checked else R.drawable.ic_sort_down,
                                     sizeButton = 40.dp, sizeImage = 24.dp,
                                     modifier = Modifier
                                         .padding(start = 7.dp)
-                                        .pulseOn(settingPulse)
-                                        .captureBoundsInWindow { settingsBtnRect = it },
-                                    onClick = { showSettingsDialog = true }
+                                        .pulseOn(sortingPulse)
+                                        .captureBoundsInWindow { sortingBtnRect = it },
+                                    onClick = { showSortingDialog = true },
+                                    shape = RoundedCornerShape(4.dp)
                                 )
 
                                 ImageButton(
-                                    id = R.drawable.ic_refresh,
+                                    id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier
+                                        .padding(start = 7.dp)
+                                        .pulseOn(filterPulse)
+                                        .captureBoundsInWindow { filterBtnRect = it },
+                                    onClick = { showFilteringDialog = true },
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                            } else {
+                                ImageButton(
+                                    id = R.drawable.ic_maps,
                                     shape = RoundedCornerShape(4.dp),
+                                    sizeButton = 40.dp,
+                                    sizeImage = 24.dp,
+                                    modifier = Modifier
+                                        .padding(start = 7.dp)
+                                        .pulseOn(mapsPulse)
+                                        .captureBoundsInWindow { mapsBtnRect = it },
+                                    onClick = {
+                                        showMapsDialog = true
+//                                        Toast.makeText(context, "Карта в разработке", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+
+                                if ((viewModel.typeWindow ?: "").equals("container", true)) {
+                                    ImageButton(
+                                        id = R.drawable.ic_settings_empt,
+                                        shape = RoundedCornerShape(4.dp),
+                                        sizeButton = 40.dp, sizeImage = 24.dp,
+                                        modifier = Modifier
+                                            .padding(start = 7.dp)
+                                            .pulseOn(settingPulse)
+                                            .captureBoundsInWindow { settingsBtnRect = it },
+                                        onClick = { showSettingsDialog = true }
+                                    )
+
+                                    ImageButton(
+                                        id = R.drawable.ic_refresh,
+                                        shape = RoundedCornerShape(4.dp),
+                                        sizeButton = 40.dp, sizeImage = 24.dp,
+                                        modifier = Modifier.padding(start = 7.dp),
+                                        onClick = { viewModel.updateContent() }
+                                    )
+                                }
+
+                                ImageButton(
+                                    id = R.drawable.ic_plus,
                                     sizeButton = 40.dp, sizeImage = 24.dp,
                                     modifier = Modifier.padding(start = 7.dp),
-                                    onClick = { viewModel.updateContent() }
+                                    onClick = {
+//                                    ##
+                                        showAdditionalContent = true
+                                    },
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+
+                                ImageButton(
+                                    id = if (isActiveSorted) R.drawable.ic_sort_down_checked else R.drawable.ic_sort_down,
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier
+                                        .padding(start = 7.dp)
+                                        .pulseOn(sortingPulse)
+                                        .captureBoundsInWindow { sortingBtnRect = it },
+                                    onClick = { showSortingDialog = true },
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+
+                                ImageButton(
+                                    id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                                    sizeButton = 40.dp, sizeImage = 24.dp,
+                                    modifier = Modifier
+                                        .padding(start = 7.dp)
+                                        .pulseOn(filterPulse)
+                                        .captureBoundsInWindow { filterBtnRect = it },
+                                    onClick = { showFilteringDialog = true },
+                                    shape = RoundedCornerShape(4.dp)
                                 )
                             }
-
-                            ImageButton(
-                                id = R.drawable.ic_plus,
-                                sizeButton = 40.dp, sizeImage = 24.dp,
-                                modifier = Modifier.padding(start = 7.dp),
-                                onClick = {
-//                                    ##
-                                    showAdditionalContent = true
-                                },
-                                shape = RoundedCornerShape(4.dp)
-                            )
-
-                            ImageButton(
-                                id = if (isActiveSorted) R.drawable.ic_sort_down_checked else R.drawable.ic_sort_down,
-                                sizeButton = 40.dp, sizeImage = 24.dp,
-                                modifier = Modifier
-                                    .padding(start = 7.dp)
-                                    .pulseOn(sortingPulse)
-                                    .captureBoundsInWindow { sortingBtnRect = it },
-                                onClick = { showSortingDialog = true },
-                                shape = RoundedCornerShape(4.dp)
-                            )
-
-                            ImageButton(
-                                id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
-                                sizeButton = 40.dp, sizeImage = 24.dp,
-                                modifier = Modifier
-                                    .padding(start = 7.dp)
-                                    .pulseOn(filterPulse)
-                                    .captureBoundsInWindow { filterBtnRect = it },
-                                onClick = { showFilteringDialog = true },
-                                shape = RoundedCornerShape(4.dp)
-                            )
                         }
                     }
                 }
@@ -1284,11 +1348,36 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             state = listState,
                         ) {
                             if (!isActiveGrouped || groups.isEmpty()) {
-                                // ----- обычный режим, как сейчас -----
-                                itemsIndexed(
-                                    items = dataItemsUI,
-                                    key = { _, item -> item.stableId }
-                                ) { index, item ->
+                                val imageGridColumns = uiState.imageDisplayMode.columns
+                                    ?.takeIf {
+                                        it > 1 && uiState.settingsItems.canUseImageDisplayMode()
+                                    }
+
+                                if (imageGridColumns != null) {
+                                    items(
+                                        items = dataItemsUI.chunked(imageGridColumns),
+                                        key = { rowItems ->
+                                            rowItems.joinToString(separator = "_") {
+                                                it.stableId.toString()
+                                            }
+                                        }
+                                    ) { rowItems ->
+                                        ImageDisplayModeItemRows(
+                                            items = rowItems,
+                                            columns = imageGridColumns,
+                                            uiState = uiState,
+                                            viewModel = viewModel,
+                                            context = context,
+                                            visibilityColumName = visibilityColumName,
+                                            productCodeEditorState = productCodeEditorState
+                                        )
+                                    }
+                                } else {
+                                    // ----- обычный режим, как сейчас -----
+                                    itemsIndexed(
+                                        items = dataItemsUI,
+                                        key = { _, item -> item.stableId }
+                                    ) { index, item ->
 //                                    ItemRowCard(
 //                                        item = item,
 //                                        uiState = uiState,
@@ -1296,14 +1385,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                                        context = context,
 //                                        visibilityColumName = visibilityColumName
 //                                    )
-                                    ItemRowCard(
-                                        item = item,
-                                        uiState = uiState,
-                                        viewModel = viewModel,
-                                        context = context,
-                                        visibilityColumName = visibilityColumName,
-                                        productCodeEditorState = productCodeEditorState
-                                    )
+                                        ItemRowCard(
+                                            item = item,
+                                            uiState = uiState,
+                                            viewModel = viewModel,
+                                            context = context,
+                                            visibilityColumName = visibilityColumName,
+                                            productCodeEditorState = productCodeEditorState
+                                        )
+                                    }
                                 }
                             } else {
                                 // ----- режим колод -----
@@ -2695,7 +2785,9 @@ fun ItemUI(
     onProductCodeValue2Change: ((String, String) -> Unit)? = null,
     onProductCodeTakePhoto: ((DataItemUI) -> Unit)? = null,
     onClickImageComment: (DataItemUI, FieldValue) -> Unit = { _, _ -> },
-    loadingImageIndexes: Set<Int> = emptySet()
+    loadingImageIndexes: Set<Int> = emptySet(),
+    imageDisplayMode: ImageDisplayMode = ImageDisplayMode.DEFAULT,
+    imageOverlayTextKeys: List<String> = DEFAULT_IMAGE_OVERLAY_TEXT_KEYS
 ) {
 //    index++
 //    Globals.writeToMLOG("INFO", "MainUI.ItemUI", "index: $index")
@@ -2732,6 +2824,17 @@ fun ItemUI(
         item.fields.firstOrNull { field ->
             field.key.equals(key, ignoreCase = true)
         }
+    }
+    val hasImageField = item.fields.any {
+        it.key.equals("id_res_image", ignoreCase = true)
+    }
+    val appliedImageDisplayMode = if (
+        hasImageField &&
+        item.images.orEmpty().size <= 1
+    ) {
+        imageDisplayMode
+    } else {
+        ImageDisplayMode.DEFAULT
     }
 
     Box(
@@ -2880,6 +2983,13 @@ fun ItemUI(
                     onClickProductCode = onClickProductCode,
                     onLongClickProductCode = onLongClickProductCode
                 )
+            } else if (appliedImageDisplayMode != ImageDisplayMode.DEFAULT) {
+                ImageOnlyItemContent(
+                    item = item,
+                    loadingImageIndexes = loadingImageIndexes,
+                    imageOverlayTextKeys = imageOverlayTextKeys,
+                    onClickItemImage = onClickItemImage
+                )
             } else
                 Row(Modifier.padding(7.dp)) {
                     item.fields.firstOrNull {
@@ -2929,6 +3039,13 @@ fun ItemUI(
                                         contentScale = ContentScale.FillWidth,
                                         contentDescription = null
                                     )
+                                    if (0 in loadingImageIndexes) {
+                                        PhotoLoadingOverlay(
+                                            modifier = Modifier
+                                                .padding(2.dp)
+                                                .size(100.dp)
+                                        )
+                                    }
                                 } else {
                                     LazyRow {
                                         items(images) { image ->
@@ -3041,6 +3158,89 @@ fun ItemUI(
 }
 
 @Composable
+private fun ImageOnlyItemContent(
+    item: DataItemUI,
+    loadingImageIndexes: Set<Int>,
+    imageOverlayTextKeys: List<String>,
+    onClickItemImage: (DataItemUI) -> Unit
+) {
+    val idResImage = (item.fields.firstOrNull {
+        it.key.equals("id_res_image", ignoreCase = true)
+    }?.value?.rawValue as? Int) ?: R.drawable.merchik
+    val painter = imagePainterForPath(
+        pathImage = item.images?.firstOrNull(),
+        idResImage = idResImage
+    )
+    val overlayText = item.primaryImageOverlayText(imageOverlayTextKeys)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(7.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .border(1.dp, Color.LightGray)
+                .background(Color.White)
+                .clipToBounds(),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onClickItemImage(item) },
+                contentScale = ContentScale.Crop
+            )
+
+            overlayText?.let {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.4f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                ) {
+                    Text(
+                        text = it,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = Offset(0f, 0f),
+                                blurRadius = 1f
+                            )
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .padding(horizontal = 6.dp, vertical = 6.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            if (0 in loadingImageIndexes) {
+                PhotoLoadingOverlay()
+            }
+        }
+    }
+}
+
+@Composable
 private fun TwoImagesItemContent(
     item: DataItemUI,
     visibleFields: List<FieldValue>,
@@ -3092,18 +3292,7 @@ private fun TwoImagesItemContent(
                     }
 
                     if (isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.18f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(28.dp),
-                                color = colorResource(id = R.color.blue),
-                                strokeWidth = 2.dp
-                            )
-                        }
+                        PhotoLoadingOverlay()
                     }
                 }
             }
@@ -3130,6 +3319,25 @@ private fun TwoImagesItemContent(
                 onLongClickProductCode = onLongClickProductCode
             )
         }
+    }
+}
+
+@Composable
+private fun PhotoLoadingOverlay(
+    modifier: Modifier = Modifier.fillMaxSize()
+) {
+    Box(
+        modifier = modifier
+            .background(Color.Black.copy(alpha = 0.18f)),
+        contentAlignment = Alignment.Center
+    ) {
+        LineSpinFadeLoaderIndicator(
+            penThickness = 10f,
+            radius = 22f,
+            elementHeight = 15f,
+            color = Color.Green,
+            modifier = Modifier.size(68.dp)
+        )
     }
 }
 
@@ -3212,7 +3420,101 @@ private fun ItemFieldDivider(item: DataItemUI) {
     HorizontalDivider(color = color)
 }
 
+private fun DataItemUI.primaryImageOverlayText(keys: List<String>): String? {
+    return keys
+        .firstNotNullOfOrNull { key ->
+            rawFields.firstOrNull { it.key.equals(key, ignoreCase = true) }
+                ?.value
+                ?.value
+                ?.takeIf { value -> value.isValidImageOverlayText() }
+        }
+}
+
+@Composable
+private fun ImageDisplayModeToolbarButton(
+    imageDisplayMode: ImageDisplayMode,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(4.dp)
+
+    Button(
+        onClick = onClick,
+        shape = shape,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        contentPadding = PaddingValues(0.dp),
+        modifier = modifier
+            .size(40.dp)
+            .shadow(4.dp, shape = shape)
+            .clip(shape)
+    ) {
+        ImageDisplayModeIcon(
+            mode = imageDisplayMode,
+            iconSize = 30.dp,
+            showFrame = false,
+            strokeColor = Color.Black,
+            lineColor = Color.Black
+        )
+    }
+}
+
+private fun ContextUI.isImageDisplayModeToolbarContext(): Boolean = when (this) {
+    ContextUI.SHOWCASE_FROM_ACHIEVEMENT,
+    ContextUI.SHOWCASE,
+    ContextUI.SHOWCASE_COMPLETED_CHECK,
+    ContextUI.STACK_PHOTO_DYNAMIC_ACHIEVEMENT,
+    ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
+    ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+    ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE,
+    ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
+    ContextUI.STACK_PHOTO_FROM_OPTION_158605,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878,
+    ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015 -> true
+
+    else -> false
+}
+
+fun ContextUI.imageOverlayTextKeys(): List<String> = when (this) {
+    ContextUI.SHOWCASE_FROM_ACHIEVEMENT,
+    ContextUI.SHOWCASE,
+    ContextUI.SHOWCASE_COMPLETED_CHECK -> SHOWCASE_IMAGE_OVERLAY_TEXT_KEYS
+
+    else -> DEFAULT_IMAGE_OVERLAY_TEXT_KEYS
+}
+
+private fun String.isValidImageOverlayText(): Boolean {
+    val prepared = trim()
+    return prepared.isNotEmpty() &&
+            prepared != "0" &&
+            prepared != "-" &&
+            !prepared.equals("null", ignoreCase = true)
+}
+
+private fun List<SettingsItemUI>.canUseImageDisplayMode(): Boolean {
+    val hasDisplayModeSetting = any {
+        it.key.equals(IMAGE_DISPLAY_MODE_SETTINGS_KEY, ignoreCase = true)
+    }
+    val imageEnabled = firstOrNull {
+        it.key.equals("id_res_image", ignoreCase = true)
+    }?.isEnabled != false
+
+    return hasDisplayModeSetting && imageEnabled
+}
+
 private val TWO_IMAGE_LABELS = listOf("Фото до", "Фото після")
+private val DEFAULT_IMAGE_OVERLAY_TEXT_KEYS = listOf("dt", "create_time")
+private val SHOWCASE_IMAGE_OVERLAY_TEXT_KEYS = listOf("showcaseName", "showcase_name")
 
 fun Color.isLighterThan(other: Color): Boolean =
     this.luminance() < other.luminance()

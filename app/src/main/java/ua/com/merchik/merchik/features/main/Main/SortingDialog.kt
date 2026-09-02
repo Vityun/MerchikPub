@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
@@ -68,6 +69,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
             .filter { !it.key.equals("filter_select", true) }
 
             .filter { !it.key.equals("id_res_image", true) } // два костыля
+            .filter { !it.key.equals(IMAGE_DISPLAY_MODE_SETTINGS_KEY, true) }
             .filter { !it.key.equals("barcode", true) }
             .filter { setting ->
                 val hiddenByUser = setting.isEnabled

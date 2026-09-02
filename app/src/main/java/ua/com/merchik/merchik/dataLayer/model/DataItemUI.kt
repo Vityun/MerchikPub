@@ -64,8 +64,33 @@ data class SettingsItemUI(
     val key: String,
     val text: String,
     var isEnabled: Boolean,
-    val index: Int
+    val index: Int,
+    var imageDisplayMode: ImageDisplayMode? = null
 )
+
+const val IMAGE_DISPLAY_MODE_SETTINGS_KEY = "image_display_mode"
+
+enum class ImageDisplayMode {
+    DEFAULT,
+    SINGLE_IMAGE,
+    TWO_COLUMNS,
+    THREE_COLUMNS;
+
+    val columns: Int?
+        get() = when (this) {
+            DEFAULT -> null
+            SINGLE_IMAGE -> 1
+            TWO_COLUMNS -> 2
+            THREE_COLUMNS -> 3
+        }
+
+    fun next(): ImageDisplayMode = when (this) {
+        DEFAULT -> SINGLE_IMAGE
+        SINGLE_IMAGE -> TWO_COLUMNS
+        TWO_COLUMNS -> THREE_COLUMNS
+        THREE_COLUMNS -> DEFAULT
+    }
+}
 
 @Immutable
 data class ClickTextAction(

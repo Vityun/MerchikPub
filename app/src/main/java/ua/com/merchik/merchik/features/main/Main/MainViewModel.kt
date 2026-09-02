@@ -71,6 +71,8 @@ import ua.com.merchik.merchik.dataLayer.model.ContextMenuActionEvent
 import ua.com.merchik.merchik.dataLayer.model.ContextMenuUiState
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.dataLayer.withContainerBackground
@@ -106,6 +108,7 @@ data class StateUI(
     val itemsFooter: List<DataItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
     val settingsItemsForCard: List<SettingsItemUI> = emptyList(),
+    val imageDisplayMode: ImageDisplayMode = ImageDisplayMode.DEFAULT,
     var sortingFields: List<SortingField> = emptyList(),
     val groupingFields: List<GroupingField> = emptyList(),
     val filters: Filters? = null,
@@ -168,7 +171,8 @@ data class SettingsUI(
     val hideFields: List<String>? = null,
     val sortFields: List<SortingField>? = null,
     val groupFields: List<GroupingField>? = null,
-    val sizeFonts: Int? = null
+    val sizeFonts: Int? = null,
+    val imageDisplayMode: ImageDisplayMode? = null
 )
 
 data class GroupingField(
@@ -1110,16 +1114,50 @@ abstract class MainViewModel(
 
     fun saveSettings() {
         viewModelScope.launch {
-            repository.saveSettingsUI(
-                table,
-                SettingsUI(
-                    hideFields = uiState.value.settingsItems.filter { !it.isEnabled }
-                        .map { it.key },
-                    sortFields = uiState.value.sortingFields.filter { it.key != null }
-                        .map { it.copy(title = null) }),
-                contextUI
-            )
+            val displayMode = uiState.value.settingsItems
+                .firstOrNull { it.key == IMAGE_DISPLAY_MODE_SETTINGS_KEY }
+                ?.imageDisplayMode
+                ?: uiState.value.imageDisplayMode
+
+            saveSettingsSnapshot(displayMode)
         }
+    }
+
+    fun updateImageDisplayMode(displayMode: ImageDisplayMode) {
+        viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    imageDisplayMode = displayMode,
+                    settingsItems = state.settingsItems.map { item ->
+                        if (item.key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+                            item.copy(imageDisplayMode = displayMode)
+                        } else {
+                            item
+                        }
+                    },
+                    lastUpdate = System.currentTimeMillis()
+                )
+            }
+            saveSettingsSnapshot(displayMode)
+            updateContent()
+        }
+    }
+
+    private fun saveSettingsSnapshot(displayMode: ImageDisplayMode) {
+        repository.saveSettingsUI(
+            table,
+            SettingsUI(
+                hideFields = uiState.value.settingsItems
+                    .filter {
+                        it.key != IMAGE_DISPLAY_MODE_SETTINGS_KEY && !it.isEnabled
+                    }
+                    .map { it.key },
+                sortFields = uiState.value.sortingFields.filter { it.key != null }
+                    .map { it.copy(title = null) },
+                imageDisplayMode = displayMode
+            ),
+            contextUI
+        )
     }
 
 //    fun updateSearch(text: String) {
@@ -1176,6 +1214,8 @@ abstract class MainViewModel(
 
             val list = getDefaultHideUserFields()
             val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
+            val imageDisplayMode =
+                repository.getImageDisplayMode(table, contextUI) ?: ImageDisplayMode.DEFAULT
 
             val defaultSort = getDefaultSortUserFields()
             val hideSort = getHideSortUserFields()
@@ -1349,6 +1389,7 @@ abstract class MainViewModel(
                     itemsFooter = itemsFooter,
                     settingsItems = settingsItems,
                     settingsItemsForCard = settingsForCardsItems,
+                    imageDisplayMode = imageDisplayMode,
                     sortingFields = sortingFields,
                     groupingFields = groupingFields,
                     filters = filters,

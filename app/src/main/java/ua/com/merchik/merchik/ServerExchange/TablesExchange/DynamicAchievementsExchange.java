@@ -139,7 +139,11 @@ public class DynamicAchievementsExchange {
 
             saveDownloadSyncInfo(syncInfo, successfulWatermark(syncInfo, window.toSec), rows.size(), DownloadStatus.SUCCESS);
             logInfo("images_achieve.dynamic_photo", responseSummary(response, rows.size()));
-            return "dynamic_photo downloaded=" + rows.size();
+            boolean stackPhotoDownloadStarted = new DynamicPhotoStackPhotoExchange()
+                    .downloadMissingFromDynamicPhotoTableAsync();
+
+            return "dynamic_photo downloaded=" + rows.size()
+                    + ", stack_photo_missing_check=" + (stackPhotoDownloadStarted ? "started" : "skipped");
         } catch (Exception e) {
             saveDownloadSyncInfo(syncInfo, syncInfo.getLastDownloadTime(), syncInfo.getDownloadedItems(), DownloadStatus.ERROR);
             throw e;

@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Response
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.ServerExchange.PhotoUrlUtils
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData
@@ -140,9 +141,16 @@ class DownloadImagesWorker(
         return withContext(Dispatchers.IO) {
             downloadSemaphore.acquire() // Ограничиваем количество одновременных запросов
             try {
+                val url = PhotoUrlUtils.prepareDownloadUrl(
+                    photo.photoUrl,
+                    false,
+                    "DownloadImagesWorker/downloadPhoto",
+                    photo.id
+                ) ?: return@withContext false
+
                 // Загружаем изображение по URL
                 val response: Response<ResponseBody> = RetrofitBuilder.getRetrofitInterfaceForImage()
-                    .DOWNLOAD_PHOTO_BY_URL_WORKER(photo.photoUrl)
+                    .DOWNLOAD_PHOTO_BY_URL_WORKER(url)
                     .execute()
 
                 if (response.isSuccessful && response.body() != null) {
@@ -274,8 +282,12 @@ class DownloadImagesWorker(
         return withContext(Dispatchers.IO) {
             downloadSemaphore.acquire()
             try {
-                val originalUrl =
-                    stackPhoto.photoServerURL?.replace("thumb_", "") ?: return@withContext false
+                val originalUrl = PhotoUrlUtils.prepareDownloadUrl(
+                    stackPhoto.photoServerURL,
+                    true,
+                    "DownloadImagesWorker/downloadAndUpdateThumbnail",
+                    stackPhoto.photoServerId
+                ) ?: return@withContext false
 
                 val response = RetrofitBuilder.getRetrofitInterfaceForImage()
                     .DOWNLOAD_PHOTO_BY_URL(originalUrl)

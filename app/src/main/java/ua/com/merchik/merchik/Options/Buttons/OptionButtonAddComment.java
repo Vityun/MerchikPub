@@ -83,15 +83,10 @@ public class OptionButtonAddComment<T> extends OptionControl {
 
                 if (wpDataDB.user_comment_dt_update == 0 || (passedTimeSeconds < hourInSeconds)) {
 
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                        wpDataDB.user_comment = comment;
-                        wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
-                        wpDataDB.user_comment_dt_update = System.currentTimeMillis() / 1000;
-                        wpDataDB.startUpdate = true;
-
-                        realm.copyToRealmOrUpdate(wpDataDB);
-                    });
+                    WpDataDB savedWpDataDB = RealmManager.saveWpDataCommentSafely(wpDataDB, comment, System.currentTimeMillis() / 1000);
+                    if (savedWpDataDB != null) {
+                        wpDataDB = savedWpDataDB;
+                    }
 //startUpdate: true
                     Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
 

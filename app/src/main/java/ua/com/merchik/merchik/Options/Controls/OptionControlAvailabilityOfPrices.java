@@ -223,6 +223,12 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */ else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
 //            spannableStringBuilder.append("Не предоставлена информация о ЦЕНАХ по товару (" + missingPriceCount + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signal = true;
+        } else if ((found == 0 && hasOsvList) &&
+                (optionDB.getOptionId().equals("174974") || optionDB.getOptionControlId().equals("174974"))) {
+            spannableStringBuilder.append("Жоден з товарiв ")
+                    .append(String.valueOf(totalOSV))
+                    .append(" з Особою увагою не присутнiй на вiтринi. Зауважень по зазначенню цiн немає");
+            signal = false;
         } else if (isOsvOnlyOption && !hasOsvList) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
             signal = false;

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
@@ -167,7 +168,10 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                 key = { _, it -> it.key } // ключ стабильный
                             ) { index, itemSettingsUI ->
 
-                                SettingsItemView(item = itemSettingsUI)
+                                SettingsItemView(
+                                    item = itemSettingsUI,
+                                    onItemChanged = viewModel::updateSettingsItem
+                                )
 
                                 if (index == lastHeaderIndex && lastHeaderIndex != -1 && index != items.lastIndex) {
                                     HorizontalDivider(thickness = 1.dp,
@@ -253,5 +257,6 @@ private val HEADER_KEYS = setOf(
     "column_name",
     "group_header",
     "filter_select",
+    IMAGE_DISPLAY_MODE_SETTINGS_KEY,
     "id_res_image",
 )
