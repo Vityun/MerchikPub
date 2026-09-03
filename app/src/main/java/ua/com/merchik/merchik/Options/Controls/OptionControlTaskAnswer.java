@@ -153,6 +153,8 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
 
+                Log.e("ControlTaskAnswer", "theme: " + new Gson().toJson(theme));
+                Log.e("ControlTaskAnswer", "TasksAndReclamationsSDB: " + new Gson().toJson(item));
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "item: " + item.id);
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "theme: " + theme.getID());
                 try {
@@ -174,6 +176,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                         result.add(item);
 
 //                    } else if (item.lastAnswer.length() == 0 || item.author.equals(item.lastAnswerUserId)) {
+                        Log.e("ControlTaskAnswer", "popali: 1");
 
                     } else if (item.lastAnswer.length() == 0 || userId != item.lastAnswerUserId) {
                         String msg = context.getString(R.string.option_control_135329_not_write_tar_comment);
@@ -185,6 +188,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                         spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
 
                         result.add(item);
+                        Log.e("ControlTaskAnswer", "popali: 2");
 
                     } else if ((!item.author.equals(item.lastAnswerUserId) && item.lastAnswer.length() < 10)
                             || (!item.author.equals(item.lastAnswerUserId) && countChar(item.lastAnswer, ' ') < 2)) {
@@ -201,6 +205,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
                             result.add(item);
                         }
+                        Log.e("ControlTaskAnswer", "popali: 3");
 
                     } else if (theme.need_photo == 1) {
                         String msg = context.getString(R.string.option_control_135329_no_photo);
@@ -244,22 +249,29 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo",
                                     "Не смог найти комменты в БД комментов по item.id: " + item.id + ", item.vinovnik: " + item.vinovnik);
                         }
+                        Log.e("ControlTaskAnswer", "popali: 4");
 
                     } else if (theme.need_report == 1) {
 
                         long timeCreateTAR = item.dtRealPost;
                         List<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
 
-                        if (rp == null || rp.size() == 0) {
-                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "rp: " + rp.size());
+
+                        if (rp == null || rp.isEmpty()) {
                             String msg = context.getString(R.string.option_control_135329_no_detailed_report);
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
 
                             result.add(item);
+                        } else {
+                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "rp: " + rp.size());
                         }
+                        Log.e("ControlTaskAnswer", "popali: 5");
+
                     } else {
                         // Смотрю в потолок
+                        Log.e("ControlTaskAnswer", "theme.getTp(): " + theme.getTp());
+
                     }
                 } else {
                     // Смотрю в потолок, бо тема у задачи = 3 и ничего блокироваться не должно

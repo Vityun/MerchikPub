@@ -394,6 +394,12 @@ public class Options {
                     optionControlPlanorammVizit.showOptionMassage("");
                     break;
 
+
+                case 135329:
+                    OptionControlTaskAnswer<?> optionControlTaskAnswer = new OptionControlTaskAnswer<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlTaskAnswer.showOptionMassage("");
+                    break;
+
                 case 141893:
                     OptionControlOpinionByController<?> optionControlOpinionByController = new OptionControlOpinionByController<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlOpinionByController.showOptionMassage("");

@@ -684,11 +684,13 @@ public class DialogCreateAchievement {
 
     public void setData(AchievementsSDB data) {
         AchievementDataHolder.Companion.instance().init();
+        Log.e("!!!!!updateFilters!!!!!!", "1 wpDataDB: +++");
+        Log.e("!!!!!updateFilters!!!!!!", "1 AchievementsSDB: " + new Gson().toJson(data));
 
         CustomerSDB customerSDB = SQL_DB.customerDao().getById(data.clientId);
         UsersSDB usersSDB = SQL_DB.usersDao().getById(data.userId);
         this.wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(data.codeDad2);
-        Log.e("!!!!!updateFilters!!!!!!", "1 wpDataDB: " +new Gson().toJson(wpDataDB));
+        Log.e("!!!!!updateFilters!!!!!!", "1 wpDataDB: " +new Gson().toJson(this.wpDataDB));
 
         userId = data.userId;
         userTxt = usersSDB.fio;

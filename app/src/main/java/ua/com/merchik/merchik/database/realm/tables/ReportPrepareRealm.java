@@ -48,7 +48,24 @@ public class ReportPrepareRealm {
         return result;
     }
 
-    public static List<ReportPrepareDB> getRPLastChange(String clientId, String addrId, long dtChange) {
+    public static List<ReportPrepareDB> getRPLastChange(
+            String clientId,
+            String addrId,
+            long dtChange
+    ) {
+        long tenDaysMillis = 10L * 24 * 60 * 60;
+        long dateFrom = dtChange - tenDaysMillis;
+
+        RealmResults<ReportPrepareDB> reportPrepareDBS = INSTANCE.where(ReportPrepareDB.class)
+                .equalTo("kli", clientId)
+                .equalTo("addrId", addrId)
+                .greaterThanOrEqualTo("dtChange", dateFrom)
+                .lessThanOrEqualTo("dtChange", dtChange)
+                .findAll();
+
+        return INSTANCE.copyFromRealm(reportPrepareDBS);
+    }
+    public static List<ReportPrepareDB> getRPLastChangeOld(String clientId, String addrId, long dtChange) {
         RealmResults<ReportPrepareDB> reportPrepareDBS = INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("kli", clientId)
                 .equalTo("addrId", addrId)

@@ -16,6 +16,8 @@ import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +50,7 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 
 public class OptionControlAchievements<T> extends OptionControl {
-    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; //
+    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; // 160209
 
     public boolean signal = true;
 
@@ -149,7 +151,11 @@ public class OptionControlAchievements<T> extends OptionControl {
             int controlId = Integer.parseInt(optionDB.getOptionControlId());
             if (wpDataDB.getClient_id().equals("9382") && controlId == 138520)
                 controlId = 160209;
+            boolean isAchievementsPresenceControl = "160209".equals(optionDB.getOptionId()) ||
+                    "160209".equals(optionDB.getOptionControlId()) ||
+                    controlId == 160209;
 
+            Log.e("ControlAchievements","controlId: " + controlId);
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
@@ -196,7 +202,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             if (usersSDBDocument.reportDate20 == null || dateDocument < usersSDBDocument.reportDate20.getTime() / 1000) {
                 traineeSignal = 1;
                 trainee = ", але виконавець ще не провів свого 20-го звіту. Наявність Досягнень не перевіряємо!";
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
+            } else if (isAchievementsPresenceControl && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
                 traineeSignal = 1;
                 trainee = ", але виконавець ще не провів свого 40-го звіту. Наявність Досягнень не перевіряємо!";
             }
@@ -210,9 +216,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                 for (AchievementsSDB item : achievementsSDBList) {
                     Log.e("!!!!!!!!", "spisTovOSV: " + spisTovOSV.size());
                     Log.e("!!!!!!!!", "spisTovOSV: " + spisTovOSV);
+                    Log.e("ControlAchievements","3.4 AchievementsSDB: " + new Gson().toJson(item));
 
                     // 18.04.24. Проверка на тему 595. Мерчикам надо ГОВОРИТь что у них нет нужной темы.
-                    if (item.themeId != 595) {
+                    if (!Objects.equals(item.themeId, 595)) {
                         String themeTxt = "";
                         String theme595Txt = "";
                         ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
@@ -226,8 +233,8 @@ public class OptionControlAchievements<T> extends OptionControl {
                         item.error = 1;
                         item.note = new SpannableStringBuilder()
                                 .append("\n")
-                                .append(createLinkedString("Досягнення #" + achievementId, item))
-                                .append(" тема досягнення ")
+//                                .append(createLinkedString("Досягнення #" + achievementId, item))
+                                .append("тема досягнення ")
                                 .append(String.valueOf(item.themeId)).append(" - ").append(themeTxt)
                                 .append(" не влаштовує! Повинна бути тема: ")
                                 .append("595").append(" - ").append(theme595Txt)
@@ -264,7 +271,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                                 .append("Клієнт вимагає створення Досягнення по")
                                 .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
                                 .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
-                    } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
+                    } else if (isAchievementsPresenceControl) {
                         item.note = new SpannableStringBuilder().append("для опції перевіряем лише наявність досягнень");
                         continue;
                     } else if (item.dvi == 1) { // значение достижения не утверждено супервайзером
@@ -308,9 +315,11 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }// end for
 
 
-                try {
-                    sumError = achievementsSDBList.stream().map(table -> table.error).reduce(0, Integer::sum);
-                } catch (Exception ignored) {
+                sumError = 0;
+                for (AchievementsSDB item : achievementsSDBList) {
+                    if (Objects.equals(item.error, 1)) {
+                        sumError++;
+                    }
                 }
                 if (sumError == achievementsSDBList.size()) {
                     sumOptionError = 1;
@@ -326,14 +335,28 @@ public class OptionControlAchievements<T> extends OptionControl {
             StringBuilder period = new StringBuilder();
             period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo - 86400L)); // добавил вычитание 1 дня, что бы привести к 1С потому, что функция работает до НАЧАЛА дня, а не до конца
             //4.0. готовим сообщение и сигнал
-            if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
+            Log.e("ControlAchievements","4.0 optionDB: " + new Gson().toJson(optionDB));
+
+            if (isAchievementsPresenceControl && achievementsSDBList.size() == 0) {
                 spannableStringBuilder.append(period).append(" нема жодного досягнення. ");
                 signal = true;
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0) {
+            } else if (isAchievementsPresenceControl && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()) {
+                Log.e("!", "_");
+                period.append(" є ").append(achievementsSDBList.size())
+                        .append(" досягнення");
+                spannableStringBuilder.append(period);
+                if (!resultAchievements.isEmpty())
+                    spannableStringBuilder.append(", але: ")
+                            .append(resultAchievements.stream()
+                                    .filter(item -> Objects.equals(item.error, 1))
+                                    .map(item -> item.note)
+                                    .findFirst()
+                                    .orElse(new SpannableStringBuilder()));
+                signal = true;
+            } else if (isAchievementsPresenceControl && achievementsSDBList.size() > 0) {
                 spannableStringBuilder.append(period).append(" створено ").append(String.valueOf(achievementsSDBList.size())).append(" досягнень.");
                 signal = false;
-            }
-            else if (sumOptionError == 0 && traineeSignal == 0) {
+            } else if (sumOptionError == 0 && traineeSignal == 0) {
                 spannableStringBuilder.append(period).append(" Є досягнення (з оцінкою ").append(String.valueOf(minScore)).append(" чи більш) ")
                         .append(wpDataDB.getAddr_txt()).append(" по ").append(customerSDBDocument.nm).append(". Та передані кліенту для нарахування премії.");
 
@@ -342,23 +365,6 @@ public class OptionControlAchievements<T> extends OptionControl {
 //                        .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
 
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0 && traineeSignal > 0) {
-                spannableStringBuilder.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
-                signal = false;
-
-            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()) {
-                Log.e("!", "_");
-                period.append(" є ").append(achievementsSDBList.size())
-                        .append(" досягнення");
-                spannableStringBuilder.append(period);
-                if (!resultAchievements.isEmpty())
-                    spannableStringBuilder.append(", але: ")
-                            .append(resultAchievements.stream()
-                                    .filter(item -> item.error == 1)
-                                    .map(item -> item.note)
-                                    .findFirst()
-                                    .orElse(new SpannableStringBuilder()));
-                signal = true;
             } else  {
                 spannableStringBuilder.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
                         .append(String.valueOf(minScore)).append(" чи більш) по ").append(SPIS).append(".");
