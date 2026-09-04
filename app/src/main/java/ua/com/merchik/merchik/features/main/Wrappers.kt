@@ -1038,6 +1038,7 @@ object StackPhotoDBOverride {
         "main_option_id" -> 8725
         "mainOption" -> 8725
         "cash_ispolnitel" -> 8751
+        "cash_fact" -> 8752
         //группа 2340
 
         "dt_update" -> 5926
@@ -1229,6 +1230,12 @@ object WPDataPauseSDBOverride {
 
 
 object WPDataBDOverride {
+    fun getFallbackTitle(key: String): String? = when (key) {
+        "cash_fact" -> "Премія (факт)"
+        "cash_penalty" -> "Зниження"
+        else -> null
+    }
+
     fun getValueUI(key: String, value: Any, wpDataDB: WpDataDB): String = when (key) {
         "dt" -> {
             formatDateString(value.toString()) ?: value.toString()
@@ -1327,8 +1334,7 @@ object WPDataBDOverride {
         "theme_id" -> 8724
         "status" -> 3167
         "main_option_id" -> 8725
-        "cash_ispolnitel" -> 8751
-        //группа 2340
+        "cash_ispolnitel" -> 8752
 
         "dt_update" -> 5926
         "nomer_tt" -> 5930

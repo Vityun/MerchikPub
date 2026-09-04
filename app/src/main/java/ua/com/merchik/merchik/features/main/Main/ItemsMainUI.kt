@@ -1117,6 +1117,20 @@ fun buildGroupSummaryItem(
                     else String.format(Locale.getDefault(), "%.0f грн", it)
                 }
             }
+            "cash_fact" -> {
+                val sum = aggregateNumberOrCount(rawValues)
+                sum?.let {
+                    if (it % 1.0 == 0.0) "${it.toLong()} грн"
+                    else String.format(Locale.getDefault(), "%.0f грн", it)
+                }
+            }
+            "cash_penalty" -> {
+                val sum = aggregateNumberOrCount(rawValues)
+                sum?.let {
+                    if (it % 1.0 == 0.0) "${it.toLong()} грн"
+                    else String.format(Locale.getDefault(), "%.0f грн", it)
+                }
+            }
 
             "addr_txt" -> {
                 val distinct = displayValues

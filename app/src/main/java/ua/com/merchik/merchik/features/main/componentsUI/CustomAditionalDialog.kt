@@ -55,11 +55,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
-import com.vanpra.composematerialdialogs.datetime.date.datepicker
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import java.time.LocalDate
@@ -261,7 +258,7 @@ fun CustomAditionalWorkForm(
         val initialDate = parseCustomAditionalDate(date, displayDateFormatter) ?: minDate
         mutableStateOf(if (initialDate.isBefore(minDate)) minDate else initialDate)
     }
-    val dateDialog = rememberMaterialDialogState()
+    var showDateDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         CustomAditionalSelectField(
@@ -297,7 +294,7 @@ fun CustomAditionalWorkForm(
             title = "Дата",
             value = date,
             tooltipText = "Выберите дату новой работы.",
-            onClick = { dateDialog.show() },
+            onClick = { showDateDialog = true },
 //                modifier = Modifier.width(152.dp)
         )
 //        }
@@ -321,46 +318,22 @@ fun CustomAditionalWorkForm(
         )
     }
 
-    MaterialDialog(
-        dialogState = dateDialog,
-        buttons = {
-            positiveButton(
-                text = "ОК",
-                textStyle = TextStyle(
-                    color = colorResource(R.color.blue),
-                    fontWeight = FontWeight.Black
-                )
-            )
-            negativeButton(
-                text = "Скасувати",
-                textStyle = TextStyle(
-                    color = colorResource(R.color.orange),
-                    fontWeight = FontWeight.Black
-                )
-            )
-        }
-    ) {
-        datepicker(
-            initialDate = selectedDate,
-            title = "Дата",
-            allowedDateValidator = { date ->
-                !date.isBefore(minDate)
-            },
-            colors = DatePickerDefaults.colors(
-                headerBackgroundColor = Color(0xFFB1B1B1),
-                headerTextColor = Color.White,
-                calendarHeaderTextColor = Color(0xFFB1B1B1),
-                dateActiveBackgroundColor = Color(0xFFB1B1B1),
-                dateActiveTextColor = Color.White
-            )
-        ) { newDate ->
+    MerchikDatePickerDialog(
+        visible = showDateDialog,
+        initialDate = selectedDate,
+        title = "Дата",
+        allowedDateValidator = { date ->
+            !date.isBefore(minDate)
+        },
+        onDateSelected = { newDate ->
             selectedDate = newDate
             onDateSelected(
                 newDate.format(displayDateFormatter),
                 newDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
             )
-        }
-    }
+        },
+        onDismiss = { showDateDialog = false }
+    )
 }
 
 private fun parseCustomAditionalDate(

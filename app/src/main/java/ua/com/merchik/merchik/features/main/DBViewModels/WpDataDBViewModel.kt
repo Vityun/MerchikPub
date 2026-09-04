@@ -123,11 +123,11 @@ class WpDataDBViewModel @Inject constructor(
     override fun getDefaultHideUserFields(): List<String>? {
         return if (contextUI == ContextUI.WP_DATA ||
             contextUI == ContextUI.WP_DATA_PAUSED)
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, status".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, status, cash_fact, cash_penalty".split(
                 ","
             )
         else
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, cash_fact, cash_penalty".split(
                 ","
             )
     }

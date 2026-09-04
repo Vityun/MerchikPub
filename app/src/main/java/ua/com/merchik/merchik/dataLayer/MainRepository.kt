@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.data.RealmModels.UsersDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
@@ -56,6 +57,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
+import ua.com.merchik.merchik.features.main.WPDataBDOverride
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -80,6 +82,7 @@ class MainRepository(
     private fun fieldTitleSource(obj: DataObjectUI, key: String): String =
         when (obj) {
             is DynamicAchievementSDB -> DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
+            is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
             else -> key
         }
 

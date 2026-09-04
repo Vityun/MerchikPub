@@ -1539,6 +1539,7 @@ public class Options {
 
                             );
                         }
+                        dialog.setDismissOnlyByButtonsMode(true);
                         dialog.show();
                         Log.e("optionNotConduct", "3 " + resStr);
 

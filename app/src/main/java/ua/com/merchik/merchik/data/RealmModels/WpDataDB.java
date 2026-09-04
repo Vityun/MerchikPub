@@ -1439,7 +1439,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
                 "mon, tue, wed, thu, fri, sat, sun, source_change, set_status, premiya_total, " +
                 "addr_location_xd, addr_location_yd, action_short_txt, " +
                 "code_iza, user_comment, user_comment_author_id, user_comment_dt_update, ptt_user_id, sku_plan, sku_fact, " +
-                "oos, kp, startUpdate, cash_fact, cash_penalty, user_opinion_id, user_opinion_author_id, " +
+                "oos, kp, startUpdate, user_opinion_id, user_opinion_author_id, " +
                 "user_opinion_dt_update, controller_opinion_id, controller_opinion_author_id, statusComment, duration_plan, " +
                 "pause_duration, pause_dt_start, pause_dt_end";
 

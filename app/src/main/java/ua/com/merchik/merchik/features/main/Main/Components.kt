@@ -94,10 +94,6 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
-import com.vanpra.composematerialdialogs.datetime.date.datepicker
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
@@ -114,6 +110,7 @@ import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
@@ -1201,7 +1198,7 @@ fun DateEditorRow(
     var displayValue by remember(value) {
         mutableStateOf(createEditorDateFieldValue(value))
     }
-    val dateDialog = rememberMaterialDialogState()
+    var showDateDialog by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -1279,7 +1276,7 @@ fun DateEditorRow(
                         .size(28.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .clickable {
-                            dateDialog.show()
+                            showDateDialog = true
                         }
                         .padding(4.dp)
                 )
@@ -1287,36 +1284,11 @@ fun DateEditorRow(
         }
     }
 
-    MaterialDialog(
-        dialogState = dateDialog,
-        buttons = {
-            positiveButton(
-                text = "ОК",
-                textStyle = TextStyle(
-                    color = colorResource(R.color.blue),
-                    fontWeight = FontWeight.Black
-                )
-            )
-            negativeButton(
-                text = "Скасувати",
-                textStyle = TextStyle(
-                    color = colorResource(R.color.orange),
-                    fontWeight = FontWeight.Black
-                )
-            )
-        }
-    ) {
-        datepicker(
-            initialDate = selectedDate,
-            title = title,
-            colors = DatePickerDefaults.colors(
-                headerBackgroundColor = Color(0xFFB1B1B1),
-                headerTextColor = Color.White,
-                calendarHeaderTextColor = Color(0xFFB1B1B1),
-                dateActiveBackgroundColor = Color(0xFFB1B1B1),
-                dateActiveTextColor = Color.White
-            )
-        ) { newDate ->
+    MerchikDatePickerDialog(
+        visible = showDateDialog,
+        initialDate = selectedDate,
+        title = title,
+        onDateSelected = { newDate ->
             selectedDate = newDate
             val newDisplayValue = newDate.format(EDITOR_DISPLAY_DATE_FORMATTER)
             displayValue = TextFieldValue(
@@ -1324,8 +1296,9 @@ fun DateEditorRow(
                 selection = TextRange(newDisplayValue.length)
             )
             onDateSelected(newDate.format(EDITOR_ISO_DATE_FORMATTER))
-        }
-    }
+        },
+        onDismiss = { showDateDialog = false }
+    )
 }
 
 @Composable

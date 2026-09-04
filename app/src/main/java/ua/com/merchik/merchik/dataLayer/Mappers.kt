@@ -12,9 +12,11 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
+import ua.com.merchik.merchik.features.main.WPDataBDOverride
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -87,6 +89,8 @@ private fun DataObjectUI.fieldTitleSource(key: String): String =
     when (this) {
         is ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB ->
             DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
+
+        is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
 
         else -> key
     }

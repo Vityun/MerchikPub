@@ -122,6 +122,8 @@ public class DialogData {
     private Button operationButton1, operationButton2;
     // ---- UI end ----
 
+    private boolean dismissOnlyByButtonsMode = false;
+    private DialogClickListener closeClickListener;
 
     public DialogData() {
     }
@@ -193,7 +195,8 @@ public class DialogData {
 
         textView42 = dialog.findViewById(R.id.textView42);
 
-        imgBtnClose.setOnClickListener(v -> dialog.dismiss());
+        closeClickListener = () -> dialog.dismiss();
+        applyDismissMode();
 
     }
 
@@ -263,7 +266,6 @@ public class DialogData {
             text.setScrollbarFadingEnabled(false);
         }
     }
-
 
     public void setEditTextSearch(RecycleViewDRAdapterTovar adapter) {
         this.editTextSearch.setVisibility(View.VISIBLE);
@@ -348,9 +350,34 @@ public class DialogData {
 //        }
 //    }
     public void setClose(DialogClickListener clickListener) {
-        imgBtnClose.setOnClickListener(v -> {
-            clickListener.clicked();
-        });
+        closeClickListener = clickListener;
+        applyDismissMode();
+    }
+
+    public void setDismissOnlyByButtonsMode(boolean enabled) {
+        dismissOnlyByButtonsMode = enabled;
+        applyDismissMode();
+    }
+
+    private void applyDismissMode() {
+        if (dialog == null || imgBtnClose == null) return;
+
+        dialog.setCancelable(!dismissOnlyByButtonsMode);
+        dialog.setCanceledOnTouchOutside(!dismissOnlyByButtonsMode);
+
+        if (dismissOnlyByButtonsMode) {
+            imgBtnClose.setVisibility(View.GONE);
+            imgBtnClose.setOnClickListener(null);
+        } else {
+            imgBtnClose.setVisibility(View.VISIBLE);
+            imgBtnClose.setOnClickListener(v -> {
+                if (closeClickListener != null) {
+                    closeClickListener.clicked();
+                } else {
+                    dialog.dismiss();
+                }
+            });
+        }
     }
 
     public void setLesson(Context context, boolean visualise, int objectId) {

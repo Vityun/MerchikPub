@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,19 +15,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
-import com.vanpra.composematerialdialogs.datetime.date.datepicker
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun DatePicker(
@@ -39,9 +31,7 @@ fun DatePicker(
 ) {
     var selectedDate by remember { mutableStateOf(date ?: LocalDate.now()) }
     val dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy")
-
-    // Материал диалог
-    val dateDialog = rememberMaterialDialogState()
+    var showDateDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.padding(bottom = 16.dp),
@@ -55,7 +45,7 @@ fun DatePicker(
                     BorderStroke(1.dp, colorResource(id = R.color.borderContextMenu)),
                     RoundedCornerShape(8.dp)
                 )
-                .then(if (enabled) Modifier.clickable { dateDialog.show() } else Modifier)
+                .then(if (enabled) Modifier.clickable { showDateDialog = true } else Modifier)
         ) {
             Text(
                 text = selectedDate.format(dateFormat),
@@ -63,40 +53,16 @@ fun DatePicker(
             )
         }
 
-        val formattedDate = selectedDate.format(
-            DateTimeFormatter.ofPattern("EEE, dd MMM", Locale.getDefault())
-        )
-        // Компонент выбора даты
-        MaterialDialog(
-            dialogState = dateDialog,
-            buttons = {
-                positiveButton(
-                    text = "ОК",
-                    textStyle = TextStyle(color = colorResource(R.color.blue),
-                        fontWeight = FontWeight.Black) // зелёный OK
-                )
-                negativeButton(
-                    text = "Скасувати",
-                    textStyle = TextStyle(color = colorResource(R.color.orange),
-                        fontWeight = FontWeight.Black) // красный Cancel
-                )
-            }
-        ) {
-            datepicker(
-                initialDate = selectedDate,
-                title = title,
-                colors =  DatePickerDefaults.colors(
-                    headerBackgroundColor = Color(0xFFB1B1B1),     // фон хедера
-                    headerTextColor = Color.White,                 // текст хедера
-                    calendarHeaderTextColor = Color(0xFFB1B1B1),   // названия дней недели
-                    dateActiveBackgroundColor = Color(0xFFB1B1B1), // выбранная дата
-                    dateActiveTextColor = Color.White              // текст выбранной даты
-                )
-            ) { newDate ->
+        MerchikDatePickerDialog(
+            visible = showDateDialog,
+            initialDate = selectedDate,
+            title = title,
+            onDateSelected = { newDate ->
                 selectedDate = newDate
                 dateChange(newDate)
-            }
-        }
+            },
+            onDismiss = { showDateDialog = false }
+        )
     }
 }
 
