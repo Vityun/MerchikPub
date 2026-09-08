@@ -60,26 +60,44 @@ class UsersSDBViewModel @Inject constructor(
         return uiItemsHeader.value
     }
 
+    private fun readInputParameters(): JsonObject? {
+        val raw = dataJson?.takeIf { it.isNotBlank() } ?: return null
+        return runCatching {
+            Gson().fromJson(raw, JsonObject::class.java)
+        }.onFailure {
+            Log.w("UsersSDBViewModel", "Invalid dataJson; using fallback parameters")
+        }.getOrNull()
+    }
+
+    private fun JsonObject?.stringOrNull(key: String): String? {
+        val value = this?.get(key)
+            ?.takeIf { it.isJsonPrimitive }
+            ?.asJsonPrimitive
+            ?: return null
+        if (!value.isString && !value.isNumber) return null
+        return value.asString.trim().takeIf { it.isNotEmpty() }
+    }
+
 
     override fun updateFilters() {
 
         try {
 
-            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+            val dataJsonObject = readInputParameters()
 
-            val addrId = dataJsonObject.get("addr_id")?.asInt
+            val addrId = dataJsonObject.stringOrNull("addr_id")?.toIntOrNull()
                 ?: EKLDataHolder.instance().usersPTTWorkAddressId
 
-            val wpClientId = dataJsonObject.get("wpDataClientId")?.asString
+            val wpClientId = dataJsonObject.stringOrNull("wpDataClientId")
                 ?: EKLDataHolder.instance().usersPTTWPClientId
 
-            val wpPttUserId = dataJsonObject.get("wpDataPttUserId")?.asInt
+            val wpPttUserId = dataJsonObject.stringOrNull("wpDataPttUserId")?.toIntOrNull()
                 ?: EKLDataHolder.instance().usersPTTWPPttUserId
 
-            val wpDataUserId = dataJsonObject.get("wpDataUserId")?.asInt
+            val wpDataUserId = dataJsonObject.stringOrNull("wpDataUserId")?.toIntOrNull()
                 ?: EKLDataHolder.instance().usersPTTWPDataUserId
 
-            val wpDataTime = dataJsonObject.get("wpDataTime")?.asLong
+            val wpDataTime = dataJsonObject.stringOrNull("wpDataTime")?.toLongOrNull()
                 ?: EKLDataHolder.instance().usersPTTWPDataTime
 
             if (addrId != null && wpClientId != null && wpPttUserId != null
@@ -186,9 +204,9 @@ class UsersSDBViewModel @Inject constructor(
 
     override suspend fun getItems(): List<DataItemUI> {
 
-        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+        val dataJsonObject = readInputParameters()
 
-        val addrId = dataJsonObject.get("addr_id")?.asInt
+        val addrId = dataJsonObject.stringOrNull("addr_id")?.toIntOrNull()
             ?: EKLDataHolder.instance().usersPTTWorkAddressId
 
         val usersSDBList: List<UsersSDB> = if (addrId != null) {
