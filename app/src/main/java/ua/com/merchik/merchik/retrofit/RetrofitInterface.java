@@ -132,6 +132,7 @@ import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.FCMToken;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.LogListResponse;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
@@ -504,6 +505,11 @@ public interface RetrofitInterface {
             @Query("client_id") String client_id
     );
 
+
+    @POST("mobile_app.php?")
+    Call<LogListResponse> GET_LOG_LIST(
+            @Header("Content-Type") String contentType,
+            @Body JsonObject data);
 
     // --------------- UPLOAD ---------------
 

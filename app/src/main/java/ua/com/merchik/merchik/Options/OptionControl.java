@@ -238,6 +238,7 @@ public class OptionControl<T> {
                     LogDB log = LogRealm.getLogByODADandTheme(codeODAD, themeCode);
                     if (log != null) {
                         stringBuilderMsg.append("\n\nАле виконавцю видано код розблокування!");
+                        spannableStringBuilder.append("\n\nАле виконавцю видано код розблокування!");
                         setIsBlockOption(false);
                         OptionsDB finalOptionDB = optionDB;
                         RealmManager.INSTANCE.executeTransaction(realm -> {

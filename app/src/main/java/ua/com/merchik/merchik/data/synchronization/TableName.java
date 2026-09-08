@@ -15,7 +15,7 @@ public enum TableName {
     PROMO_LIST("promoList"), //PromoDB
     ERROR_LIST("errorsList"), //ErrorDB
     STACK_PHOTO("stack_photo"),
-    TASK_AND_RECLAMATION("task_and_reclamations"), //2026090400
+    TASK_AND_RECLAMATION("task_and_reclamations"), //2026090800
     PLANOGRAMM("planogram"),
     PLANOGRAMM_ADDRESS("PlanogrammAddressSDB"),
     PLANOGRAMM_GROUP("planogramm_group"),
@@ -108,6 +108,7 @@ public enum TableName {
     WP_DATA_PAUSE("wp_data_pause"),
     DYNAMIC_ACHIEVEMENTS("dynamic_achievements"),
     DYNAMIC_PHOTO("dynamic_photo"),
+    LOG("log"),
 
 
 

@@ -1118,6 +1118,12 @@ public class Exchange {
                         }
 
                         try {
+                            new TablesLoadingUnloading().downloadLogList();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "startExchange/downloadLogList", "Exception e: " + e);
+                        }
+
+                        try {
                             new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
                                 @Override
                                 public <T> void onSuccess(List<T> data) {

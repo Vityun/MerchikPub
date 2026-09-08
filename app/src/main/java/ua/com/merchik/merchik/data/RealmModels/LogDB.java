@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.data.RealmModels;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -17,6 +19,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 public class LogDB extends RealmObject implements DataObjectUI{
 
     @PrimaryKey
+    @SerializedName(value = "id", alternate = {"ID"})
     private Integer id;
     private Long dt_action;
     private String comments;

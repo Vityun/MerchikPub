@@ -78,6 +78,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExch
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.DynamicAchievementsExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.LogExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -335,6 +336,7 @@ public class TablesLoadingUnloading {
 
             downloadWiFi();
             downloadDynamicAchievementsTables();
+            downloadLogList();
 
             downloadTovarGroupTable(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -419,6 +421,14 @@ public class TablesLoadingUnloading {
             new DynamicAchievementsExchange().syncInCron();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadDynamicAchievementsTables", "Exception: " + e);
+        }
+    }
+
+    public void downloadLogList() {
+        try {
+            new LogExchange().syncInCron();
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadLogList", "Exception: " + e);
         }
     }
 

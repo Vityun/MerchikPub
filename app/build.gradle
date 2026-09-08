@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 36
         //noinspection HighAppVersionCode
-        versionCode  2026090400
-        versionName "2026090400"
+        versionCode  2026090800
+        versionName "2026090800"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -90,11 +90,11 @@ android {
             outputFileName = "merchik.${versionCode}.apk"
         }
     }
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-    }
+//    packagingOptions {
+//        jniLibs {
+//            useLegacyPackaging = true
+//        }
+//    }
 }
 
 dependencies {
@@ -203,7 +203,6 @@ dependencies {
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 //    kapt 'androidx.hilt:hilt-compiler:1.0.0'
 
-    implementation("io.realm.kotlin:library-base:3.0.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
 
     implementation 'com.daimajia.androidanimations:library:2.4@aar'

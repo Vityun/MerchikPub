@@ -2098,14 +2098,9 @@ public class RealmManager {
     }
 
     public static int getLastIdLogDB() {
-        RealmResults<LogDB> realmResults = INSTANCE.where(LogDB.class).findAll();
-        try {
-            Log.e("TAG_REALM_LOG", "int: " + Objects.requireNonNull(realmResults.last().getId()));
-
-            return Objects.requireNonNull(realmResults.last().getId());
-        } catch (Exception e) {
-            return 0;
-        }
+        // Server rows can arrive out of ID order; new local logs must use the maximum ID.
+        Number maxId = INSTANCE.where(LogDB.class).max("id");
+        return maxId == null ? 0 : maxId.intValue();
     }
 
     public static ArrayList<LogUploadToServ> getLogToSend() {

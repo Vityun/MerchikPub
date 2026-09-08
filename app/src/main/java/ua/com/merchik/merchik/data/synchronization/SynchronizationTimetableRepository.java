@@ -261,7 +261,8 @@ public final class SynchronizationTimetableRepository {
                 row(48, "question_answer", 86400, 0, 10000000, "question_answer", 0),
                 row(49, "wp_data_pause", 600, 0, 0, "wp_data_pause", 1),
                 row(50, "dynamic_achievements", 600, 0, 0, "dynamic_achievements", 0),
-                row(51, "dynamic_photo", 600, 0, 0, "dynamic_photo", 0)
+                row(51, "dynamic_photo", 600, 0, 0, "dynamic_photo", 0),
+                row(52, "log", 600, 0, 0, "log", 0)
         );
     }
 
