@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.compose.ui.platform.ComposeView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,6 +45,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import kotlin.Unit;
+import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -117,6 +121,10 @@ public class DetailedReportOptionsFrag extends Fragment {
     public static RecyclerView rvContacts;
     public static RecycleViewDRAdapter recycleViewDRAdapter;
 
+    // Set false to build the unchanged RecyclerView options list for comparison.
+    public static final boolean USE_COMPOSE_OPTIONS = false;
+    private OptionsDBViewModel optionsViewModel;
+
     public DetailedReportOptionsFrag() {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
     }
@@ -142,6 +150,10 @@ public class DetailedReportOptionsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate");
 
         viewModel = new ViewModelProvider(requireActivity()).get(DetailedReportViewModel.class);
+        if (USE_COMPOSE_OPTIONS) {
+            optionsViewModel = new ViewModelProvider(requireActivity())
+                    .get(OptionsDBViewModel.class);
+        }
 
 //        Bundle args = getArguments();
 //        if (args != null) {
@@ -170,6 +182,8 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (USE_COMPOSE_OPTIONS && optionsViewModel != null) optionsViewModel.detachOptions();
+        stopCurrentPulse();
         super.onDestroyView();
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onDestroyView");
     }
@@ -194,6 +208,19 @@ public class DetailedReportOptionsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "create: " + savedInstanceState);
 
         View v = inflater.inflate(R.layout.fragment_dr_option, container, false);
+        if (USE_COMPOSE_OPTIONS) {
+            v.findViewById(R.id.DRRecycleView).setVisibility(View.GONE);
+            v.findViewById(R.id.button3).setVisibility(View.GONE);
+            v.findViewById(R.id.planfact).setVisibility(View.GONE);
+            v.findViewById(R.id.check).setVisibility(View.GONE);
+            v.findViewById(R.id.divider).setVisibility(View.GONE);
+            ComposeView composeView = v.findViewById(R.id.options_compose_container);
+            composeView.setVisibility(View.VISIBLE);
+            // Set the container before the first composition, including before wpData is observed.
+            optionsViewModel.setContextUI(ContextUI.OPTIONS_IN_CONTAINER);
+            optionsViewModel.setTypeWindow("container");
+            ComposeFunctions.setContentOptionsData(composeView, optionsViewModel);
+        }
 
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "v: " + v);
 
@@ -207,51 +234,37 @@ public class DetailedReportOptionsFrag extends Fragment {
 
                     Button download = v.findViewById(R.id.download);
                     TextView information = v.findViewById(R.id.info_msg);
-                    TextView planfact = v.findViewById(R.id.planfact);
-
-                    // todo это надо будет вынести в отдельную функцию. И скорее всего перересовывать при клике на "провести"
-                    StringBuilder sb = new StringBuilder();
-
-                    sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append(" грн.\n\n");
-                    sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append(" грн.\n");
-                    planfact.setText(sb);
-
+                    updateReportFooter(v);
                     ImageView check = v.findViewById(R.id.check);
-                    if (wpDataDB.getSetStatus() == 1) {
-                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
-                        check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
-                    } else {
-                        if (wpDataDB.getStatus() == 1) {
-                            check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
-                            check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
-                        } else {
-//                            if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
-                            if (wpDataDB.getDt().getTime() < System.currentTimeMillis()) { //+TODO CHANGE DATE
-                                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
-                                check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
-                            } else {
-                                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
-                                check.setColorFilter(requireContext().getResources().getColor(R.color.shadow));
-                            }
-                        }
-                    }
 
                     WorkPlan workPlan = new WorkPlan();
-                    rvContacts = v.findViewById(R.id.DRRecycleView);
-                    rvContacts.addOnChildAttachStateChangeListener(pulseViewGuard);
-                    rvContacts.addOnScrollListener(pulsePositionGuard);
-
-                    List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-
-                    setupRecyclerView(optionsButtons);
-
-
-                    Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+                    if (USE_COMPOSE_OPTIONS) {
+                        optionsViewModel.attachOptions(requireContext(), wpDataDB, new Clicks.click() {
+                            @Override
+                            public <T> void click(T data) {
+                                if (!isAdded() || getView() == null) return;
+                                photoHandler = new PhotoHandler((int) data);
+                                imagePickerLauncher.launch(PhotoPickerUtils.createSingleImageChooser());
+                            }
+                        }, updatedWp -> {
+                            wpDataDB = updatedWp;
+                            updateReportFooter(v);
+                            return Unit.INSTANCE;
+                        });
+                    } else {
+                        rvContacts = v.findViewById(R.id.DRRecycleView);
+                        rvContacts.addOnChildAttachStateChangeListener(pulseViewGuard);
+                        rvContacts.addOnScrollListener(pulsePositionGuard);
+                        List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                        setupRecyclerView(optionsButtons);
+                        Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+                    }
 
                     buttonSave.setOnClickListener(b -> {
                         Toast.makeText(requireContext(), "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
                     });
-                    buttonMakeAReport.setOnClickListener(b -> {
+                    // Both renderers call exactly the same conduct handler.
+                    View.OnClickListener conductReport = b -> {
                         try {
                             List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 //                            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
@@ -291,7 +304,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                                 @Override
                                 public <T> void click(T data) {
                                     OptionsDB optionsDB = (OptionsDB) data;
-                                    int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
+                                    int scrollPosition = USE_COMPOSE_OPTIONS ? -1 : recycleViewDRAdapter.getItemPosition(optionsDB);
                                     OptionMassageType msgType = new OptionMassageType();
                                     msgType.type = OptionMassageType.Type.DIALOG;
                                     new Options().optControl(getContext(), wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
@@ -307,11 +320,17 @@ public class DetailedReportOptionsFrag extends Fragment {
                                         }
                                     });
 //                                    rvContacts.smoothScrollToPosition(scrollPosition);
-                                    waitForViewAndHighlight(scrollPosition, rvContacts);
+                                    if (USE_COMPOSE_OPTIONS) {
+                                        optionsViewModel.scrollToOption(optionsDB);
+                                        optionsViewModel.refreshOptions(false);
+                                    } else {
+                                        waitForViewAndHighlight(scrollPosition, rvContacts);
+                                    }
 
                                 }
                             });
 
+                            if (USE_COMPOSE_OPTIONS) optionsViewModel.refreshOptions(false);
                             if (wpDataDB.getSetStatus() == 1) {
                                 check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
                                 check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
@@ -336,7 +355,14 @@ public class DetailedReportOptionsFrag extends Fragment {
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/buttonMakeAReport/setOnClickListener", "Exception e: " + e);
                         }
-                    });
+                    };
+                    buttonMakeAReport.setOnClickListener(conductReport);
+                    if (USE_COMPOSE_OPTIONS) {
+                        optionsViewModel.setOnConductReport(() -> {
+                            if (isAdded() && getView() == v) conductReport.onClick(v);
+                            return Unit.INSTANCE;
+                        });
+                    }
 
                 } catch (Exception e) {
                     Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
@@ -345,9 +371,13 @@ public class DetailedReportOptionsFrag extends Fragment {
             }
         });
 
-        viewModel.getScrollToIdEvent().observe(this, new Observer<OptionsDB>() {
+        viewModel.getScrollToIdEvent().observe(getViewLifecycleOwner(), new Observer<OptionsDB>() {
             @Override
             public void onChanged(OptionsDB optionsDB) {
+                if (USE_COMPOSE_OPTIONS) {
+                    optionsViewModel.scrollToOption(optionsDB);
+                    return;
+                }
                 int scrollPosition = recycleViewDRAdapter.getItemPositionForOptionControl(optionsDB);
                 Log.e("showOrScrollAndWait", "animation optionsDB: " + new Gson().toJson(optionsDB));
                 if (scrollPosition > 0) {
@@ -363,6 +393,11 @@ public class DetailedReportOptionsFrag extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        if (USE_COMPOSE_OPTIONS) {
+            if (optionsViewModel != null) optionsViewModel.refreshOptions(true);
+            return;
+        }
 
         try {
 
@@ -489,7 +524,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         try {
-            rvContacts = view.findViewById(R.id.DRRecycleView);
+            if (!USE_COMPOSE_OPTIONS) rvContacts = view.findViewById(R.id.DRRecycleView);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "enter");
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "mContext: " + view.getContext());
 
@@ -497,6 +532,49 @@ public class DetailedReportOptionsFrag extends Fragment {
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    public void refreshOptionsUI() {
+        View root = getView();
+        if (root == null) return;
+        root.post(() -> {
+            if (!isAdded() || getView() != root) return;
+            if (USE_COMPOSE_OPTIONS) optionsViewModel.refreshOptions(false);
+            else if (recycleViewDRAdapter != null) recycleViewDRAdapter.notifyDataSetChanged();
+        });
+    }
+
+    private void updateReportFooter(View root) {
+        if (!isAdded() || getView() != root || wpDataDB == null) return;
+        if (USE_COMPOSE_OPTIONS) {
+            optionsViewModel.updateReportButton(wpDataDB);
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append(" грн.\n\n");
+        sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append(" грн.\n");
+        ((TextView) root.findViewById(R.id.planfact)).setText(sb);
+
+        ImageView check = root.findViewById(R.id.check);
+        if (wpDataDB.getSetStatus() == 1) {
+            check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
+            check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
+        } else {
+            if (wpDataDB.getStatus() == 1) {
+                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
+            } else {
+//                            if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
+                if (wpDataDB.getDt().getTime() < System.currentTimeMillis()) { //+TODO CHANGE DATE
+                    check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                    check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
+                } else {
+                    check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                    check.setColorFilter(requireContext().getResources().getColor(R.color.shadow));
+                }
+            }
         }
     }
 

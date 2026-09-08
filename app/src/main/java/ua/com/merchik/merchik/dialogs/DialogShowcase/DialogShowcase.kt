@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.GroupTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -256,29 +257,21 @@ class DialogShowcase(private val context: Context) : DialogData() {
 
     private fun setRecyclerView() {
         try {
-            val list: MutableList<Int> = ArrayList()
-            if (photoType == 0 || photoType == 14){
-                list.add(0)
-                list.add(1)
-                list.add(2)
-            }else if (photoType == 45){
-                list.add(3)
-                list.add(5)
-                list.add(8)
+            val wp = wpDataDB!!
+            // Same query selection as OptionControlPhotoShowcase, sections 2.1-2.2.
+            val showcaseIds = AdditionalRequirementsRealm.getAdditionalRequirements(
+                wp.client_id, wp.addr_id, 160568
+            ).map { it.showcaseTpId }
+
+            val showcaseDao = RoomManager.SQL_DB.showcaseDao()
+            var showcaseDataList = if (showcaseIds.isNotEmpty()) {
+                showcaseDao.getByDoc(wp.client_id, wp.addr_id, showcaseIds)
+            } else {
+                showcaseDao.getByDoc(wp.client_id, wp.addr_id)
             }
 
-//            var showcaseDataListTest = RoomManager.SQL_DB.showcaseDao().getByDocTP(
-//                wpDataDB!!.client_id, wpDataDB!!.addr_id
-//            )
-//
-//            Log.e("setRecyclerView", "showcaseDataListTest: $showcaseDataListTest")
-
-            var showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
-                wpDataDB!!.client_id, wpDataDB!!.addr_id, list
-            )
-
             // добавил проверку по главной опции 13.08.2026
-            val mainOptionId = wpDataDB!!.main_option_id
+            val mainOptionId = wp.main_option_id
                 ?.trim()
                 ?.toIntOrNull()
 

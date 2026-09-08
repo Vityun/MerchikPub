@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.dataLayer.model.MenuLeading
 import ua.com.merchik.merchik.dataLayer.model.SubmenuPresentation
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -1029,21 +1030,38 @@ class ShowcaseDBViewModel @Inject constructor(
             return emptyList()
         }
 
+        val isCompletedCheck = contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK
+        val typesForLog = if (isCompletedCheck) "all" else SHOWCASE_TYPES.toString()
+
         return runCatching {
-            RoomManager.SQL_DB
-                .showcaseDao()
-                .getByDocTP(
+            val showcaseDao = RoomManager.SQL_DB.showcaseDao()
+            if (isCompletedCheck) {
+                // Same query selection as OptionControlPhotoShowcase, sections 2.1-2.2.
+                val showcaseIds = AdditionalRequirementsRealm.getAdditionalRequirements(
+                    clientId,
+                    wpDataDB.addr_id,
+                    SHOWCASE_CONTROL_OPTION_ID
+                ).map { it.showcaseTpId }
+
+                if (showcaseIds.isNotEmpty()) {
+                    showcaseDao.getByDoc(clientId, wpDataDB.addr_id, showcaseIds)
+                } else {
+                    showcaseDao.getByDoc(clientId, wpDataDB.addr_id)
+                }
+            } else {
+                showcaseDao.getByDocTP(
                     clientId,
                     wpDataDB.addr_id,
                     SHOWCASE_TYPES
                 )
+            }
         }.onSuccess { showcases ->
             if (showcases.isEmpty()) {
                 logShowcaseDiagnosticOnce(
                     key = "${stage}_empty_showcases_${wpDataDB.code_dad2}_${clientId}_${wpDataDB.addr_id}",
                     level = "INFO",
                     stage = stage,
-                    message = "ShowcaseSDB list is empty. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, clientId=$clientId, addrId=${wpDataDB.addr_id}, tpIds=$SHOWCASE_TYPES"
+                    message = "ShowcaseSDB list is empty. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, clientId=$clientId, addrId=${wpDataDB.addr_id}, tpIds=$typesForLog"
                 )
             }
         }.onFailure { error ->
@@ -1481,6 +1499,7 @@ class ShowcaseDBViewModel @Inject constructor(
     }
 
     private companion object {
+        const val SHOWCASE_CONTROL_OPTION_ID = 160568
         const val SHOWCASE_NOT_ACTUAL_LOG_THEME_ID = 1403
         const val SHOWCASE_NOT_ACTUAL_MIN_COMMENT_LENGTH = 10
         const val SHOWCASE_DOSSIER_THEME_ID = 982L

@@ -1208,7 +1208,7 @@ abstract class MainViewModel(
     }
 
 
-    fun updateContent() {
+    open fun updateContent() {
         updateContentJob?.cancel()
         updateContentJob = viewModelScope.launch {
 

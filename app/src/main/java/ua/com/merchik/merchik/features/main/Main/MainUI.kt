@@ -170,6 +170,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialogButton
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalWorkForm
@@ -196,6 +197,9 @@ import kotlin.math.roundToInt
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
+
+    val optionsViewModel = (viewModel as? OptionsDBViewModel)
+        ?.takeIf { it.contextUI == ContextUI.OPTIONS_IN_CONTAINER }
 
     var showQuestionAnswerDialog by remember { mutableStateOf(false) }
     var showCustomAditionalConfirmDialog by remember { mutableStateOf(false) }
@@ -359,7 +363,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
-        if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS)
+        if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS && optionsViewModel == null)
             listState.scrollToItem(0)
     }
 
@@ -1343,8 +1347,15 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             thumbShape = CircleShape,
                         ),
                     ) {
-
-                        LazyColumn(
+                        if (optionsViewModel != null) {
+                            OptionsItemsUI(
+                                modifier = Modifier,
+                                viewModel = optionsViewModel,
+                                dataItems = dataItemsUI,
+                                groups = if (isActiveGrouped) groups else emptyList(),
+                                listState = listState
+                            )
+                        } else LazyColumn(
                             state = listState,
                         ) {
                             if (!isActiveGrouped || groups.isEmpty()) {
@@ -1814,7 +1825,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 //                    }
 //                }
 
-                if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT ||
+                if (optionsViewModel != null) {
+                    OptionsReportButton(
+                        viewModel = optionsViewModel,
+                        modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                    )
+                } else if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT ||
                     viewModel.modeUI == ModeUI.FILTER_SELECT
                 ) {
 //                    if (viewModel.contextUI != ContextUI.WP_DATA_IN_CONTAINER) // вернулся к старому функционалу, убрать

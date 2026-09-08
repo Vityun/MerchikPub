@@ -272,7 +272,8 @@ fun GroupDeck(
     groupingFields: List<GroupingField>,
     level: Int,
     maxStackSize: Int = 5,
-    stackOffset: Dp = 4.dp
+    stackOffset: Dp = 4.dp,
+    itemContent: (@Composable (DataItemUI) -> Unit)? = null
 ) {
 
     val allSelected = remember(items) { items.isNotEmpty() && items.all { it.selected } }
@@ -701,7 +702,8 @@ fun GroupDeck(
                             )
                         }
                     }
-                } else if (!hasDeck && showTopCardBlock) {
+                } else if (!hasDeck && showTopCardBlock &&
+                    !(expanded && itemContent != null && groupingFields.getOrNull(level + 1)?.key.isNullOrBlank())) {
                     // группа из одного элемента
                     Box(
                         modifier = Modifier
@@ -714,7 +716,9 @@ fun GroupDeck(
                             )
                             .shadow(4.dp, RoundedCornerShape(8.dp))
                     ) {
-                        ItemUI(
+                        if (itemContent != null && groupingFields.getOrNull(level + 1)?.key.isNullOrBlank()) {
+                            itemContent(items.first())
+                        } else ItemUI(
                             item = topItem,
                             visibilityColumName = visibilityColumName,
                             settingsItemUI = settingsItems,
@@ -797,7 +801,11 @@ fun GroupDeck(
                         val imageGridColumns = uiState.imageDisplayMode.columns
                             ?.takeIf { it > 1 && settingsItems.canUseImageDisplayMode() }
 
-                        if (imageGridColumns != null) {
+                        if (itemContent != null) {
+                            Column(Modifier.fillMaxWidth()) {
+                                items.forEach { itemContent(it) }
+                            }
+                        } else if (imageGridColumns != null) {
                             ImageDisplayModeItemRows(
                                 items = items,
                                 columns = imageGridColumns,
@@ -934,7 +942,8 @@ fun GroupDeck(
                                     groupingFields = groupingFields,
                                     level = nextLevel,
                                     maxStackSize = maxStackSize,
-                                    stackOffset = stackOffset
+                                    stackOffset = stackOffset,
+                                    itemContent = itemContent
                                 )
                             }
                         }

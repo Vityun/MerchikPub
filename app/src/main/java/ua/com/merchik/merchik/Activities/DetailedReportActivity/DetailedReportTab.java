@@ -46,8 +46,7 @@ public class DetailedReportTab extends FragmentStateAdapter {
         try {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "HERE");
             if (detailedReportOptionsFrag != null)
-                if (detailedReportOptionsFrag.recycleViewDRAdapter != null)
-                    detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
+                detailedReportOptionsFrag.refreshOptionsUI();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "Exception e: " + e);
         }

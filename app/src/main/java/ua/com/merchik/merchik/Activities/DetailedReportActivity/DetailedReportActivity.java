@@ -739,21 +739,21 @@ public class DetailedReportActivity extends toolbar_menus {
             tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2) { // второй таб
+                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
                         tab.view.setBackgroundColor(activeColor);
                     }
                 }
 
                 @Override
                 public void onTabUnselected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2) {
+                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
                         tab.view.setBackgroundColor(transparentColor);
                     }
                 }
 
                 @Override
                 public void onTabReselected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2) {
+                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
                         tab.view.setBackgroundColor(activeColor);
                     }
                 }
