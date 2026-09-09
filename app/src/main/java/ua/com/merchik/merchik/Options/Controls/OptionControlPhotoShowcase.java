@@ -115,8 +115,30 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             if (mainOptionId != null && showcaseSDBList != null) {
 
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(2026, Calendar.SEPTEMBER, 13, 0, 0, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+
+                Date dateFromNewLogic = calendar.getTime();
+                Date wpDate = wpDataDB.getDt();
+
+                boolean useNewLogic = wpDate != null && !wpDate.before(dateFromNewLogic);
+
                 List<ShowcaseSDB> filteredList = showcaseSDBList.stream()
-                        .filter(item -> item != null && Objects.equals(item.mainOptionId, mainOptionId))
+                        .filter(item -> {
+                            if (item == null) {
+                                return false;
+                            }
+
+                            if (useNewLogic) {
+                                // С 13.09.2026: основная опция + опция 0
+                                return Objects.equals(item.mainOptionId, mainOptionId)
+                                        || Objects.equals(item.mainOptionId, 0);
+                            } else {
+                                // До 13.09.2026: старое поведение
+                                return Objects.equals(item.mainOptionId, mainOptionId);
+                            }
+                        })
                         .collect(Collectors.toList());
 
                 if (!filteredList.isEmpty()) {

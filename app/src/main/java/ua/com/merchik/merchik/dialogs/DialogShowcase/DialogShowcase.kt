@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.DialogVideo
+import java.util.Calendar
 
 class DialogShowcase(private val context: Context) : DialogData() {
 
@@ -276,8 +277,15 @@ class DialogShowcase(private val context: Context) : DialogData() {
                 ?.toIntOrNull()
 
             if (mainOptionId != null && showcaseDataList != null) {
-                val filteredList = showcaseDataList.filter { item ->
-                    item.mainOptionId == mainOptionId
+                // Match section 2.2: the cutoff is the visit date, not today's date.
+                val dateFromNewLogic = Calendar.getInstance().apply {
+                    set(2026, Calendar.SEPTEMBER, 13, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                val useNewLogic = wp.dt?.let { !it.before(dateFromNewLogic) } == true
+
+                val filteredList = showcaseDataList.filterNotNull().filter { item ->
+                    item.mainOptionId == mainOptionId || (useNewLogic && item.mainOptionId == 0)
                 }
 
                 if (filteredList.isNotEmpty()) {

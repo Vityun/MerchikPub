@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import java.lang.ref.WeakReference
+import java.util.Calendar
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -403,6 +404,10 @@ class ShowcaseDBViewModel @Inject constructor(
                                 .filterIsInstance<StackPhotoDB>()
                                 .firstOrNull()
 
+                            // mainOption is an int in StackPhotoDB: keep an unknown value
+                            // distinct from a real option 0 in the raw fields used by ItemFilter.
+                            val mainOptionId = showcaseByPhotoId[stackPhoto?.photoServerId]?.mainOptionId
+
                             val selected = FilteringDialogDataHolder
                                 .instance()
                                 .filters
@@ -414,7 +419,12 @@ class ShowcaseDBViewModel @Inject constructor(
                                 ?.contains(stackPhoto?.id?.toString())
 
                             item.copy(
-                                selected = selected == true
+                                selected = selected == true,
+                                rawFields = item.rawFields.map { field ->
+                                    if (field.key == "mainOption" && mainOptionId == null)
+                                        field.copy(value = field.value.copy(rawValue = ""))
+                                    else field
+                                }
                             )
                         }
                 }
@@ -1372,7 +1382,14 @@ class ShowcaseDBViewModel @Inject constructor(
             ?: return null
 
         val showcaseDataList = getShowcaseDataList(wpDataDB, "buildMainOptionFilter")
-        val hasMatchingShowcase = showcaseDataList.any { it.mainOptionId == mainOptionId }
+        // Match OptionControlPhotoShowcase 2.2, including the visit-date cutoff.
+        val dateFromNewLogic = Calendar.getInstance().apply {
+            set(2026, Calendar.SEPTEMBER, 13, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+        val useNewLogic = wpDataDB.dt?.let { !it.before(dateFromNewLogic) } == true
+        val allowedMainOptionIds = if (useNewLogic) listOf(mainOptionId, 0) else listOf(mainOptionId)
+        val hasMatchingShowcase = showcaseDataList.any { it.mainOptionId in allowedMainOptionIds }
 
         if (!hasMatchingShowcase) {
             val localMainOptions = showcaseDataList
@@ -1383,7 +1400,7 @@ class ShowcaseDBViewModel @Inject constructor(
                 key = "main_option_filter_skip_${wpDataDB.code_dad2}_$mainOptionId",
                 level = "INFO",
                 stage = "buildMainOptionFilter",
-                message = "Skip mainOption filter: local showcases do not contain wp main option. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, wpMainOptionId=$mainOptionId, showcaseCount=${showcaseDataList.size}, localMainOptions=${localMainOptions.map { it.toString() }.previewIds()}"
+                message = "Skip mainOption filter: local showcases do not contain allowed main options. contextUI=$contextUI, codeDad2=${wpDataDB.code_dad2}, wpMainOptionId=$mainOptionId, allowedMainOptionIds=$allowedMainOptionIds, showcaseCount=${showcaseDataList.size}, localMainOptions=${localMainOptions.map { it.toString() }.previewIds()}"
             )
             return null
         }
@@ -1399,8 +1416,8 @@ class ShowcaseDBViewModel @Inject constructor(
             "Оберіть основну опцію",
             "mainOption",
             "iD",
-            mutableListOf(mainOptionId.toString()),
-            mutableListOf(optionName),
+            allowedMainOptionIds.map { it.toString() },
+            allowedMainOptionIds.map { if (it == 0) "Без основної опції" else optionName },
             true
         )
     }

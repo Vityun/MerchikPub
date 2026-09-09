@@ -122,7 +122,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     public static RecycleViewDRAdapter recycleViewDRAdapter;
 
     // Set false to build the unchanged RecyclerView options list for comparison.
-    public static final boolean USE_COMPOSE_OPTIONS = false;
+    public static final boolean USE_COMPOSE_OPTIONS = true;
     private OptionsDBViewModel optionsViewModel;
 
     public DetailedReportOptionsFrag() {
