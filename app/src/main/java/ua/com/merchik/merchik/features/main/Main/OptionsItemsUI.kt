@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -206,19 +207,17 @@ private fun OptionItemUI(
         }
     }
     val inactive = row.backgroundRes == R.drawable.button_bg_inactive
-    val shape = RoundedCornerShape(2.dp)
-    // Same two-layer background, spacing and 50dp signal as dr_option_item_button.
+    val shape = RoundedCornerShape(8.dp)
     Box(
         Modifier.fillMaxWidth().graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-            .clip(shape).background(if (inactive) Color(0xFFC9C9C9) else Color(0xFF838383))
+            .shadow(2.dp, shape, clip = false)
+            .clip(shape).background(if (inactive) Color(0xFFDBDBDB) else Color(0xFFAAAAAA))
             .combinedClickable(enabled = enabled,
                 onClick = { onClick(OptionsDBViewModel.OptionClickTarget.ROW) },
                 onLongClick = onLongClick)
-            .padding(end = 2.dp, bottom = 2.dp)
     ) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 66.dp)
-                .background(if (inactive) Color(0xFFDBDBDB) else Color(0xFFAAAAAA), shape)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -254,28 +253,48 @@ private fun OptionItemUI(
 fun OptionsReportButton(viewModel: OptionsDBViewModel, modifier: Modifier = Modifier) {
     val state by viewModel.reportButton.collectAsState()
     val loading by viewModel.optionsLoading.collectAsState()
+    val shape = RoundedCornerShape(8.dp)
+    val buttonColor = colorResource(R.color.blue)
     Button(
         onClick = viewModel::conductReport,
         enabled = !loading && state != null,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.blue))
+        modifier = modifier.fillMaxWidth().shadow(4.dp, shape),
+        shape = shape,
+        contentPadding = PaddingValues(horizontal = 8.dp),
+        // Recalculation blocks repeat submits without fading the button into the background.
+        colors = ButtonDefaults.buttonColors(
+            containerColor = buttonColor,
+            contentColor = Color.White,
+            disabledContainerColor = buttonColor,
+            disabledContentColor = Color.White
+        )
     ) {
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(viewModel.getTranslateString(stringResource(R.string.complete_work)))
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 66.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = viewModel.getTranslateString(stringResource(R.string.complete_work)),
+                modifier = Modifier.weight(1f).padding(vertical = 16.dp,
+                    horizontal = 16.dp),
+                fontSize = 14.sp,
+                lineHeight = 18.sp
+            )
+            Column(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp).widthIn(max = 120.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text("План: ${state?.plan ?: "0"} грн", fontSize = 13.sp, lineHeight = 18.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Text("Факт: ${state?.fact ?: "0"} грн", fontSize = 13.sp, lineHeight = 18.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            }
+            Box(Modifier.size(50.dp), contentAlignment = Alignment.Center) {
                 state?.let {
                     Image(painterResource(it.iconRes), contentDescription = null,
                         modifier = Modifier.size(24.dp), colorFilter = ColorFilter.tint(colorResource(it.tintRes)))
                 }
-            }
-            Row(Modifier.fillMaxWidth().padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("План: ${state?.plan ?: "0"} грн", Modifier.weight(1f), fontSize = 13.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                Text("Факт: ${state?.fact ?: "0"} грн", Modifier.weight(1f), fontSize = 13.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             }
         }
     }

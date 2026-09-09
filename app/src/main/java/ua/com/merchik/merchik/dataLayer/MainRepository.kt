@@ -55,6 +55,7 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
+import ua.com.merchik.merchik.features.main.OptionsDBOverride
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
 import ua.com.merchik.merchik.features.main.WPDataBDOverride
@@ -83,6 +84,7 @@ class MainRepository(
         when (obj) {
             is DynamicAchievementSDB -> DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
             is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
+            is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
             else -> key
         }
 
@@ -95,10 +97,18 @@ class MainRepository(
             else -> null
         }
 
-    private fun getSettingsUI(clazz: Class<*>, contextUI: ContextUI?) =
+    fun getSettingsUI(
+        clazz: Class<*>,
+        contextUI: ContextUI?,
+        settingsVisitId: Long? = null
+    ): SettingsUI? =
         try {
-            val json = RoomManager.SQL_DB.settingsUIDao()
-                .getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson
+            val dao = RoomManager.SQL_DB.settingsUIDao()
+            val visitSettings = settingsVisitId?.let {
+                dao.getTableByContext(clazz.simpleName, settingsVisitTag(contextUI, it))
+            }
+            val json = (visitSettings
+                ?: dao.getTableByContext(clazz.simpleName, contextUI?.name))?.settingsJson
 
             Gson().fromJson(json, SettingsUI::class.java)
 
@@ -108,6 +118,12 @@ class MainRepository(
             null
         }
 
+    private fun settingsVisitPrefix(contextUI: ContextUI?): String =
+        "${contextUI?.name ?: ContextUI.DEFAULT.name}:visit:"
+
+    private fun settingsVisitTag(contextUI: ContextUI?, visitId: Long): String =
+        "${settingsVisitPrefix(contextUI)}$visitId"
+
 //    fun <T : DataObjectUI> getSortingFields(klass: KClass<T>, contextUI: ContextUI?) =
 //        getSettingsUI(klass.java, contextUI)?.sortFields ?: emptyList()
 
@@ -115,7 +131,8 @@ class MainRepository(
         klass: KClass<T>,
         contextUI: ContextUI?,
         defaultHideUserFields: List<String>?,
-        modeUI: ModeUI
+        modeUI: ModeUI,
+        settingsVisitId: Long? = null
     ): List<SettingsItemUI> {
 
         val item = getRoomBackedLegacySample(klass) ?: (klass.java.newInstance() as? RealmObject)?.let {
@@ -155,7 +172,7 @@ class MainRepository(
         item?.let { obj ->
             val jsonObject = JSONObject(gson.toJson(obj))
             val imageCommentKeys = obj.getCommentsForImageKeys()
-            val settingsUI = getSettingsUI(obj::class.java, contextUI)
+            val settingsUI = getSettingsUI(obj::class.java, contextUI, settingsVisitId)
             val imageKeys = obj.getFieldsImageOnUI()
                 .split(",")
                 .map { it.trim() }
@@ -253,34 +270,52 @@ class MainRepository(
 
     fun getImageDisplayMode(
         klass: KClass<out DataObjectUI>,
-        contextUI: ContextUI?
-    ): ImageDisplayMode? = getSettingsUI(klass.java, contextUI)?.imageDisplayMode
+        contextUI: ContextUI?,
+        settingsVisitId: Long? = null
+    ): ImageDisplayMode? = getSettingsUI(klass.java, contextUI, settingsVisitId)?.imageDisplayMode
 
     fun <T : DataObjectUI> saveSettingsUI(
         klass: KClass<T>,
         settingsUI: SettingsUI,
-        contextUI: ContextUI?
+        contextUI: ContextUI?,
+        settingsVisitId: Long? = null,
+        applyToAllVisits: Boolean? = null
     ) {
-//        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: start")
+        val database = RoomManager.SQL_DB
+        database.runInTransaction {
+            val applyAll = settingsVisitId != null && (applyToAllVisits
+                ?: (getSettingsUI(klass.java, contextUI, settingsVisitId)?.applyToAllVisits == true))
+            val contextTAG = if (settingsVisitId != null && !applyAll) {
+                settingsVisitTag(contextUI, settingsVisitId)
+            } else {
+                contextUI?.name ?: ContextUI.DEFAULT.name
+            }
+            val snapshot = if (settingsVisitId != null) {
+                settingsUI.copy(applyToAllVisits = applyAll)
+            } else {
+                settingsUI
+            }
+            val dao = database.settingsUIDao()
+            val settingsUISDB = dao.getTableByContext(klass.java.simpleName, contextTAG)
+                ?: SettingsUISDB()
+            settingsUISDB.contextTAG = contextTAG
+            settingsUISDB.tableDB = klass.java.simpleName
+            settingsUISDB.settingsJson = Gson().toJson(snapshot)
+            dao.insert(settingsUISDB)
 
-        val contextTAG = contextUI?.name ?: ContextUI.DEFAULT.name
-
-        val settingsUISDB = RoomManager.SQL_DB.settingsUIDao()
-            .getTableByContext(klass.java.simpleName, contextTAG) ?: SettingsUISDB()
-
-        settingsUISDB.contextTAG = contextTAG
-        settingsUISDB.tableDB = klass.java.simpleName
-        settingsUISDB.settingsJson = Gson().toJson(settingsUI)
-
-        RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
-//        Log.e("!!!!!!TEST!!!!!!","saveSettingsUI: finish")
+            if (applyAll) {
+                // Existing visit overrides must not mask the new common settings.
+                dao.deleteVisitSettings(klass.java.simpleName, settingsVisitPrefix(contextUI))
+            }
+        }
     }
 
     fun <T : DataObjectUI> getSortingFields(
         klass: KClass<T>,
         contextUI: ContextUI?,
         defaultSortKeys: List<String>? = null,
-        hideSortKeys: List<String>? = null
+        hideSortKeys: List<String>? = null,
+        settingsVisitId: Long? = null
     ): List<SortingField> {
 
         val hiddenSortKeys = hideSortKeys
@@ -291,7 +326,7 @@ class MainRepository(
 
         // 1) если в настройках уже есть сортировка — отдаем её,
         // но без полей, которые запрещены для сортировки/группировки
-        val savedSortingFields = getSettingsUI(klass.java, contextUI)?.sortFields
+        val savedSortingFields = getSettingsUI(klass.java, contextUI, settingsVisitId)?.sortFields
             ?.filterNot { sortField ->
                 hiddenSortKeys.any { hiddenKey ->
                     hiddenKey.equals(sortField.key?.trim().orEmpty(), ignoreCase = true)
@@ -398,11 +433,13 @@ class MainRepository(
     suspend fun hasUserSorting(
         table: KClass<out DataObjectUI>,
         contextUI: ContextUI?,
-        hideSortKeys: List<String>? = null
+        hideSortKeys: List<String>? = null,
+        settingsVisitId: Long? = null
     ): Boolean {
         val settings = getSettingsUI(
             table.java,
-            contextUI
+            contextUI,
+            settingsVisitId
         )
 
         val hiddenSortKeys = hideSortKeys
@@ -514,7 +551,8 @@ class MainRepository(
         data: List<DataObjectUI>,
         contextUI: ContextUI?,
         typePhoto: Int?,
-        groupingKeys: List<String> = emptyList()
+        groupingKeys: List<String> = emptyList(),
+        settingsVisitId: Long? = null
     ): List<DataItemUI> {
 //        Log.e("!!!!!!TEST!!!!!!","getItems: end 0?")
 //        Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data size: ${data.size}")
@@ -522,7 +560,7 @@ class MainRepository(
 //            Globals.writeToMLOG("INFO","MainRepository.toItemUIList","data.map: $it")
             it.toItemUI(
                 nameUIRepository,
-                getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," },
+                getSettingsUI(kClass.java, contextUI, settingsVisitId)?.hideFields?.joinToString { "," },
                 typePhoto,
                 groupingKeys
             )

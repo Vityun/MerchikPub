@@ -1411,6 +1411,13 @@ object ErrorDBOverride {
 
 object OptionsDBOverride {
 
+    fun getFallbackTitle(key: String): String? = when (key) {
+        "sum_penalty" -> "Зниження"
+        "option_txt" -> "Назва опції"
+        "option_id" -> "ID опції"
+        else -> null
+    }
+
     fun getValueUI(key: String, value: Any): String = when (key) {
 
         "sum_penalty" -> {
@@ -1455,10 +1462,11 @@ object OptionsDBOverride {
 
     fun getHidedFieldsOnUI(): String =
         "ID, client_id, addr_id, user_id, dt, code_dad2, doc_id, doc_type, " +
-                "option_block_1, option_block_2, " +
-                "priznak, proveden, deleted, lesson_id, so, notes, " +
-                "author_id, dt_change, " +
+                "option_control_id, option_block_1, option_block_2, " +
+                "priznak, proveden, deleted, lesson_id, so, is_signal, notes, " +
+                "author_id, dt_change, sum_premiya, amount, amount_min, " +
                 "amount_max, price, percent, block_pns, key_option, " +
+                "option_descr, option_control_txt, option_control_descr, " +
                 "option_group, option_group_txt, timeColor"
 
 

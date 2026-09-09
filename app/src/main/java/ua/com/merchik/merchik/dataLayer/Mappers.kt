@@ -13,9 +13,11 @@ import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
+import ua.com.merchik.merchik.features.main.OptionsDBOverride
 import ua.com.merchik.merchik.features.main.WPDataBDOverride
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -91,6 +93,7 @@ private fun DataObjectUI.fieldTitleSource(key: String): String =
             DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
 
         is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
+        is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
 
         else -> key
     }

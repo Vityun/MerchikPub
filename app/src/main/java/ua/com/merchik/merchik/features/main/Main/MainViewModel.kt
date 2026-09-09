@@ -73,6 +73,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
+import ua.com.merchik.merchik.features.main.options.OptionsDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.dataLayer.withContainerBackground
@@ -172,7 +173,10 @@ data class SettingsUI(
     val sortFields: List<SortingField>? = null,
     val groupFields: List<GroupingField>? = null,
     val sizeFonts: Int? = null,
-    val imageDisplayMode: ImageDisplayMode? = null
+    val imageDisplayMode: ImageDisplayMode? = null,
+    val applyToAllVisits: Boolean = false,
+    val fontSizeOffset: Float? = null,
+    val optionsDisplayMode: OptionsDisplayMode? = null
 )
 
 data class GroupingField(
@@ -1112,14 +1116,23 @@ abstract class MainViewModel(
     fun getTranslateString(text: String, translateId: Long? = null) =
         nameUIRepository.getTranslateString(text, translateId)
 
-    fun saveSettings() {
+    protected open val settingsVisitId: Long? get() = null
+
+    fun settingsApplyToAllVisits(): Boolean = settingsVisitId?.let {
+        repository.getSettingsUI(table.java, contextUI, it)?.applyToAllVisits
+    } == true
+
+    fun saveSettings(
+        applyToAllVisits: Boolean? = null,
+        fontSizeOffset: Float? = null
+    ) {
         viewModelScope.launch {
             val displayMode = uiState.value.settingsItems
                 .firstOrNull { it.key == IMAGE_DISPLAY_MODE_SETTINGS_KEY }
                 ?.imageDisplayMode
                 ?: uiState.value.imageDisplayMode
 
-            saveSettingsSnapshot(displayMode)
+            saveSettingsSnapshot(displayMode, applyToAllVisits, fontSizeOffset)
         }
     }
 
@@ -1143,7 +1156,11 @@ abstract class MainViewModel(
         }
     }
 
-    private fun saveSettingsSnapshot(displayMode: ImageDisplayMode) {
+    private fun saveSettingsSnapshot(
+        displayMode: ImageDisplayMode,
+        applyToAllVisits: Boolean? = null,
+        fontSizeOffset: Float? = null
+    ) {
         repository.saveSettingsUI(
             table,
             SettingsUI(
@@ -1154,10 +1171,25 @@ abstract class MainViewModel(
                     .map { it.key },
                 sortFields = uiState.value.sortingFields.filter { it.key != null }
                     .map { it.copy(title = null) },
-                imageDisplayMode = displayMode
+                imageDisplayMode = displayMode,
+                fontSizeOffset = if (settingsVisitId != null) {
+                    fontSizeOffset ?: offsetSizeFonts.value
+                } else {
+                    null
+                },
+                optionsDisplayMode = if (settingsVisitId != null) {
+                    repository.getSettingsUI(table.java, contextUI, settingsVisitId)?.optionsDisplayMode
+                } else {
+                    null
+                }
             ),
-            contextUI
+            contextUI,
+            settingsVisitId,
+            applyToAllVisits
         )
+        if (settingsVisitId != null && fontSizeOffset != null) {
+            _offsetSizeFonts.value = fontSizeOffset
+        }
     }
 
 //    fun updateSearch(text: String) {
@@ -1212,10 +1244,15 @@ abstract class MainViewModel(
         updateContentJob?.cancel()
         updateContentJob = viewModelScope.launch {
 
+            if (settingsVisitId != null) {
+                _offsetSizeFonts.value = repository.getSettingsUI(table.java, contextUI, settingsVisitId)
+                    ?.fontSizeOffset ?: sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
+            }
+
             val list = getDefaultHideUserFields()
-            val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI)
+            val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI, settingsVisitId)
             val imageDisplayMode =
-                repository.getImageDisplayMode(table, contextUI) ?: ImageDisplayMode.DEFAULT
+                repository.getImageDisplayMode(table, contextUI, settingsVisitId) ?: ImageDisplayMode.DEFAULT
 
             val defaultSort = getDefaultSortUserFields()
             val hideSort = getHideSortUserFields()
@@ -1225,14 +1262,15 @@ abstract class MainViewModel(
 
             val hideFieldsForCards = getDefaultHideFieldsForCards()
             val settingsForCardsItems =
-                repository.getSettingsItemList(table, contextUI, hideFieldsForCards, modeUI)
+                repository.getSettingsItemList(table, contextUI, hideFieldsForCards, modeUI, settingsVisitId)
 
             // 1) Берём сортировки
             val sortingFieldsFromRepo = repository.getSortingFields(
                 table,
                 contextUI,
                 defaultSort,
-                hideSort
+                hideSort,
+                settingsVisitId
             )
 
             // 2) Дефолтные ключи группировки
@@ -1243,7 +1281,8 @@ abstract class MainViewModel(
             val hasUserSorting: Boolean = repository.hasUserSorting(
                 table,
                 contextUI,
-                hideSort
+                hideSort,
+                settingsVisitId
             )
 
             // 4) Есть ли включённая группировка в том, что пришло из репозитория?

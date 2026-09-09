@@ -19,6 +19,10 @@ public interface SettingsUIDao {
     @Query("SELECT * FROM settings_ui WHERE table_db = :tableDB AND context_tag = :contextTag")
     SettingsUISDB getTableByContext(String tableDB, String contextTag);
 
+    @Query("DELETE FROM settings_ui WHERE table_db = :tableDB " +
+            "AND substr(context_tag, 1, length(:contextPrefix)) = :contextPrefix")
+    void deleteVisitSettings(String tableDB, String contextPrefix);
+
     @Query("SELECT * FROM settings_ui WHERE id = :id")
     SettingsUISDB getById(int id);
 

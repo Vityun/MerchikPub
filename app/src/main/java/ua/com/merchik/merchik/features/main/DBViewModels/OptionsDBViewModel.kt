@@ -4,6 +4,8 @@ import android.app.Application
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -24,6 +26,7 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolde
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import java.util.Calendar
 import javax.inject.Inject
@@ -54,6 +57,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.features.main.options.OptionItemState
+import ua.com.merchik.merchik.features.main.options.OptionsDisplayMode
 import ua.com.merchik.merchik.features.main.options.OptionsRowFactory
 
 
@@ -77,6 +81,8 @@ class OptionsDBViewModel @Inject constructor(
     val optionScroll = _optionScroll.asStateFlow()
     private var scrollSequence = 0L
     private var visitDad2 = 0L
+    override val settingsVisitId: Long?
+        get() = visitDad2.takeIf { contextUI == ContextUI.OPTIONS_IN_CONTAINER && it > 0 }
     private var optionsJob: Job? = null
     private var refreshPending = false
     private var recheckPending = false
@@ -395,13 +401,55 @@ class OptionsDBViewModel @Inject constructor(
         }
     }
 
+    fun settingsDisplayMode(): OptionsDisplayMode =
+        if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) {
+            repository.getSettingsUI(table.java, contextUI, settingsVisitId)?.optionsDisplayMode
+                ?: OptionsDisplayMode.ALL
+        } else {
+            OptionsDisplayMode.ALL
+        }
+
+    fun saveDisplayFilters(applyToAllVisits: Boolean, displayMode: OptionsDisplayMode) {
+        val dad2 = settingsVisitId ?: return
+        val saved = repository.getSettingsUI(table.java, contextUI, dad2) ?: SettingsUI(
+            hideFields = repository.getSettingsItemList(
+                table, contextUI, getDefaultHideUserFields(), modeUI, dad2
+            ).filterNot { it.isEnabled }.map { it.key }
+        )
+        repository.saveSettingsUI(
+            table,
+            saved.copy(optionsDisplayMode = displayMode),
+            contextUI,
+            dad2,
+            applyToAllVisits
+        )
+    }
+
     override suspend fun getItems(): List<DataItemUI> {
         if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) {
-            val titles = _optionRows.value.associate { it.id to it.title.text.toString() }
-            return repository.toItemUIList(OptionsDB::class, visibleOptions, contextUI, null)
+            val rowsById = _optionRows.value.associateBy { it.id }
+            val displayMode = settingsDisplayMode()
+            val redSignalColor = ContextCompat.getColor(
+                context ?: getApplication<Application>(), R.color.red_error
+            )
+            // Only restrict presentation: every option has already been calculated in loadOptionRows.
+            val displayedOptions = visibleOptions.filter { option ->
+                val row = rowsById[option.getID()]
+                when (displayMode) {
+                    OptionsDisplayMode.ALL -> true
+                    OptionsDisplayMode.ACTIVE -> row != null &&
+                        row.backgroundRes != R.drawable.button_bg_inactive
+                    OptionsDisplayMode.VIOLATIONS -> row != null &&
+                        row.signal.visibility == View.VISIBLE && row.signal.tint == redSignalColor
+                }
+            }
+            return repository.toItemUIList(
+                OptionsDB::class, displayedOptions, contextUI, null,
+                settingsVisitId = settingsVisitId
+            )
                 .map { item ->
                     val id = (item.rawObj.firstOrNull() as? OptionsDB)?.getID()
-                    val translatedTitle = titles[id]
+                    val translatedTitle = rowsById[id]?.title?.text?.toString()
                     item.copy(fields = item.fields.map { field ->
                         if (field.key == "option_txt" && translatedTitle != null)
                             field.copy(value = field.value.copy(value = translatedTitle))

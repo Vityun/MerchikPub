@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
@@ -44,6 +45,7 @@ import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 
@@ -51,6 +53,8 @@ import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val isVisitOptions = viewModel is OptionsDBViewModel &&
+            viewModel.contextUI == ContextUI.OPTIONS_IN_CONTAINER
 
     var offsetSizeFont by remember { mutableStateOf(viewModel.offsetSizeFonts.value) }
 
@@ -218,9 +222,14 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     Button(
                         onClick = {
-                            viewModel.saveSettings()
-                            viewModel.updateContent()
-                            viewModel.updateOffsetSizeFonts(offsetSizeFont)
+                            if (isVisitOptions) {
+                                viewModel.saveSettings(fontSizeOffset = offsetSizeFont)
+                                viewModel.updateContent()
+                            } else {
+                                viewModel.saveSettings()
+                                viewModel.updateContent()
+                                viewModel.updateOffsetSizeFonts(offsetSizeFont)
+                            }
                             onDismiss.invoke()
                         },
                         shape = RoundedCornerShape(8.dp),
