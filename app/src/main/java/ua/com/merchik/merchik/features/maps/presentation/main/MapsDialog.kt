@@ -58,10 +58,12 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.LogMpMapInput
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -69,10 +71,12 @@ import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
+import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalWorksMapSearchLocationHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
 import ua.com.merchik.merchik.features.main.Main.FilteringDialog
@@ -126,6 +130,8 @@ fun MapsDialog(
     val uiState by mainViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val contextUI = mainViewModel.contextUI
+    val optionsViewModel = mainViewModel as? OptionsDBViewModel
+    val isOptionsVisitMap = optionsViewModel != null
     val isAdditionalWorksMap =
         contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER ||
                 contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
@@ -143,6 +149,25 @@ fun MapsDialog(
 
     // 1) генерим id сессии диалога (константа на время жизни composable)
     val sessionId = remember { System.currentTimeMillis() }
+
+    var visitMapInput by remember(mainViewModel, mainViewModel.dataJson) {
+        mutableStateOf<LogMpMapInput?>(null)
+    }
+    var visitMapError by remember(mainViewModel, mainViewModel.dataJson) {
+        mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(optionsViewModel, mainViewModel.dataJson, sessionId) {
+        if (optionsViewModel == null) return@LaunchedEffect
+        try {
+            visitMapInput = optionsViewModel.loadVisitMapInput()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Globals.writeToMLOG("ERROR", "OptionsDBViewModel/map",
+                "dataJson=${mainViewModel.dataJson}, error=$error")
+            visitMapError = error.message ?: "Не вдалося завантажити дані карти."
+        }
+    }
 
     var showToolTip by remember { mutableStateOf(false) }
     var notReadyMenu by remember { mutableStateOf(false) }
@@ -182,9 +207,9 @@ fun MapsDialog(
         .withLocale(Locale.getDefault())
 
 // Decide scenario once per input
-    val hasLogCenter by remember(uiState.items) {
+    val hasLogCenter by remember(uiState.items, isOptionsVisitMap) {
         mutableStateOf(
-            uiState.items.firstOrNull {
+            isOptionsVisitMap || uiState.items.firstOrNull {
                 it.rawFields.stringByKey("log_addr_location_xd")?.parseDoubleSafe() != null &&
                         it.rawFields.stringByKey("log_addr_location_yd")?.parseDoubleSafe() != null
             } != null
@@ -193,7 +218,9 @@ fun MapsDialog(
 
 
     val vm: BaseMapViewModel =
-        if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>() else hiltViewModel<MapFromWPdataViewModel>()
+        if (isOptionsVisitMap) hiltViewModel<MapFromMapsViewModel>(key = "options-visit-map")
+        else if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>()
+        else hiltViewModel<MapFromWPdataViewModel>()
 
     // 1) Подписываемся на состояние карты
     val mapState by vm.state.collectAsState()
@@ -272,7 +299,13 @@ fun MapsDialog(
     }
 
 // определяем время
-    val startTime = remember {
+    val startTime = remember(visitMapInput) {
+
+        visitMapInput?.let { input ->
+            return@remember Instant.ofEpochMilli(input.startMillis)
+                .atZone(ZoneId.systemDefault())
+                .format(formatterHHdd_DDmmYYYY)
+        }
 
         val startMillis =
             if (wpDataDB != null && wpDataDB.visit_start_dt > 0 && wpDataDB.visit_end_dt > 0) {
@@ -289,7 +322,13 @@ fun MapsDialog(
             .format(formatterHHdd_DDmmYYYY)
     }
 
-    val endTime = remember {
+    val endTime = remember(visitMapInput) {
+
+        visitMapInput?.let { input ->
+            return@remember Instant.ofEpochMilli(input.endMillis)
+                .atZone(ZoneId.systemDefault())
+                .format(formatterHHdd_DDmmYYYY)
+        }
 
         val endMillis = if (wpDataDB != null && wpDataDB.visit_end_dt > 0) {
             wpDataDB.visit_end_dt
@@ -314,7 +353,9 @@ fun MapsDialog(
         isFromMaps,
         isRnoUserOnMap,
         periodStrt,
-        periodEnd
+        periodEnd,
+        startTime,
+        endTime
     ) {
         when {
             // 1) FromWPdata + user 14041  — "Додатковий заробіток."
@@ -551,6 +592,19 @@ fun MapsDialog(
             }
         }
     }
+    // Visit history is already scoped by dad2 and period, not by the options list filters.
+    LaunchedEffect(visitMapInput, vm, sessionId, Globals.CoordX, Globals.CoordY) {
+        val input = visitMapInput ?: return@LaunchedEffect
+        vm.process(MapIntent.SetPointsInput(
+            center = input.center,
+            points = input.points,
+            userLat = Globals.CoordX,
+            userLon = Globals.CoordY,
+            distanceMeters = null,
+            autoCenterOnSetInput = false
+        ))
+    }
+
     // Подаём вход — но запрещаем авто-фит на SetInput
     LaunchedEffect(
         uiState.items,
@@ -567,9 +621,11 @@ fun MapsDialog(
         vm,
         sessionId,
         distance,
+        isOptionsVisitMap,
         isCustomAditionalAddressMap,
         customAditionalAddressMapDistance
     ) {
+        if (isOptionsVisitMap) return@LaunchedEffect
         vm.process(
             MapIntent.SetInput(
                 items = uiState.items,
@@ -760,44 +816,57 @@ fun MapsDialog(
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.White)
                 ) {
-                    StoresMap(
-                        cameraPositionState = cameraController,
-                        vm = vm,
-                        searchMarker = if (isAdditionalWorksMap) mapSearchMarker else null,
-                        onMapClick = if (isAdditionalWorksMap) {
-                            { latLng ->
-                                val clickedMarker = createAdditionalWorksSearchMarker(
-                                    position = latLng,
-                                    title = formatMapPoint(latLng)
-                                )
-                                setAdditionalWorksSearchMarker(clickedMarker)
-                                scope.launch {
-                                    val markerWithAddress = createAdditionalWorksSearchMarker(
+                    if (isOptionsVisitMap && visitMapInput == null) {
+                        val error = visitMapError
+                        if (error != null) {
+                            Text(error, modifier = Modifier.align(Alignment.Center).padding(16.dp))
+                        } else {
+                            LineSpinFadeLoaderIndicator(
+                                color = Color.Gray,
+                                modifier = Modifier.align(Alignment.Center).size(36.dp),
+                                radius = 12f, elementHeight = 5f, penThickness = 3f
+                            )
+                        }
+                    } else {
+                        StoresMap(
+                            cameraPositionState = cameraController,
+                            vm = vm,
+                            searchMarker = if (isAdditionalWorksMap) mapSearchMarker else null,
+                            onMapClick = if (isAdditionalWorksMap) {
+                                { latLng ->
+                                    val clickedMarker = createAdditionalWorksSearchMarker(
                                         position = latLng,
-                                        title = findAddressTitleByLatLng(context, latLng)
-                                            ?: formatMapPoint(latLng)
+                                        title = formatMapPoint(latLng)
                                     )
-                                    if (mapSearchMarker?.position.sameLatLng(latLng)) {
-                                        setAdditionalWorksSearchMarker(markerWithAddress)
+                                    setAdditionalWorksSearchMarker(clickedMarker)
+                                    scope.launch {
+                                        val markerWithAddress = createAdditionalWorksSearchMarker(
+                                            position = latLng,
+                                            title = findAddressTitleByLatLng(context, latLng)
+                                                ?: formatMapPoint(latLng)
+                                        )
+                                        if (mapSearchMarker?.position.sameLatLng(latLng)) {
+                                            setAdditionalWorksSearchMarker(markerWithAddress)
+                                        }
                                     }
                                 }
+                            } else {
+                                null
+                            },
+                            onSearchAreaClick = if (isAdditionalWorksMap) {
+                                { marker ->
+                                    pendingAdditionalWorksSearchMarker = marker
+                                }
+                            } else {
+                                null
+                            },
+                            focusUserRadiusMeters = if (isCustomAditionalAddressMap) {
+                                customAditionalAddressMapDistance
+                            } else {
+                                null
                             }
-                        } else {
-                            null
-                        },
-                        onSearchAreaClick = if (isAdditionalWorksMap) {
-                            { marker ->
-                                pendingAdditionalWorksSearchMarker = marker
-                            }
-                        } else {
-                            null
-                        },
-                        focusUserRadiusMeters = if (isCustomAditionalAddressMap) {
-                            customAditionalAddressMapDistance
-                        } else {
-                            null
-                        }
-                    )
+                        )
+                    }
                 }
 
 

@@ -8,9 +8,10 @@ import ua.com.merchik.merchik.R;
 /** Presentation only: no Android widgets or managed Realm objects. */
 public final class OptionItemState {
     public final String id;
-    public final String optionId;
+    public final String optionIdValue;
     public final String controlId;
     public final TextPart title = new TextPart();
+    public final TextPart optionId = new TextPart();
     public final TextPart counter = new TextPart();
     public final TextPart secondaryCounter = new TextPart();
     public final Signal signal = new Signal();
@@ -20,7 +21,9 @@ public final class OptionItemState {
 
     public OptionItemState(String id, String optionId, String controlId) {
         this.id = id;
-        this.optionId = optionId;
+        this.optionIdValue = optionId;
+        this.optionId.text = optionId == null ? "" : optionId;
+        this.optionId.visibility = optionId == null || optionId.isEmpty() ? View.GONE : View.VISIBLE;
         this.controlId = controlId;
         secondaryCounter.visibility = View.GONE;
     }

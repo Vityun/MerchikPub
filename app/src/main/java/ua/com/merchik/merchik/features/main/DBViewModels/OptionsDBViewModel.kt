@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.LogMpMapInput
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.loadLogMpMapInput
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
@@ -149,6 +151,17 @@ class OptionsDBViewModel @Inject constructor(
     override fun updateContent() {
         if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) refreshOptions(true)
         else super.updateContent()
+    }
+
+    internal suspend fun loadVisitMapInput(): LogMpMapInput {
+        val dad2: Long? = if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) {
+            visitDad2
+        } else {
+            Gson().fromJson(dataJson, Long::class.java)
+        }
+        val wp = dad2?.takeIf { it > 0L }?.let { WpDataRealm.getWpDataRowByDad2Id(it) }
+            ?: error("Немає даних відвідування для відкриття карти.")
+        return loadLogMpMapInput(wp)
     }
 
     fun refreshOptions(recheck: Boolean) {
@@ -292,7 +305,7 @@ class OptionsDBViewModel @Inject constructor(
             }
             action?.onClick(view)
         } catch (error: Exception) {
-            Globals.writeToMLOG("ERROR", "OptionsDBViewModel/click", "option=${row.optionId}, target=$target, error=$error")
+            Globals.writeToMLOG("ERROR", "OptionsDBViewModel/click", "option=${row.optionIdValue}, target=$target, error=$error")
         }
     }
 

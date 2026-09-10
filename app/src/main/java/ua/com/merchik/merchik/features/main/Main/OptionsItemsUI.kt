@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -101,7 +102,7 @@ fun OptionsItemsUI(
         if (handledScroll == request.sequence) return@LaunchedEffect
         val index = visibleRows.indexOfFirst { it.id == request.id }.takeIf { it >= 0 }
             ?: visibleRows.indexOfFirst { it.controlId == request.optionId }.takeIf { it >= 0 }
-            ?: visibleRows.indexOfFirst { it.optionId == request.optionId }.takeIf { it >= 0 }
+            ?: visibleRows.indexOfFirst { it.optionIdValue == request.optionId }.takeIf { it >= 0 }
             ?: return@LaunchedEffect
         val groupIndex = groups.indexOfFirst { index in it.startIndex until it.endIndexExclusive }
         listState.animateScrollToItem(if (groupIndex >= 0) groupIndex else index)
@@ -225,7 +226,15 @@ private fun OptionItemUI(
                 RoundCheckbox(aroundColor = Color.Transparent, checked = selected,
                     onCheckedChange = onCheckedChange)
             }
-            OptionText(row.title, Modifier.weight(1f).padding(vertical = 16.dp), null, 0.dp)
+            Column(
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                OptionText(row.title, Modifier, null, 0.dp,
+                    textStyle = TextStyle(fontWeight = FontWeight.SemiBold))
+                OptionText(row.optionId, Modifier, null, 0.dp)
+            }
             Column(Modifier.padding(start = 8.dp, end = 8.dp).widthIn(max = 120.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 OptionText(row.counter, Modifier, if (enabled && row.counter.onClick != null) {
@@ -301,7 +310,13 @@ fun OptionsReportButton(viewModel: OptionsDBViewModel, modifier: Modifier = Modi
 }
 
 @Composable
-private fun OptionText(part: OptionItemState.TextPart, modifier: Modifier, onClick: (() -> Unit)?, padding: Dp = 8.dp) {
+private fun OptionText(
+    part: OptionItemState.TextPart,
+    modifier: Modifier,
+    onClick: (() -> Unit)?,
+    padding: Dp = 8.dp,
+    textStyle: TextStyle? = null
+) {
     if (part.visibility == View.GONE) return
     val annotated = remember(part.text) {
         (part.text as? Spanned)?.toAnnotatedString() ?: AnnotatedString(part.text.toString())
@@ -311,7 +326,8 @@ private fun OptionText(part: OptionItemState.TextPart, modifier: Modifier, onCli
         color = Color(0xFF424242),
         fontSize = 14.sp,
         lineHeight = 18.sp,
-        fontWeight = if (part.bold) FontWeight.Bold else FontWeight.Normal,
+        style = textStyle ?: TextStyle.Default,
+        fontWeight = textStyle?.fontWeight ?: if (part.bold) FontWeight.Bold else FontWeight.Normal,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier.alpha(if (part.visibility == View.VISIBLE) 1f else 0f)

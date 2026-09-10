@@ -186,6 +186,8 @@ public final class OptionsRowFactory<T> {
                 buttText = siteObjectsSDB.commentsTranslation;
             }
 
+            buttText = buttText == null ? "" : buttText.replace("&quot;", "").replace("\"", "");
+
             if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
                 textTitle.text = "" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>");
             } else {

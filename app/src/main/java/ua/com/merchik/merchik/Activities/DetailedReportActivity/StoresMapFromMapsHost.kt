@@ -133,9 +133,11 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
     }
 }
 
-private data class LogMpMapInput(
+internal data class LogMpMapInput(
     val center: StoreCenter?,
-    val points: List<StorePoint>
+    val points: List<StorePoint>,
+    val startMillis: Long,
+    val endMillis: Long
 )
 
 private data class LogMpMapRequest(
@@ -144,7 +146,7 @@ private data class LogMpMapRequest(
     val center: StoreCenter?
 )
 
-private suspend fun loadLogMpMapInput(wpData: WpDataDB): LogMpMapInput {
+internal suspend fun loadLogMpMapInput(wpData: WpDataDB): LogMpMapInput {
     val request = buildLogMpMapRequest(wpData)
 
     return withContext(Dispatchers.IO) {
@@ -185,7 +187,9 @@ private suspend fun loadLogMpMapInput(wpData: WpDataDB): LogMpMapInput {
 
             LogMpMapInput(
                 center = request.center,
-                points = points
+                points = points,
+                startMillis = request.startMillis,
+                endMillis = request.endMillis
             )
         } finally {
             realm.close()
