@@ -628,16 +628,6 @@ public class OptionControlEKL<T> extends OptionControl {
             @Override
             public void onSuccess(String data) {
                 signal = false;
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    if (optionDB != null) {
-                        if (signal) {
-                            optionDB.setBlockPns("1");
-                        } else {
-                            optionDB.setIsSignal("0");
-                        }
-                        realm.insertOrUpdate(optionDB);
-                    }
-                });
                 setIsBlockOption(signal);
                 unlockCodeResultListener.onUnlockCodeSuccess();
             }

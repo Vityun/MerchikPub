@@ -147,11 +147,6 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
 
         spannableStringBuilder.append(massageToUser);
 
-        // ===== 5.1. код разблокировки (в 1С он проверяется только если сигнал=1) =====
-        if (signal) {
-            checkUnlockCode(optionDB);
-        }
-
         // ===== 5.2. блокировать только если сигнал и включена блокировка опцией =====
         boolean shouldBlock = signal && isBlockPnsEnabled();
         setIsBlockOption(shouldBlock);
@@ -170,6 +165,11 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
+
+        // 5.1. Код применяем после сохранения, чтобы расчёт не перезаписал разблокировку.
+        if (signal) {
+            checkUnlockCode(optionDB);
+        }
 
         Log.d("test", "massageToUser: " + massageToUser);
         Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
@@ -307,11 +307,10 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         spannableStringBuilder.clear();
         spannableStringBuilder.append(massageToUser);
 
-        if (signal) checkUnlockCode(optionDB);
-
         boolean shouldBlock = signal && isBlockPnsEnabled();
         setIsBlockOption(shouldBlock);
 
         saveOption(signal ? "1" : "2");
+        if (signal) checkUnlockCode(optionDB);
     }
 }

@@ -252,7 +252,10 @@ class MainRepository(
                             )
                         },
                         // 👇 логика видимости оставлена как была
-                        isEnabled = if (key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+                        isEnabled = if (key == IMAGE_DISPLAY_MODE_SETTINGS_KEY ||
+                            (klass == OptionsDB::class && contextUI == ContextUI.OPTIONS_IN_CONTAINER &&
+                                    key == "option_txt")
+                        ) {
                             true
                         } else {
                             hideUserFields?.contains(key) != true
@@ -278,35 +281,22 @@ class MainRepository(
         klass: KClass<T>,
         settingsUI: SettingsUI,
         contextUI: ContextUI?,
-        settingsVisitId: Long? = null,
-        applyToAllVisits: Boolean? = null
+        settingsVisitId: Long? = null
     ) {
         val database = RoomManager.SQL_DB
         database.runInTransaction {
-            val applyAll = settingsVisitId != null && (applyToAllVisits
-                ?: (getSettingsUI(klass.java, contextUI, settingsVisitId)?.applyToAllVisits == true))
-            val contextTAG = if (settingsVisitId != null && !applyAll) {
+            val contextTAG = if (settingsVisitId != null) {
                 settingsVisitTag(contextUI, settingsVisitId)
             } else {
                 contextUI?.name ?: ContextUI.DEFAULT.name
-            }
-            val snapshot = if (settingsVisitId != null) {
-                settingsUI.copy(applyToAllVisits = applyAll)
-            } else {
-                settingsUI
             }
             val dao = database.settingsUIDao()
             val settingsUISDB = dao.getTableByContext(klass.java.simpleName, contextTAG)
                 ?: SettingsUISDB()
             settingsUISDB.contextTAG = contextTAG
             settingsUISDB.tableDB = klass.java.simpleName
-            settingsUISDB.settingsJson = Gson().toJson(snapshot)
+            settingsUISDB.settingsJson = Gson().toJson(settingsUI)
             dao.insert(settingsUISDB)
-
-            if (applyAll) {
-                // Existing visit overrides must not mask the new common settings.
-                dao.deleteVisitSettings(klass.java.simpleName, settingsVisitPrefix(contextUI))
-            }
         }
     }
 

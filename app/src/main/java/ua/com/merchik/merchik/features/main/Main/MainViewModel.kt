@@ -73,7 +73,6 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
-import ua.com.merchik.merchik.features.main.options.OptionsDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.dataLayer.withContainerBackground
@@ -126,10 +125,16 @@ data class Filters(
     val selectedMode: SelectedMode = SelectedMode.ALL
 )
 
+data class ItemFilterChoice(
+    val key: String,
+    val title: String,
+    val rawValues: List<String> = listOf(key)
+)
+
 data class ItemFilter(
     val title: String,
     val clazz: KClass<out DataObjectUI>,
-    val clazzViewModel: KClass<out MainViewModel>,
+    val clazzViewModel: KClass<out MainViewModel>? = null,
     val modeUI: ModeUI,
     val titleContext: String,
     val subTitleContext: String,
@@ -138,12 +143,38 @@ data class ItemFilter(
     val rightValuesRaw: List<String?>,
     val rightValuesUI: List<String?>,
     val enabled: Boolean,
-    val excludeMode: Boolean = false
+    val excludeMode: Boolean = false,
+    val choices: List<ItemFilterChoice>? = null,
+    val defaultChoiceKey: String? = null,
+    val key: String = "${clazz.java.name}:$leftField",
+    val isPinned: Boolean? = null // null: this filter has no pin control.
 ) {
+    val defaultChoice: ItemFilterChoice?
+        get() = choices?.firstOrNull { it.key == defaultChoiceKey } ?: choices?.firstOrNull()
+
+    val selectedChoice: ItemFilterChoice?
+        get() = choices?.firstOrNull { it.rawValues == rightValuesRaw } ?: defaultChoice
+
+    fun selectChoice(choice: ItemFilterChoice): ItemFilter {
+        val available = choices?.firstOrNull { it.key == choice.key } ?: return this
+        return copy(rightValuesRaw = available.rawValues, rightValuesUI = listOf(available.title))
+    }
+
+    fun clearValues(): ItemFilter = defaultChoice?.let { selectChoice(it) }
+        ?: copy(rightValuesRaw = emptyList(), rightValuesUI = emptyList())
+
+    fun onPinChanged(pinned: Boolean): ItemFilter {
+        if (!enabled || choices == null || isPinned == null) return this
+        // UI state only; pinning does not affect filtering or persistence yet.
+        return copy(isPinned = pinned)
+    }
+
     fun onSelect(activity: Activity) {
+        if (!enabled || choices != null) return
+        val targetViewModel = clazzViewModel ?: return
         val intent = Intent(activity, FeaturesActivity::class.java)
         val bundle = Bundle()
-        bundle.putString("viewModel", clazzViewModel.java.canonicalName)
+        bundle.putString("viewModel", targetViewModel.java.canonicalName)
         bundle.putString("modeUI", modeUI.toString())
         bundle.putString("title", titleContext)
         bundle.putString("subTitle", subTitleContext)
@@ -174,9 +205,7 @@ data class SettingsUI(
     val groupFields: List<GroupingField>? = null,
     val sizeFonts: Int? = null,
     val imageDisplayMode: ImageDisplayMode? = null,
-    val applyToAllVisits: Boolean = false,
-    val fontSizeOffset: Float? = null,
-    val optionsDisplayMode: OptionsDisplayMode? = null
+    val fontSizeOffset: Float? = null
 )
 
 data class GroupingField(
@@ -1118,12 +1147,7 @@ abstract class MainViewModel(
 
     protected open val settingsVisitId: Long? get() = null
 
-    fun settingsApplyToAllVisits(): Boolean = settingsVisitId?.let {
-        repository.getSettingsUI(table.java, contextUI, it)?.applyToAllVisits
-    } == true
-
     fun saveSettings(
-        applyToAllVisits: Boolean? = null,
         fontSizeOffset: Float? = null
     ) {
         viewModelScope.launch {
@@ -1132,7 +1156,7 @@ abstract class MainViewModel(
                 ?.imageDisplayMode
                 ?: uiState.value.imageDisplayMode
 
-            saveSettingsSnapshot(displayMode, applyToAllVisits, fontSizeOffset)
+            saveSettingsSnapshot(displayMode, fontSizeOffset)
         }
     }
 
@@ -1158,7 +1182,6 @@ abstract class MainViewModel(
 
     private fun saveSettingsSnapshot(
         displayMode: ImageDisplayMode,
-        applyToAllVisits: Boolean? = null,
         fontSizeOffset: Float? = null
     ) {
         repository.saveSettingsUI(
@@ -1176,16 +1199,10 @@ abstract class MainViewModel(
                     fontSizeOffset ?: offsetSizeFonts.value
                 } else {
                     null
-                },
-                optionsDisplayMode = if (settingsVisitId != null) {
-                    repository.getSettingsUI(table.java, contextUI, settingsVisitId)?.optionsDisplayMode
-                } else {
-                    null
                 }
             ),
             contextUI,
-            settingsVisitId,
-            applyToAllVisits
+            settingsVisitId
         )
         if (settingsVisitId != null && fontSizeOffset != null) {
             _offsetSizeFonts.value = fontSizeOffset

@@ -159,7 +159,9 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         )
                         HorizontalDivider(thickness = 1.dp)
 
-                        val items = uiState.settingsItems
+                        val items = uiState.settingsItems.filterNot {
+                            isVisitOptions && it.key == "filter_select"
+                        }
 
 // индекс последнего элемента из HEADER_KEYS (учитывая что id_res_image может отсутствовать)
                         val lastHeaderIndex = remember(items) {
@@ -174,6 +176,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                                 SettingsItemView(
                                     item = itemSettingsUI,
+                                    enabled = !(isVisitOptions && itemSettingsUI.key == "option_txt"),
                                     onItemChanged = viewModel::updateSettingsItem
                                 )
 

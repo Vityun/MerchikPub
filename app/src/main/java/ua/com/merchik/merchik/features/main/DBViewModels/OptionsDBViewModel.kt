@@ -23,12 +23,14 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
+import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
+import ua.com.merchik.merchik.features.main.Main.ItemFilterChoice
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import java.util.Calendar
 import javax.inject.Inject
@@ -59,7 +61,6 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.features.main.options.OptionItemState
-import ua.com.merchik.merchik.features.main.options.OptionsDisplayMode
 import ua.com.merchik.merchik.features.main.options.OptionsRowFactory
 
 
@@ -70,6 +71,16 @@ class OptionsDBViewModel @Inject constructor(
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
+
+    private companion object {
+        const val DISPLAY_FILTER_FIELD = "option_display_state"
+        const val STATE_ACTIVE = "active"
+        const val STATE_INACTIVE = "inactive"
+        const val STATE_ACTIVE_VIOLATION = "active_violation"
+        const val STATE_INACTIVE_VIOLATION = "inactive_violation"
+        const val STATE_ACTIVE_GREEN = "active_green"
+        const val STATE_INACTIVE_GREEN = "inactive_green"
+    }
 
     private val _optionRows = MutableStateFlow<List<OptionItemState>>(emptyList())
     val optionRows = _optionRows.asStateFlow()
@@ -365,6 +376,35 @@ class OptionsDBViewModel @Inject constructor(
             val previous = uiState.value.filters?.takeIf { state ->
                 state.items.any { it.leftField == "code_dad2" && it.rightValuesRaw == listOf(dad2) }
             } ?: Filters()
+            val displayFilter = ItemFilter(
+                title = "Режим відображення",
+                clazz = OptionsDB::class,
+                modeUI = ModeUI.ONE_SELECT,
+                titleContext = "Режим відображення",
+                subTitleContext = "",
+                leftField = DISPLAY_FILTER_FIELD,
+                rightField = DISPLAY_FILTER_FIELD,
+                rightValuesRaw = emptyList(),
+                rightValuesUI = emptyList(),
+                enabled = true,
+                choices = listOf(
+                    ItemFilterChoice("all", "Усі", emptyList()),
+                    ItemFilterChoice("active", "За замовчуванням",
+                        listOf(STATE_ACTIVE, STATE_ACTIVE_VIOLATION, STATE_ACTIVE_GREEN)),
+                    ItemFilterChoice("green", "Де сигналу немає",
+                        listOf(STATE_ACTIVE_GREEN, STATE_INACTIVE_GREEN)),
+                    ItemFilterChoice("violations", "Де є сигнал",
+                        listOf(STATE_ACTIVE_VIOLATION, STATE_INACTIVE_VIOLATION))
+                ),
+                defaultChoiceKey = "active",
+                isPinned = false
+            )
+            val previousDisplay = previous.items.firstOrNull { it.key == displayFilter.key }
+            val selectedChoice = displayFilter.choices?.firstOrNull {
+                it.rawValues == previousDisplay?.rightValuesRaw
+            }
+            val selectedDisplayFilter = (selectedChoice?.let(displayFilter::selectChoice)
+                ?: displayFilter.clearValues()).copy(isPinned = previousDisplay?.isPinned ?: false)
             filters = previous.copy(
                 items = listOf(ItemFilter(
                     title = "Відвідування",
@@ -378,7 +418,7 @@ class OptionsDBViewModel @Inject constructor(
                     rightValuesRaw = listOf(dad2),
                     rightValuesUI = listOf(dad2),
                     enabled = false
-                )),
+                ), selectedDisplayFilter),
                 rangeDataByKey = null
             )
             return
@@ -414,60 +454,50 @@ class OptionsDBViewModel @Inject constructor(
         }
     }
 
-    fun settingsDisplayMode(): OptionsDisplayMode =
-        if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) {
-            repository.getSettingsUI(table.java, contextUI, settingsVisitId)?.optionsDisplayMode
-                ?: OptionsDisplayMode.ALL
-        } else {
-            OptionsDisplayMode.ALL
-        }
-
-    fun saveDisplayFilters(applyToAllVisits: Boolean, displayMode: OptionsDisplayMode) {
-        val dad2 = settingsVisitId ?: return
-        val saved = repository.getSettingsUI(table.java, contextUI, dad2) ?: SettingsUI(
-            hideFields = repository.getSettingsItemList(
-                table, contextUI, getDefaultHideUserFields(), modeUI, dad2
-            ).filterNot { it.isEnabled }.map { it.key }
-        )
-        repository.saveSettingsUI(
-            table,
-            saved.copy(optionsDisplayMode = displayMode),
-            contextUI,
-            dad2,
-            applyToAllVisits
-        )
-    }
-
     override suspend fun getItems(): List<DataItemUI> {
         if (contextUI == ContextUI.OPTIONS_IN_CONTAINER) {
             val rowsById = _optionRows.value.associateBy { it.id }
-            val displayMode = settingsDisplayMode()
             val redSignalColor = ContextCompat.getColor(
                 context ?: getApplication<Application>(), R.color.red_error
             )
-            // Only restrict presentation: every option has already been calculated in loadOptionRows.
-            val displayedOptions = visibleOptions.filter { option ->
-                val row = rowsById[option.getID()]
-                when (displayMode) {
-                    OptionsDisplayMode.ALL -> true
-                    OptionsDisplayMode.ACTIVE -> row != null &&
-                        row.backgroundRes != R.drawable.button_bg_inactive
-                    OptionsDisplayMode.VIOLATIONS -> row != null &&
-                        row.signal.visibility == View.VISIBLE && row.signal.tint == redSignalColor
-                }
-            }
+            val greenSignalColor = ContextCompat.getColor(
+                context ?: getApplication<Application>(), R.color.green_default
+            )
             return repository.toItemUIList(
-                OptionsDB::class, displayedOptions, contextUI, null,
+                OptionsDB::class, visibleOptions, contextUI, null,
                 settingsVisitId = settingsVisitId
             )
                 .map { item ->
                     val id = (item.rawObj.firstOrNull() as? OptionsDB)?.getID()
-                    val translatedTitle = rowsById[id]?.title?.text?.toString()
-                    item.copy(fields = item.fields.map { field ->
-                        if (field.key == "option_txt" && translatedTitle != null)
-                            field.copy(value = field.value.copy(value = translatedTitle))
-                        else field
-                    })
+                    val row = rowsById[id]
+                    val translatedTitle = row?.title?.text?.toString()
+                    val active = row != null && row.backgroundRes != R.drawable.button_bg_inactive
+                    val violation = row != null && row.signal.visibility == View.VISIBLE &&
+                        row.signal.tint == redSignalColor
+                    val greenSignal = row != null && row.signal.visibility == View.VISIBLE &&
+                        row.signal.tint == greenSignalColor
+                    val displayState = when {
+                        active && violation -> STATE_ACTIVE_VIOLATION
+                        active && greenSignal -> STATE_ACTIVE_GREEN
+                        active -> STATE_ACTIVE
+                        violation -> STATE_INACTIVE_VIOLATION
+                        greenSignal -> STATE_INACTIVE_GREEN
+                        else -> STATE_INACTIVE
+                    }
+                    // Filter metadata only: keep it out of the visible card fields and database.
+                    val displayField = FieldValue(
+                        key = DISPLAY_FILTER_FIELD,
+                        field = TextField(DISPLAY_FILTER_FIELD, "Режим відображення"),
+                        value = TextField(displayState, displayState)
+                    )
+                    item.copy(
+                        fields = item.fields.map { field ->
+                            if (field.key == "option_txt" && translatedTitle != null)
+                                field.copy(value = field.value.copy(value = translatedTitle))
+                            else field
+                        },
+                        rawFields = item.rawFields.filterNot { it.key == DISPLAY_FILTER_FIELD } + displayField
+                    )
                 }
         }
         Log.e("OpinionSDBViewModel", "++++")

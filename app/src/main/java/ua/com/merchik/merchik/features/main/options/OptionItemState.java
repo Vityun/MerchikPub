@@ -31,8 +31,13 @@ public final class OptionItemState {
     public static final class TextPart {
         public CharSequence text = "";
         public boolean bold;
+        public boolean monetary;
         public int visibility = View.VISIBLE;
         public View.OnClickListener onClick;
+
+        public boolean shouldDisplay(boolean showMonetaryValues) {
+            return visibility != View.GONE && (showMonetaryValues || !monetary);
+        }
     }
 
     public static final class Signal {

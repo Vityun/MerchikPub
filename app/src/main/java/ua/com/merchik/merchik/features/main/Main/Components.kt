@@ -41,6 +41,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -321,6 +322,7 @@ private fun ItemTextField(
 @Composable
 fun SettingsItemView(
     item: SettingsItemUI,
+    enabled: Boolean = true,
     onItemChanged: (SettingsItemUI) -> Unit = {}
 ) {
     var isChecked by remember(item.key, item.isEnabled) { mutableStateOf(item.isEnabled) }
@@ -345,7 +347,7 @@ fun SettingsItemView(
                 mode = imageDisplayMode,
                 modifier = Modifier
                     .padding(end = 8.dp, top = 6.dp, bottom = 6.dp)
-                    .clickable {
+                    .clickable(enabled = enabled) {
                         val nextMode = imageDisplayMode.next()
                         imageDisplayMode = nextMode
                         item.imageDisplayMode = nextMode
@@ -355,6 +357,10 @@ fun SettingsItemView(
         } else {
             Checkbox(
                 checked = isChecked,
+                enabled = enabled,
+                colors = CheckboxDefaults.colors(
+                    disabledCheckedColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                ),
                 onCheckedChange = { checked ->
                     isChecked = checked
                     item.isEnabled = checked

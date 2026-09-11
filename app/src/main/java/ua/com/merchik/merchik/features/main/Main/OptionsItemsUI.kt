@@ -54,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
@@ -83,6 +85,11 @@ fun OptionsItemsUI(
 ) {
     val rows by viewModel.optionRows.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val isVisitOptions = viewModel.contextUI == ContextUI.OPTIONS_IN_CONTAINER
+    val showOptionId = !isVisitOptions ||
+        uiState.settingsItems.firstOrNull { it.key == "option_id" }?.isEnabled != false
+    val showMonetaryValues = !isVisitOptions ||
+        uiState.settingsItems.firstOrNull { it.key == "sum_penalty" }?.isEnabled != false
     val loading by viewModel.optionsLoading.collectAsState()
     val error by viewModel.optionsError.collectAsState()
     val scrollRequest by viewModel.optionScroll.collectAsState()
@@ -141,6 +148,8 @@ fun OptionsItemsUI(
                 OptionItemUI(
                     row = row,
                     enabled = !loading,
+                    showOptionId = showOptionId,
+                    showMonetaryValues = showMonetaryValues,
                     selected = item.selected,
                     showSelection = viewModel.modeUI == ModeUI.FILTER_SELECT ||
                         viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT,
@@ -192,6 +201,8 @@ fun OptionsItemsUI(
 private fun OptionItemUI(
     row: OptionItemState,
     enabled: Boolean,
+    showOptionId: Boolean,
+    showMonetaryValues: Boolean,
     selected: Boolean,
     showSelection: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -208,6 +219,9 @@ private fun OptionItemUI(
         }
     }
     val inactive = row.backgroundRes == R.drawable.button_bg_inactive
+    val displayOptionId = showOptionId && row.optionId.visibility != View.GONE
+    val displayCounter = row.counter.shouldDisplay(showMonetaryValues)
+    val displaySecondaryCounter = row.secondaryCounter.shouldDisplay(showMonetaryValues)
     val shape = RoundedCornerShape(8.dp)
     Box(
         Modifier.fillMaxWidth().graphicsLayer { scaleX = scale.value; scaleY = scale.value }
@@ -231,18 +245,29 @@ private fun OptionItemUI(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                OptionText(row.title, Modifier, null, 0.dp,
-                    textStyle = TextStyle(fontWeight = FontWeight.SemiBold))
-                OptionText(row.optionId, Modifier, null, 0.dp)
+                OptionText(row.title, Modifier.fillMaxWidth(), null, 0.dp,
+                    textStyle = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Start
+                    ))
+                if (displayOptionId) {
+                    OptionText(row.optionId, Modifier, null, 0.dp)
+                }
             }
-            Column(Modifier.padding(start = 8.dp, end = 8.dp).widthIn(max = 120.dp),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                OptionText(row.counter, Modifier, if (enabled && row.counter.onClick != null) {
-                    { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER) }
-                } else null)
-                OptionText(row.secondaryCounter, Modifier, if (enabled && row.secondaryCounter.onClick != null) {
-                    { onClick(OptionsDBViewModel.OptionClickTarget.SECONDARY_COUNTER) }
-                } else null)
+            if (displayCounter || displaySecondaryCounter) {
+                Column(Modifier.padding(start = 8.dp, end = 16.dp).widthIn(max = 120.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (displayCounter) {
+                        OptionText(row.counter, Modifier, if (enabled && row.counter.onClick != null) {
+                            { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER) }
+                        } else null)
+                    }
+                    if (displaySecondaryCounter) {
+                        OptionText(row.secondaryCounter, Modifier, if (enabled && row.secondaryCounter.onClick != null) {
+                            { onClick(OptionsDBViewModel.OptionClickTarget.SECONDARY_COUNTER) }
+                        } else null)
+                    }
+                }
             }
             Image(
                 painter = painterResource(row.signal.iconRes),

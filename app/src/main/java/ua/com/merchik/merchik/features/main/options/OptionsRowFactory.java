@@ -277,8 +277,10 @@ public final class OptionsRowFactory<T> {
                 if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
                     if (optionId == 132666 || optionId == 132812)
                         textInteger2.visibility = View.INVISIBLE;
-                    else
+                    else {
+                        textInteger2.monetary = true;
                         textInteger2.text = counter2Text(optionId);
+                    }
                 } else {
                     if (optionId == 133382) {
                         textInteger2.visibility = View.VISIBLE;
@@ -289,6 +291,7 @@ public final class OptionsRowFactory<T> {
                         SpannableString text = CustomString.underlineString("+" + salary / 10 + ".0 грн.", optionsButtons);
                         text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+                        textInteger2.monetary = true;
                         textInteger2.text = text;
                         textInteger2.onClick = v -> {
                             DialogData dialog = new DialogData(mContext);
@@ -298,6 +301,7 @@ public final class OptionsRowFactory<T> {
                             dialog.show();
                         };
                     } else if (optionId == 84007 && optionsButtons.getIsSignal().equals("1")) {
+                        textInteger2.monetary = true;
                         textInteger2.text = counter2EKLText();
                     } else {
                         textInteger2.visibility = View.GONE;
@@ -311,6 +315,7 @@ public final class OptionsRowFactory<T> {
 
                     SpannableString text = CustomString.underlineString("+" + bonus.getSecond() + " грн.", optionsButtons);
                     text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    textInteger2.monetary = true;
                     textInteger2.text = text;
                     textInteger2.onClick = new View.OnClickListener() {
                         @Override
@@ -982,6 +987,7 @@ public final class OptionsRowFactory<T> {
 
                     case 141888: // "Выкуп Товара с ТТ"
                         String counter141888 = DetailedReportActivity.rpTotalSumToRedemptionOfGoods + "грн";
+                        textInteger.monetary = true;
                         textInteger.text = counter141888;
                         break;
 

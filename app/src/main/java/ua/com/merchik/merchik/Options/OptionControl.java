@@ -19,12 +19,9 @@ import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
-import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.LogRealm;
-import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogManager;
@@ -192,12 +189,6 @@ public class OptionControl<T> {
             public void onSuccess(String data) {
                 setIsBlockOption(false);
                 unlockCodeResultListener.onUnlockCodeSuccess();
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    if (optionDB != null) {
-                        optionDB.setIsSignal("2");
-                        realm.insertOrUpdate(optionDB);
-                    }
-                });
                 dialog.dismiss();
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
             }
@@ -223,37 +214,20 @@ public class OptionControl<T> {
             // 12.08.24. Виктор. Для будущих поколений.
             // Обращайте внимание - сохраняет ли опция контроля сигнал. Был случай когда не было
             // сохранения/обновления сигнала в БД изза чего мерчер НЕ БЛОКИРОВАЛО то что должно было блокировать.
-            if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
-                if (nnkMode != null)
-                    if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)) {
-                        optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
-                    } else
-                        Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "nnkMode is null");
-
-
-                Long codeODAD = new UnlockCode().codeODAD(optionDB);
-                int themeCode = 1285;
-
-                if (codeODAD != null) {
-                    LogDB log = LogRealm.getLogByODADandTheme(codeODAD, themeCode);
-                    if (log != null) {
-                        stringBuilderMsg.append("\n\nАле виконавцю видано код розблокування!");
-                        spannableStringBuilder.append("\n\nАле виконавцю видано код розблокування!");
-                        setIsBlockOption(false);
-                        OptionsDB finalOptionDB = optionDB;
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            finalOptionDB.setIsSignal("2");
-                            finalOptionDB.setBlockPns("0");
-                            realm.insertOrUpdate(finalOptionDB);
-                        });
-                        return true;
-                    }
+            if (optionDB == null) return false;
+            if ("1".equals(optionDB.getIsSignal())) {
+                if (new UnlockCode().applyStoredUnlockCode(optionDB)) {
+                    stringBuilderMsg.append("\n\nАле виконавцю видано код розблокування!");
+                    spannableStringBuilder.append("\n\nАле виконавцю видано код розблокування!");
+                    setIsBlockOption(false);
+                    return true;
                 }
-                return false;
-            } else {
-                setIsBlockOption(false);
-                return true;
+                if ("1".equals(optionDB.getBlockPns())) {
+                    return false;
+                }
             }
+            setIsBlockOption(false);
+            return true;
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "Exception e: " + e);
             return false;

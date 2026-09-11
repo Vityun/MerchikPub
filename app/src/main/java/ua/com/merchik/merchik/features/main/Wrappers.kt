@@ -1412,7 +1412,7 @@ object ErrorDBOverride {
 object OptionsDBOverride {
 
     fun getFallbackTitle(key: String): String? = when (key) {
-        "sum_penalty" -> "Зниження"
+        "sum_penalty" -> "Зниження та премії"
         "option_txt" -> "Назва опції"
         "option_id" -> "ID опції"
         else -> null

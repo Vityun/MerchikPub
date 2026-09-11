@@ -15,6 +15,10 @@ import android.widget.Toast;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import io.realm.Realm;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -39,6 +43,8 @@ import ua.com.merchik.merchik.dialogs.DialogData;
  * mode - режим формирования кода (число) 1 - по Коду ДАД2 и Опции, иначе - по сотруднику и дате
  */
 public class UnlockCode {
+
+    private static final int UNLOCK_USED_THEME = 1285;
 
     public enum UnlockCodeMode {
         CODE_DAD_2_AND_OPTION, DATE_AND_USER
@@ -177,7 +183,7 @@ public class UnlockCode {
 //            long dad2 = wp.getCode_dad2();
 
                     Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
-                    Log.e("UnlockCode", "user: " + user.id);
+                    Log.e("UnlockCode", "user: " + user_id);
                     Log.e("UnlockCode", "dad2: " + dad2);
                     Log.e("UnlockCode", "option: " + option.getOptionId());
 
@@ -207,6 +213,7 @@ public class UnlockCode {
                                         null,
                                         null)));
 
+                        applyUnlockSignals(option);
                         Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
                         click.onSuccess("");
                         dialog.dismiss();
@@ -220,22 +227,83 @@ public class UnlockCode {
             dialog.show();
         } else {
             // Pika Если в логе есть за сегодня этот код разблокировки, то тут делаю вид, что успешно внесен правильный код разблокировки
+            applyUnlockSignals(option);
             click.onSuccess("");
 
         }
     }
 
     public Long codeODAD(OptionsDB optionsDB) {
-        Long res = null;
+        return optionsDB == null ? null
+                : OptionUnlockPolicy.objectId(optionsDB.getCodeDad2(), optionsDB.getOptionId());
+    }
 
-        String dad2str = optionsDB.getCodeDad2();
-        String optId = optionsDB.getOptionId();
-        int len = optionsDB.getOptionId().length();
+    private String getControlId(OptionsDB option) {
+        return option == null ? null : OptionUnlockPolicy.controlId(
+                option.getOptionId(), option.getOptionControlId(), option.getOptionGroup());
+    }
 
-        String kodObstr = "1" + optId.substring(len - 3, len) + dad2str.substring(1, 5) + dad2str.substring(6, 7) + dad2str.substring(8, 13) + dad2str.substring(14, 19);
-        res = Long.valueOf(kodObstr);
+    private Set<String> getUnlockOptionIds(OptionsDB option) {
+        Set<String> ids = new LinkedHashSet<>();
+        String controlId = getControlId(option);
+        if (controlId == null || option.getCodeDad2() == null) return ids;
+        ids.add(controlId);
+        if (OptionUnlockPolicy.BUTTON_GROUP.equals(option.getOptionGroup())) ids.add(option.getOptionId());
+        for (OptionsDB button : RealmManager.INSTANCE.where(OptionsDB.class)
+                .equalTo("codeDad2", option.getCodeDad2())
+                .equalTo("optionGroup", OptionUnlockPolicy.BUTTON_GROUP)
+                .equalTo("optionControlId", controlId).findAll()) {
+            ids.add(button.getOptionId());
+        }
+        return ids;
+    }
 
-        return res;
+    public boolean applyStoredUnlockCode(OptionsDB source) {
+        String controlId = getControlId(source);
+        if (controlId == null || source.getCodeDad2() == null) return false;
+        String dad2 = source.getCodeDad2();
+        Long matchedObjectId = null;
+        for (String id : getUnlockOptionIds(source)) {
+            Long objectId = OptionUnlockPolicy.objectId(dad2, id);
+            if (objectId != null && LogRealm.getLogByODADandTheme(objectId, UNLOCK_USED_THEME) != null) {
+                matchedObjectId = objectId;
+                break;
+            }
+        }
+        if (matchedObjectId == null) return false;
+
+        applyUnlockSignals(source);
+        return true;
+    }
+
+    // Only update signals after a code is accepted; the LogDB key belongs to the original option.
+    private void applyUnlockSignals(OptionsDB source) {
+        String controlId = getControlId(source);
+        if (controlId == null || source.getCodeDad2() == null) return;
+        String dad2 = source.getCodeDad2();
+        int[] changed = {0};
+        Realm.Transaction updateSignals = realm -> {
+            for (OptionsDB row : realm.where(OptionsDB.class).equalTo("codeDad2", dad2)
+                    .beginGroup().equalTo("optionId", controlId)
+                    .or().beginGroup().equalTo("optionGroup", OptionUnlockPolicy.BUTTON_GROUP)
+                    .equalTo("optionControlId", controlId).endGroup().endGroup().findAll()) {
+                if (OptionUnlockPolicy.isRelated(dad2, controlId, row.getCodeDad2(),
+                        row.getOptionId(), row.getOptionControlId(), row.getOptionGroup())) {
+                    if (!"2".equals(row.getIsSignal())) changed[0]++;
+                    row.setIsSignal("2");
+                }
+            }
+            // The UI often holds a detached copy. Do not upsert that stale object in full.
+            source.setIsSignal("2");
+        };
+        if (RealmManager.INSTANCE.isInTransaction()) updateSignals.execute(RealmManager.INSTANCE);
+        else RealmManager.INSTANCE.executeTransaction(updateSignals);
+
+        if (changed[0] > 0) {
+            Globals.writeToMLOG("INFO", "OptionControl/unlockApplied",
+                    "dad2=" + dad2 + ", sourceOption=" + source.getOptionId()
+                            + ", controlOption=" + controlId + ", updated=" + changed[0]);
+        }
     }
 
     private SpannableString createLinkedString(String msg) {

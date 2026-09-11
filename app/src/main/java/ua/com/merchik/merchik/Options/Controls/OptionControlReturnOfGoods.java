@@ -211,8 +211,6 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             }
         });
 
-        checkUnlockCode(optionDB);
-
         // 8.0 Блокировка проведения
         if (signal) {
             if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {
@@ -222,6 +220,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             }
             setIsBlockOption(true);
         }
+        checkUnlockCode(optionDB);
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {

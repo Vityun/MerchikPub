@@ -2,14 +2,15 @@ package ua.com.merchik.merchik.features.main.Main
 
 import android.app.Activity
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -29,10 +29,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,15 +50,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,13 +81,11 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
-import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
-import ua.com.merchik.merchik.features.main.options.OptionsDisplayMode
 import java.time.LocalDate
 
 @Composable
@@ -94,14 +102,6 @@ fun FilteringDialog(
     var showToolTip by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
-    val optionsViewModel = (viewModel as? OptionsDBViewModel)
-        ?.takeIf { it.contextUI == ContextUI.OPTIONS_IN_CONTAINER }
-    var applyToAllVisits by remember(optionsViewModel, viewModel.dataJson) {
-        mutableStateOf(optionsViewModel?.settingsApplyToAllVisits() == true)
-    }
-    var optionsDisplayMode by remember(optionsViewModel, viewModel.dataJson) {
-        mutableStateOf(optionsViewModel?.settingsDisplayMode() ?: OptionsDisplayMode.ALL)
-    }
 
     val initialSelectedMode = remember(uiState.filters?.selectedMode) {
         uiState.filters?.selectedMode ?: SelectedMode.ALL
@@ -283,7 +283,7 @@ fun FilteringDialog(
                                         it
                                     ) { changedItemFilter ->
                                         uiState.filters?.items?.map {
-                                            if (it.clazz == changedItemFilter.clazz) changedItemFilter
+                                            if (it.key == changedItemFilter.key) changedItemFilter
                                             else it
                                         }?.let { it1 ->
                                             uiState.filters?.copy(
@@ -308,16 +308,6 @@ fun FilteringDialog(
                                 }
                                 Spacer(modifier = Modifier.padding(10.dp))
                             }
-                            if (optionsViewModel != null) {
-                                item(key = "options_display_mode") {
-                                    OptionsDisplayModeFilter(
-                                        selectedMode = optionsDisplayMode,
-                                        applyToAllVisits = applyToAllVisits,
-                                        onApplyToAllVisitsChange = { applyToAllVisits = it },
-                                        onSelectedMode = { optionsDisplayMode = it }
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -326,7 +316,6 @@ fun FilteringDialog(
                 Row {
                     Button(
                         onClick = {
-                            optionsViewModel?.saveDisplayFilters(applyToAllVisits, optionsDisplayMode)
                             val base = uiState.filters ?: Filters()
 
                             val committed = base.copy(
@@ -360,38 +349,25 @@ fun FilteringDialog(
                     Spacer(modifier = Modifier.padding(10.dp))
                     Button(
                         onClick = {
-                            if (optionsViewModel != null) {
-                                optionsDisplayMode = OptionsDisplayMode.ALL
-                                localSelectedMode = SelectedMode.ALL
-                                optionsViewModel.saveDisplayFilters(applyToAllVisits, optionsDisplayMode)
+                            (FilteringDialogDataHolder.instance().filters ?: uiState.filters)?.let {
+                                val cleared = it.copy(
+                                    rangeDataByKey =
+                                        if (it.rangeDataByKey?.enabled == true)
+                                            it.rangeDataByKey.copy(
+                                                start = LocalDate.now(),
+                                                end = LocalDate.now()
+                                            )
+                                        else
+                                            it.rangeDataByKey,
+                                    searchText = "",
+                                    items = it.items.map {
+                                        if (it.enabled) it.clearValues() else it
+                                    }
+                                )
+                                FilteringDialogDataHolder.instance().filters = cleared
+                                viewModel.updateFilters(cleared)
+                                onChanged(cleared)
                             }
-                            val currentFilters = FilteringDialogDataHolder.instance().filters
-                                ?: if (optionsViewModel != null) uiState.filters else null
-                            currentFilters?.let {
-                                onChanged.invoke(
-                                    it.copy(
-                                        selectedMode = if (optionsViewModel != null) SelectedMode.ALL else it.selectedMode,
-                                        rangeDataByKey =
-                                            if (it.rangeDataByKey?.enabled == true)
-                                                it.rangeDataByKey.copy(
-                                                    start = LocalDate.now(),
-                                                    end = LocalDate.now()
-                                                )
-                                            else
-                                                it.rangeDataByKey,
-                                        searchText = "",
-                                        items = it.items.map {
-                                            if (it.enabled)
-                                                it.copy(
-                                                    rightValuesRaw = emptyList(),
-                                                    rightValuesUI = emptyList()
-                                                )
-                                            else
-                                                it
-                                        }
-                                    ))
-                            }
-                            if (optionsViewModel != null) viewModel.updateContent()
                         },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
@@ -424,64 +400,6 @@ fun FilteringDialog(
                 showToolTip = false
             }
         )
-    }
-}
-
-@Composable
-private fun OptionsDisplayModeFilter(
-    selectedMode: OptionsDisplayMode,
-    applyToAllVisits: Boolean,
-    onApplyToAllVisitsChange: (Boolean) -> Unit,
-    onSelectedMode: (OptionsDisplayMode) -> Unit
-) {
-    val modes = remember { OptionsDisplayMode.values().toList() }
-    val shape = RoundedCornerShape(8.dp)
-
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(end = 10.dp, bottom = 10.dp)
-            .border(BorderStroke(1.dp, colorResource(R.color.borderContextMenu)), shape)
-            .padding(8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                .toggleable(
-                    value = applyToAllVisits,
-                    role = Role.Checkbox,
-                    onValueChange = onApplyToAllVisitsChange
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Застосувати до всіх відвідувань",
-                modifier = Modifier.weight(1f)
-            )
-            Checkbox(
-                checked = applyToAllVisits,
-                onCheckedChange = null,
-                modifier = Modifier.size(48.dp)
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(text = "Режим відображення", color = Color.DarkGray)
-        Spacer(Modifier.height(4.dp))
-        ContextMenu(
-            modifier = Modifier.fillMaxWidth()
-                .shadow(4.dp, shape).background(Color.White, shape),
-            itemsMenu = modes.map { it.title },
-            onSelectedMenu = { onSelectedMode(modes[it]) }
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(7.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = selectedMode.title, modifier = Modifier.weight(1f))
-                Image(
-                    painter = painterResource(R.drawable.ic_arrow_down_1),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
     }
 }
 
@@ -519,10 +437,17 @@ private fun ItemFilterUI(
     itemFilter: ItemFilter,
     onChanged: ((ItemFilter) -> Unit)? = null
 ) {
+    if (itemFilter.choices != null) {
+        SingleChoiceItemFilterUI(viewModel, itemFilter, onChanged)
+        return
+    }
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(end = 10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom
+        ) {
             Text(text = itemFilter.title)
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -646,6 +571,135 @@ private fun ItemFilterUI(
                 }
             }
 
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SingleChoiceItemFilterUI(
+    viewModel: MainViewModel,
+    itemFilter: ItemFilter,
+    onChanged: ((ItemFilter) -> Unit)?
+) {
+    val context = LocalContext.current
+    val choices = itemFilter.choices.orEmpty()
+    val shape = RoundedCornerShape(8.dp)
+    val border = BorderStroke(1.dp, colorResource(R.color.borderContextMenu))
+    Column(Modifier.padding(end = 10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(text = itemFilter.title, modifier = Modifier.weight(1f))
+            itemFilter.isPinned?.let { pinned ->
+                val pinDepth by animateFloatAsState(
+                    targetValue = if (pinned) 1f else 0f,
+                    animationSpec = tween(180),
+                    label = "filterPinDepth"
+                )
+                val pinLabel = viewModel.getTranslateString(
+                    if (pinned) "Відкріпити фільтр" else "Закріпити фільтр"
+                )
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = { PlainTooltip { Text(pinLabel) } },
+                    state = rememberTooltipState()
+                ) {
+                    IconToggleButton(
+                        checked = pinned,
+                        onCheckedChange = {
+                            onChanged?.invoke(itemFilter.onPinChanged(it))
+                            Toast.makeText(
+                                context,
+                                "Ця функція з’явиться в наступних версіях",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        enabled = itemFilter.enabled && onChanged != null,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(32.dp)
+//                                .shadow((4f * (1f - pinDepth)).dp, CircleShape, clip = false)
+                                .clip(CircleShape)
+//                                .background(
+//                                    Brush.linearGradient(listOf(
+//                                        lerp(Color.White, Color(0xFFD5D7DA), pinDepth),
+//                                        lerp(Color(0xFFE1E3E6), Color(0xFFF8F9FA), pinDepth)
+//                                    ))
+//                                )
+//                                .drawWithCache {
+//                                    // Offset the inner shadow towards the upper-left rim.
+//                                    val inset = 2.dp.toPx()
+//                                    val innerShadow = Brush.radialGradient(
+//                                        0f to Color.Transparent,
+//                                        0.72f to Color.Transparent,
+//                                        1f to Color.Black.copy(alpha = 0.24f * pinDepth),
+//                                        center = Offset(size.width / 2f + inset, size.height / 2f + inset),
+//                                        radius = size.minDimension / 2f + inset
+//                                    )
+//                                    onDrawBehind { drawCircle(innerShadow) }
+//                                }
+//                                .border(
+//                                    1.dp,
+//                                    Brush.linearGradient(listOf(
+//                                        lerp(Color.White, Color(0xFFACAFB3), pinDepth),
+//                                        lerp(Color(0xFFC6C9CD), Color.White, pinDepth)
+//                                    )),
+//                                    CircleShape
+//                                )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_filter_pin),
+                                contentDescription = pinLabel,
+                                tint = if (pinned) colorResource(R.color.blue)
+                                    else Color(0xFFB8BBC0),
+                                modifier = Modifier.size(20.dp).graphicsLayer {
+                                    rotationZ = 45f * pinDepth
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        val content: @Composable () -> Unit = {
+            Column(
+                modifier = Modifier.fillMaxWidth().border(border, shape).padding(3.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                listOf(
+                    viewModel.getTranslateString("Вибрати…"),
+                    itemFilter.selectedChoice?.title.orEmpty()
+                ).forEach { label ->
+                    Text(
+                        text = label,
+                        modifier = Modifier.fillMaxWidth().padding(end = 22.dp)
+                            .background(colorResource(R.color.background_item_filter), shape)
+                            .border(border, shape)
+                            .padding(horizontal = 7.dp, vertical = 3.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+        if (itemFilter.enabled && choices.isNotEmpty()) {
+            ContextMenu(
+                modifier = Modifier.fillMaxWidth(),
+                itemsMenu = choices.map { it.title },
+                onSelectedMenu = { index ->
+                    choices.getOrNull(index)?.let { choice ->
+                        onChanged?.invoke(itemFilter.selectChoice(choice))
+                    }
+                },
+                content = content
+            )
+        } else {
+            content()
         }
     }
 }
