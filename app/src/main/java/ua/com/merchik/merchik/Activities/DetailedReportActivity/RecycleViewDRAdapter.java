@@ -72,6 +72,7 @@ import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
@@ -440,6 +441,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     } else if (optionsButtons.getIsSignal().equals("2")) {
                         setCheck.setImageResource(R.drawable.ic_check);
                         setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.green_default));
+                    } else if (OptionUnlockPolicy.SIGNAL_UNLOCKED.equals(optionsButtons.getIsSignal())) {
+                        setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
+                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorInetYellow));
                     } else {
                         if (optionsButtons.getOptionControlId().equals("0")) {
 //                            setCheck.setVisibility(View.INVISIBLE);
@@ -1016,6 +1020,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                         new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
                                 case "2" ->
                                         new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+                                case OptionUnlockPolicy.SIGNAL_UNLOCKED ->
+                                        new ForegroundColorSpan(mContext.getResources().getColor(R.color.colorInetYellow));
                                 default -> new ForegroundColorSpan(Color.YELLOW);
                             };
 
@@ -2382,6 +2388,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
             case "2" ->
                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+            case OptionUnlockPolicy.SIGNAL_UNLOCKED ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.colorInetYellow));
             default -> new ForegroundColorSpan(Color.YELLOW);
         };
         //        if (dataBaseCount >= maxPhotos) {

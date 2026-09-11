@@ -2,8 +2,16 @@ package ua.com.merchik.merchik.Global;
 
 public final class OptionUnlockPolicy {
     public static final String BUTTON_GROUP = "3161";
+    public static final String SIGNAL_UNLOCKED = "3";
 
     private OptionUnlockPolicy() {
+    }
+
+    // Only call after accepting an unlock code. A normal success must stay green.
+    public static String signalAfterUnlock(String sourceSignal, String relatedSignal) {
+        return "1".equals(sourceSignal) || SIGNAL_UNLOCKED.equals(sourceSignal)
+                || "1".equals(relatedSignal) || SIGNAL_UNLOCKED.equals(relatedSignal)
+                ? SIGNAL_UNLOCKED : "2";
     }
 
     public static String controlId(String optionId, String optionControlId, String optionGroup) {

@@ -1439,6 +1439,7 @@ public class Options {
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                             );
                             dialog.setTitle(spannable);
+                            dialog.setDismissOnlyByButtonsMode(true);
                         }
 
                         SpannableStringBuilder resStr = new SpannableStringBuilder();
@@ -1539,7 +1540,6 @@ public class Options {
 
                             );
                         }
-                        dialog.setDismissOnlyByButtonsMode(true);
                         dialog.show();
                         Log.e("optionNotConduct", "3 " + resStr);
 

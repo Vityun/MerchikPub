@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataFragmentHome;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -52,6 +53,7 @@ public class CustomString {
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0", "2" -> new ForegroundColorSpan(Color.GREEN);
             case "1" -> new ForegroundColorSpan(Color.RED);
+            case OptionUnlockPolicy.SIGNAL_UNLOCKED -> new ForegroundColorSpan(Color.YELLOW);
             default -> new ForegroundColorSpan(Color.DKGRAY);
         };
         SpannableString spannableSt = new SpannableString(text);
@@ -66,6 +68,7 @@ public class CustomString {
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0", "2" -> new ForegroundColorSpan(Color.GREEN);
             case "1" -> new ForegroundColorSpan(Color.RED);
+            case OptionUnlockPolicy.SIGNAL_UNLOCKED -> new ForegroundColorSpan(Color.YELLOW);
             default -> new ForegroundColorSpan(Color.DKGRAY);
         };
         SpannableString spannableSt = new SpannableString(text);

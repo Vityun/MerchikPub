@@ -9,6 +9,33 @@ public class OptionUnlockPolicyTest {
     private static final String OTHER_VISIT = "1100926036220061198";
 
     @Test
+    public void acceptedCodeTurnsRedSignalYellow() {
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("1", "1"));
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("1", "2"));
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("2", "1"));
+    }
+
+    @Test
+    public void unlockedSignalSurvivesRepeatedApplicationAndOtherLinkedButtons() {
+        String signal = OptionUnlockPolicy.signalAfterUnlock("0", "1");
+        signal = OptionUnlockPolicy.signalAfterUnlock(signal, "2");
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock(signal, "0"));
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("2", "3"));
+    }
+
+    @Test
+    public void codeDoesNotTurnAnOrdinarySuccessYellow() {
+        assertEquals("2", OptionUnlockPolicy.signalAfterUnlock("2", "2"));
+        assertEquals("2", OptionUnlockPolicy.signalAfterUnlock("0", "2"));
+        assertEquals("2", OptionUnlockPolicy.signalAfterUnlock(null, null));
+    }
+
+    @Test
+    public void detachedControlWithoutStoredRowsStillTurnsYellow() {
+        assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("1", null));
+    }
+
+    @Test
     public void buttonUsesItsControlInEveryExecutionMode() {
         assertEquals("84006", OptionUnlockPolicy.controlId("84007", "84006", "3161"));
     }

@@ -13,9 +13,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -283,18 +285,25 @@ public class UnlockCode {
         String dad2 = source.getCodeDad2();
         int[] changed = {0};
         Realm.Transaction updateSignals = realm -> {
+            List<OptionsDB> relatedOptions = new ArrayList<>();
+            String signal = OptionUnlockPolicy.signalAfterUnlock(source.getIsSignal(), null);
             for (OptionsDB row : realm.where(OptionsDB.class).equalTo("codeDad2", dad2)
                     .beginGroup().equalTo("optionId", controlId)
                     .or().beginGroup().equalTo("optionGroup", OptionUnlockPolicy.BUTTON_GROUP)
                     .equalTo("optionControlId", controlId).endGroup().endGroup().findAll()) {
                 if (OptionUnlockPolicy.isRelated(dad2, controlId, row.getCodeDad2(),
                         row.getOptionId(), row.getOptionControlId(), row.getOptionGroup())) {
-                    if (!"2".equals(row.getIsSignal())) changed[0]++;
-                    row.setIsSignal("2");
+                    relatedOptions.add(row);
+                    signal = OptionUnlockPolicy.signalAfterUnlock(signal, row.getIsSignal());
                 }
             }
+            // A detached control may already be red while its stored button is still green.
+            for (OptionsDB row : relatedOptions) {
+                if (!signal.equals(row.getIsSignal())) changed[0]++;
+                row.setIsSignal(signal);
+            }
             // The UI often holds a detached copy. Do not upsert that stale object in full.
-            source.setIsSignal("2");
+            source.setIsSignal(signal);
         };
         if (RealmManager.INSTANCE.isInTransaction()) updateSignals.execute(RealmManager.INSTANCE);
         else RealmManager.INSTANCE.executeTransaction(updateSignals);

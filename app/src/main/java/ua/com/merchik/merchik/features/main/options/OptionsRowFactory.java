@@ -53,6 +53,7 @@ import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
@@ -362,6 +363,9 @@ public final class OptionsRowFactory<T> {
                 } else if (optionsButtons.getIsSignal().equals("2")) {
                     setCheck.iconRes = R.drawable.ic_check;
                     setCheck.tint = mContext.getResources().getColor(R.color.green_default);
+                } else if (OptionUnlockPolicy.SIGNAL_UNLOCKED.equals(optionsButtons.getIsSignal())) {
+                    setCheck.iconRes = R.drawable.ic_exclamation_mark_in_a_circle;
+                    setCheck.tint = mContext.getResources().getColor(R.color.colorInetYellow);
                 } else {
                     if (optionsButtons.getOptionControlId().equals("0")) {
 
@@ -870,6 +874,8 @@ public final class OptionsRowFactory<T> {
                                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
                             case "2" ->
                                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+                            case OptionUnlockPolicy.SIGNAL_UNLOCKED ->
+                                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.colorInetYellow));
                             default -> new ForegroundColorSpan(Color.YELLOW);
                         };
 
@@ -1672,6 +1678,8 @@ public final class OptionsRowFactory<T> {
                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
             case "2" ->
                     new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+            case OptionUnlockPolicy.SIGNAL_UNLOCKED ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.colorInetYellow));
             default -> new ForegroundColorSpan(Color.YELLOW);
         };
 

@@ -355,10 +355,17 @@ class OptionsDBViewModel @Inject constructor(
         get() = OptionsDB::class
 
     override fun getDefaultHideUserFields(): List<String> {
-        return (
-                "option_control_id, is_signal, sum_premiya, amount, amount_min, option_control_txt, " +
-                        "amount_max, option_control_descr, column_name, option_descr"
-                ).split(",").map { it.trim() }    }
+        return if ((contextUI == ContextUI.OPTIONS_IN_CONTAINER))
+            (
+                    "option_control_id, is_signal, sum_premiya, amount, amount_min, option_control_txt, " +
+                            "amount_max, option_control_descr, column_name, option_descr, option_id "
+                    ).split(",").map { it.trim() }
+        else
+            (
+                    "option_control_id, is_signal, sum_premiya, amount, amount_min, option_control_txt, " +
+                            "amount_max, option_control_descr, column_name, option_descr "
+                    ).split(",").map { it.trim() }
+    }
 
     override fun getDefaultGroupUserFields(): List<String> {
         return emptyList()
