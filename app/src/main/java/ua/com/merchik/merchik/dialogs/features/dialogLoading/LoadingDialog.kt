@@ -33,7 +33,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 
 
 @Composable
-fun LoadingDialog(viewModel: ProgressViewModel, onDismiss: () -> Unit) {
+fun LoadingDialog(viewModel: ProgressViewModel, canCancel: Boolean = true, onDismiss: () -> Unit) {
     // Для управления состоянием подтверждающего диалога
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
@@ -71,7 +71,7 @@ fun LoadingDialog(viewModel: ProgressViewModel, onDismiss: () -> Unit) {
                             .padding(top = 16.dp),
                         color = Color.White
                     )
-                    ImageButton(
+                    if (canCancel) ImageButton(
                         id = R.drawable.ic_letter_x,
                         shape = CircleShape,
                         colorImage = ColorFilter.tint(color = Color.Gray),
@@ -97,7 +97,7 @@ fun LoadingDialog(viewModel: ProgressViewModel, onDismiss: () -> Unit) {
     }
 
     // Диалог подтверждения
-    if (showConfirmationDialog) {
+    if (canCancel && showConfirmationDialog) {
         ConfirmationDialog(
             title = "Вы действительно хотите отменить загрузку?",
             onConfirm = {

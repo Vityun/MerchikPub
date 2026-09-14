@@ -13,6 +13,19 @@ interface InitStateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun saveState(state: InitStateEntity)
 
+    @Transaction
+    fun mergeLocalReadiness(wp: Boolean, site: Boolean, options: Boolean, theme: Boolean): InitStateEntity {
+        val current = getState() ?: InitStateEntity()
+        val updated = current.copy(
+            wpLoaded = current.wpLoaded || wp,
+            siteLoaded = current.siteLoaded || site,
+            optionsLoaded = current.optionsLoaded || options,
+            themeLoaded = current.themeLoaded || theme
+        )
+        if (updated != current) saveState(updated)
+        return updated
+    }
+
     // Удобные шорткаты
 
     @Transaction

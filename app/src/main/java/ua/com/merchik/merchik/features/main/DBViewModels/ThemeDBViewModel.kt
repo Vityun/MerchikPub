@@ -42,8 +42,8 @@ class ThemeDBViewModel @Inject constructor(
         get() = ThemeDB::class
 
     private val defaultAchievementThemeIds = arrayOf("595", "1252", "1251", "1378")
-    private val premiumQuestionAnswerThemeId = "421"
-    private val paymentIncreaseThemeId = "610"
+    private val premiumQuestionAnswerThemeId = "610"
+    private val excludedPremiumQuestionAnswerThemeId = "421"
 
     override fun getDefaultHideUserFields(): List<String>? {
         return "ID, comment, column_name".split(",")
@@ -218,7 +218,7 @@ class ThemeDBViewModel @Inject constructor(
         return try {
             val premiumTheme = ThemeRealm.getThemeById(premiumQuestionAnswerThemeId)
             val themes = ThemeRealm.getAllOpros()
-                .filterNot { it.id?.trim() == paymentIncreaseThemeId }
+                .filterNot { it.id?.trim() == excludedPremiumQuestionAnswerThemeId }
                 .filterNot { it.id?.trim() == premiumQuestionAnswerThemeId }
 
             if (premiumTheme == null) {

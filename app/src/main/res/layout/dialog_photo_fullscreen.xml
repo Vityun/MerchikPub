@@ -104,10 +104,37 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/merchik" />
 
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/photoTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="88dp"
+            android:background="@drawable/photo_title_scrim"
+            android:clickable="false"
+            android:focusable="false"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingStart="16dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="36dp"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="12sp"
+            app:autoSizeMaxTextSize="18sp"
+            app:autoSizeStepGranularity="1sp"
+            app:layout_constraintEnd_toEndOf="@id/photo"
+            app:layout_constraintStart_toStartOf="@id/photo"
+            app:layout_constraintTop_toTopOf="@id/photo" />
+
         <ImageButton
             android:id="@+id/camera"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="8dp"
@@ -120,7 +147,7 @@
         <Button
             android:id="@+id/buttonComment"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:text="Коментар"

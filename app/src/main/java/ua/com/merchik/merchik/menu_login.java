@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -78,6 +79,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.Logout;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearch;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearchList;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
+import ua.com.merchik.merchik.data.synchronization.StartupPolicy;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.Translation.LangListDB;
 import ua.com.merchik.merchik.data.Translation.SiteLanguages;
@@ -99,6 +101,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.GlobalErrorsLive;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 
 
 public class menu_login extends AppCompatActivity {
@@ -163,6 +166,103 @@ public class menu_login extends AppCompatActivity {
     private ProgressViewModel progress;
     private LoadingDialogWithPercent loadingDialog;
     private MessageDialogBuilder messageDialogBuilder;
+    private final List<Call<?>> startupCalls = new ArrayList<>();
+    private boolean loginAttemptFinished;
+
+    private void beginLoginAttempt() {
+        for (Call<?> call : startupCalls) call.cancel();
+        startupCalls.clear();
+        loginAttemptFinished = false;
+    }
+
+    private boolean validSessionUser(SessionCheck response) {
+        if (response.getAuth() == null) return false;
+        if (!response.getAuth()) return true;
+        if (response.getUserInfo() == null) return false;
+        try {
+            return Integer.parseInt(response.getUserInfo().getUserId()) > 0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private <T> Call<T> startupCall(Call<T> call) {
+        call.timeout().timeout(StartupPolicy.LOADING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        startupCalls.add(call);
+        return call;
+    }
+
+    private boolean ignoreLoginCallback() {
+        return isFinishing() || isDestroyed() || loginAttemptFinished;
+    }
+
+    private void hideLoginProgress() {
+        if (loadingDialog != null) loadingDialog.dismiss();
+        if (progress != null) progress.hideNow();
+    }
+
+    private void showLoginProgress() {
+        hideLoginProgress();
+        progress = new ProgressViewModel(1);
+        loadingDialog = new LoadingDialogWithPercent(this, progress);
+        loadingDialog.show();
+        progress.onNextEvent("Авторизація", 39_500);
+    }
+
+    private void loginUnavailable(String stage, String reason) {
+        if (ignoreLoginCallback()) return;
+        Globals.writeToMLOG("WARN", "StartupLogin/" + stage, reason);
+        RetrofitBuilder.setServerStatusUI(false);
+        hideLoginProgress();
+        withoutLogin();
+    }
+
+    private void loginRejected(String message) {
+        if (ignoreLoginCallback()) return;
+        for (Call<?> call : startupCalls) call.cancel();
+        startupCalls.clear();
+        loginAttemptFinished = true;
+        hideLoginProgress();
+        globals.alertDialogMsg(this, message == null || message.trim().isEmpty()
+                ? "Сервер не підтвердив авторизацію. Перевірте дані входу або зверніться до підтримки."
+                : message);
+    }
+
+    private boolean canProcessLoginResponse(String stage, Call<?> call, Response<?> response, Boolean state) {
+        if (ignoreLoginCallback() || !startupCalls.contains(call)) return false;
+        if (!response.isSuccessful()) {
+            if (StartupPolicy.isTemporaryHttpFailure(response.code())) {
+                loginUnavailable(stage, "http=" + response.code());
+            } else {
+                Globals.writeToMLOG("WARN", "StartupLogin/" + stage, "Rejected: http=" + response.code());
+                loginRejected("Сервер відхилив запит авторизації (HTTP " + response.code() + ").");
+            }
+            return false;
+        }
+        if (response.body() == null || state == null) {
+            loginUnavailable(stage, "Invalid response: http=" + response.code() + ", state=" + state);
+            return false;
+        }
+        return true;
+    }
+
+    private void openWorkPlan(boolean offline) {
+        if (ignoreLoginCallback()) return;
+        loginAttemptFinished = true;
+        hideLoginProgress();
+        intent.putExtra(StartupPolicy.EXTRA_OFFLINE_LOGIN, offline);
+        if (!offline) RetrofitBuilder.setServerStatusUI(true);
+        Globals.writeToMLOG("INFO", "StartupLogin/openWorkPlan", "offline=" + offline);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        for (Call<?> call : startupCalls) call.cancel();
+        startupCalls.clear();
+        hideLoginProgress();
+        super.onDestroy();
+    }
 
     private static boolean isGPSDialogShow = false;
 
@@ -1036,18 +1136,18 @@ public class menu_login extends AppCompatActivity {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        retrofit2.Call<JsonObject> call = startupCall(RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject));
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("test", "onResponse: " + response);
-                if (response.isSuccessful())
+                if (canProcessLoginResponse("registerCompany", call, response, Boolean.TRUE))
                     click.click();
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("test", "onFailure: " + t);
+                if (!startupCalls.contains(call)) return;
+                loginUnavailable("registerCompany", "failure=" + t.getClass().getSimpleName());
             }
         });
     }
@@ -1499,6 +1599,11 @@ public class menu_login extends AppCompatActivity {
 //---------------------------------------------------------------------------------------------
 
     private void loginOnServer() {
+        beginLoginAttempt();
+        if (!NetworkUtil.isNetworkConnected(this)) {
+            withoutLogin();
+            return;
+        }
         try {
             String mod = "auth";
             String sessId = "";
@@ -1518,10 +1623,7 @@ public class menu_login extends AppCompatActivity {
                 return;
 
 
-            progress = new ProgressViewModel(1);
-            loadingDialog = new LoadingDialogWithPercent(this, progress);
-            loadingDialog.show();
-            progress.onNextEvent("Авторизація", 39_500);
+            showLoginProgress();
 
 //            Handler handler = new Handler(Looper.getMainLooper());
 //            Runnable timeoutRunnable = () ->
@@ -1538,10 +1640,12 @@ public class menu_login extends AppCompatActivity {
 //// Запускаем таймер на 5 секунд
 //            handler.postDelayed(timeoutRunnable, 10000);
 //            long startTime = System.currentTimeMillis();
-            retrofit2.Call<Login> call = RetrofitBuilder.getRetrofitInterface().loginInfo(mod, sessId);
+            retrofit2.Call<Login> call = startupCall(RetrofitBuilder.getRetrofitInterface().loginInfo(mod, sessId));
             call.enqueue(new retrofit2.Callback<Login>() {
                 @Override
                 public void onResponse(retrofit2.Call<Login> call, retrofit2.Response<Login> response) {
+                    if (!canProcessLoginResponse("loginInfo", call, response,
+                            response.body() == null ? null : response.body().getState())) return;
                     if (response.isSuccessful() && response.body() != null) {
 //                        handler.removeCallbacks(timeoutRunnable);
 //                        dialogBuilder.dismiss();
@@ -1549,11 +1653,9 @@ public class menu_login extends AppCompatActivity {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
                             appLogin();
-                            progress.onCompletedNoAnim();
 //                            dialogBuilder.dismiss();
                         } else {
                             withoutLogin();
-                            progress.onCanceledNoAnim();
 //                            dialogBuilder.dismiss();
                         }
                     }
@@ -1561,13 +1663,14 @@ public class menu_login extends AppCompatActivity {
 
                 @Override
                 public void onFailure(retrofit2.Call<Login> call, Throwable t) {
+                    if (!startupCalls.contains(call)) return;
 //                    handler.removeCallbacks(timeoutRunnable);
-                    withoutLogin();
-                    progress.onCanceledNoAnim();
+                    loginUnavailable("loginInfo", "failure=" + t.getClass().getSimpleName());
 //                    dialogBuilder.dismiss();
                 }
             });
         } catch (Exception e) {
+            hideLoginProgress();
             globals.alertDialogMsg(this, "Ошибка_1: " + e);
             Log.e("loginInfo", "Exception e: ", e);
         }
@@ -1581,6 +1684,11 @@ public class menu_login extends AppCompatActivity {
      * Проверка данных на сервере.
      **/
     private void appLogin() {
+        beginLoginAttempt();
+        if (!NetworkUtil.isNetworkConnected(this)) {
+            withoutLogin();
+            return;
+        }
         // https://merchik.net/mobile_app.php?mod=auth&app_data=435235235
 
         try {
@@ -1592,20 +1700,27 @@ public class menu_login extends AppCompatActivity {
 //            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
 //            progress.show();
 
-            progress = new ProgressViewModel(1);
-            loadingDialog = new LoadingDialogWithPercent(this, progress);
-            loadingDialog.show();
-            progress.onNextEvent("Авторизація", 39_500);
+            showLoginProgress();
 
 
             // Проверка - есть ли сессия на сервере(залогинились ли мы)
-            retrofit2.Call<SessionCheck> call = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(this));
+            retrofit2.Call<SessionCheck> call = startupCall(RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(this)));
             call.enqueue(new retrofit2.Callback<SessionCheck>() {
                 @Override
                 public void onResponse(retrofit2.Call<SessionCheck> call, retrofit2.Response<SessionCheck> response) {
+                    if (!canProcessLoginResponse("checkSession", call, response,
+                            response.body() == null ? null : response.body().getState())) return;
                     try {
                         if (response.isSuccessful() && response.body() != null) {
                             SessionCheck resp = response.body();
+                            if (!resp.getState()) {
+                                loginRejected(null);
+                                return;
+                            }
+                            if (!validSessionUser(resp)) {
+                                loginUnavailable("checkSession", "Invalid auth or user_info");
+                                return;
+                            }
                             Log.e("APP_LOGIN", "AUTH: " + resp.getAuth());
 
 //                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
@@ -1646,12 +1761,12 @@ public class menu_login extends AppCompatActivity {
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
                                         Globals.setCurrentToken(resp.websocketParam != null ? resp.websocketParam.token : null);
-                                        Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
+                                        Globals.userOwnership = "our".equals(resp.getUserInfo().user_work_plan_status);
 
                                         intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
                                         intent.putExtra("initialOpent", true);
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        startActivity(intent); // ++
+                                        openWorkPlan(false);
 
                                         // ------------
                                     } else {
@@ -1668,6 +1783,7 @@ public class menu_login extends AppCompatActivity {
 
                         }
                     } catch (Exception e) {
+                        hideLoginProgress();
                         globals.alertDialogMsg(menu_login.this, "Ошибка во время логина(1). Обратитесь к Вашему руководителю. Ошибка: " + e);
                         progress.onCanceled();
                     }
@@ -1675,10 +1791,12 @@ public class menu_login extends AppCompatActivity {
 
                 @Override
                 public void onFailure(retrofit2.Call<SessionCheck> call, Throwable t) {
-                    withoutLogin();
+                    if (!startupCalls.contains(call)) return;
+                    loginUnavailable("checkSession", "failure=" + t.getClass().getSimpleName());
                 }
             });
         } catch (Exception e) {
+            hideLoginProgress();
             globals.alertDialogMsg(this, "Ошибка_2: " + e);
 
         }
@@ -1712,12 +1830,14 @@ public class menu_login extends AppCompatActivity {
 
                 Log.e("APP_LOGIN", "LOGIN: " + login + " pass: " + password);
 
-                retrofit2.Call<Login> callLogin = RetrofitBuilder.getRetrofitInterface().LOGIN(mod, act, login, password, Globals.getAppInfoToSession(this));
+                retrofit2.Call<Login> callLogin = startupCall(RetrofitBuilder.getRetrofitInterface().LOGIN(mod, act, login, password, Globals.getAppInfoToSession(this)));
                 String finalLogin = login;
                 String finalPassword = password;
                 callLogin.enqueue(new retrofit2.Callback<Login>() {
                     @Override
                     public void onResponse(retrofit2.Call<Login> callLogin, retrofit2.Response<Login> response) {
+                        if (!canProcessLoginResponse("auth", callLogin, response,
+                                response.body() == null ? null : response.body().getState())) return;
                         if (response.isSuccessful() && response.body() != null) {
 
 //                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
@@ -1737,15 +1857,15 @@ public class menu_login extends AppCompatActivity {
                                     sessionCheck(mod, finalLogin, finalPassword);
                                 }
                             } else {
-                                globals.alertDialogMsg(menu_login.this, response.body().getError());
-                                progress.onCanceled();
+                                loginRejected(response.body().getError());
                             }
                         }
                     }
 
                     @Override
                     public void onFailure(retrofit2.Call<Login> callLogin, Throwable t) {
-                        withoutLogin();
+                        if (!startupCalls.contains(callLogin)) return;
+                        loginUnavailable("auth", "failure=" + t.getClass().getSimpleName());
                     }
                 });
 
@@ -1756,20 +1876,32 @@ public class menu_login extends AppCompatActivity {
             }
 
         } catch (Exception e) {
+            hideLoginProgress();
             globals.alertDialogMsg(this, "Ошибка_3: " + e);
         }
     }
 
     private void sessionCheck(String mod, String finalLogin, String finalPassword) {
+        if (ignoreLoginCallback()) return;
         // =================================================
-        Call<SessionCheck> callAUTH = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this));
+        Call<SessionCheck> callAUTH = startupCall(RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this)));
         callAUTH.enqueue(new retrofit2.Callback<SessionCheck>() {
             @Override
             public void onResponse(retrofit2.Call<SessionCheck> callAUTH, retrofit2.Response<SessionCheck> RESPONSE) {
+                if (!canProcessLoginResponse("sessionAfterAuth", callAUTH, RESPONSE,
+                        RESPONSE.body() == null ? null : RESPONSE.body().getState())) return;
                 if (RESPONSE.isSuccessful() && RESPONSE.body() != null) {
 //                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
 
                     SessionCheck resp = RESPONSE.body();
+                    if (!resp.getState()) {
+                        loginRejected(null);
+                        return;
+                    }
+                    if (!validSessionUser(resp)) {
+                        loginUnavailable("sessionAfterAuth", "Invalid auth or user_info");
+                        return;
+                    }
 
                     Globals.setCurrentSessionId(resp.getSessionId());
 //                    CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
@@ -1816,25 +1948,29 @@ public class menu_login extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                         Globals.setCurrentUserId(Integer.parseInt(resp.getUserInfo().getUserId()));
                         Globals.setCurrentToken(resp.websocketParam != null ? resp.websocketParam.token : null);
-                        Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
+                        Globals.userOwnership = "our".equals(resp.getUserInfo().user_work_plan_status);
                         // ------------
 
                         progress.onCompleted();
-                        startActivity(intent);  //++
+                        openWorkPlan(false);
                     } else {
-                        appLogin();
+                        loginRejected(null);
                     }
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<SessionCheck> callAUTH, Throwable t) {
-                withoutLogin();
+                if (!startupCalls.contains(callAUTH)) return;
+                loginUnavailable("sessionAfterAuth", "failure=" + t.getClass().getSimpleName());
             }
         });
     }
 
     private void withoutLogin() {
+        if (ignoreLoginCallback()) return;
+        RetrofitBuilder.setServerStatusUI(false);
+        hideLoginProgress();
         try {
             AppUsersDB appUsersDB = RealmManager.getAppUser();
 
@@ -1851,20 +1987,16 @@ public class menu_login extends AppCompatActivity {
                         .getString("login", ""));
 
 
-                new TablesLoadingUnloading().downloadMenu();
                 Globals.setCurrentUserId(appUsersDB.getUserId());
                 if (appUsersDB.user_work_plan_status != null) {
                     Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
                 }
 
-                progress.onCompleted();
-
                 intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE"); // тут
-                startActivity(intent); // ++
+                openWorkPlan(true);
 
             } else {
                 // Не получилось залогиниться БЕЗ инета или при ошибке. БД пустая.
-                progress.onCanceled();
                 globals.alertDialogMsg(menu_login.this, "Не удалось войти. \n\nПроверьте состояние интернета и повторите попытку входа.");
             }
 
@@ -2345,7 +2477,10 @@ public class menu_login extends AppCompatActivity {
             LangListDB id_lang = RealmManager.getLangList(l);
 
             Log.e("getTableTranslate", "id_lang: " + id_lang);
-            TablesLoadingUnloading.downloadSiteHints(id_lang.getID());
+            // The language table is still empty on the first launch.
+            String languageId = id_lang != null && id_lang.getID() != null
+                    ? id_lang.getID() : String.valueOf(Globals.langId);
+            TablesLoadingUnloading.downloadSiteHints(languageId);
         } catch (Exception e) {
             Log.e("getTableTranslate", "-");
         }

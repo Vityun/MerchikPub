@@ -575,7 +575,7 @@ abstract class MainViewModel(
         }
     }
 
-    private fun resolvePhotoDbForItem(obj: Any, index: Int): StackPhotoDB? {
+    protected open fun resolvePhotoDbForItem(obj: Any, index: Int): StackPhotoDB? {
         // если это уже StackPhotoDB (частый кейс для журнала фото) — просто вернём его
         if (obj is StackPhotoDB) return obj
 

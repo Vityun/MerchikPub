@@ -786,7 +786,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                                dataJson.addProperty("optionDBId", optionId);
                                 bundle.putString("dataJson", new Gson().toJson(dataJson));
 //                                bundle.putString("dataJson", new Gson().toJson(dad2));
-                                bundle.putString("title", "Список витрин");
+                                bundle.putString("title", "Список вітрин");
                                 bundle.putString("subTitle", "Представленi усі вітрини на цій торговій точці, зеленим кольором відзначені вітрини за якими виготовлені фотографії, червоним – за якими немає");
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);

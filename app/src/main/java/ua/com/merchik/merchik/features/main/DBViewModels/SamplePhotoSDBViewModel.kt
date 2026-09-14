@@ -4,12 +4,14 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
@@ -24,6 +26,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
@@ -62,21 +65,35 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
-        super.onClickItemImage(clickedDataItemUI, context)
-        dialog?.setCamera {
-            openCamera(null) {
-                dialog?.dismiss()
-            }
+        onClickItemImage(clickedDataItemUI, context, 0)
+    }
+
+    override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
+        val sample = clickedDataItemUI.rawAs<SamplePhotoSDB>() ?: return
+        val photo = resolvePhotoDbForItem(sample, index)
+        if (photo == null) {
+            Log.e("SamplePhotoSDBViewModel", "Photo not found: sampleId=${sample.id}, photoId=${sample.photoId}")
+            Toast.makeText(context, "Фото зразка ще не завантажено", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        this.context = context
+        valueForCustomResult.value[EXAMPLE_ID] = sample.id1c ?: 0
+        valueForCustomResult.value[EXAMPLE_IMG_ID] = sample.photoId ?: 0
+        val comment = listOfNotNull(sample.nm, sample.about)
+            .filter { it.isNotBlank() }
+            .joinToString("\n\n")
+        onClickFullImage(photo, comment)
     }
 
     override fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {
+        val photoContext = context ?: return
         try {
-            val dialogFullPhoto = DialogFullPhotoR(context)
+            val dialogFullPhoto = DialogFullPhotoR(photoContext)
+            dialogFullPhoto.setTitle("Зразок")
+            dialogFullPhoto.setCommentTitle("Інформація")
             dialogFullPhoto.setPhoto(stackPhotoDB)
-
-            // Pika
-            comment?.let { dialogFullPhoto.setComment(it) }
+            dialogFullPhoto.setComment(comment?.takeIf { it.isNotBlank() } ?: "Інформація відсутня")
 
             dialogFullPhoto.setCamera {
                 openCamera(stackPhotoDB) {
@@ -86,8 +103,24 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
             dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
             dialogFullPhoto.show()
+
+            // Раніше оригінал завантажував проміжний DialogFullPhoto.
+            if (stackPhotoDB.photo_size == "Small") {
+                PhotoDownload().downloadPhoto(true, stackPhotoDB,
+                    object : PhotoDownload.downloadPhotoInterface {
+                        override fun onSuccess(data: StackPhotoDB) {
+                            if (dialogFullPhoto.isShowing) {
+                                dialogFullPhoto.setPhoto(data)
+                            }
+                        }
+
+                        override fun onFailure(error: String) {
+                            Log.e("SamplePhotoSDBViewModel", "Full photo ${stackPhotoDB.photoServerId}: $error")
+                        }
+                    })
+            }
         } catch (e: Exception) {
-            Log.e("ShowcaseAdapter", "Exception e: $e")
+            Log.e("SamplePhotoSDBViewModel", "Cannot open sample photo", e)
         }
     }
 

@@ -15,6 +15,15 @@ public class SiteObjectsLocalDefaults {
         ensureRealmObjects();
     }
 
+    public static boolean hasDownloadedObjects() {
+        return RealmManager.INSTANCE != null && RealmManager.INSTANCE
+                .where(SiteObjectsDB.class)
+                .greaterThan("id", 0)
+                .notEqualTo("id", PLAN_DURATION_ID)
+                .notEqualTo("id", FACT_DURATION_ID)
+                .count() > 0;
+    }
+
     private static void ensureRealmObjects() {
         try {
             if (RealmManager.INSTANCE == null) {

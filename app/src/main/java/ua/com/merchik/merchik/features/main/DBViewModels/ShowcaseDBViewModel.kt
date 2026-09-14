@@ -1,16 +1,21 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import MessageDialogData
+import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Build
+import android.os.Environment
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.Realm
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -51,6 +56,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.io.File
 import java.lang.ref.WeakReference
 import java.util.Calendar
 import javax.inject.Inject
@@ -66,6 +72,12 @@ class ShowcaseDBViewModel @Inject constructor(
 
     private var contextForPhotoAction: WeakReference<Context>? = null
     private val loggedShowcaseDiagnostics = mutableSetOf<String>()
+
+    private val isPhotoCapture: Boolean
+        get() = contextUI == ContextUI.SHOWCASE_MAKE_PHOTO
+
+    private val usesCompletedCheckFilters: Boolean
+        get() = contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK || isPhotoCapture
 
     private val planogrammId = mutableStateOf(0)
 
@@ -98,7 +110,10 @@ class ShowcaseDBViewModel @Inject constructor(
         dialogFullPhoto.setPhoto(stackPhotoDB)
         comment?.let { dialogFullPhoto.setComment(it) }
         dialogFullPhoto.hideCamera()
-        dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
+        dialogFullPhoto.setClose {
+            dialogFullPhoto.dismiss()
+            if (isPhotoCapture) updateContent()
+        }
         dialogFullPhoto.show()
     }
 
@@ -147,7 +162,7 @@ class ShowcaseDBViewModel @Inject constructor(
                 true
             )
 
-            val mainOptionFilter = if (contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK) {
+            val mainOptionFilter = if (usesCompletedCheckFilters) {
                 buildMainOptionFilter(wpDataDB)
             } else {
                 null
@@ -177,14 +192,16 @@ class ShowcaseDBViewModel @Inject constructor(
 
     override fun getItemsFooter(): List<DataItemUI> {
         return when (contextUI) {
-            ContextUI.SHOWCASE_FROM_ACHIEVEMENT -> {
+            ContextUI.SHOWCASE_FROM_ACHIEVEMENT,
+            ContextUI.SHOWCASE_MAKE_PHOTO -> {
                 val wpDataDB = getCurrentWpDataOrLog("getItemsFooter") ?: return emptyList()
                 val showcaseDataList = getShowcaseDataList(wpDataDB, "getItemsFooter")
 
                 val canCreatePhotoWithoutShowcase =
                     showcaseDataList.isEmpty() || workedWithClientLessThanOptionalPeriod(wpDataDB)
 
-                if (!canCreatePhotoWithoutShowcase) {
+                if (!canCreatePhotoWithoutShowcase &&
+                    contextUI != ContextUI.SHOWCASE_MAKE_PHOTO) {
                     return emptyList()
                 }
 
@@ -280,7 +297,8 @@ class ShowcaseDBViewModel @Inject constructor(
                             )
                         }
                 }
-                ContextUI.SHOWCASE_COMPLETED_CHECK -> {
+                ContextUI.SHOWCASE_COMPLETED_CHECK,
+                ContextUI.SHOWCASE_MAKE_PHOTO -> {
                     val wpDataDB = getCurrentWpDataOrLog("getItems/$contextUI") ?: return emptyList()
                     val codeDad2 = wpDataDB.code_dad2
                     val showcaseDataList = getShowcaseDataList(wpDataDB, "getItems/$contextUI")
@@ -288,7 +306,7 @@ class ShowcaseDBViewModel @Inject constructor(
                     /*
                      * Связываем ID фотографии с витриной.
                      */
-                    val showcaseByPhotoId = buildShowcaseByPhotoId(
+                    val showcaseByPhotoId = if (isPhotoCapture) emptyMap() else buildShowcaseByPhotoId(
                         showcaseDataList = showcaseDataList,
                         stage = "getItems/$contextUI",
                         wpDataDB = wpDataDB
@@ -304,7 +322,9 @@ class ShowcaseDBViewModel @Inject constructor(
                      *
                      * specialCol здесь не меняем.
                      */
-                    val data: List<StackPhotoDB> =
+                    val data: List<StackPhotoDB> = if (isPhotoCapture) {
+                        buildCapturePhotos(showcaseDataList, wpDataDB)
+                    } else {
                         alignPhotosToShowcases(
                             loadedPhotos = loadShowcasePhotos(
                                 photoIds = photoIds.toList(),
@@ -324,22 +344,18 @@ class ShowcaseDBViewModel @Inject constructor(
                             photo.mainOption = showcase?.mainOptionId ?: 0
 
                         }
+                    }
 
-                    val listOfStackPhotoCOMPLETED = buildList {
-                        addAll(
-                            loadCompletedPhotos(
-                                codeDad2 = codeDad2,
-                                photoType = 0,
-                                stage = "getItems/$contextUI"
-                            )
-                        )
-
-                        addAll(
-                            loadCompletedPhotos(
-                                codeDad2 = codeDad2,
-                                photoType = 45,
-                                stage = "getItems/$contextUI"
-                            )
+                    val completedPhotoTypes = if (isPhotoCapture) {
+                        listOfNotNull(getCapturePhotoType())
+                    } else {
+                        listOf(0, 45)
+                    }
+                    val listOfStackPhotoCOMPLETED = completedPhotoTypes.flatMap { photoType ->
+                        loadCompletedPhotos(
+                            codeDad2 = codeDad2,
+                            photoType = photoType,
+                            stage = "getItems/$contextUI"
                         )
                     }
 
@@ -347,6 +363,12 @@ class ShowcaseDBViewModel @Inject constructor(
 
                     for (stackPhotoDB in listOfStackPhotoCOMPLETED) {
                         val showcaseIdStack = stackPhotoDB.showcase_id
+
+                        if (isPhotoCapture) {
+                            data.find { it.showcaseId.toString() == showcaseIdStack }
+                                ?.specialCol = 1
+                            continue
+                        }
 
                         if (
                             showcaseIdStack.isNullOrEmpty() ||
@@ -392,10 +414,17 @@ class ShowcaseDBViewModel @Inject constructor(
                         }
                     }
 
+                    val displayData = if (isPhotoCapture) {
+                        val photoCounts = listOfStackPhotoCOMPLETED.groupingBy { it.showcase_id }.eachCount()
+                        data.sortedBy { photoCounts[it.showcaseId.toString()] ?: 0 }
+                    } else {
+                        data
+                    }
+
                     repository
                         .toItemUIList(
                             StackPhotoDB::class,
-                            data,
+                            displayData,
                             contextUI,
                             0
                         )
@@ -406,7 +435,11 @@ class ShowcaseDBViewModel @Inject constructor(
 
                             // mainOption is an int in StackPhotoDB: keep an unknown value
                             // distinct from a real option 0 in the raw fields used by ItemFilter.
-                            val mainOptionId = showcaseByPhotoId[stackPhoto?.photoServerId]?.mainOptionId
+                            val mainOptionId = if (isPhotoCapture) {
+                                showcaseDataList.firstOrNull { it.id == stackPhoto?.showcaseId }?.mainOptionId
+                            } else {
+                                showcaseByPhotoId[stackPhoto?.photoServerId]?.mainOptionId
+                            }
 
                             val selected = FilteringDialogDataHolder
                                 .instance()
@@ -420,6 +453,10 @@ class ShowcaseDBViewModel @Inject constructor(
 
                             item.copy(
                                 selected = selected == true,
+                                images = if (isPhotoCapture) {
+                                    listOf(stackPhoto?.photo_num?.takeIf { it.isNotBlank() }
+                                        ?: R.mipmap.merchik.toString())
+                                } else item.images,
                                 rawFields = item.rawFields.map { field ->
                                     if (field.key == "mainOption" && mainOptionId == null)
                                         field.copy(value = field.value.copy(rawValue = ""))
@@ -447,6 +484,64 @@ class ShowcaseDBViewModel @Inject constructor(
 
     override fun shouldOpenContextMenuOnCardClick(): Boolean = true
 
+    private fun makeShowcasePhoto(
+        clickedDataItemUI: DataItemUI,
+        context: Context,
+        onPhotoFlowStarted: () -> Unit = {}
+    ) {
+        if (!isPhotoCapture) return
+
+        try {
+            val activity = context as? Activity ?: return
+            val wpDataDB = getCurrentWpDataOrLog("makePhoto") ?: run {
+                Toast.makeText(context, "Відвідування не знайдено. Оновіть список.", Toast.LENGTH_LONG).show()
+                return
+            }
+            val photo = clickedDataItemUI.rawAs<StackPhotoDB>() ?: return
+            val showcaseId = photo.showcaseId
+            val showcase = if (showcaseId == 0 && photo.id == -999) {
+                ShowcaseSDB().apply {
+                    id = 0
+                    nm = photo.showcaseName
+                }
+            } else {
+                RoomManager.SQL_DB.showcaseDao().getById(showcaseId)
+            }
+            if (showcase == null) {
+                Toast.makeText(context, "Вітрину не знайдено. Оновіть список.", Toast.LENGTH_LONG).show()
+                return
+            }
+            val photoType = getCapturePhotoType()
+            if (photoType == null) {
+                Toast.makeText(context, "Не визначено тип фото. Відкрийте список повторно з опції.", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            val captureData = JsonParser.parseString(dataJson).asJsonObject
+            val optionDbId = captureData.get("optionDbId")?.takeUnless { it.isJsonNull }?.asString
+            val option = optionDbId?.let { OptionsRealm.getOptionById(it) }
+                ?.let { RealmManager.INSTANCE.copyFromRealm(it) }
+            if (optionDbId != null && option == null) {
+                Toast.makeText(context, "Опцію не знайдено. Відкрийте список повторно з опції.", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            MakePhoto.example_id = captureData.get("exampleId")?.takeUnless { it.isJsonNull }?.asString.orEmpty()
+            MakePhoto.tovarId = captureData.get("tovarId")?.takeUnless { it.isJsonNull }?.asString.orEmpty()
+            MakePhoto.photoCustomerGroup = captureData.get("photoCustomerGroup")?.takeUnless { it.isJsonNull }?.asString.orEmpty()
+            MakePhoto().makePhotoForShowcase(activity, wpDataDB, option, photoType.toString(), showcase)
+            onPhotoFlowStarted()
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "ShowcaseDBViewModel/makePhoto", "dataJson=${dataJson.previewForLog()}, error=$e")
+            Toast.makeText(context, "Не вдалося розпочати виготовлення фото.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun getCapturePhotoType(): Int? = runCatching {
+        JsonParser.parseString(dataJson).asJsonObject.get("photoType")
+            ?.takeUnless { it.isJsonNull }?.asString?.toIntOrNull()?.takeIf { it >= 0 }
+    }.getOrNull()
+
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         showShowcaseContextMenu(listOf(itemUI), context)
     }
@@ -471,12 +566,76 @@ class ShowcaseDBViewModel @Inject constructor(
         showShowcaseContextMenu(items.withClickedFirst(clickedItem), context)
     }
 
+    override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
+        if (isPhotoCapture) {
+            val photo = clickedDataItemUI.rawAs<StackPhotoDB>()
+            if (photo == null || resolvePhotoDbForItem(photo, index) == null) {
+                Toast.makeText(context, "Фото вітрини ще не завантажено.", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+
+        super.onClickItemImage(clickedDataItemUI, context, index)
+        if (!isPhotoCapture) return
+
+        val photoDialog = dialog ?: return
+        photoDialog.setClose {
+            photoDialog.dismiss()
+            if (dialog === photoDialog) dialog = null
+            updateContent()
+        }
+        photoDialog.setCamera {
+            val currentPhoto = photoDialog.currentPhoto ?: return@setCamera
+            val currentItem = uiState.value.items.firstOrNull {
+                it.rawAs<StackPhotoDB>()?.showcaseId == currentPhoto.showcaseId
+            } ?: return@setCamera
+
+            makeShowcasePhoto(currentItem, context) {
+                photoDialog.dismiss()
+                if (dialog === photoDialog) dialog = null
+            }
+        }
+    }
+
+    override fun resolvePhotoDbForItem(obj: Any, index: Int): StackPhotoDB? {
+        if (!isPhotoCapture || obj !is StackPhotoDB) {
+            return super.resolvePhotoDbForItem(obj, index)
+        }
+
+        val photoId = obj.photoServerId?.trim()
+            ?.takeIf { (it.toLongOrNull() ?: 0L) > 0L }
+            ?: return null
+
+        // UI placeholders use showcase IDs. Only real photo rows may reach the downloader.
+        return runCatching {
+            StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(photoId)
+                ?.takeIf { it.id > 0 }
+                ?.apply {
+                    restoreShowcasePhotoCache(this)
+                    showcaseId = obj.showcaseId
+                    showcaseName = obj.showcaseName
+                }
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "resolve_photo_$photoId",
+                level = "ERROR",
+                stage = "resolvePhotoDbForItem",
+                message = "Cannot resolve original showcase photo. photoServerId=$photoId",
+                error = error
+            )
+        }.getOrNull()
+    }
+
     override fun onContextMenuAction(event: ContextMenuActionEvent) {
         when (event.actionId) {
             ContextMenuActionIds.SHOWCASE_VIEW_PHOTO -> {
                 hideContextMenu()
                 contextForPhotoAction?.get()?.let { context ->
-                    onClickItemImage(event.payload.firstItem, context)
+                    if (isPhotoCapture) {
+                        makeShowcasePhoto(event.payload.firstItem, context)
+                    } else {
+                        onClickItemImage(event.payload.firstItem, context)
+                    }
                 }
                 contextForPhotoAction = null
             }
@@ -634,8 +793,10 @@ class ShowcaseDBViewModel @Inject constructor(
                 ContextMenuEntry.Action(
                     id = "showcase_view_photo",
                     actionId = ContextMenuActionIds.SHOWCASE_VIEW_PHOTO,
-                    title = "Відкрити",
-                    leading = MenuLeading.DrawableIcon(R.drawable.ic_eye)
+                    title = if (isPhotoCapture) "Виготовити фото" else "Відкрити",
+                    leading = MenuLeading.DrawableIcon(
+                        if (isPhotoCapture) android.R.drawable.ic_menu_camera else R.drawable.ic_eye
+                    )
                 )
             )
 
@@ -1040,7 +1201,7 @@ class ShowcaseDBViewModel @Inject constructor(
             return emptyList()
         }
 
-        val isCompletedCheck = contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK
+        val isCompletedCheck = usesCompletedCheckFilters
         val typesForLog = if (isCompletedCheck) "all" else SHOWCASE_TYPES.toString()
 
         return runCatching {
@@ -1083,6 +1244,90 @@ class ShowcaseDBViewModel @Inject constructor(
                 error = error
             )
         }.getOrDefault(emptyList())
+    }
+
+    private fun buildCapturePhotos(
+        showcases: List<ShowcaseSDB>,
+        wpDataDB: WpDataDB
+    ): List<StackPhotoDB> {
+        val photoIds = showcases.mapNotNull { it.photoId?.takeIf { id -> id > 0 }?.toString() }.distinct()
+        val photosById = loadShowcasePhotos(photoIds, "getItems/$contextUI", wpDataDB)
+            .onEach { restoreShowcasePhotoCache(it) }
+            // DialogShowcase uses findFirst(), not the last duplicate with this server ID.
+            .distinctBy { it.photoServerId }
+            .associateBy { it.photoServerId }
+
+        // One UI row per showcase, even without a photo or with a shared sample photo.
+        return showcases.map { showcase ->
+            val photoId = showcase.photoId?.takeIf { it > 0 }?.toString().orEmpty()
+            val samplePhoto = photosById[photoId]
+            createShowcasePhotoPlaceholder(showcase, photoId, wpDataDB).apply {
+                photo_num = samplePhoto?.photo_num
+                photo_size = samplePhoto?.photo_size
+                photo_hash = samplePhoto?.photo_hash.orEmpty()
+                photoServerURL = samplePhoto?.photoServerURL?.takeIf { it.isNotBlank() } ?: photoServerURL
+                dt = samplePhoto?.dt
+            }
+        }
+    }
+
+    private fun restoreShowcasePhotoCache(photo: StackPhotoDB) {
+        if (photo.id <= 0 || photo.photo_size != "Full") return
+        val photoId = photo.photoServerId?.takeIf { (it.toLongOrNull() ?: 0L) > 0L } ?: return
+        val previousPath = photo.photo_num ?: return
+
+        runCatching {
+            val pictures = getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                ?: return
+            val replacedFile = File(pictures, "ShowcaseOriginal/$photoId.jpg")
+            if (File(previousPath).absolutePath != replacedFile.absolutePath) return
+
+            // Repair only the cache written by the removed ShowcaseOriginal downloader.
+            // Read bounds, not bitmaps; keep the largest surviving file as the preview.
+            val fullFile = File(pictures, "UserPhotoFull-$photoId.jpg")
+            val legacyFile = File(pictures, "Showcase/$photoId.jpg")
+            val restoredFile = listOf(fullFile, legacyFile, replacedFile)
+                .mapNotNull { file ->
+                    if (!file.isFile) return@mapNotNull null
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeFile(file.path, bounds)
+                    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@mapNotNull null
+                    file to bounds.outWidth.toLong() * bounds.outHeight
+                }
+                .maxByOrNull { it.second }
+                ?.first ?: replacedFile
+            val restoredSize = if (restoredFile == fullFile) "Full" else "Small"
+
+            Realm.getDefaultInstance().use { realm ->
+                realm.executeTransaction { transaction ->
+                    val current = transaction.where(StackPhotoDB::class.java)
+                        .equalTo("id", photo.id)
+                        .equalTo("photoServerId", photoId)
+                        .equalTo("photo_num", previousPath)
+                        .equalTo("photo_size", "Full")
+                        .findFirst() ?: return@executeTransaction
+                    current.photo_num = restoredFile.absolutePath
+                    // Small lets DialogFullPhoto use the standard authenticated PhotoDownload.
+                    current.photo_size = restoredSize
+                    photo.photo_num = current.photo_num
+                    photo.photo_size = current.photo_size
+                }
+            }
+            logShowcaseDiagnosticOnce(
+                key = "restore_cache_${photo.id}",
+                level = "INFO",
+                stage = "restorePhotoCache",
+                message = "photoServerId=$photoId, previousFile=$previousPath, file=${photo.photo_num}, size=${photo.photo_size}"
+            )
+        }.onFailure { error ->
+            logShowcaseDiagnosticOnce(
+                key = "restore_cache_error_${photo.id}",
+                level = "ERROR",
+                stage = "restorePhotoCache",
+                message = "Cannot restore photo cache. photoServerId=$photoId",
+                error = error
+            )
+        }
     }
 
     private fun buildShowcaseByPhotoId(
@@ -1431,6 +1676,17 @@ class ShowcaseDBViewModel @Inject constructor(
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+        if (isPhotoCapture) {
+            val photoContext = context ?: return
+            val selectedItem = itemsUI.singleOrNull()
+            if (selectedItem == null) {
+                Toast.makeText(photoContext, "Оберіть одну вітрину.", Toast.LENGTH_LONG).show()
+                return
+            }
+            makeShowcasePhoto(selectedItem, photoContext)
+            return
+        }
+
         val stackPhotoDB = itemsUI
             .firstOrNull()
             ?.rawObj

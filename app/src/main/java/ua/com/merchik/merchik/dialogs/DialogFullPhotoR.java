@@ -13,6 +13,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.ortiz.touchview.TouchImageView;
 
@@ -39,6 +40,7 @@ public class DialogFullPhotoR {
     // Pika
     private Button comment1;
     private String textComment1 = "";
+    private String commentTitle = "Комментарий";
 
     // Pika комментарий сразу поверх фото
     public boolean commentOn = false;
@@ -53,7 +55,7 @@ public class DialogFullPhotoR {
         dialog.setCancelable(false);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
-        int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.90);
+        int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.95);
 //        int height = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.90);
 
         dialog.setContentView(R.layout.dialog_photo_fullscreen);
@@ -72,7 +74,7 @@ public class DialogFullPhotoR {
         try {
 //            Toast.makeText(context, textComment1, Toast.LENGTH_LONG).show();
             DialogData dialogData = new DialogData(context);
-            dialogData.setTitle("Комментарий");
+            dialogData.setTitle(commentTitle);
             dialogData.setText(textComment1);
             dialogData.setClose(dialogData::dismiss);
             dialogData.show();
@@ -94,7 +96,7 @@ public class DialogFullPhotoR {
         // Pika
         if (commentOn) {
             DialogData dialogData = new DialogData(context);
-            dialogData.setTitle("Комментарий");
+            dialogData.setTitle(commentTitle);
             dialogData.setText(textComment1);
             dialogData.setScore(score);
             dialogData.setClose(dialogData::dismiss);
@@ -104,6 +106,21 @@ public class DialogFullPhotoR {
 
     public void dismiss() {
         if (dialog != null) dialog.dismiss();
+    }
+
+    public boolean isShowing() {
+        return dialog != null && dialog.isShowing();
+    }
+
+    public void setTitle(String text) {
+        TextView title = dialog.findViewById(R.id.photoTitle);
+        title.setText(text);
+        title.setVisibility(text == null || text.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    public void setCommentTitle(String text) {
+        commentTitle = text;
+        comment1.setText(text);
     }
 
     public void setClose(DialogData.DialogClickListener clickListener) {

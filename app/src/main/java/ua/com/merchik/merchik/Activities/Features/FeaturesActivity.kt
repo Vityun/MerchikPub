@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -267,6 +268,12 @@ class FeaturesActivity : AppCompatActivity() {
                 StackPhotoRealm.deleteByPhotoNum(it)
             }
             MakePhoto.clearPendingPhoto(this)
+        }
+
+        if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST &&
+            intent.getStringExtra("contextUI") == ContextUI.SHOWCASE_MAKE_PHOTO.toString()
+        ) {
+            ViewModelProvider(this)[ShowcaseDBViewModel::class.java].updateContent()
         }
     }
 

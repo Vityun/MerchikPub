@@ -55,23 +55,26 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.OtherComp
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataContentTab
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.data.Database.Room.InitStateEntity
+import ua.com.merchik.merchik.BuildConfig
+import ua.com.merchik.merchik.data.synchronization.StartupPolicy
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.hasData
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.retrofit.GlobalErrors
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder
+import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil
 
 
 @Composable
@@ -88,6 +91,15 @@ fun WpDataTabsScreen() {
     val textUnselectedColor = Color.Gray
 
     var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
+    val startedOffline = remember {
+        activity.intent?.getBooleanExtra(StartupPolicy.EXTRA_OFFLINE_LOGIN, false) == true
+    }
+    fun isOfflineNow() = StartupPolicy.isOffline(
+        startedOffline, NetworkUtil.isNetworkConnected(context),
+        RetrofitBuilder.hasServerStatusUI(), RetrofitBuilder.getServerStatusUI()
+    )
+    var offline by remember { mutableStateOf(isOfflineNow()) }
+    val canShowContent = dataIsReady
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     var initialTabResolved by rememberSaveable { mutableStateOf(false) }
 
@@ -100,7 +112,6 @@ fun WpDataTabsScreen() {
     )
 
     val hasAdditionalIncomeAccess = remember(dossierSotrSDBList) {
-        if (!dataIsReady) null
         dossierSotrSDBList.any { it.priznak == 1L }
     }
 
@@ -111,8 +122,8 @@ fun WpDataTabsScreen() {
         "Доп.заробіток"
     )
 
-    LaunchedEffect(dataIsReady, hasAdditionalIncomeAccess) {
-        if (!dataIsReady || initialTabResolved) return@LaunchedEffect
+    LaunchedEffect(canShowContent, hasAdditionalIncomeAccess) {
+        if (!canShowContent || initialTabResolved) return@LaunchedEffect
 
         val hasFirstTabData = RealmManager.getAllWorkPlanWithOutRNO_LIST().isNotEmpty()
         val hasSecondTabData = RealmManager.getAllWorkPlanForRNO_LIST().isNotEmpty()
@@ -126,8 +137,8 @@ fun WpDataTabsScreen() {
         initialTabResolved = true
     }
 
-    LaunchedEffect(selectedTabIndex, hasAdditionalIncomeAccess) {
-        if (selectedTabIndex == 1 && !hasAdditionalIncomeAccess && dataIsReady) {
+    LaunchedEffect(selectedTabIndex, hasAdditionalIncomeAccess, canShowContent) {
+        if (selectedTabIndex == 1 && !hasAdditionalIncomeAccess && canShowContent) {
             showAdditionalIncomeDeniedDialog = true
         }
     }
@@ -150,22 +161,30 @@ fun WpDataTabsScreen() {
 
     val badgeCounts = cronchikViewModel.badgeCounts
 
-    var isLoading by remember { mutableStateOf(false) }
     val progressModel = remember { ProgressViewModel(1) }
 
     LaunchedEffect(Unit) {
+        logStartupReadiness("start: offline=$offline")
         while (!dataIsReady) {
+            val currentlyOffline = isOfflineNow()
+            if (offline != currentlyOffline) {
+                offline = currentlyOffline
+                logStartupReadiness("offline=$offline")
+            }
             if (isDataReadyCompat()) {
-                delay(800)
                 dataIsReady = true
-                progressModel.onCompleted()
+                logStartupReadiness("ready")
                 cronchikViewModel.updateBadgeAdditionalIncome(5000f)
                 break
             }
 
-            if (Globals.getCurrentUserId() == 172906 || Globals.getCurrentUserId() == 19653) {
+            // These accounts skip the plan/options exchange, but still need UI dictionaries.
+            if ((Globals.getCurrentUserId() == 172906 || Globals.getCurrentUserId() == 19653)
+                && SiteObjectsLocalDefaults.hasDownloadedObjects()
+                && RoomManager.SQL_DB.themeDao().getCount() > 0
+            ) {
                 dataIsReady = true
-                progressModel.onCompleted()
+                logStartupReadiness("ready_without_plan")
                 break
             }
 
@@ -173,20 +192,28 @@ fun WpDataTabsScreen() {
         }
     }
 
-    LaunchedEffect(isLoading, dataIsReady) {
-        if (!dataIsReady && !isLoading) {
-            isLoading = true
-            val dialog = LoadingDialogWithPercent(context as Activity, progressModel)
-
-            dialog.setOnDismissListener(object : DialogDismissedListener {
-                override fun onDialogDismissed() {
-                    isLoading = false
-                }
-            })
-
-            dialog.show()
+    val showLoading = StartupPolicy.shouldShowLoading(dataIsReady, offline)
+    LaunchedEffect(showLoading) {
+        if (showLoading) {
+            progressModel.reset("Отримання даних вiд сервера")
             progressModel.onNextEvent("Отримання даних вiд сервера", 23_500)
+        } else {
+            progressModel.reset("")
         }
+    }
+    if (showLoading) {
+        LoadingDialog(progressModel, canCancel = false, onDismiss = {})
+    }
+    // Do not create the plan ViewModel/MainUI while required dictionaries are missing.
+    if (!canShowContent) {
+        if (offline) {
+            Text(
+                text = "Початкове завантаження даних не завершено. Повторіть обмін, коли сервер буде доступний.",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                color = Color.DarkGray
+            )
+        }
+        return
     }
 
     val viewModel: WpDataDBViewModel = hiltViewModel()
@@ -378,11 +405,11 @@ fun WpDataTabsScreen() {
         }
 
         if (Globals.getCurrentUserId() == 255247) {
-            WpDataContentTab(dataIsReady = dataIsReady)
+            WpDataContentTab(dataIsReady = canShowContent)
         } else {
             when (selectedTabIndex) {
-                0 -> WpDataContentTab(dataIsReady = dataIsReady)
-                1 -> OtherComposeTab(dataIsReady = dataIsReady)
+                0 -> WpDataContentTab(dataIsReady = canShowContent)
+                1 -> OtherComposeTab(dataIsReady = canShowContent && hasAdditionalIncomeAccess)
             }
         }
     }
@@ -497,44 +524,31 @@ fun GlobalErrorMsg() {
 
 
 /**
- * Совместимая проверка готовности:
- * 1) Если Room-флаги уже говорят "всё загружено" → true
- * 2) Иначе проверяем старую логику Realm.
- *    Если там всё ок → считаем готово и ДОзаполняем Room-флаги, чтобы потом
- *    уже всегда идти по новой схеме.
+ * Восстанавливаем отсутствующие флаги по данным из актуальных хранилищ.
+ * Сетевые ошибки не сбрасывают ранее сохранённую готовность.
  */
 fun isDataReadyCompat(): Boolean {
-    // 1. Сначала пробуем новый путь (через Room-флаги)
-    if (checkRealmReadyII()) return true
-
-    // 2. Старый путь: все таблицы Realm существуют и не пустые
-    if (checkRealmReady()) {
-        // Миграция: проставим флаги в Room, чтобы в следующий раз
-        // уже не опираться на Realm-состояние.
-        val initDao = RoomManager.SQL_DB.initStateDao()
-        val current = initDao.getState()
-
-        val updated = (current ?: InitStateEntity(id = 1)).copy(
-            wpLoaded = true,
-            siteLoaded = true,
-            optionsLoaded = true,
-            themeLoaded = true,
-            customerLoaded = true
-        )
-        initDao.saveState(updated)
-
-        return true
-    }
-
-    return false
+    val siteAvailable = SiteObjectsLocalDefaults.hasDownloadedObjects()
+    val themeAvailable = RoomManager.SQL_DB.themeDao().getCount() > 0
+    if (!siteAvailable || !themeAvailable) return false
+    val state = RoomManager.SQL_DB.initStateDao().mergeLocalReadiness(
+        wp = RealmManager.INSTANCE.hasData<WpDataDB>(),
+        site = siteAvailable,
+        options = RealmManager.INSTANCE.hasData<OptionsDB>(),
+        theme = themeAvailable
+    )
+    return StartupPolicy.areRequiredTablesReady(
+        state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
+        siteAvailable, themeAvailable
+    )
 }
 
 
 fun checkRealmReady(): Boolean {
     val hasWp = RealmManager.INSTANCE.hasData<WpDataDB>()
-    val hasStObj = RealmManager.INSTANCE.hasData<SiteObjectsDB>()
+    val hasStObj = SiteObjectsLocalDefaults.hasDownloadedObjects()
     val hasOption = RealmManager.INSTANCE.hasData<OptionsDB>()
-    val hasThema = RealmManager.INSTANCE.hasData<ThemeDB>()
+    val hasThema = RoomManager.SQL_DB.themeDao().getCount() > 0
 
     return hasWp && hasStObj && hasOption && hasThema
 }
@@ -543,5 +557,27 @@ fun checkRealmReadyII(): Boolean {
     val initDao = RoomManager.SQL_DB.initStateDao()
     val state = initDao.getState()
 
-    return state?.wpLoaded == true && state.siteLoaded && state.optionsLoaded && state.themeLoaded
+    return state != null && StartupPolicy.areRequiredTablesReady(
+        state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
+        SiteObjectsLocalDefaults.hasDownloadedObjects(),
+        RoomManager.SQL_DB.themeDao().getCount() > 0
+    )
+}
+
+private fun logStartupReadiness(reason: String) {
+    try {
+        Globals.writeToMLOG(
+            "INFO", "StartupReadiness",
+            "$reason, version=${BuildConfig.VERSION_NAME}, user=${Globals.getCurrentUserId()}, " +
+                    "flags=${RoomManager.SQL_DB.initStateDao().getState()}, " +
+                    "wp=${RealmManager.INSTANCE.where(WpDataDB::class.java).count()}, " +
+                    "site=${RealmManager.INSTANCE.where(SiteObjectsDB::class.java).count()}, " +
+                    "siteDownloaded=${SiteObjectsLocalDefaults.hasDownloadedObjects()}, " +
+                    "options=${RealmManager.INSTANCE.where(OptionsDB::class.java).count()}, " +
+                    "themeRoom=${RoomManager.SQL_DB.themeDao().getCount()}, " +
+                    "themeRealm=${RealmManager.INSTANCE.where(ThemeDB::class.java).count()}"
+        )
+    } catch (e: Exception) {
+        Log.e("StartupReadiness", "Cannot read startup diagnostics", e)
+    }
 }

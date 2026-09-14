@@ -858,13 +858,14 @@ public class RealmManager {
     }
 
     public static boolean setOptions(List<OptionsDB> optionsDBS) {
+        if (optionsDBS == null || optionsDBS.isEmpty()) return false;
         globals.writeToMLOG("_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
 
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(OptionsDB.class);
-        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
-        globals.writeToMLOG("_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
-        INSTANCE.commitTransaction();
+        INSTANCE.executeTransaction(realm -> {
+            realm.delete(OptionsDB.class);
+            List<OptionsDB> res = realm.copyToRealmOrUpdate(optionsDBS);
+            globals.writeToMLOG("_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
+        });
         return true;
     }
 

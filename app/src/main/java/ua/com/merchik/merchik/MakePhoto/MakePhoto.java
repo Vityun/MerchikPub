@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.Html;
@@ -19,6 +20,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
@@ -49,11 +53,14 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
+import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.trecker;
 
@@ -1099,6 +1106,29 @@ public class MakePhoto {
      * @param activity
      */
     public <T> void showDialogSW(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB) {
+        JsonObject data = new JsonObject();
+        data.addProperty("wpDataDBId", String.valueOf(wp.dad2));
+        data.addProperty("photoType", MakePhoto.photoType);
+        data.addProperty("photoCustomerGroup", MakePhoto.photoCustomerGroup);
+        data.addProperty("exampleId", MakePhoto.example_id);
+        data.addProperty("tovarId", MakePhoto.tovarId);
+        if (optionsDB != null) {
+            data.addProperty("optionDbId", optionsDB.getID());
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", ShowcaseDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.SHOWCASE_MAKE_PHOTO.toString());
+        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+        bundle.putString("dataJson", data.toString());
+        bundle.putString("title", "Вітрини");
+        bundle.putString("subTitle", "Оберіть вітрину для виготовлення фото");
+        Intent intent = new Intent(activity, FeaturesActivity.class);
+        intent.putExtras(bundle);
+        activity.startActivity(intent);
+    }
+
+    public <T> void showDialogSWOld(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB) {
         DialogShowcase dialog = new DialogShowcase(activity);
         dialog.wpDataDB = (WpDataDB) dataT;
         dialog.photoType = Integer.valueOf(MakePhoto.photoType);
@@ -1234,6 +1264,132 @@ public class MakePhoto {
         });
         dialog.setClose(dialog::dismiss);
         dialog.show();
+    }
+
+    // Continue the existing showcase/planogram flow without reopening the selector.
+    public void makePhotoForShowcase(Activity activity, WpDataDB dataT, OptionsDB optionsDB,
+                                    String photoType, ShowcaseSDB showcase) {
+        if (showcase == null || dataT == null) return;
+        try {
+            MakePhoto.photoType = photoType;
+            WPDataObj wp = new WorkPlan().getKPS(dataT.getId());
+            /*
+            25.04.25
+            Добавил обновление, теперь учитываются планограммы из таблицы planogram_vizit_showcase,
+            если их нет оставил старый дизайн
+             */
+            Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
+            PlanogrammSDB planogrammSDB = null;
+            PlanogrammVizitShowcaseSDB planogrammVizitShowcaseSDB = null;
+
+            try {
+                // 1. Всегда сбрасываем все поля, чтобы не было артефактов от прошлого вызова
+                MakePhoto.img_src_id      = "";
+                MakePhoto.showcase_id     = "";
+                MakePhoto.example_img_id  = "";
+                MakePhoto.planogram_id    = "";
+                MakePhoto.planogram_img_id = "";
+
+                // 2. Заполняем базовые значения из showcase
+                MakePhoto.img_src_id = showcase.photoId != null
+                        ? String.valueOf(showcase.photoId)
+                        : "";
+                MakePhoto.showcase_id = showcase.id != null
+                        ? String.valueOf(showcase.id)
+                        : "";
+                MakePhoto.example_img_id = showcase.photoId != null
+                        ? String.valueOf(showcase.photoId)
+                        : "";
+
+                // 3. Ищем витринный планограм по dad2
+                List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB
+                        .planogrammVizitShowcaseDao()
+                        .getByCodeDad2(wp.dad2);
+
+                if (planogrammVizitShowcaseSDBList != null) {
+                    for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
+                        if (item != null && Objects.equals(item.showcase_id, showcase.id)) {
+                            planogrammVizitShowcaseSDB = item;
+                            break;
+                        }
+                    }
+                }
+
+                // 4. Заполняем поля планограма
+                if (planogrammVizitShowcaseSDB != null) {
+                    MakePhoto.planogram_id = planogrammVizitShowcaseSDB.planogram_id != null
+                            ? String.valueOf(planogrammVizitShowcaseSDB.planogram_id)
+                            : "";
+                    MakePhoto.planogram_img_id = planogrammVizitShowcaseSDB.planogram_photo_id != null
+                            ? String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id)
+                            : "";
+                } else {
+                    // запасной вариант – из showcase / planogrammDao
+                    if (showcase.planogramId != null) {
+                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                        planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                        MakePhoto.planogram_img_id = (planogrammSDB != null && planogrammSDB.photoId != null)
+                                ? String.valueOf(planogrammSDB.photoId)
+                                : "";
+                    } else {
+                        // если даже planogramId нет – оставляем пустые строки (уже очищены выше)
+                        MakePhoto.planogram_id = "";
+                        MakePhoto.planogram_img_id = "";
+                    }
+                }
+
+            } catch (Exception e) {
+                // при ошибке тоже лучше сбросить, чтобы не висели старые значения
+                MakePhoto.img_src_id      = "";
+                MakePhoto.showcase_id     = "";
+                MakePhoto.example_img_id  = "";
+                MakePhoto.planogram_id    = "";
+                MakePhoto.planogram_img_id = "";
+
+                Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);
+            }
+
+
+            boolean needPlan;
+            if (planogrammSDB != null) {
+                needPlan = true;
+            } else {
+                needPlan = "0".equals(photoType);
+            }
+            if (planogrammVizitShowcaseSDB != null)
+                needPlan = false;
+
+            if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
+                wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
+                MakePhoto.photoCustomerGroup = showcase.tovarGrp.toString();
+                Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
+
+                if (needPlan) {
+                    showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
+                        photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
+                        });
+                    });
+                } else {
+                    photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
+                    });
+                }
+
+            } else {
+                if (needPlan) {
+                    showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
+                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                        });
+                    });
+                } else {
+                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                    });
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e("", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "showDialogSW/click", "Exception e: " + e);
+        }
     }
 
     /**

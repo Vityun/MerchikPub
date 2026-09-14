@@ -210,6 +210,7 @@ public class TablesLoadingUnloading {
     private Context context;
 
     private static String notice = "";
+    private static final Set<String> siteHintsRequestsInFlight = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * 18.08.2020
@@ -222,9 +223,26 @@ public class TablesLoadingUnloading {
         downloadAllTables(context);
     }
 
+    private static void initialDownloadFailed(String table, String reason) {
+        RetrofitBuilder.setServerStatusUI(false);
+        logInitialDataFailure(table, reason);
+    }
+
+    private static void logInitialDataFailure(String table, String reason) {
+        Globals.writeToMLOG("WARN", "StartupExchange/" + table,
+                reason + "; initialization flags not reset");
+    }
+
     public void downloadAllTables(Context context) {
         sync = true;
         this.context = context;
+        try {
+            if (!SiteObjectsLocalDefaults.hasDownloadedObjects()) {
+                downloadSiteHints(String.valueOf(Globals.langId));
+            }
+        } catch (Exception e) {
+            logInitialDataFailure("site_objects", "Readiness check failed: " + e.getClass().getSimpleName());
+        }
 //if (false)
         if (Globals.getCurrentUserId() != 172906)
             if (Globals.getCurrentUserId() != 19653)
@@ -464,6 +482,13 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
                     try {
+                        if (!response.isSuccessful() || response.body() == null
+                                || !Boolean.TRUE.equals(response.body().getState())
+                                || response.body().getList() == null) {
+                            initialDownloadFailed("wp_data", "Invalid response: http=" + response.code());
+                            readyWPData = false;
+                            return;
+                        }
                         if (response.isSuccessful() && response.body() != null) {
 
                             Set<Long> knownDad2BeforeDownload = getKnownWorkPlanDad2Snapshot();
@@ -566,12 +591,15 @@ public class TablesLoadingUnloading {
                         );
                         isdownloadWPData = false;
                         readyWPData = true;
+                    } finally {
+                        isdownloadWPData = false;
                     }
                     isdownloadWPData = false;
                 }
 
                 @Override
                 public void onFailure(Call<WpDataServer> call, Throwable t) {
+                    initialDownloadFailed("wp_data", "failure=" + t.getClass().getSimpleName());
 //                    if (pg != null)
 //                        if (pg.isShowing())
 //                            pg.dismiss();
@@ -2069,8 +2097,13 @@ public class TablesLoadingUnloading {
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
                 try {
                     globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
+                    if (!response.isSuccessful() || response.body() == null
+                            || !Boolean.TRUE.equals(response.body().getState())
+                            || response.body().getList() == null) {
+                        initialDownloadFailed("options", "Invalid response: http=" + response.code());
+                        return;
+                    }
                     if (response.isSuccessful() && response.body() != null) {
-                        RoomManager.SQL_DB.initStateDao().markOptionsLoaded();
 
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
                         globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
@@ -2087,7 +2120,10 @@ public class TablesLoadingUnloading {
 //                            });
                         }
 
+                        RoomManager.SQL_DB.initStateDao().markOptionsLoaded();
                     }
+                } catch (Exception e) {
+                    logInitialDataFailure("options", "Save failed: " + e.getClass().getSimpleName());
                 } finally {
                     readyOptions = true;
                     isDownloadOptions = false;
@@ -2096,6 +2132,7 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(Call<OptionsServer> call, Throwable t) {
+                initialDownloadFailed("options", "failure=" + t.getClass().getSimpleName());
                 globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
 //                if (pg != null)
 //                    if (pg.isShowing())
@@ -4488,6 +4525,7 @@ id_exclude - иди товаров которые есть в приложени
      * @param langId
      */
     public static void downloadSiteHints(String langId) {
+        if (!siteHintsRequestsInFlight.add(langId)) return;
         try {
             Log.e("downloadSiteHints", "String langId: " + langId);
 
@@ -4500,27 +4538,35 @@ id_exclude - иди товаров которые есть в приложени
                 @Override
                 public void onResponse(Call<SiteObjects> call, Response<SiteObjects> response) {
                     try {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && !response.body().getObjectList().isEmpty()) {
+                        if (response.isSuccessful() && response.body() != null
+                                && Boolean.TRUE.equals(response.body().getState())
+                                && response.body().getObjectList() != null && !response.body().getObjectList().isEmpty()) {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
                                 saveSiteObjectsDB(response.body().getObjectList());
                                 RoomManager.SQL_DB.initStateDao().markSiteLoaded();
-                            }
+                        } else {
+                            initialDownloadFailed("site_objects", "Empty or invalid response: http=" + response.code());
                         }
                     } catch (Exception e) {
+                        logInitialDataFailure("site_objects", "Save failed: " + e.getClass().getSimpleName());
                         Log.e("downloadSiteHints", "Exception e: " + e);
+                    } finally {
+                        siteHintsRequestsInFlight.remove(langId);
                     }
 
                 }
 
                 @Override
                 public void onFailure(Call<SiteObjects> call, Throwable t) {
+                    siteHintsRequestsInFlight.remove(langId);
+                    initialDownloadFailed("site_objects", "failure=" + t.getClass().getSimpleName());
                     Log.e("downloadSiteHints", "FAILURE_E: " + t.getMessage());
                     Log.e("downloadSiteHints", "FAILURE_E2: " + t);
                 }
             });
         } catch (Exception e) {
-            //todo Делать запись в лог ошибки
+            siteHintsRequestsInFlight.remove(langId);
+            initialDownloadFailed("site_objects", "Request failed: " + e.getClass().getSimpleName());
         }
     }
 
@@ -4852,7 +4898,9 @@ id_exclude - иди товаров которые есть в приложени
 
             // #### TODO
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("theme_list");
-            data.dt = String.valueOf(synchronizationTimetableDB.getVpi_app());
+            data.dt = String.valueOf(synchronizationTimetableDB == null
+                    || RoomManager.SQL_DB.themeDao().getCount() == 0
+                    ? 0L : synchronizationTimetableDB.getVpi_app());
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -4876,23 +4924,38 @@ id_exclude - иди товаров которые есть в приложени
                 @Override
                 public void onResponse(Call<ThemeTableRespose> call, Response<ThemeTableRespose> response) {
                     try {
-                        RoomManager.SQL_DB.initStateDao().markThemeLoaded();
-                        if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
-                            ThemeRealm.setThemeDBTable(response.body().getList());
-                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                        if (response.isSuccessful() && response.body() != null
+                                && Boolean.TRUE.equals(response.body().getState()) && response.body().getList() != null) {
+                            if (!response.body().getList().isEmpty()) {
+                                ThemeRealm.setThemeDBTable(response.body().getList());
+                            }
+                            // Empty incremental responses are valid only with an existing dictionary.
+                            if (RoomManager.SQL_DB.themeDao().getCount() == 0) {
+                                initialDownloadFailed("theme", "Empty initial dictionary");
+                                return;
+                            }
+                            RoomManager.SQL_DB.initStateDao().markThemeLoaded();
+                            if (synchronizationTimetableDB != null) {
+                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
+                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                            }
+                        } else {
+                            initialDownloadFailed("theme", "Invalid response: http=" + response.code());
                         }
                     } catch (Exception e) {
+                        logInitialDataFailure("theme", "Save failed: " + e.getClass().getSimpleName());
                         Globals.writeToMLOG("ERR", "downloadTheme/onResponse", "Exception e: " + e);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ThemeTableRespose> call, Throwable t) {
+                    initialDownloadFailed("theme", "failure=" + t.getClass().getSimpleName());
                     Globals.writeToMLOG("ERR", "downloadTheme/onFailure", "onFailure e: " + t.getMessage());
                 }
             });
         } catch (Exception e) {
+            logInitialDataFailure("theme", "Request failed: " + e.getClass().getSimpleName());
         }
     }
 

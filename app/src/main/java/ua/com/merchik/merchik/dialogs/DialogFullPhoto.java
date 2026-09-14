@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.PagerSnapHelper;
@@ -141,6 +142,14 @@ public class DialogFullPhoto {
         camera.setOnClickListener((view) -> {
             clickVoid.click();
         });
+    }
+
+    @Nullable
+    public StackPhotoDB getCurrentPhoto() {
+        if (photoLogData == null || POSITION_ADAPTER < 0 || POSITION_ADAPTER >= photoLogData.size()) {
+            return null;
+        }
+        return photoLogData.get(POSITION_ADAPTER);
     }
 
     public void show() {
@@ -283,6 +292,7 @@ public class DialogFullPhoto {
 
         photoLogData = data;
         position = pos;
+        POSITION_ADAPTER = pos;
         ratingType = RatingType.PHOTO;
 
         Log.e("setPhotos", "ratingType: " + ratingType);

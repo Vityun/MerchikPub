@@ -4,10 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,7 +14,6 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsDialogViewModel
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.isDataReadyCompat
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -36,10 +32,7 @@ fun WpDataContentTab(dataIsReady: Boolean) {
 
     WPDataActivity.textLesson = 8718
 
-    // ✅ локальный "бейдж"
-    var localReady by remember(dataIsReady) { mutableStateOf(dataIsReady) }
-
-    var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
+    val localReady = dataIsReady
 
     if (localReady) {
         val viewModel: WpDataDBViewModel = hiltViewModel()

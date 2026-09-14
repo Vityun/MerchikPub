@@ -669,7 +669,7 @@ fun ImageCommentFieldsBlock(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp,
-                start = 2.dp)
+                start = 4.dp)
     ) {
         fields.forEach { field ->
             Box(

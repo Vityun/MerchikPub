@@ -160,8 +160,8 @@ public class server {
         call.enqueue(new retrofit2.Callback<ServerConnection>() {
             @Override
             public void onResponse(retrofit2.Call<ServerConnection> call, retrofit2.Response<ServerConnection> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().getState()) {
+                if (response.isSuccessful() && response.body() != null
+                        && Boolean.TRUE.equals(response.body().getState())) {
                         if (Globals.autoSendManualMode) {
                             Globals.autoSend = true;
                             Globals.autoSendManualMode = false;
@@ -178,7 +178,13 @@ public class server {
                             Globals.writeToMLOG("WARN", "server/serverIsOn", "server_time is null");
                         }
                         Globals.serverGetTime = System.currentTimeMillis();
-                    }
+                } else {
+                    test = false;
+                    RetrofitBuilder.setServerStatusUI(false);
+                    RetrofitBuilder.setServerTime(0);
+                    Globals.writeToMLOG("WARN", "server/serverIsOn",
+                            "Ping rejected: http=" + response.code() + ", state="
+                                    + (response.body() == null ? "null" : response.body().getState()));
                 }
             }
 

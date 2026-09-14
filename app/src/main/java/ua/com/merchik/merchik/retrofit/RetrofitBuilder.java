@@ -53,7 +53,8 @@ public class RetrofitBuilder {
     private RetrofitInterface interfaceAPIforImage;
 
 
-    private static boolean serverStatus;//todo add int interConnection
+    private static volatile boolean serverStatus;//todo add int interConnection
+    private static volatile boolean serverStatusKnown;
     private static long serverTime;
 
     private final int MAX_CONCURRENT_REQUESTS = 12; // Ограничиваем до 12 одновременных запросов
@@ -337,6 +338,11 @@ public class RetrofitBuilder {
     public static void setServerStatusUI(boolean status) {
 
         serverStatus = status;
+        serverStatusKnown = true;
+    }
+
+    public static boolean hasServerStatusUI() {
+        return serverStatusKnown;
     }
 
     public static boolean getServerStatusUI() {
