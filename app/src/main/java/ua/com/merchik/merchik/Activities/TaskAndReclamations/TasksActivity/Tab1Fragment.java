@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -202,6 +203,14 @@ public class Tab1Fragment extends Fragment {
     }
 
     private void initView(View v) {
+        View mapContainer = v.findViewById(R.id.tar_visit_map_container);
+        ComposeView composeMap = v.findViewById(R.id.tar_visit_map);
+        if (data.codeDad2SrcDoc != null && data.codeDad2SrcDoc > 0) {
+            mapContainer.setVisibility(View.VISIBLE);
+            TARVisitMapHostKt.attachTARVisitMap(composeMap, data.codeDad2SrcDoc);
+        } else {
+            mapContainer.setVisibility(View.GONE);
+        }
         textViewData = v.findViewById(R.id.text_data);
         textViewData.setMovementMethod(LinkMovementMethod.getInstance());
         goToWpData = v.findViewById(R.id.wpLink);

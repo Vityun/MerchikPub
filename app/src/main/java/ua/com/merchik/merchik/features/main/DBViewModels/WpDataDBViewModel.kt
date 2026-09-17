@@ -687,7 +687,7 @@ class WpDataDBViewModel @Inject constructor(
                             .filters
 //                        val selected = filter
                             ?.items
-                            ?.firstOrNull { it.clazz == table }
+                            ?.firstOrNull { it.isSelectionTarget(table, sourceFilterKey) }
                             ?.rightValuesRaw
                             ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
                         it.copy(selected = true)
@@ -696,7 +696,7 @@ class WpDataDBViewModel @Inject constructor(
                     else -> {
                         val selected = filter
                             ?.items
-                            ?.firstOrNull { it.clazz == table }
+                            ?.firstOrNull { it.isSelectionTarget(table, sourceFilterKey) }
                             ?.rightValuesRaw
                             ?.contains((it.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB)?.code_dad2.toString())
                         it.copy(selected = selected == true)
@@ -804,7 +804,7 @@ class WpDataDBViewModel @Inject constructor(
         FilteringDialogDataHolder.instance().filters.apply {
             this?.let { filters ->
                 filters.items = filters.items.map { itemFilter ->
-                    if (itemFilter.clazz == table) {
+                    if (itemFilter.isSelectionTarget(table, sourceFilterKey)) {
                         val rightValuesRaw = mutableListOf<String>()
                         val rightValuesUI = mutableListOf<String>()
                         itemsUI.forEach {

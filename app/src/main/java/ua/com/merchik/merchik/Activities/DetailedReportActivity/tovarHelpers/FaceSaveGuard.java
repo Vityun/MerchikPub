@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao.ReportCorrectionDiagnostic;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public final class FaceSaveGuard {
@@ -92,9 +93,24 @@ public final class FaceSaveGuard {
                 return FaceSaveCheckResult.success();
             }
 
+            // 2026-09-16: allow face reset for a source-visit TAR with theme need_report=1 or tp=2.
+            long codeDad2 = wpDataDB.getCode_dad2();
+            if (codeDad2 > 0L && SQL_DB.tarDao().hasReportCorrectionRequestBySourceDad2(codeDad2)) {
+                Globals.writeToMLOG(
+                        "INFO",
+                        "FaceSaveGuard/canSaveFace",
+                        "Allowed finished work face reset by TAR with theme.need_report=1 OR theme.tp=2. codeDad2="
+                                + codeDad2 + ", tovarId=" + rp.getTovarId() + ", oldFace=" + oldFace
+                );
+                return FaceSaveCheckResult.success();
+            }
+
+            logReportCorrectionDiagnostics(wpDataDB, rp, oldFace);
+
             /*
              * 2026-08-04: face reset to 0 is blocked for every completed work,
-             * not only for option 159707. This protects both the Compose editor
+             * not only for option 159707, unless the TAR exception above applies.
+             * This protects both the Compose editor
              * and the old requisites dialog, because both paths call this guard.
              */
             showCompletedWorkFaceZeroBlockedDialog(
@@ -120,6 +136,52 @@ public final class FaceSaveGuard {
             );
 
             return FaceSaveCheckResult.error();
+        }
+    }
+
+    private static void logReportCorrectionDiagnostics(WpDataDB wpDataDB, ReportPrepareDB rp, int oldFace) {
+        String tag = "FaceSaveGuard/TAR_DIAGNOSTIC";
+        try {
+            long codeDad2 = wpDataDB.getCode_dad2();
+            Globals.writeToMLOG("INFO", tag,
+                    "allowed=false, codeDad2=" + codeDad2 + ", tovarId=" + rp.getTovarId()
+                            + ", oldFace=" + oldFace + ", newFace=0"
+                            + ", client_end_dt=" + wpDataDB.getClient_end_dt()
+                            + ", visit_end_dt=" + wpDataDB.getVisit_end_dt());
+            if (codeDad2 <= 0L) {
+                Globals.writeToMLOG("INFO", tag, "reason=INVALID_VISIT_DAD2");
+                return;
+            }
+
+            // Include matches on the other DAD2 field only for diagnostics, not for unlocking.
+            int logLimit = 20;
+            List<ReportCorrectionDiagnostic> rows = SQL_DB.tarDao()
+                    .getReportCorrectionDiagnostics(codeDad2, logLimit + 1);
+            Globals.writeToMLOG("INFO", tag,
+                    "relatedRowsShown=" + Math.min(rows.size(), logLimit)
+                            + ", truncated=" + (rows.size() > logLimit)
+                            + (rows.isEmpty() ? ", reason=NO_RELATED_TAR" : ""));
+            for (int i = 0; i < Math.min(rows.size(), logLimit); i++) {
+                ReportCorrectionDiagnostic row = rows.get(i);
+                boolean sourceMatches = Long.valueOf(codeDad2).equals(row.codeDad2SrcDoc);
+                boolean themeAllowsCorrection = Integer.valueOf(1).equals(row.needReport)
+                        || "2".equals(row.themeTp);
+                String reason = !sourceMatches ? "SOURCE_DAD2_MISMATCH"
+                        : row.matchedThemeId == null ? "THEME_NOT_FOUND"
+                        : !themeAllowsCorrection ? "THEME_CONDITIONS_NOT_MET"
+                        : "MATCH_FOUND_AFTER_CHECK";
+                Globals.writeToMLOG("INFO", tag,
+                        "tarId=" + row.id + ", id1c=" + row.id1c
+                                + ", codeDad2=" + row.codeDad2 + ", codeDad2SrcDoc=" + row.codeDad2SrcDoc
+                                + ", sourceMatches=" + sourceMatches + ", themeId=" + row.themeId
+                                + ", themeFound=" + (row.matchedThemeId != null)
+                                + ", themeTp=" + row.themeTp
+                                + ", need_report=" + row.needReport
+                                + ", state=" + row.state + ", tarTp=" + row.tp + ", reason=" + reason);
+            }
+        } catch (Exception e) {
+            // Diagnostic failures must not change the save decision or the error dialog.
+            Globals.writeToMLOG("ERROR", tag, "Diagnostic query failed: " + e);
         }
     }
 

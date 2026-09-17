@@ -27,6 +27,9 @@ public interface SamplePhotoDao {
     @Query("SELECT * FROM sample_photo WHERE id = :id")
     SamplePhotoSDB getById(int id);
 
+    @Query("SELECT * FROM sample_photo WHERE photoId = :photoId")
+    SamplePhotoSDB getByPhotoId(int photoId);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<SamplePhotoSDB> data);
 

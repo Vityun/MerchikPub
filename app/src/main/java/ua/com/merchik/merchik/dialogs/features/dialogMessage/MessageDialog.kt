@@ -1,10 +1,13 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -12,7 +15,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,13 +34,16 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -102,6 +111,8 @@ fun MessageDialog(
     dismissOnBackPress: Boolean = true,
     dismissOnClickOutside: Boolean = true,
     onTextLinkClick: ((String) -> Unit)? = null,
+    singleChoice: MessageDialogSingleChoice? = null,
+    fontSizeOffsetSp: Float = 0f,
     onDialogClosed: ((DialogCloseReason) -> Unit)? = null
 ) {
     Log.e("additionalEarningsDialogData", "MessageDialog ++")
@@ -109,6 +120,24 @@ fun MessageDialog(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var isChecked by rememberSaveable { mutableStateOf(false) }
+    val confirmEnabled = singleChoice?.canConfirm != false
+    val confirmButtonColors = ButtonDefaults.buttonColors(
+        containerColor = colorResource(R.color.orange),
+        disabledContainerColor = Color(0xFFD0D0D0),
+        disabledContentColor = Color(0xFF616161)
+    )
+    val context = LocalContext.current
+    // Disabled buttons ignore onClick; only the hint overlay handles these taps.
+    val disabledConfirmHintModifier = Modifier.pointerInput(context) {
+        detectTapGestures {
+            Toast.makeText(context, "Спочатку оберіть потрібний варіант", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun TextStyle.withDialogFontSize(): TextStyle = if (fontSizeOffsetSp == 0f) this else copy(
+        fontSize = if (fontSize.isSp) (fontSize.value + fontSizeOffsetSp).sp else fontSize,
+        lineHeight = if (lineHeight.isSp) (lineHeight.value + fontSizeOffsetSp).sp else lineHeight
+    )
 
     fun closeDialog(reason: DialogCloseReason) {
         onDialogClosed?.invoke(reason)
@@ -212,7 +241,7 @@ fun MessageDialog(
                     title?.takeIf { it.isNotEmpty() }?.let {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.withDialogFontSize(),
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                                 .scale(1.1f),
@@ -248,7 +277,7 @@ fun MessageDialog(
                     subTitle?.takeIf { it.isNotEmpty() }?.let {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleSmall.withDialogFontSize(),
                             color = Color.Gray,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -258,7 +287,7 @@ fun MessageDialog(
 
                     BasicText(
                         text = styledAnnotatedString,
-                        style = MaterialTheme.typography.titleSmall.copy(
+                        style = MaterialTheme.typography.titleSmall.withDialogFontSize().copy(
                             color = Color(0xCC1E201D),
                             textAlign = TextAlign.Justify
                         ),
@@ -289,6 +318,47 @@ fun MessageDialog(
                         }
                     )
 
+                    singleChoice?.let { choice ->
+                        Column(
+                            modifier = Modifier
+                                .width(IntrinsicSize.Max)
+                                .padding(top = 4.dp)
+                                .selectableGroup()
+                        ) {
+                            choice.options.forEach { option ->
+                                val selected = choice.selectedKey == option.key
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 44.dp)
+                                        .selectable(
+                                            selected = selected,
+                                            role = Role.RadioButton,
+                                            onClick = { choice.select(option.key) }
+                                        )
+                                        .padding(horizontal = 0.dp, vertical = 4.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = selected,
+                                        onClick = null,
+                                        colors = RadioButtonDefaults.colors(
+                                            selectedColor = colorResource(R.color.blue),
+                                            unselectedColor = Color.Gray
+                                        )
+                                    )
+                                    Text(
+                                        text = option.title,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 12.dp),
+                                        style = MaterialTheme.typography.bodyMedium.withDialogFontSize()
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     if (showCheckbox) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -306,7 +376,7 @@ fun MessageDialog(
                             Text(
                                 text = stringResource(id = R.string.not_show_again),
                                 modifier = Modifier.padding(start = 4.dp),
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall.withDialogFontSize()
                             )
                         }
                     }
@@ -331,21 +401,27 @@ fun MessageDialog(
                                         ),
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text(cancelButtonName)
+                                        Text(cancelButtonName, style = LocalTextStyle.current.withDialogFontSize())
                                     }
 
-                                    Button(
-                                        onClick = {
-                                            onConfirmAction()
-                                            closeDialog(DialogCloseReason.CONFIRM)
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = colorResource(id = R.color.orange)
-                                        ),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(okButtonName)
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        Button(
+                                            onClick = {
+                                                if (confirmEnabled) {
+                                                    onConfirmAction()
+                                                    closeDialog(DialogCloseReason.CONFIRM)
+                                                }
+                                            },
+                                            enabled = confirmEnabled,
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = confirmButtonColors,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(okButtonName, style = LocalTextStyle.current.withDialogFontSize())
+                                        }
+                                        if (!confirmEnabled) {
+                                            Box(Modifier.matchParentSize().then(disabledConfirmHintModifier))
+                                        }
                                     }
                                 }
                             }
@@ -368,9 +444,9 @@ fun MessageDialog(
                                         AutoResizeText(
                                             text = cancelButtonName,
                                             modifier = Modifier.fillMaxWidth(),
-                                            style = MaterialTheme.typography.labelLarge,
+                                            style = MaterialTheme.typography.labelLarge.withDialogFontSize(),
                                             maxLines = 1,
-                                            minTextSize = 12.sp,
+                                            minTextSize = (12f + fontSizeOffsetSp).sp,
                                             step = 1.sp
                                         )
                                     }
@@ -381,27 +457,31 @@ fun MessageDialog(
                             onConfirmAction != null -> {
                                 Row {
                                     Spacer(modifier = Modifier.weight(1f))
-                                    Button(
-                                        onClick = {
-                                            onConfirmAction()
-                                            closeDialog(DialogCloseReason.CONFIRM)
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = colorResource(id = R.color.orange)
-                                        ),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxWidth()
-                                    ) {
-                                        AutoResizeText(
-                                            text = okButtonName,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            style = MaterialTheme.typography.labelLarge,
-                                            maxLines = 1,
-                                            minTextSize = 12.sp,
-                                            step = 1.sp
-                                        )
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        Button(
+                                            onClick = {
+                                                if (confirmEnabled) {
+                                                    onConfirmAction()
+                                                    closeDialog(DialogCloseReason.CONFIRM)
+                                                }
+                                            },
+                                            enabled = confirmEnabled,
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = confirmButtonColors,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            AutoResizeText(
+                                                text = okButtonName,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                style = MaterialTheme.typography.labelLarge.withDialogFontSize(),
+                                                maxLines = 1,
+                                                minTextSize = (12f + fontSizeOffsetSp).sp,
+                                                step = 1.sp
+                                            )
+                                        }
+                                        if (!confirmEnabled) {
+                                            Box(Modifier.matchParentSize().then(disabledConfirmHintModifier))
+                                        }
                                     }
                                 }
                             }

@@ -195,4 +195,212 @@ class ItemFilterTest {
         assertEquals(listOf(4L, 5L), filteredIds(green))
         assertEquals(listOf(2L, 3L), filteredIds(violations))
     }
+
+    private fun row(id: Long, vararg states: String) = DataItemUI(
+        rawObj = emptyList(),
+        rawFields = states.map { state -> FieldValue(
+            "option_display_state", TextField("option_display_state", "Display"), TextField(state, state)
+        ) },
+        fields = emptyList(),
+        selected = false,
+        stableId = id
+    )
+
+    private fun applyFilters(rows: List<DataItemUI>, vararg filters: ItemFilter) = filterAndSortDataItems(
+        items = rows,
+        filters = Filters(items = filters.toList()),
+        sortingFields = emptyList(),
+        groupingFields = emptyList(),
+        rangeStart = null,
+        rangeEnd = null,
+        searchText = null
+    )
+
+    @Test
+    fun ordinaryExclusionRemovesAnySelectedValue() {
+        val filter = dropdown().copy(
+            choices = null,
+            excludeMode = true,
+            rightValuesRaw = listOf("active", "inactive"),
+            rightValuesUI = listOf("Active", "Inactive")
+        )
+        val result = applyFilters(listOf(row(1, "active"), row(2, "inactive"), row(3, "other")), filter)
+
+        assertEquals(listOf(3L), result.items.map { it.stableId })
+        assertEquals(true, result.isActiveFiltered)
+    }
+
+    @Test
+    fun emptyExclusionDoesNotHideAnythingOrMarkFilteringActive() {
+        val filter = dropdown().copy(choices = null, excludeMode = true)
+        val rows = listOf(row(1, "active"), row(2, "inactive"), row(3))
+        val result = applyFilters(rows, filter)
+
+        assertEquals(rows, result.items)
+        assertEquals(false, result.isActiveFiltered)
+    }
+
+    @Test
+    fun inclusionAndExclusionAreBothApplied() {
+        val include = dropdown().selectChoice(active)
+        val exclude = dropdown().selectChoice(green).copy(excludeMode = true, key = "exclude")
+        val rows = listOf(row(1, "active"), row(2, "active_green"), row(3, "inactive_green"))
+
+        assertEquals(listOf(1L), applyFilters(rows, include, exclude).items.map { it.stableId })
+        assertEquals(emptyList<DataItemUI>(), applyFilters(rows, include, include.copy(excludeMode = true)).items)
+    }
+
+    @Test
+    fun exclusionKeepsMissingFieldsButRemovesRowsWithAnyMatchingField() {
+        val filter = dropdown().selectChoice(active)
+        val rows = listOf(row(1), row(2, "other"), row(3, "other", "active"))
+
+        assertEquals(listOf(1L, 2L), applyFilters(rows, filter.copy(excludeMode = true)).items.map { it.stableId })
+        assertEquals(listOf(3L), applyFilters(rows, filter).items.map { it.stableId })
+    }
+
+    @Test
+    fun exclusionUsesCaseInsensitiveFieldKeysAndRawValues() {
+        val filter = dropdown().copy(
+            choices = null, excludeMode = true, leftField = "OPTION_DISPLAY_STATE", rightValuesRaw = listOf("42")
+        )
+        val numeric = row(1, "placeholder").let { item ->
+            item.copy(rawFields = item.rawFields.map { it.copy(value = TextField(42, "Translated name")) })
+        }
+
+        assertEquals(listOf(2L), applyFilters(listOf(numeric, row(2, "other")), filter).items.map { it.stableId })
+    }
+
+    @Test
+    fun selectingAndClearingValuesPreservesExclusionMode() {
+        val filter = dropdown().copy(excludeMode = true)
+        val selected = filter.selectChoice(green)
+
+        assertEquals(true, selected.excludeMode)
+        assertEquals(true, selected.clearValues().excludeMode)
+        assertEquals(active.rawValues, selected.clearValues().rightValuesRaw)
+        val ordinaryCleared = selected.copy(choices = null).clearValues()
+        assertEquals(true, ordinaryCleared.excludeMode)
+        assertEquals(emptyList<String>(), ordinaryCleared.rightValuesRaw)
+    }
+
+    @Test
+    fun exclusionWorksWithDropdownAndEmptyChoice() {
+        val rows = listOf(row(1, "active_green"), row(2, "inactive_green"), row(3, "active_violation"))
+        val filter = dropdown().copy(excludeMode = true).selectChoice(green)
+
+        assertEquals(listOf(3L), applyFilters(rows, filter).items.map { it.stableId })
+        assertEquals(rows, applyFilters(rows, filter.selectChoice(all)).items)
+    }
+
+    @Test
+    fun exclusionIsAppliedBeforeSortingAndGrouping() {
+        val rows = listOf(row(1, "active"), row(2, "inactive"), row(3, "active_green"))
+            .map { it.copy(fields = it.rawFields) }
+        val result = filterAndSortDataItems(
+            items = rows,
+            filters = Filters(items = listOf(dropdown().selectChoice(green).copy(excludeMode = true))),
+            sortingFields = listOf(SortingField(key = "option_display_state", order = -1)),
+            groupingFields = listOf(GroupingField(key = "option_display_state")),
+            rangeStart = null,
+            rangeEnd = null,
+            searchText = null
+        )
+
+        assertEquals(setOf(1L, 2L), result.items.map { it.stableId }.toSet())
+        assertEquals(2, result.groups.size)
+        assertEquals(true, result.isActiveSorted)
+        assertEquals(true, result.isActiveGrouped)
+    }
+
+    @Test
+    fun includeAndExcludeFiltersHaveDifferentIdentitiesEvenAfterCopy() {
+        val include = dropdown()
+        val exclude = include.copy(excludeMode = true)
+
+        assertEquals(include.key, include.identityKey)
+        assertEquals(include.key, exclude.key)
+        assertNotEquals(include.identityKey, exclude.identityKey)
+    }
+
+    @Test
+    fun removingExcludedVisitDoesNotRenameOrClearTheLockedIncludeFilter() {
+        val include = dropdown().copy(
+            title = "Visit", choices = null, enabled = false,
+            rightValuesRaw = listOf("123"), rightValuesUI = listOf("Visit 123")
+        )
+        val exclude = include.copy(title = "Exclude visit", enabled = true, excludeMode = true)
+        val changed = exclude.clearValues()
+        val updated = listOf(include, exclude).map {
+            if (it.identityKey == changed.identityKey) changed else it
+        }
+
+        assertSame(include, updated.first())
+        assertEquals("Visit", updated.first().title)
+        assertEquals(false, updated.first().enabled)
+        assertEquals(listOf("123"), updated.first().rightValuesRaw)
+        assertEquals(listOf("Visit 123"), updated.first().rightValuesUI)
+        assertEquals("Exclude visit", updated.last().title)
+        assertEquals(true, updated.last().excludeMode)
+        assertEquals(emptyList<String>(), updated.last().rightValuesRaw)
+        val rows = listOf(row(1, "123"), row(2, "456"))
+        assertEquals(emptyList<DataItemUI>(), applyFilters(rows, include, exclude).items)
+        assertEquals(listOf(1L), applyFilters(rows, *updated.toTypedArray()).items.map { it.stableId })
+    }
+
+    @Test
+    fun identitySurvivesChangingLabelsAndClearingValues() {
+        val exclude = dropdown().copy(excludeMode = true).selectChoice(green)
+
+        assertEquals(exclude.identityKey, exclude.copy(title = "Translated title").identityKey)
+        assertEquals(exclude.identityKey, exclude.clearValues().identityKey)
+    }
+
+    @Test
+    fun pickerReadsSelectionFromTheRequestedFilterNotFirstOfSameTable() {
+        val include = dropdown().selectChoice(active)
+        val exclude = dropdown().copy(excludeMode = true).selectChoice(green)
+        val filters = listOf(include, exclude)
+        val selectedFilter = filters.firstOrNull {
+            it.isSelectionTarget(OptionsDB::class, exclude.identityKey)
+        }
+
+        assertSame(exclude, selectedFilter)
+        assertEquals(green.rawValues, selectedFilter?.rightValuesRaw)
+    }
+
+    @Test
+    fun pickerResultUpdatesOnlyTheRequestedFilter() {
+        val include = dropdown().copy(choices = null, rightValuesRaw = listOf("123"), enabled = false)
+        val exclude = include.copy(excludeMode = true, enabled = true)
+        val filters = listOf(include, exclude)
+        val updated = filters.map {
+            if (it.isSelectionTarget(OptionsDB::class, exclude.identityKey)) {
+                it.copy(rightValuesRaw = listOf("456"), rightValuesUI = listOf("Visit 456"))
+            } else it
+        }
+
+        assertSame(include, updated.first())
+        assertEquals(listOf("456"), updated.last().rightValuesRaw)
+        assertEquals(true, updated.last().excludeMode)
+    }
+
+    @Test
+    fun pickerTargetDoesNotFallbackWhenAnExplicitKeyIsMissing() {
+        val include = dropdown()
+        val exclude = include.copy(excludeMode = true)
+
+        assertEquals(false, include.isSelectionTarget(OptionsDB::class, "missing"))
+        assertEquals(false, exclude.isSelectionTarget(OptionsDB::class, "missing"))
+        assertEquals(true, include.isSelectionTarget(OptionsDB::class, null))
+    }
+
+    @Test
+    fun customFilterKeysRemainIndependent() {
+        val first = dropdown().copy(key = "first", excludeMode = true)
+        val second = first.copy(key = "second")
+
+        assertNotEquals(first.identityKey, second.identityKey)
+        assertEquals(false, first.isSelectionTarget(OptionsDB::class, second.identityKey))
+    }
 }

@@ -167,6 +167,7 @@ class FeaturesActivity : AppCompatActivity() {
                                         else -> null
                                     }?.let { viewModel ->
                                         viewModel.dataJson = bundle.getString("dataJson")
+                                        viewModel.sourceFilterKey = bundle.getString("sourceFilterKey")
                                         viewModel.contextUI =
                                             try {
                                                 ContextUI.valueOf(

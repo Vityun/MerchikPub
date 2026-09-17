@@ -41,6 +41,7 @@ public class DialogFullPhotoR {
     private Button comment1;
     private String textComment1 = "";
     private String commentTitle = "Комментарий";
+    private Clicks.clickObject<DialogData> commentDialogSetup;
 
     // Pika комментарий сразу поверх фото
     public boolean commentOn = false;
@@ -55,7 +56,7 @@ public class DialogFullPhotoR {
         dialog.setCancelable(false);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
-        int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.95);
+        int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.97);
 //        int height = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.90);
 
         dialog.setContentView(R.layout.dialog_photo_fullscreen);
@@ -71,21 +72,11 @@ public class DialogFullPhotoR {
         // Pika
         comment1 = dialog.findViewById(R.id.buttonComment);
         comment1.setOnClickListener(v -> {
-        try {
-//            Toast.makeText(context, textComment1, Toast.LENGTH_LONG).show();
-            DialogData dialogData = new DialogData(context);
-            dialogData.setTitle(commentTitle);
-            dialogData.setText(textComment1);
-            dialogData.setClose(dialogData::dismiss);
-            dialogData.show();
-        }catch (Exception e){
-////            DialogData dialogData = new DialogData(context);
-////            dialogData.setTitle("Произошла ошибка");
-////            dialogData.setText(textComment1);
-////            dialogData.setClose(dialogData::dismiss);
-////            dialogData.show();
-        }
-
+            try {
+                showComment(false);
+            } catch (Exception e) {
+                Log.e("DialogFullPhotoR", "Cannot show photo information", e);
+            }
         });
 
     }
@@ -95,13 +86,22 @@ public class DialogFullPhotoR {
             dialog.show();
         // Pika
         if (commentOn) {
-            DialogData dialogData = new DialogData(context);
-            dialogData.setTitle(commentTitle);
-            dialogData.setText(textComment1);
-            dialogData.setScore(score);
-            dialogData.setClose(dialogData::dismiss);
-            dialogData.show();
+            showComment(true);
         }
+    }
+
+    private void showComment(boolean includeScore) {
+        DialogData dialogData = new DialogData(context);
+        dialogData.setTitle(commentTitle);
+        dialogData.setText(textComment1);
+        if (includeScore) dialogData.setScore(score);
+        if (commentDialogSetup != null) commentDialogSetup.click(dialogData);
+        dialogData.setClose(dialogData::dismiss);
+        dialogData.show();
+    }
+
+    public void setCommentDialogSetup(Clicks.clickObject<DialogData> setup) {
+        commentDialogSetup = setup;
     }
 
     public void dismiss() {

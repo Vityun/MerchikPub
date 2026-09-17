@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.ReferencesActivity.Chat;
 
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,12 +65,13 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
             super(itemView);
             layout = itemView.findViewById(R.id.chat_item);
             massage = itemView.findViewById(R.id.massage);
+            massage.setMovementMethod(LinkMovementMethod.getInstance());
             info = itemView.findViewById(R.id.info);
             time = itemView.findViewById(R.id.time);
         }
 
         public void bind(ChatSDB item) {
-            massage.setText(item.msg);
+            massage.setText(ChatVisitLinks.linkify(item.msg));
             if (item.dtRead != null && item.dtRead > 0){
                 massage.setTextColor(itemView.getContext().getResources().getColor(R.color.colorUnselectedTab));
                 info.setTextColor(itemView.getContext().getResources().getColor(R.color.colorUnselectedTab));

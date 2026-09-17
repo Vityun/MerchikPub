@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 
+internal val ROUND_CHECKBOX_SIZE = 45.dp
+
 @Composable
 fun RoundCheckbox(
     modifier: Modifier = Modifier,
@@ -23,7 +25,7 @@ fun RoundCheckbox(
     onCheckedChange: (Boolean) -> Unit) {
     Box(
         modifier = Modifier
-            .size(45.dp)
+            .size(ROUND_CHECKBOX_SIZE)
             .clip(CircleShape)
             .background(aroundColor)
             .clickable { onCheckedChange(!checked) },

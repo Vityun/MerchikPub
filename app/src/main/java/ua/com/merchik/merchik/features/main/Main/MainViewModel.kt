@@ -149,6 +149,13 @@ data class ItemFilter(
     val key: String = "${clazz.java.name}:$leftField",
     val isPinned: Boolean? = null // null: this filter has no pin control.
 ) {
+    // A copied filter may keep its base key while switching to exclusion mode.
+    val identityKey: String
+        get() = if (excludeMode) "$key:exclude" else key
+
+    fun isSelectionTarget(table: KClass<out DataObjectUI>, sourceFilterKey: String?): Boolean =
+        clazz == table && (sourceFilterKey == null || identityKey == sourceFilterKey)
+
     val defaultChoice: ItemFilterChoice?
         get() = choices?.firstOrNull { it.key == defaultChoiceKey } ?: choices?.firstOrNull()
 
@@ -178,6 +185,7 @@ data class ItemFilter(
         bundle.putString("modeUI", modeUI.toString())
         bundle.putString("title", titleContext)
         bundle.putString("subTitle", subTitleContext)
+        bundle.putString("sourceFilterKey", identityKey)
         intent.putExtras(bundle)
         ActivityCompat.startActivityForResult(
             activity, intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST, null
@@ -345,6 +353,7 @@ abstract class MainViewModel(
 
     var context: Context? = null
     var dataJson: String? = null
+    var sourceFilterKey: String? = null
     var title: String? = null
     var typeWindow: String? = null
     var subTitle: String? = null
@@ -1434,7 +1443,6 @@ abstract class MainViewModel(
                 if (finalItems.isEmpty()) {
                     _showEmptyDataDialog.value = true
                 }
-
                 old.copy(
                     title = titleResolved,
                     subTitle = subTitle,

@@ -42,6 +42,7 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatVisitLinks;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -399,7 +400,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                 try {
                     DialogData dialog = new DialogData(mContext);
                     dialog.setTitle("Сообщение " + data.id);
-                    dialog.setText(msg);
+                    dialog.setText(ChatVisitLinks.linkify(msg));
                     dialog.setClose(dialog::dismiss);
                     dialog.show();
 

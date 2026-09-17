@@ -125,7 +125,8 @@ private val mapSearchHttpClient: OkHttpClient by lazy {
 fun MapsDialog(
     mainViewModel: MainViewModel,
     onDismiss: () -> Unit,
-    onOpenContextMenu: (WpDataDB, ContextUI, LaunchOrigin?) -> Unit
+    onOpenContextMenu: (WpDataDB, ContextUI, LaunchOrigin?) -> Unit,
+    isVisitHistory: Boolean = false
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -207,9 +208,9 @@ fun MapsDialog(
         .withLocale(Locale.getDefault())
 
 // Decide scenario once per input
-    val hasLogCenter by remember(uiState.items, isOptionsVisitMap) {
+    val hasLogCenter by remember(uiState.items, isOptionsVisitMap, isVisitHistory) {
         mutableStateOf(
-            isOptionsVisitMap || uiState.items.firstOrNull {
+            isOptionsVisitMap || isVisitHistory || uiState.items.firstOrNull {
                 it.rawFields.stringByKey("log_addr_location_xd")?.parseDoubleSafe() != null &&
                         it.rawFields.stringByKey("log_addr_location_yd")?.parseDoubleSafe() != null
             } != null
@@ -219,6 +220,7 @@ fun MapsDialog(
 
     val vm: BaseMapViewModel =
         if (isOptionsVisitMap) hiltViewModel<MapFromMapsViewModel>(key = "options-visit-map")
+        else if (isVisitHistory) hiltViewModel<MapFromMapsViewModel>(key = "visit-history-map")
         else if (hasLogCenter) hiltViewModel<MapFromMapsViewModel>()
         else hiltViewModel<MapFromWPdataViewModel>()
 

@@ -99,6 +99,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.InlineChoiceUi
 import ua.com.merchik.merchik.features.main.Main.InlineEditorKind
+import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorMode
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorRowUi
@@ -118,6 +119,7 @@ import kotlin.reflect.KClass
 
 private const val FIELD_OPTION_CODE = "option_code"
 private const val FIELD_TOVAR_REPORT_PREPARE_CHANGED = "tovar_report_prepare_changed"
+private const val FIELD_VISIT_DAD2 = "code_dad2"
 
 enum class AkciyaPresence {
     HAS,
@@ -311,6 +313,11 @@ class TovarDBViewModel @Inject constructor(
         productCodeSessionCache = null
     }
 
+    fun refreshAfterVisitDataLoaded() {
+        clearProductCodeSessionCache()
+        updateContent()
+    }
+
     override fun onClickProductCode(
         itemUI: DataItemUI,
         fieldValue: FieldValue,
@@ -464,41 +471,32 @@ class TovarDBViewModel @Inject constructor(
     }
 
     override fun updateFilters() {
-//        val codeDad2 =
-//            Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
-//        val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
-//        val filterTovarDB = ItemFilter(
-//            "Доп. фильтр",
-//            TovarDB::class,
-//            TovarDBViewModel::class,
-//            ModeUI.MULTI_SELECT,
-//            "Товар",
-//            "subTitle",
-//            "iD",
-//            "iD",
-//            data.map { it.getiD() },
-//            data.map { it.nm },
-//            false
-//        )
+        val codeDad2 = runCatching { getCodeDad2String().toLongOrNull() }
+            .getOrNull()
+            ?.takeIf { it > 0L }
+            ?.toString()
 
-//        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_NEW)
-//            filters = Filters(
-//                rangeDataByKey = null,
-//                searchText = "",
-//                items = mutableListOf(
-//                    filterCustomerSDB
-//                )
-//            )
-//        else
         filters = Filters(
             rangeDataByKey = null,
             searchText = "",
-            items = mutableListOf(
-//                    filterTovarDB,
-//                    filterCustomerSDB
+            items = listOfNotNull(
+                codeDad2?.let { dad2 ->
+                    ItemFilter(
+                        title = "Відвідування",
+                        clazz = WpDataDB::class,
+                        clazzViewModel = WpDataDBViewModel::class,
+                        modeUI = ModeUI.ONE_SELECT,
+                        titleContext = "Відвідування",
+                        subTitleContext = "Товари поточного відвідування",
+                        leftField = FIELD_VISIT_DAD2,
+                        rightField = FIELD_VISIT_DAD2,
+                        rightValuesRaw = listOf(dad2),
+                        rightValuesUI = listOf(dad2),
+                        enabled = false
+                    )
+                }
             )
         )
-
     }
 
 
@@ -544,7 +542,7 @@ class TovarDBViewModel @Inject constructor(
                     tovarList,
                     contextUI,
                     18
-                )
+                ).withVisitDad2(codeDad2)
 
                 return baseItems.map {
                     if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS_ADD_NEW) {
@@ -613,7 +611,7 @@ class TovarDBViewModel @Inject constructor(
                     tovarList,
                     contextUI,
                     18
-                )
+                ).withVisitDad2(codeDad2)
 
                 val optionsList = cache.optionsList2 ?: mutableListOf()
                 val deletePromoOption = false
@@ -725,6 +723,21 @@ class TovarDBViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun List<DataItemUI>.withVisitDad2(codeDad2: Long): List<DataItemUI> {
+        // TovarDB has no visit field, including products not yet added to ReportPrepareDB.
+        val visitField = FieldValue(
+            key = FIELD_VISIT_DAD2,
+            field = TextField(rawValue = FIELD_VISIT_DAD2, value = "Відвідування"),
+            value = TextField(rawValue = codeDad2, value = codeDad2.toString())
+        )
+        return map { item ->
+            item.copy(
+                rawFields = item.rawFields
+                    .filterNot { it.key.equals(FIELD_VISIT_DAD2, ignoreCase = true) } + visitField
+            )
         }
     }
 

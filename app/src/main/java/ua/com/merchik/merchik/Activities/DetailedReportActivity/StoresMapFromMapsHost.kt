@@ -5,15 +5,13 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity
 // ComposeHosts.kt
 
 
-import android.content.Context
-import android.content.Intent
-import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -26,18 +24,18 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import io.realm.Realm
 import io.realm.Sort
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedDialog
+import ua.com.merchik.merchik.features.main.Main.captureBoundsInScreen
 import ua.com.merchik.merchik.features.maps.domain.StoreCenter
 import ua.com.merchik.merchik.features.maps.domain.StorePoint
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
@@ -45,6 +43,7 @@ import ua.com.merchik.merchik.features.maps.domain.parseDoubleSafe
 import ua.com.merchik.merchik.features.maps.presentation.MainMapActionsBridge
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.main.StoresMap
+import ua.com.merchik.merchik.features.maps.presentation.main.MapsDialog
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.MapFromMapsViewModel
 import androidx.compose.runtime.collectAsState
@@ -56,12 +55,18 @@ private const val LOG_MP_VALID_TIME_SEC = 1_800L
 private const val MAX_LOG_MP_MAP_POINTS = 500
 
 @Composable
-private fun StoresMapFromMapsHost(wpData: WpDataDB) {
-    val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
-    val context = LocalContext.current
+internal fun StoresMapFromMapsHost(wpData: WpDataDB) {
+    val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>(key = "visit-map-host-${wpData.code_dad2}")
     val wpDataJson = remember(wpData) { Gson().toJson(wpData) }
     mainVm.dataJson = wpDataJson
-    val mapVm: MapFromMapsViewModel = hiltViewModel()
+    mainVm.context = LocalContext.current
+    val mapVm: MapFromMapsViewModel = hiltViewModel(key = "visit-map-preview-${wpData.code_dad2}")
+    var showMapDialog by remember(wpData.code_dad2) { mutableStateOf(false) }
+    var mapBounds by remember { mutableStateOf<Rect?>(null) }
+
+    LaunchedEffect(showMapDialog, wpDataJson) {
+        if (showMapDialog) mainVm.updateContent()
+    }
 
     val camera = rememberCameraPositionState()
 
@@ -100,7 +105,9 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
                     autoCenterOnSetInput = false
                 )
             )
-        } catch (e: Throwable) {
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
             Log.e("StoresMapFromMapsHost", "loadLogMpMapInput failed", e)
             mapVm.process(
                 MapIntent.SetPointsInput(
@@ -115,7 +122,7 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().captureBoundsInScreen { mapBounds = it }) {
         StoresMap(
             cameraPositionState = camera,
             vm = mapVm as BaseMapViewModel
@@ -126,9 +133,24 @@ private fun StoresMapFromMapsHost(wpData: WpDataDB) {
                 .matchParentSize()
                 .pointerInput(wpDataJson) {
                     detectTapGestures {
-                        openLogMpMap(context, wpData, wpDataJson)
+                        showMapDialog = true
                     }
                 }
+        )
+    }
+
+    AnchoredAnimatedDialog(
+        visible = showMapDialog,
+        anchorRect = mapBounds,
+        onDismissRequest = { showMapDialog = false }
+    ) { requestClose ->
+        MapsDialog(
+            mainViewModel = mainVm,
+            onDismiss = requestClose,
+            onOpenContextMenu = { wp, _, origin ->
+                mainVm.openUFMDSelector(wp.addr_id.toString(), origin)
+            },
+            isVisitHistory = true
         )
     }
 }
@@ -250,30 +272,6 @@ private fun formatDistance(distance: Int): String =
         "$distance m"
     }
 
-private fun openLogMpMap(context: Context, wpData: WpDataDB, wpDataJson: String) {
-    val intent = Intent(context, FeaturesActivity::class.java)
-    val bundle = Bundle().apply {
-        putString("viewModel", LogMPDBViewModel::class.java.canonicalName)
-        putString("dataJson", wpDataJson)
-        putString("contextUI", ContextUI.DEFAULT.name)
-        putString("modeUI", ModeUI.DEFAULT.name)
-        putString("title", "Історія місцеположення")
-        putString("subTitle", buildLogMpFeatureSubtitle(wpData))
-        putBoolean("openMapsOnStart", true)
-        putBoolean("finishOnMapsDismiss", true)
-    }
-    intent.putExtras(bundle)
-    context.startActivity(intent)
-}
-
-private fun buildLogMpFeatureSubtitle(wpData: WpDataDB): String {
-    val request = buildLogMpMapRequest(wpData)
-    val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-    val address = wpData.addr_txt?.takeIf { it.isNotBlank() }.orEmpty()
-    return "Дані розташування по ТТ: $address за період з " +
-            "${formatter.format(Date(request.startMillis))} по ${formatter.format(Date(request.endMillis))}"
-}
-
 /** Расширение для удобного вызова из Java. */
 @JvmOverloads
 fun attachStoresMapFromMaps(
@@ -281,9 +279,11 @@ fun attachStoresMapFromMaps(
     wpData: WpDataDB
 ) {
     composeView.setViewCompositionStrategy(
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
     )
     composeView.setContent {
-        StoresMapFromMapsHost(wpData)
+        MerchikTheme {
+            StoresMapFromMapsHost(wpData)
+        }
     }
 }

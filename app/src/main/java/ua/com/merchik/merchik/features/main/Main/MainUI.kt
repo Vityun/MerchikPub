@@ -30,10 +30,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -63,6 +62,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -137,6 +137,7 @@ import ua.com.merchik.merchik.Utils.CustomString
 import ua.com.merchik.merchik.Utils.observeInternetState
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -162,15 +163,18 @@ import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
-import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogChoice
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogSingleChoice
+import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
-import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialogButton
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalWorkForm
@@ -178,6 +182,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialog
 import ua.com.merchik.merchik.features.main.componentsUI.QuestionAnswerDialogUiState
+import ua.com.merchik.merchik.features.main.componentsUI.ROUND_CHECKBOX_SIZE
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
@@ -249,9 +254,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         viewModel.contextUI.isImageDisplayModeToolbarContext()
     }
 
-    val showImageDisplayModeButton = remember(isImageDisplayModeToolbarContext, uiState.settingsItems) {
-        isImageDisplayModeToolbarContext && uiState.settingsItems.canUseImageDisplayMode()
-    }
+    val showImageDisplayModeButton =
+        remember(isImageDisplayModeToolbarContext, uiState.settingsItems) {
+            isImageDisplayModeToolbarContext && uiState.settingsItems.canUseImageDisplayMode()
+        }
 
     var showAdditionalContent by remember { mutableStateOf(false) }
 
@@ -787,7 +793,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 } else {
                     emptyList()
                 }
-                var createdVisitsSyncResult: OrderDataPreloadRepository.CreatedVisitsSyncResult? = null
+                var createdVisitsSyncResult: OrderDataPreloadRepository.CreatedVisitsSyncResult? =
+                    null
                 var createdVisitWpIds = emptyList<Long>()
 
                 if (createdDad2List.isNotEmpty()) {
@@ -970,7 +977,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 onRefresh = { viewModel.updateContent() },
                 onClose = { (context as? Activity)?.finish() },
                 onSettingsBounds = { settingsBtnRect = it },
-                onShowToolTipDialog = if (viewModel.contextUI == ContextUI.WP_DATA) {
+                onShowToolTipDialog = if (viewModel.contextUI == ContextUI.WP_DATA ||
+                    viewModel is SamplePhotoSDBViewModel
+                ) {
                     { showToolTipDialog = true }
                 } else null
             )
@@ -1039,7 +1048,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                 // TODO убрать пересчет из MainUI
                 val dataItemsUI = remember(dataItemsUI_, selectedIds) {
-                    if (selectedIds.isEmpty()) dataItemsUI_ else restoreSelected(dataItemsUI_, selectedIds)
+                    if (selectedIds.isEmpty()) dataItemsUI_ else restoreSelected(
+                        dataItemsUI_,
+                        selectedIds
+                    )
                 }
 
                 LaunchedEffect(uiState.items, dataItemsUI) {
@@ -1827,7 +1839,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     val waitForAdditionalEarningsDialog =
                                         viewModel.additionalEarningsDialogState.value != null
                                     if (viewModel.typeWindow != "container" && !waitForAdditionalEarningsDialog &&
-                                        viewModel.contextUI != ContextUI.SHOWCASE_MAKE_PHOTO
+                                        viewModel.contextUI != ContextUI.SHOWCASE_MAKE_PHOTO &&
+                                        viewModel !is SamplePhotoSDBViewModel
                                     ) {
                                         if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER ||
                                             viewModel.contextUI == ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER
@@ -1851,11 +1864,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                                         showSavedMessage = true
                                                     },
                                                     onRepeatComplaint = { themeName, createdAtSeconds, onConfirm ->
-                                                        repeatComplaintDialogState = RepeatComplaintDialogState(
-                                                            themeName = themeName,
-                                                            createdAtSeconds = createdAtSeconds,
-                                                            onConfirm = onConfirm
-                                                        )
+                                                        repeatComplaintDialogState =
+                                                            RepeatComplaintDialogState(
+                                                                themeName = themeName,
+                                                                createdAtSeconds = createdAtSeconds,
+                                                                onConfirm = onConfirm
+                                                            )
                                                     }
                                                 )//                                                showQuestionAnswerThemeDialog(
 //                                                    context = context,
@@ -2330,6 +2344,47 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
+    if (viewModel is SamplePhotoSDBViewModel &&
+        viewModel.contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360
+    ) {
+        val warehouseProductAvailable by viewModel.warehouseProductAvailable.collectAsState()
+        if (warehouseProductAvailable == null) {
+            var pendingWarehouseChoice by rememberSaveable(viewModel.dataJson) {
+                mutableStateOf<String?>(null)
+            }
+            val question = remember(viewModel, viewModel.dataJson) {
+                viewModel.getWarehouseAvailabilityQuestion()
+            }
+            MessageDialog(
+                title = "Наявність товару на складі",
+                message = question,
+                status = DialogStatus.EMPTY,
+                fontSizeOffsetSp = 2f,
+                onDismiss = {
+                    // Без відповіді не відкриваємо вибір зразків без потрібного фільтра.
+                    if (viewModel.warehouseProductAvailable.value == null) {
+                        (context as? Activity)?.finish()
+                    }
+                },
+                okButtonName = "ОК",
+                onConfirmAction = {
+                    when (pendingWarehouseChoice) {
+                        "available" -> viewModel.setWarehouseProductAvailable(true)
+                        "unavailable" -> viewModel.setWarehouseProductAvailable(false)
+                    }
+                },
+                singleChoice = MessageDialogSingleChoice(
+                    options = listOf(
+                        MessageDialogChoice("available", "Так, товар є в наявності"),
+                        MessageDialogChoice("unavailable", "Ні, товару на складі немає")
+                    ),
+                    selectedKey = pendingWarehouseChoice,
+                    onSelected = { pendingWarehouseChoice = it }
+                )
+            )
+        }
+    }
+
     if (showKostilDialog) {
 
         val selectedCount = dataItemsUI_.size
@@ -2408,15 +2463,33 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
             )
     }
     if (showToolTipDialog) {
-        MessageDialog(
-            title = "Довідка",
-            status = DialogStatus.NORMAL,
-            subTitle = "Додатковий заробіток",
-            message = "У цьому розділі, ви можете обрати (позначити) ті візити, роботу з котрими ви хочете виконати. За замовчуванням позначені усі візити. Натиснувши кнопку 'Подати замовлення' ви ініціюєте процес передачі цих робіт з розділу 'Додатковий заробіток' до розділу 'План робіт'. Потім, у родiлi розділу 'План робіт', Ви зможете почати їх виконувати, і отримати за це гроші.",
-            onDismiss = { showToolTipDialog = false },
-            okButtonName = "Ok",
-            onConfirmAction = { showToolTipDialog = false }
-        )
+        if (viewModel is SamplePhotoSDBViewModel) {
+            val lessonId = when (viewModel.contextUI){
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 10395
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 10394
+                else -> 0
+            }
+            val data = RealmManager.getLesson(lessonId)
+            if (data != null) {
+                val dialogLesson = DialogData(context)
+                dialogLesson.setTitle("Підказка")
+                dialogLesson.setText(data.comments)
+                dialogLesson.show()
+            } else {
+                Toast.makeText(context, "Для цієї сторінки урок ще не створено.", Toast.LENGTH_LONG)
+                    .show()
+            }
+
+        } else
+            MessageDialog(
+                title = "Довідка",
+                status = DialogStatus.NORMAL,
+                subTitle = "Додатковий заробіток",
+                message = "У цьому розділі, ви можете обрати (позначити) ті візити, роботу з котрими ви хочете виконати. За замовчуванням позначені усі візити. Натиснувши кнопку 'Подати замовлення' ви ініціюєте процес передачі цих робіт з розділу 'Додатковий заробіток' до розділу 'План робіт'. Потім, у родiлi розділу 'План робіт', Ви зможете почати їх виконувати, і отримати за це гроші.",
+                onDismiss = { showToolTipDialog = false },
+                okButtonName = "Ok",
+                onConfirmAction = { showToolTipDialog = false }
+            )
     }
 
     if (showAditionalWorkDialog) {
@@ -2580,8 +2653,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         val wpList = dialogState.wpList
         val single = wpList.size == 1
         val wp = wpList.firstOrNull()
-        fun htmlText(value: Any?): String = android.text.Html.escapeHtml(value?.toString().orEmpty())
-        val dialogSubTitle = if (single) wp?.addr_txt.orEmpty() else wpList.firstOrNull()?.addr_txt.orEmpty()
+        fun htmlText(value: Any?): String =
+            android.text.Html.escapeHtml(value?.toString().orEmpty())
+
+        val dialogSubTitle =
+            if (single) wp?.addr_txt.orEmpty() else wpList.firstOrNull()?.addr_txt.orEmpty()
         Log.e("additionalEarningsDialogData", "start")
         MessageDialog(
             title = "Додатковий заробіток",
@@ -2811,6 +2887,11 @@ fun ItemUI(
     } else {
         ImageDisplayMode.DEFAULT
     }
+    val checkboxVisible = showRoundCheckbox && (
+            contextUI == ModeUI.ONE_SELECT ||
+                    contextUI == ModeUI.MULTI_SELECT ||
+                    contextUI == ModeUI.FILTER_SELECT
+            )
 
     Box(
         modifier = Modifier
@@ -2963,6 +3044,7 @@ fun ItemUI(
                     item = item,
                     loadingImageIndexes = loadingImageIndexes,
                     imageOverlayTextKeys = imageOverlayTextKeys,
+                    checkboxVisible = checkboxVisible,
                     onClickItemImage = onClickItemImage
                 )
             } else
@@ -3088,14 +3170,7 @@ fun ItemUI(
         }
         Column(modifier = Modifier.align(Alignment.TopEnd)) {
 
-            if (
-                showRoundCheckbox &&
-                (
-                        contextUI == ModeUI.ONE_SELECT ||
-                                contextUI == ModeUI.MULTI_SELECT ||
-                                contextUI == ModeUI.FILTER_SELECT
-                        )
-            ) {
+            if (checkboxVisible) {
                 RoundCheckbox(
                     modifier = Modifier.padding(
                         top = 3.dp,
@@ -3138,6 +3213,7 @@ private fun ImageOnlyItemContent(
     item: DataItemUI,
     loadingImageIndexes: Set<Int>,
     imageOverlayTextKeys: List<String>,
+    checkboxVisible: Boolean,
     onClickItemImage: (DataItemUI) -> Unit
 ) {
     val idResImage = (item.fields.firstOrNull {
@@ -3148,11 +3224,17 @@ private fun ImageOnlyItemContent(
         idResImage = idResImage
     )
     val overlayText = item.primaryImageOverlayText(imageOverlayTextKeys)
+    val imagePadding = 7.dp
+    val titleEndInset = if (checkboxVisible && item.rawObj.any { it is SamplePhotoSDB }) {
+        ROUND_CHECKBOX_SIZE - imagePadding
+    } else {
+        0.dp
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(7.dp)
+            .padding(imagePadding)
     ) {
         Box(
             modifier = Modifier
@@ -3202,6 +3284,7 @@ private fun ImageOnlyItemContent(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .fillMaxWidth()
+                            .padding(end = titleEndInset)
                             .padding(horizontal = 6.dp, vertical = 6.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -3397,6 +3480,8 @@ private fun ItemFieldDivider(item: DataItemUI) {
 }
 
 private fun DataItemUI.primaryImageOverlayText(keys: List<String>): String? {
+    val sample = rawObj.firstOrNull { it is SamplePhotoSDB } as? SamplePhotoSDB
+    if (sample != null) return sample.id?.let { "Зразок ($it)" } ?: "Зразок"
     return keys
         .firstNotNullOfOrNull { key ->
             rawFields.firstOrNull { it.key.equals(key, ignoreCase = true) }
@@ -3671,6 +3756,7 @@ fun ProductCodeInlineEditor(
                             }
                         )
                     }
+
                     InlineEditorKind.TEXT_AND_SELECT -> {
                         Log.e(
                             "TEXT_AND_SELECT",

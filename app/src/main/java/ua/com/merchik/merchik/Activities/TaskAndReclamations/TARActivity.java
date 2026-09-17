@@ -19,10 +19,8 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -61,9 +59,6 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     private TARHomeFrag homeFrag;
     private TARSecondFrag secondFrag;
 
-    private TabLayout tabLayout;
-    private ViewPager2 viewPager;
-
     private FragmentManager fragmentManager;
 
     //    private FragmentManager fragmentManager;
@@ -96,10 +91,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        tabLayout = findViewById(R.id.tabLayout);
-        viewPager = findViewById(R.id.viewPager);
-
-        setTabs();
+        setHomeContent();
 
         try {
             fab = findViewById(R.id.fab);
@@ -408,39 +400,14 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     }
 
 
-    private void setTabs() {
-
-        String homeTabTitle = getText(R.string.title_task).toString();
+    private void setHomeContent() {
         TARType = getIntent().getIntExtra("TAR_type", 1);
-        if (TARType == 1) {
-            homeTabTitle = getText(R.string.title_task).toString();
-        } else if (TARType == 0) {
-            homeTabTitle = getText(R.string.title_reclamation).toString();
-        }
-
-        tabLayout.getTabAt(0).setText(homeTabTitle);
-        tabLayout.getTabAt(1).setText(getText(R.string.title_1));
-
         fragmentManager = getSupportFragmentManager();
-        TARHomeTab tabAdapter = new TARHomeTab(fragmentManager, getLifecycle(), tabLayout.getTabCount());
-        viewPager.setAdapter(tabAdapter);
-//        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
+        if (fragmentManager.findFragmentById(R.id.tar_content_container) == null) {
+            fragmentManager.beginTransaction()
+                    .add(R.id.tar_content_container, TARFragmentHome.newInstance(fragmentManager))
+                    .commit();
+        }
     }
 
 

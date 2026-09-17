@@ -249,6 +249,8 @@
     <string name="title_1">Карта</string>
     <string name="title_task">Завдання</string>
     <string name="title_reclamation">Рекламації</string>
+    <string name="title_task_single">Завдання</string>
+    <string name="title_reclamation_single">Рекламація</string>
     <string name="complete_work">Провести звіт</string>
     <string name="hamburger_menu_language">Мова</string>
     <string name="end_work">"Закінчення роботи "</string>

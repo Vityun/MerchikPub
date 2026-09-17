@@ -6,9 +6,14 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload
@@ -26,8 +31,10 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
@@ -39,6 +46,7 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -52,9 +60,50 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     private val EXAMPLE_ID = "id_1c"
     private val EXAMPLE_IMG_ID = "photo_id"
+    private val HIDE_INFORMATION_ON_OPEN = "hide_information_on_open"
+    private val samplePhotoPreferences =
+        application.getSharedPreferences("sample_photo_settings", Context.MODE_PRIVATE)
+    private var initialDisplayModeApplied = false
+    private val warehouseAvailabilityKey = "warehouse_product_available"
+    private val warehouseExceptionSampleIds = listOf(78, 94)
+    private val warehouseNoStockExcludedSampleIds = listOf(36, 39, 41, 42, 75, 80, 83, 84, 87)
+    val warehouseProductAvailable = savedStateHandle.getStateFlow<Boolean?>(warehouseAvailabilityKey, null)
+
+    init {
+        viewModelScope.launch {
+            dataItems
+                .map { items -> items.mapNotNull { it.rawAs<SamplePhotoSDB>()?.id } }
+                .distinctUntilChanged()
+                .collect { ids ->
+                    if (uiState.value.lastUpdate != 0L) {
+                        Log.e(
+                            "SamplePhotoFilter",
+                            "displayedSamples: contextUI=$contextUI, warehouseProductAvailable=${warehouseProductAvailable.value}, " +
+                                "count=${ids.size}, ids=$ids"
+                        )
+                    }
+                }
+        }
+    }
 
     override val table: KClass<out DataObjectUI>
         get() = SamplePhotoSDB::class
+
+    override fun updateContent() {
+        modeUI = ModeUI.ONE_SELECT
+        if (!initialDisplayModeApplied) {
+            val settings = repository.getSettingsUI(table.java, contextUI, settingsVisitId)
+                ?: SettingsUI(hideFields = getDefaultHideUserFields())
+            repository.saveSettingsUI(
+                table,
+                settings.copy(imageDisplayMode = ImageDisplayMode.TWO_COLUMNS),
+                contextUI,
+                settingsVisitId
+            )
+            initialDisplayModeApplied = true
+        }
+        super.updateContent()
+    }
 
     override fun getFieldsForCommentsImage(): List<String>? {
         return "nm, about".split(",").map { it.trim() }
@@ -64,36 +113,145 @@ class SamplePhotoSDBViewModel @Inject constructor(
         return "$EXAMPLE_ID, $EXAMPLE_IMG_ID".split(",").map { it.trim() }
     }
 
+    override fun updateFilters() {
+
+        try {
+
+            val typePhotoId = resolvePhotoTypeId()
+
+            val itemsFilter = mutableListOf<ItemFilter>()
+
+            typePhotoId?.let {
+                val imagesType = PhotoTypeRealm.getPhotoTypeById(it)
+
+                val imagesTypeId = imagesType?.id ?: it
+                val imagesTypeName = imagesType?.nm ?: "Тип фото $it"
+                val filterImagesTypeListDB = ItemFilter(
+                    "Тип фото",
+                    ImagesTypeListDB::class,
+                    ImagesTypeListDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "photo_tp",
+                    "id",
+                    mutableListOf(imagesTypeId.toString()),
+                    mutableListOf(imagesTypeName),
+                    true
+                )
+                itemsFilter.add(filterImagesTypeListDB)
+            }
+
+            try {
+//                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+//                groupText.setText(tradeMarkDB.getNm());
+
+                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
+                val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
+
+                val filterTradeMarkDB = ItemFilter(
+                    "Мережа",
+                    TradeMarkDB::class,
+                    TradeMarkDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "Мережа",
+                    "subTitle",
+                    "grp_id",
+                    "iD",
+                    mutableListOf(tradeMarkDB.id.toString(), "0"),
+                    mutableListOf(tradeMarkDB.nm, "Все не указанные"),
+                    true
+                )
+                itemsFilter.add(filterTradeMarkDB)
+            } catch (e: Exception) {
+            }
+
+            buildWarehouseSampleFilter()?.let { itemsFilter.add(it) }
+
+            filters = Filters(
+                rangeDataByKey = null,
+                searchText = "",
+                items = itemsFilter
+            )
+        } catch (e: Exception) {
+            Log.e("!", "error: ${e.message}")
+        }
+    }
+
+    override fun getDefaultHideUserFields(): List<String>? {
+        return "abbr, grp_id, ID, photo_id, photo_tp, column_name, showcaseName, showcaseId, statusShowcase, mainOption".split(",")
+    }
+
+    override suspend fun getItems(): List<DataItemUI> {
+        val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
+        // Оновлюємо назви виключених зразків з актуального набору для відображення.
+        buildWarehouseSampleFilter(data)?.let { warehouseFilter ->
+            val currentFilters = filters ?: Filters()
+            filters = currentFilters.copy(
+                items = currentFilters.items.filterNot { it.key == warehouseFilter.key } + warehouseFilter
+            )
+        }
+        val typePhoto = 35
+        return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, typePhoto)
+    }
+
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
         onClickItemImage(clickedDataItemUI, context, 0)
     }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
         val sample = clickedDataItemUI.rawAs<SamplePhotoSDB>() ?: return
-        val photo = resolvePhotoDbForItem(sample, index)
-        if (photo == null) {
-            Log.e("SamplePhotoSDBViewModel", "Photo not found: sampleId=${sample.id}, photoId=${sample.photoId}")
-            Toast.makeText(context, "Фото зразка ще не завантажено", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        this.context = context
-        valueForCustomResult.value[EXAMPLE_ID] = sample.id1c ?: 0
-        valueForCustomResult.value[EXAMPLE_IMG_ID] = sample.photoId ?: 0
+        val photo = prepareSamplePhoto(sample, context, index) ?: return
         val comment = listOfNotNull(sample.nm, sample.about)
             .filter { it.isNotBlank() }
             .joinToString("\n\n")
-        onClickFullImage(photo, comment)
+        onClickFullImage(photo, comment, sample.id)
     }
 
+    override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+        val photoContext = context ?: return
+        val sample = itemsUI.singleOrNull()?.rawAs<SamplePhotoSDB>()
+        if (sample == null) {
+            Toast.makeText(photoContext, "Оберіть один зразок фото", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            val photo = prepareSamplePhoto(sample, photoContext, 0) ?: return
+            openCamera(photo) {}
+        } catch (e: Exception) {
+            Log.e("SamplePhotoSDBViewModel", "Cannot take photo for sample ${sample.id}", e)
+            Toast.makeText(photoContext, "Не вдалося відкрити камеру", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
     override fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {
+        onClickFullImage(stackPhotoDB, comment, null)
+    }
+
+    private fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?, sampleId: Int?) {
         val photoContext = context ?: return
         try {
             val dialogFullPhoto = DialogFullPhotoR(photoContext)
-            dialogFullPhoto.setTitle("Зразок")
+            dialogFullPhoto.setTitle(sampleId?.let { "Зразок ($it)" } ?: "Зразок")
             dialogFullPhoto.setCommentTitle("Інформація")
             dialogFullPhoto.setPhoto(stackPhotoDB)
             dialogFullPhoto.setComment(comment?.takeIf { it.isNotBlank() } ?: "Інформація відсутня")
+            dialogFullPhoto.commentOn =
+                !samplePhotoPreferences.getBoolean(HIDE_INFORMATION_ON_OPEN, false)
+            dialogFullPhoto.setCommentDialogSetup { informationDialog ->
+                informationDialog.setBottomCheckbox(
+                    "Більше не показувати",
+                    samplePhotoPreferences.getBoolean(HIDE_INFORMATION_ON_OPEN, false)
+                ) { _, checked ->
+                    samplePhotoPreferences.edit()
+                        .putBoolean(HIDE_INFORMATION_ON_OPEN, checked)
+                        .apply()
+                    dialogFullPhoto.commentOn = !checked
+                }
+            }
 
             dialogFullPhoto.setCamera {
                 openCamera(stackPhotoDB) {
@@ -230,95 +388,72 @@ class SamplePhotoSDBViewModel @Inject constructor(
         }.getOrNull()
     }
 
-    override fun updateFilters() {
-
-        try {
-
-            val typePhotoId = resolvePhotoTypeId()
-
-            val itemsFilter = mutableListOf<ItemFilter>()
-
-            typePhotoId?.let {
-                /* времено пока Вова не починит */
-                val imagesType =
-//                    when (typePhotoId) {
-//                         48 -> {
-//                            val im = ImagesTypeListDB()
-//                            im.id = 48
-//                            im.nm = "Фото Biтрини з Aкційними Цінниками"
-//                            im
-//                        }
-//                        49 -> {
-//                            val im = ImagesTypeListDB()
-//                            im.id = 49
-//                            im.nm = "Фото Biтрини Конекрентiв"
-//                            im
-//                        }
-//                        else ->
-                            PhotoTypeRealm.getPhotoTypeById(it)
-
-//                    }
-                val imagesTypeId = imagesType?.id ?: it
-                val imagesTypeName = imagesType?.nm ?: "Тип фото $it"
-                val filterImagesTypeListDB = ItemFilter(
-                    "Тип фото",
-                    ImagesTypeListDB::class,
-                    ImagesTypeListDBViewModel::class,
-                    ModeUI.MULTI_SELECT,
-                    "title",
-                    "subTitle",
-                    "photo_tp",
-                    "id",
-                    mutableListOf(imagesTypeId.toString()),
-                    mutableListOf(imagesTypeName),
-                    true
-                )
-                itemsFilter.add(filterImagesTypeListDB)
-            }
-
-            try {
-//                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-//                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
-//                groupText.setText(tradeMarkDB.getNm());
-
-                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
-                val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
-
-                val filterTradeMarkDB = ItemFilter(
-                    "Торгова марка",
-                    TradeMarkDB::class,
-                    TradeMarkDBViewModel::class,
-                    ModeUI.MULTI_SELECT,
-                    "Торгова марка",
-                    "subTitle",
-                    "grp_id",
-                    "iD",
-                    mutableListOf(tradeMarkDB.id.toString(), "0"),
-                    mutableListOf(tradeMarkDB.nm, "Все не указанные"),
-                    true
-                )
-                itemsFilter.add(filterTradeMarkDB)
-            } catch (e: Exception) {
-            }
-
-            filters = Filters(
-                rangeDataByKey = null,
-                searchText = "",
-                items = itemsFilter
-            )
+    fun getWarehouseAvailabilityQuestion(): String {
+        val clientName = try {
+            val root = Gson().fromJson(dataJson, JsonObject::class.java)
+            val visitId = root?.get("wpDataDBId")?.takeIf { !it.isJsonNull }
+                ?.asString?.toLongOrNull()
+            val visit = visitId?.let { WpDataRealm.getWpDataRowById(it) }
+            visit?.client_txt?.takeIf { it.isNotBlank() }
+                ?: visit?.client_id?.let { CustomerRealm.getCustomerById(it)?.nm }
+                    ?.takeIf { it.isNotBlank() }
         } catch (e: Exception) {
-            Log.e("!", "error: ${e.message}")
+            Log.e("SamplePhotoSDBViewModel", "Cannot resolve customer for warehouse question", e)
+            null
         }
+        val customer = clientName?.let { "заказчика «$it»" } ?: "заказчика"
+        return "Есть ли на складе  данной торговой точки какой либо товар $customer?"
     }
 
-    override fun getDefaultHideUserFields(): List<String>? {
-        return "abbr, grp_id, ID, photo_id, photo_tp, column_name, showcaseName, showcaseId, statusShowcase, mainOption".split(",")
+    fun setWarehouseProductAvailable(available: Boolean) {
+        if (contextUI != ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 ||
+            warehouseProductAvailable.value != null
+        ) return
+
+        savedStateHandle[warehouseAvailabilityKey] = available
+        updateFilters()
+        filters?.let { updateFilters(it) }
     }
 
-    override suspend fun getItems(): List<DataItemUI> {
-        val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
-        val typePhoto = 35
-        return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, typePhoto)
+    private fun buildWarehouseSampleFilter(samples: List<SamplePhotoSDB>? = null): ItemFilter? {
+        if (contextUI != ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360) return null
+        val available = warehouseProductAvailable.value ?: return null
+        val samplesById = (samples ?: RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1))
+            .associateBy { it.id }
+        val excludedIds = if (available) {
+            warehouseExceptionSampleIds
+        } else {
+            warehouseNoStockExcludedSampleIds
+        }
+
+        return ItemFilter(
+            title = "Виключити зразки",
+            clazz = SamplePhotoSDB::class,
+            modeUI = ModeUI.ONE_SELECT,
+            titleContext = "Зразок",
+            subTitleContext = "",
+            leftField = "ID",
+            rightField = "ID",
+            rightValuesRaw = excludedIds.map { it.toString() },
+            rightValuesUI = excludedIds.map { id ->
+                samplesById[id]?.nm?.takeIf { it.isNotBlank() } ?: "Зразок №$id"
+            },
+            enabled = true,
+            excludeMode = true
+        )
+    }
+
+    private fun prepareSamplePhoto(sample: SamplePhotoSDB, context: Context, index: Int): StackPhotoDB? {
+        val photo = resolvePhotoDbForItem(sample, index)
+        if (photo == null) {
+            Log.e("SamplePhotoSDBViewModel", "Photo not found: sampleId=${sample.id}, photoId=${sample.photoId}")
+            Toast.makeText(context, "Фото зразка ще не завантажено", Toast.LENGTH_SHORT).show()
+            return null
+        }
+
+        this.context = context
+        valueForCustomResult.value[EXAMPLE_ID] = sample.id1c ?: 0
+        valueForCustomResult.value[EXAMPLE_IMG_ID] = sample.photoId ?: 0
+        return photo
     }
 }

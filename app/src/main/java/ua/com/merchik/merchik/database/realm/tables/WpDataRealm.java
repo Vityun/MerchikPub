@@ -68,6 +68,12 @@ public class WpDataRealm {
                 .findFirst();
     }
 
+    public static WpDataDB getWpDataRowByDocNumOtchet(String documentNumber) {
+        return INSTANCE.where(WpDataDB.class)
+                .equalTo("doc_num_otchet", documentNumber)
+                .findFirst();
+    }
+
     public static WpDataDB getWpDataRowByDad2Id(long dad2) {
         WpDataDB result = INSTANCE.where(WpDataDB.class)
                 .equalTo("code_dad2", dad2)

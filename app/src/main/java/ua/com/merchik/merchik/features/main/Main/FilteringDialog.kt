@@ -283,7 +283,7 @@ fun FilteringDialog(
                                         it
                                     ) { changedItemFilter ->
                                         uiState.filters?.items?.map {
-                                            if (it.key == changedItemFilter.key) changedItemFilter
+                                            if (it.identityKey == changedItemFilter.identityKey) changedItemFilter
                                             else it
                                         }?.let { it1 ->
                                             uiState.filters?.copy(
@@ -448,7 +448,9 @@ private fun ItemFilterUI(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Bottom
         ) {
-            Text(text = itemFilter.title)
+            Text(
+                text = itemFilter.title
+            )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 modifier = Modifier
@@ -591,7 +593,10 @@ private fun SingleChoiceItemFilterUI(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Bottom
         ) {
-            Text(text = itemFilter.title, modifier = Modifier.weight(1f))
+            Text(
+                text = itemFilter.title,
+                modifier = Modifier.weight(1f)
+            )
             itemFilter.isPinned?.let { pinned ->
                 val pinDepth by animateFloatAsState(
                     targetValue = if (pinned) 1f else 0f,

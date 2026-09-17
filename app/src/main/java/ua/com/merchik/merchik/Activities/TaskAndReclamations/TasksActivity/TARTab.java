@@ -13,6 +13,8 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 
 public class TARTab extends FragmentStateAdapter {
 
+    private static final boolean USE_COMPOSE_TOVARS = true;
+
     private Context myContext;
     private TasksAndReclamationsSDB data;
     private int totalTabs;
@@ -73,8 +75,9 @@ public class TARTab extends FragmentStateAdapter {
             case 3:
                 return tab3Fragment = Tab3Fragment.newInstance(data);
             case 2:
-//                return new DetailedReportTovarsFrag(myContext, data);
-                return DetailedReportTovarsFrag.newInstance(data);
+                return USE_COMPOSE_TOVARS
+                        ? TARTovarsFragment.newInstance(data)
+                        : DetailedReportTovarsFrag.newInstance(data);
             default:
                 return null;
         }

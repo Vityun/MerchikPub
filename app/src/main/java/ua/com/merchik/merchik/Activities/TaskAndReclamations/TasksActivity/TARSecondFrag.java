@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -79,11 +80,13 @@ public class TARSecondFrag extends Fragment {
 
         data = resolveTarData();
         if (data != null) {
+            bindHeader(v, data);
             setTab(v.getContext());
         } else if (viewModel != null) {
             viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), tar -> {
                 if (tar != null && data == null) {
                     data = tar;
+                    bindHeader(v, data);
                     setTab(v.getContext());
                 }
             });
@@ -94,6 +97,25 @@ public class TARSecondFrag extends Fragment {
         }
 
         return v;
+    }
+
+    private void bindHeader(View view, TasksAndReclamationsSDB tar) {
+        TextView title = view.findViewById(R.id.tar_header_title);
+        TextView number = view.findViewById(R.id.tar_header_number);
+        title.setText(tar.tp != null && tar.tp == 1
+                ? R.string.title_task_single : R.string.title_reclamation_single);
+
+        StringBuilder identifier = new StringBuilder();
+        if (tar.id != null) {
+            identifier.append(tar.id);
+        }
+        if (tar.id1c != null && !tar.id1c.trim().isEmpty()) {
+            if (identifier.length() > 0) identifier.append(" / ");
+            identifier.append(tar.id1c.trim());
+        }
+        number.setText(identifier.length() > 0 ? "ID: " + identifier : "");
+        number.setVisibility(identifier.length() > 0 ? View.VISIBLE : View.GONE);
+        view.findViewById(R.id.tar_header).setVisibility(View.VISIBLE);
     }
 
     // Pika установка ссылки на экземпляр этого класса в переменной внутри класса Tab1Fragment, чтоб можно было симитировать оттуда клик

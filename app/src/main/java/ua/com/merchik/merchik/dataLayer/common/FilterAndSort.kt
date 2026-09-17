@@ -107,14 +107,15 @@ fun filterAndSortDataItems(
             if (!allTermsFound) return@filter false
         }
 
-        // 3) Фильтры по значениям rawFields (правые значения – список допустимых)
+        // 3) Фильтры по значениям rawFields: включение или исключение выбранных значений.
         filters?.items?.forEach { flt ->
             if (flt.rightValuesRaw.isNotEmpty()) {
                 val matched = dataItemUI.rawFields.any { fv ->
                     fv.key.equals(flt.leftField, ignoreCase = true) &&
                             flt.rightValuesRaw.contains(fv.value.rawValue.toString())
                 }
-                if (!matched) return@filter false
+                val matchesFilter = if (flt.excludeMode) !matched else matched
+                if (!matchesFilter) return@filter false
             }
         }
 

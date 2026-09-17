@@ -92,6 +92,21 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations WHERE id = :id")
     TasksAndReclamationsSDB getById(int id);
 
+    @Query("SELECT EXISTS (SELECT 1 FROM tasks_and_reclamations AS tar " +
+            "INNER JOIN theme_list AS theme ON theme.id = CAST(tar.theme_id AS TEXT) " +
+            "WHERE :codeDad2 > 0 AND tar.code_dad2_src_doc = :codeDad2 " +
+            "AND (theme.need_report = 1 OR theme.tp = '2'))")
+    boolean hasReportCorrectionRequestBySourceDad2(long codeDad2);
+
+    @Query("SELECT tar.id, tar.id_1c AS id1c, tar.code_dad2 AS codeDad2, " +
+            "tar.code_dad2_src_doc AS codeDad2SrcDoc, tar.theme_id AS themeId, tar.state, tar.tp, " +
+            "theme.id AS matchedThemeId, theme.tp AS themeTp, theme.need_report AS needReport " +
+            "FROM tasks_and_reclamations AS tar " +
+            "LEFT JOIN theme_list AS theme ON theme.id = CAST(tar.theme_id AS TEXT) " +
+            "WHERE :codeDad2 > 0 AND (tar.code_dad2_src_doc = :codeDad2 OR tar.code_dad2 = :codeDad2) " +
+            "ORDER BY (tar.code_dad2_src_doc = :codeDad2) DESC, tar.id DESC LIMIT :limit")
+    List<ReportCorrectionDiagnostic> getReportCorrectionDiagnostics(long codeDad2, int limit);
+
     @Query("DELETE FROM tasks_and_reclamations WHERE code_dad2 = :codeDad2 OR code_dad2_src_doc = :codeDad2")
     void deleteByCodeDad2Sync(long codeDad2);
 
@@ -125,6 +140,19 @@ public interface TarDao {
 
     @Query("SELECT * FROM tasks_and_reclamations WHERE voteDtUpload = 0")
     List<TasksAndReclamationsSDB> getTARVotesToUpload();
+
+    class ReportCorrectionDiagnostic {
+        public Integer id;
+        public String id1c;
+        public Long codeDad2;
+        public Long codeDad2SrcDoc;
+        public Integer themeId;
+        public Integer state;
+        public Integer tp;
+        public String matchedThemeId;
+        public String themeTp;
+        public Integer needReport;
+    }
 }
 
 /*SELECT tar.*, addr.nm FROM tasks_and_reclamations tar

@@ -32,6 +32,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
@@ -41,6 +42,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -120,6 +122,7 @@ public class DialogData {
 
     private Button ok, okRv, okRecycler, cancel, cancel2;
     private Button operationButton1, operationButton2;
+    private AppCompatCheckBox bottomCheckbox;
     // ---- UI end ----
 
     private boolean dismissOnlyByButtonsMode = false;
@@ -352,6 +355,40 @@ public class DialogData {
     public void setClose(DialogClickListener clickListener) {
         closeClickListener = clickListener;
         applyDismissMode();
+    }
+
+    public void setBottomCheckbox(String label, boolean checked,
+                                  CompoundButton.OnCheckedChangeListener listener) {
+        if (bottomCheckbox == null) {
+            float density = context.getResources().getDisplayMetrics().density;
+            bottomCheckbox = new AppCompatCheckBox(context);
+            bottomCheckbox.setId(View.generateViewId());
+            bottomCheckbox.setTextSize(14);
+            bottomCheckbox.setTextColor(Color.BLACK);
+            bottomCheckbox.setMinHeight(Math.round(48 * density));
+
+            ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.topToBottom = text.getId();
+            params.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.setMarginStart(Math.round(16 * density));
+            params.setMarginEnd(Math.round(16 * density));
+            params.topMargin = Math.round(8 * density);
+            params.bottomMargin = Math.round(16 * density);
+            layoutDialog.addView(bottomCheckbox, params);
+
+            ConstraintLayout.LayoutParams textParams = (ConstraintLayout.LayoutParams) text.getLayoutParams();
+            textParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET;
+            textParams.bottomToTop = bottomCheckbox.getId();
+            textParams.bottomMargin = 0;
+            text.setLayoutParams(textParams);
+        }
+        bottomCheckbox.setOnCheckedChangeListener(null);
+        bottomCheckbox.setText(label);
+        bottomCheckbox.setChecked(checked);
+        bottomCheckbox.setOnCheckedChangeListener(listener);
     }
 
     public void setDismissOnlyByButtonsMode(boolean enabled) {

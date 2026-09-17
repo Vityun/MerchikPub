@@ -179,7 +179,6 @@
             android:layout_marginBottom="16dp"
             android:clickable="true"
             android:text="TextView"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView61"
             app:layout_constraintVertical_bias="0.0" />
@@ -194,11 +193,34 @@
             android:background="#E6EDCB"
             android:clickable="true"
             android:text="TextView"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/wpLink"
             app:layout_constraintVertical_bias="0.0" />
-        />
+
+        <FrameLayout
+            android:id="@+id/tar_visit_map_container"
+            android:layout_width="0dp"
+            android:layout_height="350dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/border_map"
+            android:elevation="3dp"
+            android:padding="8dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/lastComment"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0">
+
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/tar_visit_map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/border_imgview" />
+        </FrameLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

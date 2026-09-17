@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">091400</string>
+    <string name="ver" translatable="false">091700</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-09-14</string>
+    <string name="debug_date" translatable="false">2026-09-17</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -42,6 +42,8 @@
 
     <string name="title_task">Задачи</string>
     <string name="title_reclamation">Рекламации</string>
+    <string name="title_task_single">Задача</string>
+    <string name="title_reclamation_single">Рекламация</string>
 
     <string name="title_tab_tar_0">Главная</string>
     <string name="title_tab_tar_1">Опции</string>
