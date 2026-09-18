@@ -29,6 +29,7 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
@@ -54,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -96,6 +99,15 @@ fun OptionsItemsUI(
     val hostView = LocalView.current
     val context = LocalContext.current
     val activity = context as? Activity
+    val textMeasurer = rememberTextMeasurer()
+    val counterMinWidth = with(LocalDensity.current) {
+        textMeasurer.measure(
+            text = "0/0",
+            style = LocalTextStyle.current.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+            maxLines = 1,
+            softWrap = false
+        ).size.width.toDp()
+    } + 16.dp // Match OptionText's horizontal padding.
     val rowsById = remember(rows) { rows.associateBy { it.id } }
     val visibleRows = remember(dataItems, rowsById) {
         dataItems.mapNotNull { item -> rowsById[(item.rawObj.firstOrNull() as? OptionsDB)?.getID()] }
@@ -150,6 +162,7 @@ fun OptionsItemsUI(
                     enabled = !loading,
                     showOptionId = showOptionId,
                     showMonetaryValues = showMonetaryValues,
+                    counterMinWidth = counterMinWidth,
                     selected = item.selected,
                     showSelection = viewModel.modeUI == ModeUI.FILTER_SELECT ||
                         viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT,
@@ -203,6 +216,7 @@ private fun OptionItemUI(
     enabled: Boolean,
     showOptionId: Boolean,
     showMonetaryValues: Boolean,
+    counterMinWidth: Dp,
     selected: Boolean,
     showSelection: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -256,16 +270,16 @@ private fun OptionItemUI(
             }
             if (displayCounter || displaySecondaryCounter) {
                 Column(Modifier.padding(start = 8.dp, end = 16.dp).widthIn(max = 120.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    horizontalAlignment = Alignment.End) {
                     if (displayCounter) {
-                        OptionText(row.counter, Modifier, if (enabled && row.counter.onClick != null) {
+                        OptionText(row.counter, Modifier.widthIn(min = counterMinWidth), if (enabled && row.counter.onClick != null) {
                             { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER) }
-                        } else null)
+                        } else null, textStyle = TextStyle(textAlign = TextAlign.Center))
                     }
                     if (displaySecondaryCounter) {
-                        OptionText(row.secondaryCounter, Modifier, if (enabled && row.secondaryCounter.onClick != null) {
+                        OptionText(row.secondaryCounter, Modifier.widthIn(min = counterMinWidth), if (enabled && row.secondaryCounter.onClick != null) {
                             { onClick(OptionsDBViewModel.OptionClickTarget.SECONDARY_COUNTER) }
-                        } else null)
+                        } else null, textStyle = TextStyle(textAlign = TextAlign.Center))
                     }
                 }
             }

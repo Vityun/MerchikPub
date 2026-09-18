@@ -10,13 +10,15 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
-import ua.com.merchik.merchik.ServerExchange.PhotoDownload
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
@@ -42,7 +44,7 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
+import ua.com.merchik.merchik.dialogs.SamplePhotoPreview
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -60,9 +62,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     private val EXAMPLE_ID = "id_1c"
     private val EXAMPLE_IMG_ID = "photo_id"
-    private val HIDE_INFORMATION_ON_OPEN = "hide_information_on_open"
-    private val samplePhotoPreferences =
-        application.getSharedPreferences("sample_photo_settings", Context.MODE_PRIVATE)
+    private val isProductCapture: Boolean
+        get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT ||
+            (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 &&
+                (dataJsonString("tovarId")?.toLongOrNull() ?: 0L) > 0L)
     private var initialDisplayModeApplied = false
     private val warehouseAvailabilityKey = "warehouse_product_available"
     private val warehouseExceptionSampleIds = listOf(78, 94)
@@ -137,7 +140,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "id",
                     mutableListOf(imagesTypeId.toString()),
                     mutableListOf(imagesTypeName),
-                    true
+                    !isProductCapture
                 )
                 itemsFilter.add(filterImagesTypeListDB)
             }
@@ -151,6 +154,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
                 val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
+                val isProductPhoto = isProductCapture
+
                 val filterTradeMarkDB = ItemFilter(
                     "Мережа",
                     TradeMarkDB::class,
@@ -160,9 +165,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "subTitle",
                     "grp_id",
                     "iD",
-                    mutableListOf(tradeMarkDB.id.toString(), "0"),
-                    mutableListOf(tradeMarkDB.nm, "Все не указанные"),
-                    true
+                    if (isProductPhoto) listOf(tradeMarkId, "0").distinct()
+                    else mutableListOf(tradeMarkDB.id.toString(), "0"),
+                    if (isProductPhoto) listOf(tradeMarkId, "0").distinct().map {
+                        if (it == "0") "Все не указанные" else tradeMarkDB?.nm ?: "Мережа $it"
+                    } else mutableListOf(tradeMarkDB.nm, "Все не указанные"),
+                    !isProductPhoto
                 )
                 itemsFilter.add(filterTradeMarkDB)
             } catch (e: Exception) {
@@ -185,6 +193,14 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
+        if (isProductCapture) {
+            val photoType = resolvePhotoTypeId() ?: return emptyList()
+            val tradeMarkId = dataJsonInt("tradeMarkDBId") ?: 0
+            val samples = withContext(Dispatchers.IO) {
+                ProductPhotoCapture.getSamples(photoType, tradeMarkId)
+            }
+            return repository.toItemUIList(SamplePhotoSDB::class, samples, contextUI, 35)
+        }
         val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
         // Оновлюємо назви виключених зразків з актуального набору для відображення.
         buildWarehouseSampleFilter(data)?.let { warehouseFilter ->
@@ -203,6 +219,18 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
         val sample = clickedDataItemUI.rawAs<SamplePhotoSDB>() ?: return
+        if (isProductCapture) {
+            this.context = context
+            try {
+                SamplePhotoPreview.showSample(context, sample) { onStarted ->
+                    takeProductPhoto(sample, onStarted)
+                }
+            } catch (e: Exception) {
+                Log.e("SamplePhotoSDBViewModel", "Cannot open product sample ${sample.id}", e)
+                Toast.makeText(context, "Не вдалося відкрити зразок фото", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
         val photo = prepareSamplePhoto(sample, context, index) ?: return
         val comment = listOfNotNull(sample.nm, sample.about)
             .filter { it.isNotBlank() }
@@ -218,6 +246,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
             return
         }
         try {
+            if (isProductCapture) {
+                takeProductPhoto(sample) {}
+                return
+            }
             val photo = prepareSamplePhoto(sample, photoContext, 0) ?: return
             openCamera(photo) {}
         } catch (e: Exception) {
@@ -234,51 +266,28 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?, sampleId: Int?) {
         val photoContext = context ?: return
         try {
-            val dialogFullPhoto = DialogFullPhotoR(photoContext)
-            dialogFullPhoto.setTitle(sampleId?.let { "Зразок ($it)" } ?: "Зразок")
-            dialogFullPhoto.setCommentTitle("Інформація")
-            dialogFullPhoto.setPhoto(stackPhotoDB)
-            dialogFullPhoto.setComment(comment?.takeIf { it.isNotBlank() } ?: "Інформація відсутня")
-            dialogFullPhoto.commentOn =
-                !samplePhotoPreferences.getBoolean(HIDE_INFORMATION_ON_OPEN, false)
-            dialogFullPhoto.setCommentDialogSetup { informationDialog ->
-                informationDialog.setBottomCheckbox(
-                    "Більше не показувати",
-                    samplePhotoPreferences.getBoolean(HIDE_INFORMATION_ON_OPEN, false)
-                ) { _, checked ->
-                    samplePhotoPreferences.edit()
-                        .putBoolean(HIDE_INFORMATION_ON_OPEN, checked)
-                        .apply()
-                    dialogFullPhoto.commentOn = !checked
-                }
-            }
-
-            dialogFullPhoto.setCamera {
-                openCamera(stackPhotoDB) {
-                    dialogFullPhoto.dismiss()
-                }
-            }
-
-            dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
-            dialogFullPhoto.show()
-
-            // Раніше оригінал завантажував проміжний DialogFullPhoto.
-            if (stackPhotoDB.photo_size == "Small") {
-                PhotoDownload().downloadPhoto(true, stackPhotoDB,
-                    object : PhotoDownload.downloadPhotoInterface {
-                        override fun onSuccess(data: StackPhotoDB) {
-                            if (dialogFullPhoto.isShowing) {
-                                dialogFullPhoto.setPhoto(data)
-                            }
-                        }
-
-                        override fun onFailure(error: String) {
-                            Log.e("SamplePhotoSDBViewModel", "Full photo ${stackPhotoDB.photoServerId}: $error")
-                        }
-                    })
+            SamplePhotoPreview.show(photoContext, stackPhotoDB, comment, sampleId) { onStarted ->
+                openCamera(stackPhotoDB, onStarted)
             }
         } catch (e: Exception) {
             Log.e("SamplePhotoSDBViewModel", "Cannot open sample photo", e)
+        }
+    }
+
+    private fun takeProductPhoto(sample: SamplePhotoSDB, onStarted: () -> Unit) {
+        val activity = context as? Activity ?: return
+        try {
+            val data = Gson().fromJson(dataJson, JsonObject::class.java)
+            val visitId = data.get("wpDataDBId").asString.toLong()
+            val optionId = data.get("optionDBId").asString
+            val tovarId = data.get("tovarId").asString
+            val photoType = resolvePhotoTypeId() ?: error("Photo type is missing")
+            if (ProductPhotoCapture.takePhoto(activity, visitId, optionId, photoType, tovarId, sample)) {
+                onStarted()
+            }
+        } catch (e: Exception) {
+            Log.e("SamplePhotoSDBViewModel", "Invalid product capture parameters", e)
+            Toast.makeText(activity, "Не вдалося відкрити камеру для цього товару", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -376,15 +385,18 @@ class SamplePhotoSDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> 50
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_GENERIC -> dataJsonInt("photoType")
+            ContextUI.SAMPLE_PHOTO_FOR_PRODUCT -> dataJsonInt("photoType")
             else -> dataJsonInt("photoType")
         }
     }
 
-    private fun dataJsonInt(key: String): Int? {
+    private fun dataJsonInt(key: String): Int? = dataJsonString(key)?.toIntOrNull()
+
+    private fun dataJsonString(key: String): String? {
         return runCatching {
             val root = Gson().fromJson(dataJson, JsonObject::class.java)
             val value = root?.get(key)?.takeIf { !it.isJsonNull } ?: return@runCatching null
-            value.asString.toIntOrNull()
+            value.asString.trim()
         }.getOrNull()
     }
 

@@ -141,6 +141,12 @@ public class DialogFullPhotoR {
         });
     }
 
+    public void setGallery(Clicks.clickVoid clickVoid) {
+        camera.setImageResource(R.drawable.ic_menu_gallery);
+        camera.setContentDescription("Вибрати з галереї");
+        camera.setOnClickListener(view -> clickVoid.click());
+    }
+
     // Pika Виктор добавил этот метод чтоб при создании диалога можно было установить масштабирование
     public void scaleType(ImageView.ScaleType type){
         photo.setScaleType(type);

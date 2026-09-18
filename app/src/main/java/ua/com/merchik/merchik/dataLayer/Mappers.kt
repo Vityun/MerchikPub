@@ -524,6 +524,7 @@ enum class ContextUI {
     SAMPLE_PHOTO_FROM_OPTION_174878,    // фото товаров СИСГ (с истекающим/истекшим сроком годности) (50)
     SAMPLE_PHOTO_FROM_OPTION_175015,    // фото единиці товара+ценик
     SAMPLE_PHOTO_FROM_OPTION_GENERIC,
+    SAMPLE_PHOTO_FOR_PRODUCT,
     ERROR_FROM_TEXT_EDITOR,
     AKCIYA_FROM_TEXT_EDITOR,
     QUESTION_ANSWER_INFO,

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -39,7 +39,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 
 public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
-    public static final int OPTION_BUTTON_PHOTO_TOVAR_AND_PRICE_ID = 175015;
+    public static final int OPTION_BUTTON_PHOTO_TOVAR_AND_PRICE_ID = 175015; //157277
     public static final int OPTION_CONTROL_PHOTO_TOVAR_AND_PRICE_ID = 175016;
     private static final int PHOTO_TOVAR_AND_PRICE = StackPhotoDB.PHOTO_TOVAR_AND_PRICE;
     private static final LocalDate EXCEPTION_UNTIL_DATE = LocalDate.of(2026, 9, 10);
@@ -473,14 +473,12 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
                         return;
                     }
 
-                    new MakePhoto().pressedMakePhoto(
+                    ProductPhotoCapture.open(
                             activity,
                             wp,
                             optionDB,
-                            String.valueOf(PHOTO_TOVAR_AND_PRICE),
-                            finalTov.getiD(),
-                            () -> {
-                            }
+                            PHOTO_TOVAR_AND_PRICE,
+                            finalTov.getiD()
                     );
 
                     Globals.writeToMLOG("INFO", "OptionControlPhotoTovarAndPrice/createLinkedString", "wp_dad2: " + wp.getCode_dad2() + ", tovarId: " + finalTov.getiD());

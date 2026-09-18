@@ -51,12 +51,14 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -771,12 +773,36 @@ public class MakePhoto {
             } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
-                wpDataObj.setPhotoType(photoType);
             }
+            wpDataObj.setPhotoType(photoType);
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, click);
+
+            String productGroupId = null;
+            if (!isBlank(tovarId) && !"0".equals(tovarId.trim())
+                    && wpDataObj.getCustomerTypeGrp() != null
+                    && !"5".equals(photoType) && !"47".equals(photoType)) {
+                try {
+                    TovarDB tovar = TovarRealm.getById(tovarId.trim());
+                    if (tovar != null && !isBlank(tovar.getGroupId())) {
+                        int groupId = Integer.parseInt(tovar.getGroupId().trim());
+                        if (groupId > 0 && wpDataObj.getCustomerTypeGrp().containsKey(groupId)) {
+                            productGroupId = String.valueOf(groupId);
+                        }
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "MakePhoto/pressedMakePhoto",
+                            "Cannot resolve product group. tovarId: " + tovarId + ", exception: " + e);
+                }
+            }
+
+            if (productGroupId != null) {
+                setPhotoCustomerGroup(wpDataObj, productGroupId);
+                photoDialogsNEW(activity, wpDataObj, data, optionsDB, click);
+            } else {
+                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, click);
+            }
             click.click();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
@@ -796,8 +822,15 @@ public class MakePhoto {
         });
     }
 
+    private void setPhotoCustomerGroup(WPDataObj wp, String groupId) {
+        // makePhoto recreates WPDataObj and reads the group from this static field.
+        photoCustomerGroup = notNull(groupId);
+        wp.setCustomerTypeGrpS(photoCustomerGroup);
+    }
+
     // TODO ## убрать эту группу
     private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
+        setPhotoCustomerGroup(wp, "");
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
             if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")
@@ -807,22 +840,19 @@ public class MakePhoto {
                         .setItems(result, (dialog, which) -> {
                             Toast t = Toast.makeText(activity, "Вибрано групу товару: " + result[which], Toast.LENGTH_LONG);
                             t.show();
-                            wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
+                            setPhotoCustomerGroup(wp, Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
 
                             Log.e("choiceCustomerGroup", "Globals.getKeyForValue(result[which]: " + Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
                             Log.e("choiceCustomerGroup", "result[which]: " + result[which]);
                             Log.e("choiceCustomerGroup", "wp.getCustomerTypeGrp(): " + wp.getCustomerTypeGrp());
                             Log.e("choiceCustomerGroup", "which: " + which);
 
-                            /*07.07.23. Возможно в будущем изза этой Группы Товаров будут проблемы.*/
-                            photoCustomerGroup = Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp());
-
 //                            photoDialogs(activity, wp, data, optionsDB);
                             photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
-                wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
+                setPhotoCustomerGroup(wp, Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(activity, "Вибрано групу товару: " + result[0], Toast.LENGTH_LONG).show();
 //                photoDialogs(activity, wp, data, optionsDB);
                 photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
@@ -830,7 +860,6 @@ public class MakePhoto {
                 if (!wp.getPhotoType().equals("5") && !wp.getPhotoType().equals("47")) {
                     globals.alertDialogMsg(activity, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
-                wp.setCustomerTypeGrpS("");
 //                photoDialogs(activity, wp, data, optionsDB);
                 photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
             }

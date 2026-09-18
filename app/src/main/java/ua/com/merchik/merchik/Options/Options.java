@@ -103,7 +103,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseKonkurent;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonQuestionAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
@@ -137,8 +136,8 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarAndPrice;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
@@ -276,11 +275,16 @@ public class Options {
                     optionControlCheckingForAnAchievement.showOptionMassage("");
                     break;
 
+
+                case 174878:
                 case 174877:
+                    Log.e("!!CLICK!!", "0 option: 174877");
+
                     OptionControlPhotoExpirationDate<?> optionControlPhotoExpirationDate = new OptionControlPhotoExpirationDate<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoExpirationDate.showOptionMassage("");
                     break;
 
+                case 157278:
                 case 175016:
                     OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice = new OptionControlPhotoTovarAndPrice<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoTovarAndPrice.showOptionMassage("");
@@ -438,8 +442,10 @@ public class Options {
                     break;
 
                 case 172101:
-                case 157278:
+                case 157277:
                 case 166528:
+                    Log.e("!!CLICK!!", "option: 157277-" + optionsDB.getOptionId());
+
                     OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoPromotion.showOptionMassage("");
                     break;
@@ -1775,7 +1781,10 @@ public class Options {
                 }
                 return optionControlCheckingForAnAchievement.isBlockOption2() ? 1 : 0;
 
+            case 174878:
             case 174877:
+                Log.e("!!CLICK!!", "option: 174877");
+
                 OptionControlPhotoExpirationDate<?> optionControlPhotoExpirationDate =
                         new OptionControlPhotoExpirationDate<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoExpirationDate.isBlockOption()))
@@ -1786,6 +1795,7 @@ public class Options {
                 }
                 return optionControlPhotoExpirationDate.isBlockOption2() ? 1 : 0;
 
+            case 157277:
             case 175016:
                 OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice =
                         new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -2156,18 +2166,18 @@ public class Options {
                 break;
 
             case 135330:
-                Log.e("optionNotConduct","135330");
+                Log.e("optionNotConduct", "135330");
                 OptionControlReclamationAnswer<?> optionControlReclamationAnswer =
                         new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReclamationAnswer.isBlockOption())) {
                     optionControlReclamationAnswer.showOptionMassage(block);
-                    Log.e("optionNotConduct","135330 block 0");
+                    Log.e("optionNotConduct", "135330 block 0");
                 }
                 if (mode.equals(NNKMode.BLOCK) && optionControlReclamationAnswer.signal && optionControlReclamationAnswer.isBlockOption()) {
                     optionControlReclamationAnswer.showOptionMassage(block);
-                    Log.e("optionNotConduct","135330 block 1");
+                    Log.e("optionNotConduct", "135330 block 1");
                 }
-                Log.e("optionNotConduct","135330 ttt " + (optionControlReclamationAnswer.isBlockOption2() ? 1 : 0));
+                Log.e("optionNotConduct", "135330 ttt " + (optionControlReclamationAnswer.isBlockOption2() ? 1 : 0));
 
                 return optionControlReclamationAnswer.isBlockOption2() ? 1 : 0;
 
@@ -2260,6 +2270,7 @@ public class Options {
                 break;
 
             case 175015:
+                Log.e("!!CLICK!!", "option: 175015");
 //                new OptionButtonPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice1 =
                         new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -2273,19 +2284,18 @@ public class Options {
                 return optionControlPhotoTovarAndPrice1.isBlockOption2() ? 1 : 0;
 //                break;
 
-            case 157277:
-//                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-//                break;
-                OptionControlPhotoPromotion<?> optionControlPhotoPromotionB =
-                        new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (optionControlPhotoPromotionB.isBlockOption()) {
-                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoPromotionB.isBlockOption()))
-                        optionControlPhotoPromotionB.showOptionMassage(block);
-                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoPromotionB.signal && optionControlPhotoPromotionB.isBlockOption()) {
-                        optionControlPhotoPromotionB.showOptionMassage(block);
-                    }
-                }
-                return optionControlPhotoPromotionB.isBlockOption2() ? 1 : 0;
+////                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+////                break;
+//                OptionControlPhotoPromotion<?> optionControlPhotoPromotionB =
+//                        new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                if (optionControlPhotoPromotionB.isBlockOption()) {
+//                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoPromotionB.isBlockOption()))
+//                        optionControlPhotoPromotionB.showOptionMassage(block);
+//                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoPromotionB.signal && optionControlPhotoPromotionB.isBlockOption()) {
+//                        optionControlPhotoPromotionB.showOptionMassage(block);
+//                    }
+//                }
+//                return optionControlPhotoPromotionB.isBlockOption2() ? 1 : 0;
 
             case 157354:
                 new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);

@@ -122,15 +122,15 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             correctionPercentage = 0;
         }
 
-        if (time < 0) {
-            stringBuilderMsg.append("Роботи по поточному кпс (клієнто/відвідуванню) ще не були початі. Почніть роботи, відредагуйте ДЗ (дет. звіт) та повторіть спробу.");
-            signal = true;
-        } else if (reportPrepare != null && reportPrepare.isEmpty()) {
+        //7.0
+        if (reportPrepare != null && reportPrepare.isEmpty()) {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
         } else if (colSKU == 0) {
-//            stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙЧАС не знайдено.");
             stringBuilderMsg.append("Товарів, у котрих визначена їх наявність на вітрині (фейси) у деталіз.звітності не знайдено.");
+            signal = true;
+        } else if (time <= 0) {
+            stringBuilderMsg.append("Роботи по поточному кпс (клієнто/відвідуванню) ще не були початі. Почніть роботи, відредагуйте ДЗ (дет. звіт) та повторіть спробу.");
             signal = true;
         } else if (min > 0 && correctionPercentage < min) {
             stringBuilderMsg.append("Данні деталіз.звітності виправлені у ").append(fixesNum)
@@ -191,49 +191,6 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 
     }
 
-    /**
-     * Заполняем данными с ОСВ
-     */
-//    private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare) {
-//        List<ReportPrepareDB> res = null;
-//        if (reportPrepare != null && reportPrepare.size() > 0) {
-//            res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
-//            for (ReportPrepareDB item : res) {
-//                if (calculateSKU(item.getFace()) == 0) {
-//                    item.colSKU = 0;
-//                    continue;
-//                } else {
-//                    item.colSKU = 1;
-//                }
-//
-//                long dtChangeTime = item.getDtChange();
-//                if (dtChangeTime < time) {
-//                    item.errorExist = 1;
-//                    item.note = "исправление не внесено";
-//                } else {
-//                    item.fixesNum = 1;
-//                }
-//            }
-//        }
-//        return res;
-//    }
-    public static long adjustStartTime(long timeStartWork) {
-        // Получаем текущую дату в секундах (без миллисекунд)
-        long nowInSeconds = System.currentTimeMillis() / 1000;
-
-        // Переводим обе даты в дни
-        long todayDays = nowInSeconds / 86400; // 86400 секунд в сутках
-        long startDays = timeStartWork / 86400;
-
-        // Разница в днях
-        long diffDays = startDays - todayDays;
-
-        // Определяем, сколько дней нужно отнять
-        long daysToSubtract = diffDays >= 3 ? 3 : diffDays;
-
-        // Возвращаем скорректированное время
-        return timeStartWork - (daysToSubtract * 86400);
-    }
 
     /**
      * Заполняем данными с ОСВ изменены от 18.02.25

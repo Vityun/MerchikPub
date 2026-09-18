@@ -361,9 +361,16 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
 
+        // 3.2
         if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
             signal = true;
-            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
+            RealmResults<StackPhotoDB> stackPhotoFor132971 =
+                    StackPhotoRealm.getPhotosForTypeAndExamples(
+                            dad2,
+                            31,
+                            "78",
+                            "94"
+                    );
             spannableStringBuilder.append("Не знайдено жодного фото ")
                     .append(item != null ? item.getNm() : photoTypeName)
                     .append(" по даному відвідуванню");
@@ -385,12 +392,12 @@ public class OptionControlPhoto<T> extends OptionControl {
             signal = false;
         }
 
-        // 3.2
+        // 3.3
         // для 141361 от 27.03.2025
         if (optionId.equals("141361")) {
             RealmResults<StackPhotoDB> stackPhotoDB141361 = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
             long count = stackPhotoDB141361.where()
-                    .equalTo("example_id", "78")
+                    .in("example_id", new String[]{"78", "94"})
                     .count();
             if (count > 0) {
                 m = 2;
@@ -399,7 +406,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 String baseEmptyComment = "У свiтлин: ";
                 List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
                 for (StackPhotoDB photo : stackPhotoDBList) {
-                    if ("78".equals(photo.getExample_id())) {
+                    if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
                         String comment = photo.getComment();
                         if (comment != null && comment.length() > 10) {
                             photoWithComment++;
@@ -411,7 +418,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 if (photoWithComment < m) {
                     if (count < 2) {
                         signal = true;
-                        spannableStringBuilder.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 має бути не менше ніж ")
+                        spannableStringBuilder.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 (або 94) має бути не менше ніж ")
                                 .append(String.valueOf(m))
                                 .append(", а зроблено: ")
                                 .append(String.valueOf(count));
@@ -421,7 +428,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                         baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
                         signal = true;
                         spannableStringBuilder.append(baseEmptyComment)
-                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78, повинен бути доданий коментар довжиною більше 10 символів");
+                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78 (або 94), повинен бути доданий коментар довжиною більше 10 символів");
                     }
                 } else {
                     spannableStringBuilder.append("Скарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");

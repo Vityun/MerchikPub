@@ -385,6 +385,17 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getPhotosForTypeAndExamples(
+            long dad2,
+            int photoType,
+            String... examples
+    ) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", dad2)
+                .equalTo("photo_type", photoType)
+                .in("example_id", examples)
+                .findAll();
+    }
     /**
      * 09.01.2023.
      * Универсальная функция для получения Жернала фото

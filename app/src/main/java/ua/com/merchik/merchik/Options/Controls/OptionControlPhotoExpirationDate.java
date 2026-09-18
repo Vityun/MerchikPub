@@ -30,7 +30,7 @@ import java.util.Map;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -582,13 +582,10 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
 
                 Toast.makeText(textView.getContext(), "Виготовлення світлини по товару(" + tovBarcode + "): " + tovName, Toast.LENGTH_LONG).show();
 
-                resetPhotoContext();
-
                 Globals.writeToMLOG("INFO", "OptionControlPhotoExpirationDate/createLinkedString", "wp_dad2: " + wp.getCode_dad2());
                 Globals.writeToMLOG("INFO", "OptionControlPhotoExpirationDate/createLinkedString", "tov.id: " + item.getTovarId());
 
-                new MakePhoto().pressedMakePhoto(activity, wp, optionDB, String.valueOf(PHOTO_EXPIRATION_DATE), item.getTovarId(), () -> {
-                });
+                ProductPhotoCapture.open(activity, wp, optionDB, PHOTO_EXPIRATION_DATE, item.getTovarId());
             }
 
             @Override
@@ -611,15 +608,6 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         return res;
-    }
-
-    private void resetPhotoContext() {
-        MakePhoto.img_src_id = "";
-        MakePhoto.showcase_id = "";
-        MakePhoto.planogram_id = "";
-        MakePhoto.planogram_img_id = "";
-        MakePhoto.example_id = "";
-        MakePhoto.example_img_id = "";
     }
 
     private Activity findActivity(Context context) {

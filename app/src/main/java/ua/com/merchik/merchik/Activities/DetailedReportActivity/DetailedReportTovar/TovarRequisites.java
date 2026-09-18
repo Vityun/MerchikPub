@@ -6,8 +6,10 @@ import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.tovarId;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.Arrays;
@@ -17,6 +19,7 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
@@ -26,6 +29,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TovarOptions;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -62,6 +66,14 @@ public class TovarRequisites {
      * Создание и отображение модального окна для выполнения фото остатков Товаров
      */
     public DialogData createDialog(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, Clicks.clickVoid click) {
+        return createDialog(context, wpDataDB, optionsDB, click, false);
+    }
+
+    public DialogData createDialogWithSamples(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, Clicks.clickVoid click) {
+        return createDialog(context, wpDataDB, optionsDB, click, true);
+    }
+
+    private DialogData createDialog(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, Clicks.clickVoid click, boolean useSamplePhotos) {
         DialogData res = new DialogData(context);
 
         TovarOptions tovarOptions;
@@ -99,35 +111,67 @@ public class TovarRequisites {
             tovarId = reportPrepareDB.tovarId;
         }
 
+        final String selectedTovarId = reportPrepareDB != null ? reportPrepareDB.tovarId : tovarId;
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
-                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
+                    if (useSamplePhotos) {
+                        Activity activity = findActivity(context);
+                        if (activity == null) {
+                            Toast.makeText(context, "Не вдалося відкрити зразки фото", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        ProductPhotoCapture.open(activity, wpDataDB, optionsDB, photoType, selectedTovarId,
+                                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158);
+                    } else {
+                        new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
+                    }
                 },
                 "Вибрати з галереї",
                 () -> {
-                    try {
-                        Globals.writeToMLOG("INFO", "Вибрати з галереї", "PhotoPickerUtils.createSingleImageChooser()");
-                        MakePhotoFromGaleryWpDataDB = wpDataDB;
-                        if (photoType != 4)
-                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
-                        MakePhotoFromGalery.photoType = photoType;
-                        Intent intent = PhotoPickerUtils.createSingleImageChooser();
-                        if (context instanceof DetailedReportActivity) {
-                            ((DetailedReportActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
-                        } else if (context instanceof FeaturesActivity) {
-                            ((FeaturesActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
-                            res.dismiss();
+                    if (useSamplePhotos) {
+                        Activity activity = findActivity(context);
+                        if (activity == null) {
+                            Toast.makeText(context, "Не вдалося відкрити зразок фото", Toast.LENGTH_SHORT).show();
+                            return;
                         }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("INFO", "Вибрати з галереї", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                        ProductPhotoCapture.openRemainingGoodsGallery(activity, wpDataDB,
+                                () -> openGallery(activity, wpDataDB, selectedTovarId, res));
+                    } else {
+                        openGallery(context, wpDataDB, selectedTovarId, res);
                     }
-
                 });
 
         res.setCancel("Закрити", res::dismiss);
 
         return res;
+    }
+
+    private void openGallery(Context context, WpDataDB wpDataDB, String selectedTovarId, DialogData sourceDialog) {
+        try {
+            Globals.writeToMLOG("INFO", "Вибрати з галереї", "PhotoPickerUtils.createSingleImageChooser()");
+            MakePhotoFromGaleryWpDataDB = wpDataDB;
+            MakePhotoFromGalery.tovarId = selectedTovarId;
+            MakePhotoFromGalery.photoType = photoType;
+            Intent intent = PhotoPickerUtils.createSingleImageChooser();
+            if (context instanceof DetailedReportActivity) {
+                ((DetailedReportActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+            } else if (context instanceof FeaturesActivity) {
+                ((FeaturesActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+                sourceDialog.dismiss();
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "Вибрати з галереї", "Exception e: " + Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    private Activity findActivity(Context context) {
+        Context current = context;
+        while (current instanceof ContextWrapper) {
+            if (current instanceof Activity) return (Activity) current;
+            current = ((ContextWrapper) current).getBaseContext();
+        }
+        return null;
     }
 
 

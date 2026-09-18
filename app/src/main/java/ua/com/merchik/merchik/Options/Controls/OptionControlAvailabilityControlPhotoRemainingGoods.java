@@ -416,7 +416,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             ClickableSpan clickableSpan = new ClickableSpan() {
                 @Override
                 public void onClick(View textView) {
-                    new TovarRequisites(TovarRealm.getById(rp.tovarId), rp).createDialog(context, WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(rp.codeDad2)), optionDB, () -> {
+                    new TovarRequisites(TovarRealm.getById(rp.tovarId), rp).createDialogWithSamples(context, WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(rp.codeDad2)), optionDB, () -> {
                     }).show();
                 }
 
