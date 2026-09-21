@@ -284,7 +284,7 @@ public class Options {
                     optionControlPhotoExpirationDate.showOptionMassage("");
                     break;
 
-                case 157278:
+//                case 157278:
                 case 175016:
                     OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice = new OptionControlPhotoTovarAndPrice<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoTovarAndPrice.showOptionMassage("");
@@ -444,6 +444,7 @@ public class Options {
                 case 172101:
                 case 157277:
                 case 166528:
+                case 157278:
                     Log.e("!!CLICK!!", "option: 157277-" + optionsDB.getOptionId());
 
                     OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -1795,8 +1796,9 @@ public class Options {
                 }
                 return optionControlPhotoExpirationDate.isBlockOption2() ? 1 : 0;
 
-            case 157277:
+//            case 157277:
             case 175016:
+                Log.e("!!!!!!!!!", "option id: " + option.getOptionId() + " | " + option.getOptionControlId()  + " | " + option.getOptionTxt());
                 OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice =
                         new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarAndPrice.isBlockOption()))

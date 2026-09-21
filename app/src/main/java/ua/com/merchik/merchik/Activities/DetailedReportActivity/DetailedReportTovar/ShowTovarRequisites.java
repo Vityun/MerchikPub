@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import io.realm.RealmResults;
 import kotlin.Unit;
@@ -69,7 +70,41 @@ public class ShowTovarRequisites {
     private final Options options = new Options();
     private final TovarRequisites tovarRequisites = new TovarRequisites();
 
-    private List<DialogData> dialogList = new ArrayList<>();
+    private final List<PendingDialog> dialogList = new ArrayList<>();
+
+    // Keep only data for queued steps; inflate the window when it is actually shown.
+    private static class PendingDialog {
+        final TovarOptions tovarOptions;
+        ReportPrepareDB reportPrepareDB;
+        private final Function<ReportPrepareDB, DialogData> factory;
+        private DialogData dialog;
+
+        PendingDialog(TovarOptions option, ReportPrepareDB report,
+                      Function<ReportPrepareDB, DialogData> factory) {
+            this.tovarOptions = option;
+            this.reportPrepareDB = report;
+            this.factory = factory;
+        }
+
+        void show() {
+            if (dialog == null) dialog = factory.apply(reportPrepareDB);
+            if (dialog != null) {
+                dialog.reportPrepareDB = reportPrepareDB;
+                dialog.show();
+            }
+        }
+
+        void dismiss() {
+            if (dialog != null) {
+                dialog.dismiss();
+                dialog = null;
+            }
+        }
+    }
+
+    private void removeDialogAt(int index) {
+        dialogList.remove(index).dismiss();
+    }
 
     List<TovarOptions> tovOptTplList;
 
@@ -80,6 +115,8 @@ public class ShowTovarRequisites {
     }
 
     public void showDialogs() {
+        for (PendingDialog pending : dialogList) pending.dismiss();
+        dialogList.clear();
         boolean finalDeletePromoOption = true;  // true - потому что так захотел
 
         ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
@@ -129,8 +166,11 @@ public class ShowTovarRequisites {
                         OptionsDB optionsDB = matchingOption.get();
                         // Делайте что-то с объектом OptionsDB
                         System.out.println(optionsDB);
-                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB, () -> {
-                        }));
+                        dialogList.add(new PendingDialog(
+                                new TovarOptions().createTovarOptionPhotoType(), reportPrepareTovar,
+                                report -> new TovarRequisites(tovarDB, report)
+                                        .createDialog(context, wpDataDB, optionsDB, () -> {
+                                        })));
                     } else {
                         // Обработка случая, когда объект OptionsDB не найден
                         System.out.println("Объект OptionsDB не найден");
@@ -139,7 +179,7 @@ public class ShowTovarRequisites {
             }
         }
 
-        dialogList.get(0).show();
+        if (!dialogList.isEmpty()) dialogList.get(0).show();
     }
 
 
@@ -165,6 +205,12 @@ public class ShowTovarRequisites {
 
     //    @RequiresApi(api = Build.VERSION_CODES.N)
     private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+        dialogList.add(new PendingDialog(tpl, reportPrepareDB,
+                report -> createDialog(list, tpl, report, tovarId, cd2, clientId,
+                        finalBalanceData1, finalBalanceDate1, clickType)));
+    }
+
+    private DialogData createDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
         try {
             DialogData dialog = new DialogData(context);
             dialog.setTitle("");
@@ -321,10 +367,11 @@ public class ShowTovarRequisites {
                 });
             }
 
-            dialogList.add(dialog);
+            return dialog;
 
         } catch (Exception e) {
             Log.d("test", "test" + e);
+            return null;
         }
     }
 
@@ -372,11 +419,9 @@ public class ShowTovarRequisites {
      * списка dialogList.
      */
     private void dialogShowRule(boolean clickType) {
+        if (dialogList.isEmpty()) return;
         ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
-        if (dialogList.size() > 1)
-            dialogList.remove(0);
-        else
-            dialogList.get(0).dismiss();
+        removeDialogAt(0);
         if (!dialogList.isEmpty()) {
             dialogList.get(0).reportPrepareDB = report;
             int face = 0;
@@ -389,7 +434,7 @@ public class ShowTovarRequisites {
                             dialogList.get(0).tovarOptions.getOptionId().contains(157243)) &&
                     face > 0) {
                 // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -397,7 +442,7 @@ public class ShowTovarRequisites {
                     (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
                             dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
                     face == 0) {
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -406,7 +451,7 @@ public class ShowTovarRequisites {
 //                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
                     face != 0
             ) {
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -415,7 +460,7 @@ public class ShowTovarRequisites {
                     dialogList.get(0).tovarOptions.getOptionId().contains(135591) &&
                     face > 0
             ) {
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -426,17 +471,17 @@ public class ShowTovarRequisites {
     }
 
     private void dialogShowRuleFix(boolean clickType) {
-        for (DialogData dialogData : dialogList) {
+        for (PendingDialog dialogData : dialogList) {
             TovarOptions o = dialogData.tovarOptions;
             Log.e("W", "d " + o);
         }
-        ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
     }
 
     private void dialogShowRule2(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
         Log.e("dialogShowRule2", "clickType: " + clickType);
+        if (dialogList.isEmpty()) return;
         ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
-        dialogList.remove(0);
+        removeDialogAt(0);
 
         boolean option165276 = false;
         OptionsDB option = OptionsRealm.getOptionControl(String.valueOf(cd2), "165276");
@@ -455,7 +500,7 @@ public class ShowTovarRequisites {
                             dialogList.get(0).tovarOptions.getOptionId().contains(157243)) &&
                     face > 0) {
                 // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -463,7 +508,7 @@ public class ShowTovarRequisites {
                     (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
                             dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
                     face == 0) {
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
@@ -472,7 +517,7 @@ public class ShowTovarRequisites {
 //                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
                         face != 0
                 ) {
-                    dialogList.remove(0);
+                    removeDialogAt(0);
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
@@ -495,7 +540,7 @@ public class ShowTovarRequisites {
 //                    } else {
                     // Обработка случая, когда объект не найден
 //                            dialogList.get(0).show();
-                    dialogList.remove(0);
+                    removeDialogAt(0);
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
 //                        }
@@ -534,7 +579,7 @@ public class ShowTovarRequisites {
 
                                 boolean existError = false;
                                 try {
-                                    for (DialogData item : dialogList) {
+                                    for (PendingDialog item : dialogList) {
                                         if (item.tovarOptions.getOptionShort().equals("Ш")) {
                                             existError = true;
                                         }
@@ -546,13 +591,13 @@ public class ShowTovarRequisites {
                                 if (!existError && tpl.getOptionShort().equals("В")) {
                                     TovarOptions to = new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242);
                                     showDialog(list, to, reportPrepareDB, tovarId, String.valueOf(cd2), clientId, finalBalanceData1, finalBalanceDate1, true);
-                                    dialogList.remove(0);
-                                    if (dialogList.size() > 0 /*&& dialogList.get(0).tovarOptions.getOptionShort().equals("P")*/) {
-                                        Collections.swap(dialogList, 0, 1);
+                                    removeDialogAt(0);
+                                    if (!dialogList.isEmpty()) {
+                                        if (dialogList.size() > 1) Collections.swap(dialogList, 0, 1);
                                         dialogList.get(0).show();
                                     }
                                 } else {
-                                    dialogList.remove(0);
+                                    removeDialogAt(0);
                                     if (dialogList.size() > 0) {
                                         dialogList.get(0).show();
                                     }
@@ -560,7 +605,7 @@ public class ShowTovarRequisites {
 
                                 // Отображаем то что у нас дальше
                             } else {
-                                dialogList.remove(0);
+                                removeDialogAt(0);
                                 if (dialogList.size() > 0) {
                                     dialogList.get(0).show();
                                 }
@@ -571,9 +616,9 @@ public class ShowTovarRequisites {
                             if (tpl.getOptionShort().equals("Д")) {  // Если текущее окно - ДАТА
                                 // Удаляем Возврат
                                 try {
-                                    for (DialogData item : dialogList) {
-                                        if (item.tovarOptions.getOptionShort().equals("В")) {
-                                            dialogList.remove(item);
+                                    for (int i = dialogList.size() - 1; i >= 0; i--) {
+                                        if (dialogList.get(i).tovarOptions.getOptionShort().equals("В")) {
+                                            removeDialogAt(i);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -583,7 +628,7 @@ public class ShowTovarRequisites {
 
 
                             // Тут мы не должны указывать ВОЗВРАТ
-                            dialogList.get(0).show();
+                            if (!dialogList.isEmpty()) dialogList.get(0).show();
                         }
                     }
                 } else {
@@ -594,7 +639,7 @@ public class ShowTovarRequisites {
 //                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
                     face != 0
             ) {
-                dialogList.remove(0);
+                removeDialogAt(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }

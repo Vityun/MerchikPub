@@ -2518,7 +2518,10 @@ class TovarDBViewModel @Inject constructor(
                                             wpDataDB = wpDataDB
                                         )
 
-                                        onSaved?.invoke(tpl, changed)
+                                        if (changed) {
+                                            dialog.dismiss()
+                                            onSaved?.invoke(tpl, true)
+                                        }
 
                                     })
                                     dialogBadData.setClose(DialogClickListener { dialogBadData.dismiss() })
@@ -2536,7 +2539,10 @@ class TovarDBViewModel @Inject constructor(
                                 wpDataDB = wpDataDB
                             )
 
-                            onSaved?.invoke(tpl, changed)
+                            if (changed) {
+                                dialog.dismiss()
+                                onSaved?.invoke(tpl, true)
+                            }
                         } else {
                             Toast.makeText(
                                 dialog.context,

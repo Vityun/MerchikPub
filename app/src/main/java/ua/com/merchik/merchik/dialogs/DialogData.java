@@ -3,12 +3,9 @@ package ua.com.merchik.merchik.dialogs;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -46,6 +43,8 @@ import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Calendar;
@@ -74,6 +73,7 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerLauncher;
 import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 
 public class DialogData {
@@ -127,6 +127,8 @@ public class DialogData {
 
     private boolean dismissOnlyByButtonsMode = false;
     private DialogClickListener closeClickListener;
+    private File imageFile;
+    private MerchikDatePickerLauncher datePicker;
 
     public DialogData() {
     }
@@ -144,12 +146,24 @@ public class DialogData {
 
     public DialogData(Context context) {
         this.context = context;
-        DialogManager.register(this);
 
         dialog = new Dialog(context);
         dialog.setCancelable(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.setContentView(R.layout.dialog_data);
+        dialog.setOnDismissListener(d -> {
+            if (!dialog.isShowing()) releaseDialogResources();
+        });
+        dialog.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                releaseDialogResources();
+            }
+        });
 
         drawable = context.getResources().getDrawable(R.drawable.shape_rounded_corner);
 
@@ -212,13 +226,29 @@ public class DialogData {
     }
 
     public void show() {
-        if (dialog != null) dialog.show();
+        if (dialog != null && !dialog.isShowing()) {
+            dialog.show();
+            DialogManager.register(this);
+            loadPreviewImage();
+        }
     }
 
     public void dismiss() {
         if (dialog != null) {
             dialog.dismiss();
-            DialogManager.unregister(this);
+            releaseDialogResources();
+        }
+    }
+
+    private void releaseDialogResources() {
+        DialogManager.unregister(this);
+        if (datePicker != null) {
+            datePicker.dismiss();
+            datePicker = null;
+        }
+        if (photo != null) {
+            Glide.with(context.getApplicationContext()).clear(photo);
+            photo.setImageDrawable(null);
         }
     }
 
@@ -655,13 +685,21 @@ public class DialogData {
     public void setImage(boolean visualise, File file) {
         photo = dialog.findViewById(R.id.img);
         if (visualise) infoLayout.setVisibility(View.VISIBLE);
-        if (visualise) photo.setVisibility(View.VISIBLE);
+        photo.setVisibility(visualise ? View.VISIBLE : View.GONE);
+        imageFile = visualise ? file : null;
+        if (dialog.isShowing()) loadPreviewImage();
+    }
 
-        if (file != null && file.exists()) {
-            Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-            photo.setImageBitmap(myBitmap);
-        }
-
+    private void loadPreviewImage() {
+        if (photo == null) return;
+        int size = Math.max(1, Math.round(100 * context.getResources().getDisplayMetrics().density));
+        Glide.with(context.getApplicationContext())
+                .load(imageFile)
+                .override(size, size)
+                .fitCenter()
+                .placeholder(R.mipmap.merchik_m)
+                .error(R.mipmap.merchik_m)
+                .into(photo);
     }
 
     public void setAdditionalText(PhotoDescriptionText data) {
@@ -1048,42 +1086,23 @@ public class DialogData {
                 break;
 
             case Date:
-                Log.e("DATE_PICKER", "Here1: " + data);
-
                 editDate.setVisibility(View.VISIBLE);
-                editDate.setText(data);
+                result = MerchikDatePickerLauncher.toStorageDate(data);
+                editDate.setHint("ДД.ММ.ГГГГ");
+                editDate.setText(MerchikDatePickerLauncher.formatForDisplay(result));
+                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 editDate.setOnClickListener(v -> {
-                    Log.e("DATE_PICKER", "Here");
-
-                    Calendar mcurrentDate = Calendar.getInstance();
-                    int mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-                    int mMonth = mcurrentDate.get(Calendar.MONTH);
-                    int mYear = mcurrentDate.get(Calendar.YEAR);
-                    DatePickerDialog datePickerDialog = new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
-
-                        month = month + 1;
-                        String date = year + "-" + month + "-" + dayOfMonth;
-
-                        Log.e("DATE_PICKER", "Here2: " + data);
-
-                        editDate.setText(date);
-
-                    }, mYear, mMonth, mDay);
-                    datePickerDialog.show();
+                    if (datePicker == null) datePicker = new MerchikDatePickerLauncher(context);
+                    String calendarTitle = tovarOptions != null
+                            ? tovarOptions.getOptionLong() : title.getText().toString();
+                    datePicker.show(result, calendarTitle, value -> {
+                        result = value;
+                        editDate.setText(MerchikDatePickerLauncher.formatForDisplay(value));
+                    });
                 });
 
-                ok.setOnClickListener(v -> {
-                    String date = editDate.getText().toString();
-                    if (date.equals("0000-00-00")) {
-                        listener.clicked();
-//                        dialog.dismiss();
-                    }
-
-                    result = editDate.getText().toString();
-                    Log.e("setOperation", "Date.result: " + result);
-                    listener.clicked();
-//                    dialog.dismiss();
-                });
+                // The caller validates the date before closing this dialog.
+                ok.setOnClickListener(v -> listener.clicked());
                 break;
 
             case Spinner:
@@ -1295,6 +1314,7 @@ public class DialogData {
             if (editText.getVisibility() == View.VISIBLE) {
                 editText.requestFocus();
                 editText.postDelayed(() -> {
+                    if (!dialog.isShowing()) return;
                     InputMethodManager imm = (InputMethodManager)
                             context.getSystemService(Context.INPUT_METHOD_SERVICE);
                     if (imm != null) {

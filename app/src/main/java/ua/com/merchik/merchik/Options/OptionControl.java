@@ -75,6 +75,10 @@ public class OptionControl<T> {
                     case DIALOG:
                         Log.e("OptionControl", "(dialog) Massage to Log: " + stringBuilderMsg);
 
+                        if (block) {
+                            dialog.setVideoLesson(context, true, new Integer[]{10407}, null, null);
+                        }
+
 //                        String optionTitle = "Опция: (" + optionDB.getOptionControlId() + ")\n" + optionDB.getOptionControlTxt();
                         String optionTitle = "Опция: (" + optionDB.getOptionId() + ")\n" + optionDB.getOptionTxt();
 
@@ -135,14 +139,14 @@ public class OptionControl<T> {
         });
         dialog.setImgBtnCall(context);
         if (block)
-            dialog.setCancel("Исправить замечание", () -> {
+            dialog.setCancel("Виправити зауваження", () -> {
                 Log.e("optionNotConduct", "optionDB: " + new Gson().toJson(optionDB));
                 DetailedReportViewModel viewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(DetailedReportViewModel.class);
                 viewModel.postScrollToId(optionDB);
                 DialogManager.dismissAll();
             });
         else
-            dialog.setCancel("Закрыть", DialogManager::dismissAll);
+            dialog.setCancel("Закрити", DialogManager::dismissAll);
     }
 
 

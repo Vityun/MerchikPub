@@ -8,7 +8,9 @@ public class DialogManager {
 
     public static void register(DialogData dialog) {
         synchronized (activeDialogs) {
-            activeDialogs.add(dialog);
+            if (!activeDialogs.contains(dialog)) {
+                activeDialogs.add(dialog);
+            }
         }
     }
 
