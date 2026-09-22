@@ -135,7 +135,7 @@ public class TovarRequisites {
                             Toast.makeText(context, "Не вдалося відкрити зразок фото", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        ProductPhotoCapture.openRemainingGoodsGallery(activity, wpDataDB,
+                        ProductPhotoCapture.openRemainingGoodsGallery(activity, wpDataDB, selectedTovarId,
                                 () -> openGallery(activity, wpDataDB, selectedTovarId, res));
                     } else {
                         openGallery(context, wpDataDB, selectedTovarId, res);

@@ -18,7 +18,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
 import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
@@ -66,10 +68,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
         get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT ||
             (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 &&
                 (dataJsonString("tovarId")?.toLongOrNull() ?: 0L) > 0L)
+    private val isProductGallery: Boolean
+        get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY
     private var initialDisplayModeApplied = false
     private val warehouseAvailabilityKey = "warehouse_product_available"
     private val warehouseExceptionSampleIds = listOf(78, 94)
-    private val warehouseNoStockExcludedSampleIds = listOf(36, 39, 41, 42, 75, 80, 83, 84, 87)
+    private val warehouseNoStockExcludedSampleIds = listOf(34, 36, 39, 41, 42, 75, 80, 83, 84, 87)
     val warehouseProductAvailable = savedStateHandle.getStateFlow<Boolean?>(warehouseAvailabilityKey, null)
 
     init {
@@ -140,7 +144,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "id",
                     mutableListOf(imagesTypeId.toString()),
                     mutableListOf(imagesTypeName),
-                    !isProductCapture
+                    !isProductCapture && !isProductGallery
                 )
                 itemsFilter.add(filterImagesTypeListDB)
             }
@@ -154,7 +158,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
                 val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
-                val isProductPhoto = isProductCapture
+                val isProductPhoto = isProductCapture || isProductGallery
+                val tradeMarkIds = if (isProductGallery) {
+                    listOf(tradeMarkId)
+                } else {
+                    listOf(tradeMarkId, "0").distinct()
+                }
 
                 val filterTradeMarkDB = ItemFilter(
                     "Мережа",
@@ -165,9 +174,9 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "subTitle",
                     "grp_id",
                     "iD",
-                    if (isProductPhoto) listOf(tradeMarkId, "0").distinct()
+                    if (isProductPhoto) tradeMarkIds
                     else mutableListOf(tradeMarkDB.id.toString(), "0"),
-                    if (isProductPhoto) listOf(tradeMarkId, "0").distinct().map {
+                    if (isProductPhoto) tradeMarkIds.map {
                         if (it == "0") "Все не указанные" else tradeMarkDB?.nm ?: "Мережа $it"
                     } else mutableListOf(tradeMarkDB.nm, "Все не указанные"),
                     !isProductPhoto
@@ -193,11 +202,17 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> {
-        if (isProductCapture) {
+        if (isProductCapture || isProductGallery) {
             val photoType = resolvePhotoTypeId() ?: return emptyList()
             val tradeMarkId = dataJsonInt("tradeMarkDBId") ?: 0
+            if (isProductGallery && tradeMarkId <= 0) return emptyList()
             val samples = withContext(Dispatchers.IO) {
-                ProductPhotoCapture.getSamples(photoType, tradeMarkId)
+                if (isProductGallery) {
+                    RoomManager.SQL_DB.samplePhotoDao()
+                        .getPhotoLogActiveAndTpExactGroup(1, photoType, tradeMarkId)
+                } else {
+                    ProductPhotoCapture.getSamples(photoType, tradeMarkId)
+                }
             }
             return repository.toItemUIList(SamplePhotoSDB::class, samples, contextUI, 35)
         }
@@ -219,11 +234,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
         val sample = clickedDataItemUI.rawAs<SamplePhotoSDB>() ?: return
-        if (isProductCapture) {
+        if (isProductCapture || isProductGallery) {
             this.context = context
             try {
-                SamplePhotoPreview.showSample(context, sample) { onStarted ->
-                    takeProductPhoto(sample, onStarted)
+                SamplePhotoPreview.showSample(context, sample, galleryAction = isProductGallery) { onStarted ->
+                    if (isProductGallery) openProductGallery(onStarted)
+                    else takeProductPhoto(sample, onStarted)
                 }
             } catch (e: Exception) {
                 Log.e("SamplePhotoSDBViewModel", "Cannot open product sample ${sample.id}", e)
@@ -246,6 +262,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
             return
         }
         try {
+            if (isProductGallery) {
+                openProductGallery {}
+                return
+            }
             if (isProductCapture) {
                 takeProductPhoto(sample) {}
                 return
@@ -266,11 +286,40 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?, sampleId: Int?) {
         val photoContext = context ?: return
         try {
-            SamplePhotoPreview.show(photoContext, stackPhotoDB, comment, sampleId) { onStarted ->
-                openCamera(stackPhotoDB, onStarted)
+            SamplePhotoPreview.show(
+                photoContext, stackPhotoDB, comment, sampleId,
+                galleryAction = isProductGallery
+            ) { onStarted ->
+                if (isProductGallery) openProductGallery(onStarted)
+                else openCamera(stackPhotoDB, onStarted)
             }
         } catch (e: Exception) {
             Log.e("SamplePhotoSDBViewModel", "Cannot open sample photo", e)
+        }
+    }
+
+    private fun openProductGallery(onStarted: () -> Unit) {
+        val activity = context as? Activity ?: return
+        if (activity.isFinishing || activity.isDestroyed) return
+        try {
+            val visitId = dataJsonString("wpDataDBId")?.toLongOrNull()
+                ?: error("Visit ID is missing")
+            val visit = WpDataRealm.getWpDataRowById(visitId)
+                ?: error("Visit not found: $visitId")
+            val tovarId = dataJsonString("tovarId")
+                ?.takeIf { (it.toLongOrNull() ?: 0L) > 0L }
+                ?: error("Product ID is missing")
+            MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB = RealmManager.INSTANCE.copyFromRealm(visit)
+            MakePhotoFromGalery.tovarId = tovarId
+            MakePhotoFromGalery.photoType = 4
+            activity.startActivityForResult(
+                PhotoPickerUtils.createSingleImageChooser(),
+                MakePhoto.PICK_GALLERY_IMAGE_REQUEST
+            )
+            onStarted()
+        } catch (e: Exception) {
+            Log.e("SamplePhotoSDBViewModel", "Cannot open product gallery", e)
+            Toast.makeText(activity, "Не вдалося відкрити галерею для цього товару", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -372,6 +421,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private fun resolvePhotoTypeId(): Int? {
         return when (contextUI) {
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+            ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY -> 4
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10

@@ -61,24 +61,7 @@ object ProductPhotoCapture {
                         }
                     }
                     else -> {
-                        val photoTypeName = PhotoTypeRealm.getPhotoTypeById(photoType)?.nm
-                            ?: "Тип фото $photoType"
-                        val data = JsonObject().apply {
-                            addProperty("wpDataDBId", visitId.toString())
-                            addProperty("optionDBId", optionId)
-                            addProperty("photoType", photoType)
-                            addProperty("tovarId", tovarId)
-                            addProperty("tradeMarkDBId", tradeMarkId)
-                        }
-                        val intent = Intent(activity, FeaturesActivity::class.java).apply {
-                            putExtra("viewModel", SamplePhotoSDBViewModel::class.java.canonicalName)
-                            putExtra("contextUI", contextUI.toString())
-                            putExtra("modeUI", ModeUI.ONE_SELECT.toString())
-                            putExtra("dataJson", data.toString())
-                            putExtra("title", activity.getString(R.string.title_samplephotosdb))
-                            putExtra("subTitle", photoTypeName)
-                        }
-                        activity.startActivityForResult(intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST)
+                        openSampleList(activity, visitId, photoType, tovarId, tradeMarkId, contextUI, optionId)
                     }
                 }
             } catch (e: CancellationException) {
@@ -91,8 +74,9 @@ object ProductPhotoCapture {
     }
 
     @JvmStatic
-    fun openRemainingGoodsGallery(activity: Activity, wp: WpDataDB, onPick: Clicks.clickVoid) {
+    fun openRemainingGoodsGallery(activity: Activity, wp: WpDataDB, tovarId: String, onPick: Clicks.clickVoid) {
         val owner = activity as? LifecycleOwner ?: return
+        val visitId = wp.id
         val addressId = wp.addr_id
         owner.lifecycleScope.launch {
             try {
@@ -113,7 +97,10 @@ object ProductPhotoCapture {
                         onPick.click()
                         onStarted()
                     }
-                    else -> onPick.click()
+                    else -> openSampleList(
+                        activity, visitId, 4, tovarId, tradeMarkId,
+                        ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY
+                    )
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -122,6 +109,34 @@ object ProductPhotoCapture {
                 Toast.makeText(activity, "Не вдалося відкрити зразок фото залишків", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun openSampleList(
+        activity: Activity,
+        visitId: Long,
+        photoType: Int,
+        tovarId: String,
+        tradeMarkId: Int,
+        contextUI: ContextUI,
+        optionId: String? = null
+    ) {
+        val photoTypeName = PhotoTypeRealm.getPhotoTypeById(photoType)?.nm ?: "Тип фото $photoType"
+        val data = JsonObject().apply {
+            addProperty("wpDataDBId", visitId.toString())
+            optionId?.let { addProperty("optionDBId", it) }
+            addProperty("photoType", photoType)
+            addProperty("tovarId", tovarId)
+            addProperty("tradeMarkDBId", tradeMarkId)
+        }
+        val intent = Intent(activity, FeaturesActivity::class.java).apply {
+            putExtra("viewModel", SamplePhotoSDBViewModel::class.java.canonicalName)
+            putExtra("contextUI", contextUI.toString())
+            putExtra("modeUI", ModeUI.ONE_SELECT.toString())
+            putExtra("dataJson", data.toString())
+            putExtra("title", activity.getString(R.string.title_samplephotosdb))
+            putExtra("subTitle", photoTypeName)
+        }
+        activity.startActivityForResult(intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST)
     }
 
     fun getSamples(photoType: Int, tradeMarkId: Int): List<SamplePhotoSDB> =

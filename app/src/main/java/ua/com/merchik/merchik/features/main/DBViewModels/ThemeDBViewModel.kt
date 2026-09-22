@@ -100,11 +100,13 @@ class ThemeDBViewModel @Inject constructor(
                             it.copy(selected = selected == true)
                         }
                         ContextUI.ADD_THEME_PREMIUM_QUESTION_ANSWER -> {
-                            val selected =
-                                (it.rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)
-                                    ?.id
-                                    ?.trim() == premiumQuestionAnswerThemeId
-                            it.copy(selected = selected)
+                            val selected = FilteringDialogDataHolder.instance()
+                                .filters
+                                ?.items
+                                ?.firstOrNull { it.clazz == table }
+                                ?.rightValuesRaw
+                                ?.contains((it.rawObj.firstOrNull { it is ThemeDB } as? ThemeDB)?.id.toString())
+                            it.copy(selected = selected == true)
                         }
                         else -> { it }
                     }

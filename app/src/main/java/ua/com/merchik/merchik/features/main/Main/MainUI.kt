@@ -2466,7 +2466,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         if (viewModel is SamplePhotoSDBViewModel) {
             val lessonId = when (viewModel.contextUI){
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 10395
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 10394
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158,
+                ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY -> 10394
                 else -> 0
             }
             val data = RealmManager.getLesson(lessonId)
@@ -3531,6 +3532,7 @@ private fun ContextUI.isImageDisplayModeToolbarContext(): Boolean = when (this) 
     ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
     ContextUI.STACK_PHOTO_FROM_OPTION_158605,
     ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158,
+    ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY,
     ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
     ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
     ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
