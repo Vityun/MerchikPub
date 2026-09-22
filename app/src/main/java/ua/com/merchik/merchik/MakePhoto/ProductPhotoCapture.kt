@@ -81,10 +81,8 @@ object ProductPhotoCapture {
         owner.lifecycleScope.launch {
             try {
                 val (tradeMarkId, samples) = withContext(Dispatchers.IO) {
-                    val networkId = RoomManager.SQL_DB.addressDao().getById(addressId)?.tpId
-                        ?.takeIf { it > 0 } ?: error("Network not found for address: $addressId")
-                    networkId to RoomManager.SQL_DB.samplePhotoDao()
-                        .getPhotoLogActiveAndTpExactGroup(1, 4, networkId)
+                    val networkId = RoomManager.SQL_DB.addressDao().getById(addressId)?.tpId ?: 0
+                    networkId to getSamples(4, networkId)
                 }
                 if (activity.isFinishing || activity.isDestroyed) return@launch
                 when (samples.size) {

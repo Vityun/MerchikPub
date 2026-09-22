@@ -159,11 +159,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
                 val isProductPhoto = isProductCapture || isProductGallery
-                val tradeMarkIds = if (isProductGallery) {
-                    listOf(tradeMarkId)
-                } else {
-                    listOf(tradeMarkId, "0").distinct()
-                }
+                val tradeMarkIds = listOf(tradeMarkId, "0").distinct()
 
                 val filterTradeMarkDB = ItemFilter(
                     "Мережа",
@@ -205,14 +201,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
         if (isProductCapture || isProductGallery) {
             val photoType = resolvePhotoTypeId() ?: return emptyList()
             val tradeMarkId = dataJsonInt("tradeMarkDBId") ?: 0
-            if (isProductGallery && tradeMarkId <= 0) return emptyList()
             val samples = withContext(Dispatchers.IO) {
-                if (isProductGallery) {
-                    RoomManager.SQL_DB.samplePhotoDao()
-                        .getPhotoLogActiveAndTpExactGroup(1, photoType, tradeMarkId)
-                } else {
-                    ProductPhotoCapture.getSamples(photoType, tradeMarkId)
-                }
+                ProductPhotoCapture.getSamples(photoType, tradeMarkId)
             }
             return repository.toItemUIList(SamplePhotoSDB::class, samples, contextUI, 35)
         }
