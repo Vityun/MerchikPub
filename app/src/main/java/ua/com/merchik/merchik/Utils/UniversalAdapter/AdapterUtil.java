@@ -309,6 +309,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                         stack.setPhoto_size("small");
                         stack.setUserTxt(data.fio);
                         stack.setPhotoServerURL(data.img_personal_photo_thumb);
+                        stack.setVpi(System.currentTimeMillis() / 1000);
 
 
                         RealmManager.stackPhotoSavePhoto(stack);

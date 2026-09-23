@@ -11,9 +11,11 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -52,7 +54,10 @@ import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
+import ua.com.merchik.merchik.features.maps.domain.distanceMeters
 import ua.com.merchik.merchik.features.maps.domain.filterByDistance
+import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
+import ua.com.merchik.merchik.features.maps.domain.parseWpPoint
 import ua.com.merchik.merchik.trecker
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -123,13 +128,32 @@ class WpDataDBViewModel @Inject constructor(
     override fun getDefaultHideUserFields(): List<String>? {
         return if (contextUI == ContextUI.WP_DATA ||
             contextUI == ContextUI.WP_DATA_PAUSED)
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, status, cash_fact, cash_penalty".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, status, cash_fact, cash_penalty, distanceForTT".split(
                 ","
             )
         else
-            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, cash_fact, cash_penalty".split(
+            "ID, user_txt, theme_id, client_start_dt, client_end_dt, sku, duration_fact, duration, doc_num_otchet, main_option_id, smeta, cash_fact, cash_penalty, distanceForTT".split(
                 ","
             )
+    }
+
+    override fun updateContent() {
+        val preferences = getApplication<Application>()
+            .getSharedPreferences(Globals.APP_PREFERENCES, Context.MODE_PRIVATE)
+        val initializedKey = "wp_data_distance_for_tt_initialized_${contextUI.name}"
+        if (!preferences.getBoolean(initializedKey, false)) {
+            // Existing settings store hidden fields only, so a new field would otherwise become visible.
+            repository.getSettingsUI(table.java, contextUI)?.let { settings ->
+                val hiddenFields = settings.hideFields ?: getDefaultHideUserFields().orEmpty()
+                repository.saveSettingsUI(
+                    table,
+                    settings.copy(hideFields = (hiddenFields.map { it.trim() } + "distanceForTT").distinct()),
+                    contextUI
+                )
+            }
+            preferences.edit().putBoolean(initializedKey, true).apply()
+        }
+        super.updateContent()
     }
 
     override fun onClickAdditionalContent() {
@@ -515,6 +539,7 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> = withContext(Dispatchers.Default) {
+        val (currentLocation, currentLocationSource) = resolveCurrentLocation()
 
         val raw: List<WpDataDB> = when (contextUI) {
 
@@ -531,30 +556,13 @@ class WpDataDBViewModel @Inject constructor(
                 )
 
                 val selectedMapPoint = AdditionalWorksMapSearchLocationHolder.get()
-                var location: Location? = selectedMapPoint?.let { point ->
+                val location = selectedMapPoint?.let { point ->
                     Location("additional_works_map_search").apply {
                         latitude = point.latitude
                         longitude = point.longitude
                     }
-                }
-                var locationSource = if (location != null) "map_search" else ""
-
-                if (location == null) {
-                    if (trecker.imHereGPS != null) {
-                        location = trecker.imHereGPS
-                        locationSource = "gps"
-                    } else if (trecker.imHereNET != null) {
-                        location = trecker.imHereNET
-                        locationSource = "net"
-                    } else if (context != null) {
-                        val client = LocationServices.getFusedLocationProviderClient(context!!)
-                        val last = runCatching { client.lastLocation.await() }.getOrNull()
-                        location = last
-                        locationSource = if (last != null) "fused_last" else "none"
-                    } else {
-                        locationSource = "none"
-                    }
-                }
+                } ?: currentLocation
+                val locationSource = if (selectedMapPoint != null) "map_search" else currentLocationSource
 
                 val filtered = if (location != null) {
                     filterByDistance(location, data, offsetDistanceMeters.value)
@@ -629,6 +637,11 @@ class WpDataDBViewModel @Inject constructor(
         }
 
         raw.forEach { wpDataDB ->
+            wpDataDB.distanceForTT = currentLocation?.let { from ->
+                parseWpPoint(wpDataDB)
+                    ?.takeIf { isValidLatLon(it.lat, it.lon) }
+                    ?.let { distanceMeters(from, it).toDouble() }
+            }
             // Определяем статус статуса
             val statusComment = try {
                 if (wpDataDB.status == 1) {
@@ -704,6 +717,28 @@ class WpDataDBViewModel @Inject constructor(
                 }
             }
 
+    }
+
+    private suspend fun resolveCurrentLocation(): Pair<Location?, String> {
+        trecker.imHereGPS?.takeIf { isValidLatLon(it.latitude, it.longitude) }?.let {
+            return Location(it) to "gps"
+        }
+        trecker.imHereNET?.takeIf { isValidLatLon(it.latitude, it.longitude) }?.let {
+            return Location(it) to "net"
+        }
+        val last = try {
+            withTimeoutOrNull(1000L) {
+                LocationServices.getFusedLocationProviderClient(context ?: getApplication<Application>())
+                    .lastLocation.await()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+        return last?.takeIf { isValidLatLon(it.latitude, it.longitude) }
+            ?.let { Location(it) to "fused_last" }
+            ?: (null to "none")
     }
 
     private fun DataItemUI.withPauseWorkFilterField(): DataItemUI {

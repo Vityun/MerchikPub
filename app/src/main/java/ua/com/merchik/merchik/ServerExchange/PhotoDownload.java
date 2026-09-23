@@ -223,7 +223,7 @@ public class PhotoDownload {
                                             StackPhotoDB stackPhotoDB = new StackPhotoDB();
                                             stackPhotoDB.setId(id);
                                             stackPhotoDB.setPhotoServerId(item.getID());
-                                            stackPhotoDB.setVpi(0);
+                                            stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
                                             stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
                                             stackPhotoDB.setUpload_to_server(System.currentTimeMillis());
                                             stackPhotoDB.setGet_on_server(System.currentTimeMillis());
@@ -698,6 +698,7 @@ public class PhotoDownload {
                     stackPhotoDB.showcase_id = item.showcase_id;
                     stackPhotoDB.setCode_iza(item.codeIZA);
                     stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+                    stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
 
                 } catch (Exception e) {
                     Log.e("Exception", ">>> e: " + e.getMessage());
@@ -739,6 +740,7 @@ public class PhotoDownload {
                                             stackPhotoDB.showcase_id = item.showcase_id;
                                             stackPhotoDB.setCode_iza(item.codeIZA);
                                             stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+                                            stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
 
                                             String photoPath = Globals.savePhotoToPhoneMemory("/Manager", item.getID(), bitmap);
 
@@ -1088,12 +1090,14 @@ public class PhotoDownload {
     (List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
+        String firstExistingPhotoId = null;
 
         // Перебираем полученные от сервера данные и формируем список для записи.
         for (ModImagesViewList item : list) {
 
             // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
-            if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+            StackPhotoDB existingPhoto = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID());
+            if (existingPhoto == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
                 stackPhotoDB.setId(id);
 
@@ -1121,14 +1125,27 @@ public class PhotoDownload {
                 stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
 
                 stackPhotoDB.setComment(item.getComments());
+                stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
 
                 stackList.add(stackPhotoDB);
 
                 id++;
+            } else {
+                updateExistingPhotoComment(existingPhoto, item.getComments());
+                if (firstExistingPhotoId == null) {
+                    firstExistingPhotoId = item.getID();
+                }
             }
         }
         RealmManager.stackPhotoSavePhoto(stackList);
-        clickUpdatePhoto.onSuccess(stackList.get(0));   // TODO Это стоит сделать адекватнее. Сделано это только для частного случая.
+        StackPhotoDB result = stackList.isEmpty()
+                ? StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(firstExistingPhotoId)
+                : stackList.get(0);
+        if (result != null) {
+            clickUpdatePhoto.onSuccess(result);
+        } else {
+            clickUpdatePhoto.onFailure("Дані фотографії відсутні.");
+        }
     }
 
     public void savePhotoInfoToDB(List<ModImagesViewList> list) {
@@ -1141,7 +1158,8 @@ public class PhotoDownload {
             // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
 
 
-            if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+            StackPhotoDB existingPhoto = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID());
+            if (existingPhoto == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
                 try {
                     stackPhotoDB.setId(id);
@@ -1160,6 +1178,7 @@ public class PhotoDownload {
                     stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
 
+                    stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
                     stackPhotoDB.setDt(item.getDt());
 
                     stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
@@ -1197,9 +1216,32 @@ public class PhotoDownload {
                 stackList.add(stackPhotoDB);
 
                 id++;
+            } else {
+                updateExistingPhotoComment(existingPhoto, item.getComments());
             }
         }
         RealmManager.stackPhotoSavePhoto(stackList);
+    }
+
+    private void updateExistingPhotoComment(StackPhotoDB existingPhoto, String serverComment) {
+        if (serverComment == null || serverComment.trim().isEmpty()) {
+            return;
+        }
+        String localComment = existingPhoto.getComment();
+        if (localComment != null && !localComment.trim().isEmpty()) {
+            return;
+        }
+
+        // Recheck the current Realm row and update only the received comment and its local timestamp.
+        RealmManager.INSTANCE.executeTransaction(realm -> {
+            StackPhotoDB photo = realm.where(StackPhotoDB.class)
+                    .equalTo("photoServerId", existingPhoto.getPhotoServerId())
+                    .findFirst();
+            if (photo != null && (photo.getComment() == null || photo.getComment().trim().isEmpty())) {
+                photo.setComment(serverComment);
+                photo.setVpi(System.currentTimeMillis() / 1000);
+            }
+        });
     }
 
 
@@ -1365,6 +1407,7 @@ public class PhotoDownload {
 
                             photoDB.setDvi(item.dvi);
                             photoDB.setPhotoServerURL(item.photoUrl);
+                            photoDB.setVpi(System.currentTimeMillis() / 1000);
 
 
 //                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));

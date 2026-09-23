@@ -1449,7 +1449,7 @@ public class menu_main extends AppCompatActivity {
                             customer_id,
                             themId,
                             date,
-                            unixTime,
+                            unixTime / 1000L,
                             System.currentTimeMillis(),
                             0,
                             0,

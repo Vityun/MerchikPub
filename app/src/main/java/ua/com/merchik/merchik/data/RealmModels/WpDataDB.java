@@ -167,6 +167,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Ignore
     private long duration_fact;
 
+    @Ignore
+    private Double distanceForTT;
+
     public WpDataDB() {
     }
 
@@ -1499,7 +1502,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @NonNull
     @Override
     public List<String> getPreferredFieldOrder() {
-        return new ArrayList<>(Arrays.asList("theme_id", "addr_txt", "client_txt", "dt", "cash_ispolnitel", "client_start_dt", "client_end_dt"));
+        return new ArrayList<>(Arrays.asList("theme_id", "addr_txt", "distanceForTT", "client_txt", "dt", "cash_ispolnitel", "client_start_dt", "client_end_dt"));
     }
 
    @Override
@@ -1519,5 +1522,14 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
     public void setDuration_fact(long duration_fact) {
         this.duration_fact = duration_fact;
+    }
+
+    @Nullable
+    public Double getDistanceForTT() {
+        return distanceForTT;
+    }
+
+    public void setDistanceForTT(@Nullable Double distanceForTT) {
+        this.distanceForTT = distanceForTT;
     }
 }

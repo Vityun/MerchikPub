@@ -233,6 +233,7 @@ public class ShowcaseExchange {
                             photoDB.showcase_id = String.valueOf(item.id);
                             photoDB.planogram_id = Objects.toString(item.planogramId, "");
                             photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
+                            photoDB.setVpi(System.currentTimeMillis() / 1000);
 
                             photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.photoId, bitmap, photoDB);
 

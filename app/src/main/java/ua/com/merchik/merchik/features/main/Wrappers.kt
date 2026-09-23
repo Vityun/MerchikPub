@@ -1233,10 +1233,26 @@ object WPDataBDOverride {
     fun getFallbackTitle(key: String): String? = when (key) {
         "cash_fact" -> "Премія (факт)"
         "cash_penalty" -> "Зниження"
+        "distanceForTT" -> "Відстань до ТТ"
         else -> null
     }
 
     fun getValueUI(key: String, value: Any, wpDataDB: WpDataDB): String = when (key) {
+        "distanceForTT" -> {
+            val meters = value.toString().toDoubleOrNull()
+            when {
+                meters == null || !meters.isFinite() || meters < 0.0 -> "-"
+                meters < 1000.0 -> "${BigDecimal.valueOf(meters).setScale(0, RoundingMode.HALF_UP)} м"
+                else -> {
+                    val kilometers = BigDecimal.valueOf(meters)
+                        .divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP)
+                        .toPlainString()
+                        .replace('.', ',')
+                    "$kilometers км"
+                }
+            }
+        }
+
         "dt" -> {
             formatDateString(value.toString()) ?: value.toString()
         }
