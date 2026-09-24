@@ -238,7 +238,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG: " + object);
                     }
             } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG/Exception e: " + e);
+                logOptionError("createTZN.virtualTable", e);
             }
 //            // -----------------------
 

@@ -76,7 +76,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
                 Globals.writeToMLOG("INFO", "OptionControlPercentageOfThePrize", "sb: " + sb);
             }
         }catch (Exception e){
-            Globals.writeToMLOG("INFO", "OptionControlPercentageOfThePrize", "Exception e: " + e);
+            logOptionError("init/executeOption", e);
             Log.e("test_135412", "Exception e: " + e);
             e.printStackTrace();
         }

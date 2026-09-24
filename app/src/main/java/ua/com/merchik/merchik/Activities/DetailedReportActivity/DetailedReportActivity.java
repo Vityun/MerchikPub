@@ -1337,6 +1337,7 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setCustomerTxt(wpDataDB.getClient_txt());
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
+            stackPhotoDB.setCode_iza(wpDataDB.getCode_iza());
 
             LogMPDB log = Globals.fixMP(wpDataDB, null);
             String GP = log != null ? log.gp : "";
@@ -1383,6 +1384,7 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setCustomerTxt(wpDataDB.getClient_txt());
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
+            stackPhotoDB.setCode_iza(wpDataDB.getCode_iza());
 
             // 10.09.23. Походу Сервер без этого не воспринимает фотографии (сейчас касается это // Тип фото Остатков из ГАЛЕРЕИ)
             LogMPDB log = Globals.fixMP(wpDataDB, null);

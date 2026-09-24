@@ -272,6 +272,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
                         dialogFullPhoto.show();
                     } catch (Exception e) {
                         Log.e("ShowcaseAdapter", "Exception e: " + e);
+                        logOptionError("onPhotoClicked", e);
                     }
                 }
             }, () -> {
@@ -283,7 +284,7 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
             dialog.setDvi();
             dialog.show();
         } catch (Exception e) {
-
+            logOptionError("openPhotoDialog", e);
         }
     }
 }

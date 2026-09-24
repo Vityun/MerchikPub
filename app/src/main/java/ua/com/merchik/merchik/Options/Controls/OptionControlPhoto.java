@@ -10,6 +10,7 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             executeOption();
         } catch (Exception e) {
             Log.e("OptionControlPhoto", "Exception e: " + e);
-            Globals.writeToMLOG("ERR", "OptionControlPhoto", "Exception e: " + e);
+            logOptionError("init", e);
         }
     }
 
@@ -87,20 +88,36 @@ public class OptionControlPhoto<T> extends OptionControl {
 
 
     private void executeOption() {
+        String diagnosticContext = "dad2=" + dad2 + ", mode=" + nnkMode;
+        try {
 
 
-        String optionId;
-        if (nnkMode.equals(Options.NNKMode.BLOCK)) {
-            optionId = optionDB.getOptionId();
-        } else {
-            optionId = optionDB.getOptionControlId();
-        }
+            String optionId;
+            if (nnkMode.equals(Options.NNKMode.BLOCK)) {
+                optionId = optionDB.getOptionId();
+            } else {
+                optionId = optionDB.getOptionControlId();
+            }
+
+            diagnosticContext += ", checkedOption=" + optionId
+                    + ", optionId=" + optionDB.getOptionId()
+                    + ", controlId=" + optionDB.getOptionControlId()
+                    + ", amount=" + optionDB.getAmount()
+                    + ", amountMin=" + optionDB.getAmountMin()
+                    + ", amountMax=" + optionDB.getAmountMax()
+                    + ", blockPns=" + optionDB.getBlockPns()
+                    + ", previousSignal=" + optionDB.getIsSignal()
+                    + ", rowId=" + optionDB.getID()
+                    + ", userId=" + (wpDataDB == null ? null : wpDataDB.getUser_id())
+                    + ", userFound=" + (usersSDB != null)
+                    + ", addressFound=" + (addressSDB != null);
+            Globals.writeToMLOG("INFO", "OptionControlPhoto/start", diagnosticContext);
 
 
 //        Log.e("OptionControlPhoto","optionId 8====> " + optionId);
 //        Log.e("OptionControlPhoto","8====> " + new Gson().toJson(optionDB));
 
-        int m = Integer.parseInt(optionDB.getAmountMin());
+            int m = Integer.parseInt(optionDB.getAmountMin());
 //        if (m == 0) {
 //            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
 ////            if (optionId.equals("164352")){
@@ -109,340 +126,367 @@ public class OptionControlPhoto<T> extends OptionControl {
 ////                m = 3;
 ////            }
 //        }
-        int photoType = 0;
+            int photoType = 0;
 
-        long dad2ForGetStackPhotoDB = dad2;
-        String[] codeIZAForGetStackPhotoDB = null;
-        long dateFromForGetStackPhotoDB = 0;
-        long dateToForGetStackPhotoDB = 0;
-        Date data05report = usersSDB.reportDate05; // Дата проведения 20й отчетности
-        Date documentDate = wpDataDB.getDt();
+            long dad2ForGetStackPhotoDB = dad2;
+            String[] codeIZAForGetStackPhotoDB = null;
+            long dateFromForGetStackPhotoDB = 0;
+            long dateToForGetStackPhotoDB = 0;
+            Date data05report = usersSDB.reportDate05; // Дата проведения 20й отчетности
+            Date documentDate = wpDataDB.getDt();
 
-        switch (optionId) {
-            case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
-                photoType = 14;
-                m = m > 0 ? m : 3;
-                break;
+            switch (optionId) {
+                case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
+                    photoType = 14;
+                    m = m > 0 ? m : 3;
+                    break;
 
-            case "164354":  // Фото Планограмми ТТ
-            {
-                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
-                if (quantityMax > 0) {
-                    dad2ForGetStackPhotoDB = 0;
-                    long date = wpDataDB.getDt().getTime();
-                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                case "164354":  // Фото Планограмми ТТ
+                {
+                    int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                    if (quantityMax > 0) {
+                        dad2ForGetStackPhotoDB = 0;
+                        long date = wpDataDB.getDt().getTime();
+                        codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
+                        dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
+                        dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                    }
+
+                    photoType = 5;
+                    // c 21.02.25 поменял на 0, требование Петрова
+                    m = m > 0 ? m : 0;
+                    break;
                 }
 
-                photoType = 5;
-                // c 21.02.25 поменял на 0, требование Петрова
-                m = m > 0 ? m : 0;
-                break;
-            }
+                case "164352":  // Контроль наявності світлини прикасової зони
+                    photoType = 45;
+                    m = m > 0 ? m : 1;
+                    break;
 
-            case "164352":  // Контроль наявності світлини прикасової зони
-                photoType = 45;
-                m = m > 0 ? m : 1;
-                break;
+                case "134583": //!smarti!
+                case "84932":
+                    photoType = 0;
+                    m = m > 0 ? m : 3;
+                    break;
 
-            case "134583": //!smarti!
-            case "84932":
-                photoType = 0;
-                m = m > 0 ? m : 3;
-                break;
-
-            case "132971": {
-                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
-                if (quantityMax > 0) {
-                    dad2ForGetStackPhotoDB = 0;
-                    long date = wpDataDB.getDt().getTime();
-                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
-                }
-                photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
-                m = m > 0 ? m : 1;
-                break;
-            }
-
-            case "141361": {
-                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
-                if (quantityMax > 0) {
-                    dad2ForGetStackPhotoDB = 0;
-                    long date = wpDataDB.getDt().getTime();
-                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
-                            replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                case "132971": {
+                    int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                    if (quantityMax > 0) {
+                        dad2ForGetStackPhotoDB = 0;
+                        long date = wpDataDB.getDt().getTime();
+                        codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
+                        dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
+                        dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                    }
+                    photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
+                    m = m > 0 ? m : 1;
+                    break;
                 }
 
-                photoType = 31; // Фото товара на скалде
-                m = m > 0 ? m : 1;
-                break;
+                case "141361": {
+                    int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                    if (quantityMax > 0) {
+                        dad2ForGetStackPhotoDB = 0;
+                        long date = wpDataDB.getDt().getTime();
+                        codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5),
+                                replaceSubstring(wpDataDB.getCode_iza(), "03693", 1, 5)};
+                        dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
+                        dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                    }
+
+                    photoType = 31; // Фото товара на скалде
+                    m = m > 0 ? m : 1;
+                    break;
+                }
+
+                case "158606":  // Корпоративный блок
+                    photoType = 40;
+                    m = m > 0 ? m : 3;
+                    break;
+
+                case "158607":  // Наполненность полки
+                    photoType = 41;
+                    m = m > 0 ? m : 3;
+                    break;
+
+                case "158608":  // Приближенная фото
+                    photoType = 39;
+                    m = m > 0 ? m : 3;
+                    break;
+
+                case "158609":  // Дополнительное место продаж
+                    photoType = 42;
+                    m = m > 0 ? m : 3; // 20.01 изменил как в 1С (3.1)
+                    break;
+
+                case "159726":  // Фото торговой точки
+                case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)" !smarti!
+                    photoType = 37;
+                    m = m > 0 ? m : 3;
+                    break;
+
+                case "165482":  // Контроль наличия Фото - скан посещения в приложении Эффи
+                    photoType = 46; // 46 - фото скан посещения в приложении эффи
+                    m = m > 0 ? m : 1;
+                    break;
+
+                case "169109":  // Контроль наличия Фото POS материалов
+                    photoType = 47; // 47 - фото POS материалов
+                    m = m > 0 ? m : 1;
+                    break;
+                case "174214":  // Контроль наличия Фото витрины с товарами конкурентов
+                    photoType = 49; // 47 - фото витрины с товарами конкурентов
+                    m = m > 0 ? m : 1;
+                    break;
+
             }
 
-            case "158606":  // Корпоративный блок
-                photoType = 40;
-                m = m > 0 ? m : 3;
-                break;
 
-            case "158607":  // Наполненность полки
-                photoType = 41;
-                m = m > 0 ? m : 3;
-                break;
+            // 15.06.2026 временное решение +1 ко всем фоткам, кроме исключений, сделал специаьно так коряво, что бы читалось лучше
+            if (optionId.equals("159707") || optionId.equals("1470") || optionId.equals("158361")
+                    || optionId.equals("141361") || optionId.equals("132971") ||
+                    (wpDataDB != null && wpDataDB.getSku() < 5))
+                m = m;
+            else
+                m = m + 1;
 
-            case "158608":  // Приближенная фото
-                photoType = 39;
-                m = m > 0 ? m : 3;
-                break;
+            if (optionDB.getOptionId().equals("134583") || optionDB.getOptionId().equals("158308"))
+                m = m + 1;
 
-            case "158609":  // Дополнительное место продаж
-                photoType = 42;
-                m = m > 0 ? m : 3; // 20.01 изменил как в 1С (3.1)
-                break;
+            if (("164352".equals(optionDB.getOptionId())
+                    && "77190".equals(wpDataDB.getClient_id())
+                    && addressSDB != null) || "164351".equals(optionDB.getOptionId())
+                    && "77190".equals(wpDataDB.getClient_id())
+                    && addressSDB != null) {
+                int kolKass = addressSDB.kolKass != null
+                        ? addressSDB.kolKass
+                        : 0;
 
-            case "159726":  // Фото торговой точки
-            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)" !smarti!
-                photoType = 37;
-                m = m > 0 ? m : 3;
-                break;
+                int kolKassSo = addressSDB.kolKassSo != null
+                        ? addressSDB.kolKassSo
+                        : 0;
 
-            case "165482":  // Контроль наличия Фото - скан посещения в приложении Эффи
-                photoType = 46; // 46 - фото скан посещения в приложении эффи
-                m = m > 0 ? m : 1;
-                break;
-
-            case "169109":  // Контроль наличия Фото POS материалов
-                photoType = 47; // 47 - фото POS материалов
-                m = m > 0 ? m : 1;
-                break;
-            case "174214":  // Контроль наличия Фото витрины с товарами конкурентов
-                photoType = 49; // 47 - фото витрины с товарами конкурентов
-                m = m > 0 ? m : 1;
-                break;
-
-        }
+                m = Math.max(m, kolKass - kolKassSo);
+            }
 
 
-        // 15.06.2026 временное решение +1 ко всем фоткам, кроме исключений, сделал специаьно так коряво, что бы читалось лучше
-        if (optionId.equals("159707") || optionId.equals("1470") || optionId.equals("158361")
-                || optionId.equals("141361") || optionId.equals("132971") ||
-                (wpDataDB != null && wpDataDB.getSku() < 5))
-            m = m;
-        else
-            m = m + 1;
-
-        if (optionDB.getOptionId().equals("134583") || optionDB.getOptionId().equals("158308"))
-            m = m + 1;
-
-        if (("164352".equals(optionDB.getOptionId())
-                && "77190".equals(wpDataDB.getClient_id())
-                && addressSDB != null) || "164351".equals(optionDB.getOptionId())
-                && "77190".equals(wpDataDB.getClient_id())
-                && addressSDB != null) {
-            int kolKass = addressSDB.kolKass != null
-                    ? addressSDB.kolKass
-                    : 0;
-
-            int kolKassSo = addressSDB.kolKassSo != null
-                    ? addressSDB.kolKassSo
-                    : 0;
-
-            m = Math.max(m, kolKass - kolKassSo);
-        }
-
-
-        int adress = ((WpDataDB) document).getAddr_id();
+            int adress = ((WpDataDB) document).getAddr_id();
+            diagnosticContext += ", addrId=" + adress + ", clientId=" + clientId
+                    + ", visitDate=" + documentDate + ", photoType=" + photoType
+                    + ", search=" + (dad2ForGetStackPhotoDB > 0 ? "DAD2" : "PERIOD_IZA")
+                    + ", fromSec=" + dateFromForGetStackPhotoDB / 1000
+                    + ", toSec=" + dateToForGetStackPhotoDB / 1000
+                    + ", codeIza=" + Arrays.toString(codeIZAForGetStackPhotoDB)
+                    + ", requiredBeforeExceptions=" + m;
 //        получаем данные из таблицы фото
-        RealmResults<StackPhotoDB> stackPhotoDB =
-                dad2ForGetStackPhotoDB > 0 ?
-                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
+            RealmResults<StackPhotoDB> stackPhotoDB =
+                    dad2ForGetStackPhotoDB > 0 ?
+                            StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                            StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
-        ImagesTypeListDB imagesType = ImagesTypeListRealm.getByID(photoType);
-        String photoTypeName;
-        if (imagesType != null && imagesType.getNm() != null)
-            photoTypeName = imagesType.getNm();
-        else
-            photoTypeName = "Не вдалося визначити тип фото";
+            diagnosticContext += ", matchedPhotos=" + stackPhotoDB.size();
+            if ("164354".equals(optionId)) {
+                diagnosticContext += ", matchedPhotoSample=" + describePhotosForDiagnostic(stackPhotoDB);
+            }
+            if (dad2ForGetStackPhotoDB == 0) {
+                RealmResults<StackPhotoDB> visitPhotos = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);
+                long missingCodeIza = visitPhotos.where()
+                        .beginGroup().isNull("code_iza").or().equalTo("code_iza", "").endGroup()
+                        .count();
+                diagnosticContext += ", currentVisitPhotos=" + visitPhotos.size()
+                        + ", currentVisitPhotosWithoutCodeIza=" + missingCodeIza;
+                if ("164354".equals(optionId)) {
+                    diagnosticContext += ", visitPhotoSample=" + describePhotosForDiagnostic(visitPhotos);
+                }
+            }
+
+            ImagesTypeListDB imagesType = ImagesTypeListRealm.getByID(photoType);
+            String photoTypeName;
+            if (imagesType != null && imagesType.getNm() != null)
+                photoTypeName = imagesType.getNm();
+            else
+                photoTypeName = "Не вдалося визначити тип фото";
 
 //        List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
 //        подводим итог
-        ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+            ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
 
 
-        // Исключения
-        // 3.1
-        // 3.1 Сначала получим данные о ДВ (ОСВ) по текущей опции,
+            // Исключения
+            // 3.1
+            // 3.1 Сначала получим данные о ДВ (ОСВ) по текущей опции,
 //     чтобы исключить из проверки Сеть/Адрес, если ДВ задано НЕ для всех мест работ.
 //
 // ВАЖНО: этот блок должен выполняться ДО основной проверки (до выставления signal),
 // иначе будет рассинхрон с 1С.
-        if ("158609".equals(optionId) || "169109".equals(optionId) || "164354".equals(optionId)) {
+            if ("158609".equals(optionId) || "169109".equals(optionId) || "164354".equals(optionId)) {
 
-            // === ШАГ A: грузим ОСВ БЕЗ фильтра по адресу/сети ===
-            List<AdditionalRequirementsDB> osvList =
-                    AdditionalRequirementsRealm.getDocumentAdditionalRequirementsForDMP(
-                            document,
-                            false,
-                            Integer.parseInt(optionId),
-                            null,
-                            wpDataDB.getDt(), wpDataDB.getDt(),
-                            null, null, null, null
-                    );
+                // === ШАГ A: грузим ОСВ БЕЗ фильтра по адресу/сети ===
+                List<AdditionalRequirementsDB> osvList =
+                        AdditionalRequirementsRealm.getDocumentAdditionalRequirementsForDMP(
+                                document,
+                                false,
+                                Integer.parseInt(optionId),
+                                null,
+                                wpDataDB.getDt(), wpDataDB.getDt(),
+                                null, null, null, null
+                        );
 
-            // === ШАГ B ===
-            if (osvList != null && !osvList.isEmpty()) {
+                diagnosticContext += ", osvCount=" + (osvList == null ? -1 : osvList.size());
+                // === ШАГ B ===
+                if (osvList != null && !osvList.isEmpty()) {
 
-                int currentAddr = wpDataDB.getAddr_id();
-                Log.e("!!!158609!!!", "B-> currentAddr: " + currentAddr);
+                    int currentAddr = wpDataDB.getAddr_id();
+                    Log.e("!!!158609!!!", "B-> currentAddr: " + currentAddr);
 
-                // ЭТО ДОЛЖНО СООТВЕТСТВОВАТЬ 1С "Гру"
-                int currentGrp = addressSDB.tpId; // если в 1С это торговая марка
-                Log.e("!!!158609!!!", "B-> currentGrp: " + currentGrp);
-                // === ШАГ C: ВсеСетиАдреса ===
-                boolean allAddrAndGrp = false;
-
-                for (AdditionalRequirementsDB r : osvList) {
-                    Log.e("!!!158609!!!", "C-> r.getGrpId(): " + r.getGrpId() + " | isEmpty1c(r.getGrpId()): " + isEmpty1c(r.getGrpId()));
-                    Log.e("!!!158609!!!", "C-> r.getAddrId(): " + r.getAddrId() + " | isEmpty1c(r.getAddrId()): " + isEmpty1c(r.getAddrId()));
-                    if (r.getGrpId().equals("320"))
-                        Log.e("!", "+");
-                    if (!allAddrAndGrp
-                            && isEmpty1c(r.getGrpId())
-                            && isEmpty1c(r.getAddrId())) {
-                        allAddrAndGrp = true;
-                    }
-                }
-
-                // === ШАГ D: ИСКЛЮЧЕНИЕ ===
-                if (!allAddrAndGrp) {
-
-                    boolean foundGrp = false;
-                    boolean foundAddr = false;
+                    // ЭТО ДОЛЖНО СООТВЕТСТВОВАТЬ 1С "Гру"
+                    int currentGrp = addressSDB.tpId; // если в 1С это торговая марка
+                    Log.e("!!!158609!!!", "B-> currentGrp: " + currentGrp);
+                    // === ШАГ C: ВсеСетиАдреса ===
+                    boolean allAddrAndGrp = false;
 
                     for (AdditionalRequirementsDB r : osvList) {
-                        // 1С: НайтиЗначение(Гру)
-                        Log.e("!!!158609!!!", "D-> r.getGrpId(): " + r.getGrpId() + " | equals1c(r.getGrpId(), currentGrp): " + equals1c(r.getGrpId(), currentGrp));
-                        if (equals1c(r.getGrpId(), currentGrp)) {
-                            foundGrp = true;
+                        Log.e("!!!158609!!!", "C-> r.getGrpId(): " + r.getGrpId() + " | isEmpty1c(r.getGrpId()): " + isEmpty1c(r.getGrpId()));
+                        Log.e("!!!158609!!!", "C-> r.getAddrId(): " + r.getAddrId() + " | isEmpty1c(r.getAddrId()): " + isEmpty1c(r.getAddrId()));
+                        if (r.getGrpId().equals("320"))
+                            Log.e("!", "+");
+                        if (!allAddrAndGrp
+                                && isEmpty1c(r.getGrpId())
+                                && isEmpty1c(r.getAddrId())) {
+                            allAddrAndGrp = true;
                         }
-
-                        // 1С: НайтиЗначение(Адр)
-                        Log.e("!!!158609!!!", "D-> r.getAddrId(): " + r.getAddrId() + " | equals1c(r.getAddrId(), currentAddr): " + equals1c(r.getAddrId(), currentAddr));
-                        if (equals1c(r.getAddrId(), currentAddr)) {
-                            foundAddr = true;
-                        }
-
-                        if (foundGrp || foundAddr) break;
                     }
 
-                    // === ТОЧНО КАК В 1С ===
-                    if (!foundGrp && !foundAddr) {
+                    diagnosticContext += ", osvCurrentGrp=" + currentGrp + ", osvAllAddrAndGrp=" + allAddrAndGrp;
+                    // === ШАГ D: ИСКЛЮЧЕНИЕ ===
+                    if (!allAddrAndGrp) {
 
-                        m = 0;
-                        signal = false;
+                        boolean foundGrp = false;
+                        boolean foundAddr = false;
 
-                        spannableStringBuilder
-                                .append("\nЗгідно ДВ ")
-                                .append(photoTypeName)
-                                .append(" у поточної Адреси/Мережі виготовляти НЕ ОБОВ'ЯЗКОВО. Перевірка не виконувалась.");
-                    }
-                }
-            }
-        }
+                        for (AdditionalRequirementsDB r : osvList) {
+                            // 1С: НайтиЗначение(Гру)
+                            Log.e("!!!158609!!!", "D-> r.getGrpId(): " + r.getGrpId() + " | equals1c(r.getGrpId(), currentGrp): " + equals1c(r.getGrpId(), currentGrp));
+                            if (equals1c(r.getGrpId(), currentGrp)) {
+                                foundGrp = true;
+                            }
 
-        // 3.2
-        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
-            signal = true;
-            RealmResults<StackPhotoDB> stackPhotoFor132971 =
-                    StackPhotoRealm.getPhotosForTypeAndExamples(
-                            dad2,
-                            31,
-                            "78",
-                            "94"
-                    );
-            spannableStringBuilder.append("Не знайдено жодного фото ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(" по даному відвідуванню");
-            if (!stackPhotoFor132971.isEmpty()) {
-                signal = false;
-                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
-            }
-        } else if (stackPhotoDB.size() < m) { // главнй итог
-            spannableStringBuilder.append("Ви повинні зробити: ")
-                    .append(String.valueOf(m)).append(" фото з типом: ")
-                    .append(item != null ? item.getNm() : photoTypeName)
-                    .append(", а зробили: ")
-                    .append(String.valueOf(stackPhotoDB.size()))
-                    .append(" - доробiть фотографії.");
-            signal = true;
-        } else {
-            spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
-                    .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
-            signal = false;
-        }
+                            // 1С: НайтиЗначение(Адр)
+                            Log.e("!!!158609!!!", "D-> r.getAddrId(): " + r.getAddrId() + " | equals1c(r.getAddrId(), currentAddr): " + equals1c(r.getAddrId(), currentAddr));
+                            if (equals1c(r.getAddrId(), currentAddr)) {
+                                foundAddr = true;
+                            }
 
-        // 3.3
-        // для 141361 от 27.03.2025
-        if (optionId.equals("141361")) {
-            RealmResults<StackPhotoDB> stackPhotoDB141361 = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
-            long count = stackPhotoDB141361.where()
-                    .in("example_id", new String[]{"78", "94"})
-                    .count();
-            if (count > 0) {
-                m = 2;
-                int photoWithComment = 0;
-                spannableStringBuilder.clear();
-                String baseEmptyComment = "У свiтлин: ";
-                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
-                for (StackPhotoDB photo : stackPhotoDBList) {
-                    if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
-                        String comment = photo.getComment();
-                        if (comment != null && comment.length() > 10) {
-                            photoWithComment++;
-                        } else {
-                            baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
+                            if (foundGrp || foundAddr) break;
+                        }
+
+                        diagnosticContext += ", osvFoundGrp=" + foundGrp + ", osvFoundAddr=" + foundAddr;
+                        // === ТОЧНО КАК В 1С ===
+                        if (!foundGrp && !foundAddr) {
+
+                            m = 0;
+                            signal = false;
+                            diagnosticContext += ", optionalByOsv=true";
+
+                            spannableStringBuilder
+                                    .append("\nЗгідно ДВ ")
+                                    .append(photoTypeName)
+                                    .append(" у поточної Адреси/Мережі виготовляти НЕ ОБОВ'ЯЗКОВО. Перевірка не виконувалась.");
                         }
                     }
                 }
-                if (photoWithComment < m) {
-                    if (count < 2) {
-                        signal = true;
-                        spannableStringBuilder.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 (або 94) має бути не менше ніж ")
-                                .append(String.valueOf(m))
-                                .append(", а зроблено: ")
-                                .append(String.valueOf(count));
-                    } else
-//                    if (baseEmptyComment.length() > 20)
-                    {
-                        baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
-                        signal = true;
-                        spannableStringBuilder.append(baseEmptyComment)
-                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78 (або 94), повинен бути доданий коментар довжиною більше 10 символів");
-                    }
-                } else {
-                    spannableStringBuilder.append("Скарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");
+            }
+
+            // 3.2
+            if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
+                signal = true;
+                RealmResults<StackPhotoDB> stackPhotoFor132971 =
+                        StackPhotoRealm.getPhotosForTypeAndExamples(
+                                dad2,
+                                31,
+                                "78",
+                                "94"
+                        );
+                spannableStringBuilder.append("Не знайдено жодного фото ")
+                        .append(item != null ? item.getNm() : photoTypeName)
+                        .append(" по даному відвідуванню");
+                if (!stackPhotoFor132971.isEmpty()) {
                     signal = false;
+                    spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
+                }
+            } else if (stackPhotoDB.size() < m) { // главнй итог
+                spannableStringBuilder.append("Ви повинні зробити: ")
+                        .append(String.valueOf(m)).append(" фото з типом: ")
+                        .append(item != null ? item.getNm() : photoTypeName)
+                        .append(", а зробили: ")
+                        .append(String.valueOf(stackPhotoDB.size()))
+                        .append(" - доробiть фотографії.");
+                signal = true;
+            } else {
+                spannableStringBuilder.append("Скарг щодо виконання фото немає. Усього зроблено: ")
+                        .append(String.valueOf(stackPhotoDB.size())).append(" фото.");
+                signal = false;
+            }
+
+            // 3.3
+            // для 141361 от 27.03.2025
+            if (optionId.equals("141361")) {
+                RealmResults<StackPhotoDB> stackPhotoDB141361 = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
+                long count = stackPhotoDB141361.where()
+                        .in("example_id", new String[]{"78", "94"})
+                        .count();
+                if (count > 0) {
+                    m = 2;
+                    int photoWithComment = 0;
+                    spannableStringBuilder.clear();
+                    String baseEmptyComment = "У свiтлин: ";
+                    List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
+                    for (StackPhotoDB photo : stackPhotoDBList) {
+                        if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
+                            String comment = photo.getComment();
+                            if (comment != null && comment.length() > 10) {
+                                photoWithComment++;
+                            } else {
+                                baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
+                            }
+                        }
+                    }
+                    if (photoWithComment < m) {
+                        if (count < 2) {
+                            signal = true;
+                            spannableStringBuilder.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 (або 94) має бути не менше ніж ")
+                                    .append(String.valueOf(m))
+                                    .append(", а зроблено: ")
+                                    .append(String.valueOf(count));
+                        } else
+//                    if (baseEmptyComment.length() > 20)
+                        {
+                            baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
+                            signal = true;
+                            spannableStringBuilder.append(baseEmptyComment)
+                                    .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78 (або 94), повинен бути доданий коментар довжиною більше 10 символів");
+                        }
+                    } else {
+                        spannableStringBuilder.append("Скарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");
+                        signal = false;
+                    }
                 }
             }
-        }
 
-        if (!signal && !optionId.equals("158609")) {
-            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
+            if (!signal && !optionId.equals("158609")) {
+                List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionId), null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
 //            AdditionalRequirementsDB additional = additionalRequirementsDBList.stream().findFirst().get();
-            if (!stackPhotoDB.isEmpty()) {
-                for (StackPhotoDB stackPhoto : stackPhotoDB) {
-                    additionalRequirementsDBList.removeIf(req -> req.getTovarId().equals(stackPhoto.getTovar_id()));
+                if (!stackPhotoDB.isEmpty()) {
+                    for (StackPhotoDB stackPhoto : stackPhotoDB) {
+                        additionalRequirementsDBList.removeIf(req -> req.getTovarId().equals(stackPhoto.getTovar_id()));
 //                    String photoId = stackPhoto.getTovar_id();
 //                    String adId = additional.getTovarId();
 //                    Log.e("!!!!!!", "photoId: " + photoId + " | adId: " + adId + " = " + (photoId.equals(adId)));
@@ -450,106 +494,137 @@ public class OptionControlPhoto<T> extends OptionControl {
 //                        Log.e("!", "_+");
 //                    additionalRequirementsDBList.remove("");
 //                    promotionalTov.remove(stackPhoto.tovar_id);
+                    }
                 }
-            }
-            if (!additionalRequirementsDBList.isEmpty()) {
-                List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-                signal = true;
+                diagnosticContext += ", missingProductRequirements=" + additionalRequirementsDBList.size();
+                if (!additionalRequirementsDBList.isEmpty()) {
+                    List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+                    signal = true;
 //                spannableStringBuilder.clear();
-                String fullText = spannableStringBuilder.toString();
-                String startPhrase = "Відповідно до ДВ";
-                String endPhrase = "Перевірка не проводилась";
+                    String fullText = spannableStringBuilder.toString();
+                    String startPhrase = "Відповідно до ДВ";
+                    String endPhrase = "Перевірка не проводилась";
 
-                int startIndex = fullText.indexOf(startPhrase);
-                int endIndex = fullText.indexOf(endPhrase) + endPhrase.length();
-                String text = "\nОднак, Вам треба зробити свiтлини " + photoTypeName + " товарiв:\n";
+                    int startIndex = fullText.indexOf(startPhrase);
+                    int endIndex = fullText.indexOf(endPhrase) + endPhrase.length();
+                    String text = "\nОднак, Вам треба зробити свiтлини " + photoTypeName + " товарiв:\n";
 
-                if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
-                    // Заменяем найденный диапазон на новый SpannableString
-                    spannableStringBuilder.replace(startIndex, endIndex, text);
+                    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                        // Заменяем найденный диапазон на новый SpannableString
+                        spannableStringBuilder.replace(startIndex, endIndex, text);
+                    } else {
+                        spannableStringBuilder.append(text);
+                    }
+
+                    for (AdditionalRequirementsDB additionalRequirementsDB : additionalRequirementsDBList) {
+                        TovarDB tovar = TovarRealm.getById(additionalRequirementsDB.getTovarId());
+                        ReportPrepareDB prepareDB = reportPrepare.stream()
+                                .filter(reportPrepareDB -> additionalRequirementsDB.getTovarId().equals(reportPrepareDB.getTovarId()))
+                                .findFirst().get();
+                        String code = tovar.getiD();
+                        String result = "(" + code + ") " + tovar.getNm();
+                        spannableStringBuilder.append(createLinkedString(result, prepareDB, photoType));
+
+                    }
+                }
+            }
+
+
+            if (optionId.equals("141361") || optionId.equals("132971")) {
+                if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(", але для Ашанів, наявність ФЗ ФТС не перевіряємо.");
+                } else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
+                } else if (addressSDB.tpId == 6698) {   // Для КОЛО ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(", але для КОЛО, наявність ФЗ ФТС не перевіряємо.");
+                } else if (addressSDB.tpId == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
+                } else if (addressSDB.tpId == 3838) {   // Для Лоток ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(", але для Лоток, наявність ФЗ ФТС не перевіряємо.");
+                } else if (addressSDB.tpId == 1012) {   // Для Ева ФЗ ФТС НЕ проверяем
+                    signal = false;
+                    spannableStringBuilder.append(". Але для Ева, наявність ФЗ ФТС не перевіряємо.");
+                } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
+                        Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
+                        Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
+                        Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
+                        Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
+                    signal = false;
+                    spannableStringBuilder.append("Обнаружено (")
+                            .append(String.valueOf(stackPhotoDB.size()))
+                            .append(")")
+                            .append(photoTypeName)
+                            .append(" но, для ")
+                            .append(clientName)
+                            .append(" сделано исключение.");
+                } else if (data05report == null || data05report.after(documentDate)) {
+                    signal = false;
+                    spannableStringBuilder.append(", але виконавець ще не провiв свого 5го звiту, наявність ФЗ ФТС не перевіряємо.");
+                }
+            }
+
+
+            //7.0. сохраним сигнал
+            RealmManager.INSTANCE.executeTransaction(realm -> {
+                if (optionDB != null) {
+                    if (signal) {
+                        double penalty = calculatePenalty(wpDataDB);
+                        optionDB.setIsSignal("1");
+                        optionDB.setSumPenalty(String.valueOf(penalty));
+                    } else {
+                        optionDB.setIsSignal("2");
+                        optionDB.setSumPenalty("0.00");
+                    }
+                    realm.insertOrUpdate(optionDB);
+                }
+            });
+
+            //8.0. блокировка проведения
+            // Установка блокирует ли опция работу приложения или нет
+            if (signal) {
+                if (optionDB.getBlockPns().equals("1")) {
+                    setIsBlockOption(signal);
+                    spannableStringBuilder.append("\n\n").append("Документ проведено не буде!");
                 } else {
-                    spannableStringBuilder.append(text);
-                }
-
-                for (AdditionalRequirementsDB additionalRequirementsDB : additionalRequirementsDBList) {
-                    TovarDB tovar = TovarRealm.getById(additionalRequirementsDB.getTovarId());
-                    ReportPrepareDB prepareDB = reportPrepare.stream()
-                            .filter(reportPrepareDB -> additionalRequirementsDB.getTovarId().equals(reportPrepareDB.getTovarId()))
-                            .findFirst().get();
-                    String code = tovar.getiD();
-                    String result = "(" + code + ") " + tovar.getNm();
-                    spannableStringBuilder.append(createLinkedString(result, prepareDB, photoType));
-
+                    spannableStringBuilder.append("\n\n").append("Вы можете отримати Преміальні БІЛЬШЕ, якщо будете збільшувати кількість фейсів товарів замовника на полиці.");
                 }
             }
+            checkUnlockCode(optionDB);
+            Globals.writeToMLOG("INFO", "OptionControlPhoto/result", diagnosticContext
+                    + ", required=" + m + ", calculatedSignal=" + signal
+                    + ", finalIsSignal=" + optionDB.getIsSignal()
+                    + ", blocked=" + isBlockOption());
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlPhoto.executeOption",
+                    diagnosticContext + "\n" + Log.getStackTraceString(e));
         }
+    }
 
-
-        if (optionId.equals("141361") || optionId.equals("132971")) {
-            if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(", але для Ашанів, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 6698) {   // Для КОЛО ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(", але для КОЛО, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 3838) {   // Для Лоток ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(", але для Лоток, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId == 1012) {   // Для Ева ФЗ ФТС НЕ проверяем
-                signal = false;
-                spannableStringBuilder.append(". Але для Ева, наявність ФЗ ФТС не перевіряємо.");
-            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
-                    Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
-                    Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
-                    Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
-                    Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
-                signal = false;
-                spannableStringBuilder.append("Обнаружено (")
-                        .append(String.valueOf(stackPhotoDB.size()))
-                        .append(")")
-                        .append(photoTypeName)
-                        .append(" но, для ")
-                        .append(clientName)
-                        .append(" сделано исключение.");
-            } else if (data05report == null || data05report.after(documentDate)) {
-                signal = false;
-                spannableStringBuilder.append(", але виконавець ще не провiв свого 5го звiту, наявність ФЗ ФТС не перевіряємо.");
+    private String describePhotosForDiagnostic(List<StackPhotoDB> photos) {
+        try {
+            StringBuilder result = new StringBuilder("[");
+            int limit = Math.min(photos.size(), 5);
+            for (int i = 0; i < limit; i++) {
+                StackPhotoDB photo = photos.get(i);
+                if (i > 0) result.append(", ");
+                result.append("{id=").append(photo.getId())
+                        .append(", serverId=").append(photo.getPhotoServerId())
+                        .append(", dad2=").append(photo.getCode_dad2())
+                        .append(", dt=").append(photo.getDt())
+                        .append(", iza=").append(photo.getCode_iza())
+                        .append(", dvi=").append(photo.getDvi()).append('}');
             }
+            if (photos.size() > limit) result.append(", ...");
+            return result.append(']').toString();
+        } catch (RuntimeException e) {
+            return "unavailable=" + e;
         }
-
-
-        //7.0. сохраним сигнал
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            if (optionDB != null) {
-                if (signal) {
-                    double penalty = calculatePenalty(wpDataDB);
-                    optionDB.setIsSignal("1");
-                    optionDB.setSumPenalty(String.valueOf(penalty));
-                } else {
-                    optionDB.setIsSignal("2");
-                    optionDB.setSumPenalty("0.00");
-                }
-                realm.insertOrUpdate(optionDB);
-            }
-        });
-
-        //8.0. блокировка проведения
-        // Установка блокирует ли опция работу приложения или нет
-        if (signal) {
-            if (optionDB.getBlockPns().equals("1")) {
-                setIsBlockOption(signal);
-                spannableStringBuilder.append("\n\n").append("Документ проведено не буде!");
-            } else {
-                spannableStringBuilder.append("\n\n").append("Вы можете отримати Преміальні БІЛЬШЕ, якщо будете збільшувати кількість фейсів товарів замовника на полиці.");
-            }
-        }
-        checkUnlockCode(optionDB);
     }
 
     // Метод для замены символов

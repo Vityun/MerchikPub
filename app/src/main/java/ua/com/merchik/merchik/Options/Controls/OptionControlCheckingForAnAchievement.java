@@ -322,6 +322,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                     showDialogs(textView.getContext(), tov);
                 }catch (Exception e){
                     Log.e("createLinkedString", "Exception e: " + e);
+                    logOptionError("createLinkedString/onClick", e);
                 }
             }
 

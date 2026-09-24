@@ -1218,11 +1218,20 @@ public class PhotoReportActivity extends toolbar_menus {
                         globals.alertDialogMsg(this, "Фото сохранено, но возникли некоторые проблемы: " + e);
                     }
 
-                    String iza = Globals.generateIzaCode(
-                            userNmText,
-                            wpDataObj.getCustomerId(),
-                            wpDataObj.getAddressId()
-                    );
+                    Long photoDad2 = wpDataObj.getDad2();
+                    WpDataDB wp = photoDad2 != null && photoDad2 > 0
+                            ? WpDataRealm.getWpDataRowByDad2Id(photoDad2)
+                            : null;
+                    String iza = wp != null ? wp.getCode_iza() : null;
+                    if ((iza == null || iza.trim().isEmpty()) && wp != null
+                            && wp.getIsp() != null && !wp.getIsp().trim().isEmpty()) {
+                        iza = Globals.generateIzaCode(wp);
+                    }
+                    if (iza == null || iza.trim().isEmpty()) {
+                        Globals.writeToMLOG("ERROR", "PhotoReportActivity/savePhotoToDB",
+                                "Cannot resolve code_iza: dad2=" + photoDad2
+                                        + ", wpFound=" + (wp != null));
+                    }
 
                     StackPhotoDB stackPhotoDB = new StackPhotoDB(
                             id,

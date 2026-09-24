@@ -67,6 +67,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             executeOption();
         } catch (Exception e) {
             Log.e("OCReturnOfGoods", "Exception e: " + e);
+            logOptionError("init/executeOption", e);
         }
     }
 
@@ -232,6 +233,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                     showDialogs(context, tov);
                 }catch (Exception e){
                     Log.e("createLinkedString", "Exception e: " + e);
+                    logOptionError("createLinkedString/onClick", e);
                 }
             }
 

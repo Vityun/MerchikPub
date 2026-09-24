@@ -251,6 +251,7 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
             return new long[]{deltaA, deltaB};
 
         } catch (Throwable t) {
+            logOptionError("applyOsvOverrides", t);
             // не ломаем выполнение опции
             return new long[]{deltaA, deltaB};
         }

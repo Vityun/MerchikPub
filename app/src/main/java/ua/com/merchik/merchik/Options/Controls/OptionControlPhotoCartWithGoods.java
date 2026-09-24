@@ -60,11 +60,11 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 try {
                     executeOption();
                 } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods/executeOption", "Exception e: " + e);
+                    logOptionError("executeOption", e);
                 }
             }
         }catch (Exception e){
-            Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods", "Exception e: " + e);
+            logOptionError("init", e);
         }
     }
 

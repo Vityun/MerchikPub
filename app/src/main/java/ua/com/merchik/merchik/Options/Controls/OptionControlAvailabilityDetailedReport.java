@@ -67,6 +67,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             executeOption();
         } catch (Exception e) {
             Log.e("OCAvailabilityDReport", "Exception e: " + e);
+            logOptionError("init/executeOption", e);
         }
     }
 

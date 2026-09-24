@@ -70,11 +70,11 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 try {
                     executeOption();
                 } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
+                    logOptionError("executeOption", e);
                 }
             }
         } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/", "Exception e: " + e);
+            logOptionError("init", e);
         }
     }
 

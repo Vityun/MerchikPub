@@ -622,7 +622,7 @@ public class Options {
                     break;
             }
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "optionControl", "exeption: " + e);
+            OptionControl.logOptionError("Options/optionControl", optionsDB, mode, e);
         }
 
     }
@@ -693,7 +693,38 @@ public class Options {
                 }
             }
         }
+        if ("138520".equals(optionsDB.getOptionId())) {
+            logEndWorkControls(optionsDB, optionsDBList, res);
+        }
         return res;
+    }
+
+    private void logEndWorkControls(OptionsDB action, List<OptionsDB> candidates, List<OptionsDB> selected) {
+        try {
+            StringBuilder controls = new StringBuilder();
+            for (OptionsDB item : selected) {
+                if (controls.length() > 0) controls.append(", ");
+                controls.append(item.getOptionId()).append(":blockPns=").append(item.getBlockPns());
+            }
+            StringBuilder photoControl = new StringBuilder();
+            if (candidates != null) {
+                for (OptionsDB item : candidates) {
+                    if ("164354".equals(item.getOptionId())) {
+                        photoControl.append('[').append(OptionControl.describeOption(item))
+                                .append(", selected=").append(selected.contains(item))
+                                .append(", amountMin=").append(item.getAmountMin())
+                                .append(", amountMax=").append(item.getAmountMax()).append(']');
+                    }
+                }
+            }
+            Globals.writeToMLOG("INFO", "Options/endWork.controls",
+                    OptionControl.describeOption(action)
+                            + ", candidates=" + (candidates == null ? 0 : candidates.size())
+                            + ", selected=" + selected.size() + ", controls=[" + controls + "]"
+                            + ", photoControl164354=" + (photoControl.length() == 0 ? "MISSING" : photoControl));
+        } catch (Exception e) {
+            OptionControl.logOptionError("Options/endWork.controls", action, NNKMode.BLOCK, e);
+        }
     }
 
     /**
@@ -730,8 +761,15 @@ public class Options {
 //                        click.click(); +84932/+158608/+8299/+157352/+160568/+134583/139577/+158607
 //                        count++;
                         success.add(item);
+                        if (optionId2 == 138520 && optionId == 164354) {
+                            Globals.writeToMLOG("INFO", "Options/endWork.controlPassed", OptionControl.describeOption(item));
+                        }
                         if (success.size() == optionsDBList.size() && failure.isEmpty()) {
                             click.click();
+                            if (optionId2 == 138520) {
+                                Globals.writeToMLOG("INFO", "Options/endWork.allowed",
+                                        OptionControl.describeOption(option) + ", passed=" + success.size());
+                            }
                             // Обычное выполнение нажатия на кнопку.
                             optControl(view, context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
                                 @Override
@@ -750,12 +788,19 @@ public class Options {
                     @Override
                     public void onUnlockCodeFailure() {
                         failure.add(item);
+                        if (optionId2 == 138520) {
+                            Globals.writeToMLOG("INFO", "Options/endWork.blocked", OptionControl.describeOption(item));
+                        }
                         click.click();
                     }
                 });
             }
         } else {
             // Обычное выполнение нажатия на кнопку.
+            if (optionId2 == 138520) {
+                Globals.writeToMLOG("INFO", "Options/endWork.allowed",
+                        OptionControl.describeOption(option) + ", reason=NO_LINKED_CONTROLS");
+            }
             optControl(view, context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
                 @Override
                 public void onUnlockCodeSuccess() {
@@ -1246,6 +1291,7 @@ public class Options {
             Log.e("NNK", "-------------END-------------------");
         } catch (Exception e) {
             Log.e("NNK", "Exception e: " + e);
+            OptionControl.logOptionError("Options/NNK", option, mode, e);
         }
 
         result = type;
@@ -1717,6 +1763,16 @@ public class Options {
 
     /* Проверка Опции - кнопка, провести отчет */
     public <T> int optControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+        try {
+            return executeOptionControl(view, context, dataDB, optionCurrent, optionId, optionBlock, type, mode, unlockCodeResultListener);
+        } catch (RuntimeException e) {
+            OptionControl.logOptionError("Options/optControl/" + optionId,
+                    mode == NNKMode.BLOCK ? optionBlock : optionCurrent, mode, e);
+            throw e;
+        }
+    }
+
+    private <T> int executeOptionControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
         String block = "";
@@ -1918,6 +1974,7 @@ public class Options {
                     context.startActivity(intent);
                 } catch (Exception e) {
                     Log.e("2222", "error", e);
+                    OptionControl.logOptionError("Options/photoFOT", option, mode, e);
                 }
 
 //                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -2514,6 +2571,7 @@ public class Options {
                     }
                     return optionControlAdditionalRequirementsMark.isBlockOption2() ? 1 : 0;
                 } catch (Exception e) {
+                    OptionControl.logOptionError("Options/optControl/138341", option, mode, e);
                     return 0;
                 }
 
@@ -2528,6 +2586,7 @@ public class Options {
                     }
                     return optionControlAdditionalMaterialsMark.isBlockOption2() ? 1 : 0;
                 } catch (Exception e) {
+                    OptionControl.logOptionError("Options/optControl/138342", option, mode, e);
                 }
                 break;
 
@@ -2654,6 +2713,7 @@ public class Options {
                                 @Override
                                 public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
                                     Log.d("test", "test");
+                                    OptionControl.logOptionError("Options/option132621/save", option, mode, e);
                                 }
                             });
                 }
@@ -2782,6 +2842,7 @@ public class Options {
 
         } catch (Exception e) {
             type.msg = "Ошибка: " + e;
+            OptionControl.logOptionError("Options/option135742", option, mode, e);
         }
     }
 
@@ -2856,6 +2917,7 @@ public class Options {
                         coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                     }
                 } catch (Exception e) {
+                    OptionControl.logOptionError("Options/optionControlMP_8299/coordinates", optionsDB, mode, e);
                 }
             }
 
@@ -3232,12 +3294,14 @@ public class Options {
                             @Override
                             public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
                                 Log.d("test", "test");
+                                OptionControl.logOptionError("Options/optionStartWork_138518/TAR/save", optionsDB, mode, e);
                             }
                         });
 
                 Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 // Set to log error
+                OptionControl.logOptionError("Options/optionStartWork_138518/TAR", optionsDB, mode, e);
                 Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
             }
         }
@@ -3461,11 +3525,13 @@ public class Options {
                                 @Override
                                 public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
                                     Log.d("test", "test");
+                                    OptionControl.logOptionError("Options/optionEndWork_138520/TAR/save", optionsDB, mode, e);
                                 }
                             });
                     Toast.makeText(context, "Вы окончили работу в: " + endTime, Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     // Set to log error
+                    OptionControl.logOptionError("Options/optionEndWork_138520/TAR", optionsDB, mode, e);
                     Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -3784,6 +3850,7 @@ public class Options {
 
         } catch (Exception e) {
             Log.e("testprint", "Exception e: " + e);
+            OptionControl.logOptionError("Options/optionControlAdditionalRequirements_138341", optionsDB, mode, e);
         }
 
 
@@ -4067,6 +4134,7 @@ public class Options {
             }
         } catch (Exception e) {
             Log.e("OPTION_CONTROL", "checkPhoto e: " + e);
+            OptionControl.logOptionError("Options/checkPhoto", optionsDB, null, e);
         }
     }
 

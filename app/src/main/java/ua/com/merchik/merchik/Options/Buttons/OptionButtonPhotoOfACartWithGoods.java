@@ -80,6 +80,7 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
                 context.startActivity(intent);
             } catch (Exception e) {
                 Log.e("2222", "error1", e);
+                logOptionError("executeOption/openPhoto", e);
             }
 
 //            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());

@@ -58,6 +58,31 @@ public class OptionControl<T> {
     public boolean notCloseSpannableStringBuilderDialog = false;    // Делает так что при клике на текст диалог не будет закрываться
     private boolean block;
 
+    protected void logOptionError(String stage, Throwable error) {
+        logOptionError(getClass().getSimpleName() + "/" + stage, optionDB, nnkMode, error);
+    }
+
+    public static String describeOption(OptionsDB option) {
+        if (option == null) return "option=null";
+        try {
+            return "rowId=" + option.getID() + ", dad2=" + option.getCodeDad2()
+                    + ", optionId=" + option.getOptionId() + ", controlId=" + option.getOptionControlId()
+                    + ", blockPns=" + option.getBlockPns() + ", isSignal=" + option.getIsSignal();
+        } catch (RuntimeException e) {
+            // A deleted/closed Realm object must not hide the original exception.
+            return "optionContextUnavailable=" + e;
+        }
+    }
+
+    public static void logOptionError(String source, OptionsDB option, Options.NNKMode mode, Throwable error) {
+        String message = describeOption(option) + ", mode=" + mode + "\n" + Log.getStackTraceString(error);
+        try {
+            Globals.writeToMLOG("ERROR", source, message);
+        } catch (RuntimeException loggingError) {
+            Log.e(source, message, loggingError);
+        }
+    }
+
     public void showOptionMassage(String msg) {
         try {
             dialog = new DialogData(context);

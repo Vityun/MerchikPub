@@ -89,6 +89,7 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
         } catch (Exception e) {
             Log.e("test_135412", "Exception e: " + e);
+            logOptionError("executeOption", e);
             e.printStackTrace();
         }
     }
