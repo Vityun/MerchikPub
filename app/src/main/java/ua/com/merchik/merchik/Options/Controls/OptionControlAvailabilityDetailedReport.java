@@ -151,16 +151,34 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 .append(SKUFact > SKUPlan ? "товаров больше, чем должно быть на " + String.format("%.2f", OFS) + "%" : "отсутствует " + String.format("%.2f", OFS) + "% товаров.");
 
 
+        String blockPnsBeforeVitmark = optionDB.getBlockPns();
+        String signalReason = "NO_THRESHOLD_EXCEEDED";
+        Globals.writeToMLOG("INFO", "OptionControlAvailabilityDetailedReport/calculation",
+                describeOption(optionDB) + ", mode=" + nnkMode + ", clientId=" + clientId
+                        + ", amount=" + optionDB.getAmount() + ", amountMin=" + optionDB.getAmountMin()
+                        + ", amountMax=" + optionDB.getAmountMax()
+                        + ", reportPrepareCount=" + detailedReportRPList.size()
+                        + ", matchedTovarCount=" + detailedReportTovList.size()
+                        + ", skuPlan=" + SKUPlan + ", skuFact=" + SKUFact + ", missingPercent=" + OFS
+                        + ", hasComment=" + (find > 1));
+
         // Блокировки
         // Блокировка для Витмарка
         if (clientId.equals("9382")) {    // Витмарк
             if (OFS >= 90) {
                 optionDB.setBlockPns("1");
                 signal = true;
+                signalReason = "VITMARK_OFS_AT_LEAST_90";
                 spannableStringBuilder.append("\n\nВы можете снять сигнал, если напишите комментарии о причинах отсутствия товара.");
             } else {
                 optionDB.setBlockPns("0");
             }
+            Globals.writeToMLOG("INFO", "OptionControlAvailabilityDetailedReport/vitmarkRule",
+                    describeOption(optionDB) + ", mode=" + nnkMode
+                            + ", amountMax=" + optionDB.getAmountMax() + ", missingPercent=" + OFS
+                            + ", vitmarkBlockThreshold=90, thresholdReached=" + (OFS >= 90)
+                            + ", blockPnsBeforeVitmark=" + blockPnsBeforeVitmark
+                            + ", blockPnsAfterVitmark=" + optionDB.getBlockPns());
         }
 
 
@@ -176,19 +194,23 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         );
         if (OFS == 100) {
             signal = true;
+            signalReason = "ALL_GOODS_MISSING";
 
             List<SMSPlanSDB> smsPlanSDBS = SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
             List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
 
             if (smsPlanSDBS != null && smsPlanSDBS.size() > 0) {
                 signal = false;
+                signalReason = "SMS_PLAN_1172";
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
             } else if (smsLogSDBS != null && smsLogSDBS.size() > 0) {
                 signal = false;
+                signalReason = "SMS_LOG_1172";
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
             } else if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
                 if (wp.getDot_user_id() > 0) {
                     signal = false;
+                    signalReason = "AUCHAN_DOT";
                     stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ, ОФС ДЗ не перевіряємо.");
                 }
             } else {
@@ -198,17 +220,21 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         } else if (OFS > Integer.parseInt(optionDB.getAmountMax()) && Integer.parseInt(optionDB.getAmountMax()) > 0) {
             signal = true;
+            signalReason = "AMOUNT_MAX_EXCEEDED";
             spannableStringBuilder.append(" и это больше ").append(optionDB.getAmountMax()).append("% (максимально допустимого).");
 
             if (clientExclusionList.contains(clientId) && find > 1) {
                 signal = false;
+                signalReason = "CLIENT_COMMENT";
                 spannableStringBuilder.append(" Але, сигнал знятий, так як наданий коментар про ПРИЧИНИ відсутності товару.");
             }
             else if (SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
                 signal = false;
+                signalReason = "SMS_PLAN_727";
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
             } else if (SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
                 signal = false;
+                signalReason = "SMS_LOG_727";
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
 //            } else if (find > 0) {
 //                signal = false;
@@ -243,9 +269,12 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             spannableStringBuilder.append("\n\nЗамечаний нет.");
         }
 
-        spannableStringBuilder.append("\n\n");
-        spannableStringBuilder.append(createLinkedString("Отправка СМС", makeLink()));
-        notCloseSpannableStringBuilderDialog = true;
+        String smsLink = makeLink();
+        if (smsLink != null) {
+            spannableStringBuilder.append("\n\n");
+            spannableStringBuilder.append(createLinkedString("Отправка СМС", smsLink));
+            notCloseSpannableStringBuilderDialog = true;
+        }
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
@@ -264,6 +293,12 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         setIsBlockOption(signal);
 
         checkUnlockCode(optionDB);
+        Globals.writeToMLOG("INFO", "OptionControlAvailabilityDetailedReport/result",
+                describeOption(optionDB) + ", mode=" + nnkMode + ", clientId=" + clientId
+                        + ", amountMax=" + optionDB.getAmountMax() + ", missingPercent=" + OFS
+                        + ", blockPnsBeforeVitmark=" + blockPnsBeforeVitmark
+                        + ", calculatedSignal=" + signal + ", signalReason=" + signalReason
+                        + ", blocked=" + isBlockOption());
     }
 
     private SpannableString createLinkedString(String msg, String link) {
@@ -287,6 +322,11 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
     private String makeLink() {
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        if (appUser == null) {
+            Globals.writeToMLOG("ERROR", "OptionControlAvailabilityDetailedReport/makeLink",
+                    "AppUsersDB not found, SMS link skipped. userId=" + userId + ", dad2=" + dad2);
+            return null;
+        }
         String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
         hash = Globals.getSha1Hex(hash);
 

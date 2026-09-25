@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">092401</string>
+    <string name="ver" translatable="false">092501</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-09-24</string>
+    <string name="debug_date" translatable="false">2026-09-25</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -296,6 +296,25 @@
     <string name="forgot_password">Забыли пароль?</string>
     <string name="regisration">Регистрация</string>
     <string name="distance">Расстояние</string>
+
+    <string name="master_code_title">Мастер код</string>
+    <string name="master_code_access_prompt">Для получения доступа к выдаче мастер кода введите пароль</string>
+    <string name="master_code_for_date">Мастер код для %1$s</string>
+    <string name="master_code_date">Дата</string>
+    <string name="master_code_password">Пароль</string>
+    <string name="master_code_show_password">Показати пароль</string>
+    <string name="master_code_hide_password">Приховати пароль</string>
+    <string name="master_code_invalid_password_attempts">Неправильний пароль. Залишилося спроб: %1$d</string>
+    <string name="master_code_attempts_remaining">Залишилося спроб: %1$d</string>
+    <string name="master_code_locked">Спроби вичерпано. Повторний ввід через %1$s</string>
+    <string name="master_code_description">Мастер код предназначен для разблокировки любых опций. Используется исключительно для экстренного случая "падения сервера".</string>
+    <string name="master_code_create">Створити</string>
+    <string name="master_code_invalid_password">Неправильний пароль</string>
+    <string name="master_code_invalid_date">Оберіть дату в межах трьох днів до або після сьогодні</string>
+    <string name="master_code_generation_error">Не вдалося сформувати Мастер код</string>
+    <string name="master_code_copy">Скопіювати</string>
+    <string name="master_code_copied">Мастер код скопійовано</string>
+    <string name="master_code_close">Закрити</string>
 
 </resources>
 

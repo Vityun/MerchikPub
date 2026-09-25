@@ -139,6 +139,7 @@ import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.masterCode.MasterCodeDialogLauncher;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
@@ -656,6 +657,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     }
 
     private MessageDialogBuilder messageDialogBuilder;
+    private MasterCodeDialogLauncher masterCodeDialogLauncher;
 
     @Override
     protected void onResume() {
@@ -669,11 +671,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 messageDialogBuilder.dismiss();
         }
         super.onResume();
+        View versionView = findViewById(R.id.textView14);
+        if (versionView != null) {
+            if (masterCodeDialogLauncher == null) {
+                masterCodeDialogLauncher = new MasterCodeDialogLauncher(this);
+            }
+            masterCodeDialogLauncher.attachTo(versionView);
+        }
         invalidateOptionsMenu();
     }
 
     @Override
     protected void onPause() {
+        if (masterCodeDialogLauncher != null) masterCodeDialogLauncher.cancelPendingPress();
         super.onPause();
         globals.handlerCount.removeCallbacks(runnableCron10);
     }
@@ -686,6 +696,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     @Override
     protected void onDestroy() {
+        if (masterCodeDialogLauncher != null) {
+            masterCodeDialogLauncher.dispose();
+            masterCodeDialogLauncher = null;
+        }
         super.onDestroy();
         if (loadingIndicator != null) {
             loadingIndicator.hide();

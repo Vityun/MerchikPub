@@ -2396,7 +2396,7 @@ public class RealmManager {
                 String id = item.getManufacturerId();
                 TradeMarkDB tm = TradeMarkRealm.getTradeMarkRowById(id);
                 String sortCol = item.getSortcol();
-                String data = sortCol.toLowerCase();
+                String data = sortCol != null ? sortCol.toLowerCase() : null;
 
                 INSTANCE.executeTransaction(realm -> {
                     item.setSortcol(data);
