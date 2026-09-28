@@ -1087,7 +1087,7 @@ public class MakePhoto {
             Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
             Log.e("!!!!!!!!!", "wp -> user_comment: " + wp.user_comment);
 
-            if (unlockCode.equals(res)) {
+            if (UnlockCode.matchesUnlockCode(res, unlockCode, wp.getDt())) {
                 int tema_id = 1285;
                 String client_id = wp.getClient_id(); // код клиента из плана работ
                 Date wpDate = wp.getDt(); // дата работ из плана работ

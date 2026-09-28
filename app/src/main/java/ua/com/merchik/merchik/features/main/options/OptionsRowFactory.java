@@ -90,6 +90,7 @@ import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -294,7 +295,7 @@ public final class OptionsRowFactory<T> {
 
                         textInteger2.monetary = true;
                         textInteger2.text = text;
-                        textInteger2.onClick = v -> {
+                        textInteger2.onClick = (v, origin) -> {
                             DialogData dialog = new DialogData(mContext);
                             dialog.setTitle("Добавление потенциального клиента");
                             dialog.setText("Расчет за потенциального клиента \n\n" + OptionButtonAddNewClient.additionalText());
@@ -318,9 +319,9 @@ public final class OptionsRowFactory<T> {
                     text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     textInteger2.monetary = true;
                     textInteger2.text = text;
-                    textInteger2.onClick = new View.OnClickListener() {
+                    textInteger2.onClick = new OptionItemState.TextClickListener() {
                         @Override
-                        public void onClick(View view) {
+                        public void onClick(View view, LaunchOrigin origin) {
                             DialogData dialog = new DialogData(mContext);
                             dialog.setTitle("Пригласить Друга");
 
@@ -408,8 +409,9 @@ public final class OptionsRowFactory<T> {
                         }
 
                         textInteger.text = CustomString.underlineString(logMPList.size() + "/" + loMPonPoint, optionsButtons);
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
                             bundle.putString("dataJson", new Gson().toJson(wp));
@@ -453,8 +455,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString158309;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309.toString());
@@ -473,8 +476,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString158605;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_FROM_OPTION_158605.toString());
@@ -495,8 +499,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString132968;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
@@ -516,8 +521,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString157277;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277.toString());
@@ -537,7 +543,7 @@ public final class OptionsRowFactory<T> {
                         textInteger.text =
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 37));
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
                             intent.putExtra("report_prepare", true);
                             intent.putExtra("dad2", dad2);
@@ -555,8 +561,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString174878;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878.toString());
@@ -582,8 +589,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString175015;
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             ImagesTypeListDB photoType = ImagesTypeListRealm.getByID(StackPhotoDB.PHOTO_TOVAR_AND_PRICE);
                             String photoTypeName = photoType != null && photoType.getNm() != null
@@ -616,8 +624,9 @@ public final class OptionsRowFactory<T> {
                         );
 
                         textInteger.text = spannableString174546;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             JsonObject dataJson = new JsonObject();
                             dataJson.addProperty("codeDad2", dad2);
@@ -636,8 +645,9 @@ public final class OptionsRowFactory<T> {
                         spannableString158606.setSpan(new UnderlineSpan(), 0, spannableString158606.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString158606;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
@@ -660,8 +670,9 @@ public final class OptionsRowFactory<T> {
                         spannableString160567.setSpan(new UnderlineSpan(), 0, spannableString160567.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString160567;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", ShowcaseDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SHOWCASE_COMPLETED_CHECK.toString());
@@ -685,8 +696,9 @@ public final class OptionsRowFactory<T> {
                         spannableString157354.setSpan(new UnderlineSpan(), 0, spannableString157354.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString157354;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
@@ -703,7 +715,7 @@ public final class OptionsRowFactory<T> {
                         textInteger.text =
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45));
 
-                        textInteger.onClick = view -> {
+                        textInteger.onClick = (view, origin) -> {
                             Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
                             intent.putExtra("report_prepare", true);
                             intent.putExtra("dad2", dad2);
@@ -717,8 +729,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString151139;
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
@@ -745,8 +758,9 @@ public final class OptionsRowFactory<T> {
 
                         textInteger.text = spannableString164355;
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
@@ -765,8 +779,9 @@ public final class OptionsRowFactory<T> {
                         spannableString169108.setSpan(new UnderlineSpan(), 0, spannableString169108.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString169108;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108.toString());
@@ -789,8 +804,9 @@ public final class OptionsRowFactory<T> {
                                 : "Тип фото не определен";
 
                         textInteger.text = spannableString174213;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213.toString());
@@ -809,8 +825,9 @@ public final class OptionsRowFactory<T> {
                         spannableString158604.setSpan(new UnderlineSpan(), 0, spannableString158604.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString158604;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604.toString());
@@ -830,8 +847,9 @@ public final class OptionsRowFactory<T> {
                         spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
@@ -850,8 +868,9 @@ public final class OptionsRowFactory<T> {
                         spannableString135158.setSpan(new UnderlineSpan(), 0, spannableString135158.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger.text = spannableString135158;
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
@@ -898,8 +917,9 @@ public final class OptionsRowFactory<T> {
                         spannableString151122.setSpan(foregroundSpan, 0, spannableString151122.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         spannableString151122.setSpan(new UnderlineSpan(), 0, spannableString151122.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger.text = spannableString151122;
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", QuestionAnswerSDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.QUESTION_ANSWER_INFO.toString());
@@ -924,8 +944,9 @@ public final class OptionsRowFactory<T> {
                                 ? it.getNm()
                                 : "Фото Biтрини з Aкційними Цінниками";
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100.toString());
@@ -944,8 +965,9 @@ public final class OptionsRowFactory<T> {
                         spannableString132969.setSpan(new UnderlineSpan(), 0, spannableString132969.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger.text = spannableString132969;
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969.toString());
@@ -965,8 +987,9 @@ public final class OptionsRowFactory<T> {
                         spannableString141360.setSpan(new UnderlineSpan(), 0, spannableString141360.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger.text = spannableString141360;
 
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360.toString());
@@ -1056,7 +1079,7 @@ public final class OptionsRowFactory<T> {
                             } else {
                                 opinionName = "Ви ще не встановлювали думку щодо цього відвідування, ви можете виправити це зараз і вибрати потрібну думку.";
                             }
-                            textInteger.onClick = v -> {
+                            textInteger.onClick = (v, origin) -> {
                                 new MessageDialogBuilder((Activity) mContext)
                                         .setTitle("Думка виконавця")
                                         .setStatus(DialogStatus.NORMAL)
@@ -1078,8 +1101,9 @@ public final class OptionsRowFactory<T> {
                         OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
                         textInteger.text = CustomString.underlineString(optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons);
-                        textInteger.onClick = v -> {
+                        textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
                             bundle.putString("contextUI", ContextUI.TOVAR_FROM_ACHIEVEMENT.toString());
@@ -1447,6 +1471,7 @@ public final class OptionsRowFactory<T> {
 
                         ContextUI samplePhotoContextUI = resolveSamplePhotoContextUI(photoType, optionsDB);
                         Intent intent = new Intent(context, FeaturesActivity.class);
+                        FeaturesActivity.setAnchoredOrigin(intent, FeaturesActivity.originFromView(textView));
                         Bundle bundle = new Bundle();
                         bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                         bundle.putString("contextUI", samplePhotoContextUI.toString());

@@ -18,6 +18,7 @@ import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -304,17 +305,21 @@ class OptionsDBViewModel @Inject constructor(
 
     enum class OptionClickTarget { ROW, COUNTER, SECONDARY_COUNTER, SIGNAL }
 
-    fun onOptionClick(id: String, target: OptionClickTarget, view: android.view.View) {
+    fun onOptionClick(
+        id: String,
+        target: OptionClickTarget,
+        view: android.view.View,
+        origin: LaunchOrigin? = null
+    ) {
         if (context == null || _optionsLoading.value) return
         val row = _optionRows.value.firstOrNull { it.id == id } ?: return
         try {
-            val action = when (target) {
-                OptionClickTarget.ROW -> row.onClick
-                OptionClickTarget.COUNTER -> row.counter.onClick
-                OptionClickTarget.SECONDARY_COUNTER -> row.secondaryCounter.onClick
-                OptionClickTarget.SIGNAL -> row.signal.onClick
+            when (target) {
+                OptionClickTarget.ROW -> row.onClick?.onClick(view)
+                OptionClickTarget.COUNTER -> row.counter.onClick?.onClick(view, origin)
+                OptionClickTarget.SECONDARY_COUNTER -> row.secondaryCounter.onClick?.onClick(view, origin)
+                OptionClickTarget.SIGNAL -> row.signal.onClick?.onClick(view)
             }
-            action?.onClick(view)
         } catch (error: Exception) {
             Globals.writeToMLOG("ERROR", "OptionsDBViewModel/click", "option=${row.optionIdValue}, target=$target, error=$error")
         }

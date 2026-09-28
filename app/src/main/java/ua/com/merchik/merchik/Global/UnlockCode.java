@@ -13,6 +13,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -32,6 +34,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.LogRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.features.masterCode.MasterCodeGenerator;
 
 /**
  * Код для разблокировки
@@ -92,6 +95,15 @@ public class UnlockCode {
         res = hashMD5.getMD5fromString(code).substring(0, 4).toLowerCase();
 
         return res;
+    }
+
+    public static boolean matchesUnlockCode(String enteredCode, String optionCode, Date workDate) {
+        if (enteredCode == null || enteredCode.isEmpty()) return false;
+        if (enteredCode.equals(optionCode)) return true;
+        if (workDate == null) return false;
+        // Use WpDataDB.dt, with the same local date conversion as the visit controls.
+        LocalDate documentDate = workDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return enteredCode.equals(MasterCodeGenerator.INSTANCE.generate(documentDate));
     }
 
 
@@ -197,7 +209,7 @@ public class UnlockCode {
                     Log.e("UnlockCode", "unlockCode: " + unlockCode);
 //            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
-                    if (res.equals(unlockCode)) {
+                    if (matchesUnlockCode(res, unlockCode, wpDate)) {
                         // Pika сохраняю код в лог приложения
                         RealmManager.setRowToLog(Collections.singletonList(
                                 new LogDB(

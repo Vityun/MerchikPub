@@ -66,6 +66,7 @@ import ua.com.merchik.merchik.R
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
@@ -168,7 +169,7 @@ fun OptionsItemsUI(
                         viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT,
                     onCheckedChange = { if (!loading) viewModel.updateItemSelect(it, item) },
                     pulseSequence = if (highlightedId == row.id) highlightSequence else 0L,
-                    onClick = { target -> viewModel.onOptionClick(row.id, target, hostView) },
+                    onClick = { target, origin -> viewModel.onOptionClick(row.id, target, hostView, origin) },
                     onLongClick = { viewModel.onOptionLongClick(row.id, hostView) }
                 )
             }
@@ -221,9 +222,11 @@ private fun OptionItemUI(
     showSelection: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     pulseSequence: Long,
-    onClick: (OptionsDBViewModel.OptionClickTarget) -> Unit,
+    onClick: (OptionsDBViewModel.OptionClickTarget, LaunchOrigin?) -> Unit,
     onLongClick: () -> Unit
 ) {
+    var counterOrigin by remember(row.id) { mutableStateOf<LaunchOrigin?>(null) }
+    var secondaryCounterOrigin by remember(row.id) { mutableStateOf<LaunchOrigin?>(null) }
     val scale = remember { Animatable(1f) }
     LaunchedEffect(pulseSequence) {
         scale.snapTo(1f)
@@ -242,7 +245,7 @@ private fun OptionItemUI(
             .shadow(2.dp, shape, clip = false)
             .clip(shape).background(if (inactive) Color(0xFFDBDBDB) else Color(0xFFAAAAAA))
             .combinedClickable(enabled = enabled,
-                onClick = { onClick(OptionsDBViewModel.OptionClickTarget.ROW) },
+                onClick = { onClick(OptionsDBViewModel.OptionClickTarget.ROW, null) },
                 onLongClick = onLongClick)
     ) {
         Row(
@@ -272,13 +275,15 @@ private fun OptionItemUI(
                 Column(Modifier.padding(start = 8.dp, end = 16.dp).widthIn(max = 120.dp),
                     horizontalAlignment = Alignment.End) {
                     if (displayCounter) {
-                        OptionText(row.counter, Modifier.widthIn(min = counterMinWidth), if (enabled && row.counter.onClick != null) {
-                            { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER) }
+                        OptionText(row.counter, Modifier.widthIn(min = counterMinWidth)
+                            .captureLaunchOrigin { counterOrigin = it }, if (enabled && row.counter.onClick != null) {
+                            { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER, counterOrigin) }
                         } else null, textStyle = TextStyle(textAlign = TextAlign.Center))
                     }
                     if (displaySecondaryCounter) {
-                        OptionText(row.secondaryCounter, Modifier.widthIn(min = counterMinWidth), if (enabled && row.secondaryCounter.onClick != null) {
-                            { onClick(OptionsDBViewModel.OptionClickTarget.SECONDARY_COUNTER) }
+                        OptionText(row.secondaryCounter, Modifier.widthIn(min = counterMinWidth)
+                            .captureLaunchOrigin { secondaryCounterOrigin = it }, if (enabled && row.secondaryCounter.onClick != null) {
+                            { onClick(OptionsDBViewModel.OptionClickTarget.SECONDARY_COUNTER, secondaryCounterOrigin) }
                         } else null, textStyle = TextStyle(textAlign = TextAlign.Center))
                     }
                 }
@@ -290,7 +295,7 @@ private fun OptionItemUI(
                 modifier = Modifier.padding(vertical = 8.dp).size(50.dp)
                     .alpha(if (row.signal.visibility == View.VISIBLE) 1f else 0f)
                     .clickable(enabled = enabled && row.signal.visibility == View.VISIBLE) {
-                        onClick(OptionsDBViewModel.OptionClickTarget.SIGNAL)
+                        onClick(OptionsDBViewModel.OptionClickTarget.SIGNAL, null)
                     }
             )
         }

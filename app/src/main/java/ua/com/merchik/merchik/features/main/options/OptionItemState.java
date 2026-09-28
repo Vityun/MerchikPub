@@ -3,7 +3,10 @@ package ua.com.merchik.merchik.features.main.options;
 import android.graphics.Color;
 import android.view.View;
 
+import androidx.annotation.Nullable;
+
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.dataLayer.LaunchOrigin;
 
 /** Presentation only: no Android widgets or managed Realm objects. */
 public final class OptionItemState {
@@ -28,12 +31,16 @@ public final class OptionItemState {
         secondaryCounter.visibility = View.GONE;
     }
 
+    public interface TextClickListener {
+        void onClick(View view, @Nullable LaunchOrigin origin);
+    }
+
     public static final class TextPart {
         public CharSequence text = "";
         public boolean bold;
         public boolean monetary;
         public int visibility = View.VISIBLE;
-        public View.OnClickListener onClick;
+        public TextClickListener onClick;
 
         public boolean shouldDisplay(boolean showMonetaryValues) {
             return visibility != View.GONE && (showMonetaryValues || !monetary);

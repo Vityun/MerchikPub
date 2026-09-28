@@ -64,7 +64,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -540,13 +539,8 @@ fun AnchoredAnimatedDialog(
     var hostVisible by remember { mutableStateOf(false) }
     var targetRect by remember { mutableStateOf<Rect?>(null) }
 
-    val shrinkToZeroOnClose: Boolean = true
-    val minScaleToZero: Float = 0.001f // чтобы не было 0 и глюков матрицы
-
     val scope = rememberCoroutineScope()
     val p = remember { Animatable(0f) } // 0 -> в кнопке, 1 -> на месте
-
-    fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
 
     suspend fun playClose() {
         // если anchorRect ещё неизвестен — просто закрываем как есть
@@ -623,32 +617,7 @@ fun AnchoredAnimatedDialog(
                             bottom = r.bottom + loc[1]
                         )
                     }
-                    .graphicsLayer {
-                        transformOrigin = TransformOrigin(0.5f, 0.5f)
-                        alpha = 1f
-
-                        val a = anchorRect
-                        val t = targetRect
-
-                        if (a != null && t != null && t.width > 0f && t.height > 0f) {
-                            val openStartScaleX = (a.width / t.width).coerceIn(0.03f, 1f)
-                            val openStartScaleY = (a.height / t.height).coerceIn(0.03f, 1f)
-
-                            val closeScaleX =
-                                if (shrinkToZeroOnClose) minScaleToZero else openStartScaleX
-                            val closeScaleY =
-                                if (shrinkToZeroOnClose) minScaleToZero else openStartScaleY
-
-                            scaleX = closeScaleX + (1f - closeScaleX) * p.value
-                            scaleY = closeScaleY + (1f - closeScaleY) * p.value
-
-                            val startTx = (a.center.x - t.center.x)
-                            val startTy = (a.center.y - t.center.y)
-
-                            translationX = startTx * (1f - p.value)
-                            translationY = startTy * (1f - p.value)
-                        }
-                    },
+                    .anchoredTransform(anchorRect, targetRect) { p.value },
                 contentAlignment = Alignment.TopCenter
             ) {
                 content(requestClose)

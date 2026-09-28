@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,20 +22,22 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -44,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -91,11 +96,39 @@ import ua.com.merchik.merchik.features.main.DBViewModels.VideoLessonsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
+import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedContent
 import ua.com.merchik.merchik.toolbar_menus
 
 @AndroidEntryPoint
 class FeaturesActivity : AppCompatActivity() {
+    companion object {
+        private const val EXTRA_ANCHORED_TRANSITION = "launch_anchored_transition"
+
+        @JvmStatic
+        fun setAnchoredOrigin(intent: Intent, origin: LaunchOrigin?) {
+            if (origin == null || origin.width <= 0 || origin.height <= 0) return
+            intent.putExtra("launch_origin_left", origin.x)
+            intent.putExtra("launch_origin_top", origin.y)
+            intent.putExtra("launch_origin_width", origin.width)
+            intent.putExtra("launch_origin_height", origin.height)
+            intent.putExtra(EXTRA_ANCHORED_TRANSITION, true)
+        }
+
+        @JvmStatic
+        fun originFromView(view: View): LaunchOrigin? {
+            if (!view.isAttachedToWindow || view.width <= 0 || view.height <= 0) return null
+            val location = IntArray(2)
+            view.getLocationOnScreen(location)
+            return LaunchOrigin(location[0], location[1], view.width, view.height)
+        }
+    }
+
     private lateinit var launchOrigin: LaunchOrigin
+    private var anchoredTransition = false
+    private var anchoredContentAttached = false
+    private var finishAfterAnimation = false
+    private val anchoredCloseRequested = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -104,16 +137,26 @@ class FeaturesActivity : AppCompatActivity() {
         val normalizedLaunchOrigin = launchOrigin.takeIf {
             it.x != 0 || it.y != 0 || it.width != 0 || it.height != 0
         }
+        anchoredTransition = normalizedLaunchOrigin != null &&
+            intent.getBooleanExtra(EXTRA_ANCHORED_TRANSITION, false)
 
         if (normalizedLaunchOrigin != null) {
             overridePendingTransition(0, 0)
         }
         setContent {
+            if (anchoredTransition) {
+                DisposableEffect(Unit) {
+                    anchoredContentAttached = true
+                    onDispose { anchoredContentAttached = false }
+                }
+                BackHandler { finish() }
+            }
             MerchikTheme {
                 Surface(
                     modifier = Modifier
-                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        // Reserve system bars/cutouts before measuring any screen or animation.
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
                     color = Color.Transparent,
                 ) {
                     val currentUserId = Globals.getCurrentUserId()
@@ -130,7 +173,9 @@ class FeaturesActivity : AppCompatActivity() {
 
                     FeaturesLaunchAnimationContainer(
                         origin = normalizedLaunchOrigin,
-                        durationMillis = animationTime
+                        durationMillis = animationTime,
+                        closeRequested = if (anchoredTransition) anchoredCloseRequested else null,
+                        onClosed = ::completeAnimatedFinish
                     ) {
                         intent?.let { intent ->
                             intent.extras?.let { bundle ->
@@ -278,12 +323,29 @@ class FeaturesActivity : AppCompatActivity() {
         }
     }
 
-//    override fun finish() {
-//        super.finish()
-//        if (intent?.readLaunchOriginOrNull() != null) {
-//            overridePendingTransition(0, 0)
-//        }
-//    }
+    override fun finish() {
+        if (anchoredTransition && anchoredContentAttached && !finishAfterAnimation &&
+            !isFinishing && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        ) {
+            anchoredCloseRequested.value = true
+            return
+        }
+        super.finish()
+        if (anchoredTransition) overridePendingTransition(0, 0)
+    }
+
+    private fun completeAnimatedFinish() {
+        finishAfterAnimation = true
+        finish()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // A backgrounded activity cannot rely on Compose animation frames to finish.
+        if (anchoredCloseRequested.value && !finishAfterAnimation && !isChangingConfigurations) {
+            completeAnimatedFinish()
+        }
+    }
 }
 
 
@@ -315,8 +377,24 @@ fun RequestNotificationsPermissionPersistent() {
 private fun FeaturesLaunchAnimationContainer(
     origin: LaunchOrigin?,
     durationMillis: Int = 2500,
+    closeRequested: State<Boolean>? = null,
+    onClosed: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
+    if (origin != null && closeRequested != null) {
+        AnchoredAnimatedContent(
+            anchorRect = Rect(
+                origin.x.toFloat(), origin.y.toFloat(),
+                (origin.x + origin.width).toFloat(), (origin.y + origin.height).toFloat()
+            ),
+            closeRequested = closeRequested,
+            durationMillis = durationMillis,
+            onClosed = onClosed,
+            content = content
+        )
+        return
+    }
+
     val slowThenFastEasing = remember {
         CubicBezierEasing(
             0.85f, 0f,
