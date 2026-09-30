@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ChatVisitLinksTest {
     private static final String PREFIX = "\u0410\u041e\u0438-";
+    private static final String UNLOCK_PREFIX = "\u043a\u043e\u0434 \u0440\u0430\u0437\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u043a\u0438 ";
 
     private List<String> references(String message) {
         List<String> result = new ArrayList<>();
@@ -84,6 +85,64 @@ public class ChatVisitLinksTest {
         assertTrue(matcher.find());
         assertEquals(before.length(), matcher.start());
         assertEquals(before.length() + number.length(), matcher.end());
+        assertFalse(matcher.find());
+    }
+
+    private List<String> unlockCodes(String message) {
+        List<String> result = new ArrayList<>();
+        Matcher matcher = ChatVisitLinks.UNLOCK_CODE_PATTERN.matcher(message);
+        while (matcher.find()) result.add(matcher.group(1));
+        return result;
+    }
+
+    @Test
+    public void findsUnlockCodeInNotificationWithoutLinkingOtherNumbers() {
+        assertEquals(Collections.singletonList("5a68"), unlockCodes("Sender " + UNLOCK_PREFIX
+                + "5a68 option 132971 {document|1300926045012061223|1300926045012061223}. 30.09.2026"));
+        assertTrue(unlockCodes("5a68 2026 option 132971").isEmpty());
+    }
+
+    @Test
+    public void preservesCodeCaseAndLeadingZeroes() {
+        for (String code : Arrays.asList("5a68", "0B2F", "0001", "1234", "abcd")) {
+            assertEquals(Collections.singletonList(code), unlockCodes(UNLOCK_PREFIX + code));
+        }
+    }
+
+    @Test
+    public void requiresExactlyFourCodeCharacters() {
+        for (String code : Arrays.asList("", "123", "abcde", "12345", "a1_2", "_5a68", "5a68_", "5a68\u044f")) {
+            assertTrue(unlockCodes(UNLOCK_PREFIX + code).isEmpty());
+        }
+    }
+
+    @Test
+    public void supportsCaseWhitespaceAndUkrainianNotification() {
+        assertEquals(Collections.singletonList("5a68"), unlockCodes(UNLOCK_PREFIX.toUpperCase(java.util.Locale.ROOT)
+                .replace(' ', '\u00a0') + "5a68."));
+        assertEquals(Collections.singletonList("5a68"), unlockCodes(UNLOCK_PREFIX.replace(" ", "\n") + "5a68,"));
+        assertEquals(Collections.singletonList("5a68"), unlockCodes(
+                "\u041a\u043e\u0434 \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u0443\u0432\u0430\u043d\u043d\u044f 5a68"));
+    }
+
+    @Test
+    public void matchesMultipleCodesAlongsideVisitLink() {
+        String number = PREFIX + "03187535";
+        String message = UNLOCK_PREFIX + "5a68, " + number + "; " + UNLOCK_PREFIX + "0B2F";
+        assertEquals(Arrays.asList("5a68", "0B2F"), unlockCodes(message));
+        assertEquals(Collections.singletonList(number), references(message));
+        assertTrue(unlockCodes("x" + UNLOCK_PREFIX + "5a68").isEmpty());
+    }
+
+    @Test
+    public void matchOffsetsSelectOnlyUnlockCode() {
+        String before = "Sender \ud83d\udcdd: " + UNLOCK_PREFIX;
+        String message = before + "5a68 option 132971";
+        Matcher matcher = ChatVisitLinks.UNLOCK_CODE_PATTERN.matcher(message);
+        assertTrue(matcher.find());
+        assertEquals(before.length(), matcher.start(1));
+        assertEquals(before.length() + 4, matcher.end(1));
+        assertEquals("5a68", message.substring(matcher.start(1), matcher.end(1)));
         assertFalse(matcher.find());
     }
 }

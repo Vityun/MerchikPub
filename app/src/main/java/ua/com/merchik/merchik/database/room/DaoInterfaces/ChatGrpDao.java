@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.database.room.DaoInterfaces;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -8,15 +9,43 @@ import androidx.room.Query;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatGrpJoinedTemp;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatGrpSDB;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatGrpTEMPSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem;
 
 @Dao
 public interface ChatGrpDao {
     @Query("SELECT * FROM chat_grp ORDER BY dt_last_update DESC")
     Single<List<ChatGrpSDB>> getAll();
+
+    @Query("SELECT * FROM chat_grp WHERE id = :id LIMIT 1")
+    Single<ChatGrpSDB> getById(int id);
+
+    // Observe both tables without rebuilding the shared temporary table.
+    @Query("SELECT chg.id AS id, COALESCE(chg.nm, '') AS nm, COALESCE(chg.dt, 0) AS dt, " +
+            "MAX(COALESCE(chg.dt_last_update, 0), COALESCE(latest.dt, 0)) AS lastUpdate, " +
+            "CASE WHEN COALESCE(latest.dt, 0) >= COALESCE(chg.dt_last_update, 0) " +
+            "THEN COALESCE(latest.msg, chg.last_msg, '') ELSE COALESCE(chg.last_msg, latest.msg, '') END AS lastMsg, " +
+            "stats.kolRead AS kolRead, stats.kolUnread AS kolUnread, stats.kolVsego AS kolVsego, " +
+            "CASE WHEN stats.kolUnread > 0 THEN 1 ELSE 0 END AS readState " +
+            "FROM chat_grp AS chg " +
+            "INNER JOIN (SELECT chat_id, COUNT(*) AS kolVsego, " +
+            "SUM(CASE WHEN dt_read > 0 THEN 1 ELSE 0 END) AS kolRead, " +
+            "SUM(CASE WHEN dt_read > 0 THEN 0 ELSE 1 END) AS kolUnread FROM chat GROUP BY chat_id) AS stats " +
+            "ON stats.chat_id = chg.id " +
+            "LEFT JOIN chat AS latest ON latest.id = " +
+            "(SELECT id FROM chat WHERE chat_id = chg.id ORDER BY dt DESC, id DESC LIMIT 1) " +
+            "ORDER BY chg.dt DESC, chg.id DESC")
+    Flowable<List<ChatListItem>> observeChatList();
+
+    // Match the chat list: only messages belonging to an available chat group.
+    @Query("SELECT COUNT(*) FROM chat AS msg " +
+            "INNER JOIN chat_grp AS chg ON chg.id = msg.chat_id " +
+            "WHERE msg.dt_read IS NULL OR msg.dt_read <= 0")
+    LiveData<Long> observeUnreadCount();
 
     /**
      * Записываю данные о кол-ве чатов во временную таблицу

@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem
 import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
@@ -85,6 +86,7 @@ class MainRepository(
             is DynamicAchievementSDB -> DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
             is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
             is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
+            is ChatListItem -> obj.fieldTitle(key)
             else -> key
         }
 
@@ -94,6 +96,7 @@ class MainRepository(
             TradeMarkDB::class -> TradeMarkRealm.getAll().firstOrNull() ?: TradeMarkDB()
             ImagesTypeListDB::class -> ImagesTypeListRealm.getAll().firstOrNull() ?: ImagesTypeListDB()
             UsersDB::class -> UsersRealm.getAll().firstOrNull() ?: UsersDB()
+            ChatListItem::class -> ChatListItem()
             else -> null
         }
 
@@ -380,7 +383,8 @@ class MainRepository(
                         )
                     } ?: key,
                     order = if (key.equals("create_time", ignoreCase = true)
-                        || (key.equals("dt", ignoreCase = true) && klass == QuestionAnswerDB::class)) -1 else 1
+                        || (key.equals("dt", ignoreCase = true) &&
+                            (klass == QuestionAnswerDB::class || klass == ChatListItem::class))) -1 else 1
                 )
             }
 

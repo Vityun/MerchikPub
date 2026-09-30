@@ -7,7 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
+import ua.com.merchik.merchik.features.main.Main.ChatToolbarTitle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.CommentViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionAndCommentView
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.TovarTabs
@@ -58,6 +60,24 @@ fun setContentOptionsData(
     composeView.setContent {
         MerchikTheme {
             MainUI(Modifier, viewModel, LocalContext.current)
+        }
+    }
+}
+
+fun setContentChatsData(composeView: ComposeView, viewModel: ChatSDBViewModel) {
+    composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+    composeView.setContent {
+        MerchikTheme {
+            MainUI(Modifier, viewModel, LocalContext.current)
+        }
+    }
+}
+
+fun setContentChatTitle(composeView: ComposeView, viewModel: ChatSDBViewModel) {
+    composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+    composeView.setContent {
+        MerchikTheme {
+            ChatToolbarTitle(viewModel)
         }
     }
 }

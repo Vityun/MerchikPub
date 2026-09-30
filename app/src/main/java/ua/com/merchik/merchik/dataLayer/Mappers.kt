@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.dataLayer.model.*
@@ -94,6 +95,7 @@ private fun DataObjectUI.fieldTitleSource(key: String): String =
 
         is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
         is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
+        is ChatListItem -> fieldTitle(key)
 
         else -> key
     }
@@ -532,6 +534,7 @@ enum class ContextUI {
     ADD_THEME_PREMIUM_QUESTION_ANSWER,
     OPTIONS,
     OPTIONS_IN_CONTAINER,
+    CHATS_IN_CONTAINER,
     SAMPLE_PHOTO_FOR_PRODUCT_GALLERY
 }
 

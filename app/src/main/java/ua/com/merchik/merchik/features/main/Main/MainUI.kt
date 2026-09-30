@@ -173,6 +173,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
@@ -233,10 +234,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val focusManager = LocalFocusManager.current
     val productCodeEditorState by viewModel.productCodeEditorState.collectAsState()
 
-    val isActiveFiltered = remember(uiState.filters, rangeDataStart, rangeDataEnd) {
+    val isActiveFiltered = remember(uiState.filters, rangeDataStart, rangeDataEnd, viewModel.contextUI) {
         val filters = uiState.filters
         filters?.searchText?.trim()?.isNotEmpty() == true ||
-                filters?.items?.any { it.rightValuesRaw.isNotEmpty() } == true ||
+                filters?.items?.any {
+                    it.rightValuesRaw.isNotEmpty() ||
+                        (viewModel.contextUI == ContextUI.CHATS_IN_CONTAINER && it.selectedChoice != null)
+                } == true ||
                 (filters?.rangeDataByKey != null && (rangeDataStart != null || rangeDataEnd != null))
     }
 
@@ -368,7 +372,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
-        if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS && optionsViewModel == null)
+        if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS && optionsViewModel == null &&
+            viewModel !is ChatSDBViewModel)
             listState.scrollToItem(0)
     }
 
@@ -1222,7 +1227,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     shape = RoundedCornerShape(4.dp)
                                 )
                             } else {
-                                ImageButton(
+                                if (viewModel.contextUI != ContextUI.CHATS_IN_CONTAINER) ImageButton(
                                     id = R.drawable.ic_maps,
                                     shape = RoundedCornerShape(4.dp),
                                     sizeButton = 40.dp,
@@ -1320,6 +1325,13 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             OptionsItemsUI(
                                 modifier = Modifier,
                                 viewModel = optionsViewModel,
+                                dataItems = dataItemsUI,
+                                groups = if (isActiveGrouped) groups else emptyList(),
+                                listState = listState
+                            )
+                        } else if (viewModel is ChatSDBViewModel) {
+                            ChatItemsUI(
+                                viewModel = viewModel,
                                 dataItems = dataItemsUI,
                                 groups = if (isActiveGrouped) groups else emptyList(),
                                 listState = listState

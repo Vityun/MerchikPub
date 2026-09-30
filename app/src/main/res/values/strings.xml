@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">092801</string>
+    <string name="ver" translatable="false">093001</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-09-28</string>
+    <string name="debug_date" translatable="false">2026-09-30</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -316,6 +316,21 @@
     <string name="master_code_copied">Мастер код скопійовано</string>
     <string name="master_code_close">Закрити</string>
 
+    <string name="chats_title">Чати</string>
+    <string name="chat_toolbar_title">Чат</string>
+    <string name="chats_reference_title">Довідник: Чати</string>
+    <string name="chats_load_error">Не вдалося завантажити чати</string>
+    <string name="chat_load_error">Не вдалося завантажити повідомлення чату</string>
+    <string name="chats_empty">Чатів не знайдено</string>
+    <string name="chats_retry">Повторити</string>
+    <string name="chat_loading">Завантаження повідомлень…</string>
+    <string name="chat_unread">Непрочитані повідомлення</string>
+    <string name="chat_read">Усі повідомлення прочитані</string>
+    <string name="chat_creation_unavailable">Створення чатів у додатку поки не підтримується</string>
+    <string name="chat_select_one">Оберіть один чат, щоб відкрити переписку</string>
+    <string name="chat_unlock_code">Код розблокування</string>
+    <string name="chat_unlock_code_copied">Код розблокування скопійовано</string>
+    <string name="chat_unlock_code_copy_error">Не вдалося скопіювати код розблокування</string>
 </resources>
 
     <!--

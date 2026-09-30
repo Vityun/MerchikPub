@@ -55,6 +55,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val isVisitOptions = viewModel is OptionsDBViewModel &&
             viewModel.contextUI == ContextUI.OPTIONS_IN_CONTAINER
+    val isChats = viewModel.contextUI == ContextUI.CHATS_IN_CONTAINER
 
     var offsetSizeFont by remember { mutableStateOf(viewModel.offsetSizeFonts.value) }
 
@@ -160,7 +161,8 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         HorizontalDivider(thickness = 1.dp)
 
                         val items = uiState.settingsItems.filterNot {
-                            isVisitOptions && it.key == "filter_select"
+                            (isVisitOptions && it.key == "filter_select") ||
+                                    (isChats && it.key in setOf("column_name", "group_header"))
                         }
 
 // индекс последнего элемента из HEADER_KEYS (учитывая что id_res_image может отсутствовать)

@@ -11,6 +11,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.compose.ui.platform.ComposeView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +28,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatGrpAdapter;
+import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatFrag;
+import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -33,9 +39,15 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
+import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class ReferencesActivity extends toolbar_menus {
+    // Set false to compare with the original RecyclerView chat list.
+    private static final boolean USE_COMPOSE_CHATS = true;
+    private static final String CHAT_FRAGMENT_TAG = "CHAT_MASSAGES";
+    private ChatSDBViewModel chatViewModel;
+    private final FragmentManager.OnBackStackChangedListener chatBackStackListener = this::updateChatVisibility;
     Globals globals = new Globals();
     AdapterUtil adapter;
     private UniversalAdapterData data = new UniversalAdapterData();
@@ -69,8 +81,80 @@ public class ReferencesActivity extends toolbar_menus {
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
 
 
-        setData();
-        setModuleData();
+        if (USE_COMPOSE_CHATS && referencesEnum == Globals.ReferencesEnum.CHAT) {
+            setComposeChats();
+        } else {
+            setData();
+            setModuleData();
+        }
+    }
+
+    private void setComposeChats() {
+        recycler.setVisibility(View.GONE);
+        findViewById(R.id.searchView).setVisibility(View.GONE);
+        findViewById(R.id.filter).setVisibility(View.GONE);
+        chatViewModel = new ViewModelProvider(this).get(ChatSDBViewModel.class);
+        chatViewModel.setContext(this);
+        setChatTitle();
+        ComposeView composeView = findViewById(R.id.references_chat_compose_container);
+        ComposeFunctions.setContentChatsData(composeView, chatViewModel);
+        getSupportFragmentManager().addOnBackStackChangedListener(chatBackStackListener);
+        updateChatVisibility();
+    }
+
+    private void setChatTitle() {
+        ConstraintLayout parent = (ConstraintLayout) activity_title.getParent();
+        ComposeView titleView = new ComposeView(this);
+        titleView.setId(R.id.references_chat_title);
+        ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+                (ConstraintLayout.LayoutParams) activity_title.getLayoutParams());
+        params.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT;
+        params.height = ConstraintLayout.LayoutParams.WRAP_CONTENT;
+        params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        activity_title.setVisibility(View.GONE);
+        parent.addView(titleView, params);
+        ComposeFunctions.setContentChatTitle(titleView, chatViewModel);
+    }
+
+    public void openChat(int chatId) {
+        FragmentManager manager = getSupportFragmentManager();
+        if (chatViewModel == null || manager.isStateSaved() || isFinishing()
+                || findViewById(R.id.references_chat_host).getVisibility() == View.VISIBLE) return;
+        findViewById(R.id.references_chat_host).setVisibility(View.VISIBLE);
+        findViewById(R.id.references_chat_compose_container).setVisibility(View.GONE);
+        manager.beginTransaction()
+                .replace(R.id.references_chat_host, ChatFrag.newInstance(chatId), CHAT_FRAGMENT_TAG)
+                .addToBackStack(CHAT_FRAGMENT_TAG)
+                .commit();
+    }
+
+    private void updateChatVisibility() {
+        if (chatViewModel == null) return;
+        boolean conversationOpen = getSupportFragmentManager().findFragmentById(R.id.references_chat_host) != null;
+        findViewById(R.id.references_chat_host).setVisibility(conversationOpen ? View.VISIBLE : View.GONE);
+        findViewById(R.id.references_chat_compose_container).setVisibility(conversationOpen ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (chatViewModel != null) chatViewModel.startObserving();
+    }
+
+    @Override
+    protected void onStop() {
+        if (chatViewModel != null) chatViewModel.stopObserving();
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        getSupportFragmentManager().removeOnBackStackChangedListener(chatBackStackListener);
+        if (chatViewModel != null && chatViewModel.getContext() == this) {
+            chatViewModel.setContext(null);
+            chatViewModel.setLauncher(null);
+        }
+        super.onDestroy();
     }
 
     private void setData() {

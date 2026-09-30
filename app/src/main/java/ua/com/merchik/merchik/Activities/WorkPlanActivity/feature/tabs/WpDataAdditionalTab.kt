@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs
 
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -9,19 +7,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelProvider
-import ua.com.merchik.merchik.Activities.CronchikViewModel
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
-import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogCloseReason
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 

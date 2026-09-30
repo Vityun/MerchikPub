@@ -371,9 +371,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         RecyclerView recyclerView = navigationView.findViewById(R.id.navigationRecycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new MenuHeaderAdapter(headerList_2, (View view, MenuItemFromWebDB item) -> {
+        MenuHeaderAdapter menuAdapter = new MenuHeaderAdapter(headerList_2, (View view, MenuItemFromWebDB item) -> {
             itemClick(view, item.getID());
-        }));
+        });
+        recyclerView.setAdapter(menuAdapter);
+        SQL_DB.chatGrpDao().observeUnreadCount().observe(this, unreadCount ->
+                menuAdapter.setUnreadChatCount(unreadCount == null ? 0L : unreadCount));
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {

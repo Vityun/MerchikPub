@@ -2361,6 +2361,7 @@ public class RealmManager {
         for (int i = 0; i < reportPrepareDBList.size(); i++) {
             list[i] = reportPrepareDBList.get(i).getTovarId();
             listRpTovId.add(reportPrepareDBList.get(i).getTovarId());
+
         }
 
 //        Log.e("TovarListFromRPByDad2", "list: " + list);
@@ -2369,6 +2370,7 @@ public class RealmManager {
                 .findAll();
 
         Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "realmResults2.size(): " + realmResults2.size());
+        logReportPrepareTovarMismatch(dad2, reportPrepareDBList, realmResults2);
 
         try {
             for (TovarDB item : realmResults2) {
@@ -2414,6 +2416,48 @@ public class RealmManager {
 
 
         return realmResults2;
+    }
+
+    private static void logReportPrepareTovarMismatch(long dad2, List<ReportPrepareDB> rows, List<TovarDB> matchedTovars) {
+        if (rows.size() == matchedTovars.size()) return;
+
+        // Diagnostics only: RP rows remain in the database, even when their product is not returned.
+        try {
+            Set<String> matchedIds = new HashSet<>();
+            for (TovarDB tovar : matchedTovars) {
+                matchedIds.add(tovar.getiD());
+            }
+            String[] requestedIds = rows.stream().map(ReportPrepareDB::getTovarId).toArray(String[]::new);
+            Map<String, TovarDB> allTovars = new HashMap<>();
+            for (TovarDB tovar : INSTANCE.where(TovarDB.class).in("iD", requestedIds).findAll()) {
+                allTovars.put(tovar.getiD(), tovar);
+            }
+
+            Map<String, Long> firstRpIds = new HashMap<>();
+            for (ReportPrepareDB rp : rows) {
+                String tovarId = rp.getTovarId();
+                TovarDB tovar = allTovars.get(tovarId);
+                String reason;
+                if (!matchedIds.contains(tovarId)) {
+                    reason = tovar == null ? "TOVAR_NOT_FOUND"
+                            : tovar.deleted == null ? "TOVAR_DELETED_NULL" : "TOVAR_DELETED";
+                } else if (firstRpIds.containsKey(tovarId)) {
+                    reason = "DUPLICATE_TOVAR_ID";
+                } else {
+                    firstRpIds.put(tovarId, rp.getID());
+                    continue;
+                }
+
+                Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2/RP_DIAGNOSTIC",
+                        "dad2=" + dad2 + ", rpId=" + rp.getID() + ", tovarId=" + tovarId
+                                + ", face=" + rp.getFace() + ", amount=" + rp.getAmount()
+                                + ", reason=" + reason + ", deleted=" + (tovar == null ? null : tovar.deleted)
+                                + ", firstRpId=" + firstRpIds.get(tovarId));
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "getTovarListFromReportPrepareByDad2/RP_DIAGNOSTIC",
+                    "dad2=" + dad2 + ", error=" + e);
+        }
     }
 
     /**

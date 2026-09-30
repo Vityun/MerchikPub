@@ -36,12 +36,30 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.MenuHeaderViewHolder> {
 
+    private static final int CHATS_MENU_ID = 160;
     private List<MenuHeader> data;
     private MenuListener listener;
+    private long unreadChatCount;
 
     public MenuHeaderAdapter(List<MenuHeader> data, MenuListener listener) {
         this.data = data;
         this.listener = listener;
+    }
+
+    public void setUnreadChatCount(long count) {
+        if (unreadChatCount == count) return;
+        unreadChatCount = count;
+        for (int i = 0; i < data.size(); i++) {
+            MenuHeader header = data.get(i);
+            boolean containsChats = header.menuItemFromWebDB.getID() == CHATS_MENU_ID;
+            for (MenuItemFromWebDB item : header.items) {
+                if (item.getID() == CHATS_MENU_ID) {
+                    containsChats = true;
+                    break;
+                }
+            }
+            if (containsChats) notifyItemChanged(i);
+        }
     }
 
     @NonNull
@@ -103,29 +121,7 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
             name.setTypeface(null, Typeface.BOLD);
             name.setShadowLayer(3, 5, 5, shadow);
 
-            // Заполнение числа
-            ArrayList arr = getNumbers(header.menuItemFromWebDB);
-            Log.e("MenuHeaderBind", "id: " + header.menuItemFromWebDB.getID());
-            Log.e("MenuHeaderBind", "arr: " + arr);
-
-            if (arr != null && arr.size() > 0) {
-                try {
-                    setNumberData(number, String.valueOf(arr.get(0)));
-                    setNumberData(number2, String.valueOf(arr.get(1)));
-                    setNumberData(number3, String.valueOf(arr.get(2)));
-                    setNumberData(number4, String.valueOf(arr.get(3)));
-
-                    number.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Количество работ по плану за " + Clock.today, Toast.LENGTH_LONG).show());
-                    number2.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Количество выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
-                    number3.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Процент выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
-
-                } catch (Exception e) {
-                    // TODO Поправить/Разобраться/Доработать
-                    // Это ужасно. Как будет время надо подумать как правильно сделать вывод этого
-                    // всего безобразия. Сейчас вылетает Exception в элементах которые не заполнены,
-                    // но я к ним обращаюсь.
-                }
-            }
+            bindNumbers(header.menuItemFromWebDB, number, number2, number3, number4);
 
 //            layout.setBackgroundColor(Color.RED);
 
@@ -265,9 +261,24 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
      * Делаю их видимыми ибо по умолчанию данные скрыты
      */
     public void setNumberData(TextView number, String data) {
-        if (!data.isEmpty()) {
-            number.setText(data);
-            number.setVisibility(View.VISIBLE);
+        number.setText(data);
+        number.setVisibility(data.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private void bindNumbers(MenuItemFromWebDB item, TextView... numbers) {
+        ArrayList values = getNumbers(item);
+        for (int i = 0; i < numbers.length; i++) {
+            // Clear reused views too, including when the unread count becomes zero.
+            setNumberData(numbers[i], i < values.size() ? String.valueOf(values.get(i)) : "");
+            numbers[i].setOnClickListener(null);
+            numbers[i].setClickable(false);
+        }
+        if (item.getID() == 129 || item.getID() == 135) {
+            numbers[0].setOnClickListener(v -> Toast.makeText(v.getContext(), "Количество работ по плану за " + Clock.today, Toast.LENGTH_LONG).show());
+            numbers[1].setOnClickListener(v -> Toast.makeText(v.getContext(), "Количество выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
+            numbers[2].setOnClickListener(v -> Toast.makeText(v.getContext(), "Процент выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
+        } else if (item.getID() == CHATS_MENU_ID) {
+            numbers[0].setOnClickListener(v -> listener.onClick(v, item));
         }
     }
 
@@ -285,6 +296,9 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
         ArrayList res = new ArrayList();
 
         switch (menuItemDB.getID()) {
+            case CHATS_MENU_ID:
+                if (unreadChatCount > 0) res.add(unreadChatCount);
+                return res;
             case 135:   // План работ/план работ
                 List<WpDataDB> data135 = RealmManager.getAllWorkPlan();
                 int wpDataCount135 = data.size();
@@ -378,29 +392,7 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
             name.setShadowLayer(3, 5, 5, shadow);
 
 
-            // Заполнение числа
-            ArrayList arr = getNumbers(item);
-            Log.e("MenuHeaderBind", "id: " + item.getID());
-            Log.e("MenuHeaderBind", "arr: " + arr);
-
-            if (arr != null && arr.size() > 0) {
-                try {
-                    setNumberData(number, String.valueOf(arr.get(0)));
-                    setNumberData(number2, String.valueOf(arr.get(1)));
-                    setNumberData(number3, String.valueOf(arr.get(2)));
-                    setNumberData(number4, String.valueOf(arr.get(3)));
-
-                    number.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Количество работ по плану за " + Clock.today, Toast.LENGTH_LONG).show());
-                    number2.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Количество выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
-                    number3.setOnClickListener(v -> Toast.makeText(itemView.getContext(), "Процент выполненых работ за " + Clock.today, Toast.LENGTH_LONG).show());
-
-                } catch (Exception e) {
-                    // TODO Поправить/Разобраться/Доработать
-                    // Это ужасно. Как будет время надо подумать как правильно сделать вывод этого
-                    // всего безобразия. Сейчас вылетает Exception в элементах которые не заполнены,
-                    // но я к ним обращаюсь.
-                }
-            }
+            bindNumbers(item, number, number2, number3, number4);
 
 
             // delete arrow

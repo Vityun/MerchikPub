@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.ReferencesActivity.Chat;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import java.util.regex.Pattern;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
@@ -24,6 +27,10 @@ public final class ChatVisitLinks {
 
     static final Pattern REPORT_DOCUMENT_PATTERN = Pattern.compile(
             "(?<![\\p{L}\\p{N}_])\u0410\u041e\u0438-[0-9]{8}(?![\\p{L}\\p{N}_])");
+
+    static final Pattern UNLOCK_CODE_PATTERN = Pattern.compile(
+            "(?<![\\p{L}\\p{N}_])код[\\s\\u00A0]+(?:разблокировки|розблокування)[\\s\\u00A0]+([\\p{L}\\p{N}]{4})(?![\\p{L}\\p{N}_])",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     private ChatVisitLinks() {
     }
@@ -46,7 +53,39 @@ public final class ChatVisitLinks {
                 }
             }, matcher.start(), matcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
+
+        Matcher codeMatcher = UNLOCK_CODE_PATTERN.matcher(text);
+        while (codeMatcher.find()) {
+            String code = codeMatcher.group(1);
+            text.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    copyUnlockCode(widget.getContext(), code);
+                }
+
+                @Override
+                public void updateDrawState(@NonNull TextPaint ds) {
+                    ds.setColor(Color.BLUE);
+                    ds.setUnderlineText(true);
+                }
+            }, codeMatcher.start(1), codeMatcher.end(1), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
         return text;
+    }
+
+    private static void copyUnlockCode(Context context, String code) {
+        try {
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null) {
+                Toast.makeText(context, R.string.chat_unlock_code_copy_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.chat_unlock_code), code));
+            Toast.makeText(context, R.string.chat_unlock_code_copied, Toast.LENGTH_SHORT).show();
+        } catch (RuntimeException e) {
+            Globals.writeToMLOG("ERROR", "ChatVisitLinks/copyUnlockCode", "exception=" + e);
+            Toast.makeText(context, R.string.chat_unlock_code_copy_error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private static void openVisit(Context context, String documentNumber) {

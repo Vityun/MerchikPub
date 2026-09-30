@@ -6,6 +6,7 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 import static ua.com.merchik.merchik.Globals.userId;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -20,8 +21,10 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import java.util.Calendar;
 import java.util.List;
 
+import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -98,14 +101,23 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         // Получение Товаров для Отчёта исполнителя
 //        if (detailedReportTovList == null || detailedReportTovList.isEmpty()) {
-        detailedReportTovList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
+        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class).equalTo("codeDad2", String.valueOf(dad2)).findAll();
+        List<ReportPrepareDB> reportPrepareDBList = INSTANCE.copyFromRealm(realmResults);
+
+        detailedReportTovList = INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
 //        }
 
-        SKUPlan = detailedReportTovList.size();
+        // С 01.11.2026 по дате визита считаем план по отфильтрованному списку товаров.
+        Calendar skuPlanSwitchDate = Calendar.getInstance();
+        skuPlanSwitchDate.clear();
+        skuPlanSwitchDate.set(2026, Calendar.NOVEMBER, 1);
+        boolean useMatchedTovarPlan = wp != null && wp.getDt() != null
+                && !wp.getDt().before(skuPlanSwitchDate.getTime());
+        SKUPlan = useMatchedTovarPlan ? detailedReportTovList.size() : reportPrepareDBList.size();
 
         // Получение REPORT PREPARE для Отчёта исполнителя
 //        if (detailedReportRPList == null || detailedReportRPList.isEmpty()) {
-        detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+        detailedReportRPList = INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        }
 
         // Обработка опции контроля
@@ -276,7 +288,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             notCloseSpannableStringBuilderDialog = true;
         }
 
-        RealmManager.INSTANCE.executeTransaction(realm -> {
+        INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
                     double penalty = calculatePenalty(wpDataDB);
