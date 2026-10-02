@@ -58,6 +58,14 @@ public class TARSecondFrag extends Fragment {
         return fragment;
     }
 
+    public static TARSecondFrag newInstanceById(int tarId) {
+        TARSecondFrag fragment = new TARSecondFrag();
+        Bundle args = new Bundle();
+        args.putInt(ARG_TAR_ID, tarId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

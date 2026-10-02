@@ -98,6 +98,8 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
+private const val WINDOW_IMAGE_DISPLAY_MODE_KEY = "window_image_display_mode"
+
 data class StateUI(
     val title: String? = null,
     val subTitle: String? = null,
@@ -1156,6 +1158,18 @@ abstract class MainViewModel(
 
     protected open val settingsVisitId: Long? get() = null
 
+    // A launch-specific layout must not change other entry points sharing the same ContextUI.
+    fun setInitialImageDisplayMode(displayMode: ImageDisplayMode) {
+        if (!savedStateHandle.contains(WINDOW_IMAGE_DISPLAY_MODE_KEY)) {
+            savedStateHandle[WINDOW_IMAGE_DISPLAY_MODE_KEY] = displayMode.name
+        }
+    }
+
+    private fun windowImageDisplayMode(): ImageDisplayMode? =
+        savedStateHandle.get<String>(WINDOW_IMAGE_DISPLAY_MODE_KEY)?.let { name ->
+            ImageDisplayMode.entries.firstOrNull { it.name == name }
+        }
+
     fun saveSettings(
         fontSizeOffset: Float? = null
     ) {
@@ -1193,6 +1207,12 @@ abstract class MainViewModel(
         displayMode: ImageDisplayMode,
         fontSizeOffset: Float? = null
     ) {
+        val persistedDisplayMode = if (windowImageDisplayMode() != null) {
+            savedStateHandle[WINDOW_IMAGE_DISPLAY_MODE_KEY] = displayMode.name
+            repository.getImageDisplayMode(table, contextUI, settingsVisitId)
+        } else {
+            displayMode
+        }
         repository.saveSettingsUI(
             table,
             SettingsUI(
@@ -1203,7 +1223,7 @@ abstract class MainViewModel(
                     .map { it.key },
                 sortFields = uiState.value.sortingFields.filter { it.key != null }
                     .map { it.copy(title = null) },
-                imageDisplayMode = displayMode,
+                imageDisplayMode = persistedDisplayMode,
                 fontSizeOffset = if (settingsVisitId != null) {
                     fontSizeOffset ?: offsetSizeFonts.value
                 } else {
@@ -1276,9 +1296,18 @@ abstract class MainViewModel(
             }
 
             val list = getDefaultHideUserFields()
-            val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI, settingsVisitId)
             val imageDisplayMode =
-                repository.getImageDisplayMode(table, contextUI, settingsVisitId) ?: ImageDisplayMode.DEFAULT
+                windowImageDisplayMode()
+                    ?: repository.getImageDisplayMode(table, contextUI, settingsVisitId)
+                    ?: ImageDisplayMode.DEFAULT
+            val settingsItems = repository.getSettingsItemList(table, contextUI, list, modeUI, settingsVisitId)
+                .map { item ->
+                    if (item.key == IMAGE_DISPLAY_MODE_SETTINGS_KEY) {
+                        item.copy(imageDisplayMode = imageDisplayMode)
+                    } else {
+                        item
+                    }
+                }
 
             val defaultSort = getDefaultSortUserFields()
             val hideSort = getHideSortUserFields()

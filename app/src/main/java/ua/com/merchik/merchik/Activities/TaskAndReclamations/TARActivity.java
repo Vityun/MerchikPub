@@ -53,6 +53,8 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener {
 
+    public static final String EXTRA_OPEN_TAR_ID = "tar_open_id";
+
     private Globals globals = new Globals();
 
 

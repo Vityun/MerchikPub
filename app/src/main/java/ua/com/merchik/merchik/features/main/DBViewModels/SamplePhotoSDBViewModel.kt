@@ -261,7 +261,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 return
             }
             val photo = prepareSamplePhoto(sample, photoContext, 0) ?: return
-            openCamera(photo) {}
+            openCamera(photo, sample.id) {}
         } catch (e: Exception) {
             Log.e("SamplePhotoSDBViewModel", "Cannot take photo for sample ${sample.id}", e)
             Toast.makeText(photoContext, "Не вдалося відкрити камеру", Toast.LENGTH_SHORT).show()
@@ -281,7 +281,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 galleryAction = isProductGallery
             ) { onStarted ->
                 if (isProductGallery) openProductGallery(onStarted)
-                else openCamera(stackPhotoDB, onStarted)
+                else openCamera(stackPhotoDB, sampleId, onStarted)
             }
         } catch (e: Exception) {
             Log.e("SamplePhotoSDBViewModel", "Cannot open sample photo", e)
@@ -330,7 +330,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         }
     }
 
-    private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
+    private fun openCamera(stackPhotoDB: StackPhotoDB?, sampleId: Int?, callback: () -> Unit) {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
         val wpDataDB =
             RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong()))
@@ -399,7 +399,9 @@ class SamplePhotoSDBViewModel @Inject constructor(
                             wpDataObj,
                             wpDataDB,
                             optionDB,
-                            stackPhotoDB
+                            stackPhotoDB,
+                            contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 &&
+                                sampleId in warehouseExceptionSampleIds
                         )
                         callback.invoke()
                     }
@@ -454,7 +456,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
             null
         }
         val customer = clientName?.let { "заказчика «$it»" } ?: "заказчика"
-        return "Есть ли на складе  данной торговой точки какой либо товар $customer?"
+        return "Есть ли на СКЛАДЕ данной торговой точки какой либо товар $customer?"
     }
 
     fun setWarehouseProductAvailable(available: Boolean) {

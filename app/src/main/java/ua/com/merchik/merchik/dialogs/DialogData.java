@@ -127,6 +127,7 @@ public class DialogData {
 
     private boolean dismissOnlyByButtonsMode = false;
     private DialogClickListener closeClickListener;
+    private Runnable onDismissAction;
     private File imageFile;
     private MerchikDatePickerLauncher datePicker;
 
@@ -153,6 +154,7 @@ public class DialogData {
         dialog.setContentView(R.layout.dialog_data);
         dialog.setOnDismissListener(d -> {
             if (!dialog.isShowing()) releaseDialogResources();
+            if (onDismissAction != null) onDismissAction.run();
         });
         dialog.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
@@ -424,6 +426,10 @@ public class DialogData {
     public void setDismissOnlyByButtonsMode(boolean enabled) {
         dismissOnlyByButtonsMode = enabled;
         applyDismissMode();
+    }
+
+    public void setOnDismissAction(Runnable action) {
+        onDismissAction = action;
     }
 
     private void applyDismissMode() {

@@ -51,6 +51,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.Options.Options
+import ua.com.merchik.merchik.Options.ReportConductManager
 import ua.com.merchik.merchik.Options.OptionControl
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.ViewHolders.Clicks
@@ -63,6 +64,7 @@ import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.features.main.options.OptionItemState
 import ua.com.merchik.merchik.features.main.options.OptionsRowFactory
+import ua.com.merchik.merchik.features.main.options.SamplePhotoCaptureResult
 
 
 @HiltViewModel
@@ -94,6 +96,11 @@ class OptionsDBViewModel @Inject constructor(
     private val _optionScroll = MutableStateFlow<OptionScrollRequest?>(null)
     val optionScroll = _optionScroll.asStateFlow()
     private var scrollSequence = 0L
+    data class PhotoFeedbackRequest(val rowId: String, val sequence: Long, val signalOnly: Boolean = false)
+    private val _photoFeedback = MutableStateFlow<PhotoFeedbackRequest?>(null)
+    val photoFeedback = _photoFeedback.asStateFlow()
+    private var photoFeedbackSequence = 0L
+    private var pendingPhotoFeedback: SamplePhotoCaptureResult.Result? = null
     private var visitDad2 = 0L
     override val settingsVisitId: Long?
         get() = visitDad2.takeIf { contextUI == ContextUI.OPTIONS_IN_CONTAINER && it > 0 }
@@ -124,7 +131,8 @@ class OptionsDBViewModel @Inject constructor(
 
     fun updateReportButton(wp: WpDataDB) {
         val (icon, tint) = when {
-            wp.setStatus == 1 -> R.drawable.ic_question_circle_regular to R.color.colorInetYellow
+            wp.setStatus == 1 || (wp.status != 1 && ReportConductManager.isAwaitingServer(wp.code_dad2)) ->
+                R.drawable.ic_question_circle_regular to R.color.colorInetYellow
             wp.status == 1 -> R.drawable.ic_check to R.color.greenCol
             (wp.dt?.time ?: Long.MAX_VALUE) < System.currentTimeMillis() ->
                 R.drawable.ic_exclamation_mark_in_a_circle to R.color.red_error
@@ -214,6 +222,7 @@ class OptionsDBViewModel @Inject constructor(
         val gallery = galleryClick ?: return
         var wp = WpDataRealm.getWpDataRowByDad2Id(visitDad2)
             ?: error("Відвідування не знайдено в локальній базі")
+        SamplePhotoCaptureResult.takeForVisit(wp.id)?.let { pendingPhotoFeedback = it }
         val workPlan = WorkPlan()
         fun readButtons() = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wp), wp.id)
         var buttons = readButtons()
@@ -225,7 +234,7 @@ class OptionsDBViewModel @Inject constructor(
         }
         // These controls use the main-thread Realm instance and may show dialogs.
         // Do not move them to Dispatchers.IO with managed Realm objects.
-        if (recheck || downloaded) {
+        if (recheck || downloaded || pendingPhotoFeedback != null) {
             val controls = Options()
             for (button in buttons) {
                 val previousSignal = button.isSignal
@@ -265,6 +274,23 @@ class OptionsDBViewModel @Inject constructor(
         rowFactory = factory
         visibleOptions = visibleButtons
         _optionRows.value = rows
+        pendingPhotoFeedback?.let { result ->
+            val sourceOption = allOptions.firstOrNull { it.getID() == result.optionRowId }
+            val row = rows.firstOrNull { it.id == result.optionRowId }
+                ?: sourceOption?.let { source ->
+                    rows.firstOrNull { it.controlId == source.optionId }
+                }
+            if (row != null) {
+                val signalOnly = result.kind == SamplePhotoCaptureResult.Kind.CORRECTION
+                val resolved = row.signal.visibility == View.VISIBLE &&
+                    (row.signal.tint == ContextCompat.getColor(host, R.color.green_default) ||
+                        row.signal.tint == ContextCompat.getColor(host, R.color.colorInetYellow))
+                _photoFeedback.value = if (!signalOnly || resolved) {
+                    PhotoFeedbackRequest(row.id, ++photoFeedbackSequence, signalOnly)
+                } else null
+            }
+            pendingPhotoFeedback = null
+        }
         updateReportButton(wp)
         onVisitReloaded?.invoke(wp)
         // Publish the same buttons to MainUI's search/filter/sort/selection pipeline.
@@ -336,6 +362,14 @@ class OptionsDBViewModel @Inject constructor(
 
     fun clearOptionsError() { _optionsError.value = null }
 
+    fun finishPhotoFeedback(sequence: Long) {
+        if (_photoFeedback.value?.sequence == sequence) _photoFeedback.value = null
+    }
+
+    fun cancelPhotoFeedback() {
+        _photoFeedback.value = null
+    }
+
     fun detachOptions() {
         hostGeneration++
         optionsJob?.cancel()
@@ -344,6 +378,8 @@ class OptionsDBViewModel @Inject constructor(
         rowFactory = null
         _optionsLoading.value = false
         _optionRows.value = emptyList()
+        _photoFeedback.value = null
+        pendingPhotoFeedback = null
         _optionsError.value = null
         visibleOptions = emptyList()
         _reportButton.value = null

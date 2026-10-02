@@ -95,7 +95,14 @@ public class TARFragmentHome extends Fragment {
             }
         }
 
-        Fragment childFragment = setHomeFrag();
+        int initialTaskId = requireActivity().getIntent().getIntExtra(TARActivity.EXTRA_OPEN_TAR_ID, 0);
+        Fragment childFragment;
+        if (initialTaskId > 0 && existingFragment == null) {
+            secondFrag = TARSecondFrag.newInstanceById(initialTaskId);
+            childFragment = secondFrag;
+        } else {
+            childFragment = setHomeFrag();
+        }
         getChildFragmentManager()
                 .beginTransaction()
                 .replace(R.id.frame_layout, childFragment)

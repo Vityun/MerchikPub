@@ -331,6 +331,10 @@
     <string name="chat_unlock_code">Код розблокування</string>
     <string name="chat_unlock_code_copied">Код розблокування скопійовано</string>
     <string name="chat_unlock_code_copy_error">Не вдалося скопіювати код розблокування</string>
+    <string name="native_text_visit_not_found">Відвідування %1$s відсутнє на цьому пристрої</string>
+    <string name="native_text_photo_not_found">Світлина %1$s відсутня на цьому пристрої</string>
+    <string name="native_text_task_not_found">Завдання або рекламація %1$s відсутні на цьому пристрої</string>
+    <string name="native_text_action_error">Не вдалося виконати дію за посиланням</string>
 </resources>
 
     <!--

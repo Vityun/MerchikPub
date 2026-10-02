@@ -816,10 +816,20 @@ public class MakePhoto {
     }
 
     public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, StackPhotoDB stackPhoto) {
+        pressedMakePhotoOldStyle(activity, wp, data, optionsDB, stackPhoto, false);
+    }
+
+    public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, StackPhotoDB stackPhoto, boolean skipCustomerGroupSelection) {
         photoType = wp.getPhotoType();
 
-        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, () -> {
-        });
+        if (skipCustomerGroupSelection) {
+            setPhotoCustomerGroup(wp, "");
+            photoDialogsNEW(activity, wp, data, optionsDB, () -> {
+            });
+        } else {
+            choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, () -> {
+            });
+        }
     }
 
     private void setPhotoCustomerGroup(WPDataObj wp, String groupId) {

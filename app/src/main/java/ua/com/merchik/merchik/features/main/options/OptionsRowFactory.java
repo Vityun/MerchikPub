@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
@@ -460,6 +461,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -481,6 +483,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_FROM_OPTION_158605.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -504,6 +507,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -526,6 +530,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -566,6 +571,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -598,6 +604,7 @@ public final class OptionsRowFactory<T> {
                                     ? photoType.getNm()
                                     : "# фото единиці товара+ценик";
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -650,6 +657,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -701,6 +709,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -712,14 +721,29 @@ public final class OptionsRowFactory<T> {
                         break;
 
                     case 164351:
-                        textInteger.text =
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45));
+                        SpannableString spannableString164351 = setPhotoCountsMakeAndMust(
+                                optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45));
+                        spannableString164351.setSpan(new UnderlineSpan(), 0, spannableString164351.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        textInteger.text = spannableString164351;
 
                         textInteger.onClick = (view, origin) -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
+                            Intent intent = new Intent(mContext, FeaturesActivity.class);
+                            FeaturesActivity.setAnchoredOrigin(intent, origin);
+                            Bundle bundle = new Bundle();
+                            ImagesTypeListDB photoType = ImagesTypeListRealm.getByID(45);
+                            String photoTypeName = photoType != null && photoType.getNm() != null
+                                    && !photoType.getNm().trim().isEmpty()
+                                    ? photoType.getNm()
+                                    : "Фото прикасової зони";
+                            bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
+                            bundle.putString("contextUI", ContextUI.STACK_PHOTO_FROM_OPTION_164351.toString());
+                            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                            bundle.putString("dataJson", new Gson().toJson(dad2));
+                            bundle.putString("title", "Перелік фото звітів");
+                            bundle.putString("subTitle", "Справочник Фото" + ": " + photoTypeName);
+                            intent.putExtras(bundle);
+                            ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                         };
                         break;
 
@@ -763,6 +787,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -784,6 +809,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -809,6 +835,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -830,6 +857,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -852,6 +880,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -873,6 +902,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -949,6 +979,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -970,6 +1001,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
 
@@ -992,6 +1024,7 @@ public final class OptionsRowFactory<T> {
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
                             Bundle bundle = new Bundle();
                             bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                            bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                             bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360.toString());
                             bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                             bundle.putString("dataJson", new Gson().toJson(dad2));

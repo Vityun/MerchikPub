@@ -427,6 +427,7 @@ public class Options {
 
                 case 579:
                 case 174974:
+                case 175121:
                     OptionMassageType type579 = new OptionMassageType();
                     switch (mode) {
                         case NULL:
@@ -1354,6 +1355,15 @@ public class Options {
      */
     public void conduct(Context context, WpDataDB wpDataDB, List<OptionsDB> options, ConductMode mode, Clicks.click click) {
         try {
+            if (wpDataDB == null || wpDataDB.getCode_dad2() <= 0) {
+                throw new IllegalArgumentException("Missing visit for conduct");
+            }
+            if (mode == DEFAULT_CONDUCT && !ReportConductUi.begin(context, wpDataDB.getCode_dad2())) return;
+            if (options == null || options.isEmpty()) {
+                throw new IllegalStateException("Options are not loaded; conduct deferred");
+            }
+            optionNotConduct.clear();
+            optionConductWithPenalty.clear();
             int register = 0;
 
             DialogData dialog = new DialogData(context);
@@ -1437,6 +1447,10 @@ public class Options {
             Globals.writeToMLOG("INFO", "Options.conduct.block",
                     "optionNotConduct: " + new Gson().fromJson(new Gson().toJson(optionNotConduct), JsonArray.class));
 
+            ReportConductManager.log("INFO", wp.getCode_dad2(),
+                    "check: mode=" + mode + ", blocking=" + optionIds(optionNotConduct)
+                            + ", penalty=" + optionIds(optionConductWithPenalty));
+
             switch (mode) {
                 case SALARY_CUT:
                     dialog.setDialogIco();
@@ -1448,7 +1462,7 @@ public class Options {
                             .append(String.format("%.2f", optionSumRes))
                             .append("грн, якщо виконаєте опції вище.");
 
-                    dialog.setText(salaryCutText, () -> {
+                    dialog.setText(OptionMessageLinks.style(context, salaryCutText), () -> {
                     });
                     dialog.show();
 
@@ -1513,87 +1527,18 @@ public class Options {
                             resStr.append("\n\nВи можете отримати ще: ")
                                     .append(Html.fromHtml("<font color=red>~" + penalty + "грн</font>")).append(", якщо виконаєте опції вище.");
 
-                        dialog.setText(resStr, () -> {
+                        dialog.setText(OptionMessageLinks.style(context, resStr), () -> {
                         });
                         if (optionNotConduct.isEmpty()) {
                             dialog.setCancel2("Виправити зауваження", () -> {
+                                ReportConductManager.log("INFO", wp.getCode_dad2(), "correction chosen; no consent to penalty");
                                 click.click(optionConductWithPenalty.get(0));
                                 dialog.dismiss();
                             });
-                            dialog.setOk("Провести звiт зі зниженням", () -> {
-                                        {
-//                            new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                                            new TablesLoadingUnloading().uploadReportPrepareToServer();
-                                            Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
-                                                @Override
-                                                public <T> void onSuccess(T data) {
-//                                    dialogData.setTitle("Команда на проведення звіту. ");
-                                                    try {
-//                                        Spanned spanned = Html.fromHtml((String) data);
-                                                        Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
-
-                                                        if (data instanceof String)
-                                                            new MessageDialogBuilder(unwrap(context))
-                                                                    .setTitle("Команда на проведення звіту.")
-                                                                    .setSubTitle("Відповідь від сервера")
-                                                                    .setMessage((String) data)
-                                                                    .setOnConfirmAction(() -> {
-                                                                        if (((String) data).contains("#134583")) {
-                                                                            DialogData dialogData = new DialogData(context);
-                                                                            dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
-                                                                            dialogData.show();
-                                                                        }
-                                                                        return Unit.INSTANCE;
-                                                                    })
-                                                                    .show();
-                                                        else
-                                                            new MessageDialogBuilder(unwrap(context))
-                                                                    .setTitle("Команда на проведення звіту.")
-                                                                    .setStatus(DialogStatus.NORMAL)
-                                                                    .setSubTitle("Надіслано на сервер")
-                                                                    .setMessage("Запит на проведення звіту успішно прийнятий сервером та буде автоматично проведений")
-                                                                    .setOnConfirmAction(() -> {
-                                                                        return Unit.INSTANCE;
-                                                                    })
-                                                                    .show();
-                                                    } catch (Exception e) {
-                                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception e: " + e);
-                                                    }
-                                                }
-
-                                                @Override
-                                                public void onFailure(String error) {
-                                                    Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
-                                                    new MessageDialogBuilder(unwrap(context))
-                                                            .setTitle("Проведення звіту...")
-                                                            .setStatus(DialogStatus.ERROR)
-                                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними." +
-                                                                    "<br> Ответ от сервера: " + error)
-                                                            .setOnConfirmAction(() -> Unit.INSTANCE)
-                                                            .show();
-
-//                                    dialogData.setTitle("Проведення звіту...");
-//                                    dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
-//                                    dialogData.show();
-
-                                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                        if (wp != null) {
-                                                            wp.startUpdate = true;
-                                                            wp.setSetStatus(1);
-                                                            wp.setDt_update(System.currentTimeMillis() / 1000);
-                                                            realm.insertOrUpdate(wp);
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                            new Exchange().startExchange();
-
-                                        }
-                                    }
-
-                            );
+                            ReportConductManager.awaitingConfirmation(wp.getCode_dad2());
+                            dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
                         }
-                        dialog.show();
+                        ReportConductUi.show(context, wp.getCode_dad2(), dialog);
                         Log.e("optionNotConduct", "3 " + resStr);
 
                     } else {
@@ -1616,7 +1561,7 @@ public class Options {
                             }
                         }
                         if (!existing.isEmpty()) {
-                            new MessageDialogBuilder(unwrap(context))
+                            MessageDialogBuilder photoDialog = new MessageDialogBuilder(unwrap(context))
                                     .setTitle("Дані не вивантажені на сервер")
                                     .setStatus(DialogStatus.ALERT)
                                     .setMessage("" +
@@ -1627,93 +1572,13 @@ public class Options {
                                             "Якщо зв’язок нестабільний, знайдіть місце з кращим прийомом сигналу та повторіть спробу.")
                                     .setOnCancelAction(() -> Unit.INSTANCE)
                                     .setOnConfirmAction("Синхронізація", () -> {
-                                                new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                                                new TablesLoadingUnloading().uploadReportPrepareToServer();
-                                                new Exchange().startExchange();
-                                                Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
-                                                            @Override
-                                                            public <T> void onSuccess(T data) {
-
-                                                            }
-
-                                                            @Override
-                                                            public void onFailure(String error) {
-
-                                                            }
-                                                        }
-                                                );
-
-                                                return Unit.INSTANCE;
-                                            }
-                                    )
-                                    .show();
-                        } else {
-//                            new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                            new TablesLoadingUnloading().uploadReportPrepareToServer();
-                            Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
-                                @Override
-                                public <T> void onSuccess(T data) {
-//                                    dialogData.setTitle("Команда на проведення звіту. ");
-                                    try {
-//                                        Spanned spanned = Html.fromHtml((String) data);
-                                        Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "data: " + data);
-
-                                        if (data instanceof String)
-                                            new MessageDialogBuilder(unwrap(context))
-                                                    .setTitle("Команда на проведення звіту.")
-                                                    .setSubTitle("Відповідь від сервера")
-                                                    .setMessage((String) data)
-                                                    .setOnConfirmAction(() -> {
-                                                        if (((String) data).contains("#134583")) {
-                                                            DialogData dialogData = new DialogData(context);
-                                                            dialogData.setTitle("Если Вы видите это сообщение то, скорее всего, Вам надо просто повторить попытку проведения через пару минут, для того, чтобы сервер успел проверить полученную от приложения информацию (фото и пр. данные).");
-                                                            dialogData.show();
-                                                        }
-                                                        return Unit.INSTANCE;
-                                                    })
-                                                    .show();
-                                        else
-                                            new MessageDialogBuilder(unwrap(context))
-                                                    .setTitle("Команда на проведення звіту.")
-                                                    .setStatus(DialogStatus.NORMAL)
-                                                    .setSubTitle("Надіслано на сервер")
-                                                    .setMessage("Запит на проведення звіту успішно прийнятий сервером та буде автоматично проведений")
-                                                    .setOnConfirmAction(() -> {
-                                                        return Unit.INSTANCE;
-                                                    })
-                                                    .show();
-                                    } catch (Exception e) {
-                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception e: " + e);
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-                                    Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
-                                    new MessageDialogBuilder(unwrap(context))
-                                            .setTitle("Проведення звіту...")
-                                            .setStatus(DialogStatus.ERROR)
-                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними." +
-                                                    "<br> Ответ от сервера: " + error)
-                                            .setOnConfirmAction(() -> Unit.INSTANCE)
-                                            .show();
-
-//                                    dialogData.setTitle("Проведення звіту...");
-//                                    dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
-//                                    dialogData.show();
-
-                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                        if (wp != null) {
-                                            wp.startUpdate = true;
-                                            wp.setSetStatus(1);
-                                            wp.setDt_update(System.currentTimeMillis() / 1000);
-                                            realm.insertOrUpdate(wp);
-                                        }
+                                        submitConduct(context, wp, true);
+                                        return Unit.INSTANCE;
                                     });
-                                }
-                            });
-                            new Exchange().startExchange();
-
+                            ReportConductManager.awaitingConfirmation(wp.getCode_dad2());
+                            ReportConductUi.show(context, wp.getCode_dad2(), photoDialog);
+                        } else {
+                            submitConduct(context, wp, false);
                         }
                     }
                     break;
@@ -1727,8 +1592,89 @@ public class Options {
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "Options/conduct/catch", "Exception e: " + e);
+            if (mode == DEFAULT_CONDUCT) {
+                ReportConductUi.release(context);
+                if (ReportConductUi.canShow(context)) {
+                    Toast.makeText(context, "Не вдалося завершити перевірку звіту. Повторіть спробу проведення.", Toast.LENGTH_LONG).show();
+                }
+            }
         }
     }
+
+    private static String optionIds(List<OptionsDB> options) {
+        List<String> ids = new ArrayList<>();
+        for (OptionsDB option : options) ids.add(option.getOptionControlId());
+        return ids.toString();
+    }
+
+    public static void resumePendingConduct(Context context, long dad2) {
+        try {
+            ReportConductState state = ReportConductManager.get(dad2);
+            if (state == null || !state.awaitingDecision() || !ReportConductUi.canShow(context)) return;
+            WpDataDB managed = WpDataRealm.getWpDataRowByDad2Id(dad2);
+            if (managed == null) return;
+            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(managed);
+            // Do not auto-resume if the process stopped before the work-end transaction committed.
+            if (wp.getVisit_end_dt() <= 0) return;
+            WorkPlan workPlan = new WorkPlan();
+            List<OptionsDB> options = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wp), wp.getId());
+            new Options().conduct(context, wp, options, DEFAULT_CONDUCT, new Clicks.click() {
+                @Override public <T> void click(T data) {
+                    OptionsDB option = (OptionsDB) data;
+                    OptionMassageType type = new OptionMassageType();
+                    type.type = DIALOG;
+                    new Options().optControl(context, wp, option, Integer.parseInt(option.getOptionControlId()),
+                            null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                @Override public void onUnlockCodeSuccess() { }
+                                @Override public void onUnlockCodeFailure() { }
+                            });
+                }
+            });
+        } catch (Exception e) {
+            ReportConductManager.log("ERROR", dad2, "resume: " + e);
+        }
+    }
+
+    private void submitConduct(Context context, WpDataDB wp, boolean uploadPhotos) {
+        try {
+            if (!ReportConductUi.canSubmit(context, wp.getCode_dad2())) return;
+            // Consent is saved before any network operation, including uploads.
+            ReportConductManager.approve(wp.getCode_dad2());
+            ReportConductUi.closeApprovedDialog(context);
+            Toast.makeText(context, "Команду проведення збережено. Вона буде передана під час обміну з сервером.",
+                    Toast.LENGTH_LONG).show();
+            try {
+                if (uploadPhotos) new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                new TablesLoadingUnloading().uploadReportPrepareToServer();
+            } catch (Exception e) {
+                ReportConductManager.log("ERROR", wp.getCode_dad2(), "upload before conduct: " + e);
+            }
+            syncConductWorkData();
+            ReportConductManager.flushPending();
+            new Exchange().startExchange();
+        } catch (Exception e) {
+            ReportConductManager.log("ERROR", wp.getCode_dad2(), "submit: " + e);
+            if (ReportConductUi.canShow(context)) {
+                Toast.makeText(context, "Не вдалося підготувати проведення. Повторіть спробу.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private static void syncConductWorkData() {
+        try {
+            new Exchange().sendWpDataToServer(new Click() {
+                @Override public <T> void onSuccess(T data) {
+                    ReportConductManager.flushPending();
+                }
+                @Override public void onFailure(String error) {
+                    ReportConductManager.flushPending();
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "ReportConduct/syncWorkData", e.toString());
+        }
+    }
+
 
     private SpannableString createLinkedString(DialogData dialogData, StringBuffer msg, OptionsDB item, Clicks.click click) {
         SpannableString res = new SpannableString(msg);
@@ -2378,6 +2324,7 @@ public class Options {
 
             case 579:
             case 174974:
+            case 175121:
                 OptionControlAvailabilityOfPrices<?> optionControlAvailabilityOfPrices = new OptionControlAvailabilityOfPrices<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityOfPrices.isBlockOption()))
                     optionControlAvailabilityOfPrices.showOptionMassage(block);
@@ -3405,6 +3352,7 @@ public class Options {
             } else {
                 if (wpDataDB.getVisit_start_dt() > 0) {
                     try {
+                        ReportConductManager.begin(wpDataDB.getCode_dad2());
                         // Сохраняю время
                         long endTime = System.currentTimeMillis() / 1000;
 
@@ -3417,64 +3365,9 @@ public class Options {
                         RealmManager.INSTANCE.executeTransaction(realm -> {
                             realm.insertOrUpdate(wpDataDB);
                         });
-                        // Это жосткие костыли
-                        // При нажатии на "Конец работы" - начинаю выгружать данные палана работ,
-                        // что б мерчик не ждал следующего автоматического обмена
-                        Exchange exchange = new Exchange();
-                        exchange.sendWpDataToServer(new Click() {
-                            @Override
-                            public <T> void onSuccess(T data) {
-                                String msg = (String) data;
-                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
-                                WorkPlan workPlan = new WorkPlan();
-                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                    @Override
-                                    public <T> void click(T data) {
-                                        OptionsDB optionsDB = (OptionsDB) data;
-                                        OptionMassageType msgType = new OptionMassageType();
-                                        msgType.type = OptionMassageType.Type.DIALOG;
-                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                            @Override
-                                            public void onUnlockCodeSuccess() {
-
-                                            }
-
-                                            @Override
-                                            public void onUnlockCodeFailure() {
-
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
-                                WorkPlan workPlan = new WorkPlan();
-                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                    @Override
-                                    public <T> void click(T data) {
-                                        OptionsDB optionsDB = (OptionsDB) data;
-                                        OptionMassageType msgType = new OptionMassageType();
-                                        msgType.type = OptionMassageType.Type.DIALOG;
-                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                            @Override
-                                            public void onUnlockCodeSuccess() {
-
-                                            }
-
-                                            @Override
-                                            public void onUnlockCodeFailure() {
-
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
+                        // Check locally now; a delayed upload callback must not open UI in the background.
+                        syncConductWorkData();
+                        resumePendingConduct(context, wpDataDB.getCode_dad2());
 
                         Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
                         Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();

@@ -176,6 +176,7 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
             ContextUI.STACK_PHOTO_FROM_OPTION_158605,
+            ContextUI.STACK_PHOTO_FROM_OPTION_164351,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
@@ -285,6 +286,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT_YDERZHANIE -> 0
 
                     ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
+                    ContextUI.STACK_PHOTO_FROM_OPTION_164351 -> 45
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
@@ -407,6 +409,7 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
                 ContextUI.STACK_PHOTO_FROM_OPTION_158605,
+                ContextUI.STACK_PHOTO_FROM_OPTION_164351,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213,
@@ -484,6 +487,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> 0
 
                         ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
+                        ContextUI.STACK_PHOTO_FROM_OPTION_164351 -> 45
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39

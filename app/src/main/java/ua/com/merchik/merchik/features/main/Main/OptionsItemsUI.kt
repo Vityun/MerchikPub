@@ -4,6 +4,7 @@ import android.app.Activity
 import android.text.Spanned
 import android.view.View
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -37,6 +38,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +52,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
@@ -63,7 +67,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
@@ -97,6 +104,7 @@ fun OptionsItemsUI(
     val loading by viewModel.optionsLoading.collectAsState()
     val error by viewModel.optionsError.collectAsState()
     val scrollRequest by viewModel.optionScroll.collectAsState()
+    val photoFeedback by viewModel.photoFeedback.collectAsState()
     val hostView = LocalView.current
     val context = LocalContext.current
     val activity = context as? Activity
@@ -169,6 +177,9 @@ fun OptionsItemsUI(
                         viewModel.modeUI == ModeUI.MULTI_SELECT || viewModel.modeUI == ModeUI.ONE_SELECT,
                     onCheckedChange = { if (!loading) viewModel.updateItemSelect(it, item) },
                     pulseSequence = if (highlightedId == row.id) highlightSequence else 0L,
+                    photoFeedbackSequence = photoFeedback?.takeIf { it.rowId == row.id }?.sequence ?: 0L,
+                    photoFeedbackSignalOnly = photoFeedback?.signalOnly == true,
+                    onPhotoFeedbackFinished = viewModel::finishPhotoFeedback,
                     onClick = { target, origin -> viewModel.onOptionClick(row.id, target, hostView, origin) },
                     onLongClick = { viewModel.onOptionLongClick(row.id, hostView) }
                 )
@@ -222,6 +233,9 @@ private fun OptionItemUI(
     showSelection: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     pulseSequence: Long,
+    photoFeedbackSequence: Long,
+    photoFeedbackSignalOnly: Boolean,
+    onPhotoFeedbackFinished: (Long) -> Unit,
     onClick: (OptionsDBViewModel.OptionClickTarget, LaunchOrigin?) -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -239,6 +253,44 @@ private fun OptionItemUI(
     val displayOptionId = showOptionId && row.optionId.visibility != View.GONE
     val displayCounter = row.counter.shouldDisplay(showMonetaryValues)
     val displaySecondaryCounter = row.secondaryCounter.shouldDisplay(showMonetaryValues)
+    val counterScale = remember(row.id) { Animatable(1f) }
+    val signalScale = remember(row.id) { Animatable(1f) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val currentEnabled by rememberUpdatedState(enabled)
+    val currentViolation by rememberUpdatedState(
+        row.signal.visibility == View.VISIBLE &&
+            Color(row.signal.tint) == colorResource(R.color.red_error)
+    )
+    val currentCounterVisible by rememberUpdatedState(displayCounter && row.counter.visibility == View.VISIBLE)
+    val currentSignalVisible by rememberUpdatedState(row.signal.visibility == View.VISIBLE)
+    val onFeedbackFinished by rememberUpdatedState(onPhotoFeedbackFinished)
+    LaunchedEffect(row.id, photoFeedbackSequence, photoFeedbackSignalOnly, lifecycleOwner) {
+        counterScale.snapTo(1f)
+        signalScale.snapTo(1f)
+        if (photoFeedbackSequence == 0L) return@LaunchedEffect
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            counterScale.snapTo(1f)
+            signalScale.snapTo(1f)
+            if (photoFeedbackSignalOnly) {
+                snapshotFlow { currentEnabled }.first { it }
+                if (!currentViolation && currentSignalVisible) pulseTwice(signalScale, 1.1f)
+                onFeedbackFinished(photoFeedbackSequence)
+                return@repeatOnLifecycle
+            }
+            do {
+                // Wait for recalculation, including edits made in the photo journal.
+                snapshotFlow { currentEnabled }.first { it }
+                if (currentCounterVisible) pulseTwice(counterScale, 1.16f)
+                delay(180)
+                snapshotFlow { currentEnabled }.first { it }
+                if (currentSignalVisible) pulseTwice(signalScale, 1.1f)
+                snapshotFlow { currentEnabled }.first { it }
+                if (!currentViolation) break
+                delay(700)
+            } while (currentViolation)
+            onFeedbackFinished(photoFeedbackSequence)
+        }
+    }
     val shape = RoundedCornerShape(8.dp)
     Box(
         Modifier.fillMaxWidth().graphicsLayer { scaleX = scale.value; scaleY = scale.value }
@@ -276,6 +328,7 @@ private fun OptionItemUI(
                     horizontalAlignment = Alignment.End) {
                     if (displayCounter) {
                         OptionText(row.counter, Modifier.widthIn(min = counterMinWidth)
+                            .graphicsLayer { scaleX = counterScale.value; scaleY = counterScale.value }
                             .captureLaunchOrigin { counterOrigin = it }, if (enabled && row.counter.onClick != null) {
                             { onClick(OptionsDBViewModel.OptionClickTarget.COUNTER, counterOrigin) }
                         } else null, textStyle = TextStyle(textAlign = TextAlign.Center))
@@ -293,12 +346,21 @@ private fun OptionItemUI(
                 contentDescription = "Перевірити статус: ${row.title.text}",
                 colorFilter = ColorFilter.tint(Color(row.signal.tint)),
                 modifier = Modifier.padding(vertical = 8.dp).size(50.dp)
+                    .graphicsLayer { scaleX = signalScale.value; scaleY = signalScale.value }
                     .alpha(if (row.signal.visibility == View.VISIBLE) 1f else 0f)
                     .clickable(enabled = enabled && row.signal.visibility == View.VISIBLE) {
                         onClick(OptionsDBViewModel.OptionClickTarget.SIGNAL, null)
                     }
             )
         }
+    }
+}
+
+private suspend fun pulseTwice(scale: Animatable<Float, AnimationVector1D>, peak: Float) {
+    repeat(2) {
+        scale.animateTo(peak, tween(160))
+        scale.animateTo(1f, tween(200))
+        if (it == 0) delay(90)
     }
 }
 

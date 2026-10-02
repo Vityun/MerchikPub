@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.Options.ReportConductManager;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
@@ -558,7 +559,8 @@ public class DetailedReportOptionsFrag extends Fragment {
         ((TextView) root.findViewById(R.id.planfact)).setText(sb);
 
         ImageView check = root.findViewById(R.id.check);
-        if (wpDataDB.getSetStatus() == 1) {
+        if (wpDataDB.getSetStatus() == 1 || (wpDataDB.getStatus() != 1
+                && ReportConductManager.isAwaitingServer(wpDataDB.getCode_dad2()))) {
             check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
             check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
         } else {

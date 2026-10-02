@@ -58,6 +58,12 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
     public int OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID = 579;
     public int OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID = 174974;
+    public int OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID = 175121;
+
+    private static final String MIN_MAX_PRICE_TEXT =
+            "ЦЕНУ ДО ПОЧАТКУ АКЦІЇ (див. ЗАКРЕСЛЕНУ ціну на АКЦІЙНОМУ ціннику)";
+    private static final String MIN_MAX_PRICE_NAME =
+            "ЦІНА ДО ПОЧАТКУ АКЦІЇ (див. ЗАКРЕСЛЕНУ ціну на АКЦІЙНОМУ ціннику)";
 
 
     public boolean signal = true;
@@ -104,14 +110,17 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
         // Получение RP по данному документу.
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-        boolean isPriceOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID);
+        boolean isMinMaxOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID);
+        boolean isPriceOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID) || isMinMaxOption;
         boolean isOsvOnlyOption = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID);
 
         // Получение Доп. Требований с дополнительными фильтрами.
         List<AdditionalRequirementsDB> additionalRequirements = Collections.emptyList();
         int requirementsOptionId = isOsvOnlyOption
                 ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID
-                : OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID;
+                : (isMinMaxOption
+                ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID
+                : OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID);
         String[] tovIds;
         if (isPriceOption || isOsvOnlyOption) {
             additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, requirementsOptionId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
@@ -133,7 +142,10 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
 
         SpannableStringBuilder errMsg = new SpannableStringBuilder();
-        errMsg.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) вы должны обязательно указать ЦЕНУ:").append("\n\n");
+        errMsg.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) вы должны обязательно указать ")
+                .append(isMinMaxOption ? MIN_MAX_PRICE_TEXT : "ЦЕНУ")
+                .append(":")
+                .append("\n\n");
 
         // 5.0
         List<String> osvTovarIds = Arrays.asList(tovIds);
@@ -158,6 +170,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 }
 
                 boolean hasPrice = hasPositivePrice(item);
+                // 1С: for option 175121 both the regular price before the promotion
+                // and the promotional price must be present for an OSV item.
+                boolean hasRequiredOsvPrice = isMinMaxOption
+                        ? hasPositivePrice(item.getPriceMin()) && hasPositivePrice(item.getPriceMax())
+                        : hasPrice;
 
                 if (hasOsvList) {
                     if (!isOSV) {
@@ -166,7 +183,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     }
 
                     totalOSV++;
-                    if (hasPrice) {
+                    if (hasRequiredOsvPrice) {
                         foundWithPrice++;
                         item.find = 1;
                     } else {
@@ -239,13 +256,34 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             spannableStringBuilder.append("Замечаний по предоставлению информации о Ценах по товарам с ОСВ (Особым Вниманием) нет.");
             signal = false;
         } else if (found == 0) {
-            spannableStringBuilder.append("Ни у одного товара не указана Цена.");
+            if (isMinMaxOption) {
+                spannableStringBuilder.append("Ни у одного товара не указана ")
+                        .append(MIN_MAX_PRICE_NAME)
+                        .append(".");
+            } else {
+                spannableStringBuilder.append("Ни у одного товара не указана Цена.");
+            }
             signal = true;
         } else if (found < colMin) {
-            spannableStringBuilder.append("Вы указали данные о ценах у ").append("" + found).append(" товаров, что меньше минимально допустимого ").append("" + colMin);
+            if (isMinMaxOption) {
+                spannableStringBuilder.append("Вы указали ")
+                        .append(MIN_MAX_PRICE_TEXT.toLowerCase())
+                        .append(" у ")
+                        .append(String.valueOf(found))
+                        .append(" товаров, что меньше минимально допустимого ")
+                        .append(String.valueOf(colMin));
+            } else {
+                spannableStringBuilder.append("Вы указали данные о ценах у ").append("" + found).append(" товаров, что меньше минимально допустимого ").append("" + colMin);
+            }
             signal = true;
         } else {
-            spannableStringBuilder.append("Замечаний по предоставлению информации о Ценах по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
+            if (isMinMaxOption) {
+                spannableStringBuilder.append("Замечаний по предоставлению информации о ")
+                        .append(MIN_MAX_PRICE_NAME.toLowerCase())
+                        .append(" по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
+            } else {
+                spannableStringBuilder.append("Замечаний по предоставлению информации о Ценах по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
+            }
             signal = false;
         }
 
@@ -283,7 +321,9 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 setIsBlockOption(signal);
                 spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
             } else {
-                spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете указывать цены на товары.");
+                spannableStringBuilder.append("\n\n").append(isMinMaxOption
+                        ? "Вы можете получить Премиальные БОЛЬШЕ, если будете указывать цену ДО ПОЧАТКУ АКЦІЇ и акционную цену на товары."
+                        : "Вы можете получить Премиальные БОЛЬШЕ, если будете указывать цены на товары.");
             }
         }
 
@@ -298,6 +338,10 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
     private boolean hasPositivePrice(ReportPrepareDB item) {
         return parsePositiveNumber(item != null ? item.getPrice() : null);
+    }
+
+    private boolean hasPositivePrice(String value) {
+        return parsePositiveNumber(value);
     }
 
     private boolean parsePositiveNumber(String value) {

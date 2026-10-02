@@ -160,6 +160,13 @@ public class DialogFullPhoto {
         if (dialog != null) dialog.dismiss();
     }
 
+    public void setOnDismissListener(Clicks.clickVoid listener) {
+        dialog.setOnDismissListener(ignored -> {
+            timer.cancel();
+            listener.click();
+        });
+    }
+
     public void setClose(DialogData.DialogClickListener clickListener) {
         close.setOnClickListener(v -> {
             Log.e("!!!!!!!!!!!!", "setClose: " + isCommentSave);

@@ -49,6 +49,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.Lifecycle
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -63,6 +65,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.LaunchOrigin
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement
@@ -97,12 +100,15 @@ import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedContent
+import ua.com.merchik.merchik.features.main.options.SamplePhotoCaptureResult
+import ua.com.merchik.merchik.features.main.options.OptionPhotoCorrection
 import ua.com.merchik.merchik.toolbar_menus
 
 @AndroidEntryPoint
 class FeaturesActivity : AppCompatActivity() {
     companion object {
         private const val EXTRA_ANCHORED_TRANSITION = "launch_anchored_transition"
+        const val EXTRA_INITIAL_IMAGE_DISPLAY_MODE = "initial_image_display_mode"
 
         @JvmStatic
         fun setAnchoredOrigin(intent: Intent, origin: LaunchOrigin?) {
@@ -128,9 +134,11 @@ class FeaturesActivity : AppCompatActivity() {
     private var anchoredContentAttached = false
     private var finishAfterAnimation = false
     private val anchoredCloseRequested = mutableStateOf(false)
+    private var photoCorrectionSession: OptionPhotoCorrection.Session? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        photoCorrectionSession = OptionPhotoCorrection.readSession(intent)
 
         launchOrigin = intent?.readLaunchOriginOrNull() ?: LaunchOrigin(0,0,0,0)
 
@@ -239,6 +247,10 @@ class FeaturesActivity : AppCompatActivity() {
                                                 "idResImage"
                                             )
                                         viewModel.context = LocalContext.current
+                                        bundle.getString(EXTRA_INITIAL_IMAGE_DISPLAY_MODE)?.let { name ->
+                                            ImageDisplayMode.entries.firstOrNull { it.name == name }
+                                                ?.let(viewModel::setInitialImageDisplayMode)
+                                        }
                                         viewModel.updateContent()
                                         MainUI(
                                             modifier = Modifier.then(
@@ -308,7 +320,10 @@ class FeaturesActivity : AppCompatActivity() {
                 )
             }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
-            DetailedReportActivity.savePhoto(Globals(), this)
+            val saved = DetailedReportActivity.savePhoto(Globals(), this)
+            if (saved && intent.getStringExtra("viewModel") == SamplePhotoSDBViewModel::class.java.canonicalName) {
+                finishSamplePhotoCapture()
+            }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
             MakePhoto.getPendingPhotoNum(this)?.takeIf { it.isNotBlank() }?.let {
                 StackPhotoRealm.deleteByPhotoNum(it)
@@ -330,8 +345,25 @@ class FeaturesActivity : AppCompatActivity() {
             anchoredCloseRequested.value = true
             return
         }
+        OptionPhotoCorrection.complete(photoCorrectionSession)
+        photoCorrectionSession = null
         super.finish()
         if (anchoredTransition) overridePendingTransition(0, 0)
+    }
+
+    private fun finishSamplePhotoCapture() {
+        try {
+            val source = Gson().fromJson(intent.getStringExtra("dataJson"), JsonObject::class.java)
+            val visitId = source?.get("wpDataDBId")?.asString?.toLongOrNull()
+            val optionRowId = source?.get("optionDBId")?.asString
+            if (visitId != null && !optionRowId.isNullOrBlank()) {
+                SamplePhotoCaptureResult.publish(visitId, optionRowId)
+            }
+        } catch (error: Exception) {
+            Globals.writeToMLOG("ERROR", "FeaturesActivity/samplePhotoResult", "error=$error")
+        }
+        setResult(RESULT_OK, Intent().putExtra("photo_saved", true))
+        finish()
     }
 
     private fun completeAnimatedFinish() {

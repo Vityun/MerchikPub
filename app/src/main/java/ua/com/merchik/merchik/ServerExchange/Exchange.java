@@ -49,6 +49,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.ReportConductManager;
 import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.AddressExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CityExchange;
@@ -2415,7 +2416,9 @@ public class Exchange {
 
         List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
         final List<StartEndData> sentSnapshot = new ArrayList<>(wpdataStartEnd);
+        final int sentUserId = Globals.getCurrentUserId();
         if (wpdataStartEnd.isEmpty()) {
+            ReportConductManager.flushPending();
             result.onFailure("Нет даных");
             return;
         }
@@ -2457,20 +2460,23 @@ public class Exchange {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
                                 if (response.body().state) {
+                                    if (response.body().error == null || response.body().error.isEmpty()) {
+                                        ReportConductManager.workDataUploaded(sentUserId, sentSnapshot);
+                                    }
                                     if (response.body().data != null && !response.body().data.isEmpty()) {
                                         saveWpDataResult(response.body().data, sentSnapshot);
                                         isdownloadWPData.set(false);
-                                        result.onSuccess("Данные о проведении обработаны успешно.");
+                                        result.onSuccess("Дані відвідування передано на сервер.");
                                     } else if (response.body().error != null && !response.body().error.equals("")) {
                                         Globals.writeToMLOG("ERROR", "Exchange.sendWpDataToServer.onResponse.response.body().error", "Error: " + response.body().error);
                                         isdownloadWPData.set(false);
                                         result.onFailure("Возникла проблемма с обработкой данных на сервере по причине: " + response.body().error);
                                     } else if (response.body().data == null) {
                                         isdownloadWPData.set(false);
-                                        result.onSuccess("Запрос на проведение прошел успешно, но данных для обработки сервер не вернул.");
+                                        result.onSuccess("Оновлення даних відвідування оброблено, сервер не повернув змін.");
                                     } else {
                                         isdownloadWPData.set(false);
-                                        result.onSuccess("Запрос на проведение прошел успешно.");
+                                        result.onSuccess("Оновлення даних відвідування оброблено.");
                                     }
                                 } else {
                                     isdownloadWPData.set(false);
@@ -2490,6 +2496,7 @@ public class Exchange {
                         result.onFailure("Произошла ошибка в анализе данных. \nОшибка: " + e);
                     }
                     isdownloadWPData.set(false);
+                    ReportConductManager.flushPending();
                 }
 
                 @Override
@@ -2497,6 +2504,7 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
                     isdownloadWPData.set(false);
                     result.onFailure("Возникла ошибка связи. Проверьте состояние интернета и повторите попытку позже. \nОшибка: " + t);
+                    ReportConductManager.flushPending();
                 }
             });
         } else
@@ -3449,7 +3457,21 @@ public class Exchange {
      * 29.11.22.
      * Создание прямого запроса на Проведение документа.
      */
+    public interface ConductCallback {
+        void onAccepted(String notice);
+        void onRejected(String error);
+        void onRetry(String error);
+    }
+
     public static void conductingOnServerWpData(WpDataDB wp, long codeDad2, Click click) {
+        conductingOnServerWpData(codeDad2, new ConductCallback() {
+            @Override public void onAccepted(String notice) { click.onSuccess(notice); }
+            @Override public void onRejected(String error) { click.onFailure(error); }
+            @Override public void onRetry(String error) { click.onFailure(error); }
+        });
+    }
+
+    public static void conductingOnServerWpData(long codeDad2, ConductCallback callback) {
         StandartData data = new StandartData();
         data.mod = "plan";
         data.act = "document_complete";
@@ -3466,33 +3488,36 @@ public class Exchange {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
                 try {
-                    Log.e("conductingOnServer", "response: " + response);
-                    String text = response.body().notice;
-                    Log.e("conductingOnServer", "response: " + text);
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess", "resul: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
-                            Log.e("conductingOnServer", "response: " + new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class));
-                            if (response.body().state) {
-                                // Пока пусть будет, я не знаю что им там в голову бахнет
-                                if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
-                                    click.onSuccess(response.body().notice);
-                                } else {
-                                    click.onSuccess(response.body().notice);
-//                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
-                                }
-                            } else {
-                                click.onFailure("Не можу обробити документ, причина: " + response.body().error);
-                            }
+                    if (!response.isSuccessful()) {
+                        String error = "Код відповіді сервера: " + response.code();
+                        if (response.code() == 408 || response.code() == 429 || response.code() >= 500) {
+                            callback.onRetry(error);
                         } else {
-                            click.onFailure("Нема даних для обробки.");
+                            callback.onRejected(error);
                         }
+                        return;
+                    }
+                    ConductWpDataResponse body = response.body();
+                    if (body == null) {
+                        callback.onRetry("Сервер повернув порожню відповідь.");
+                        return;
+                    }
+                    Globals.writeToMLOG("INFO", "Options/conductingOnServerWpData/onSuccess",
+                            "dad2=" + codeDad2 + ", result: " + new Gson().toJson(body));
+                    if (body.state) {
+                        // Acceptance and completion are different: do not resend an accepted command.
+                        callback.onAccepted(body.notice != null && !body.notice.trim().isEmpty()
+                                ? body.notice : "Команду прийнято сервером.");
+                    } else if (body.error != null && !body.error.trim().isEmpty()) {
+                        callback.onRejected(body.error);
+                    } else if (body.notice != null && !body.notice.trim().isEmpty()) {
+                        callback.onRejected(body.notice);
                     } else {
-                        click.onFailure("Код запиту до сервера: " + response.code());
+                        callback.onRetry("Неповна відповідь сервера на команду проведення.");
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception: " + e.getMessage());
-
+                    callback.onRetry("Помилка обробки відповіді: " + e.getMessage());
                 }
             }
 
@@ -3500,7 +3525,7 @@ public class Exchange {
             public void onFailure(Call<ConductWpDataResponse> call, Throwable t) {
                 Log.e("conductingOnServer", "Throwable t: " + t);
                 Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onFailure", "Exception: " + t.getMessage());
-                click.onFailure("Нема зв'язку. Помилка: " + t);
+                callback.onRetry("Нема зв'язку. Помилка: " + t);
             }
         });
     }

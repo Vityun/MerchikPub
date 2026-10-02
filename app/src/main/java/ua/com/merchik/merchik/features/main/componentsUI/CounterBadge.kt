@@ -65,7 +65,7 @@ fun CounterBadge(
         border = BorderStroke(1.dp, borderAndTextColor)
     ) {
         Box(
-            modifier = if (unlimited) Modifier.padding(horizontal = horizontalPadding, vertical = 0.dp) else Modifier.fillMaxSize(),
+            modifier = if (unlimited) Modifier.padding(horizontal = horizontalPadding, vertical = 1.dp) else Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Text(

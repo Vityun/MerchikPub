@@ -113,6 +113,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
+import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
@@ -330,7 +331,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 135719   // "Дет.Отчет" (оценка)
                         || optionId == 143969   // "СМС-код Клиенту" (электронный контрольный лист ЭКЛ)
                         || optionId == 160567   // Витрины
-                        || optionId == 164351   // Контроль наявності світлини прикасової зони
+                        || optionId == 164351   // Контроль наявності світлини прикасової зони (45)
                         || optionId == 164355   // "Фото Планограммы ТТ"
                         || optionId == 132812   // Хочу увеличение оплаты
                         || optionId == 165481   // Кнопка ЭФФИ
@@ -556,6 +557,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -586,6 +588,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.STACK_PHOTO_FROM_OPTION_158605.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -608,6 +611,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -629,6 +633,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -670,6 +675,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -701,6 +707,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                         ? photoType.getNm()
                                         : "# фото единиці товара+ценик";
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_175015.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -751,6 +758,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -814,6 +822,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -876,6 +885,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -902,6 +912,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -926,6 +937,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -949,6 +961,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -976,6 +989,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -1000,6 +1014,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -1075,6 +1090,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
@@ -1095,6 +1111,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
 //                                JsonObject dataJson = new JsonObject();
@@ -1121,6 +1138,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
                                 bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name());
                                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));

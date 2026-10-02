@@ -92,6 +92,9 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations WHERE id = :id")
     TasksAndReclamationsSDB getById(int id);
 
+    @Query("SELECT * FROM tasks_and_reclamations WHERE id_1c = :number AND tp = :tp LIMIT 1")
+    TasksAndReclamationsSDB getByDocumentNumber(String number, int tp);
+
     @Query("SELECT EXISTS (SELECT 1 FROM tasks_and_reclamations AS tar " +
             "INNER JOIN theme_list AS theme ON theme.id = CAST(tar.theme_id AS TEXT) " +
             "WHERE :codeDad2 > 0 AND tar.code_dad2_src_doc = :codeDad2 " +

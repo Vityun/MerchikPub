@@ -79,6 +79,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.ReportConductUi;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
@@ -345,6 +346,15 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onResume() {
         super.onResume();
         syncPauseWorkUi();
+        getWindow().getDecorView().post(() -> {
+            try {
+                if (wpDataDB != null) {
+                    ReportConductUi.resume(this, wpDataDB.getCode_dad2());
+                }
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "ReportConduct/onResume", e.toString());
+            }
+        });
     }
 
     public void startPauseWorkUi(WpDataDB sourceWpData) {
@@ -1113,13 +1123,13 @@ public class DetailedReportActivity extends toolbar_menus {
         }
     }
 
-    public static void savePhoto(Globals globals, Activity activity) {
+    public static boolean savePhoto(Globals globals, Activity activity) {
         MakePhoto.restorePendingPhoto(activity);
         String pendingPhotoNum = MakePhoto.getPendingPhotoNum(activity);
         if (TextUtils.isEmpty(pendingPhotoNum)) {
             Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Pending photo path is empty");
             showPhotoSaveError(activity, "Не удалось завершить сохранение фото: потерян путь к файлу. Повторите съемку.");
-            return;
+            return false;
         }
 
         File photoFile = new File(pendingPhotoNum);
@@ -1143,7 +1153,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "StackPhoto row not found for photoNum: " + pendingPhotoNum);
                     MakePhoto.clearPendingPhoto(activity);
                     showPhotoSaveError(activity, "Не удалось завершить сохранение фото: запись фото не найдена в базе. Повторите съемку.");
-                    return;
+                    return false;
                 }
 
                 StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(pendingPhoto);
@@ -1167,7 +1177,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
                     MakePhoto.clearPendingPhoto(activity);
                     showPhotoSaveError(activity, "Не удалось завершить сохранение фото: файл не найден после обработки. Повторите съемку.");
-                    return;
+                    return false;
                 }
 
                 exifPhotoData(photoFile);
@@ -1209,6 +1219,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
                 MakePhoto.clearPendingPhoto(activity);
+                return true;
             } catch (OutOfMemoryError e) {
                 StackPhotoRealm.deleteByPhotoNum(pendingPhotoNum);
                 MakePhoto.clearPendingPhoto(activity);
@@ -1220,6 +1231,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
                 showPhotoSaveError(activity, "Не удалось завершить сохранение фото. Повторите съемку.");
             }
+        return false;
     }
 
 

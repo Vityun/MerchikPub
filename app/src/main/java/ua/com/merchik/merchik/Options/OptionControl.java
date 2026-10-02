@@ -111,7 +111,7 @@ public class OptionControl<T> {
 
                         if (stringBuilderMsg.toString().length() > 1) {
                             dialog.setTitle(optionTitle);
-                            dialog.setText(msg + stringBuilderMsg);
+                            dialog.setText(OptionMessageLinks.style(context, msg + stringBuilderMsg));
                             if (block) {
                                 dialog.setDialogIco();
                             } else {
@@ -127,6 +127,7 @@ public class OptionControl<T> {
                             }
                             SpannableStringBuilder text = new SpannableStringBuilder();
                             text.append(msg).append(spannableStringBuilder);
+                            text = OptionMessageLinks.style(context, text);
                             if (notCloseSpannableStringBuilderDialog) {
                                 dialog.setText(text, () -> {
                                 });
@@ -142,7 +143,7 @@ public class OptionControl<T> {
                         } else if (massageToUser.length() > 1) {  // НЕ ЮЗАЙ ЭТО
 //                            DialogData dialog = new DialogData(context);
                             dialog.setTitle(optionTitle);
-                            dialog.setText(massageToUser);
+                            dialog.setText(OptionMessageLinks.style(context, massageToUser));
                             if (block) {
                                 dialog.setDialogIco();
                             }

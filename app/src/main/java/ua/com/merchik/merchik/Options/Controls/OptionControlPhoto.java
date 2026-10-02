@@ -4,11 +4,13 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
+import androidx.core.content.ContextCompat;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -20,6 +22,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -39,6 +42,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.features.main.options.OptionPhotoCorrection;
 
 public class OptionControlPhoto<T> extends OptionControl {
     public int OPTION_CONTROL_PHOTO_ID = 84932;
@@ -447,7 +451,8 @@ public class OptionControlPhoto<T> extends OptionControl {
                     m = 2;
                     int photoWithComment = 0;
                     spannableStringBuilder.clear();
-                    String baseEmptyComment = "У свiтлин: ";
+                    SpannableStringBuilder baseEmptyComment = new SpannableStringBuilder("У свiтлин: ");
+                    boolean hasPhotoWithoutComment = false;
                     List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
                     for (StackPhotoDB photo : stackPhotoDBList) {
                         if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
@@ -455,7 +460,12 @@ public class OptionControlPhoto<T> extends OptionControl {
                             if (comment != null && comment.length() > 10) {
                                 photoWithComment++;
                             } else {
-                                baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
+                                if (hasPhotoWithoutComment) baseEmptyComment.append(", ");
+                                String photoId = photo.getPhotoServerId();
+                                String photoLabel = isEmpty1c(photoId)
+                                        ? "лок. " + photo.getId() : photoId.trim();
+                                baseEmptyComment.append(createWarehousePhotoLink(photoLabel, photo));
+                                hasPhotoWithoutComment = true;
                             }
                         }
                     }
@@ -469,10 +479,13 @@ public class OptionControlPhoto<T> extends OptionControl {
                         } else
 //                    if (baseEmptyComment.length() > 20)
                         {
-                            baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
+                            notCloseSpannableStringBuilderDialog = true;
                             signal = true;
                             spannableStringBuilder.append(baseEmptyComment)
-                                    .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78 (або 94), повинен бути доданий коментар довжиною більше 10 символів");
+                                    .append(" немає ").append(createWarehousePhotoLink("коментаря", null)).append(".\n")
+                                    .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78 (або 94), повинен бути доданий ")
+                                    .append(createWarehousePhotoLink("коментар", null))
+                                    .append(" довжиною більше 10 символів");
                         }
                     } else {
                         spannableStringBuilder.append("Скарг щодо виконання фото немає. Зроблено: ").append(String.valueOf(count)).append(" фото.");
@@ -662,6 +675,32 @@ public class OptionControlPhoto<T> extends OptionControl {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private SpannableString createWarehousePhotoLink(String label, StackPhotoDB photo) {
+        SpannableString link = new SpannableString(label);
+        long visitId = wpDataDB.getId();
+        String optionRowId = optionDB.getID();
+        String photoServerId = photo != null ? photo.getPhotoServerId() : null;
+        Integer localPhotoId = photo != null ? photo.getId() : null;
+        link.setSpan(new ClickableSpan() {
+            @Override
+            public void onClick(View view) {
+                if (localPhotoId == null) {
+                    OptionPhotoCorrection.openJournal(context, visitId, optionRowId);
+                } else {
+                    OptionPhotoCorrection.openPhoto(context, visitId, optionRowId, photoServerId, localPhotoId);
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setColor(ContextCompat.getColor(context, R.color.blue));
+                ds.setUnderlineText(true);
+            }
+        }, 0, link.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return link;
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB rp, int photoType) {
