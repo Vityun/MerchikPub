@@ -1419,6 +1419,12 @@ class TovarDBViewModel @Inject constructor(
                     leading = MenuLeading.BadgeText("Ц")
                 ),
                 ContextMenuEntry.Action(
+                    id = "tovar_price_before_promotion",
+                    actionId = ContextMenuActionIds.TOVAR_PRICE_BEFORE_PROMOTION,
+                    title = "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ",
+                    leading = MenuLeading.BadgeText("@")
+                ),
+                ContextMenuEntry.Action(
                     id = "tovar_face",
                     actionId = ContextMenuActionIds.TOVAR_FACE,
                     title = "Кол. фейсов",
@@ -2303,74 +2309,81 @@ class TovarDBViewModel @Inject constructor(
             optionIndex = 0
         ),
         TovarEditorSpec(
+            actionId = ContextMenuActionIds.TOVAR_PRICE_BEFORE_PROMOTION,
+            menuId = "tovar_price_before_promotion",
+            title = "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ",
+            badge = "@",
+            optionIndex = 1
+        ),
+        TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_FACE,
             menuId = "tovar_face",
             title = "Кол. фейсов",
             badge = "Ф",
-            optionIndex = 1
+            optionIndex = 2
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_EXPIRE_LEFT,
             menuId = "tovar_expire_left",
             title = "Возврат",
             badge = "В",
-            optionIndex = 2
+            optionIndex = 3
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_AMOUNT,
             menuId = "tovar_amount",
             title = "Кол. на витрине",
             badge = "К",
-            optionIndex = 3
+            optionIndex = 4
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_UP,
             menuId = "tovar_up",
             title = "Поднято товара",
             badge = "П",
-            optionIndex = 4
+            optionIndex = 5
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_DT_EXPIRE,
             menuId = "tovar_dt_expire",
             title = "Дата ок. ср. год",
             badge = "Д",
-            optionIndex = 5
+            optionIndex = 6
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_OBOROTVED_NUM,
             menuId = "tovar_oborotved_num",
             title = "Остаток по учёту",
             badge = "О",
-            optionIndex = 6
+            optionIndex = 7
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_ERROR_ID,
             menuId = "tovar_error_id",
             title = "Ошибка товара",
             badge = "Ш",
-            optionIndex = 7
+            optionIndex = 8
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_AKCIYA_ID,
             menuId = "tovar_akciya_id",
             title = "Акция",
             badge = "А",
-            optionIndex = 8
+            optionIndex = 9
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_AKCIYA,
             menuId = "tovar_akciya",
             title = "Наличие акции",
             badge = "Н",
-            optionIndex = 9
+            optionIndex = 10
         ),
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_NOTES,
             menuId = "tovar_notes",
             title = "Примечание к товару",
             badge = "П",
-            optionIndex = 10
+            optionIndex = 11
         )
     )
 
@@ -3140,6 +3153,17 @@ class TovarDBViewModel @Inject constructor(
                 })
             }
 
+            OptionControlName.PRICE_BEFORE_PROMOTION -> {
+                Log.e("SAVE_TO_REPORT_OPT", "PRICE_BEFORE_PROMOTION: " + data)
+                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
+                    table!!.setPriceMin(data)
+                    table.setPriceMax(data)
+                    table.uploadStatus = 1
+                    table.setDtChange(System.currentTimeMillis() / 1000)
+                    RealmManager.setReportPrepareRow(table)
+                })
+            }
+
             OptionControlName.FACE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
                 val result =
@@ -3270,6 +3294,8 @@ class TovarDBViewModel @Inject constructor(
         rp.setTovarId(tovarId)
         rp.setAddrId(wpDataDB.addr_id.toString())
         rp.setPrice("")
+        rp.setPriceMin("")
+        rp.setPriceMax("")
         rp.setFace("")
         rp.setAmount(0)
         rp.setDtExpire("")
@@ -3292,7 +3318,7 @@ class TovarDBViewModel @Inject constructor(
 
     private fun operationType(tpl: TovarOptions): DialogData.Operations {
         when (tpl.getOrderField()) {
-            ("price"), ("face"), ("expire_left"), ("amount"), ("oborotved_num"), ("up") -> return DialogData.Operations.Number
+            ("price"), ("price_before_promotion"), ("face"), ("expire_left"), ("amount"), ("oborotved_num"), ("up") -> return DialogData.Operations.Number
 
             ("dt_expire") -> return DialogData.Operations.Date
 
@@ -3316,6 +3342,9 @@ class TovarDBViewModel @Inject constructor(
 
         return when (tpl.getOptionControlName()) {
             OptionControlName.PRICE -> table.getPrice()
+            OptionControlName.PRICE_BEFORE_PROMOTION -> table.getPriceMin()
+                ?.takeIf { it.isNotBlank() }
+                ?: table.getPriceMax()
             OptionControlName.FACE -> table.getFace()
             OptionControlName.EXPIRE_LEFT -> table.getExpireLeft()
             OptionControlName.AMOUNT -> table.getAmount().toString()
@@ -3369,7 +3398,7 @@ class TovarDBViewModel @Inject constructor(
             .filter { it.getOptionControlName() != OptionControlName.AKCIYA }
             .map { tpl ->
                 val kind = when (tpl.getOptionControlName()) {
-                    OptionControlName.PRICE -> InlineEditorKind.DECIMAL_NUMBER
+                    OptionControlName.PRICE, OptionControlName.PRICE_BEFORE_PROMOTION -> InlineEditorKind.DECIMAL_NUMBER
                     else -> when (operationType(tpl)) {
                         DialogData.Operations.Number -> InlineEditorKind.NUMBER
                         DialogData.Operations.Text -> InlineEditorKind.TEXT

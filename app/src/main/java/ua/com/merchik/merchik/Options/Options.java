@@ -14,6 +14,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.FACE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
 import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.Globals.distanceMin;
 import static ua.com.merchik.merchik.Globals.userId;
@@ -4296,6 +4297,13 @@ public class Options {
         switch (tovarOptions.getOptionControlName()) {
             case PRICE:
                 return tableRow.getPrice();
+            case PRICE_BEFORE_PROMOTION: {
+                String priceMin = tableRow.getPriceMin();
+                String priceMax = tableRow.getPriceMax();
+                return hasPositivePriceValue(priceMin) && hasPositivePriceValue(priceMax)
+                        ? priceMin + "|" + priceMax
+                        : "";
+            }
             case FACE:
                 return tableRow.getFace();
             case EXPIRE_LEFT:
@@ -4319,6 +4327,17 @@ public class Options {
 
             default:
                 return "";
+        }
+    }
+
+    private boolean hasPositivePriceValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            return Double.parseDouble(value.trim().replace(',', '.')) > 0;
+        } catch (NumberFormatException ignored) {
+            return false;
         }
     }
 
@@ -4453,6 +4472,7 @@ public class Options {
         if (list == null || list.isEmpty()) {
             list = new ArrayList<>();
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579, 174974));
+            list.add(new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ", "price_before_promotion", "main", 175121));
             list.add(new TovarOptions(FACE, "Ф", "Кол. фейсов", "face", "main", 576, 76815));
             list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591, 165275));
             list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));

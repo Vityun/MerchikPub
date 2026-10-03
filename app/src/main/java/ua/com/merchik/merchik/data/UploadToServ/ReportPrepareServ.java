@@ -22,11 +22,13 @@ public class ReportPrepareServ {
     private String error_comment    ; // комментарий к ошибке
     private String code_dad2        ; // код дад2
     public String buyer_order_id   ; // Номер заказа
+    private String price_min;
+    private String price_max;
 
     public ReportPrepareServ() {
     }
 
-    public ReportPrepareServ(String element_id, long dt, String dt_report, String client_id, String tovar_id, String addr_id, String price, String face, int amount, String dt_expire, String expire_left, String notes, String up, String akciya, String akciya_id, String oborotved_num, String error_id, String error_comment, String code_dad2, String buyer_order_id) {
+    public ReportPrepareServ(String element_id, long dt, String dt_report, String client_id, String tovar_id, String addr_id, String price, String face, int amount, String dt_expire, String expire_left, String notes, String up, String akciya, String akciya_id, String oborotved_num, String error_id, String error_comment, String code_dad2, String buyer_order_id, String price_min, String price_max) {
         this.element_id = element_id;
         this.dt = dt;
         this.dt_report = dt_report;
@@ -47,6 +49,8 @@ public class ReportPrepareServ {
         this.error_comment = error_comment;
         this.code_dad2 = code_dad2;
         this.buyer_order_id = buyer_order_id;
+        this.price_min = price_min;
+        this.price_max = price_max;
     }
 
     public String getElement_id() {
@@ -103,6 +107,22 @@ public class ReportPrepareServ {
 
     public void setPrice(String price) {
         this.price = price;
+    }
+
+    public String getPrice_min() {
+        return price_min;
+    }
+
+    public void setPrice_min(String price_min) {
+        this.price_min = price_min;
+    }
+
+    public String getPrice_max() {
+        return price_max;
+    }
+
+    public void setPrice_max(String price_max) {
+        this.price_max = price_max;
     }
 
     public String getFace() {

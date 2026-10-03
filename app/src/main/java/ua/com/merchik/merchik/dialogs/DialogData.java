@@ -737,9 +737,19 @@ public class DialogData {
             additionalText1.setText(data.row1Text);
         }
 
-        if (checkString(data.row1TextValue)) {
+        if (data.row1TextValue != null && !data.row1TextValue.trim().isEmpty()) {
             additionalTextValue1.setVisibility(View.VISIBLE);
             additionalTextValue1.setText(data.row1TextValue);
+        } else {
+            additionalTextValue1.setVisibility(View.GONE);
+            if (checkString(data.row1Text)) {
+                ConstraintLayout.LayoutParams headerParams =
+                        (ConstraintLayout.LayoutParams) additionalText1.getLayoutParams();
+                headerParams.width = 0;
+                headerParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+                headerParams.endToStart = ConstraintLayout.LayoutParams.UNSET;
+                additionalText1.setLayoutParams(headerParams);
+            }
         }
 
         // 2

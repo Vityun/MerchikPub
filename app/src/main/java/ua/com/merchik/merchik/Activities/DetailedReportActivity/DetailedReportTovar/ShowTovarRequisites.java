@@ -5,6 +5,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PHOTO;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
@@ -787,6 +788,17 @@ public class ShowTovarRequisites {
                 });
                 break;
 
+            case PRICE_BEFORE_PROMOTION:
+                Log.e("SAVE_TO_REPORT_OPT", "PRICE_BEFORE_PROMOTION: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setPriceMin(data);
+                    table.setPriceMax(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
             case FACE:
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
                 FaceSaveGuard.FaceSaveCheckResult result =
@@ -950,6 +962,7 @@ public class ShowTovarRequisites {
     private DialogData.Operations operationType(TovarOptions tpl) {
         switch (tpl.getOrderField()) {
             case ("price"):
+            case ("price_before_promotion"):
             case ("face"):
             case ("expire_left"):
             case ("amount"):
@@ -986,6 +999,11 @@ public class ShowTovarRequisites {
         switch (tpl.getOptionControlName()) {
             case PRICE:
                 return table.getPrice();
+
+            case PRICE_BEFORE_PROMOTION:
+                return table.getPriceMin() != null && !table.getPriceMin().isEmpty()
+                        ? table.getPriceMin()
+                        : table.getPriceMax();
 
             case FACE:
                 return table.getFace();

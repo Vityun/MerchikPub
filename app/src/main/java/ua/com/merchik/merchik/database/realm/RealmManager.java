@@ -2629,7 +2629,7 @@ public class RealmManager {
         if (rp != null && !rp.isEmpty()) {
 
             for (int i = 0; i < rp.size(); i++) {
-                reportPrepareServ.add(new ReportPrepareServ(String.valueOf(rp.get(i).getID()), rp.get(i).getDtChange(), rp.get(i).getDtReport(), rp.get(i).getKli(), rp.get(i).getTovarId(), rp.get(i).getAddrId(), rp.get(i).getPrice(), rp.get(i).getFace(), rp.get(i).getAmount(), rp.get(i).getDtExpire(), rp.get(i).getExpireLeft(), rp.get(i).getNotes(), rp.get(i).getUp(), rp.get(i).getAkciya(), rp.get(i).getAkciyaId(), rp.get(i).getOborotvedNum(), rp.get(i).getErrorId(), rp.get(i).getErrorComment(), rp.get(i).getCodeDad2(), String.valueOf(rp.get(i).buyerOrderId)));
+                reportPrepareServ.add(new ReportPrepareServ(String.valueOf(rp.get(i).getID()), rp.get(i).getDtChange(), rp.get(i).getDtReport(), rp.get(i).getKli(), rp.get(i).getTovarId(), rp.get(i).getAddrId(), rp.get(i).getPrice(), rp.get(i).getFace(), rp.get(i).getAmount(), rp.get(i).getDtExpire(), rp.get(i).getExpireLeft(), rp.get(i).getNotes(), rp.get(i).getUp(), rp.get(i).getAkciya(), rp.get(i).getAkciyaId(), rp.get(i).getOborotvedNum(), rp.get(i).getErrorId(), rp.get(i).getErrorComment(), rp.get(i).getCodeDad2(), String.valueOf(rp.get(i).buyerOrderId), rp.get(i).getPriceMin(), rp.get(i).getPriceMax()));
             }
         } else {
             Log.e("REPORT_PREPARE_SEND", "DATABASE - ");

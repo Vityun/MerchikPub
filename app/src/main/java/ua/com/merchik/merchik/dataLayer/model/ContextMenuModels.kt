@@ -130,6 +130,7 @@ object ContextMenuActionIds {
     const val LIST_SETTINGS = "list_settings"
 
     const val TOVAR_PRICE = "tovar_price"
+    const val TOVAR_PRICE_BEFORE_PROMOTION = "tovar_price_before_promotion"
     const val TOVAR_FACE = "tovar_face"
     const val TOVAR_EXPIRE_LEFT = "tovar_expire_left"
     const val TOVAR_AMOUNT = "tovar_amount"

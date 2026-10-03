@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import android.app.DatePickerDialog;
@@ -195,7 +196,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         public void bind(TovarOptions item) {
             textView.setText(item.getOptionLong() + ": ");
-            editText.setText(getDataFromReportPrepare(item.getOptionControlName(), dataRp));
+            editText.setText(getDataFromReportPrepare(item, dataRp));
 
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -275,14 +276,19 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         }
 
-        private String getDataFromReportPrepare(Globals.OptionControlName tplName, ReportPrepareDB reportPrepare) {
+        private String getDataFromReportPrepare(TovarOptions tpl, ReportPrepareDB reportPrepare) {
             try {
-                switch (tplName) {
+                switch (tpl.getOptionControlName()) {
                     case FACE:
                         return reportPrepare.getFace();
 
                     case PRICE:
                         return reportPrepare.getPrice();
+
+                    case PRICE_BEFORE_PROMOTION:
+                        return reportPrepare.getPriceMin() != null && !reportPrepare.getPriceMin().isEmpty()
+                                ? reportPrepare.getPriceMin()
+                                : reportPrepare.getPriceMax();
 
                     case AMOUNT:
                         return String.valueOf(reportPrepare.getAmount());

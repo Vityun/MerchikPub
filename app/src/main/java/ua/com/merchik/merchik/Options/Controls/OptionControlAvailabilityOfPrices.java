@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
@@ -88,6 +89,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             executeOption();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityOfPrices", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlAvailabilityOfPrices", "StackTrace: " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -154,21 +156,52 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         int foundWithPrice = 0;
         int missingPriceCount = 0;
         List<String> missingPriceTovarIds = new ArrayList<>();
+        int noFaceCount = 0;
+        int missingTovarCount = 0;
+        int nonOsvCount = 0;
+        int evaluatedCount = 0;
+        StringBuilder itemDiagnostics = new StringBuilder();
+        Globals.writeToMLOG("INFO", "AvailabilityOfPrices/input",
+                "dad2=" + dad2
+                        + ", optionId=" + safe(optionDB != null ? optionDB.getOptionId() : null)
+                        + ", optionControlId=" + safe(optionDB != null ? optionDB.getOptionControlId() : null)
+                        + ", isMinMaxOption=" + isMinMaxOption
+                        + ", isPriceOption=" + isPriceOption
+                        + ", isOsvOnlyOption=" + isOsvOnlyOption
+                        + ", requirementsOptionId=" + requirementsOptionId
+                        + ", addrId=" + (wpDataDB != null ? wpDataDB.getAddr_id() : 0)
+                        + ", clientId=" + safe(wpDataDB != null ? wpDataDB.getClient_id() : null)
+                        + ", themeId=" + (wpDataDB != null ? wpDataDB.getTheme_id() : 0)
+                        + ", mainOptionId=" + safe(wpDataDB != null ? wpDataDB.getMain_option_id() : null)
+                        + ", visitDate=" + (wpDataDB != null ? wpDataDB.getDt() : null)
+                        + ", colMin=" + colMin
+                        + ", reportPrepareCount=" + reportPrepare.size()
+                        + ", additionalRequirementsCount=" + additionalRequirements.size()
+                        + ", osvTovarIds=" + previewIds(tovIds)
+                        + ", requirements=" + previewRequirements(additionalRequirements));
 
         for (ReportPrepareDB item : reportPrepare) {
             String itemTovarId = normalizeId(item.getTovarId());
             boolean isOSV = osvTovarIds.contains(itemTovarId);
 
             TovarDB tov = getTovarByIdSafe(itemTovarId);
-            if (tov != null) {
+            if (tov == null) {
+                missingTovarCount++;
+                appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                        "skip=PRODUCT_NOT_FOUND, face=" + safe(item.getFace()) + ", isOsv=" + isOSV);
+            } else {
                 String msg = String.format("(%s) %s (%s)", itemTovarId, tov.getNm(), tov.getWeight());
 
                 // Если товар на витрине (face > 0) — нас он интересует
                 if (!hasPositiveFace(item)) {
+                    noFaceCount++;
+                    appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                            "skip=FACE_NOT_POSITIVE, face=" + safe(item.getFace()) + ", isOsv=" + isOSV);
                     // пропускаем товары, которых нет на витрине
                     continue;
                 }
 
+                evaluatedCount++;
                 boolean hasPrice = hasPositivePrice(item);
                 // 1С: for option 175121 both the regular price before the promotion
                 // and the promotional price must be present for an OSV item.
@@ -178,23 +211,39 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
                 if (hasOsvList) {
                     if (!isOSV) {
+                        nonOsvCount++;
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "skip=NOT_IN_OSV_LIST, face=" + safe(item.getFace())
+                                        + ", price=" + safe(item.getPrice())
+                                        + ", priceMin=" + safe(item.getPriceMin())
+                                        + ", priceMax=" + safe(item.getPriceMax()));
                         // Если список ОСВ заполнен, товары без ОСВ пропускаем, как в 1С.
                         continue;
                     }
 
                     totalOSV++;
+                    String priceCheck = "price=" + safe(item.getPrice())
+                            + ", priceMin=" + safe(item.getPriceMin())
+                            + ", priceMax=" + safe(item.getPriceMax());
                     if (hasRequiredOsvPrice) {
                         foundWithPrice++;
                         item.find = 1;
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "result=PRICE_PRESENT, face=" + safe(item.getFace()) + ", " + priceCheck);
                     } else {
                         // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
                         err++;
                         missingPriceCount++;
                         missingPriceTovarIds.add(itemTovarId);
                         errMsg.append(createLinkedString(msg, item, tov)).append("\n");
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "result=PRICE_MISSING, required=" + (isMinMaxOption ? "priceMin+priceMax" : "price")
+                                        + ", face=" + safe(item.getFace()) + ", " + priceCheck);
                     }
                 } else {
                     if (isOsvOnlyOption) {
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "skip=OSV_LIST_EMPTY_OSV_ONLY, face=" + safe(item.getFace()));
                         // 174974 работает только по ОСВ. Если ОСВ для текущей ТТ нет,
                         // проверять остальные товары не нужно.
                         continue;
@@ -204,15 +253,34 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     if (hasPrice) {
                         foundWithPrice++;
                         item.find = 1;
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "result=PRICE_PRESENT, face=" + safe(item.getFace())
+                                        + ", price=" + safe(item.getPrice()) + ", osvListEmpty=true");
                     } else if (colMin == 0) {
                         // КолМин=0 означает, что цена обязательна у всех товаров на витрине.
                         err++;
                         missingPriceCount++;
                         missingPriceTovarIds.add(itemTovarId);
                         errMsg.append(createLinkedString(msg, item, tov)).append("\n");
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "result=PRICE_MISSING, required=price, face=" + safe(item.getFace())
+                                        + ", price=" + safe(item.getPrice()) + ", osvListEmpty=true");
                     }
                 }
             }
+        }
+
+        if (isMinMaxOption) {
+            Globals.writeToMLOG("INFO", "AvailabilityOfPrices/175121/items",
+                    "dad2=" + dad2
+                            + ", evaluated=" + evaluatedCount
+                            + ", noFace=" + noFaceCount
+                            + ", productNotFound=" + missingTovarCount
+                            + ", notOsv=" + nonOsvCount
+                            + ", totalOsvWithFace=" + totalOSV
+                            + ", pricesPresent=" + foundWithPrice
+                            + ", pricesMissing=" + missingPriceCount
+                            + ", rows=" + itemDiagnostics);
         }
 
         // 5.1. Если менеджер указал КолМин > числа записей — используем фактическое количество
@@ -327,6 +395,43 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             }
         }
 
+        String resultReason;
+        if (reportPrepare.isEmpty() || totalRelevant == 0) {
+            resultReason = "NO_RELEVANT_REPORT_ROWS";
+        } else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
+            resultReason = "REQUIRED_PRICE_MISSING";
+        } else if (isOsvOnlyOption && !hasOsvList) {
+            resultReason = "NO_OSV_REQUIREMENTS";
+        } else if (hasOsvList && totalOSV == 0 && (isPriceOption || isOsvOnlyOption)) {
+            resultReason = "NO_OSV_PRODUCTS_ON_DISPLAY";
+        } else if (isOsvOnlyOption) {
+            resultReason = "OSV_PRICE_CHECK_PASSED";
+        } else if (found == 0) {
+            resultReason = "NO_PRICES_FOUND";
+        } else if (found < colMin) {
+            resultReason = "BELOW_MINIMUM_COUNT";
+        } else {
+            resultReason = "PRICE_CHECK_PASSED";
+        }
+
+        Globals.writeToMLOG("INFO", "AvailabilityOfPrices/result",
+                "dad2=" + dad2
+                        + ", optionId=" + safe(optionDB != null ? optionDB.getOptionId() : null)
+                        + ", optionControlId=" + safe(optionDB != null ? optionDB.getOptionControlId() : null)
+                        + ", requirementsOptionId=" + requirementsOptionId
+                        + ", hasOsvList=" + hasOsvList
+                        + ", reportPrepare=" + reportPrepare.size()
+                        + ", totalRelevant=" + totalRelevant
+                        + ", totalOsvWithFace=" + totalOSV
+                        + ", found=" + found
+                        + ", missing=" + missingPriceCount
+                        + ", colMin=" + colMin
+                        + ", resultReason=" + resultReason
+                        + ", calculatedSignal=" + signal
+                        + ", blockPns=" + safe(optionDB != null ? optionDB.getBlockPns() : null)
+                        + ", isSignal=" + safe(optionDB != null ? optionDB.getIsSignal() : null)
+                        + ", blocked=" + isBlockOption());
+
         checkUnlockCode(optionDB);
         // Если есть какой-то сигнал - нужно вывести сообщение
 
@@ -422,6 +527,44 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         return ids != null ? previewIds(ids.toArray(new String[0])) : "";
     }
 
+    private String previewRequirements(List<AdditionalRequirementsDB> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            return "";
+        }
+
+        int limit = Math.min(requirements.size(), 10);
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < limit; i++) {
+            AdditionalRequirementsDB requirement = requirements.get(i);
+            if (i > 0) {
+                result.append(";");
+            }
+            result.append("option=").append(safe(requirement.getOptionId()))
+                    .append("/tovar=").append(safe(requirement.getTovarId()))
+                    .append("/addr=").append(safe(requirement.getAddrId()))
+                    .append("/grp=").append(safe(requirement.getGrpId()))
+                    .append("/theme=").append(safe(requirement.getThemeId()))
+                    .append("/mainOption=").append(safe(requirement.getMainOptionId()));
+        }
+        if (requirements.size() > limit) {
+            result.append(";...");
+        }
+        return result.toString();
+    }
+
+    private void appendItemDiagnostic(StringBuilder diagnostics, int currentLength, String tovarId, String details) {
+        if (currentLength >= 2500) {
+            if (!diagnostics.toString().endsWith("[truncated]")) {
+                diagnostics.append("[truncated]");
+            }
+            return;
+        }
+        if (diagnostics.length() > 0) {
+            diagnostics.append("; ");
+        }
+        diagnostics.append("tovar=").append(safe(tovarId)).append(":").append(details);
+    }
+
     private TovarDB getTovarByIdSafe(String tovId) {
         try {
             String id = normalizeId(tovId);
@@ -452,13 +595,17 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             public void onClick(View textView) {
                 Toast.makeText(textView.getContext(), "id: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
 
+                TovarOptions editTpl = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID)
+                        ? new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ", "price_before_promotion", "main", OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID)
+                        : TPL;
+
                 DialogData dialog = new DialogData(textView.getContext());
                 dialog.setTitle("");
                 dialog.setText("");
                 dialog.setClose(dialog::dismiss);
 
                 dialog.setImage(true, getPhotoFromDB(tov));
-                dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+                dialog.setAdditionalText(setPhotoInfo(editTpl, tov, "", ""));
 
                 // Заполняем операции для цен: operationType будет Number для поля price
                 dialog.setOperationSpinnerData(setMapData(Globals.OptionControlName.ERROR_ID));
@@ -467,11 +614,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 dialog.setOperationTextData2(reportPrepareDB.getAkciya());
 
                 // Установим текущее значение цены
-                dialog.setOperationTextData(reportPrepareDB.getPrice());
+                dialog.setOperationTextData(getCurrentData(editTpl, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()));
 
-                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
+                dialog.setOperation(operationType(editTpl), getCurrentData(editTpl, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(editTpl.getOptionControlName()), () -> {
                     if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+                        operetionSaveRPToDB(editTpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
                         Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                     }
                 });
@@ -531,6 +678,9 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
             case PRICE:
                 // Для цены нам не нужно заполнять спиннер, но оставим пустую мапу
+                return map;
+
+            case PRICE_BEFORE_PROMOTION:
                 return map;
 
             default:
@@ -594,6 +744,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
     private DialogData.Operations operationType(TovarOptions tpl) {
         switch (tpl.getOrderField()) {
             case ("price"):
+            case ("price_before_promotion"):
             case ("face"):
             case ("expire_left"):
             case ("amount"):
@@ -624,6 +775,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         switch (tpl.getOptionControlName()) {
             case PRICE:
                 return table.getPrice();
+
+            case PRICE_BEFORE_PROMOTION:
+                return table.getPriceMin() != null && !table.getPriceMin().isEmpty()
+                        ? table.getPriceMin()
+                        : table.getPriceMax();
 
             case FACE:
                 return table.getFace();
@@ -670,6 +826,17 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (tpl.getOptionControlName() == PRICE) {
             INSTANCE.executeTransaction(realm -> {
                 rp.setPrice(data);
+                rp.setUploadStatus(1);
+                rp.setDtChange(System.currentTimeMillis() / 1000);
+                RealmManager.setReportPrepareRow(rp);
+            });
+            return;
+        }
+
+        if (tpl.getOptionControlName() == PRICE_BEFORE_PROMOTION) {
+            INSTANCE.executeTransaction(realm -> {
+                rp.setPriceMin(data);
+                rp.setPriceMax(data);
                 rp.setUploadStatus(1);
                 rp.setDtChange(System.currentTimeMillis() / 1000);
                 RealmManager.setReportPrepareRow(rp);

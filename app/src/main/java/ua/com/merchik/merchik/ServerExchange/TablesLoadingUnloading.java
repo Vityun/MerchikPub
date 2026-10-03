@@ -4105,6 +4105,7 @@ id_exclude - иди товаров которые есть в приложени
             Gson gson = new Gson();
             String json = gson.toJson(standartData);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+            Log.e("UPLOAD_DATA", "set_report_data: " + convertedObject );
 
             Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<ReportPrepareUploadResponse>() {

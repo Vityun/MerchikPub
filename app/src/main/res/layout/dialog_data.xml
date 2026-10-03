@@ -311,6 +311,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginLeft="8dp"
+                    android:singleLine="false"
                     android:text="Доп. текст 1"
                     android:textStyle="bold"
                     android:visibility="gone"
@@ -324,11 +325,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginLeft="8dp"
+                    android:layout_marginTop="4dp"
                     android:text="Доп. текст 2"
                     android:textStyle="bold"
                     android:visibility="gone"
                     app:layout_constraintStart_toEndOf="@+id/img"
-                    app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1"
+                    app:layout_constraintTop_toBottomOf="@+id/additionalTextHeaderBottom"
                     tools:visibility="visible"/>
 
             <TextView
@@ -400,6 +402,14 @@
                     app:layout_constraintTop_toTopOf="parent"
                     tools:visibility="visible"/>
 
+            <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/additionalTextHeaderBottom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierAllowsGoneWidgets="false"
+                    app:barrierDirection="bottom"
+                    app:constraint_referenced_ids="additionalText1,additionalTextValue1"/>
+
             <TextView
                     android:id="@+id/additionalTextValue2"
                     android:layout_width="wrap_content"
@@ -408,13 +418,14 @@
                     android:layout_marginLeft="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginRight="8dp"
+                    android:layout_marginTop="4dp"
                     android:singleLine="false"
                     android:text="Значение текста 2 Значение текста 2 Значение текста 2"
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/additionalText2"
-                    app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1"
+                    app:layout_constraintTop_toBottomOf="@+id/additionalTextHeaderBottom"
                     tools:visibility="visible"/>
 
             <TextView
