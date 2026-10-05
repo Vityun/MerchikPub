@@ -1026,7 +1026,7 @@ fun DecimalNumberEditorRow(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            maxLines = 2
+            maxLines = 3
         )
 
         DecimalNumberInput(

@@ -304,6 +304,18 @@ public class DialogCreateTAR extends DialogData {
         viewHolderData.add(res);
     }
 
+    public void setPhotoActions(boolean showGalleryPick, boolean allowPhotoLongClick) {
+        if (viewHolderData.isEmpty()) {
+            return;
+        }
+        TestViewHolderData photoRow = viewHolderData.get(0);
+        photoRow.showGalleryPick = showGalleryPick;
+        photoRow.allowPhotoLongClick = allowPhotoLongClick;
+        if (adapter != null) {
+            adapter.notifyItemChanged(0);
+        }
+    }
+
     /**
      * 28.10.2021
      * Добавление поля для ввода и подсказки к нему

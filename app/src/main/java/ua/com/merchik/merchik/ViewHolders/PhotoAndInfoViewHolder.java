@@ -29,7 +29,6 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
 
     private boolean isLongClick = false;
 
-
     public PhotoAndInfoViewHolder(@NonNull View itemView) {
         super(itemView);
         context = itemView.getContext();
@@ -38,12 +37,13 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
         testText = itemView.findViewById(R.id.testText);
         photo = itemView.findViewById(R.id.photo);
         galleryPick = itemView.findViewById(R.id.galleryPick);
-        galleryPick.setVisibility(View.VISIBLE);
     }
 
     public void bind(TestViewHolderData data, Clicks.clickListener click) {
+        isLongClick = false;
         testText.setText(data.msg);
         testText.setTextColor(context.getResources().getColor(R.color.hintColorDefault));
+        galleryPick.setVisibility(data.showGalleryPick ? View.VISIBLE : View.GONE);
 
         try{
             if (data.photo!=null){
@@ -71,34 +71,40 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
         photo.setOnClickListener(v -> {
             if (!isLongClick) {
                 Log.e("DOUBLE_CLICK", "setOnClickListener 1");
-                 TEST_DATA test = new TEST_DATA();
-                 test.type = 2;
-                 click.click(test);
+                TEST_DATA test = new TEST_DATA();
+                test.type = 2;
+                click.click(test);
             }
             isLongClick = false;
         });
 
-        photo.setOnLongClickListener(view -> {
-            Log.e("DOUBLE_CLICK", "setOnLongClickListener 2");
-            isLongClick = true;
-             TEST_DATA test = new TEST_DATA();
-             test.type = 1;
-             click.click(test);
-            return true;
-        });
-
-        photo.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                isLongClick = false;
-            }
-            return false;
-        });
+        if (data.allowPhotoLongClick) {
+            photo.setOnLongClickListener(view -> {
+                Log.e("DOUBLE_CLICK", "setOnLongClickListener 2");
+                isLongClick = true;
+                TEST_DATA test = new TEST_DATA();
+                test.type = 1;
+                click.click(test);
+                return true;
+            });
+            photo.setOnTouchListener((v, event) -> {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    isLongClick = false;
+                }
+                return false;
+            });
+        } else {
+            photo.setOnLongClickListener(null);
+            photo.setOnTouchListener(null);
+        }
 
         galleryPick.setOnClickListener(view -> {
-            Log.e("DOUBLE_CLICK", "setOnLongClickListener 3");
-            TEST_DATA test = new TEST_DATA();
-            test.type = 3;
-            click.click(test);
+            if (data.showGalleryPick) {
+                Log.e("DOUBLE_CLICK", "setOnLongClickListener 3");
+                TEST_DATA test = new TEST_DATA();
+                test.type = 3;
+                click.click(test);
+            }
         });
     }
 }

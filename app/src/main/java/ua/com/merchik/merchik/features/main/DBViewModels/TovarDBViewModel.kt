@@ -1421,7 +1421,7 @@ class TovarDBViewModel @Inject constructor(
                 ContextMenuEntry.Action(
                     id = "tovar_price_before_promotion",
                     actionId = ContextMenuActionIds.TOVAR_PRICE_BEFORE_PROMOTION,
-                    title = "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ",
+                    title = "Цена товара ДО НАЧАЛА АКЦИИ (См. ЗАЧЁРКНУТУЮ цену на АКЦИОННОМ ценнике)",
                     leading = MenuLeading.BadgeText("@")
                 ),
                 ContextMenuEntry.Action(
@@ -2311,7 +2311,7 @@ class TovarDBViewModel @Inject constructor(
         TovarEditorSpec(
             actionId = ContextMenuActionIds.TOVAR_PRICE_BEFORE_PROMOTION,
             menuId = "tovar_price_before_promotion",
-            title = "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ",
+            title = "Цена товара ДО НАЧАЛА АКЦИИ (См. ЗАЧЁРКНУТУЮ цену на АКЦИОННОМ ценнике)",
             badge = "@",
             optionIndex = 1
         ),

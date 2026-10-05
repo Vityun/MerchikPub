@@ -45,6 +45,14 @@ public final class PhotoPickerUtils {
         return Intent.createChooser(createSingleImageIntent(), "Select Picture");
     }
 
+    public static Intent createCameraOrGalleryChooser(Intent cameraIntent) {
+        Intent chooser = Intent.createChooser(createSingleImageIntent(), "Оберіть джерело фото");
+        if (cameraIntent != null) {
+            chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cameraIntent});
+        }
+        return chooser;
+    }
+
     public static void persistReadPermissionIfPossible(@NonNull Context context, Intent data) {
         if (data == null || data.getData() == null) {
             return;

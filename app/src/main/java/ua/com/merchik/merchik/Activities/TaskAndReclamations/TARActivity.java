@@ -53,6 +53,9 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener {
 
+    private static final String TAR_PHOTO_PREFS = "tar_photo_selection";
+    private static final String KEY_TAR_PHOTO_TYPE_ID = "photo_type_id";
+
     public static final String EXTRA_OPEN_TAR_ID = "tar_open_id";
 
     private Globals globals = new Globals();
@@ -279,7 +282,17 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             }
 
             if (requestCode == 200) {
-                if (resultCode != 0){
+                if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                    List<Fragment> fragments = fragmentManager.getFragments();
+                    TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+                    MakePhoto.deletePendingPhotoFileIfExists(this);
+                    MakePhoto.clearPendingPhoto(this);
+                    StackPhotoDB stackPhotoDB = savePickedTARPhoto(data);
+                    clearPendingPhotoTypeId();
+                    if (stackPhotoDB != null) {
+                        fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                    }
+                } else if (resultCode != 0){
                     String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + photoPath);
 
@@ -290,6 +303,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     if (photoPath == null || photoPath.trim().isEmpty()) {
                         Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.requestCode200", "Photo path is empty");
                         MakePhoto.clearPendingPhoto(this);
+                        clearPendingPhotoTypeId();
                         return;
                     }
 
@@ -298,6 +312,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
 
                     MakePhoto.clearPendingPhoto(this);
+                    clearPendingPhotoTypeId();
 
                     List<Fragment> fragments = fragmentManager.getFragments();
                     TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
@@ -309,6 +324,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.resultCode", "resultCode.resultCode: " + resultCode);
                     MakePhoto.deletePendingPhotoFileIfExists(this);
                     MakePhoto.clearPendingPhoto(this);
+                    clearPendingPhotoTypeId();
                 }
             }
 
@@ -334,23 +350,21 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 fragmentHome.homeFrag.dialog.refreshAdaper(stackPhotoDB);
             }
 
-            if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-                List<Fragment> fragments = fragmentManager.getFragments();
-                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
-
-
-                Uri uri = data.getData();
-                PhotoPickerUtils.persistReadPermissionIfPossible(this, data);
-                File file = PhotoPickerUtils.copyPickedImageToFile(getApplicationContext(), uri);
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                StackPhotoDB stackPhotoDB =  savePhoto(file, MakePhotoFromGaleryTasksAndReclamationsSDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-
-//                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client, fragmentHome.secondFrag.data);
-
-                try {
-                    fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
-                }catch (Exception e){
-                    Log.e("test", "Exception e: " + e);
+            if (requestCode == PICK_GALLERY_IMAGE_REQUEST) {
+                if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                    List<Fragment> fragments = fragmentManager.getFragments();
+                    TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+                    StackPhotoDB stackPhotoDB = savePickedTARPhoto(data);
+                    clearPendingPhotoTypeId();
+                    try {
+                        if (stackPhotoDB != null) {
+                            fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                        }
+                    } catch (Exception e) {
+                        Log.e("test", "Exception e: " + e);
+                    }
+                } else {
+                    clearPendingPhotoTypeId();
                 }
             }
 
@@ -397,8 +411,49 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
 
         } catch (Exception e) {
+            if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO || requestCode == PICK_GALLERY_IMAGE_REQUEST) {
+                clearPendingPhotoTypeId();
+            }
             Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult", "Exception e: " + e);
         }
+    }
+
+    private StackPhotoDB savePickedTARPhoto(Intent data) {
+        try {
+            Uri uri = data.getData();
+            if (uri == null || MakePhotoFromGaleryTasksAndReclamationsSDB == null) {
+                Globals.writeToMLOG("ERROR", "TARActivity.savePickedTARPhoto", "Missing picked image URI or TAR data");
+                return null;
+            }
+            PhotoPickerUtils.persistReadPermissionIfPossible(this, data);
+            File file = PhotoPickerUtils.copyPickedImageToFile(getApplicationContext(), uri);
+            Globals.writeToMLOG("INFO", "TARActivity.savePickedTARPhoto", "fileLength=" + file.length());
+            return savePhoto(file, MakePhotoFromGaleryTasksAndReclamationsSDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity.savePickedTARPhoto", "Exception: " + e);
+            return null;
+        }
+    }
+
+    public void setPendingPhotoTypeId(int photoTypeId) {
+        getSharedPreferences(TAR_PHOTO_PREFS, MODE_PRIVATE)
+                .edit()
+                .putInt(KEY_TAR_PHOTO_TYPE_ID, photoTypeId)
+                .apply();
+    }
+
+    private Integer getPendingPhotoTypeId() {
+        android.content.SharedPreferences preferences = getSharedPreferences(TAR_PHOTO_PREFS, MODE_PRIVATE);
+        return preferences.contains(KEY_TAR_PHOTO_TYPE_ID)
+                ? preferences.getInt(KEY_TAR_PHOTO_TYPE_ID, 0)
+                : null;
+    }
+
+    public void clearPendingPhotoTypeId() {
+        getSharedPreferences(TAR_PHOTO_PREFS, MODE_PRIVATE)
+                .edit()
+                .remove(KEY_TAR_PHOTO_TYPE_ID)
+                .apply();
     }
 
 
@@ -428,9 +483,14 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setUser_id(tar.vinovnik);
 
 
-            if (tar.themeId == 150){
-                stackPhotoDB.setPhoto_type(18);
+            Integer selectedPhotoTypeId = getPendingPhotoTypeId();
+            if (tar.themeId == 150) {
                 stackPhotoDB.tovar_id = String.valueOf(tar.refId);
+            }
+            if (selectedPhotoTypeId != null) {
+                stackPhotoDB.setPhoto_type(selectedPhotoTypeId);
+            } else if (tar.themeId == 150){
+                stackPhotoDB.setPhoto_type(18);
             }else {
                 stackPhotoDB.setPhoto_type(0);
             }
@@ -567,7 +627,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             int currentUserId = Globals.getCurrentUserId();
             stackPhotoDB.setUser_id(currentUserId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(currentUserId));
-            stackPhotoDB.setPhoto_type(18);      // Фото Товара
+            Integer selectedPhotoTypeId = getPendingPhotoTypeId();
+            stackPhotoDB.setPhoto_type(selectedPhotoTypeId != null ? selectedPhotoTypeId : 18);      // Фото Товара
             stackPhotoDB.tovar_id = String.valueOf(tasksAndReclamationsSDB.refId);
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());

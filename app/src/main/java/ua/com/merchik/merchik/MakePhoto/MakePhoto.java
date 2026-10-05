@@ -411,8 +411,22 @@ public class MakePhoto {
 
     public void openCamera(Activity activity, int requestCode) {
         globals.writeToMLOG("MakePhoto.openCamera: " + "ENTER" + "\n");
+        Intent intent = createCameraIntent(activity);
+        if (intent == null) {
+            return;
+        }
         try {
-            File photo = null;
+            globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
+            activity.startActivityForResult(intent, requestCode);
+        } catch (Exception e) {
+            clearPendingPhoto(activity);
+            globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
+            globals.writeToMLOG("MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+        }
+    }
+
+    public Intent createCameraIntent(Activity activity) {
+        try {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
             Globals.writeToMLOG("INFO", "MakePhoto.openCamera.Intent", "intent: " + intent);
@@ -425,17 +439,7 @@ public class MakePhoto {
                 String imageFileName = "JPG_" + timeStamp + "_";
 
                 File storageDir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES);  // Для прилы
-                try {
-                    photo = File.createTempFile(
-                            imageFileName,
-                            ".jpg",
-                            storageDir
-                    );
-                } catch (IOException e) {
-                    globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
-                    e.printStackTrace();
-                    return;
-                }
+                File photo = File.createTempFile(imageFileName, ".jpg", storageDir);
 
                 Uri contentUri;
                 try {
@@ -453,13 +457,13 @@ public class MakePhoto {
                 intent.putExtra("photo_uri", contentUri);
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                globals.writeToMLOG("MakePhoto.startActivityForResult: " + "ENTER" + "\n");
-                activity.startActivityForResult(intent, requestCode);
+                return intent;
             }
-
+            return null;
         } catch (Exception e) {
             globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
             globals.writeToMLOG("MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            return null;
         }
     }
 

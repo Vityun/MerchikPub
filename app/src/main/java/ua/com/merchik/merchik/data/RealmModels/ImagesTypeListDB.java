@@ -46,12 +46,15 @@ public class ImagesTypeListDB extends RealmObject implements DataObjectUI{
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return "column_name,group_header";
     }
 
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
+        if ("id".equalsIgnoreCase(key)) {
+            return 5981L;
+        }
         return AddressSDBOverride.INSTANCE.getTranslateId(key);
     }
 

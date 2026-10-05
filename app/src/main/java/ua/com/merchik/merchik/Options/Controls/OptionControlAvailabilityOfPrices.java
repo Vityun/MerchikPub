@@ -596,7 +596,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 Toast.makeText(textView.getContext(), "id: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
 
                 TovarOptions editTpl = isOptionOrControl(OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID)
-                        ? new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ", "price_before_promotion", "main", OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID)
+                        ? new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена товара ДО НАЧАЛА АКЦИИ (См. ЗАЧЁРКНУТУЮ цену на АКЦИОННОМ ценнике)", "price_before_promotion", "main", OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID)
                         : TPL;
 
                 DialogData dialog = new DialogData(textView.getContext());

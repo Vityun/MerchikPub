@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.json.JSONObject;
@@ -59,6 +60,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
+import ua.com.merchik.merchik.dialogs.DialodTAR.TarPhotoSourceDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.features.main.DBViewModels.JournalPhotoSDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
@@ -70,6 +72,8 @@ public class Tab3Fragment extends Fragment {
     private FloatingActionButton fabYouTube;
     private TextView badgeTextView;
     public static final Integer[]  Tab3Fragment_VIDEO_LESSONS = new Integer[]{3623};
+    private static final int REQUEST_SELECT_TAR_PHOTO_TYPE = 7418;
+    private boolean photoActionInProgress;
 
 //    private Context mContext;
     private TasksAndReclamationsSDB tarData;
@@ -255,58 +259,48 @@ public class Tab3Fragment extends Fragment {
                 dialog = new DialogCreateTAR(v.getContext());
                 dialog.setTitle("Внесение комментария");
                 dialog.addPhoto("Короткий клик - открывает фотоаппарат для выполнения фото\nДолгий клик - открывает Журнал фото для выбора.");
+                dialog.setPhotoActions(false, true);
                 dialog.addEditText("Добавьте комментарий");
 
                 TarPhotoDataHolder.Companion.instance();
                 dialog.serCustomRecyclerView(new Clicks.click() {
                     @Override
                     public <T> void click(T data) {
+                        int action = (int) data;
+                        if ((action == 1 || action == 2) && !beginPhotoAction()) {
+                            return;
+                        }
                         // Подготовка данных для сохранения в БД
-                        switch ((int) data) {
+                        switch (action) {
                             case 1:
-//                                Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case1", "start");
-//                                intentOpen.putExtra("choise", true);
-//                                intentOpen.putExtra("resultCode", 101);
-//                                startActivityForResult(intentOpen, 101);
-//                                dialog.setDataUpdate();
-                                JsonObject dataJson = new JsonObject();
-                                dataJson.addProperty("clientId", tarData.client);
-                                dataJson.addProperty("addrId", tarData.addr.toString());
-
-                                Intent intent = new Intent(requireContext(), FeaturesActivity.class);
-                                Bundle bundle = new Bundle();
-                                bundle.putString("viewModel", JournalPhotoSDBViewModel.class.getCanonicalName());
-                                bundle.putString("contextUI", ContextUI.ADD_STACK_PHOTO_TO_ZIR.toString());
-                                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-                                bundle.putString("dataJson", new Gson().toJson(dataJson));
-                                bundle.putString("title", "Перелік фото звітів");
-                                bundle.putString("subTitle", "Справочник Фото");
-                                intent.putExtras(bundle);
-                                ActivityCompat.startActivityForResult((Activity) requireActivity(), intent, NEED_UPDATE_UI_REQUEST, null);
-
-
-//                                Toast.makeText(v.getContext(), "Короткий клик", Toast.LENGTH_SHORT).show();
-                                break;
-
-                            case 2:
                                 try {
-                                    Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case2", "start");
-                                    TARSecondFrag.TaRID = tarData.id;
-                                    MakePhoto makePhoto = new MakePhoto();
-                                    makePhoto.openCamera(getActivity(), MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
-                                }catch (Exception e){
-                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
+                                    JsonObject journalData = new JsonObject();
+                                    journalData.addProperty("clientId", tarData.client);
+                                    journalData.addProperty("addrId", tarData.addr.toString());
+
+                                    Intent journalIntent = new Intent(requireContext(), FeaturesActivity.class);
+                                    Bundle journalBundle = new Bundle();
+                                    journalBundle.putString("viewModel", JournalPhotoSDBViewModel.class.getCanonicalName());
+                                    journalBundle.putString("contextUI", ContextUI.ADD_STACK_PHOTO_TO_ZIR.toString());
+                                    journalBundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                                    journalBundle.putString("dataJson", new Gson().toJson(journalData));
+                                    journalBundle.putString("title", "Перелік фото звітів");
+                                    journalBundle.putString("subTitle", "Справочник Фото");
+                                    journalIntent.putExtras(journalBundle);
+                                    ActivityCompat.startActivityForResult(
+                                            requireActivity(), journalIntent, NEED_UPDATE_UI_REQUEST, null
+                                    );
+                                } catch (Exception e) {
+                                    photoActionInProgress = false;
+                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case1", "Exception e: " + e);
                                 }
                                 break;
-
-                            case 3:
+                            case 2:
                                 try {
-                                    MakePhotoFromGaleryTasksAndReclamationsSDB = tarData;
-                                    Intent mediaPicker = PhotoPickerUtils.createSingleImageChooser();
-                                    Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + mediaPicker);
-                                    ((TARActivity) v.getContext()).startActivityForResult(mediaPicker, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
+                                    openPhotoTypePicker();
+                                }catch (Exception e){
+                                    photoActionInProgress = false;
+                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
                                 break;
                         }
@@ -479,6 +473,88 @@ public class Tab3Fragment extends Fragment {
         }
     }
 
+    private void openPhotoTypePicker() {
+        TarPhotoDataHolder holder = TarPhotoDataHolder.Companion.instance();
+        holder.preparePhotoTypeSelection();
+
+        JsonArray excludedTypeIds = new JsonArray();
+        for (int id : new int[]{3, 25, 29, 32, 33, 34, 35, 37, 38, 46, 49, 52}) {
+            excludedTypeIds.add(id);
+        }
+        JsonObject dataJson = new JsonObject();
+        dataJson.add("excludedTypeIds", excludedTypeIds);
+
+        Intent intent = new Intent(requireContext(), FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel.class.getCanonicalName());
+        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+        bundle.putString("title", "Типы фото");
+        bundle.putString("subTitle", "Укажите тип фото которое Вы собираетесь сделать");
+        bundle.putString("dataJson", new Gson().toJson(dataJson));
+        intent.putExtras(bundle);
+        startActivityForResult(intent, REQUEST_SELECT_TAR_PHOTO_TYPE);
+    }
+
+    private boolean beginPhotoAction() {
+        if (photoActionInProgress) return false;
+        photoActionInProgress = true;
+        return true;
+    }
+
+    private void openCameraOrGalleryPicker(int photoTypeId) {
+        TARActivity tarActivity = (TARActivity) requireActivity();
+        tarActivity.setPendingPhotoTypeId(photoTypeId);
+        TARSecondFrag.TaRID = tarData.id;
+        MakePhotoFromGaleryTasksAndReclamationsSDB = tarData;
+
+        TarPhotoSourceDialog.show(
+                tarActivity,
+                () -> launchTARCamera(tarActivity),
+                () -> launchTARGallery(tarActivity),
+                () -> {
+                    tarActivity.clearPendingPhotoTypeId();
+                    photoActionInProgress = false;
+                }
+        );
+    }
+
+    private void launchTARCamera(TARActivity tarActivity) {
+        try {
+            Intent cameraIntent = new MakePhoto().createCameraIntent(tarActivity);
+            Globals.writeToMLOG("INFO", "Tab3Fragment.launchTARCamera", "cameraAvailable=" + (cameraIntent != null));
+            if (cameraIntent == null) {
+                MakePhoto.deletePendingPhotoFileIfExists(tarActivity);
+                MakePhoto.clearPendingPhoto(tarActivity);
+                tarActivity.clearPendingPhotoTypeId();
+                photoActionInProgress = false;
+                Toast.makeText(tarActivity, "Камера недоступна", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            tarActivity.startActivityForResult(cameraIntent, MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
+        } catch (Exception e) {
+            MakePhoto.deletePendingPhotoFileIfExists(tarActivity);
+            MakePhoto.clearPendingPhoto(tarActivity);
+            tarActivity.clearPendingPhotoTypeId();
+            photoActionInProgress = false;
+            Globals.writeToMLOG("ERROR", "Tab3Fragment.launchTARCamera", "Exception: " + e);
+            Toast.makeText(tarActivity, "Не удалось открыть камеру", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void launchTARGallery(TARActivity tarActivity) {
+        try {
+            tarActivity.startActivityForResult(
+                    PhotoPickerUtils.createSingleImageChooser(),
+                    MakePhoto.PICK_GALLERY_IMAGE_REQUEST
+            );
+        } catch (Exception e) {
+            tarActivity.clearPendingPhotoTypeId();
+            photoActionInProgress = false;
+            Globals.writeToMLOG("ERROR", "Tab3Fragment.launchTARGallery", "Exception: " + e);
+            Toast.makeText(tarActivity, "Не удалось открыть галерею", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private boolean hasValidPhoto(StackPhotoDB photo) {
         return photo != null && (hasValidPhotoValue(photo.getPhotoServerId()) || hasValidPhotoValue(photo.getPhoto_hash()));
     }
@@ -503,6 +579,32 @@ public class Tab3Fragment extends Fragment {
         Log.e("Tab3Fragment", "requestCode: " + requestCode);
         Log.e("Tab3Fragment", "resultCode: " + resultCode);
         Log.e("Tab3Fragment", "Intent: " + data);
+        if (requestCode == REQUEST_SELECT_TAR_PHOTO_TYPE) {
+            TarPhotoDataHolder holder = TarPhotoDataHolder.Companion.instance();
+            Integer photoTypeId = holder.consumeSelectedPhotoTypeId();
+            if (resultCode != Activity.RESULT_OK) {
+                photoActionInProgress = false;
+                return;
+            }
+            if (photoTypeId == null) {
+                photoActionInProgress = false;
+                Toast.makeText(requireContext(), "Оберіть тип фото", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            try {
+                openCameraOrGalleryPicker(photoTypeId);
+            } catch (Exception e) {
+                photoActionInProgress = false;
+                ((TARActivity) requireActivity()).clearPendingPhotoTypeId();
+                Globals.writeToMLOG("ERROR", "Tab3Fragment.onActivityResult.photoType", "Exception: " + e);
+            }
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        photoActionInProgress = false;
     }
 
     private void setRecycler() {

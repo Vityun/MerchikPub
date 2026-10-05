@@ -4227,14 +4227,19 @@ public class Options {
                     if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
                         // ничего не делаю
                     } else {
-                        Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                        if (temp.getOrderField().equals("dt_expire") && reportPrepareTovar.getDtExpire().equals("0000-00-00"))
-                            uploaded = Globals.Triple.NO_DATA;
-                        tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
                         temps.add(temp);
                     }
                 }
             }
+        }
+
+        moveRegularPriceBeforePromotionPrice(temps);
+        for (TovarOptions temp : temps) {
+            Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+            if (temp.getOrderField().equals("dt_expire") && reportPrepareTovar.getDtExpire().equals("0000-00-00")) {
+                uploaded = Globals.Triple.NO_DATA;
+            }
+            tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
         }
 
         // После пробега по опциям данного документа (они являются обязательными), я должен
@@ -4455,7 +4460,26 @@ public class Options {
                 }
             }*/
         }
+        moveRegularPriceBeforePromotionPrice(temps);
         return temps;
+    }
+
+    private void moveRegularPriceBeforePromotionPrice(List<TovarOptions> options) {
+        int promotionPriceIndex = -1;
+        int regularPriceIndex = -1;
+        for (int i = 0; i < options.size(); i++) {
+            Globals.OptionControlName optionName = options.get(i).getOptionControlName();
+            if (optionName == PRICE_BEFORE_PROMOTION) {
+                promotionPriceIndex = i;
+            } else if (optionName == PRICE) {
+                regularPriceIndex = i;
+            }
+        }
+
+        if (regularPriceIndex > promotionPriceIndex && promotionPriceIndex >= 0) {
+            TovarOptions regularPrice = options.remove(regularPriceIndex);
+            options.add(promotionPriceIndex, regularPrice);
+        }
     }
 
     public List<TovarOptions> getAllOptionsTPL() {
@@ -4472,7 +4496,7 @@ public class Options {
         if (list == null || list.isEmpty()) {
             list = new ArrayList<>();
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579, 174974));
-            list.add(new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена до начала акции ЗАЧЕРКНУТО НА АКЦИОННОМ ЦЕННИКЕ", "price_before_promotion", "main", 175121));
+            list.add(new TovarOptions(PRICE_BEFORE_PROMOTION, "@", "Цена товара ДО НАЧАЛА АКЦИИ (См. ЗАЧЁРКНУТУЮ цену на АКЦИОННОМ ценнике)", "price_before_promotion", "main", 175121));
             list.add(new TovarOptions(FACE, "Ф", "Кол. фейсов", "face", "main", 576, 76815));
             list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591, 165275));
             list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));

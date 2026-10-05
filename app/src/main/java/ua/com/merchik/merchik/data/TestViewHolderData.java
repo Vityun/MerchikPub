@@ -24,6 +24,8 @@ public class TestViewHolderData <T>{
 
     public String title;
     public String msg;
+    public boolean showGalleryPick = true;
+    public boolean allowPhotoLongClick = true;
 
     public StackPhotoDB photo;
     public List<AddressDB> addressList;
