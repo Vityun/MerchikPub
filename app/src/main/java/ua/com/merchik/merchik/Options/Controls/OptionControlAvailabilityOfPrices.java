@@ -16,13 +16,18 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,11 +126,20 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         int requirementsOptionId = isOsvOnlyOption
                 ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_OSV_ID
                 : (isMinMaxOption
-                ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID
-                : OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID);
+                   ? OPTION_CONTROL_AVAILABILITY_OF_PRICES_MIN_MAX_ID
+                   : OPTION_CONTROL_AVAILABILITY_OF_PRICES_ID);
         String[] tovIds;
         if (isPriceOption || isOsvOnlyOption) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, requirementsOptionId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
+
+            Date date = wpDataDB.getDt();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.DAY_OF_MONTH, -2);
+            Date dateMinusTwoDays = calendar.getTime();
+
+            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, requirementsOptionId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, dateMinusTwoDays.getTime() / 1000);
+//            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, requirementsOptionId, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
+            Log.e("additionalRequirements", "AvailabilityOfPrices: " + new Gson().toJson(additionalRequirements));
             List<String> tovIdList = new ArrayList<>();
             for (int i = 0; i < additionalRequirements.size(); i++) {
                 String tovId = additionalRequirements.get(i).getTovarId();
@@ -241,31 +255,10 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                                         + ", face=" + safe(item.getFace()) + ", " + priceCheck);
                     }
                 } else {
-                    if (isOsvOnlyOption) {
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "skip=OSV_LIST_EMPTY_OSV_ONLY, face=" + safe(item.getFace()));
-                        // 174974 работает только по ОСВ. Если ОСВ для текущей ТТ нет,
-                        // проверять остальные товары не нужно.
-                        continue;
-                    }
-
-                    // Если список ОСВ пуст, проверяем цены по товарам на витрине с учетом КолМин.
-                    if (hasPrice) {
-                        foundWithPrice++;
-                        item.find = 1;
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "result=PRICE_PRESENT, face=" + safe(item.getFace())
-                                        + ", price=" + safe(item.getPrice()) + ", osvListEmpty=true");
-                    } else if (colMin == 0) {
-                        // КолМин=0 означает, что цена обязательна у всех товаров на витрине.
-                        err++;
-                        missingPriceCount++;
-                        missingPriceTovarIds.add(itemTovarId);
-                        errMsg.append(createLinkedString(msg, item, tov)).append("\n");
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "result=PRICE_MISSING, required=price, face=" + safe(item.getFace())
-                                        + ", price=" + safe(item.getPrice()) + ", osvListEmpty=true");
-                    }
+                    appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                            "skip=OSV_LIST_EMPTY, face=" + safe(item.getFace()));
+                    // All price-control variants here are scoped to products in active OSV requirements.
+                    continue;
                 }
             }
         }
@@ -314,8 +307,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     .append(String.valueOf(totalOSV))
                     .append(" з Особою увагою не присутнiй на вiтринi. Зауважень по зазначенню цiн немає");
             signal = false;
-        } else if (isOsvOnlyOption && !hasOsvList) {
-            spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
+        } else if (!hasOsvList) {
+            spannableStringBuilder.append("Для данной ТТ нет действующих дополнительных требований по товарам с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
             signal = false;
         } else if (hasOsvList && totalOSV == 0 && (isPriceOption || isOsvOnlyOption)) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
@@ -400,7 +393,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             resultReason = "NO_RELEVANT_REPORT_ROWS";
         } else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
             resultReason = "REQUIRED_PRICE_MISSING";
-        } else if (isOsvOnlyOption && !hasOsvList) {
+        } else if (!hasOsvList) {
             resultReason = "NO_OSV_REQUIREMENTS";
         } else if (hasOsvList && totalOSV == 0 && (isPriceOption || isOsvOnlyOption)) {
             resultReason = "NO_OSV_PRODUCTS_ON_DISPLAY";

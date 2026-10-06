@@ -53,7 +53,7 @@ public class ImagesTypeListDB extends RealmObject implements DataObjectUI{
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
         if ("id".equalsIgnoreCase(key)) {
-            return 5981L;
+            return 5974L;
         }
         return AddressSDBOverride.INSTANCE.getTranslateId(key);
     }

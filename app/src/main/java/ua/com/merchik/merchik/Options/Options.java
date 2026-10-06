@@ -1612,9 +1612,8 @@ public class Options {
         try {
             ReportConductState state = ReportConductManager.get(dad2);
             if (state == null || !state.awaitingDecision() || !ReportConductUi.canShow(context)) return;
-            WpDataDB managed = WpDataRealm.getWpDataRowByDad2Id(dad2);
-            if (managed == null) return;
-            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(managed);
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+            if (wp == null) return;
             // Do not auto-resume if the process stopped before the work-end transaction committed.
             if (wp.getVisit_end_dt() <= 0) return;
             WorkPlan workPlan = new WorkPlan();

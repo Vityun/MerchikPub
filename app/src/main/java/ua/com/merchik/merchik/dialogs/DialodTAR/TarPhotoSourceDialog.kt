@@ -65,7 +65,7 @@ object TarPhotoSourceDialog {
                     MessageDialog(
                         title = "Добавить фотографию",
                         message = "Создайте новую фотографию или выберите уже готовую из галереи",
-                        status = DialogStatus.EMPTY,
+                        status = DialogStatus.NORMAL,
                         onDismiss = ::finish,
                         okButtonName = "ОК",
                         onConfirmAction = {
