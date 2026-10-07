@@ -21,6 +21,8 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import com.google.gson.Gson;
+
 import java.util.Calendar;
 import java.util.List;
 
@@ -177,7 +179,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         // Блокировки
         // Блокировка для Витмарка
         if (clientId.equals("9382")) {    // Витмарк
-            if (OFS >= 90) {
+            if (OFS >= 89.50) {
                 optionDB.setBlockPns("1");
                 signal = true;
                 signalReason = "VITMARK_OFS_AT_LEAST_90";
@@ -287,6 +289,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             spannableStringBuilder.append(createLinkedString("Отправка СМС", smsLink));
             notCloseSpannableStringBuilderDialog = true;
         }
+
+        Log.e("AvailabilityDetailedReport", "ptionControlAvailabilityDetailedReport/result Option: " + new Gson().toJson(optionDB));
 
         INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {

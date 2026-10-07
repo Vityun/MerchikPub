@@ -60,6 +60,9 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +74,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -2447,26 +2451,7 @@ public class Options {
                             .setOnConfirmAction(() -> Unit.INSTANCE)
                             .show();
                 else {
-                    OptionsDB finalOption = option;
-                    long timeInMillis = System.currentTimeMillis();
-                    Globals.writeToMLOG("INFO", "Options.clicked:138520", "currentTimeMillis: " + timeInMillis);
-                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                    String currentTime = sdf.format(new Date(timeInMillis));
-                    new MessageDialogBuilder(unwrap(context))
-                            .setTitle(context.getString(R.string.your_click))
-                            .setSubTitle(context.getString(R.string.end_work))
-                            .setStatus(DialogStatus.ALERT)
-                            .setMessage("Зареєструвати закінчення робіт у " + currentTime)
-                            .setOnConfirmAction("TAK", () -> {
-                                if (dataDB instanceof WpDataDB) {
-                                    optionEndWork_138520(context, (WpDataDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
-                                } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
-                                }
-                                return Unit.INSTANCE;
-                            })
-                            .setOnCancelAction("Hi", () -> Unit.INSTANCE)
-                            .show();
+                    showEndWorkDialog(context, dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
 
@@ -3336,11 +3321,107 @@ public class Options {
     }
 
 
+    private void showEndWorkDialog(Context context, Object dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener listener) {
+        long startTime = 0;
+        if (dataDB instanceof WpDataDB) {
+            startTime = ((WpDataDB) dataDB).getVisit_start_dt();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            Long start = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+            startTime = start != null ? start : 0;
+        }
+
+        showEndWorkDialog(context, startTime, requestedEndTime -> {
+            if (dataDB instanceof WpDataDB) {
+                optionEndWork_138520(context, (WpDataDB) dataDB, optionsDB, type, mode, listener, requestedEndTime);
+            } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, optionsDB, type, mode, listener, requestedEndTime);
+            }
+        });
+    }
+
+    // A null result preserves the standard current-day completion time at confirmation.
+    public void showEndWorkDialog(Context context, long startTime, Consumer<Long> onConfirm) {
+        long now = System.currentTimeMillis();
+        long daysAgo = 0;
+        if (startTime > 0 && startTime < now / 1000) {
+            ZoneId zone = ZoneId.systemDefault();
+            daysAgo = ChronoUnit.DAYS.between(
+                    Instant.ofEpochSecond(startTime).atZone(zone).toLocalDate(),
+                    Instant.ofEpochMilli(now).atZone(zone).toLocalDate());
+        }
+        if (daysAgo <= 0) {
+            showEndWorkConfirmation(context, null, onConfirm);
+            return;
+        }
+
+        Date startDate = new Date(startTime * 1000);
+        Locale locale = Locale.forLanguageTag("ru");
+        String startDay;
+        if (daysAgo == 1) {
+            startDay = "вчера";
+        } else if (daysAgo <= 7) {
+            String weekday = new SimpleDateFormat("EEEE", locale).format(startDate);
+            switch (weekday) {
+                case "среда": weekday = "среду"; break;
+                case "пятница": weekday = "пятницу"; break;
+                case "суббота": weekday = "субботу"; break;
+            }
+            startDay = "в " + weekday + " " + new SimpleDateFormat("d MMMM", locale).format(startDate);
+        } else {
+            startDay = "в " + new SimpleDateFormat("dd.MM.yyyy", locale).format(startDate);
+        }
+        String startClock = new SimpleDateFormat("HH:mm", locale).format(startDate);
+        long workStartTime = startTime;
+        long maxDurationMinutes = 600;
+        MessageDialogBuilder durationDialog = new MessageDialogBuilder(unwrap(context))
+                .setTitle(context.getString(R.string.your_click))
+                .setSubTitle(context.getString(R.string.end_work))
+                .setStatus(DialogStatus.ALERT)
+                .setMessage("Вы забыли указать время окончания работ по текущему визиту, " +
+                        "который был начат " + startDay + " в " + startClock +
+                        ".<br>Для того что бы правильно закрыть этот визит укажите длительность его")
+
+                .setNumberInput("Длительность работы, мин", maxDurationMinutes,
+                        "Введите корректную длительность в целых минутах, больше нуля", "мин.",
+                        "Длительность работы не может быть больше 10 часов");
+        durationDialog
+                .setOnConfirmAction("Далі", () -> {
+                    Long minutes = durationDialog.getNumberInputValue();
+                    if (minutes != null) {
+                        long endTime = workStartTime + minutes * 60;
+                        Globals.writeToMLOG("INFO", "Options.clicked:138520", "startTime: " + workStartTime
+                                + ", durationMinutes: " + minutes + ", calculatedEndTime: " + endTime);
+                        showEndWorkConfirmation(context, endTime, onConfirm);
+                    }
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction("Скасувати", () -> Unit.INSTANCE)
+                .show();
+    }
+
+    private void showEndWorkConfirmation(Context context, Long requestedEndTime, Consumer<Long> onConfirm) {
+        long timeInMillis = requestedEndTime != null ? requestedEndTime * 1000 : System.currentTimeMillis();
+        Globals.writeToMLOG("INFO", "Options.clicked:138520", "endTimeMillis: " + timeInMillis
+                + ", fromDuration: " + (requestedEndTime != null));
+        SimpleDateFormat sdf = new SimpleDateFormat(requestedEndTime != null ? "HH:mm dd.MM.yyyy" : "HH:mm", Locale.getDefault());
+        new MessageDialogBuilder(unwrap(context))
+                .setTitle(context.getString(R.string.your_click))
+                .setSubTitle(context.getString(R.string.end_work))
+                .setStatus(DialogStatus.ALERT)
+                .setMessage("Зареєструвати закінчення робіт у " + sdf.format(new Date(timeInMillis)))
+                .setOnConfirmAction("TAK", () -> {
+                    onConfirm.accept(requestedEndTime);
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction("Hi", () -> Unit.INSTANCE)
+                .show();
+    }
+
     /**
      * Опция
      * Нажатие на кнопку Для установки окончания рабочего дня ( 138520 )
      */
-    private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+    private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener, Long requestedEndTime) {
         boolean result = false;
         try {
             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
@@ -3354,7 +3435,7 @@ public class Options {
                     try {
                         ReportConductManager.begin(wpDataDB.getCode_dad2());
                         // Сохраняю время
-                        long endTime = System.currentTimeMillis() / 1000;
+                        long endTime = requestedEndTime != null ? requestedEndTime : System.currentTimeMillis() / 1000;
 
                         wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
                         wpDataDB.setVisit_end_dt(endTime);
@@ -3397,14 +3478,14 @@ public class Options {
         return result;
     }
 
-    private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+    private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener, Long requestedEndTime) {
         globals.writeToMLOG("_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
-        if (dataDB.dt_end_fact > 0) {
+        if (dataDB.dt_end_fact != null && dataDB.dt_end_fact > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
         } else {
-            if (dataDB.dt_start_fact > 0) {
+            if (dataDB.dt_start_fact != null && dataDB.dt_start_fact > 0) {
                 try {
-                    long endTime = System.currentTimeMillis() / 1000;
+                    long endTime = requestedEndTime != null ? requestedEndTime : System.currentTimeMillis() / 1000;
                     dataDB.dt_end_fact = endTime;
                     dataDB.uploadStatus = 1;
                     SQL_DB.tarDao().insertData(Collections.singletonList(dataDB))

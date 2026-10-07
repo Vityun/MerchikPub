@@ -35,6 +35,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,6 +61,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.Utils.TrustedTime;
@@ -253,9 +256,15 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
+        long startTime = LocalDateTime.of(2026, 10, 6, 15, 32)
+                .atZone(ZoneId.systemDefault())
+                .toEpochSecond();
+        new Options().showEndWorkDialog(this, startTime, endTime -> {
+            // Preview only: do not save work times or submit a report.
+        });
 
-        downloadTest();
-        downloadTest2();
+//        downloadTest();
+//        downloadTest2();
 
 //        new Translate().uploadNewTranslate();
 

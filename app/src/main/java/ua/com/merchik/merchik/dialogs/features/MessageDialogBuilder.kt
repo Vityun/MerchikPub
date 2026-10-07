@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.ViewHolders.Clicks
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogNumberInput
 
 class MessageDialogBuilder(private val context: Activity) {
 
@@ -29,6 +30,7 @@ class MessageDialogBuilder(private val context: Activity) {
     private var checkboxPrefKey: String = "not_show_again"
 
     private val isDialogVisible = mutableStateOf(false)
+    private val numberInput = mutableStateOf<MessageDialogNumberInput?>(null)
 
     private var onDismissListener: (() -> Unit)? = null
     private var cancelable: Boolean = true
@@ -52,6 +54,28 @@ class MessageDialogBuilder(private val context: Activity) {
     }
 
     fun setStatus(status: DialogStatus) = apply { this.status = status }
+
+    @JvmOverloads
+    fun setNumberInput(
+        label: String,
+        maxValue: Long,
+        validationMessage: String,
+        suffix: String = "",
+        maxValueMessage: String = validationMessage
+    ) = apply {
+        numberInput.value = MessageDialogNumberInput(
+            label = label,
+            maxValue = maxValue,
+            validationMessage = validationMessage,
+            suffix = suffix,
+            maxValueMessage = maxValueMessage,
+            onValueChange = { value ->
+                numberInput.value = numberInput.value?.copy(value = value)
+            }
+        )
+    }
+
+    fun getNumberInputValue(): Long? = numberInput.value?.number
 
     fun setOnConfirmAction(actionConfirm: (() -> Unit)?) =
         apply { this.onConfirmAction = actionConfirm }
@@ -161,6 +185,7 @@ class MessageDialogBuilder(private val context: Activity) {
                                 }
                             },
                             status = status,
+                            numberInput = numberInput.value,
                             showCheckbox = showCheckbox,
                             onCheckboxChanged = { checked ->
                                 sharedPref.edit().putBoolean(checkboxPrefKey, checked).apply()

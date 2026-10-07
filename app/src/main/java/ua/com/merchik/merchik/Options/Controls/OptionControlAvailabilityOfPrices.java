@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -52,6 +53,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -223,42 +225,38 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         ? hasPositivePrice(item.getPriceMin()) && hasPositivePrice(item.getPriceMax())
                         : hasPrice;
 
-                if (hasOsvList) {
-                    if (!isOSV) {
+                if (!isOSV) {
+                    if (hasOsvList) {
                         nonOsvCount++;
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "skip=NOT_IN_OSV_LIST, face=" + safe(item.getFace())
-                                        + ", price=" + safe(item.getPrice())
-                                        + ", priceMin=" + safe(item.getPriceMin())
-                                        + ", priceMax=" + safe(item.getPriceMax()));
-                        // Если список ОСВ заполнен, товары без ОСВ пропускаем, как в 1С.
-                        continue;
                     }
-
-                    totalOSV++;
-                    String priceCheck = "price=" + safe(item.getPrice())
-                            + ", priceMin=" + safe(item.getPriceMin())
-                            + ", priceMax=" + safe(item.getPriceMax());
-                    if (hasRequiredOsvPrice) {
-                        foundWithPrice++;
-                        item.find = 1;
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "result=PRICE_PRESENT, face=" + safe(item.getFace()) + ", " + priceCheck);
-                    } else {
-                        // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
-                        err++;
-                        missingPriceCount++;
-                        missingPriceTovarIds.add(itemTovarId);
-                        errMsg.append(createLinkedString(msg, item, tov)).append("\n");
-                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                                "result=PRICE_MISSING, required=" + (isMinMaxOption ? "priceMin+priceMax" : "price")
-                                        + ", face=" + safe(item.getFace()) + ", " + priceCheck);
-                    }
-                } else {
                     appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
-                            "skip=OSV_LIST_EMPTY, face=" + safe(item.getFace()));
-                    // All price-control variants here are scoped to products in active OSV requirements.
+                            "skip=" + (hasOsvList ? "NOT_IN_OSV_LIST" : "OSV_LIST_EMPTY")
+                                    + ", face=" + safe(item.getFace())
+                                    + ", price=" + safe(item.getPrice())
+                                    + ", priceMin=" + safe(item.getPriceMin())
+                                    + ", priceMax=" + safe(item.getPriceMax()));
+                    // Every option handled here checks prices only for products in the active OSV list.
                     continue;
+                }
+
+                totalOSV++;
+                String priceCheck = "price=" + safe(item.getPrice())
+                        + ", priceMin=" + safe(item.getPriceMin())
+                        + ", priceMax=" + safe(item.getPriceMax());
+                if (hasRequiredOsvPrice) {
+                    foundWithPrice++;
+                    item.find = 1;
+                    appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                            "result=PRICE_PRESENT, face=" + safe(item.getFace()) + ", " + priceCheck);
+                } else {
+                    // Для товара с ОСВ и присутствующего на витрине, цена не указана -> ошибка
+                    err++;
+                    missingPriceCount++;
+                    missingPriceTovarIds.add(itemTovarId);
+                    errMsg.append(createLinkedString(msg, item, tov)).append("\n");
+                    appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                            "result=PRICE_MISSING, required=" + (isMinMaxOption ? "priceMin+priceMax" : "price")
+                                    + ", face=" + safe(item.getFace()) + ", " + priceCheck);
                 }
             }
         }
@@ -295,10 +293,21 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         // вычислим сколько товаров вообще отмечено как "нашли" (с ценой)
         int found = foundWithPrice;
 
-        if (reportPrepare.size() == 0 || totalRelevant == 0) {
+        if (reportPrepare.size() == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия ЦЕН, не обнаружено.");
             signal = false; // нет товаров — замечаний нет
-        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */ else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
+        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */
+        else if (totalRelevant == 0 && Objects.equals(wpDataDB.getUser_opinion_id(), "59")) {
+            spannableStringBuilder.append("Товаров клиента вообще нет ни на складе, ни на витрине ТТ.");
+            signal = false;
+        }
+        else if (totalRelevant == 0){
+            spannableStringBuilder.append("Товаров клиента вообще нет ни на складе, ни на витрине ТТ и не указанно мнение (59) ")
+                    .append(RoomManager.SQL_DB.opinionDao().getOpinionById(59).nm)
+                    .append(". Если товаров заказчика ДЕЙСТВИТЕЛЬНО нет на ТТ выберите указанное мнение.");
+            signal = true;
+        }
+        else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
 //            spannableStringBuilder.append("Не предоставлена информация о ЦЕНАХ по товару (" + missingPriceCount + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signal = true;
         } else if ((found == 0 && hasOsvList) &&

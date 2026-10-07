@@ -113,6 +113,7 @@ fun MessageDialog(
     onTextLinkClick: ((String) -> Unit)? = null,
     singleChoice: MessageDialogSingleChoice? = null,
     fontSizeOffsetSp: Float = 0f,
+    numberInput: MessageDialogNumberInput? = null,
     onDialogClosed: ((DialogCloseReason) -> Unit)? = null
 ) {
     Log.e("additionalEarningsDialogData", "MessageDialog ++")
@@ -120,7 +121,7 @@ fun MessageDialog(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var isChecked by rememberSaveable { mutableStateOf(false) }
-    val confirmEnabled = singleChoice?.canConfirm != false
+    val confirmEnabled = singleChoice?.canConfirm != false && numberInput?.canConfirm != false
     val confirmButtonColors = ButtonDefaults.buttonColors(
         containerColor = colorResource(R.color.orange),
         disabledContainerColor = Color(0xFFD0D0D0),
@@ -128,9 +129,14 @@ fun MessageDialog(
     )
     val context = LocalContext.current
     // Disabled buttons ignore onClick; only the hint overlay handles these taps.
-    val disabledConfirmHintModifier = Modifier.pointerInput(context) {
+    val disabledConfirmHint = if (numberInput?.canConfirm == false) {
+        numberInput.validationError ?: numberInput.validationMessage
+    } else {
+        "Спочатку оберіть потрібний варіант"
+    }
+    val disabledConfirmHintModifier = Modifier.pointerInput(context, disabledConfirmHint) {
         detectTapGestures {
-            Toast.makeText(context, "Спочатку оберіть потрібний варіант", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, disabledConfirmHint, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -285,17 +291,36 @@ fun MessageDialog(
                         )
                     }
 
-                    BasicText(
-                        text = styledAnnotatedString,
-                        style = MaterialTheme.typography.titleSmall.withDialogFontSize().copy(
-                            color = Color(0xCC1E201D),
-                            textAlign = TextAlign.Justify
-                        ),
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp)
-                            .padding(bottom = 2.dp)
-                            .pointerInput(styledAnnotatedString) {
+                    val messageStyle = MaterialTheme.typography.titleSmall.withDialogFontSize().copy(
+                        color = Color(0xCC1E201D),
+                        textAlign = TextAlign.Justify
+                    )
+                    val messageModifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .padding(horizontal = if (subTitle.isNullOrEmpty()) 0.dp else 6.dp)
+                        .padding(bottom = 2.dp)
+                    if (numberInput != null) {
+                        MessageDialogNumberInputText(
+                            text = styledAnnotatedString,
+                            input = numberInput,
+                            style = messageStyle,
+                            modifier = messageModifier
+                        )
+                        if (numberInput.value.isNotEmpty()) {
+                            numberInput.validationError?.let { errorText ->
+                                Text(
+                                    text = errorText,
+                                    color = colorResource(R.color.red_error),
+                                    style = MaterialTheme.typography.bodySmall.withDialogFontSize(),
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        BasicText(
+                            text = styledAnnotatedString,
+                            style = messageStyle,
+                            modifier = messageModifier.pointerInput(styledAnnotatedString) {
                                 detectTapGestures { pos ->
                                     val layout = textLayoutResult ?: return@detectTapGestures
                                     val offset = layout.getOffsetForPosition(pos)
@@ -313,10 +338,11 @@ fun MessageDialog(
                                     }
                                 }
                             },
-                        onTextLayout = {
-                            textLayoutResult = it
-                        }
-                    )
+                            onTextLayout = {
+                                textLayoutResult = it
+                            }
+                        )
+                    }
 
                     singleChoice?.let { choice ->
                         Column(
