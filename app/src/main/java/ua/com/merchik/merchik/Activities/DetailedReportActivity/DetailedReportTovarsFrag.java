@@ -321,19 +321,15 @@ public class DetailedReportTovarsFrag extends Fragment {
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
 
-//            ProgressViewModel progress = new ProgressViewModel(1);
-//            LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
-//            loadingDialog.show();
-//            progress.onNextEvent("Завантажую усі товари цього клієнта", 2500);
 
-            new MessageDialogBuilder(requireActivity())
-                    .setTitle("Товари")
-                    .setStatus(DialogStatus.NORMAL)
-                    .setSubTitle("Iде процес завантаження")
-                    .setMessage("Перелік товарів (для поточного відвідування) зараз завантажується з серверу. " +
-                            "Зачекайте і поверніться до поточного розділу через хвилинку.")
-                    .setOnConfirmAction(() -> null)
-                    .show();
+//            new MessageDialogBuilder(requireActivity())
+//                    .setTitle("Товари")
+//                    .setStatus(DialogStatus.NORMAL)
+//                    .setSubTitle("Iде процес завантаження")
+//                    .setMessage("Перелік товарів (для поточного відвідування) зараз завантажується з серверу. " +
+//                            "Зачекайте і поверніться до поточного розділу через хвилинку.")
+//                    .setOnConfirmAction(() -> null)
+//                    .show();
 
             List<WpDataDB> dataList = new ArrayList<>();
             dataList.add(wpDataDB);

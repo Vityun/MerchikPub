@@ -2357,11 +2357,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
 
-    if (viewModel is SamplePhotoSDBViewModel &&
-        viewModel.contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360
-    ) {
+    if (viewModel is SamplePhotoSDBViewModel) {
         val warehouseProductAvailable by viewModel.warehouseProductAvailable.collectAsState()
-        if (warehouseProductAvailable == null) {
+        val sampleSelectionHintVisible by viewModel.sampleSelectionHintVisible.collectAsState()
+        val isWarehouseSample = viewModel.contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360
+        if (isWarehouseSample && warehouseProductAvailable == null) {
             var pendingWarehouseChoice by rememberSaveable(viewModel.dataJson) {
                 mutableStateOf<String?>(null)
             }
@@ -2394,6 +2394,19 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                     selectedKey = pendingWarehouseChoice,
                     onSelected = { pendingWarehouseChoice = it }
                 )
+            )
+        } else if (sampleSelectionHintVisible) {
+            MessageDialog(
+                title = "Інформація",
+                subTitle = if (isWarehouseSample) "Образец фото товара на складе"
+                    else "Образец фотоотчета",
+                message = "Выберите образец на основании которого будете делать свой фотоотчет",
+                status = DialogStatus.NORMAL,
+                onDismiss = { viewModel.dismissSampleSelectionHint() },
+                okButtonName = "ОК",
+                onConfirmAction = {},
+                showCheckbox = true,
+                onCheckboxChanged = { viewModel.setSampleSelectionHintHidden(it) }
             )
         }
     }

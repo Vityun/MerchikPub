@@ -75,6 +75,15 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private val warehouseExceptionSampleIds = listOf(78, 94)
     private val warehouseNoStockExcludedSampleIds = listOf(34, 36, 39, 41, 42, 75, 80, 83, 84, 87)
     val warehouseProductAvailable = savedStateHandle.getStateFlow<Boolean?>(warehouseAvailabilityKey, null)
+    private val sampleSelectionHintKey = "sample_photo_selection_hint_visible"
+    private val hideSampleSelectionHintKey = "hide_sample_photo_selection_hint"
+    private val sampleHintPreferences = application.getSharedPreferences(
+        application.packageName, Context.MODE_PRIVATE
+    )
+    val sampleSelectionHintVisible = savedStateHandle.getStateFlow(
+        sampleSelectionHintKey,
+        !sampleHintPreferences.getBoolean(hideSampleSelectionHintKey, false)
+    )
 
     init {
         viewModelScope.launch {
@@ -457,6 +466,15 @@ class SamplePhotoSDBViewModel @Inject constructor(
         }
         val customer = clientName?.let { "заказчика «$it»" } ?: "заказчика"
         return "Есть ли на СКЛАДЕ данной торговой точки какой либо товар $customer?"
+    }
+
+    fun dismissSampleSelectionHint() {
+        savedStateHandle[sampleSelectionHintKey] = false
+    }
+
+    fun setSampleSelectionHintHidden(hidden: Boolean) {
+        // The preference applies to subsequent openings; keep the current dialog open.
+        sampleHintPreferences.edit().putBoolean(hideSampleSelectionHintKey, hidden).apply()
     }
 
     fun setWarehouseProductAvailable(available: Boolean) {

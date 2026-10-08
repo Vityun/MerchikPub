@@ -12,9 +12,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -270,6 +273,15 @@ fun MessageDialog(
                                 color = Color.Green
                             )
                         }
+                    } else if (status == DialogStatus.INFO) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = colorResource(R.color.blue),
+                            modifier = Modifier
+                                .size(68.dp)
+                                .padding(bottom = 4.dp)
+                        )
                     } else if (status != DialogStatus.EMPTY) {
                         LottieAnimation(
                             modifier = Modifier
