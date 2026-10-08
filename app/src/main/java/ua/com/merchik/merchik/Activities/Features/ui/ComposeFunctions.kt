@@ -46,6 +46,7 @@ fun setContentTovarData(
     composeView: ComposeView,
     wpDataDB: WpDataDB
 ) {
+    composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     composeView.setContent {
         TovarTabs(wpDataDB)
 

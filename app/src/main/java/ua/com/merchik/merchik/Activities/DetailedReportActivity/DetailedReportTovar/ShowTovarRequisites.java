@@ -35,6 +35,7 @@ import kotlin.Unit;
 import retrofit2.Call;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecyclerViewOptionControlHint;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
@@ -53,6 +54,7 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -264,7 +266,7 @@ public class ShowTovarRequisites {
                 }
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                        if (!operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null)) return;
                         dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                     }
                 });
@@ -346,7 +348,7 @@ public class ShowTovarRequisites {
                                     if (tpl.getOrderField().equals(item.getField())) {
 
                                         dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
-                                                    operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
+                                                    if (!operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null)) return;
                                                     Toast.makeText(context, "Внесено: " + value, Toast.LENGTH_LONG).show();
 //                                            refreshElement(cd2, list.getiD());
 //                                            notifyItemChanged(adapterPosition);
@@ -422,6 +424,11 @@ public class ShowTovarRequisites {
     private void dialogShowRule(boolean clickType) {
         if (dialogList.isEmpty()) return;
         ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
+        report = report == null ? null : ReportPrepareRealm.getByIdCopy(report.getID());
+        if (report == null) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            return;
+        }
         removeDialogAt(0);
         if (!dialogList.isEmpty()) {
             dialogList.get(0).reportPrepareDB = report;
@@ -482,6 +489,11 @@ public class ShowTovarRequisites {
         Log.e("dialogShowRule2", "clickType: " + clickType);
         if (dialogList.isEmpty()) return;
         ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
+        report = report == null ? null : ReportPrepareRealm.getByIdCopy(report.getID());
+        if (report == null) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            return;
+        }
         removeDialogAt(0);
 
         boolean option165276 = false;
@@ -766,43 +778,37 @@ public class ShowTovarRequisites {
      * <p>
      * Функционал в зависимости от операции
      */
-    private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
-        if (rp == null) {
-            rp = createNewRPRow(tovarDB);
+    private boolean operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
+        if (rp == null && tovarDB != null) {
+            rp = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
+            if (rp == null) rp = createNewRPRow(tovarDB);
+        }
+        ReportPrepareDB current = rp == null ? null : ReportPrepareRealm.getByIdCopy(rp.getID());
+        if (current == null) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            return false;
         }
 
         if (data == null || data.equals("")) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
 
-        ReportPrepareDB table = rp;
+        ReportPrepareDB snapshot = rp;
+        boolean saved;
         switch (tpl.getOptionControlName()) {
             case PRICE:
                 Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data);
-                INSTANCE.executeTransaction(realm -> {
-                    table.setPrice(data);
-                    table.setUploadStatus(1);
-                    table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
-                });
-                break;
+                return PriceSaveGuard.savePrice(context, snapshot, data, false);
 
             case PRICE_BEFORE_PROMOTION:
                 Log.e("SAVE_TO_REPORT_OPT", "PRICE_BEFORE_PROMOTION: " + data);
-                INSTANCE.executeTransaction(realm -> {
-                    table.setPriceMin(data);
-                    table.setPriceMax(data);
-                    table.setUploadStatus(1);
-                    table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
-                });
-                break;
+                return PriceSaveGuard.savePrice(context, snapshot, data, true);
 
             case FACE:
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
                 FaceSaveGuard.FaceSaveCheckResult result =
-                        FaceSaveGuard.canSaveFace(context, wpDataDB, rp, data);
+                        FaceSaveGuard.canSaveFace(context, wpDataDB, current, data);
 
                 if (result.isError()) {
 //                    new MessageDialogBuilder(Globals.unwrap(context))
@@ -811,90 +817,82 @@ public class ShowTovarRequisites {
 //                            .setStatus(DialogStatus.ERROR)
 //                            .setOnConfirmAction(() -> Unit.INSTANCE)
 //                            .show();
-                    return;
+                    return false;
                 }
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setFace(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case EXPIRE_LEFT:
                 Log.e("SAVE_TO_REPORT_OPT", "EXPIRE_LEFT: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setExpireLeft(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case AMOUNT:
                 Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setAmount(Integer.parseInt(data));
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case OBOROTVED_NUM:
                 Log.e("SAVE_TO_REPORT_OPT", "OBOROTVED_NUM: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setOborotvedNum(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case UP:
                 Log.e("SAVE_TO_REPORT_OPT", "UP: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setUp(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case DT_EXPIRE:
                 Log.e("SAVE_TO_REPORT_OPT", "DT_EXPIRE: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setDtExpire(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case ERROR_ID:
                 Log.e("SAVE_TO_REPORT_OPT", "ERROR_ID: " + data);
                 Log.e("SAVE_TO_REPORT_OPT", "ERROR_COMMENT: " + data2);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setErrorId(data);
                     table.setErrorComment(data2);
                     table.setNotes(data2);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
             case AKCIYA_ID:
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data);
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setAkciyaId(data);
                     if (data2 != null && !data2.equals("")) {
                         table.setAkciya(data2);
                     }
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
@@ -910,15 +908,20 @@ public class ShowTovarRequisites {
 
             case NOTES:
                 Log.e("SAVE_TO_REPORT_OPT", "NOTES: " + data);
-                INSTANCE.executeTransaction(realm -> {
+                saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                     table.setNotes(data);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(table);
                 });
                 break;
 
+            default:
+                return false;
         }
+        if (!saved) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+        }
+        return saved;
     }
 
 
@@ -1042,7 +1045,7 @@ public class ShowTovarRequisites {
 
 
     private void pushOkButtonRequisites(TovarOptions tpl, ReportPrepareDB reportPrepareDB, DialogData dialog, String cd2, TovarDB list, String tovarId, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
-        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+        if (!operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null)) return;
         Toast.makeText(context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
         dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
     }

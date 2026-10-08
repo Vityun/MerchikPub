@@ -768,12 +768,23 @@ private fun StepperButton(
 }
 
 @Composable
+private fun rememberInlineInputValue(value: String, numeric: Boolean = false): MutableState<String> {
+    val localValue = remember { mutableStateOf(value) }
+    var previousValue by remember { mutableStateOf(value) }
+    LaunchedEffect(value) {
+        localValue.value = refreshedInlineInputValue(previousValue, localValue.value, value, numeric)
+        previousValue = value
+    }
+    return localValue
+}
+
+@Composable
 fun NumberInput(
     value: String,
     onValueChange: (String) -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    var localValue by remember(value) { mutableStateOf(value) }
+    var localValue by rememberInlineInputValue(value, numeric = true)
 
     BasicTextField(
         value = localValue,
@@ -832,7 +843,7 @@ fun DecimalNumberInput(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    var localValue by remember(value) { mutableStateOf(value) }
+    var localValue by rememberInlineInputValue(value, numeric = true)
 
     BasicTextField(
         value = localValue,
@@ -910,7 +921,7 @@ fun TextInput(
     minMeaningfulChars: Int = 0,
     tooShortHint: String = ""
 ) {
-    var localValue by remember(value) { mutableStateOf(value) }
+    var localValue by rememberInlineInputValue(value)
 
     val meaningfulCount = remember(localValue) {
         localValue.meaningfulCharsCount()

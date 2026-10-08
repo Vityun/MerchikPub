@@ -971,18 +971,23 @@ abstract class MainViewModel(
     }
 
     protected fun replaceCurrentItemByStableId(updatedItem: DataItemUI) {
-        val targetId = updatedItem.stableId
+        replaceCurrentItemsByStableId(listOf(updatedItem))
+    }
+
+    protected fun replaceCurrentItemsByStableId(updatedItems: List<DataItemUI>) {
+        if (updatedItems.isEmpty()) return
+        val replacements = updatedItems.associateBy { it.stableId }
 
         _uiState.update { state ->
             state.copy(
                 itemsHeader = state.itemsHeader.map { old ->
-                    if (old.stableId == targetId) updatedItem else old
+                    replacements[old.stableId] ?: old
                 },
                 items = state.items.map { old ->
-                    if (old.stableId == targetId) updatedItem else old
+                    replacements[old.stableId] ?: old
                 },
                 itemsFooter = state.itemsFooter.map { old ->
-                    if (old.stableId == targetId) updatedItem else old
+                    replacements[old.stableId] ?: old
                 }
             )
         }

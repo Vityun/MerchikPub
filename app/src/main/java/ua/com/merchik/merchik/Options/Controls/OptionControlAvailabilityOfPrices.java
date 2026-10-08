@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.Options.Controls;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
@@ -35,6 +34,7 @@ import java.util.Objects;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -164,6 +164,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 .append(isMinMaxOption ? MIN_MAX_PRICE_TEXT : "ЦЕНУ")
                 .append(":")
                 .append("\n\n");
+        SpannableStringBuilder invalidPriceMsg = new SpannableStringBuilder();
 
         // 5.0
         List<String> osvTovarIds = Arrays.asList(tovIds);
@@ -171,6 +172,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         int totalOSV = 0;
         int foundWithPrice = 0;
         int missingPriceCount = 0;
+        int invalidPriceCount = 0;
         List<String> missingPriceTovarIds = new ArrayList<>();
         int noFaceCount = 0;
         int missingTovarCount = 0;
@@ -219,8 +221,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
                 evaluatedCount++;
                 boolean hasPrice = hasPositivePrice(item);
-                // 1С: for option 175121 both the regular price before the promotion
-                // and the promotional price must be present for an OSV item.
+                // 1C: option 175121 requires both pre-promotion price fields for an OSV item.
                 boolean hasRequiredOsvPrice = isMinMaxOption
                         ? hasPositivePrice(item.getPriceMin()) && hasPositivePrice(item.getPriceMax())
                         : hasPrice;
@@ -243,6 +244,28 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 String priceCheck = "price=" + safe(item.getPrice())
                         + ", priceMin=" + safe(item.getPriceMin())
                         + ", priceMax=" + safe(item.getPriceMax());
+                if (isMinMaxOption && hasRequiredOsvPrice && hasPrice) {
+                    double price = Double.parseDouble(item.getPrice().trim().replace(",", "."));
+                    double priceMin = Double.parseDouble(item.getPriceMin().trim().replace(",", "."));
+                    double priceMax = Double.parseDouble(item.getPriceMax().trim().replace(",", "."));
+                    if (price > priceMin || price > priceMax) {
+                        err++;
+                        invalidPriceCount++;
+                        item.errorExist = 1;
+                        item.find = 0;
+                        String priceBeforePromotion = price > priceMin ? item.getPriceMin() : item.getPriceMax();
+                        invalidPriceMsg.append("у товара ")
+                                .append(createLinkedString(msg, item, tov))
+                                .append(" АКЦИОННАЯ цена (")
+                                .append(item.getPrice())
+                                .append(" грн) выше чем цена ДО начала акции (")
+                                .append(priceBeforePromotion)
+                                .append(" грн)\n");
+                        appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
+                                "result=PRICE_ABOVE_PRE_PROMOTION, face=" + safe(item.getFace()) + ", " + priceCheck);
+                        continue;
+                    }
+                }
                 if (hasRequiredOsvPrice) {
                     foundWithPrice++;
                     item.find = 1;
@@ -271,6 +294,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                             + ", totalOsvWithFace=" + totalOSV
                             + ", pricesPresent=" + foundWithPrice
                             + ", pricesMissing=" + missingPriceCount
+                            + ", pricesAbovePrePromotion=" + invalidPriceCount
                             + ", rows=" + itemDiagnostics);
         }
 
@@ -280,6 +304,9 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         // Формирование сообщения общего вида
         if (missingPriceCount > 0) {
             spannableStringBuilder.append(errMsg);
+        }
+        if (invalidPriceCount > 0) {
+            spannableStringBuilder.append(invalidPriceMsg);
         }
 
         // 6.0 Логика коротких сообщений (приближённо соответствует 1С)
@@ -296,18 +323,15 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (reportPrepare.size() == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия ЦЕН, не обнаружено.");
             signal = false; // нет товаров — замечаний нет
-        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */
-        else if (totalRelevant == 0 && Objects.equals(wpDataDB.getUser_opinion_id(), "59")) {
+        } /* скорее всего придется поменять местами с нижним блоком totalOSV == 0, так логично для меня, но сделал как в 1с */ else if (totalRelevant == 0 && Objects.equals(wpDataDB.getUser_opinion_id(), "59")) {
             spannableStringBuilder.append("Товаров клиента вообще нет ни на складе, ни на витрине ТТ.");
             signal = false;
-        }
-        else if (totalRelevant == 0){
-            spannableStringBuilder.append("Товаров клиента вообще нет ни на складе, ни на витрине ТТ и не указанно мнение (59) ")
+        } else if (totalRelevant == 0) {
+            spannableStringBuilder.append("Товаров клиента вообще нет ни на складе, ни на витрине ТТ и не указанно мнение: ")
                     .append(RoomManager.SQL_DB.opinionDao().getOpinionById(59).nm)
                     .append(". Если товаров заказчика ДЕЙСТВИТЕЛЬНО нет на ТТ выберите указанное мнение.");
             signal = true;
-        }
-        else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
+        } else if (err > 0 && (isPriceOption || isOsvOnlyOption)) {
 //            spannableStringBuilder.append("Не предоставлена информация о ЦЕНАХ по товару (" + missingPriceCount + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signal = true;
         } else if ((found == 0 && hasOsvList) &&
@@ -400,6 +424,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         String resultReason;
         if (reportPrepare.isEmpty() || totalRelevant == 0) {
             resultReason = "NO_RELEVANT_REPORT_ROWS";
+        } else if (invalidPriceCount > 0) {
+            resultReason = "PRICE_ABOVE_PRE_PROMOTION";
         } else if (missingPriceCount > 0 && (isPriceOption || isOsvOnlyOption)) {
             resultReason = "REQUIRED_PRICE_MISSING";
         } else if (!hasOsvList) {
@@ -427,6 +453,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         + ", totalOsvWithFace=" + totalOSV
                         + ", found=" + found
                         + ", missing=" + missingPriceCount
+                        + ", pricesAbovePrePromotion=" + invalidPriceCount
                         + ", colMin=" + colMin
                         + ", resultReason=" + resultReason
                         + ", calculatedSignal=" + signal
@@ -619,8 +646,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 dialog.setOperationTextData(getCurrentData(editTpl, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()));
 
                 dialog.setOperation(operationType(editTpl), getCurrentData(editTpl, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(editTpl.getOptionControlName()), () -> {
-                    if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(editTpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+                    if (dialog.getOperationResult() != null &&
+                            operetionSaveRPToDB(editTpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context)) {
                         Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                     }
                 });
@@ -818,44 +845,32 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         return null;
     }
 
-    private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
+    private boolean operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
         if (data == null || data.equals("")) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
 
+        boolean saved;
         // Сохраняем цену
         if (tpl.getOptionControlName() == PRICE) {
-            INSTANCE.executeTransaction(realm -> {
-                rp.setPrice(data);
-                rp.setUploadStatus(1);
-                rp.setDtChange(System.currentTimeMillis() / 1000);
-                RealmManager.setReportPrepareRow(rp);
+            return PriceSaveGuard.savePrice(context, rp, data, false);
+        } else if (tpl.getOptionControlName() == PRICE_BEFORE_PROMOTION) {
+            return PriceSaveGuard.savePrice(context, rp, data, true);
+        } else if (tpl.getOptionControlName() == AKCIYA_ID) {
+            saved = ReportPrepareRealm.updateFields(rp, current -> {
+                current.setAkciyaId(data);
+                current.setAkciya(data2);
+                current.setUploadStatus(1);
+                current.setDtChange(System.currentTimeMillis() / 1000);
             });
-            return;
+        } else {
+            return false;
         }
-
-        if (tpl.getOptionControlName() == PRICE_BEFORE_PROMOTION) {
-            INSTANCE.executeTransaction(realm -> {
-                rp.setPriceMin(data);
-                rp.setPriceMax(data);
-                rp.setUploadStatus(1);
-                rp.setDtChange(System.currentTimeMillis() / 1000);
-                RealmManager.setReportPrepareRow(rp);
-            });
-            return;
+        if (!saved) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
         }
-
-        // Старый кейс для акции (оставлен для совместимости)
-        if (tpl.getOptionControlName() == AKCIYA_ID) {
-            INSTANCE.executeTransaction(realm -> {
-                rp.setAkciyaId(data);
-                rp.setAkciya(data2);
-                rp.setUploadStatus(1);
-                rp.setDtChange(System.currentTimeMillis() / 1000);
-                RealmManager.setReportPrepareRow(rp);
-            });
-        }
+        return saved;
     }
 
 }

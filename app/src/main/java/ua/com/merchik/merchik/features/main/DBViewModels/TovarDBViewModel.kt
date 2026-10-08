@@ -14,7 +14,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.Realm
 import io.realm.RealmResults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -27,6 +26,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Globals.OptionControlName
@@ -140,7 +140,8 @@ class TovarDBViewModel @Inject constructor(
         val optionsList2: MutableList<OptionsDB>?,
         val allTovarOptions: List<TovarOptions>,
         val reportPrepareByTovarId: MutableMap<String, ReportPrepareDB?> = mutableMapOf(),
-        val rowsByItemAndMode: MutableMap<Pair<Long, ProductCodeEditorMode>, List<ProductCodeEditorRowUi>> = mutableMapOf()
+        val rowsByItemAndMode: MutableMap<Pair<Long, ProductCodeEditorMode>, List<ProductCodeEditorRowUi>> = mutableMapOf(),
+        var reportPrepareSnapshot: Map<String, TovarReportPrepareSnapshot>? = null
     )
 
     private var productCodeSessionCache: ProductCodeSessionCache? = null
@@ -313,6 +314,87 @@ class TovarDBViewModel @Inject constructor(
         productCodeSessionCache = null
     }
 
+    override fun updateContent() {
+        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+            clearProductCodeSessionCache()
+            getOrCreateProductCodeSessionCache()
+        }
+        super.updateContent()
+    }
+
+    fun prepareVisitContent() {
+        val cache = productCodeSessionCache
+        if (cache == null || cache.codeDad2 != getCodeDad2String() || cache.reportPrepareSnapshot == null) {
+            updateContent()
+        }
+    }
+
+    fun refreshReportPrepareOnTabResume() {
+        if (contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) return
+        val cache = productCodeSessionCache ?: return
+        // A full load is already pending; it will read the latest data itself.
+        val previous = cache.reportPrepareSnapshot ?: return
+        if (cache.codeDad2 != getCodeDad2String()) return
+
+        try {
+            val freshRows = readVisitReportPrepare(cache.codeDad2)
+            val snapshot = freshRows.mapValues { TovarReportPrepareSnapshot.from(it.value) }
+            if (previous.keys != snapshot.keys) {
+                Globals.writeToMLOG("INFO", "TovarDBViewModel.refreshReportPrepare",
+                    "dad2=${cache.codeDad2}, membership changed: ${previous.size} -> ${snapshot.size}, full reload")
+                updateContent()
+                return
+            }
+
+            val changedIds = changedReportPrepareTovarIds(previous, snapshot)
+            val affectedItems = getAllCurrentItems().filter {
+                it.rawAs<TovarDB>()?.getiD() in changedIds
+            }
+            affectedItems.forEach { item ->
+                invalidateProductCodeItemCache(item.stableId, item.rawAs<TovarDB>()?.getiD())
+            }
+            cache.reportPrepareByTovarId.clear()
+            cache.reportPrepareByTovarId.putAll(freshRows)
+            if (affectedItems.isEmpty()) {
+                cache.reportPrepareSnapshot = snapshot
+                return
+            }
+
+            val updatedItems = affectedItems.map { item ->
+                withReportPrepareFields(
+                    item,
+                    freshRows[item.rawAs<TovarDB>()?.getiD()],
+                    cache.optionsList2.orEmpty()
+                )
+            }
+            refreshExpandedProductCodeRows(updatedItems)
+            replaceCurrentItemsByStableId(updatedItems)
+            cache.reportPrepareSnapshot = snapshot
+            Globals.writeToMLOG("INFO", "TovarDBViewModel.refreshReportPrepare",
+                "dad2=${cache.codeDad2}, changed=${changedIds.size}, cards=${updatedItems.size}")
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "TovarDBViewModel.refreshReportPrepare", "dad2=${cache.codeDad2}: $e")
+        }
+    }
+
+    private fun readVisitReportPrepare(codeDad2: String): Map<String, ReportPrepareDB> {
+        // Realm is accessed on the UI thread; only detached copies are kept in the cache.
+        return indexReportPrepareByTovar(ReportPrepareRealm.getReportPrepareByDad2_LIST(codeDad2.toLong()))
+    }
+
+    private fun refreshExpandedProductCodeRows(items: List<DataItemUI>, replaceAll: Boolean = false) {
+        val current = productCodeEditorState.value
+        if (!current.expanded) return
+        val rows = if (replaceAll) mutableMapOf<Long, List<ProductCodeEditorRowUi>>()
+        else current.rowsByItemId.toMutableMap()
+        items.forEach { item ->
+            if (item.rawAs<TovarDB>() != null) {
+                rows[item.stableId] = buildProductCodeRowsForItem(item, current.mode)
+            }
+        }
+        setProductCodeEditor(current.copy(rowsByItemId = rows))
+    }
+
     fun refreshAfterVisitDataLoaded() {
         clearProductCodeSessionCache()
         updateContent()
@@ -328,8 +410,6 @@ class TovarDBViewModel @Inject constructor(
         if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
             openProductCodeEditor(
                 itemUI = itemUI,
-                fieldValue = fieldValue,
-                action = action,
                 mode = ProductCodeEditorMode.REQUIRED
             )
         }
@@ -345,8 +425,6 @@ class TovarDBViewModel @Inject constructor(
         if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
             openProductCodeEditor(
                 itemUI = itemUI,
-                fieldValue = fieldValue,
-                action = action,
                 mode = ProductCodeEditorMode.ALL
             )
         }
@@ -571,6 +649,11 @@ class TovarDBViewModel @Inject constructor(
                 val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
                 val cache = getOrCreateProductCodeSessionCache()
                 val baseTovars = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
+                if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                    cache.reportPrepareByTovarId.clear()
+                    cache.reportPrepareByTovarId.putAll(readVisitReportPrepare(cache.codeDad2))
+                    cache.rowsByItemAndMode.clear()
+                }
                 val tovarList = mergeBaseAndManualTovars(baseTovars)
                 val manuallyAddedIds = getManuallyAddedIds()
                 val additionalRequirementsDBList = AdditionalRequirementsRealm.getData3(
@@ -616,7 +699,7 @@ class TovarDBViewModel @Inject constructor(
                 val optionsList = cache.optionsList2 ?: mutableListOf()
                 val deletePromoOption = false
 
-                baseItems
+                val items = baseItems
                     .map { item ->
                         when (contextUI) {
 
@@ -629,7 +712,7 @@ class TovarDBViewModel @Inject constructor(
                                     ?: createNewRPRow(
                                         tovarId = tovarId,
                                         wpDataDB = wpDataDB
-                                    )
+                                    ).also { cache.reportPrepareByTovarId[tovarId] = it }
 
                                 val optionString =
                                     Options().getOptionString(
@@ -664,10 +747,11 @@ class TovarDBViewModel @Inject constructor(
                         if (contextUI != ContextUI.TOVAR_FROM_ACHIEVEMENT) {
                             val tovar = itemUI.rawAs<TovarDB>() ?: return@map itemUI
 
-                            val rp = ReportPrepareRealm.getReportPrepareByTov(
-                                codeDad2.toString(),
-                                tovar.getiD()
-                            )
+                            val rp = if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                                cache.reportPrepareByTovarId[tovar.getiD()]
+                            } else {
+                                ReportPrepareRealm.getReportPrepareByTov(codeDad2.toString(), tovar.getiD())
+                            }
 
                             val commentField = buildTovarBalanceImageCommentField(rp)
 
@@ -720,8 +804,16 @@ class TovarDBViewModel @Inject constructor(
                             else -> it
                         }
                     }
+                if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                    refreshExpandedProductCodeRows(items, replaceAll = true)
+                    cache.reportPrepareSnapshot = cache.reportPrepareByTovarId
+                        .mapNotNull { (id, row) -> row?.let { id to TovarReportPrepareSnapshot.from(it) } }
+                        .toMap()
+                }
+                items
             }
         } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "TovarDBViewModel.getItems", e.toString())
             emptyList()
         }
     }
@@ -962,16 +1054,25 @@ class TovarDBViewModel @Inject constructor(
             ""
         )
 
-        val deletePromoOption = false
+        replaceCurrentItemByStableId(withReportPrepareFields(originalItem, reportPrepare, optionsList.orEmpty()))
+    }
 
-        var updatedItem = originalItem
+    private fun withReportPrepareFields(
+        originalItem: DataItemUI,
+        reportPrepare: ReportPrepareDB?,
+        optionsList: List<OptionsDB>
+    ): DataItemUI {
+        var updatedItem = originalItem.copy(
+            rawFields = originalItem.rawFields.filterNot { it.key == "tovar_image_balance_comment" },
+            fields = originalItem.fields.filterNot { it.key == "tovar_image_balance_comment" }
+        )
         var hasChangedProductCode = false
 
         if (reportPrepare != null) {
             val optionString = Options().getOptionString(
                 optionsList,
                 reportPrepare,
-                deletePromoOption
+                false
             )
             hasChangedProductCode = optionString.hasChangedProductCode()
 
@@ -990,8 +1091,7 @@ class TovarDBViewModel @Inject constructor(
             updatedItem = updatedItem.addOrReplaceImageCommentField(commentField)
         }
 
-        updatedItem = updatedItem.addTovarReportPrepareChangedMarker(hasChangedProductCode)
-        replaceCurrentItemByStableId(updatedItem)
+        return updatedItem.addTovarReportPrepareChangedMarker(hasChangedProductCode)
     }
 
     private fun refreshEditedInlineRow(
@@ -1046,8 +1146,6 @@ class TovarDBViewModel @Inject constructor(
 
     private fun openProductCodeEditor(
         itemUI: DataItemUI,
-        fieldValue: FieldValue,
-        action: ClickTextAction,
         mode: ProductCodeEditorMode
     ) {
         val current = productCodeEditorState.value
@@ -1071,8 +1169,6 @@ class TovarDBViewModel @Inject constructor(
         val rowsByItemId = allItems.associate { item ->
             item.stableId to buildProductCodeRowsForItem(
                 item = item,
-                clickedField = fieldValue,
-                action = action,
                 mode = mode
             )
         }
@@ -3125,11 +3221,6 @@ class TovarDBViewModel @Inject constructor(
         tovarId: String,
         wpDataDB: WpDataDB
     ): Boolean {
-        var rp = rp
-        if (rp == null) {
-            rp = createNewRPRow(tovarId, wpDataDB)
-        }
-
         val optionName = tpl.getOptionControlName()
 
 // Для AKCIYA_ID разрешаем пустой data,
@@ -3141,73 +3232,69 @@ class TovarDBViewModel @Inject constructor(
             return false
         }
 
-        val table = rp
+        val current = if (rp == null) {
+            RealmManager.getTovarReportPrepare(wpDataDB.code_dad2.toString(), tovarId)
+                ?: createNewRPRow(tovarId, wpDataDB)
+        } else {
+            ReportPrepareRealm.getByIdCopy(rp.getID())
+        }
+        if (current == null) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show()
+            return false
+        }
+        val snapshot = rp ?: current
+        val saved: Boolean
         when (tpl.getOptionControlName()) {
             OptionControlName.PRICE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setPrice(data)
-                    table.uploadStatus = 1
-                    table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                return PriceSaveGuard.savePrice(context, snapshot, data, false)
             }
 
             OptionControlName.PRICE_BEFORE_PROMOTION -> {
                 Log.e("SAVE_TO_REPORT_OPT", "PRICE_BEFORE_PROMOTION: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setPriceMin(data)
-                    table.setPriceMax(data)
-                    table.uploadStatus = 1
-                    table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                return PriceSaveGuard.savePrice(context, snapshot, data, true)
             }
 
             OptionControlName.FACE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data)
                 val result =
-                    FaceSaveGuard.canSaveFace(context, wpDataDB, rp, data)
+                    FaceSaveGuard.canSaveFace(context, wpDataDB, current, data)
 
                 if (result.isError) {
                     return false
                 }
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setFace(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setFace(data)
                     table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.EXPIRE_LEFT -> {
                 Log.e("SAVE_TO_REPORT_OPT", "EXPIRE_LEFT: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
                     table.setExpireLeft(data)
                     table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.AMOUNT -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setAmount(data!!.toInt())
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setAmount(data!!.toInt())
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.OBOROTVED_NUM -> {
                 Log.e("SAVE_TO_REPORT_OPT", "OBOROTVED_NUM: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setOborotvedNum(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setOborotvedNum(data)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.UP -> {
@@ -3217,67 +3304,65 @@ class TovarDBViewModel @Inject constructor(
                 val seconds = millis / 1000
                 Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds)
                 Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setUp(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setUp(data)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.DT_EXPIRE -> {
                 Log.e("SAVE_TO_REPORT_OPT", "DT_EXPIRE: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setDtExpire(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setDtExpire(data)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.ERROR_ID -> {
                 Log.e("SAVE_TO_REPORT_OPT", "ERROR_ID: " + data)
                 Log.e("SAVE_TO_REPORT_OPT", "ERROR_COMMENT: " + data2)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setErrorId(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setErrorId(data)
                     table.setErrorComment(data2)
                     table.setNotes(data2)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.AKCIYA_ID -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data)
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setAkciyaId(data.orEmpty())
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setAkciyaId(data.orEmpty())
                     table.setAkciya(data2.orEmpty())
-//                    table!!.setAkciyaId(data)
+//                    table.setAkciyaId(data)
 //                    if (data2 != null && !data2.isEmpty()) {
 //                        table.setAkciya(data2)
 //                    }
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             OptionControlName.NOTES -> {
                 Log.e("SAVE_TO_REPORT_OPT", "NOTES: " + data)
-                RealmManager.INSTANCE.executeTransaction(Realm.Transaction { realm: Realm? ->
-                    table!!.setNotes(data)
+                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                    table.setNotes(data)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                    RealmManager.setReportPrepareRow(table)
-                })
+                }
             }
 
             else -> return false
         }
 
-        return true
+        if (!saved) {
+            Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show()
+        }
+        return saved
     }
 
     private fun createNewRPRow(tovarId: String, wpDataDB: WpDataDB): ReportPrepareDB {
@@ -3361,8 +3446,6 @@ class TovarDBViewModel @Inject constructor(
 
     private fun buildProductCodeRowsForItem(
         item: DataItemUI,
-        clickedField: FieldValue,
-        action: ClickTextAction,
         mode: ProductCodeEditorMode
     ): List<ProductCodeEditorRowUi> {
         val tovar = item.rawAs<TovarDB>() ?: return emptyList()

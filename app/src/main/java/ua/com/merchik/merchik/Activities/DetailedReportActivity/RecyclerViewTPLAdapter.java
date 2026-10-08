@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
@@ -60,6 +59,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
@@ -837,21 +837,25 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             return adapter;
         }
 
-        private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
+        private boolean operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
             if (data == null || data.equals("")) {
                 Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-                return;
+                return false;
             }
 
             if (tpl.getOptionControlName() == AKCIYA_ID) {
-                INSTANCE.executeTransaction(realm -> {
-                    rp.setAkciyaId(data);
-                    rp.setAkciya(data2);
-                    rp.setUploadStatus(1);
-                    rp.setDtChange(System.currentTimeMillis() / 1000);
-                    RealmManager.setReportPrepareRow(rp);
+                boolean saved = ReportPrepareRealm.updateFields(rp, current -> {
+                    current.setAkciyaId(data);
+                    current.setAkciya(data2);
+                    current.setUploadStatus(1);
+                    current.setDtChange(System.currentTimeMillis() / 1000);
                 });
+                if (!saved) {
+                    Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+                }
+                return saved;
             }
+            return false;
         }
     }
 

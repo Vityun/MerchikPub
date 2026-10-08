@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
@@ -273,8 +272,8 @@ public class OptionControlPromotion<T> extends OptionControl {
                 dialog.setOperationTextData2(reportPrepareDB.getAkciya());
 
                 dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
-                    if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+                    if (dialog.getOperationResult() != null &&
+                            operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context)) {
                         Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                     }
                 });
@@ -461,21 +460,25 @@ public class OptionControlPromotion<T> extends OptionControl {
         return null;
     }
 
-    private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
+    private boolean operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
         if (data == null || data.equals("")) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
 
         if (tpl.getOptionControlName() == AKCIYA_ID) {
-            INSTANCE.executeTransaction(realm -> {
-                rp.setAkciyaId(data);
-                rp.setAkciya(data2);
-                rp.setUploadStatus(1);
-                rp.setDtChange(System.currentTimeMillis() / 1000);
-                RealmManager.setReportPrepareRow(rp);
+            boolean saved = ReportPrepareRealm.updateFields(rp, current -> {
+                current.setAkciyaId(data);
+                current.setAkciya(data2);
+                current.setUploadStatus(1);
+                current.setDtChange(System.currentTimeMillis() / 1000);
             });
+            if (!saved) {
+                Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            }
+            return saved;
         }
+        return false;
     }
 
 }

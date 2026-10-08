@@ -13,10 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.RecentItem;
-import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 
 public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<RecyclerViewOptionsHintAdapter.ViewHolder>{
     private Context mContext;
@@ -48,35 +49,36 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
             button.setText(recentItem.getValue());
             button.setOnClickListener(view -> {
 
+                boolean saved;
                 switch (dataType){
                     case ("face") :
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            reportPrepareTovar.setFace(recentItem.getValue());
-                            reportPrepareTovar.setUploadStatus(1);
-                            reportPrepareTovar.setDtChange(currentTime);
-                            RealmManager.setReportPrepareRow(reportPrepareTovar);
+                        saved = ReportPrepareRealm.updateFields(reportPrepareTovar, current -> {
+                            current.setFace(recentItem.getValue());
+                            current.setUploadStatus(1);
+                            current.setDtChange(currentTime);
                         });
                         break;
 
                     case ("price") :
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            reportPrepareTovar.setPrice(recentItem.getValue());
-                            reportPrepareTovar.setUploadStatus(1);
-                            reportPrepareTovar.setDtChange(currentTime);
-                            RealmManager.setReportPrepareRow(reportPrepareTovar);
-                        });
+                        if (!PriceSaveGuard.savePrice(mContext, reportPrepareTovar, recentItem.getValue(), false)) return;
+                        saved = true;
                         break;
 
                     case ("amount") :
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            reportPrepareTovar.setAmount(Integer.parseInt(recentItem.getValue()));
-                            reportPrepareTovar.setUploadStatus(1);
-                            reportPrepareTovar.setDtChange(currentTime);
-                            RealmManager.setReportPrepareRow(reportPrepareTovar);
+                        saved = ReportPrepareRealm.updateFields(reportPrepareTovar, current -> {
+                            current.setAmount(Integer.parseInt(recentItem.getValue()));
+                            current.setUploadStatus(1);
+                            current.setDtChange(currentTime);
                         });
                         break;
+                    default:
+                        return;
                 }
 
+                if (!saved) {
+                    Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
                 Toast.makeText(mContext, "Внесено: " + recentItem.getValue(), Toast.LENGTH_LONG).show();
                 dialog.dismiss();

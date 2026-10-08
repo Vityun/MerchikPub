@@ -62,6 +62,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
@@ -3162,6 +3163,7 @@ fun ItemUI(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 ProductCodeInlineEditor(
+                    itemId = item.stableId,
                     rows = productCodeRows,
                     onMinus = { rowId -> onProductCodeMinus?.invoke(rowId) },
                     onPlus = { rowId -> onProductCodePlus?.invoke(rowId) },
@@ -3658,6 +3660,7 @@ fun TopButton(
 
 @Composable
 fun ProductCodeInlineEditor(
+    itemId: Long,
     rows: List<ProductCodeEditorRowUi>,
     onMinus: (String) -> Unit,
     onPlus: (String) -> Unit,
@@ -3679,131 +3682,133 @@ fun ProductCodeInlineEditor(
         )
 
         rows.forEachIndexed { index, row ->
-            val rowBackground = if (index % 2 == 0) Color.Transparent else oddRowColor
+            key(itemId, row.rowId) {
+                val rowBackground = if (index % 2 == 0) Color.Transparent else oddRowColor
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(rowBackground)
-            ) {
-                when (row.kind) {
-                    InlineEditorKind.NUMBER -> {
-                        NumberEditorRow(
-                            title = row.title,
-                            value = row.value,
-                            onMinus = { onMinus(row.rowId) },
-                            onPlus = { onPlus(row.rowId) },
-                            onValueChange = { onValueChange(row.rowId, it) }
-                        )
-                    }
-
-                    InlineEditorKind.DECIMAL_NUMBER -> {
-                        DecimalNumberEditorRow(
-                            title = row.title,
-                            value = row.value,
-                            onValueChange = { onValueChange(row.rowId, it) }
-                        )
-                    }
-
-                    InlineEditorKind.TEXT -> {
-                        TextEditorRow(
-                            title = row.title,
-                            value = row.value,
-                            onValueChange = { onValueChange(row.rowId, it) }
-                        )
-                    }
-
-                    InlineEditorKind.DATE -> {
-                        DateEditorRow(
-                            title = row.title,
-                            value = row.value,
-                            onDateSelected = { onValueChange(row.rowId, it) }
-                        )
-                    }
-
-                    InlineEditorKind.SINGLE_SELECT -> {
-                        SelectEditorRow(
-                            title = row.title,
-                            selectedValue = row.value,
-                            choices = row.choices,
-                            onSelected = { onValueChange(row.rowId, it) }
-                        )
-                    }
-
-                    InlineEditorKind.DOUBLE_SELECT -> {
-                        val presence = when (row.value2) {
-                            "1" -> AkciyaPresence.HAS
-                            "2" -> AkciyaPresence.NONE
-                            else -> AkciyaPresence.UNSET
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(rowBackground)
+                ) {
+                    when (row.kind) {
+                        InlineEditorKind.NUMBER -> {
+                            NumberEditorRow(
+                                title = row.title,
+                                value = row.value,
+                                onMinus = { onMinus(row.rowId) },
+                                onPlus = { onPlus(row.rowId) },
+                                onValueChange = { onValueChange(row.rowId, it) }
+                            )
                         }
 
-                        val selectedAkciyaId = row.value.takeIf { it.isNotBlank() }
-                        val selectedAkciyaName = row.choices
-                            .firstOrNull { it.id == row.value }
-                            ?.title
-                            .orEmpty()
-
-                        AkciyaSelectorRow(
-                            presence = presence,
-                            selectedAkciyaId = selectedAkciyaId,
-                            selectedAkciyaName = selectedAkciyaName,
-                            onPresenceChanged = { newPresence ->
-                                val savedValue2 = when (newPresence) {
-                                    AkciyaPresence.HAS -> "1"
-                                    AkciyaPresence.NONE -> "2"
-                                    AkciyaPresence.UNSET -> "0"
-                                }
-
-                                // Только одно событие.
-                                // Очистку row.value для "немає" делает updateProductCodeSecondValue()
-                                onValue2Change(row.rowId, savedValue2)
-                            },
-                            onSelected = { id, _ ->
-                                val selectedId = id.orEmpty()
-
-                                if (selectedId.isBlank()) {
-                                    return@AkciyaSelectorRow
-                                }
-
-                                // Только одно событие.
-                                // value2 = "1" выставляет updateProductCodeValue()
-                                onValueChange(row.rowId, selectedId)
-                            }
-                        )
-                    }
-
-                    InlineEditorKind.TEXT_AND_SELECT -> {
-                        Log.e(
-                            "TEXT_AND_SELECT",
-                            "value=${row.value}, value2=${row.value2}, choicesSize=${row.choices.size}"
-                        )
-
-                        row.choices.forEach {
-                            Log.e("TEXT_AND_SELECT", "choice id=${it.id}, title=${it.title}")
+                        InlineEditorKind.DECIMAL_NUMBER -> {
+                            DecimalNumberEditorRow(
+                                title = row.title,
+                                value = row.value,
+                                onValueChange = { onValueChange(row.rowId, it) }
+                            )
                         }
 
-                        val selectedErrorId = row.value.takeIf { it.isNotBlank() }
-                        val selectedErrorName = row.choices
-                            .firstOrNull { it.id == row.value }
-                            ?.title
-                            .orEmpty()
+                        InlineEditorKind.TEXT -> {
+                            TextEditorRow(
+                                title = row.title,
+                                value = row.value,
+                                onValueChange = { onValueChange(row.rowId, it) }
+                            )
+                        }
 
-                        TextAndSelectEditorRow(
-                            text = row.value2,
-                            selectedId = selectedErrorId,
-                            selectedValue = selectedErrorName,
-                            emptySelectionText = "Оберіть помилку",
-                            onTextChanged = { onValue2Change(row.rowId, it) },
-                            onSelected = { id, _ ->
-                                onValueChange(row.rowId, id.orEmpty())
+                        InlineEditorKind.DATE -> {
+                            DateEditorRow(
+                                title = row.title,
+                                value = row.value,
+                                onDateSelected = { onValueChange(row.rowId, it) }
+                            )
+                        }
+
+                        InlineEditorKind.SINGLE_SELECT -> {
+                            SelectEditorRow(
+                                title = row.title,
+                                selectedValue = row.value,
+                                choices = row.choices,
+                                onSelected = { onValueChange(row.rowId, it) }
+                            )
+                        }
+
+                        InlineEditorKind.DOUBLE_SELECT -> {
+                            val presence = when (row.value2) {
+                                "1" -> AkciyaPresence.HAS
+                                "2" -> AkciyaPresence.NONE
+                                else -> AkciyaPresence.UNSET
                             }
-                        )
+
+                            val selectedAkciyaId = row.value.takeIf { it.isNotBlank() }
+                            val selectedAkciyaName = row.choices
+                                .firstOrNull { it.id == row.value }
+                                ?.title
+                                .orEmpty()
+
+                            AkciyaSelectorRow(
+                                presence = presence,
+                                selectedAkciyaId = selectedAkciyaId,
+                                selectedAkciyaName = selectedAkciyaName,
+                                onPresenceChanged = { newPresence ->
+                                    val savedValue2 = when (newPresence) {
+                                        AkciyaPresence.HAS -> "1"
+                                        AkciyaPresence.NONE -> "2"
+                                        AkciyaPresence.UNSET -> "0"
+                                    }
+
+                                    // Только одно событие.
+                                    // Очистку row.value для "немає" делает updateProductCodeSecondValue()
+                                    onValue2Change(row.rowId, savedValue2)
+                                },
+                                onSelected = { id, _ ->
+                                    val selectedId = id.orEmpty()
+
+                                    if (selectedId.isBlank()) {
+                                        return@AkciyaSelectorRow
+                                    }
+
+                                    // Только одно событие.
+                                    // value2 = "1" выставляет updateProductCodeValue()
+                                    onValueChange(row.rowId, selectedId)
+                                }
+                            )
+                        }
+
+                        InlineEditorKind.TEXT_AND_SELECT -> {
+                            Log.e(
+                                "TEXT_AND_SELECT",
+                                "value=${row.value}, value2=${row.value2}, choicesSize=${row.choices.size}"
+                            )
+
+                            row.choices.forEach {
+                                Log.e("TEXT_AND_SELECT", "choice id=${it.id}, title=${it.title}")
+                            }
+
+                            val selectedErrorId = row.value.takeIf { it.isNotBlank() }
+                            val selectedErrorName = row.choices
+                                .firstOrNull { it.id == row.value }
+                                ?.title
+                                .orEmpty()
+
+                            TextAndSelectEditorRow(
+                                text = row.value2,
+                                selectedId = selectedErrorId,
+                                selectedValue = selectedErrorName,
+                                emptySelectionText = "Оберіть помилку",
+                                onTextChanged = { onValue2Change(row.rowId, it) },
+                                onSelected = { id, _ ->
+                                    onValueChange(row.rowId, id.orEmpty())
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            if (index < rows.lastIndex) {
-                HorizontalDivider(color = Color(0xFFEAEAEA))
+                if (index < rows.lastIndex) {
+                    HorizontalDivider(color = Color(0xFFEAEAEA))
+                }
             }
         }
 

@@ -5,14 +5,66 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+import io.realm.Realm;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class ReportPrepareRealm {
+
+    public static ReportPrepareDB getByIdCopy(Long id) {
+        if (id == null) return null;
+        ReportPrepareDB row = INSTANCE.where(ReportPrepareDB.class).equalTo("iD", id).findFirst();
+        return row == null ? null : INSTANCE.copyFromRealm(row);
+    }
+
+    // Setter-only callbacks edit the current row, then mirror those fields to the detached UI snapshot.
+    public static boolean updateFields(ReportPrepareDB snapshot, Consumer<ReportPrepareDB> update) {
+        return updateFields(snapshot, current -> true, update);
+    }
+
+    public static boolean updateFields(ReportPrepareDB snapshot, Predicate<ReportPrepareDB> canUpdate,
+                                       Consumer<ReportPrepareDB> update) {
+        boolean[] rejected = {false};
+        boolean saved = updateFields(INSTANCE, snapshot, current -> {
+            rejected[0] = !canUpdate.test(current);
+            return !rejected[0];
+        }, update);
+        if (!saved && !rejected[0]) {
+            Long id = snapshot != null && RealmObject.isValid(snapshot) ? snapshot.getID() : null;
+            Globals.writeToMLOG("ERROR", "ReportPrepare/updateFields", "Row not found or invalid, id=" + id);
+        }
+        return saved;
+    }
+
+    static boolean updateFields(Realm realm, ReportPrepareDB snapshot, Consumer<ReportPrepareDB> update) {
+        return updateFields(realm, snapshot, current -> true, update);
+    }
+
+    static boolean updateFields(Realm realm, ReportPrepareDB snapshot, Predicate<ReportPrepareDB> canUpdate,
+                                Consumer<ReportPrepareDB> update) {
+        if (snapshot == null || !RealmObject.isValid(snapshot) || snapshot.getID() == null) return false;
+        Long id = snapshot.getID();
+        boolean[] saved = {false};
+        realm.executeTransaction(transactionRealm -> {
+            ReportPrepareDB current = transactionRealm.where(ReportPrepareDB.class)
+                    .equalTo("iD", id).findFirst();
+            if (current == null || !canUpdate.test(current)) return;
+            update.accept(current);
+            saved[0] = true;
+        });
+        if (saved[0] && !RealmObject.isManaged(snapshot)) {
+            update.accept(snapshot);
+        }
+        return saved[0];
+    }
 
     public static void setAll(List<ReportPrepareDB> data) {
         INSTANCE.beginTransaction();

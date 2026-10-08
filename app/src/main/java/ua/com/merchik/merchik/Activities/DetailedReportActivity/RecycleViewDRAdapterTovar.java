@@ -68,6 +68,7 @@ import kotlin.jvm.functions.Function0;
 import retrofit2.Call;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
@@ -1367,7 +1368,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                         if (dialog.getOperationResult() != null) {
-                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                            if (!operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null)) return;
                             refreshElement(cd2, list.getiD());
                             dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                         }
@@ -1450,7 +1451,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     for (ReportHintList item : reportHint.getList()) {
                                         if (tpl.getOrderField().equals(item.getField())) {
                                             dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
-                                                operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
+                                                if (!operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null)) return;
                                                 Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
                                                 refreshElement(cd2, list.getiD());
                                                 if (adapterPosition != RecyclerView.NO_POSITION) {
@@ -1491,7 +1492,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * (то что должно происходить при нажатии на Ок в модальном окне при внесении реквизитов)
          */
         private void pushOkButtonRequisites(TovarOptions tpl, ReportPrepareDB reportPrepareDB, DialogData dialog, String cd2, TovarDB list, String tovarId, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
-            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+            if (!operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null)) return;
             Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
             refreshElement(cd2, list.getiD());
             dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
@@ -1504,7 +1505,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          */
         private void dialogShowRule(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
             Log.e("dialogShowRule", "clickType: " + clickType);
+            if (dialogList.isEmpty()) return;
             ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
+            report = report == null ? null : ReportPrepareRealm.getByIdCopy(report.getID());
+            if (report == null) {
+                Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+                return;
+            }
             dialogList.remove(0);
 
             boolean option165276 = false;
@@ -1932,43 +1939,37 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * <p>
          * Функционал в зависимости от операции
          */
-        private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
-            if (rp == null) {
-                rp = createNewRPRow(tovarDB);
+        private boolean operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
+            if (rp == null && tovarDB != null) {
+                rp = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
+                if (rp == null) rp = createNewRPRow(tovarDB);
+            }
+            ReportPrepareDB current = rp == null ? null : ReportPrepareRealm.getByIdCopy(rp.getID());
+            if (current == null) {
+                Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+                return false;
             }
 
             if (data == null || data.isEmpty()) {
                 Toast.makeText(mContext, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-                return;
+                return false;
             }
 
-            ReportPrepareDB table = rp;
+            ReportPrepareDB snapshot = rp;
+            boolean saved;
             switch (tpl.getOptionControlName()) {
                 case PRICE:
                     Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data);
-                    INSTANCE.executeTransaction(realm -> {
-                        table.setPrice(data);
-                        table.setUploadStatus(1);
-                        table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
-                    });
-                    break;
+                    return PriceSaveGuard.savePrice(mContext, snapshot, data, false);
 
                 case PRICE_BEFORE_PROMOTION:
                     Log.e("SAVE_TO_REPORT_OPT", "PRICE_BEFORE_PROMOTION: " + data);
-                    INSTANCE.executeTransaction(realm -> {
-                        table.setPriceMin(data);
-                        table.setPriceMax(data);
-                        table.setUploadStatus(1);
-                        table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
-                    });
-                    break;
+                    return PriceSaveGuard.savePrice(mContext, snapshot, data, true);
 
                 case FACE:
                     Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
                     FaceSaveGuard.FaceSaveCheckResult result =
-                            FaceSaveGuard.canSaveFace(mContext,wpDataDB, rp, data);
+                            FaceSaveGuard.canSaveFace(mContext,wpDataDB, current, data);
 
                     if (result.isError()) {
 //                        new MessageDialogBuilder(Globals.unwrap(mContext))
@@ -1977,43 +1978,39 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 //                                .setStatus(DialogStatus.ERROR)
 //                                .setOnConfirmAction(() -> Unit.INSTANCE)
 //                                .show();
-                        return;
+                        return false;
                     }
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setFace(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case EXPIRE_LEFT:
                     Log.e("SAVE_TO_REPORT_OPT", "EXPIRE_LEFT: " + data);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setExpireLeft(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case AMOUNT:
                     Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setAmount(Integer.parseInt(data));
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case OBOROTVED_NUM:
                     Log.e("SAVE_TO_REPORT_OPT", "OBOROTVED_NUM: " + data);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setOborotvedNum(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
@@ -2024,48 +2021,44 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     long seconds = millis / 1000;
                     Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds);
                     Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setUp(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case DT_EXPIRE:
                     Log.e("SAVE_TO_REPORT_OPT", "DT_EXPIRE: " + data);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setDtExpire(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case ERROR_ID:
                     Log.e("SAVE_TO_REPORT_OPT", "ERROR_ID: " + data);
                     Log.e("SAVE_TO_REPORT_OPT", "ERROR_COMMENT: " + data2);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setErrorId(data);
                         table.setErrorComment(data2);
                         table.setNotes(data2);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
                 case AKCIYA_ID:
                     Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data);
                     Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setAkciyaId(data);
                         if (data2 != null && !data2.isEmpty()) {
                             table.setAkciya(data2);
                         }
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
@@ -2081,15 +2074,20 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 case NOTES:
                     Log.e("SAVE_TO_REPORT_OPT", "NOTES: " + data);
-                    INSTANCE.executeTransaction(realm -> {
+                    saved = ReportPrepareRealm.updateFields(snapshot, table -> {
                         table.setNotes(data);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
+                default:
+                    return false;
             }
+            if (!saved) {
+                Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            }
+            return saved;
         }
 
 
