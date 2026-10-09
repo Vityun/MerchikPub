@@ -651,6 +651,26 @@ object LogMPDBOverride {
     }
 }
 
+object PlanogrammSDBOverride {
+    fun getFallbackTitle(key: String): String? = when (key) {
+        "ID" -> "Планограма"
+        "nm" -> "Назва"
+        "comments" -> "Коментар"
+        "client_txt" -> "Клієнт"
+        "dt_start" -> "Дата початку"
+        "dt_end" -> "Дата закінчення"
+        "planogrammPhoto" -> "Фото за відвідування"
+        else -> null
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier? =
+        when (jsonObject.optInt("planogrammPhoto", -1)) {
+            -1 -> null
+            0 -> MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4")))
+            else -> MerchModifier(background = Color(android.graphics.Color.parseColor("#00FF77")))
+        }
+}
+
 object SamplePhotoSDBOverride {
     fun getFieldsForOrderOnUI(): List<String> = "nm, about".split(",").map { it.trim() }
 

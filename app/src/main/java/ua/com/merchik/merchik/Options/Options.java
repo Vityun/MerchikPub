@@ -66,6 +66,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1367,6 +1368,14 @@ public class Options {
             if (options == null || options.isEmpty()) {
                 throw new IllegalStateException("Options are not loaded; conduct deferred");
             }
+            // включить сортировку когда Петров даст добро
+//            options.sort(
+//                    Comparator.comparing(
+//                            OptionsDB::getSo,
+//                            Comparator.nullsLast(Integer::compareTo)
+//                    ).reversed()
+//            );
+
             optionNotConduct.clear();
             optionConductWithPenalty.clear();
             int register = 0;

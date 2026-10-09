@@ -1853,6 +1853,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                         viewModel.additionalEarningsDialogState.value != null
                                     if (viewModel.typeWindow != "container" && !waitForAdditionalEarningsDialog &&
                                         viewModel.contextUI != ContextUI.SHOWCASE_MAKE_PHOTO &&
+                                        viewModel.contextUI != ContextUI.PLANOGRAM_MAKE_PHOTO &&
                                         viewModel !is SamplePhotoSDBViewModel
                                     ) {
                                         if (viewModel.contextUI == ContextUI.ADD_THEME_QUESTION_ANSWER ||
@@ -2360,7 +2361,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     if (viewModel is SamplePhotoSDBViewModel) {
         val warehouseProductAvailable by viewModel.warehouseProductAvailable.collectAsState()
         val sampleSelectionHintVisible by viewModel.sampleSelectionHintVisible.collectAsState()
-        val isWarehouseSample = viewModel.contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360
+        val isWarehouseSample = viewModel.requiresWarehouseAvailability
         if (isWarehouseSample && warehouseProductAvailable == null) {
             var pendingWarehouseChoice by rememberSaveable(viewModel.dataJson) {
                 mutableStateOf<String?>(null)
@@ -3552,6 +3553,7 @@ private fun ContextUI.isImageDisplayModeToolbarContext(): Boolean = when (this) 
     ContextUI.SHOWCASE,
     ContextUI.SHOWCASE_COMPLETED_CHECK,
     ContextUI.SHOWCASE_MAKE_PHOTO,
+    ContextUI.PLANOGRAM_MAKE_PHOTO,
     ContextUI.STACK_PHOTO_DYNAMIC_ACHIEVEMENT,
     ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
     ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
@@ -3582,6 +3584,7 @@ fun ContextUI.imageOverlayTextKeys(): List<String> = when (this) {
     ContextUI.SHOWCASE,
     ContextUI.SHOWCASE_COMPLETED_CHECK,
     ContextUI.SHOWCASE_MAKE_PHOTO -> SHOWCASE_IMAGE_OVERLAY_TEXT_KEYS
+    ContextUI.PLANOGRAM_MAKE_PHOTO -> listOf("nm")
 
     else -> DEFAULT_IMAGE_OVERLAY_TEXT_KEYS
 }

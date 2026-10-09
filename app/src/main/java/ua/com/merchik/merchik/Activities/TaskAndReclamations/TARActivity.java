@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TarPhotoDataHolder;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TarPhotoFlow;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
@@ -65,6 +66,12 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     private TARSecondFrag secondFrag;
 
     private FragmentManager fragmentManager;
+    private TarPhotoFlow photoFlow;
+
+    public TarPhotoFlow getPhotoFlow() {
+        if (photoFlow == null) photoFlow = new TarPhotoFlow(this);
+        return photoFlow;
+    }
 
     //    private FragmentManager fragmentManager;
     public static TextView activity_title;
@@ -79,6 +86,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState == null) clearPendingPhotoTypeId();
         setActivityContent();
     }
 
@@ -248,6 +256,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (getPhotoFlow().onActivityResult(requestCode, resultCode, data)) return;
 
         Log.e("TARActivity", "onActivityResult");
         Log.e("TARActivity", "requestCode: " + requestCode);
@@ -296,7 +305,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + photoPath);
 
-                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
+                    TasksAndReclamationsSDB tar = getPhotoFlow().pendingTask();
+                    if (tar == null) tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
 
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
 
@@ -421,14 +431,16 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     private StackPhotoDB savePickedTARPhoto(Intent data) {
         try {
             Uri uri = data.getData();
-            if (uri == null || MakePhotoFromGaleryTasksAndReclamationsSDB == null) {
+            TasksAndReclamationsSDB tar = getPhotoFlow().pendingTask();
+            if (tar == null) tar = MakePhotoFromGaleryTasksAndReclamationsSDB;
+            if (uri == null || tar == null) {
                 Globals.writeToMLOG("ERROR", "TARActivity.savePickedTARPhoto", "Missing picked image URI or TAR data");
                 return null;
             }
             PhotoPickerUtils.persistReadPermissionIfPossible(this, data);
             File file = PhotoPickerUtils.copyPickedImageToFile(getApplicationContext(), uri);
             Globals.writeToMLOG("INFO", "TARActivity.savePickedTARPhoto", "fileLength=" + file.length());
-            return savePhoto(file, MakePhotoFromGaleryTasksAndReclamationsSDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+            return savePhoto(file, tar, MakePhotoFromGalery.tovarId, getApplicationContext());
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TARActivity.savePickedTARPhoto", "Exception: " + e);
             return null;
@@ -450,6 +462,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     }
 
     public void clearPendingPhotoTypeId() {
+        getPhotoFlow().clear();
         getSharedPreferences(TAR_PHOTO_PREFS, MODE_PRIVATE)
                 .edit()
                 .remove(KEY_TAR_PHOTO_TYPE_ID)
@@ -505,6 +518,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
             stackPhotoDB.setPhoto_num(str);
+            getPhotoFlow().applyTo(stackPhotoDB, tar);
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             return stackPhotoDB;
         } catch (Exception e) {
@@ -644,6 +658,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(file.getAbsolutePath());
+
+            getPhotoFlow().applyTo(stackPhotoDB, tasksAndReclamationsSDB);
 
             String jo = new Gson().toJson(stackPhotoDB);
             Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);

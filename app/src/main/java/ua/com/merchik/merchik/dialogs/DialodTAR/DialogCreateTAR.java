@@ -23,6 +23,7 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.realm.RealmObject;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -124,6 +125,11 @@ public class DialogCreateTAR extends DialogData {
     }
 
     public void refreshAdaper(StackPhotoDB photo) {
+        if (photo == null || !RealmObject.isValid(photo)) {
+            Globals.writeToMLOG("ERROR", "DialogCreateTAR.refreshAdaper", "Photo is null or invalid");
+            return;
+        }
+
         Log.d("test", "data: " + adapter.data);
 
         Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack photo: " + photo);
@@ -137,17 +143,13 @@ public class DialogCreateTAR extends DialogData {
         adapter.notifyDataSetChanged();
 
         try {
-            StackPhotoDB testObj = RealmManager.INSTANCE.copyFromRealm(photo);
+            StackPhotoDB testObj = RealmObject.isManaged(photo)
+                    ? photo.getRealm().copyFromRealm(photo)
+                    : photo;
             String stackJson = new Gson().toJson(testObj);
             Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stackJson: " + stackJson);
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "Exception e: " + e);
-
-            try {
-                StackPhotoDB testObj = photo;
-            }catch (Exception ex){
-                Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "Exception ex: " + ex);
-            }
         }
     }
 

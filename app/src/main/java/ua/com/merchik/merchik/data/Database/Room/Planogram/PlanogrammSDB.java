@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.sql.Date;
+import java.util.Arrays;
 import java.util.List;
 
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
@@ -20,6 +21,8 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.features.main.PlanogrammSDBOverride;
 
 @Entity(tableName = "planogramm")
 public class PlanogrammSDB implements DataObjectUI {
@@ -92,12 +95,13 @@ public class PlanogrammSDB implements DataObjectUI {
 
     @Ignore
     @ColumnInfo(name = "planogrammPhoto")
-    public int planogrammPhoto;
+    public int planogrammPhoto = -1;
 
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        if (Integer.valueOf(-999).equals(id)) return "ID, comments, planogrammPhoto";
+        return "comments, planogrammPhoto";
     }
 
     @Nullable
@@ -127,13 +131,13 @@ public class PlanogrammSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return PlanogrammSDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable
     @Override
     public Integer getIdResImage() {
-        return DataObjectUI.DefaultImpls.getIdResImage(this);
+        return Integer.valueOf(-999).equals(id) ? R.drawable.ic_menu_camera : R.drawable.merchik;
     }
 
     public PlanogrammSDB() {
@@ -169,24 +173,24 @@ public class PlanogrammSDB implements DataObjectUI {
     @NonNull
     @Override
     public String getFieldsImageOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+        return "photo_id";
     }
 
     @Nullable
     @Override
     public List<String> getFieldsForOrderOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+        return Arrays.asList("nm", "ID");
     }
 
     @NonNull
     @Override
     public List<String> getPreferredFieldOrder() {
-        return DataObjectUI.DefaultImpls.getPreferredFieldOrder(this);
+        return Arrays.asList("ID", "nm");
     }
 
    @Override
     public @NotNull String getCommentsForImage() {
-        return DataObjectUI.DefaultImpls.getCommentsForImage(this);
+        return "";
     }
 
 

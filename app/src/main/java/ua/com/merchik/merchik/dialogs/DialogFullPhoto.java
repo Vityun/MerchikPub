@@ -144,6 +144,12 @@ public class DialogFullPhoto {
         });
     }
 
+    public void setGallery(Clicks.clickVoid clickVoid) {
+        camera.setImageResource(R.drawable.ic_menu_gallery);
+        camera.setContentDescription("Вибрати з галереї");
+        camera.setOnClickListener(view -> clickVoid.click());
+    }
+
     @Nullable
     public StackPhotoDB getCurrentPhoto() {
         if (photoLogData == null || POSITION_ADAPTER < 0 || POSITION_ADAPTER >= photoLogData.size()) {

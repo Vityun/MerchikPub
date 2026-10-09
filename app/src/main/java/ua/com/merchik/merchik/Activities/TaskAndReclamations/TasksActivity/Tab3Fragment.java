@@ -45,7 +45,6 @@ import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -496,7 +495,7 @@ public class Tab3Fragment extends Fragment {
     }
 
     private boolean beginPhotoAction() {
-        if (photoActionInProgress) return false;
+        if (photoActionInProgress || ((TARActivity) requireActivity()).getPhotoFlow().isActive()) return false;
         photoActionInProgress = true;
         return true;
     }
@@ -509,50 +508,13 @@ public class Tab3Fragment extends Fragment {
 
         TarPhotoSourceDialog.show(
                 tarActivity,
-                () -> launchTARCamera(tarActivity),
-                () -> launchTARGallery(tarActivity),
+                () -> tarActivity.getPhotoFlow().start(tarData.id, photoTypeId, false),
+                () -> tarActivity.getPhotoFlow().start(tarData.id, photoTypeId, true),
                 () -> {
                     tarActivity.clearPendingPhotoTypeId();
                     photoActionInProgress = false;
                 }
         );
-    }
-
-    private void launchTARCamera(TARActivity tarActivity) {
-        try {
-            Intent cameraIntent = new MakePhoto().createCameraIntent(tarActivity);
-            Globals.writeToMLOG("INFO", "Tab3Fragment.launchTARCamera", "cameraAvailable=" + (cameraIntent != null));
-            if (cameraIntent == null) {
-                MakePhoto.deletePendingPhotoFileIfExists(tarActivity);
-                MakePhoto.clearPendingPhoto(tarActivity);
-                tarActivity.clearPendingPhotoTypeId();
-                photoActionInProgress = false;
-                Toast.makeText(tarActivity, "Камера недоступна", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            tarActivity.startActivityForResult(cameraIntent, MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
-        } catch (Exception e) {
-            MakePhoto.deletePendingPhotoFileIfExists(tarActivity);
-            MakePhoto.clearPendingPhoto(tarActivity);
-            tarActivity.clearPendingPhotoTypeId();
-            photoActionInProgress = false;
-            Globals.writeToMLOG("ERROR", "Tab3Fragment.launchTARCamera", "Exception: " + e);
-            Toast.makeText(tarActivity, "Не удалось открыть камеру", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void launchTARGallery(TARActivity tarActivity) {
-        try {
-            tarActivity.startActivityForResult(
-                    PhotoPickerUtils.createSingleImageChooser(),
-                    MakePhoto.PICK_GALLERY_IMAGE_REQUEST
-            );
-        } catch (Exception e) {
-            tarActivity.clearPendingPhotoTypeId();
-            photoActionInProgress = false;
-            Globals.writeToMLOG("ERROR", "Tab3Fragment.launchTARGallery", "Exception: " + e);
-            Toast.makeText(tarActivity, "Не удалось открыть галерею", Toast.LENGTH_SHORT).show();
-        }
     }
 
     private boolean hasValidPhoto(StackPhotoDB photo) {

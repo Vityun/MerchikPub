@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.MakePhoto.PhotoReferenceSelection
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -75,6 +76,8 @@ class ShowcaseDBViewModel @Inject constructor(
 
     private val isPhotoCapture: Boolean
         get() = contextUI == ContextUI.SHOWCASE_MAKE_PHOTO
+    private val isReferenceSelection: Boolean
+        get() = PhotoReferenceSelection.enabled(dataJson)
 
     private val usesCompletedCheckFilters: Boolean
         get() = contextUI == ContextUI.SHOWCASE_COMPLETED_CHECK || isPhotoCapture
@@ -159,7 +162,7 @@ class ShowcaseDBViewModel @Inject constructor(
                 "client_id",
                 mutableListOf(wpDataDB.client_id),
                 mutableListOf(wpDataDB.client_txt),
-                true
+                !isReferenceSelection
             )
 
             val mainOptionFilter = if (usesCompletedCheckFilters) {
@@ -517,6 +520,13 @@ class ShowcaseDBViewModel @Inject constructor(
                 return
             }
 
+            if (isReferenceSelection) {
+                if (PhotoReferenceSelection.complete(context, dataJson, PhotoReferenceSelection.SHOWCASE, showcase.id)) {
+                    onPhotoFlowStarted()
+                }
+                return
+            }
+
             val captureData = JsonParser.parseString(dataJson).asJsonObject
             val optionDbId = captureData.get("optionDbId")?.takeUnless { it.isJsonNull }?.asString
             val option = optionDbId?.let { OptionsRealm.getOptionById(it) }
@@ -584,16 +594,21 @@ class ShowcaseDBViewModel @Inject constructor(
             if (dialog === photoDialog) dialog = null
             updateContent()
         }
-        photoDialog.setCamera {
-            val currentPhoto = photoDialog.currentPhoto ?: return@setCamera
+        val selectCurrent: () -> Unit = action@{
+            val currentPhoto = photoDialog.currentPhoto ?: return@action
             val currentItem = uiState.value.items.firstOrNull {
                 it.rawAs<StackPhotoDB>()?.showcaseId == currentPhoto.showcaseId
-            } ?: return@setCamera
+            } ?: return@action
 
             makeShowcasePhoto(currentItem, context) {
                 photoDialog.dismiss()
                 if (dialog === photoDialog) dialog = null
             }
+        }
+        if (isReferenceSelection && PhotoReferenceSelection.gallery(dataJson)) {
+            photoDialog.setGallery { selectCurrent() }
+        } else {
+            photoDialog.setCamera { selectCurrent() }
         }
     }
 

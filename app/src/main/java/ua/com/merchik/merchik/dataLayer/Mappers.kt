@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
 import ua.com.merchik.merchik.features.main.OptionsDBOverride
+import ua.com.merchik.merchik.features.main.PlanogrammSDBOverride
 import ua.com.merchik.merchik.features.main.WPDataBDOverride
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -96,6 +97,8 @@ private fun DataObjectUI.fieldTitleSource(key: String): String =
         is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
         is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
         is ChatListItem -> fieldTitle(key)
+        is ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB ->
+            PlanogrammSDBOverride.getFallbackTitle(key) ?: key
 
         else -> key
     }
@@ -501,6 +504,7 @@ enum class ContextUI {
     SHOWCASE_FROM_ACHIEVEMENT,
     SHOWCASE_COMPLETED_CHECK,
     SHOWCASE_MAKE_PHOTO,
+    PLANOGRAM_MAKE_PHOTO,
     WP_DATA,
     WP_DATA_ADDRESS_CLIENT,
     WP_DATA_PAUSED,

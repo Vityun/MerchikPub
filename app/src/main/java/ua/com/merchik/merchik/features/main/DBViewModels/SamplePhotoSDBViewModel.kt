@@ -20,6 +20,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
 import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
+import ua.com.merchik.merchik.MakePhoto.PhotoReferenceSelection
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
@@ -70,6 +71,11 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 (dataJsonString("tovarId")?.toLongOrNull() ?: 0L) > 0L)
     private val isProductGallery: Boolean
         get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY
+    private val isReferenceSelection: Boolean
+        get() = PhotoReferenceSelection.enabled(dataJson)
+    val requiresWarehouseAvailability: Boolean
+        get() = contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 ||
+            (isReferenceSelection && resolvePhotoTypeId() == 31)
     private var initialDisplayModeApplied = false
     private val warehouseAvailabilityKey = "warehouse_product_available"
     private val warehouseExceptionSampleIds = listOf(78, 94)
@@ -153,7 +159,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                     "id",
                     mutableListOf(imagesTypeId.toString()),
                     mutableListOf(imagesTypeName),
-                    !isProductCapture && !isProductGallery
+                    !isProductCapture && !isProductGallery && !isReferenceSelection
                 )
                 itemsFilter.add(filterImagesTypeListDB)
             }
@@ -167,7 +173,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
                 val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
-                val isProductPhoto = isProductCapture || isProductGallery
+                val isProductPhoto = isProductCapture || isProductGallery || isReferenceSelection
                 val tradeMarkIds = listOf(tradeMarkId, "0").distinct()
 
                 val filterTradeMarkDB = ItemFilter(
@@ -215,7 +221,13 @@ class SamplePhotoSDBViewModel @Inject constructor(
             }
             return repository.toItemUIList(SamplePhotoSDB::class, samples, contextUI, 35)
         }
-        val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
+        val data = if (isReferenceSelection) {
+            withContext(Dispatchers.IO) {
+                RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(
+                    1, resolvePhotoTypeId() ?: return@withContext emptyList(), dataJsonInt("tradeMarkDBId") ?: 0
+                )
+            }
+        } else RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
         // Оновлюємо назви виключених зразків з актуального набору для відображення.
         buildWarehouseSampleFilter(data)?.let { warehouseFilter ->
             val currentFilters = filters ?: Filters()
@@ -233,6 +245,17 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
         val sample = clickedDataItemUI.rawAs<SamplePhotoSDB>() ?: return
+        if (isReferenceSelection) {
+            try {
+                SamplePhotoPreview.showSample(context, sample, galleryAction = PhotoReferenceSelection.gallery(dataJson)) { onStarted ->
+                    if (returnSample(sample, context)) onStarted()
+                }
+            } catch (e: Exception) {
+                Log.e("SamplePhotoSDBViewModel", "Cannot open sample ${sample.id}", e)
+                Toast.makeText(context, "Не вдалося відкрити зразок фото", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
         if (isProductCapture || isProductGallery) {
             this.context = context
             try {
@@ -261,6 +284,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
             return
         }
         try {
+            if (isReferenceSelection) {
+                returnSample(sample, photoContext)
+                return
+            }
             if (isProductGallery) {
                 openProductGallery {}
                 return
@@ -419,26 +446,14 @@ class SamplePhotoSDBViewModel @Inject constructor(
         }
     }
 
-    private fun resolvePhotoTypeId(): Int? {
-        return when (contextUI) {
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
-            ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY -> 4
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 -> 48
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 -> 49
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 -> 50
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_GENERIC -> dataJsonInt("photoType")
-            ContextUI.SAMPLE_PHOTO_FOR_PRODUCT -> dataJsonInt("photoType")
-            else -> dataJsonInt("photoType")
+    private fun resolvePhotoTypeId(): Int? = PHOTO_TYPES[contextUI] ?: dataJsonInt("photoType")
+
+    private fun returnSample(sample: SamplePhotoSDB, context: Context): Boolean {
+        if ((sample.id1c ?: 0) <= 0 || (sample.photoId ?: 0) <= 0) {
+            Toast.makeText(context, "Зразок не має коду або фото. Оновіть довідник зразків.", Toast.LENGTH_LONG).show()
+            return false
         }
+        return PhotoReferenceSelection.complete(context, dataJson, PhotoReferenceSelection.SAMPLE, sample.id)
     }
 
     private fun dataJsonInt(key: String): Int? = dataJsonString(key)?.toIntOrNull()
@@ -452,7 +467,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     fun getWarehouseAvailabilityQuestion(): String {
-        val clientName = try {
+        val clientName = dataJsonString("clientName")?.takeIf { it.isNotBlank() } ?: try {
             val root = Gson().fromJson(dataJson, JsonObject::class.java)
             val visitId = root?.get("wpDataDBId")?.takeIf { !it.isJsonNull }
                 ?.asString?.toLongOrNull()
@@ -478,7 +493,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     fun setWarehouseProductAvailable(available: Boolean) {
-        if (contextUI != ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 ||
+        if (!requiresWarehouseAvailability ||
             warehouseProductAvailable.value != null
         ) return
 
@@ -488,7 +503,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     private fun buildWarehouseSampleFilter(samples: List<SamplePhotoSDB>? = null): ItemFilter? {
-        if (contextUI != ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360) return null
+        if (!requiresWarehouseAvailability) return null
         val available = warehouseProductAvailable.value ?: return null
         val samplesById = (samples ?: RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1))
             .associateBy { it.id }
@@ -510,7 +525,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
             rightValuesUI = excludedIds.map { id ->
                 samplesById[id]?.nm?.takeIf { it.isNotBlank() } ?: "Зразок №$id"
             },
-            enabled = true,
+            enabled = !isReferenceSelection,
             excludeMode = true
         )
     }
@@ -527,5 +542,27 @@ class SamplePhotoSDBViewModel @Inject constructor(
         valueForCustomResult.value[EXAMPLE_ID] = sample.id1c ?: 0
         valueForCustomResult.value[EXAMPLE_IMG_ID] = sample.photoId ?: 0
         return photo
+    }
+
+    companion object {
+        private val PHOTO_TYPES = mapOf(
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 to 4,
+            ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY to 4,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 to 5,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 to 31,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 to 10,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 to 14,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 to 39,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 to 41,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 to 28,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 to 42,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 to 47,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_172100 to 48,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174213 to 49,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_174878 to 50
+        )
+
+        @JvmStatic
+        fun supportsPhotoType(photoType: Int): Boolean = photoType in PHOTO_TYPES.values
     }
 }

@@ -42,7 +42,6 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -63,6 +62,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammSDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.trecker;
 
@@ -77,6 +77,7 @@ public class MakePhoto {
     public static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
     public static final int CAMERA_REQUEST_TAR_COMMENT_PHOTO = 203; // ЗИР. Закладка переписки. Список комментариев. Возможность делать фото к коментарию.
     public static final int CAMERA_REQUEST_PROMOTION_TOV_PHOTO = 204; // Опция Фото Акционного Товара + ценника
+    public static final int PLANOGRAM_PHOTO_REQUEST = 207;
 
     // Кода 500 буду использовать для выбора фото из галереи
     public static final int PICK_GALLERY_IMAGE_REQUEST = 500;
@@ -1277,10 +1278,7 @@ public class MakePhoto {
                         Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
 
                         if (needPlan) {
-                            showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
-                                photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
-                                });
-                            });
+                            showDialogPlanogramm(activity, wp, optionsDB, false);
                         } else {
                             photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
                             });
@@ -1288,10 +1286,7 @@ public class MakePhoto {
 
                     } else {
                         if (needPlan) {
-                            showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
-                                choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-                                });
-                            });
+                            showDialogPlanogramm(activity, wp, optionsDB, true);
                         } else {
                             choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
                             });
@@ -1322,8 +1317,7 @@ public class MakePhoto {
             если их нет оставил старый дизайн
              */
             Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
-            PlanogrammSDB planogrammSDB = null;
-            PlanogrammVizitShowcaseSDB planogrammVizitShowcaseSDB = null;
+            boolean needPlan = "0".equals(photoType);
 
             try {
                 // 1. Всегда сбрасываем все поля, чтобы не было артефактов от прошлого вызова
@@ -1344,42 +1338,10 @@ public class MakePhoto {
                         ? String.valueOf(showcase.photoId)
                         : "";
 
-                // 3. Ищем витринный планограм по dad2
-                List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB
-                        .planogrammVizitShowcaseDao()
-                        .getByCodeDad2(wp.dad2);
-
-                if (planogrammVizitShowcaseSDBList != null) {
-                    for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
-                        if (item != null && Objects.equals(item.showcase_id, showcase.id)) {
-                            planogrammVizitShowcaseSDB = item;
-                            break;
-                        }
-                    }
-                }
-
-                // 4. Заполняем поля планограма
-                if (planogrammVizitShowcaseSDB != null) {
-                    MakePhoto.planogram_id = planogrammVizitShowcaseSDB.planogram_id != null
-                            ? String.valueOf(planogrammVizitShowcaseSDB.planogram_id)
-                            : "";
-                    MakePhoto.planogram_img_id = planogrammVizitShowcaseSDB.planogram_photo_id != null
-                            ? String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id)
-                            : "";
-                } else {
-                    // запасной вариант – из showcase / planogrammDao
-                    if (showcase.planogramId != null) {
-                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-                        planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
-                        MakePhoto.planogram_img_id = (planogrammSDB != null && planogrammSDB.photoId != null)
-                                ? String.valueOf(planogrammSDB.photoId)
-                                : "";
-                    } else {
-                        // если даже planogramId нет – оставляем пустые строки (уже очищены выше)
-                        MakePhoto.planogram_id = "";
-                        MakePhoto.planogram_img_id = "";
-                    }
-                }
+                ShowcasePhotoMetadata metadata = ShowcasePhotoMetadata.load(wp.dad2, photoType, showcase);
+                MakePhoto.planogram_id = metadata.getPlanogramId();
+                MakePhoto.planogram_img_id = metadata.getPlanogramImageId();
+                needPlan = metadata.getNeedsPlanogram();
 
             } catch (Exception e) {
                 // при ошибке тоже лучше сбросить, чтобы не висели старые значения
@@ -1393,25 +1355,13 @@ public class MakePhoto {
             }
 
 
-            boolean needPlan;
-            if (planogrammSDB != null) {
-                needPlan = true;
-            } else {
-                needPlan = "0".equals(photoType);
-            }
-            if (planogrammVizitShowcaseSDB != null)
-                needPlan = false;
-
             if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
                 wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
                 MakePhoto.photoCustomerGroup = showcase.tovarGrp.toString();
                 Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
 
                 if (needPlan) {
-                    showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
-                        photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
-                        });
-                    });
+                    showDialogPlanogramm(activity, wp, optionsDB, false);
                 } else {
                     photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
                     });
@@ -1419,10 +1369,7 @@ public class MakePhoto {
 
             } else {
                 if (needPlan) {
-                    showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
-                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-                        });
-                    });
+                    showDialogPlanogramm(activity, wp, optionsDB, true);
                 } else {
                     choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
                     });
@@ -1441,33 +1388,52 @@ public class MakePhoto {
      *
      * @param activity
      */
-    public <T> void showDialogPlanogramm(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
-        DialogShowcase dialog = new DialogShowcase(activity);
-        dialog.setCurrTitle("Оберіть планограму по котрій будете викладати товар");
-        dialog.wpDataDB = (WpDataDB) dataT;
-        dialog.photoType = Integer.valueOf(MakePhoto.photoType);
-        dialog.populateDialogDataPlanogramm(new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                try {
-                    PlanogrammJOINSDB planogramm = (PlanogrammJOINSDB) data;
-                    Toast.makeText(activity, "Обрана планограма: " + planogramm.planogrammName + " (" + planogramm.id + ")", Toast.LENGTH_LONG).show();
+    public void showDialogPlanogramm(Activity activity, WPDataObj wp, OptionsDB optionsDB,
+                                    boolean chooseCustomerGroup) {
+        WpDataDB visit = RealmManager.getWorkPlanRowByCodeDad2Detached(wp.dad2);
+        if (visit == null) throw new IllegalStateException("Visit " + wp.dad2 + " not found");
+        if (PlanogramPhotoSelection.forVisit(visit).getPlans().isEmpty()) {
+            MakePhoto.planogram_id = "0";
+            MakePhoto.planogram_img_id = "0";
+            makePhotoForPlanogramm(activity, visit, optionsDB, chooseCustomerGroup);
+            return;
+        }
 
-                    MakePhoto.planogram_id = String.valueOf(planogramm.id);
-                    MakePhoto.planogram_img_id = String.valueOf(planogramm.planogrammPhotoId);
+        JsonObject data = new JsonObject();
+        data.addProperty("wpDataDBId", String.valueOf(wp.dad2));
+        data.addProperty("photoType", MakePhoto.photoType);
+        data.addProperty("photoCustomerGroup", MakePhoto.photoCustomerGroup);
+        data.addProperty("exampleId", MakePhoto.example_id);
+        data.addProperty("tovarId", MakePhoto.tovarId);
+        data.addProperty("showcaseId", MakePhoto.showcase_id);
+        data.addProperty("imgSrcId", MakePhoto.img_src_id);
+        data.addProperty("exampleImgId", MakePhoto.example_img_id);
+        data.addProperty("chooseCustomerGroup", chooseCustomerGroup);
+        if (optionsDB != null) data.addProperty("optionDbId", optionsDB.getID());
 
-//                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-//                    });
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", PlanogrammSDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.PLANOGRAM_MAKE_PHOTO.toString());
+        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+        bundle.putString("dataJson", data.toString());
+        bundle.putString("title", "Планограми");
+        bundle.putString("subTitle", "Оберіть планограму по котрій будете викладати товар. " +
+                "Розовым отмечены те планормаммы которые еще не использованы при изготовлении фотоотчетов");
+        Intent intent = new Intent(activity, FeaturesActivity.class);
+        intent.putExtras(bundle);
+        activity.startActivityForResult(intent, PLANOGRAM_PHOTO_REQUEST);
+    }
 
-                    clickVoid.click();
-
-                    dialog.dismiss();
-                } catch (Exception e) {
-                    Log.e("", "Exception e: " + e);
-                }
-            }
-        });
-        dialog.setClose(dialog::dismiss);
-        dialog.show();
+    // Continue from fresh visit data; do not keep a Realm object in a selector callback.
+    public void makePhotoForPlanogramm(Activity activity, WpDataDB dataT, OptionsDB optionsDB,
+                                       boolean chooseCustomerGroup) {
+        WPDataObj wp = new WorkPlan().getKPS(dataT.getId());
+        wp.setPhotoType(MakePhoto.photoType);
+        wp.setCustomerTypeGrpS(MakePhoto.photoCustomerGroup);
+        if (chooseCustomerGroup) {
+            choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {});
+        } else {
+            photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {});
+        }
     }
 }

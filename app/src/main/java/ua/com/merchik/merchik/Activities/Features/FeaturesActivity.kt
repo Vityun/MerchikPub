@@ -89,6 +89,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewMode
 import ua.com.merchik.merchik.features.main.DBViewModels.SMSPlanSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ShowcaseDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
@@ -205,6 +206,7 @@ class FeaturesActivity : AppCompatActivity() {
                                         OpinionSDBViewModel::class -> viewModel() as OpinionSDBViewModel
                                         PlanogrammVizitShowcaseViewModel::class -> viewModel() as PlanogrammVizitShowcaseViewModel
                                         ShowcaseDBViewModel::class -> viewModel() as ShowcaseDBViewModel
+                                        PlanogrammSDBViewModel::class -> viewModel() as PlanogrammSDBViewModel
                                         SMSPlanSDBViewModel::class -> viewModel() as SMSPlanSDBViewModel
                                         JournalPhotoSDBViewModel::class -> viewModel() as JournalPhotoSDBViewModel
                                         ErrorDBViewModel::class -> viewModel() as ErrorDBViewModel
@@ -331,10 +333,16 @@ class FeaturesActivity : AppCompatActivity() {
             MakePhoto.clearPendingPhoto(this)
         }
 
-        if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST &&
+        if ((requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST ||
+                requestCode == MakePhoto.PLANOGRAM_PHOTO_REQUEST) &&
             intent.getStringExtra("contextUI") == ContextUI.SHOWCASE_MAKE_PHOTO.toString()
         ) {
             ViewModelProvider(this)[ShowcaseDBViewModel::class.java].updateContent()
+        }
+        if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST &&
+            intent.getStringExtra("contextUI") == ContextUI.PLANOGRAM_MAKE_PHOTO.toString()
+        ) {
+            ViewModelProvider(this)[PlanogrammSDBViewModel::class.java].updateContent()
         }
     }
 
