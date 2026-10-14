@@ -124,6 +124,8 @@ fun MessageDialog(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var isChecked by rememberSaveable { mutableStateOf(false) }
+    val confirmAction = onConfirmAction?.takeIf { okButtonName.isNotBlank() }
+    val cancelAction = onCancelAction?.takeIf { cancelButtonName.isNotBlank() }
     val confirmEnabled = singleChoice?.canConfirm != false && numberInput?.canConfirm != false
     val confirmButtonColors = ButtonDefaults.buttonColors(
         containerColor = colorResource(R.color.orange),
@@ -419,18 +421,18 @@ fun MessageDialog(
                         }
                     }
 
-                    if (onConfirmAction != null || onCancelAction != null) {
+                    if (confirmAction != null || cancelAction != null) {
                         Spacer(modifier = Modifier.padding(4.dp))
 
                         when {
-                            onConfirmAction != null && onCancelAction != null -> {
+                            confirmAction != null && cancelAction != null -> {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Button(
                                         onClick = {
-                                            onCancelAction()
+                                            cancelAction()
                                             closeDialog(DialogCloseReason.CANCEL)
                                         },
                                         shape = RoundedCornerShape(8.dp),
@@ -446,7 +448,7 @@ fun MessageDialog(
                                         Button(
                                             onClick = {
                                                 if (confirmEnabled) {
-                                                    onConfirmAction()
+                                                    confirmAction()
                                                     closeDialog(DialogCloseReason.CONFIRM)
                                                 }
                                             },
@@ -464,11 +466,14 @@ fun MessageDialog(
                                 }
                             }
 
-                            onCancelAction != null -> {
-                                Row {
+                            cancelAction != null -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Button(
                                         onClick = {
-                                            onCancelAction()
+                                            cancelAction()
                                             closeDialog(DialogCloseReason.CANCEL)
                                         },
                                         shape = RoundedCornerShape(8.dp),
@@ -492,14 +497,17 @@ fun MessageDialog(
                                 }
                             }
 
-                            onConfirmAction != null -> {
-                                Row {
+                            confirmAction != null -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Spacer(modifier = Modifier.weight(1f))
                                     Box(modifier = Modifier.weight(1f)) {
                                         Button(
                                             onClick = {
                                                 if (confirmEnabled) {
-                                                    onConfirmAction()
+                                                    confirmAction()
                                                     closeDialog(DialogCloseReason.CONFIRM)
                                                 }
                                             },

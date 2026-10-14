@@ -191,7 +191,7 @@ fun rememberContextMenuHost(
                     viewModel.performPending()
                 }
             } else null,
-            onCancelAction = if (d.cancelText != null || d.status == DialogStatus.NORMAL) {
+            onCancelAction = if (!d.cancelText.isNullOrBlank()) {
                 {
                     d.onButtonCancelClicked?.invoke()
                     showMessageDialog = null
