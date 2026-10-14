@@ -256,6 +256,69 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
+        downloadAdditionalRequirementsJson();
+    }
+
+    private static final String ADD_REQUIREMENTS_JSON_TAG = "ADD_REQUIREMENTS_JSON";
+    private boolean isAdditionalRequirementsJsonLoading = false;
+
+    private void downloadAdditionalRequirementsJson() {
+        if (isAdditionalRequirementsJsonLoading) return;
+
+        StandartData<Object> data = new StandartData<>();
+        data.mod = "additional_requirements";
+        data.act = "list";
+        data.date_from = Clock.getDatePeriod(-120);
+        data.date_to = Clock.getDatePeriod(7);
+        JsonObject request = new Gson().toJsonTree(data).getAsJsonObject();
+
+        // Keep unknown server fields (including the new promotion type) without saving to Realm.
+        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
+                .TEST_JSON_UPLOAD(RetrofitBuilder.contentType, request);
+        logAdditionalRequirementsJson("REQUEST", logGson.toJson(request));
+        isAdditionalRequirementsJsonLoading = true;
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                try {
+                    logAdditionalRequirementsJson("HTTP", String.valueOf(response.code()));
+                    if (response.isSuccessful()) {
+                        logAdditionalRequirementsJson("RESPONSE", logGson.toJson(response.body()));
+                    } else {
+                        try (ResponseBody errorBody = response.errorBody()) {
+                            logAdditionalRequirementsJson("ERROR", errorBody == null
+                                    ? "<empty error body>" : errorBody.string());
+                        } catch (IOException e) {
+                            logAdditionalRequirementsJson("ERROR", "Failed to read error body: " + e);
+                        }
+                    }
+                } finally {
+                    isAdditionalRequirementsJsonLoading = false;
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                isAdditionalRequirementsJsonLoading = false;
+                logAdditionalRequirementsJson("FAILURE", Log.getStackTraceString(t));
+            }
+        });
+    }
+
+    private void logAdditionalRequirementsJson(String stage, String json) {
+        Globals.writeToMLOG("INFO", ADD_REQUIREMENTS_JSON_TAG + "/" + stage, json);
+        // Leave room for multibyte text and the prefix within Logcat's per-message limit.
+        final int chunkSize = 900;
+        final int partCount = Math.max(1, (json.length() + chunkSize - 1) / chunkSize);
+        for (int part = 0; part < partCount; part++) {
+            int start = part * chunkSize;
+            int end = Math.min(start + chunkSize, json.length());
+            Log.e(ADD_REQUIREMENTS_JSON_TAG, stage + " [" + (part + 1) + "/" + partCount + "] "
+                    + json.substring(start, end));
+        }
+    }
+
+    private void showEndWorkDialogTest() {
         long startTime = LocalDateTime.of(2026, 10, 6, 15, 32)
                 .atZone(ZoneId.systemDefault())
                 .toEpochSecond();

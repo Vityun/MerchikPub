@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARCommentPhoto;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -210,6 +211,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     } else if (theme.need_photo == 1) {
                         String msg = context.getString(R.string.option_control_135329_no_photo);
                         String comm = "";
+                        boolean missingPhoto = false;
 
                         List<TARCommentsDB> commentsRealm = null;
 
@@ -224,7 +226,8 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                                     Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "tarCommentItem.photo_hash: " + tarCommentItem.photo_hash);
 
                                     if (!checkHavePhoto(tarCommentItem)) {
-                                        comm = tarCommentItem.comment;
+                                        missingPhoto = true;
+                                        comm = tarCommentItem.comment == null ? "" : tarCommentItem.comment;
                                         Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "comm: " + comm);
 
                                         break;
@@ -238,8 +241,8 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                                     .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append(")").append("\n");
 
                             result.add(item);
-                        } else if (commentsRealm != null && commentsRealm.size() == 0) {
-                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "commentsRealm: " + commentsRealm.size());
+                        } else if (missingPhoto || commentsRealm == null || commentsRealm.isEmpty()) {
+                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "Missing photo evidence, tarId=" + item.id);
 
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
@@ -247,7 +250,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                             result.add(item);
                         } else {
                             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo",
-                                    "Не смог найти комменты в БД комментов по item.id: " + item.id + ", item.vinovnik: " + item.vinovnik);
+                                    "Photo check passed for comments: tarId=" + item.id + ", userId=" + item.vinovnik);
                         }
                         Log.e("ControlTaskAnswer", "popali: 4");
 
@@ -329,17 +332,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
     }
 
     private boolean checkHavePhoto(TARCommentsDB comment) {
-        boolean res = false;
-
-        if (comment.photo != null && !comment.photo.equals("0")) {
-            res = true;
-        }
-
-        if (comment.photo_hash != null && !comment.photo_hash.equals("")) {
-            res = true;
-        }
-
-        return res;
+        return TARCommentPhoto.hasPhoto(comment);
     }
 
     private SpannableString createLinkedString(String msg, int id) {

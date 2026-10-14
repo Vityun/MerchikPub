@@ -10,9 +10,11 @@ import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
 
 import kotlin.Unit;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.features.DialogDismissListener;
@@ -32,6 +34,7 @@ public final class ReportConductUi {
         LifecycleEventObserver observer;
         boolean conducting;
         boolean resultShowing;
+        Runnable onWorkEndSaved;
     }
 
     private ReportConductUi() { }
@@ -52,6 +55,7 @@ public final class ReportConductUi {
 
     public static void resume(Activity activity, long dad2) {
         if (!canShow(activity)) return;
+        ReportConductManager.flushPending();
         Session session = register(activity, dad2);
         showResult(dad2);
         ReportConductState state = ReportConductManager.get(dad2);
@@ -62,10 +66,15 @@ public final class ReportConductUi {
     }
 
     public static boolean begin(Context context, long dad2) {
+        return begin(context, dad2, false, null, null);
+    }
+
+    public static boolean begin(Context context, long dad2, boolean requestWorkEnd,
+                                Long requestedEnd, Runnable onWorkEndSaved) {
         Activity activity = activity(context);
         Session session = SESSIONS.get(activity);
         if (session != null && (session.conducting || session.resultShowing)) return false;
-        if (!ReportConductManager.begin(dad2)) {
+        if (!ReportConductManager.begin(dad2, requestWorkEnd, requestedEnd)) {
             Toast.makeText(context, "Команда вже збережена та очікує передачі на сервер.", Toast.LENGTH_LONG).show();
             return false;
         }
@@ -76,6 +85,7 @@ public final class ReportConductUi {
         session = register(activity, dad2);
         session.conducting = true;
         session.revision = ReportConductManager.get(dad2).revision;
+        session.onWorkEndSaved = onWorkEndSaved;
         return true;
     }
 
@@ -108,7 +118,27 @@ public final class ReportConductUi {
         ReportConductState state = ReportConductManager.get(dad2);
         return canShow(context) && session != null && session.dad2 == dad2
                 && session.userId == Globals.getCurrentUserId() && session.conducting
-                && state != null && state.revision.equals(session.revision);
+                && state != null && state.awaitingDecision() && state.revision.equals(session.revision);
+    }
+
+    public static void workEndSaved(long dad2) {
+        ReportConductState state = ReportConductManager.get(dad2);
+        for (Map.Entry<Activity, Session> entry : new ArrayList<>(SESSIONS.entrySet())) {
+            Session session = entry.getValue();
+            if (session.dad2 != dad2 || session.userId != Globals.getCurrentUserId()) continue;
+            Runnable callback = session.onWorkEndSaved;
+            session.onWorkEndSaved = null;
+            if (canShow(entry.getKey())) {
+                try {
+                    if (callback != null) callback.run();
+                    // A resumed decision no longer has the original option-click callback.
+                    if (entry.getKey() instanceof DetailedReportActivity) {
+                        ((DetailedReportActivity) entry.getKey()).refreshAdapterFragmentB();
+                    }
+                } catch (Exception e) { ReportConductManager.log("ERROR", dad2, "work-end UI refresh: " + e); }
+            }
+            if (state != null && state.stage == ReportConductState.Stage.READY) closeApprovedDialog(entry.getKey());
+        }
     }
 
     public static void show(Context context, long dad2, DialogData dialog) {
@@ -139,6 +169,7 @@ public final class ReportConductUi {
         expected.dismiss = null;
         expected.dialogToken = null;
         expected.conducting = false;
+        expected.onWorkEndSaved = null;
         ReportConductState state = ReportConductManager.get(dad2);
         if (canShow(context) && state != null && state.revision.equals(expected.revision)) {
             ReportConductManager.cancelDecision(dad2);

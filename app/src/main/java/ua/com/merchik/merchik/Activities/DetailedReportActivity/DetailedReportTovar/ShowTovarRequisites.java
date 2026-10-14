@@ -928,10 +928,6 @@ public class ShowTovarRequisites {
     private ReportPrepareDB createNewRPRow(TovarDB list) {
         ReportPrepareDB rp = new ReportPrepareDB();
 
-        long id = RealmManager.reportPrepareGetLastId();
-        id = id + 1;
-
-        rp.setID(id);
         rp.setDt(String.valueOf(System.currentTimeMillis()));
         rp.setDtReport(String.valueOf(System.currentTimeMillis()));
         rp.setKli(wpDataDB.getClient_id());
@@ -951,11 +947,7 @@ public class ShowTovarRequisites {
         rp.setErrorComment("");
         rp.setCodeDad2(String.valueOf(wpDataDB.getCode_dad2()));
 
-        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(rp);
-        INSTANCE.commitTransaction();
-        return rp;
+        return ReportPrepareRealm.getOrCreateLocal(rp);
     }
 
     /**

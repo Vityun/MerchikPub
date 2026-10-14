@@ -6,12 +6,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ReportPrepareExchange {
 
@@ -37,22 +36,19 @@ public class ReportPrepareExchange {
         data.code_dad2 = code_dad2;
 
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-        data.dt_change_to = String.valueOf(synchronizationTimetableDB.getVpi_app());
+        data.dt_change_to = String.valueOf(synchronizationTimetableDB == null ? 0 : synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
+        ReportPrepareSync.download(convertedObject, false, new retrofit2.Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(retrofit2.Call<ReportPrepareServer> call, retrofit2.Response<ReportPrepareServer> response) {
                 Log.e("downloadReportPrepare", "response: " + response.body());
                 if (response.isSuccessful() && response.body() != null && response.body().getState() &&
                         response.body().getList() != null && !response.body().getList().isEmpty()) {
                     exchange.onSuccess(response.body().getList());
-                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 } else exchange.onFailure("Throwable: Список пуст");
 
 

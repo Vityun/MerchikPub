@@ -36,8 +36,9 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.Utils.CustomString;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
+import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -263,10 +264,21 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         Log.e("TARActivity", "resultCode: " + resultCode);
         Log.e("TARActivity", "Intent: " + data);
 
+        boolean cameraRequest = requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO
+                || requestCode == 202 || requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO;
         try {
             Log.d("test", "data: " + requestCode + resultCode);
             Globals.writeToMLOG("INFO", "TARActivity.onActivityResult", "resultCode: " + resultCode);
             Globals.writeToMLOG("INFO", "TARActivity.onActivityResult", "requestCode: " + requestCode);
+
+            if (cameraRequest && resultCode != RESULT_OK) {
+                Globals.writeToMLOG("INFO", "TARActivity/cameraResult", "Capture not completed: requestCode="
+                        + requestCode + ", resultCode=" + resultCode + ". Photo and comment unchanged.");
+                MakePhoto.deletePendingPhotoFileIfExists(this);
+                MakePhoto.clearPendingPhoto(this);
+                if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO) clearPendingPhotoTypeId();
+                return;
+            }
 
             if (resultCode == 100) {
                 int id = data.getIntExtra("stack_photo_id", 0);
@@ -301,7 +313,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     if (stackPhotoDB != null) {
                         fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
                     }
-                } else if (resultCode != 0){
+                } else if (resultCode == RESULT_OK){
                     String photoPath = MakePhoto.getOpenCameraPhotoPath(this);
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + photoPath);
 
@@ -321,6 +333,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     String stackJson = new Gson().toJson(stackPhotoDB);
                     Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
 
+                    if (stackPhotoDB == null) MakePhoto.deletePendingPhotoFileIfExists(this);
                     MakePhoto.clearPendingPhoto(this);
                     clearPendingPhotoTypeId();
 
@@ -353,7 +366,9 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 }
 
                 StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client, fragmentHome.secondFrag.data);
+                if (stackPhotoDB == null) MakePhoto.deletePendingPhotoFileIfExists(this);
                 MakePhoto.clearPendingPhoto(this);
+                if (stackPhotoDB == null) return;
 
                 fragmentHome.homeFrag.dialog.setData(stackPhotoDB);
                 fragmentHome.homeFrag.dialog.setDataUpdate();
@@ -401,6 +416,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 }
 
                 StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, clientRealm, fragmentHome.secondFrag.data);
+                if (stackPhotoDB == null) MakePhoto.deletePendingPhotoFileIfExists(this);
                 MakePhoto.clearPendingPhoto(this);
 
                 if (stackPhotoDB != null) {
@@ -421,6 +437,10 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
 
         } catch (Exception e) {
+            if (cameraRequest) {
+                MakePhoto.deletePendingPhotoFileIfExists(this);
+                MakePhoto.clearPendingPhoto(this);
+            }
             if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO || requestCode == PICK_GALLERY_IMAGE_REQUEST) {
                 clearPendingPhotoTypeId();
             }
@@ -484,6 +504,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     /*Real*/
     private StackPhotoDB savePhoto(String str, TasksAndReclamationsSDB tar) {
         try {
+            String hash = validatedPhotoHash(str == null ? null : new File(str));
+            if (hash == null) return null;
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -516,7 +538,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
+            stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(str);
             getPhotoFlow().applyTo(stackPhotoDB, tar);
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
@@ -529,6 +551,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
     private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client, TasksAndReclamationsSDB tar) {
         try {
+            String hash = validatedPhotoHash(photoFile);
+            if (hash == null) return null;
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -554,7 +578,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
+            stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 
@@ -575,6 +599,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
      * */
     private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerDB client, TasksAndReclamationsSDB tar) {
         try {
+            String hash = validatedPhotoHash(photoFile);
+            if (hash == null) return null;
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -600,7 +626,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
+            stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 
@@ -618,6 +644,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
      * */
     private StackPhotoDB savePhoto(File file, TasksAndReclamationsSDB tasksAndReclamationsSDB, String tovarId, Context context) {
         try {
+            String hash = validatedPhotoHash(file);
+            if (hash == null) return null;
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -647,14 +675,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-//            String hash = globals.getHashMD5FromFileTEST(uri, context);
-            String hash = globals.getHashMD5FromFile2(file, this);
-            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(file, this);
             Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
-
-            if (hash == null || hash.equals("")) {
-                hash = globals.getHashMD5FromFile(file, this);
-            }
 
             stackPhotoDB.setPhoto_hash(hash);
             stackPhotoDB.setPhoto_num(file.getAbsolutePath());
@@ -672,6 +693,19 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             return null;
         }
     }
+
+    private String validatedPhotoHash(File file) {
+        if (PhotoPickerUtils.isReadableImageFile(file)) {
+            String hash = globals.getHashMD5FromFilePath(file.getAbsolutePath(), null);
+            if (PhotoEvidencePolicy.isUsableHash(hash)) return hash;
+        }
+        Globals.writeToMLOG("ERROR", "TARActivity/validatePhoto", "Photo not saved: file=" + file
+                + ", length=" + (file == null ? -1 : file.length()));
+        Toast.makeText(this, "Не вдалося зберегти фото. Зробіть фотографію ще раз або оберіть іншу.",
+                Toast.LENGTH_LONG).show();
+        return null;
+    }
+
     @Override
     public void messageFromParentFragment(String msg) {
 

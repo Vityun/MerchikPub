@@ -124,7 +124,7 @@ public class Globals {
 
 
     // Связь
-    static boolean autoSend = true;                 // Автообмен Выкл/Вкл
+    public static boolean autoSend = true;                 // Автообмен Выкл/Вкл
     static boolean autoSendManualMode = false;                 // Автообмен Выкл/Вкл
     public static boolean onlineStatus = false;
 

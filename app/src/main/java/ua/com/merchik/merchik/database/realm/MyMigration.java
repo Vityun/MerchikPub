@@ -353,6 +353,23 @@ public class MyMigration implements RealmMigration {
             }
         }
 
+        if (newVersion >= 32) {
+            RealmObjectSchema additionalRequirementsDB = schema.get("AdditionalRequirementsDB");
+
+            if (additionalRequirementsDB != null) {
+                if (!additionalRequirementsDB.hasField("promoTpId")) {
+                    additionalRequirementsDB.addField("promoTpId", int.class)
+                            .transform(obj -> obj.setInt("promoTpId", 0));
+                }
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "AdditionalRequirementsDB schema is null");
+            }
+
+            if (oldVersion < 32) {
+                oldVersion = 32;
+            }
+        }
+
     }
 }
 

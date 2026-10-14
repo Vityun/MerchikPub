@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARCommentPhoto;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -180,6 +181,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                         // Номер задачи
 
                         String comm = "";
+                        boolean missingPhoto = false;
 
                         List<TARCommentsDB> commentsRealm = null;
 
@@ -190,7 +192,8 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                             if (commentsRealm != null) {
                                 for (TARCommentsDB tarCommentItem : commentsRealm) {
                                     if (!checkHavePhoto(tarCommentItem)) {
-                                        comm = tarCommentItem.comment;
+                                        missingPhoto = true;
+                                        comm = tarCommentItem.comment == null ? "" : tarCommentItem.comment;
                                         break;
                                     }
                                 }
@@ -204,14 +207,14 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                                     .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append(")").append("\n");
 
                             result.add(item);
-                        } else if (commentsRealm != null && commentsRealm.size() == 0) {
+                        } else if (missingPhoto || commentsRealm == null || commentsRealm.isEmpty()) {
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
 
                             result.add(item);
                         } else {
                             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo",
-                                    "Не смог найти комменты в БД комментов по item.id: " + item.id + ", item.vinovnik: " + item.vinovnik);
+                                    "Photo check passed for comments: tarId=" + item.id + ", userId=" + item.vinovnik);
                         }
 
                     } else if (theme.need_report == 1) {
@@ -316,16 +319,6 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
     }
 
     private boolean checkHavePhoto(TARCommentsDB comment) {
-        boolean res = false;
-
-        if (comment.photo != null && !comment.photo.equals("0")) {
-            res = true;
-        }
-
-        if (comment.photo_hash != null && !comment.photo_hash.equals("")) {
-            res = true;
-        }
-
-        return res;
+        return TARCommentPhoto.hasPhoto(comment);
     }
 }

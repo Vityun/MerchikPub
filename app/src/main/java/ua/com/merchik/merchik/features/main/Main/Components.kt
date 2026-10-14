@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -65,6 +66,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -114,6 +120,7 @@ import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.ValidationTooltip
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
@@ -783,15 +790,16 @@ fun NumberInput(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    var isFocused by remember { mutableStateOf(false) }
+    var inputState by remember { mutableStateOf(InlineNumberInputState()) }
     var localValue by rememberInlineInputValue(value, numeric = true)
 
     BasicTextField(
-        value = localValue,
+        value = inputState.displayedValue(localValue),
         onValueChange = { input ->
             val digitsOnly = input.filter { it.isDigit() }
-            localValue = digitsOnly
-            onValueChange(digitsOnly)
+            inputState = inputState.onInput(digitsOnly)
+            localValue = digitsOnly.ifBlank { "0" }
+            onValueChange(localValue)
         },
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(
@@ -806,23 +814,7 @@ fun NumberInput(
             .height(38.dp)
             .padding(horizontal = 8.dp)
             .onFocusChanged { focusState ->
-                val nowFocused = focusState.isFocused
-
-                if (nowFocused && !isFocused) {
-                    if (localValue == "0") {
-                        localValue = ""
-                        onValueChange("")
-                    }
-                }
-
-                if (!nowFocused && isFocused) {
-                    if (localValue.isBlank()) {
-                        localValue = "0"
-                        onValueChange("0")
-                    }
-                }
-
-                isFocused = nowFocused
+                inputState = inputState.onFocusChanged(focusState.isFocused, localValue)
             },
         decorationBox = { innerTextField ->
             Box(
@@ -841,43 +833,68 @@ fun NumberInput(
 @Composable
 fun DecimalNumberInput(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    controlled: Boolean = false,
+    errorMessage: String? = null,
+    tooltipEnabled: Boolean = true,
+    onFocusChange: (Boolean) -> Unit = {},
+    onDone: (() -> Unit)? = null
 ) {
     var localValue by rememberInlineInputValue(value, numeric = true)
+    var inputState by remember { mutableStateOf(InlineNumberInputState()) }
+    val currentValue = if (controlled) value else localValue
 
-    BasicTextField(
-        value = localValue,
-        onValueChange = { input ->
-            val prepared = normalizeDecimalNumberInput(input)
-            localValue = prepared
+    ValidationTooltip(errorMessage, inputState.focused && tooltipEnabled) {
+        BasicTextField(
+            value = inputState.displayedValue(currentValue),
+            onValueChange = { input ->
+                val prepared = normalizeDecimalNumberInput(input)
+                inputState = inputState.onInput(prepared)
+                localValue = prepared.ifBlank { "0" }
 
-            if (prepared.isNotBlank() && !prepared.endsWith(".")) {
-                onValueChange(prepared)
+                if (controlled || !localValue.endsWith(".")) {
+                    onValueChange(localValue)
+                }
+            },
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(onDone = {
+                if (onDone != null) onDone() else defaultKeyboardAction(ImeAction.Done)
+            }),
+            modifier = Modifier
+                .width(152.dp)
+                .height(38.dp)
+                .onFocusChanged {
+                    inputState = inputState.onFocusChanged(it.isFocused, currentValue)
+                    onFocusChange(it.isFocused)
+                }
+                .onPreviewKeyEvent {
+                    if (onDone != null && (it.key == Key.Enter || it.key == Key.NumPadEnter)) {
+                        if (it.type == KeyEventType.KeyUp) onDone()
+                        true
+                    } else false
+                },
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(
+                            1.dp,
+                            if (errorMessage != null) Color(0xFFD32F2F) else Color.LightGray,
+                            RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    innerTextField()
+                }
             }
-        },
-        singleLine = true,
-        textStyle = LocalTextStyle.current.copy(
-            textAlign = TextAlign.Center
-        ),
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Done
-        ),
-        modifier = Modifier
-            .width(152.dp)
-            .height(38.dp),
-        decorationBox = { innerTextField ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(6.dp))
-                    .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                innerTextField()
-            }
-        }
-    )
+        )
+    }
 }
 
 private const val MIN_COMMENT_MEANINGFUL_CHARS = 10

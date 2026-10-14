@@ -16,6 +16,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -332,7 +335,12 @@ public class PhotoReports {
             addr_id = String.valueOf(photoDB.getAddr_id());
         }
         if (photoDB.getTime_event() != null) {
-            date = photoDB.getTime_event();
+//            date = photoDB.getTime_event();
+            //13.10.2026 изменил
+            date = Instant.ofEpochSecond(photoDB.dt)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         }
         if (photoDB.getPhoto_type() != null) {
             img_type_id = String.valueOf(photoDB.getPhoto_type());

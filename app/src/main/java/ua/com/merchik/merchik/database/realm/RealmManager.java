@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm;
 
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+
 import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
 import static ua.com.merchik.merchik.Utils.GPSUtils.distanceMeters;
 import static ua.com.merchik.merchik.features.maps.domain.UtilitiesKt.parseWpPoint;
@@ -83,8 +85,7 @@ public class RealmManager {
         Realm.init(context);
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
-                .deleteRealmIfMigrationNeeded()
-                .schemaVersion(31)
+                .schemaVersion(32)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -879,13 +880,7 @@ public class RealmManager {
      * Запись в Реалм РепортПр
      */
     public static boolean setReportPrepare(List<ReportPrepareDB> reportPrepare) {
-        Log.e("REALM_DB_UPDATE", "REPORT_S");
-        INSTANCE.beginTransaction();
-//        INSTANCE.delete(ReportPrepareDB.class);
-        INSTANCE.copyToRealmOrUpdate(reportPrepare);
-        INSTANCE.commitTransaction();
-        Log.e("REALM_DB_UPDATE", "REPORT_E");
-        return true;
+        return ReportPrepareRealm.mergeServerRows(reportPrepare);
     }
 
     /**
@@ -2614,7 +2609,7 @@ public class RealmManager {
 
 
     public static void setReportPrepareRow(ReportPrepareDB reportPrepare) {
-        INSTANCE.copyToRealmOrUpdate(reportPrepare);
+        ReportPrepareRealm.saveRowInTransaction(reportPrepare);
     }
 
 
@@ -2629,7 +2624,7 @@ public class RealmManager {
         if (rp != null && !rp.isEmpty()) {
 
             for (int i = 0; i < rp.size(); i++) {
-                reportPrepareServ.add(new ReportPrepareServ(String.valueOf(rp.get(i).getID()), rp.get(i).getDtChange(), rp.get(i).getDtReport(), rp.get(i).getKli(), rp.get(i).getTovarId(), rp.get(i).getAddrId(), rp.get(i).getPrice(), rp.get(i).getFace(), rp.get(i).getAmount(), rp.get(i).getDtExpire(), rp.get(i).getExpireLeft(), rp.get(i).getNotes(), rp.get(i).getUp(), rp.get(i).getAkciya(), rp.get(i).getAkciyaId(), rp.get(i).getOborotvedNum(), rp.get(i).getErrorId(), rp.get(i).getErrorComment(), rp.get(i).getCodeDad2(), String.valueOf(rp.get(i).buyerOrderId), rp.get(i).getPriceMin(), rp.get(i).getPriceMax()));
+                reportPrepareServ.add(ReportPrepareRealm.uploadSnapshot(rp.get(i)));
             }
         } else {
             Log.e("REPORT_PREPARE_SEND", "DATABASE - ");

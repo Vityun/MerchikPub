@@ -204,6 +204,16 @@ import kotlin.math.roundToInt
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
+    InlinePriceEditorHost(viewModel, context) {
+        MainUIContent(modifier, viewModel, context)
+    }
+}
+
+@SuppressLint("StateFlowValueCalledInComposition")
+@OptIn(ExperimentalFoundationApi::class)
+@RequiresApi(Build.VERSION_CODES.N)
+@Composable
+private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val optionsViewModel = (viewModel as? OptionsDBViewModel)
         ?.takeIf { it.contextUI == ContextUI.OPTIONS_IN_CONTAINER }
@@ -3718,9 +3728,9 @@ fun ProductCodeInlineEditor(
                         }
 
                         InlineEditorKind.DECIMAL_NUMBER -> {
-                            DecimalNumberEditorRow(
-                                title = row.title,
-                                value = row.value,
+                            ProductPriceEditorRow(
+                                itemId = itemId,
+                                row = row,
                                 onValueChange = { onValueChange(row.rowId, it) }
                             )
                         }

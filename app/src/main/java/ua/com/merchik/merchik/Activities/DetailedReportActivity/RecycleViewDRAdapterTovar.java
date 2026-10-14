@@ -2167,10 +2167,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private ReportPrepareDB createNewRPRow(TovarDB list) {
         ReportPrepareDB rp = new ReportPrepareDB();
 
-        long id = RealmManager.reportPrepareGetLastId();
-        id = id + 1;
-
-        rp.setID(id);
         rp.setDt(String.valueOf(System.currentTimeMillis()));
         rp.setDtReport(String.valueOf(System.currentTimeMillis()));
         rp.setKli(clientId);
@@ -2190,11 +2186,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         rp.setErrorComment("");
         rp.setCodeDad2(String.valueOf(codeDad2));
 
-        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(rp);
-        INSTANCE.commitTransaction();
-        return rp;
+        return ReportPrepareRealm.getOrCreateLocal(rp);
     }
 
 

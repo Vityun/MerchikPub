@@ -26,13 +26,50 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
+
+@Composable
+fun ValidationTooltip(message: String?, visible: Boolean, content: @Composable () -> Unit) {
+    val gap = with(LocalDensity.current) { 8.dp.roundToPx() }
+    val position = remember(gap) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize,
+                layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+                val x = (anchorBounds.right - popupContentSize.width)
+                    .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+                return IntOffset(x, (anchorBounds.top - popupContentSize.height - gap).coerceAtLeast(0))
+            }
+        }
+    }
+    Box {
+        content()
+        // Unlike a help tooltip, a validation warning must not time out while invalid.
+        if (visible && message != null) {
+            Popup(popupPositionProvider = position, properties = PopupProperties(
+                focusable = false, dismissOnBackPress = false, dismissOnClickOutside = false
+            )) {
+                Text(message, color = Color.Black, modifier = Modifier
+                    .widthIn(max = 200.dp)
+                    .shadow(4.dp, RoundedCornerShape(8.dp))
+                    .background(colorResource(R.color.backgroundToolTip), RoundedCornerShape(8.dp))
+                    .border(1.dp, Color(0xFFD32F2F), RoundedCornerShape(8.dp))
+                    .padding(7.dp))
+            }
+        }
+    }
+}
 
 @Composable
 fun Tooltip(

@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.Utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -24,6 +26,29 @@ public final class PhotoPickerUtils {
     private static final String DEFAULT_EXTENSION = ".jpg";
 
     private PhotoPickerUtils() {
+    }
+
+    public static boolean isReadableImageFile(File file) {
+        try {
+            if (!PhotoEvidencePolicy.isReadableNonEmptyFile(file)) return false;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            if (options.outWidth <= 0 || options.outHeight <= 0) return false;
+
+            // Decode a small bitmap to reject non-images without allocating a full camera photo.
+            options.inSampleSize = 1;
+            while (Math.max(options.outWidth, options.outHeight) / options.inSampleSize > 256) {
+                options.inSampleSize *= 2;
+            }
+            options.inJustDecodeBounds = false;
+            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            if (bitmap == null) return false;
+            bitmap.recycle();
+            return true;
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     public static Intent createSingleImageIntent() {

@@ -5,6 +5,39 @@ import org.junit.Test
 
 class InlineInputValueTest {
     @Test
+    fun initialZeroIsHiddenWhenEditingStarts() {
+        for (zero in listOf("0", "0.00", "0,00")) {
+            val state = InlineNumberInputState().onFocusChanged(true, zero)
+            assertEquals("", state.displayedValue(zero))
+            assertEquals("99", state.onInput("99").displayedValue("99"))
+        }
+    }
+
+    @Test
+    fun explicitlyEnteredZeroAndDecimalPrefixStayVisible() {
+        val state = InlineNumberInputState().onFocusChanged(true, "0").onInput("0")
+        assertEquals("0", state.displayedValue("0"))
+        assertEquals("0", state.onFocusChanged(true, "0").displayedValue("0"))
+        assertEquals("0.", state.onInput("0.").displayedValue("0."))
+        assertEquals("0.99", state.onInput("0.99").displayedValue("0.99"))
+    }
+
+    @Test
+    fun clearedNumberLooksEmptyUntilFocusIsLost() {
+        val state = InlineNumberInputState().onFocusChanged(true, "99").onInput("")
+        assertEquals("", state.displayedValue("0"))
+        assertEquals("", state.displayedValue("0.00"))
+        assertEquals("0", state.onFocusChanged(false, "0").displayedValue("0"))
+    }
+
+    @Test
+    fun zeroPlaceholderDoesNotHideNonzeroRefresh() {
+        val state = InlineNumberInputState().onFocusChanged(true, "0")
+        assertEquals("25", state.displayedValue("25"))
+        assertEquals("25", InlineNumberInputState().onFocusChanged(true, "25").displayedValue("25"))
+    }
+
+    @Test
     fun unchangedInputAcceptsFreshDatabaseValue() {
         assertEquals("20", refreshedInlineInputValue("10", "10", "20"))
         assertEquals("0", refreshedInlineInputValue("20", "20", "0"))

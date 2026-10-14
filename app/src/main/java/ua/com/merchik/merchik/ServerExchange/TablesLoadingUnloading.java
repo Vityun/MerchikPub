@@ -129,19 +129,14 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadList;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponseList;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarksServerData;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.TestJsonUpload.TasksAndReclamationsRequest;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
-import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalMapper;
 import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalServ;
@@ -259,44 +254,10 @@ public class TablesLoadingUnloading {
 
                     downloadOptions();
                     Log.e("uploadRP", "start");
-                    uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
+                    ReportPrepareSync.upload(true, null, new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
-                            Log.e("uploadRP", "onSuccess data: " + data);
-                            if (data != null) {
-                                Log.e("uploadRP", "onSuccess: " + data.size());
-
-                                if (data != null) {
-                                    List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
-
-                                    Long[] ids = new Long[list.size()];
-                                    int count = 0;
-                                    for (ReportPrepareUpdateResponseList item : list) {
-                                        ids[count++] = item.elementId;
-                                    }
-
-                                    List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
-
-                                    for (ReportPrepareDB item : rp) {
-                                        for (ReportPrepareUpdateResponseList listItem : list) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                if (Objects.equals(listItem.elementId, item.getID())) {
-                                                    if (listItem.state) {
-                                                        item.setUploadStatus(0);
-                                                        ReportPrepareRealm.setAll(Collections.singletonList(item));
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    //  TODO Вернул загрузку RP
-                                    downloadReportPrepare(0);
-                                }
-
-                            } else {
-                                downloadReportPrepare(0);
-                            }
+                            downloadReportPrepare(0);
                         }
 
                         @Override
@@ -2189,9 +2150,7 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-
-        call.enqueue(new Callback<ReportPrepareServer>() {
+        ReportPrepareSync.download(convertedObject, true, new Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(@NonNull Call<ReportPrepareServer> call, @NonNull Response<ReportPrepareServer> response) {
                 Log.e("TAG_TEST", "RESPONSE_4");
@@ -2208,12 +2167,9 @@ public class TablesLoadingUnloading {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                         Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-                        realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                        RealmManager.setToSynchronizationTimetableDB(realmResults);
                     } else {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                     }
-                    RealmManager.setReportPrepare(response.body().getList());
                 }
                 readyReportPrepare = true;
             }
@@ -2340,21 +2296,15 @@ public class TablesLoadingUnloading {
 
         Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
 
-        RetrofitBuilder.getRetrofitInterface()
-                .GET_REPORT_PREPEAR_RX(RetrofitBuilder.contentType, convertedObject)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(reportPrepareServer -> {
-                    Log.e("!", "__ " + reportPrepareServer);
-
-                    if (reportPrepareServer.getState() && reportPrepareServer.getList() != null
-                            && !reportPrepareServer.getList().isEmpty())
-                        RealmManager.setReportPrepare(reportPrepareServer.getList());
-                }, throwable -> {
-                    Log.e("TablesLoadUpload", "downloadReportPrepearByHash failed", throwable);
-                    Globals.writeToMLOG("ERROR", "downloadReportPrepearByHash/onError",
-                            "exception: " + throwable.getMessage());
-                });
+        ReportPrepareSync.download(convertedObject, false, new Callback<ReportPrepareServer>() {
+            @Override public void onResponse(Call<ReportPrepareServer> call, Response<ReportPrepareServer> response) {
+                Log.e("downloadReportPrepearByHash", "response: " + response.code());
+            }
+            @Override public void onFailure(Call<ReportPrepareServer> call, Throwable throwable) {
+                Globals.writeToMLOG("ERROR", "downloadReportPrepearByHash/onError",
+                        "exception: " + throwable.getMessage());
+            }
+        });
 
     }
 
@@ -3909,29 +3859,7 @@ id_exclude - иди товаров которые есть в приложени
                 uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
                     @Override
                     public <T> void onSuccess(List<T> data) {
-                        if (data != null) {
-                            List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
-
-                            Long[] ids = new Long[list.size()];
-                            int count = 0;
-                            for (ReportPrepareUpdateResponseList item : list) {
-                                ids[count++] = item.elementId;
-                            }
-
-                            List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
-
-                            for (ReportPrepareDB item : rp) {
-                                for (ReportPrepareUpdateResponseList listItem : list) {
-                                    if (listItem.elementId.equals(item.getID())) {
-                                        if (listItem.state) {
-                                            item.setUploadStatus(0);
-                                            ReportPrepareRealm.setAll(Collections.singletonList(item));
-                                        }
-                                    }
-                                }
-                            }
-
-                        }
+                        Log.d("uploadRP", "Acknowledged rows: " + data.size());
                     }
 
                     @Override
@@ -3986,29 +3914,6 @@ id_exclude - иди товаров которые есть в приложени
                             public <T> void onSuccess(List<T> data) {
                                 Log.e("uploadRP1", "data: " + data);
                                 downloadReportPrepare(1); // Тут мод 1 ибо будет обмен автоматический
-
-                                if (data != null) {
-                                    List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
-
-                                    Long[] ids = new Long[list.size()];
-                                    int count = 0;
-                                    for (ReportPrepareUpdateResponseList item : list) {
-                                        ids[count++] = item.elementId;
-                                    }
-
-                                    List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
-
-                                    for (ReportPrepareDB item : rp) {
-                                        for (ReportPrepareUpdateResponseList listItem : list) {
-                                            if (listItem.elementId.equals(item.getID())) {
-                                                if (listItem.state) {
-                                                    item.setUploadStatus(0);
-                                                    ReportPrepareRealm.setAll(Collections.singletonList(item));
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
                             }
 
                             @Override
@@ -4042,118 +3947,13 @@ id_exclude - иди товаров которые есть в приложени
     // =============== U_P_L_O_A_D TABLE TO SERVER ===============
 
     public void uploadRP(ExchangeInterface.ExchangeResponseInterface exchange) {
-        try {
-            List<ReportPrepareServ> prepareDBList = RealmManager.getReportPrepareToUpload();
-            if (prepareDBList.isEmpty()) {
-                exchange.onFailure("uploadRP: Данных на выгрузку нет");
-                return;
-            }
-
-            StandartData data = new StandartData();
-            data.mod = "report_prepare";
-            data.act = "set_report_data";
-            data.data = prepareDBList;
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            Log.e("uploadRP", "convertedObject: " + convertedObject);
-            Globals.writeToMLOG("INFO", "uploadRP().Start", "Size: " + data.data.size());
-
-            if (data.data.size() > 0) {
-                Call<ReportPrepareUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP_INFO(RetrofitBuilder.contentType, convertedObject);
-                call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
-                    @Override
-                    public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            if (response.body().data != null && response.body().data.size() > 0) {
-                                exchange.onSuccess(response.body().data);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ReportPrepareUpdateResponse> call, Throwable t) {
-                        Log.e("uploadRP", "Throwable t: " + t);
-                        exchange.onFailure("uploadRP: " + t);
-                    }
-                });
-            } else {
-                exchange.onFailure("uploadRP: Данных на выгрузку нет");
-            }
-        } catch (Exception e) {
-            exchange.onFailure("uploadRP: Exception e: " + e);
-            Globals.writeToMLOG("INFO", "uploadRP()", "Exception e: " + e);
-        }
+        ReportPrepareSync.upload(false, null, exchange);
     }
 
     // upload REPORT_PREPARE
     public boolean uploadReportPrepareToServer() {
-        boolean res = false;
-
-        // Получаем последние данные из REPORT_PREPARE для выгрузки на сервер (время изменения dtChange)
-        List<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
-        Log.e("UPLOAD_DATA", "REPORT_PREPARE. (" + data.size() + ")");
-
-        if (!data.isEmpty()) {
-            StandartData standartData = new StandartData();
-            standartData.mod = "report_prepare";
-            standartData.act = "set_report_data";
-            standartData.data = data;
-
-            Gson gson = new Gson();
-            String json = gson.toJson(standartData);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-            Log.e("UPLOAD_DATA", "set_report_data: " + convertedObject );
-
-            Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<ReportPrepareUploadResponse>() {
-                @Override
-                public void onResponse(Call<ReportPrepareUploadResponse> call, Response<ReportPrepareUploadResponse> response) {
-                    long currentTime = System.currentTimeMillis() / 1000;
-                    try {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null) {
-                                if (response.body().state) {
-                                    if (response.body().data != null && !response.body().data.isEmpty()) {
-                                        for (ReportPrepareUploadList item : response.body().data) {
-                                            ReportPrepareDB reportPrepareDB = INSTANCE.copyFromRealm(RealmManager.getReportPrepareRowById(item.elementId));
-                                            INSTANCE.executeTransaction(realm -> {
-                                                reportPrepareDB.setUploadStatus(0);
-                                                reportPrepareDB.setDtChange(currentTime);
-                                                realm.copyToRealmOrUpdate(reportPrepareDB);
-                                            });
-                                        }
-                                    } else {
-                                        Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body().data == null || size == 0");
-                                    }
-                                } else {
-                                    Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body().state: " + false);
-                                }
-                            } else {
-                                Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body() != null");
-                            }
-                        } else {
-                            Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body() != null");
-                        }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "onResponse/uploadReportPrepareToServer", "Resp not successful. response.code(): " + response.code());
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ReportPrepareUploadResponse> call, Throwable t) {
-                    Globals.writeToMLOG("ERROR", "onFailure/uploadReportPrepareToServer", "Throwable t: " + t);
-                }
-            });
-
-        } else {
-            // print massage NO DATA
-            return res;
-        }
-
-        return res;
+        ReportPrepareSync.upload(false, null, null);
+        return false; // Historical API: completion is asynchronous.
     }
 
 

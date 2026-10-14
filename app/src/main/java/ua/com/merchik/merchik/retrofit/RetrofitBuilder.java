@@ -49,6 +49,7 @@ public class RetrofitBuilder {
     private MyCookieJar cookie = new MyCookieJar();
 
     private RetrofitInterface interfaceAPI;
+    private RetrofitInterface silentInterfaceAPI;
 
     private RetrofitInterface interfaceAPIforImage;
 
@@ -164,6 +165,10 @@ public class RetrofitBuilder {
 
 
         interfaceAPI = retrofit.create(RetrofitInterface.class);
+        // Background diagnostics must not display global server-error dialogs.
+        OkHttpClient.Builder silentClient = client.newBuilder();
+        silentClient.interceptors().removeIf(interceptor -> interceptor instanceof StateErrorBroadcastInterceptor);
+        silentInterfaceAPI = retrofit.newBuilder().client(silentClient.build()).build().create(RetrofitInterface.class);
         interfaceAPIforImage = retrofitForImage.create(RetrofitInterface.class);
     }
 
@@ -322,6 +327,10 @@ public class RetrofitBuilder {
 
     public static RetrofitInterface getRetrofitInterface() {
         return INSTANCE.interfaceAPI;
+    }
+
+    public static RetrofitInterface getSilentRetrofitInterface() {
+        return INSTANCE.silentInterfaceAPI;
     }
 
     public static RetrofitInterface getRetrofitInterfaceForImage() {

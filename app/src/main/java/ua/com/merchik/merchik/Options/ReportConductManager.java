@@ -16,8 +16,10 @@ import java.util.Set;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public final class ReportConductManager {
@@ -44,6 +46,7 @@ public final class ReportConductManager {
     public static boolean isAwaitingServer(long dad2) {
         ReportConductState state = get(dad2);
         return state != null && (state.stage == ReportConductState.Stage.READY
+                || state.stage == ReportConductState.Stage.FINALIZING_WORK_END
                 || state.stage == ReportConductState.Stage.ACCEPTED);
     }
 
@@ -66,18 +69,33 @@ public final class ReportConductManager {
     }
 
     public static boolean begin(long dad2) {
+        return begin(dad2, false, null);
+    }
+
+    public static boolean begin(long dad2, boolean requestWorkEnd, Long requestedEnd) {
         ReportConductState previous = get(dad2);
-        if (previous != null && previous.stage == ReportConductState.Stage.READY) {
+        if (previous != null && (previous.stage == ReportConductState.Stage.READY
+                || previous.stage == ReportConductState.Stage.FINALIZING_WORK_END)) {
             flushPending();
             return false;
         }
         int userId = Globals.getCurrentUserId();
         if (userId <= 0 || dad2 <= 0) throw new IllegalStateException("Missing user or visit");
-        ReportConductState state = new ReportConductState();
+        ReportConductState state = !requestWorkEnd && previous != null
+                && previous.awaitingDecision() && previous.workEndRequested ? previous : new ReportConductState();
         state.userId = userId;
         state.dad2 = dad2;
+        if (requestWorkEnd) {
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+            if (wp == null || wp.getVisit_end_dt() != 0 || wp.getClient_end_dt() != 0) {
+                throw new IllegalStateException("Visit is missing or already finished");
+            }
+            state.requestWorkEnd(wp.getVisit_start_dt(), wp.getClient_start_dt(), requestedEnd);
+        }
+        state.stage = ReportConductState.Stage.WAITING_CHECK;
         save(state);
-        log("INFO", dad2, "WAITING_CHECK");
+        log("INFO", dad2, "WAITING_CHECK, workEndRequested=" + state.workEndRequested
+                + ", requestedEnd=" + state.requestedWorkEnd);
         return true;
     }
 
@@ -105,6 +123,10 @@ public final class ReportConductManager {
         if (state == null || !state.awaitingDecision()) {
             throw new IllegalStateException("Conduct decision is no longer active");
         }
+        if (state.workEndRequested) {
+            finishWorkEnd(dad2, true);
+            return;
+        }
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
         if (wp == null) throw new IllegalStateException("Visit is no longer available");
         state.visitStart = wp.getVisit_start_dt();
@@ -115,6 +137,41 @@ public final class ReportConductManager {
         state.approve();
         save(state);
         log("INFO", dad2, "READY: command saved");
+    }
+
+    public static void finishWorkEnd(long dad2, boolean conductAfterWorkEnd) {
+        ReportConductState state = get(dad2);
+        if (state == null || !state.awaitingDecision() || !state.workEndRequested) {
+            throw new IllegalStateException("Work-end decision is no longer active");
+        }
+        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        if (wp == null || !state.matchesUnfinishedWork(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
+                wp.getClient_start_dt(), wp.getClient_end_dt())) {
+            cancelDecision(dad2);
+            throw new IllegalStateException("Visit changed; repeat the work-end check");
+        }
+        // Journal consent first: Realm and SharedPreferences cannot share a transaction.
+        state.prepareWorkEnd(System.currentTimeMillis() / 1000, conductAfterWorkEnd);
+        save(state);
+        log("INFO", dad2, "FINALIZING_WORK_END: consent saved, end=" + state.visitEnd
+                + ", conduct=" + conductAfterWorkEnd);
+        if (!commitWorkEnd(state)) throw new IllegalStateException("Visit changed before work-end commit");
+    }
+
+    private static boolean commitWorkEnd(ReportConductState state) {
+        if (!ReportWorkEndPersistence.save(RealmManager.INSTANCE, state, System.currentTimeMillis() / 1000)) {
+            state.complete(false, "Дані відвідування змінилися. Повторіть завершення роботи.");
+            state.workEndRequested = false;
+            save(state);
+            log("ERROR", state.dad2, "Work-end commit rejected: visit missing or work times changed");
+            return false;
+        }
+        state.workEndSaved();
+        save(state);
+        log("INFO", state.dad2, "WORK_END_SAVED: end=" + state.visitEnd);
+        if (state.stage == ReportConductState.Stage.READY) log("INFO", state.dad2, "READY: command saved");
+        ReportConductUi.workEndSaved(state.dad2);
+        return true;
     }
 
     public static void workDataUploaded(int userId, List<StartEndData> snapshot) {
@@ -163,7 +220,12 @@ public final class ReportConductManager {
             if (!entry.getKey().startsWith(userId + ":") || !(entry.getValue() instanceof String)) continue;
             try {
                 ReportConductState state = GSON.fromJson((String) entry.getValue(), ReportConductState.class);
-                if (state == null || state.userId != userId || !state.canSend(System.currentTimeMillis())) continue;
+                if (state == null || state.userId != userId) continue;
+                if (state.stage == ReportConductState.Stage.FINALIZING_WORK_END) {
+                    if (commitWorkEnd(state)) MAIN.post(Options::syncConductWorkData);
+                    else ReportConductUi.showResult(state.dad2);
+                }
+                if (!state.canSend(System.currentTimeMillis())) continue;
                 String key = key(userId, state.dad2);
                 if (IN_FLIGHT.contains(key)) continue;
                 WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(state.dad2);
@@ -183,6 +245,10 @@ public final class ReportConductManager {
                 }
                 // A successful repeat can report no changed fields: times may already be on the server.
                 if (!state.workDataUploaded && wp.startUpdate) continue;
+                if (ReportPrepareSync.hasPendingVisit(state.dad2)) {
+                    ReportPrepareSync.flushVisit(state.dad2);
+                    continue;
+                }
                 state.retryAfter = System.currentTimeMillis() + RETRY_MS;
                 save(state);
                 IN_FLIGHT.add(key);

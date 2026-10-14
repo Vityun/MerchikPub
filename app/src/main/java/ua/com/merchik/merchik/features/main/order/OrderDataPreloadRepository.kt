@@ -15,6 +15,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Utils.TrustedTime
@@ -269,9 +277,6 @@ object OrderDataPreloadRepository {
         if (options.isNotEmpty()) {
             saveOptionsPartial(options)
         }
-        if (reportPrepare.isNotEmpty()) {
-            saveReportPreparePartial(reportPrepare)
-        }
 
         CreatedVisitDetailsPreloadResult(
             requestedDad2 = requestedDad2,
@@ -358,15 +363,20 @@ object OrderDataPreloadRepository {
         }
     }
 
-    private fun downloadCreatedVisitReportPrepareByDad2(
+    private suspend fun downloadCreatedVisitReportPrepareByDad2(
         codeDad2List: List<Long>
     ): List<ReportPrepareDB> {
         val request = buildCreatedVisitReportPrepareRequest(codeDad2List)
-        val response = timeRequest("report_prepare.list_data.created_visits") {
-            logInfo("report_prepare.list_data.created_visits", "request=$request")
-            RetrofitBuilder.getRetrofitInterface()
-                .ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, request)
-                .execute()
+        logInfo("report_prepare.list_data.created_visits", "request=$request")
+        val response = suspendCancellableCoroutine<Response<ReportPrepareServer>> { continuation ->
+            ReportPrepareSync.download(request, false, object : Callback<ReportPrepareServer> {
+                override fun onResponse(call: Call<ReportPrepareServer>, response: Response<ReportPrepareServer>) {
+                    if (continuation.isActive) continuation.resume(response)
+                }
+                override fun onFailure(call: Call<ReportPrepareServer>?, error: Throwable) {
+                    if (continuation.isActive) continuation.resumeWithException(error)
+                }
+            })
         }
 
         if (!response.isSuccessful) {
@@ -393,12 +403,6 @@ object OrderDataPreloadRepository {
     private suspend fun saveOptionsPartial(options: List<OptionsDB>) {
         withContext(Dispatchers.Main) {
             RealmManager.setOptions2(options)
-        }
-    }
-
-    private suspend fun saveReportPreparePartial(reportPrepare: List<ReportPrepareDB>) {
-        withContext(Dispatchers.Main) {
-            RealmManager.setReportPrepare(reportPrepare)
         }
     }
 

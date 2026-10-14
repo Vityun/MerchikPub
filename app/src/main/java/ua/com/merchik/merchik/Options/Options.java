@@ -160,7 +160,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlTwoWorkInOneDay;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.VersionApp;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -700,7 +700,7 @@ public class Options {
                 }
             }
         }
-        if ("138520".equals(optionsDB.getOptionId())) {
+        if ("138520" .equals(optionsDB.getOptionId())) {
             logEndWorkControls(optionsDB, optionsDBList, res);
         }
         return res;
@@ -716,7 +716,7 @@ public class Options {
             StringBuilder photoControl = new StringBuilder();
             if (candidates != null) {
                 for (OptionsDB item : candidates) {
-                    if ("164354".equals(item.getOptionId())) {
+                    if ("164354" .equals(item.getOptionId())) {
                         photoControl.append('[').append(OptionControl.describeOption(item))
                                 .append(", selected=").append(selected.contains(item))
                                 .append(", amountMin=").append(item.getAmountMin())
@@ -744,6 +744,14 @@ public class Options {
         Set<OptionsDB> success = new HashSet<>();
         List<OptionsDB> failure = new ArrayList<>();
         int optionId2 = Integer.parseInt(option.getOptionId());
+
+        optionsDBList.sort(
+                Comparator.comparing(
+                        OptionsDB::getSo,
+                        Comparator.nullsLast(Integer::compareTo)
+                ).reversed()
+        );
+
         if (optionsDBList != null && optionsDBList.size() > 0) {
             for (OptionsDB item : optionsDBList) {
                 NNKMode nnkMode;
@@ -1360,21 +1368,39 @@ public class Options {
      * настраивать опцию.
      */
     public void conduct(Context context, WpDataDB wpDataDB, List<OptionsDB> options, ConductMode mode, Clicks.click click) {
+        conduct(context, wpDataDB, options, mode, click, false, null, null);
+    }
+
+    private void conduct(Context context, WpDataDB wpDataDB, List<OptionsDB> options, ConductMode mode,
+                         Clicks.click click, boolean requestWorkEnd, Long requestedEnd, Runnable onWorkEndSaved) {
         try {
             if (wpDataDB == null || wpDataDB.getCode_dad2() <= 0) {
                 throw new IllegalArgumentException("Missing visit for conduct");
             }
-            if (mode == DEFAULT_CONDUCT && !ReportConductUi.begin(context, wpDataDB.getCode_dad2())) return;
+            if (mode == DEFAULT_CONDUCT && !ReportConductUi.begin(context, wpDataDB.getCode_dad2(),
+                    requestWorkEnd, requestedEnd, onWorkEndSaved)) return;
             if (options == null || options.isEmpty()) {
                 throw new IllegalStateException("Options are not loaded; conduct deferred");
             }
-            // включить сортировку когда Петров даст добро
+//            Log.e("conductTEST","before-----------------");
+//            for (OptionsDB item : options) {
+//                Log.e("conductTEST","before option id: " + item.getOptionId() +
+//                        "ctrlId: " + item.getOptionControlId() +
+//                        "os: " + item.getSo());
+//            }
 //            options.sort(
 //                    Comparator.comparing(
 //                            OptionsDB::getSo,
 //                            Comparator.nullsLast(Integer::compareTo)
 //                    ).reversed()
 //            );
+//            Log.e("conductTEST","after-----------------");
+//
+//            for (OptionsDB item : options) {
+//                Log.e("conductTEST","after option id: " + item.getOptionId() +
+//                        "ctrlId: " + item.getOptionControlId() +
+//                        "os: " + item.getSo());
+//            }
 
             optionNotConduct.clear();
             optionConductWithPenalty.clear();
@@ -1390,14 +1416,33 @@ public class Options {
             Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
                     "WpDataDB: " + new Gson().fromJson(new Gson().toJson(wpDataDB), JsonObject.class));
 
-            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpDataDB.getId()));
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+            if (wp == null) throw new IllegalStateException("Visit is no longer available");
             Globals.writeToMLOG("INFO", "Options.conduct", "ConductMode: " + mode.name() +
                     "WpDataDB From Realm: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class));
+
+            ReportConductState decision = mode == DEFAULT_CONDUCT ? ReportConductManager.get(wp.getCode_dad2()) : null;
+            boolean previewWorkEnd = decision != null && decision.workEndRequested;
+            if (previewWorkEnd) {
+                if (!decision.matchesUnfinishedWork(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
+                        wp.getClient_start_dt(), wp.getClient_end_dt())) {
+                    ReportConductManager.cancelDecision(wp.getCode_dad2());
+                    throw new IllegalStateException("Visit changed; repeat the work-end check");
+                }
+                // This detached snapshot is for duration-dependent checks only, never for saving WP.
+                long previewEnd = decision.resolveWorkEnd(System.currentTimeMillis() / 1000);
+                wp.setVisit_end_dt(previewEnd);
+                wp.setClient_end_dt(previewEnd);
+                wp.client_work_duration = previewEnd - wp.getClient_start_dt();
+                ReportConductManager.log("INFO", wp.getCode_dad2(), "PREVIEW_WORK_END: end=" + previewEnd + ", not saved");
+            }
 
             Log.e("!", "ConductMode: " + mode.name() +
                     " WpDataDB: " + new Gson().fromJson(new Gson().toJson(wp), JsonObject.class) +
                     "List<OptionsDB> size: " + options.size());
             for (OptionsDB item : options) {
+                // Checking an intended work end must not clear the persisted "work not finished" signal.
+                if (previewWorkEnd && "138521" .equals(item.getOptionControlId())) continue;
                 Log.e("conduct", "------------------------------START----------------------------------");
                 Log.e("conduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
                 Log.e("conduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
@@ -1520,7 +1565,7 @@ public class Options {
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                             );
                             dialog.setTitle(spannable);
-                            dialog.setDismissOnlyByButtonsMode(true);
+                            dialog.setDismissOnlyByButtonsMode(!previewWorkEnd);
                         }
 
                         SpannableStringBuilder resStr = new SpannableStringBuilder();
@@ -1550,7 +1595,11 @@ public class Options {
                                 dialog.dismiss();
                             });
                             ReportConductManager.awaitingConfirmation(wp.getCode_dad2());
-                            dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
+                            if (previewWorkEnd) {
+                                dialog.setOkNotClose("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
+                            } else {
+                                dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
+                            }
                         }
                         ReportConductUi.show(context, wp.getCode_dad2(), dialog);
                         Log.e("optionNotConduct", "3 " + resStr);
@@ -1575,6 +1624,11 @@ public class Options {
                             }
                         }
                         if (!existing.isEmpty()) {
+                            if (previewWorkEnd) {
+                                // No penalties: keep the existing photo-warning behavior after saving the work end.
+                                ReportConductManager.finishWorkEnd(wp.getCode_dad2(), false);
+                                syncConductWorkData();
+                            }
                             MessageDialogBuilder photoDialog = new MessageDialogBuilder(unwrap(context))
                                     .setTitle("Дані не вивантажені на сервер")
                                     .setStatus(DialogStatus.ALERT)
@@ -1624,28 +1678,46 @@ public class Options {
     public static void resumePendingConduct(Context context, long dad2) {
         try {
             ReportConductState state = ReportConductManager.get(dad2);
-            if (state == null || !state.awaitingDecision() || !ReportConductUi.canShow(context)) return;
+            if (state == null || !state.awaitingDecision() || !ReportConductUi.canShow(context))
+                return;
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
             if (wp == null) return;
-            // Do not auto-resume if the process stopped before the work-end transaction committed.
-            if (wp.getVisit_end_dt() <= 0) return;
-            WorkPlan workPlan = new WorkPlan();
-            List<OptionsDB> options = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wp), wp.getId());
-            new Options().conduct(context, wp, options, DEFAULT_CONDUCT, new Clicks.click() {
-                @Override public <T> void click(T data) {
-                    OptionsDB option = (OptionsDB) data;
-                    OptionMassageType type = new OptionMassageType();
-                    type.type = DIALOG;
-                    new Options().optControl(context, wp, option, Integer.parseInt(option.getOptionControlId()),
-                            null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                @Override public void onUnlockCodeSuccess() { }
-                                @Override public void onUnlockCodeFailure() { }
-                            });
-                }
-            });
+            if (wp.getVisit_end_dt() <= 0 && !state.workEndRequested) return;
+            conductVisit(context, wp, false, null, null);
         } catch (Exception e) {
             ReportConductManager.log("ERROR", dad2, "resume: " + e);
         }
+    }
+
+    private static void conductVisit(Context context, WpDataDB wp, boolean requestWorkEnd,
+                                     Long requestedEnd, Runnable onWorkEndSaved) {
+        long dad2 = wp.getCode_dad2();
+        WorkPlan workPlan = new WorkPlan();
+        List<OptionsDB> options = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wp), wp.getId());
+        new Options().conduct(context, wp, options, DEFAULT_CONDUCT, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                if (!ReportConductUi.canSubmit(context, dad2)) return;
+                // Cancel before opening another screen: its lifecycle must not retain an abandoned decision.
+                ReportConductManager.cancelDecision(dad2);
+                ReportConductUi.closeApprovedDialog(context);
+                WpDataDB current = WpDataRealm.getWpDataRowByDad2Id(dad2);
+                if (current == null) return;
+                OptionsDB option = (OptionsDB) data;
+                OptionMassageType type = new OptionMassageType();
+                type.type = DIALOG;
+                new Options().optControl(context, current, option, Integer.parseInt(option.getOptionControlId()),
+                        null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                            @Override
+                            public void onUnlockCodeSuccess() {
+                            }
+
+                            @Override
+                            public void onUnlockCodeFailure() {
+                            }
+                        });
+            }
+        }, requestWorkEnd, requestedEnd, onWorkEndSaved);
     }
 
     private void submitConduct(Context context, WpDataDB wp, boolean uploadPhotos) {
@@ -1657,8 +1729,9 @@ public class Options {
             Toast.makeText(context, "Команду проведення збережено. Вона буде передана під час обміну з сервером.",
                     Toast.LENGTH_LONG).show();
             try {
-                if (uploadPhotos) new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                new TablesLoadingUnloading().uploadReportPrepareToServer();
+                if (uploadPhotos)
+                    new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                ReportPrepareSync.flushVisit(wp.getCode_dad2());
             } catch (Exception e) {
                 ReportConductManager.log("ERROR", wp.getCode_dad2(), "upload before conduct: " + e);
             }
@@ -1673,13 +1746,16 @@ public class Options {
         }
     }
 
-    private static void syncConductWorkData() {
+    static void syncConductWorkData() {
         try {
             new Exchange().sendWpDataToServer(new Click() {
-                @Override public <T> void onSuccess(T data) {
+                @Override
+                public <T> void onSuccess(T data) {
                     ReportConductManager.flushPending();
                 }
-                @Override public void onFailure(String error) {
+
+                @Override
+                public void onFailure(String error) {
                     ReportConductManager.flushPending();
                 }
             });
@@ -1813,7 +1889,7 @@ public class Options {
 
 //            case 157277:
             case 175016:
-                Log.e("!!!!!!!!!", "option id: " + option.getOptionId() + " | " + option.getOptionControlId()  + " | " + option.getOptionTxt());
+                Log.e("!!!!!!!!!", "option id: " + option.getOptionId() + " | " + option.getOptionControlId() + " | " + option.getOptionTxt());
                 OptionControlPhotoTovarAndPrice<?> optionControlPhotoTovarAndPrice =
                         new OptionControlPhotoTovarAndPrice<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarAndPrice.isBlockOption()))
@@ -3371,9 +3447,15 @@ public class Options {
         } else if (daysAgo <= 7) {
             String weekday = new SimpleDateFormat("EEEE", locale).format(startDate);
             switch (weekday) {
-                case "среда": weekday = "среду"; break;
-                case "пятница": weekday = "пятницу"; break;
-                case "суббота": weekday = "субботу"; break;
+                case "среда":
+                    weekday = "среду";
+                    break;
+                case "пятница":
+                    weekday = "пятницу";
+                    break;
+                case "суббота":
+                    weekday = "субботу";
+                    break;
             }
             startDay = "в " + weekday + " " + new SimpleDateFormat("d MMMM", locale).format(startDate);
         } else {
@@ -3442,27 +3524,19 @@ public class Options {
             } else {
                 if (wpDataDB.getVisit_start_dt() > 0) {
                     try {
-                        ReportConductManager.begin(wpDataDB.getCode_dad2());
-                        // Сохраняю время
-                        long endTime = requestedEndTime != null ? requestedEndTime : System.currentTimeMillis() / 1000;
-
-                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                        wpDataDB.setVisit_end_dt(endTime);
-                        wpDataDB.setClient_end_dt(endTime);
-                        wpDataDB.startUpdate = true;
-                        wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
-
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            realm.insertOrUpdate(wpDataDB);
+                        long dad2 = wpDataDB.getCode_dad2();
+                        conductVisit(context, wpDataDB, true, requestedEndTime, () -> {
+                            WpDataDB saved = WpDataRealm.getWpDataRowByDad2Id(dad2);
+                            if (saved == null || saved.getVisit_end_dt() <= 0) return;
+                            long endTime = saved.getVisit_end_dt();
+                            Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork",
+                                    "Вы закончили работу в: " + endTime + " / отчёт: " + saved.getDoc_num_otchet());
+                            Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000),
+                                    Toast.LENGTH_SHORT).show();
+                            unlockCodeResultListener.onUnlockCodeSuccess();
                         });
-                        // Check locally now; a delayed upload callback must not open UI in the background.
-                        syncConductWorkData();
-                        resumePendingConduct(context, wpDataDB.getCode_dad2());
-
-                        Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
-                        Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
-                        unlockCodeResultListener.onUnlockCodeSuccess();
-                        result = true;
+                        WpDataDB current = WpDataRealm.getWpDataRowByDad2Id(dad2);
+                        result = current != null && current.getVisit_end_dt() > 0;
                     } catch (Exception e) {
                         // Set to log error
                         Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();

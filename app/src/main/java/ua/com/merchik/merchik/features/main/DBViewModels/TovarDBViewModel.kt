@@ -18,6 +18,7 @@ import io.realm.RealmResults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
@@ -27,6 +28,9 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceDrafts
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceField
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceValues
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.Globals.OptionControlName
@@ -85,6 +89,7 @@ import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -108,6 +113,7 @@ import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoQuality
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -145,6 +151,75 @@ class TovarDBViewModel @Inject constructor(
     )
 
     private var productCodeSessionCache: ProductCodeSessionCache? = null
+
+    private var inlinePriceSession: Pair<String, InlinePriceDrafts>? = null
+
+    fun onInlinePriceInput(field: InlinePriceField) {
+        val rp = RealmManager.getTovarReportPrepare(getCodeDad2String(), field.tovarId)
+        ReportPrepareSync.localEdit(rp?.getID())
+    }
+
+    fun inlinePriceField(itemId: Long, row: ProductCodeEditorRowUi): InlinePriceField? {
+        val control = row.option.getOptionControlName()
+        if (control != OptionControlName.PRICE && control != OptionControlName.PRICE_BEFORE_PROMOTION) return null
+        val tovar = findTovarByStableId(itemId) ?: return null
+        return InlinePriceField(itemId, row.rowId, tovar.getiD(), control == OptionControlName.PRICE_BEFORE_PROMOTION)
+    }
+
+    fun getInlinePriceDrafts(): InlinePriceDrafts {
+        val dad2 = getCodeDad2String()
+        val key = "${Globals.getCurrentUserId()}_$dad2"
+        inlinePriceSession?.takeIf { it.first == key }?.let { return it.second }
+        val preferences = getApplication<Application>().getSharedPreferences("inline_price_drafts", Context.MODE_PRIVATE)
+        val restored = mutableMapOf<InlinePriceField, String>()
+        try {
+            val entries = JSONArray(preferences.getString(key, "[]"))
+            for (index in 0 until entries.length()) {
+                val entry = entries.getJSONObject(index)
+                restored[InlinePriceField(entry.getLong("itemId"), entry.getString("rowId"),
+                    entry.getString("tovarId"), entry.getBoolean("beforePromotion"))] = entry.getString("value")
+            }
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "InlinePriceDrafts", "Cannot read drafts: $e")
+        }
+        val session = InlinePriceDrafts(
+            restored = restored,
+            readPrices = { field ->
+                val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId)
+                val name = TovarRealm.getById(field.tovarId)?.nm.orEmpty()
+                InlinePriceValues(rp?.price.orEmpty(), rp?.priceMin.orEmpty(), "(${field.tovarId}) $name")
+            },
+            savePrice = { field, value -> saveInlinePrice(dad2, field, value) },
+            store = { drafts ->
+                val entries = JSONArray()
+                drafts.forEach { (field, value) ->
+                    entries.put(JSONObject().put("itemId", field.itemId).put("rowId", field.rowId)
+                        .put("tovarId", field.tovarId).put("beforePromotion", field.beforePromotion).put("value", value))
+                }
+                val editor = preferences.edit()
+                if (drafts.isEmpty()) editor.remove(key) else editor.putString(key, entries.toString())
+                editor.apply()
+            }
+        )
+        inlinePriceSession = key to session
+        return session
+    }
+
+    private fun saveInlinePrice(dad2: String, field: InlinePriceField, value: String): Boolean {
+        if (dad2 != getCodeDad2String()) return false
+        return try {
+            val wp = RealmManager.getWorkPlanRowByCodeDad2(dad2.toLong()) ?: return false
+            val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId) ?: createNewRPRow(field.tovarId, wp)
+            // The guard validates against the current row inside the Realm transaction.
+            if (!PriceSaveGuard.savePrice(context, rp, value, field.beforePromotion, false)) return false
+            invalidateProductCodeItemCache(field.itemId, field.tovarId)
+            onInlineRowPersisted(field.itemId, field.rowId)
+            true
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "InlinePriceDrafts", "dad2=$dad2, tovar=${field.tovarId}: $e")
+            false
+        }
+    }
 
     override val table: KClass<out DataObjectUI>
         get() = TovarDB::class
@@ -214,7 +289,9 @@ class TovarDBViewModel @Inject constructor(
         val rp = RealmManager.getTovarReportPrepare(codeDad2, tovar.getiD())
 
         val refreshedRows = rows.map { row ->
-            if (!isSameTovarOption(row.option, changedTpl)) {
+            if (!isSameTovarOption(row.option, changedTpl) &&
+                !isPromotionRowAffectedByPrice(row.option, changedTpl)
+            ) {
                 row
             } else {
                 refreshProductCodeRowFromReportPrepare(
@@ -258,6 +335,14 @@ class TovarDBViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun isPromotionRowAffectedByPrice(row: TovarOptions, changed: TovarOptions): Boolean {
+        val changedControl = changed.getOptionControlName()
+        val rowControl = row.getOptionControlName()
+        return (changedControl == OptionControlName.PRICE ||
+                changedControl == OptionControlName.PRICE_BEFORE_PROMOTION) &&
+                (rowControl == OptionControlName.AKCIYA_ID || rowControl == OptionControlName.AKCIYA)
     }
 
     private fun isSameTovarOption(
@@ -1106,32 +1191,13 @@ class TovarDBViewModel @Inject constructor(
         val codeDad2 = getCodeDad2String()
         val rp = RealmManager.getTovarReportPrepare(codeDad2, tovar.getiD())
 
-        val refreshedRow = when (existingRow.option.getOptionControlName()) {
-            OptionControlName.AKCIYA_ID -> {
-                existingRow.copy(
-                    value = getCurrentData(existingRow.option, rp = rp).orEmpty(),
-                    value2 = rp?.getAkciya().orEmpty()
-                )
-            }
-
-            OptionControlName.ERROR_ID -> {
-                existingRow.copy(
-                    title = resolveErrorTitle(existingRow.option, rp),
-                    value = getCurrentData(existingRow.option, rp = rp).orEmpty(),
-                    value2 = rp?.getErrorComment().orEmpty()
-                )
-            }
-
-            else -> {
-                existingRow.copy(
-                    value = getCurrentData(existingRow.option, rp = rp).orEmpty()
-                )
-            }
-        }
-
         val updatedMap = current.rowsByItemId.toMutableMap()
         updatedMap[itemId] = rows.map { row ->
-            if (row.rowId == rowId) refreshedRow else row
+            if (row.rowId == rowId || isPromotionRowAffectedByPrice(row.option, existingRow.option)) {
+                refreshProductCodeRowFromReportPrepare(row, rp)
+            } else {
+                row
+            }
         }
 
         setProductCodeEditor(
@@ -3368,10 +3434,6 @@ class TovarDBViewModel @Inject constructor(
     private fun createNewRPRow(tovarId: String, wpDataDB: WpDataDB): ReportPrepareDB {
         val rp = ReportPrepareDB()
 
-        var id = RealmManager.reportPrepareGetLastId()
-        id = id + 1
-
-        rp.setID(id)
         rp.setDt(System.currentTimeMillis().toString())
         rp.setDtReport(System.currentTimeMillis().toString())
         rp.setDtChange(System.currentTimeMillis() / 1000)
@@ -3394,11 +3456,7 @@ class TovarDBViewModel @Inject constructor(
         rp.setErrorComment("")
         rp.setCodeDad2(wpDataDB.code_dad2.toString())
 
-        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
-        RealmManager.INSTANCE.beginTransaction()
-        RealmManager.INSTANCE.copyToRealmOrUpdate<ReportPrepareDB?>(rp)
-        RealmManager.INSTANCE.commitTransaction()
-        return rp
+        return ReportPrepareRealm.getOrCreateLocal(rp)
     }
 
     private fun operationType(tpl: TovarOptions): DialogData.Operations {

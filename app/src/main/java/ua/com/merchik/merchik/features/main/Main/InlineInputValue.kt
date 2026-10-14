@@ -1,5 +1,23 @@
 package ua.com.merchik.merchik.features.main.Main
 
+internal data class InlineNumberInputState(
+    val focused: Boolean = false,
+    private val hideZero: Boolean = false
+) {
+    fun onFocusChanged(hasFocus: Boolean, value: String): InlineNumberInputState {
+        if (focused == hasFocus) return this
+        return copy(focused = hasFocus, hideZero = hasFocus && value.isNumericZero())
+    }
+
+    fun onInput(value: String): InlineNumberInputState = copy(hideZero = value.isBlank())
+
+    fun displayedValue(value: String): String =
+        if (focused && hideZero && value.isNumericZero()) "" else value
+}
+
+private fun String.isNumericZero(): Boolean =
+    replace(',', '.').toBigDecimalOrNull()?.signum() == 0
+
 internal fun refreshedInlineInputValue(
     previous: String,
     local: String,

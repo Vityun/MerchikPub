@@ -344,7 +344,6 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 @Override
                 public <T> void onSuccess(List<T> data) {
                     if (data != null && data.size() > 0) {
-                        ReportPrepareRealm.setAll((List<ReportPrepareDB>) data);
                         Toast.makeText(itemView.getContext(), dataDownload200 + " деталізований звіт", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(itemView.getContext(), dataDownloadError + " деталізований звіт", Toast.LENGTH_LONG).show();

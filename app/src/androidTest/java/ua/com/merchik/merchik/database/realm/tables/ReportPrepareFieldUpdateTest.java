@@ -7,11 +7,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import com.google.gson.JsonElement;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareUploadPolicy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,6 +50,61 @@ public class ReportPrepareFieldUpdateTest {
     @After
     public void tearDown() {
         if (realm != null) realm.close();
+    }
+
+    @Test
+    public void acknowledgementPreservesNewerPriceWithinSameSecond() {
+        realm.executeTransaction(r -> {
+            current().setUploadStatus(1);
+            current().setPrice("10");
+            current().setDtChange(123);
+        });
+        Map<String, JsonElement> sent = Collections.singletonMap("1",
+                ReportPrepareUploadPolicy.snapshot(ReportPrepareRealm.uploadSnapshot(current())));
+        realm.executeTransaction(r -> current().setPrice("20"));
+        assertTrue(ReportPrepareRealm.acknowledgeUpload(realm, sent, Collections.singleton("1")).isEmpty());
+        assertEquals("20", current().getPrice());
+        assertEquals(1, current().getUploadStatus());
+        assertEquals(123L, current().getDtChange());
+    }
+
+    @Test
+    public void acknowledgementOnlyClearsMetadataAndDoesNotRecreateDeletedRow() {
+        realm.executeTransaction(r -> { current().setUploadStatus(1); current().setDtChange(123); });
+        Map<String, JsonElement> sent = Collections.singletonMap("1",
+                ReportPrepareUploadPolicy.snapshot(ReportPrepareRealm.uploadSnapshot(current())));
+        assertEquals(Collections.singletonList(1L),
+                ReportPrepareRealm.acknowledgeUpload(realm, sent, Collections.singleton("1")));
+        assertEquals(0, current().getUploadStatus());
+        assertEquals(123L, current().getDtChange());
+        assertEquals("original note", current().getNotes());
+        realm.executeTransaction(r -> current().deleteFromRealm());
+        assertTrue(ReportPrepareRealm.acknowledgeUpload(realm, sent, Collections.singleton("1")).isEmpty());
+        assertNull(current());
+    }
+
+    @Test
+    public void downloadSkipsPendingLocalRowAndRequestsReconciliation() {
+        ReportPrepareDB incoming = snapshot();
+        incoming.setPrice("5");
+        realm.executeTransaction(r -> { current().setPrice("20"); current().setUploadStatus(1); });
+        List<String> deferred = new ArrayList<>();
+        assertFalse(ReportPrepareRealm.mergeServerRows(realm, Collections.singletonList(incoming), deferred::add, log -> fail(log)));
+        assertEquals("20", current().getPrice());
+        assertEquals(1, current().getUploadStatus());
+        assertEquals(Collections.singletonList("100"), deferred);
+    }
+
+    @Test
+    public void downloadUpdatesCleanRowsAndAddsNewRows() {
+        ReportPrepareDB incoming = snapshot();
+        incoming.setPrice("5");
+        assertTrue(ReportPrepareRealm.mergeServerRows(realm, Collections.singletonList(incoming), id -> fail(), log -> fail(log)));
+        assertEquals("5", current().getPrice());
+        incoming.setID(2L);
+        incoming.setTovarId("20");
+        assertTrue(ReportPrepareRealm.mergeServerRows(realm, Collections.singletonList(incoming), id -> fail(), log -> fail(log)));
+        assertEquals(2, realm.where(ReportPrepareDB.class).count());
     }
 
     @Test

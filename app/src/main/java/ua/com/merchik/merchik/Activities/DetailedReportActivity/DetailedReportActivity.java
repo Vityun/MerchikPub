@@ -86,6 +86,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.workmager.WpDataDateLogWorker;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
@@ -570,6 +571,7 @@ public class DetailedReportActivity extends toolbar_menus {
         Intent i = getIntent();
         long id = i.getLongExtra("WpDataDB_ID", 0);
         wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(id));
+        WpDataDateLogWorker.onVisitOpened(this, wpDataDB);
 
 //        ScrollDataHolder.Companion.instance().removeByCodeDad2(wpDataDB.getCode_dad2());
         ScrollDataHolder.Companion.instance().removeByCodeWpDataId(wpDataDB.getId());

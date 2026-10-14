@@ -45,6 +45,7 @@ import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -131,7 +132,6 @@ public class Tab3Fragment extends Fragment {
     }
 
     public void setPhotoTARComment(Integer id, int tarCommentIndex) {
-        photoId = id;
         StackPhotoDB photoDB = StackPhotoRealm.getById(id);
         if (photoDB == null || dataComments == null || tarCommentIndex < 0 || tarCommentIndex >= dataComments.size()) {
             Globals.writeToMLOG(
@@ -142,7 +142,18 @@ public class Tab3Fragment extends Fragment {
             return;
         }
 
+        if (!TARCommentPhoto.isUsablePhoto(photoDB)) {
+            Globals.writeToMLOG("ERROR", "Tab3Fragment/setPhotoTARComment",
+                    "Photo rejected, comment unchanged: photoId=" + id + ", hash=" + photoDB.getPhoto_hash());
+            Toast.makeText(getContext(), "Фото недоступне або пошкоджене. Зробіть фотографію ще раз.",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        photoId = id;
         TARCommentsDB tarCommentsDB = dataComments.get(tarCommentIndex);
+        tarCommentsDB.photo = PhotoEvidencePolicy.hasServerPhotoId(photoDB.getPhotoServerId())
+                ? photoDB.getPhotoServerId() : "0";
         tarCommentsDB.photo_hash = photoDB.getPhoto_hash();
         tarCommentsDB.dtUpdate = System.currentTimeMillis()/1000;
         tarCommentsDB.startUpdate = true;

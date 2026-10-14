@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
@@ -905,8 +906,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag.getTovList.downloadReportPrepareByDad", "convertedObject: " + convertedObject);
 
-        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_REPORT_PREPARE(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ReportPrepareServer>() {
+        ReportPrepareSync.download(convertedObject, false, new Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(Call<ReportPrepareServer> call, Response<ReportPrepareServer> response) {
                 try {
@@ -918,7 +918,6 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                             if (response.body().getState()) {
                                 if (response.body().getList() != null && response.body().getList().size() > 0) {
-                                    ReportPrepareRealm.setAll(response.body().getList());
                                     click.onSuccess("Товары успешно обновлены!");
                                 } else {
                                     click.onFailure("Список Товаров пуст. Обратитесь к своему руководителю.");

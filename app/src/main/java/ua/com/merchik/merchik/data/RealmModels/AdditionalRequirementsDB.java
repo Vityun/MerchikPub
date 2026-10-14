@@ -111,6 +111,10 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Expose
     public Integer showcaseTpId;
 
+    @SerializedName("promo_tp_id")
+    @Expose
+    private int promoTpId = 0;
+
     @SerializedName("main_option_id")
     @Expose
     public String mainOptionId;
@@ -281,6 +285,14 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     }
 
 
+
+    public int getPromoTpId() {
+        return promoTpId;
+    }
+
+    public void setPromoTpId(int promoTpId) {
+        this.promoTpId = promoTpId;
+    }
 
     public String getMainOptionId() {
         return mainOptionId;

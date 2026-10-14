@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -94,9 +95,7 @@ internal object TARTovarDataLoader {
         realm.executeTransaction { db ->
             rows.forEach { row ->
                 val sameId = db.where(ReportPrepareDB::class.java).equalTo("iD", row.iD).findFirst()
-                val sameProduct = db.where(ReportPrepareDB::class.java)
-                    .equalTo("codeDad2", dad2).equalTo("tovarId", row.tovarId).findFirst()
-                if (sameId == null && sameProduct == null) db.insert(row)
+                if (sameId == null) ReportPrepareRealm.saveRowInTransaction(row)
             }
         }
     }

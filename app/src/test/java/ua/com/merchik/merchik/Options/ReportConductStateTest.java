@@ -98,4 +98,122 @@ public class ReportConductStateTest {
         assertTrue(loaded.workDataUploaded);
         assertTrue(loaded.canSend(0));
     }
+
+    private ReportConductState unfinished(Long requestedEnd) {
+        ReportConductState state = new ReportConductState();
+        state.userId = 216646;
+        state.dad2 = 1141026037940061377L;
+        state.requestWorkEnd(100, 110, requestedEnd);
+        return state;
+    }
+
+    @Test public void waitingForPenaltyConsentCannotSaveOrSendWorkEnd() {
+        ReportConductState state = unfinished(null);
+        state.stage = ReportConductState.Stage.WAITING_CONFIRMATION;
+        ReportConductState loaded = restored(state);
+        assertTrue(loaded.workEndRequested);
+        assertTrue(loaded.awaitingDecision());
+        assertEquals(0, loaded.visitEnd);
+        assertEquals(0, loaded.clientEnd);
+        assertFalse(loaded.canApplyWorkEnd(100, 0, 110, 0));
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void previewDoesNotAuthorizeCompletionOrFreezeCurrentTime() {
+        ReportConductState state = unfinished(null);
+        assertEquals(200, state.resolveWorkEnd(200));
+        assertEquals(0, state.visitEnd);
+        state.prepareWorkEnd(250, true);
+        assertEquals(250, state.visitEnd);
+        assertEquals(250, state.clientEnd);
+    }
+
+    @Test public void explicitDurationSurvivesBackgroundAndUsesCalculatedEnd() {
+        ReportConductState state = unfinished(700L);
+        state.stage = ReportConductState.Stage.WAITING_CONFIRMATION;
+        ReportConductState loaded = restored(state);
+        assertEquals(Long.valueOf(700), loaded.requestedWorkEnd);
+        loaded.prepareWorkEnd(1000, true);
+        assertEquals(700, loaded.visitEnd);
+    }
+
+    @Test public void consentSurvivesCrashBeforeRealmCommitButCannotSendYet() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEnd(250, true);
+        ReportConductState loaded = restored(state);
+        assertEquals(ReportConductState.Stage.FINALIZING_WORK_END, loaded.stage);
+        assertTrue(loaded.canApplyWorkEnd(100, 0, 110, 0));
+        assertFalse(loaded.awaitingDecision());
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+        loaded.workEndSaved();
+        assertFalse(loaded.workEndRequested);
+        assertTrue(loaded.canSend(0));
+        assertFalse(loaded.workDataUploaded);
+    }
+
+    @Test public void recoveryAfterRealmCommitIsIdempotent() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEnd(250, true);
+        ReportConductState loaded = restored(state);
+        assertTrue(loaded.canApplyWorkEnd(100, 250, 110, 250));
+        loaded.workEndSaved();
+        ReportConductState ready = restored(loaded);
+        assertTrue(ready.matchesWorkTimes(100, 250, 110, 250));
+        assertEquals(ReportConductState.Stage.READY, ready.stage);
+        assertFalse(ready.canApplyWorkEnd(100, 250, 110, 250));
+    }
+
+    @Test public void recoveryCannotOverwriteChangedStartOrOtherCompletion() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEnd(250, true);
+        assertFalse(state.canApplyWorkEnd(101, 0, 110, 0));
+        assertFalse(state.canApplyWorkEnd(100, 0, 111, 0));
+        assertFalse(state.canApplyWorkEnd(100, 260, 110, 260));
+        assertFalse(state.canApplyWorkEnd(100, 250, 110, 0));
+    }
+
+    @Test public void noPenaltiesWithPhotoWarningStillNeedsSeparateConductConsent() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEnd(250, false);
+        ReportConductState loaded = restored(state);
+        loaded.workEndSaved();
+        assertFalse(loaded.workEndRequested);
+        assertTrue(loaded.awaitingDecision());
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+        assertEquals(250, loaded.visitEnd);
+        loaded.approve();
+        assertTrue(loaded.canSend(0));
+    }
+
+    @Test public void legacyStateDoesNotInventWorkEndIntent() {
+        ReportConductState legacy = gson.fromJson("{\"stage\":\"WAITING_CONFIRMATION\","
+                + "\"visitStart\":100,\"visitEnd\":250,\"clientStart\":100,\"clientEnd\":250}",
+                ReportConductState.class);
+        assertFalse(legacy.workEndRequested);
+        legacy.approve();
+        assertEquals(250, legacy.visitEnd);
+        assertTrue(legacy.canSend(0));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void repeatedConsentCannotChangeFinalTimestamp() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEnd(250, true);
+        state.prepareWorkEnd(300, true);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void pendingWorkEndCannotBecomeReadyWithoutCommit() {
+        unfinished(null).approve();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void waitingDecisionCannotPretendThatWorkEndWasSaved() {
+        unfinished(null).workEndSaved();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void invalidEndDoesNotAuthorizeNegativeDuration() {
+        unfinished(50L).prepareWorkEnd(250, true);
+    }
 }
