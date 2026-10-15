@@ -1,4 +1,5 @@
 *.iml
+.gitignore
 .gradle
 /local.properties
 /.idea/libraries
@@ -11,3 +12,7 @@ build
 /captures
 .externalNativeBuild
 keystore.properties
+/AGENTS.md
+/app/release/merchik.2026101501.apk
+/app/release/baselineProfiles/1/merchik.2026101501.dm
+/app/release/baselineProfiles/0/merchik.2026101501.dm

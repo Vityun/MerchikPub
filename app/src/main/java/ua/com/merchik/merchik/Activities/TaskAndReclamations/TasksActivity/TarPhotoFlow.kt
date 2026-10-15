@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.RealmManager
@@ -56,6 +57,8 @@ class TarPhotoFlow(private val activity: TARActivity) {
             activity.clearPendingPhotoTypeId()
             require(photoType >= 0)
             val task = requireNotNull(SQL_DB.tarDao().getById(tarId)) { "TAR $tarId not found" }
+            Globals.writeToMLOG("INFO", "TarPhotoFlow/start", "tar=$tarId, type=$photoType, gallery=$gallery, " +
+                "codeDad2=${task.codeDad2}, codeDad2SrcDoc=${task.codeDad2SrcDoc}, addr=${task.addr}, client=${task.client}")
             val networkId = SQL_DB.addressDao().getById(task.addr)?.tpId ?: 0
             val state = TarPhotoCaptureState(tarId, photoType, gallery, UUID.randomUUID().toString(), networkId)
             activity.setPendingPhotoTypeId(photoType)
@@ -101,7 +104,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
                 PhotoReferenceSelection.SHOWCASE -> {
                     val showcase = if (id == 0) ShowcaseSDB().apply { this.id = 0 }
                         else requireNotNull(SQL_DB.showcaseDao().getById(id)) { "Showcase $id not found" }
-                    val metadata = ShowcasePhotoMetadata.load(task.codeDad2, state.photoType.toString(), showcase)
+                    val metadata = ShowcasePhotoMetadata.load(sourceVisitDad2(task), state.photoType.toString(), showcase)
                     state.showcaseId = metadata.showcaseId
                     state.imageId = metadata.imageId
                     state.exampleImageId = metadata.imageId
@@ -131,12 +134,20 @@ class TarPhotoFlow(private val activity: TARActivity) {
         return true
     }
 
-    private fun requireVisit(task: TasksAndReclamationsSDB) =
-        requireNotNull(RealmManager.getWorkPlanRowByCodeDad2Detached(task.codeDad2)) {
+    private fun requireVisit(task: TasksAndReclamationsSDB): WpDataDB {
+        val state = pending()
+        val context = "tar=${task.id}, type=${state?.photoType}, gallery=${state?.gallery}, stage=${state?.stage}, " +
+            "codeDad2=${task.codeDad2}, codeDad2SrcDoc=${task.codeDad2SrcDoc}, addr=${task.addr}, client=${task.client}"
+        Globals.writeToMLOG("INFO", "TarPhotoFlow/visit", "lookup: $context")
+        val visit = RealmManager.getWorkPlanRowByCodeDad2Detached(sourceVisitDad2(task))
+        Globals.writeToMLOG("INFO", "TarPhotoFlow/visit", "found=${visit != null}, $context, " +
+            "visitAddr=${visit?.addr_id}, visitClient=${visit?.client_id}")
+        return requireNotNull(visit) {
             "Відвідування для цієї задачі не завантажено. Виконайте обмін даними."
         }.also {
             require(it.addr_id == task.addr && it.client_id == task.client) { "TAR visit does not match address/customer" }
         }
+    }
 
     private fun openSelector(state: TarPhotoCaptureState, task: TasksAndReclamationsSDB, kind: String) {
         if (kind == PhotoReferenceSelection.PLANOGRAM &&
@@ -159,7 +170,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
             addProperty("photoType", state.photoType)
             addProperty("tradeMarkDBId", state.networkId)
             addProperty("clientName", task.clientNm)
-            if (kind != PhotoReferenceSelection.SAMPLE) addProperty("wpDataDBId", task.codeDad2.toString())
+            if (kind != PhotoReferenceSelection.SAMPLE) addProperty("wpDataDBId", sourceVisitDad2(task).toString())
         }
         activity.startActivityForResult(Intent(activity, FeaturesActivity::class.java).apply {
             putExtra("viewModel", model.canonicalName)
@@ -198,8 +209,10 @@ class TarPhotoFlow(private val activity: TARActivity) {
     }
 
     private fun fail(error: Exception) {
-        Globals.writeToMLOG("ERROR", "TarPhotoFlow", "${error}")
-        val cameraPath = pending()?.cameraPath?.takeIf { it.isNotBlank() }
+        val state = pending()
+        Globals.writeToMLOG("ERROR", "TarPhotoFlow", "tar=${state?.tarId}, type=${state?.photoType}, " +
+            "gallery=${state?.gallery}, stage=${state?.stage}: $error")
+        val cameraPath = state?.cameraPath?.takeIf { it.isNotBlank() }
         if (cameraPath != null && cameraPath == MakePhoto.getPendingPhotoNum(activity)) {
             MakePhoto.deletePendingPhotoFileIfExists(activity)
             MakePhoto.clearPendingPhoto(activity)
@@ -211,6 +224,12 @@ class TarPhotoFlow(private val activity: TARActivity) {
     companion object {
         private const val REQUEST_REFERENCE = 21341
         internal fun usesShowcase(photoType: Int) = photoType == 0 || photoType == 45
+
+        // codeDad2 belongs to the task/photo; only codeDad2SrcDoc identifies the source visit.
+        internal fun sourceVisitDad2(task: TasksAndReclamationsSDB): Long =
+            requireNotNull(task.codeDad2SrcDoc?.takeIf { it > 0 }) {
+                "Для цієї задачі не вказано пов'язане відвідування."
+            }
     }
 }
 

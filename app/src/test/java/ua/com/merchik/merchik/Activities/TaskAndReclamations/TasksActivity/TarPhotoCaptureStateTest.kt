@@ -6,6 +6,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 
 class TarPhotoCaptureStateTest {
@@ -99,5 +100,53 @@ class TarPhotoCaptureStateTest {
         assertTrue(TarPhotoFlow.usesShowcase(45))
         assertFalse(TarPhotoFlow.usesShowcase(31))
         assertFalse(TarPhotoFlow.usesShowcase(4))
+    }
+
+    @Test
+    fun visitUsesSourceDocumentInsteadOfTaskDocument() {
+        val task = TasksAndReclamationsSDB().apply {
+            codeDad2 = 9000001L
+            codeDad2SrcDoc = 1151026038613061387L
+        }
+        assertEquals(1151026038613061387L, TarPhotoFlow.sourceVisitDad2(task))
+        assertEquals(9000001L, task.codeDad2.toLong())
+    }
+
+    @Test
+    fun sourceVisitDoesNotRequireTaskDocumentCode() {
+        val task = TasksAndReclamationsSDB().apply {
+            codeDad2 = null
+            codeDad2SrcDoc = 1151026038613061387L
+        }
+        assertEquals(1151026038613061387L, TarPhotoFlow.sourceVisitDad2(task))
+    }
+
+    @Test
+    fun missingSourceVisitNeverFallsBackToTaskDocument() {
+        for (sourceDad2 in listOf(null, 0L, -1L)) {
+            val task = TasksAndReclamationsSDB().apply {
+                codeDad2 = 9000001L
+                codeDad2SrcDoc = sourceDad2
+            }
+            val error = runCatching { TarPhotoFlow.sourceVisitDad2(task) }.exceptionOrNull()
+            assertTrue(error is IllegalArgumentException)
+        }
+    }
+
+    @Test
+    fun photoKeepsTaskDocumentForCameraAndGallery() {
+        for (gallery in listOf(false, true)) {
+            for (photoType in listOf(0, 45, 31)) {
+                val photo = StackPhotoDB().apply { code_dad2 = 9000001L }
+                val state = TarPhotoCaptureState(1, photoType, gallery, "selection", 12)
+                state.showcaseId = "17"
+                state.planogramId = "25"
+                state.applyTo(photo)
+                assertEquals(9000001L, photo.code_dad2)
+                assertEquals(photoType, photo.photo_type.toInt())
+                assertEquals("17", photo.showcase_id)
+                assertEquals("25", photo.planogram_id)
+            }
+        }
     }
 }

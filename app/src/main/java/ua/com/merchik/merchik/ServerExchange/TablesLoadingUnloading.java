@@ -206,6 +206,7 @@ public class TablesLoadingUnloading {
 
     private static String notice = "";
     private static final Set<String> siteHintsRequestsInFlight = Collections.synchronizedSet(new HashSet<>());
+    private static final AtomicBoolean promoDownloadInFlight = new AtomicBoolean(false);
 
     /**
      * 18.08.2020
@@ -3379,42 +3380,62 @@ id_exclude - иди товаров которые есть в приложени
      * Обновление таблицы: Акции
      */
     public void downloadAkciyTable() {
+        if (!promoDownloadInFlight.compareAndSet(false, true)) return;
+        readyAkciyTable = false;
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadAkciyTable.START");
 
-        String mod = "data_list";
-        String act = "report_promo_list";
+        try {
+            SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("promoList");
+            long vpi = sTable == null || RealmManager.getAllPromoDb().isEmpty()
+                    ? 0L : sTable.getVpi_app();
+            // Capture before the request so slow downloads cannot skip concurrent server edits.
+            long nextVpi = TrustedTime.syncWatermarkSec(vpi, 120);
+            Globals.writeToMLOG("INFO", "downloadAkciyTable", "Request dt=" + vpi);
 
-//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Акции");
-
-        Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_PROMO_LIST(mod, act);
-        call.enqueue(new Callback<PromoTableResponce>() {
-            @Override
-            public void onResponse(Call<PromoTableResponce> call, Response<PromoTableResponce> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + compactBodyLog(response.body()));
-                    if (response.body().getState()) {
-                        RealmManager.setPromo(response.body().getList());
-//                        if (RealmManager.setPromo(response.body().getList()))
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
+            Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface()
+                    .GET_PROMO_LIST("data_list", "report_promo_list", vpi);
+            call.enqueue(new Callback<PromoTableResponce>() {
+                @Override
+                public void onResponse(Call<PromoTableResponce> call, Response<PromoTableResponce> response) {
+                    try {
+                        PromoTableResponce body = response.body();
+                        if (!response.isSuccessful() || body == null || !Boolean.TRUE.equals(body.getState())
+                                || body.getList() == null) {
+                            syncInternetError = true;
+                            Globals.writeToMLOG("ERROR", "downloadAkciyTable",
+                                    "Invalid response: http=" + response.code() + ", VPI unchanged=" + vpi);
+                            return;
+                        }
+                        Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + compactBodyLog(body));
+                        if (!RealmManager.setPromo(body.getList())) return;
+                        if (sTable != null) {
+                            sTable.setVpi_app(nextVpi);
+                            RealmManager.setToSynchronizationTimetableDB(sTable);
+                        }
+                        readyAkciyTable = true;
+                        Globals.writeToMLOG("INFO", "downloadAkciyTable",
+                                "Saved rows=" + body.getList().size() + ", VPI=" + vpi + " -> " + nextVpi);
+                    } catch (Exception e) {
+                        syncInternetError = true;
+                        Globals.writeToMLOG("ERROR", "downloadAkciyTable/onResponse", "Save failed: " + e);
+                    } finally {
+                        promoDownloadInFlight.set(false);
                     }
                 }
-                readyAkciyTable = true;
-            }
 
-            @Override
-            public void onFailure(Call<PromoTableResponce> call, Throwable t) {
-//                if (pg != null)
-//                    if (pg.isShowing())
-//                        pg.dismiss();
-                readyAkciyTable = false;
-                syncInternetError = true;
-                Log.e("TAG_TABLE", "FAILUREdownloadAkciyTable: " + t);
-            }
-        });
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadAkciyTable.END");
-
+                @Override
+                public void onFailure(Call<PromoTableResponce> call, Throwable t) {
+                    promoDownloadInFlight.set(false);
+                    syncInternetError = true;
+                    Log.e("TAG_TABLE", "FAILUREdownloadAkciyTable: " + t);
+                    Globals.writeToMLOG("ERROR", "downloadAkciyTable/onFailure", "Request failed: " + t);
+                }
+            });
+        } catch (Exception e) {
+            promoDownloadInFlight.set(false);
+            syncInternetError = true;
+            Globals.writeToMLOG("ERROR", "downloadAkciyTable", "Request failed: " + e);
+        }
     }
 
 

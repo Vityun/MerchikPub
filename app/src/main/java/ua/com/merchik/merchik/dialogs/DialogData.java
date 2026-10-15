@@ -53,8 +53,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -86,6 +88,46 @@ public class DialogData {
     private String textData, textData2;
     public TovarOptions tovarOptions;
     public ReportPrepareDB reportPrepareDB;
+    private Supplier<List<ReportPrepareDB>> priceRowsProvider;
+    private boolean priceConfirmationPending;
+
+    public void setPriceRowsProvider(Supplier<List<ReportPrepareDB>> provider) {
+        priceRowsProvider = provider;
+    }
+
+    public void runPriceOperation(String value, Runnable save) {
+        if (tovarOptions == null || (tovarOptions.getOptionControlName() != Globals.OptionControlName.PRICE
+                && tovarOptions.getOptionControlName() != Globals.OptionControlName.PRICE_BEFORE_PROMOTION)) {
+            save.run();
+            return;
+        }
+        if (priceConfirmationPending) return;
+        if (value == null || value.isEmpty()) { save.run(); return; }
+        List<ReportPrepareDB> rows = priceRowsProvider != null ? priceRowsProvider.get()
+                : Collections.singletonList(reportPrepareDB);
+        priceConfirmationPending = true;
+        dialog.hide();
+        PriceSaveGuard.confirmPriceSave(Globals.unwrap(context), rows, value,
+                tovarOptions.getOptionControlName() == Globals.OptionControlName.PRICE_BEFORE_PROMOTION,
+                () -> { priceConfirmationPending = false; save.run(); },
+                () -> {
+                    priceConfirmationPending = false;
+                    if (!Globals.unwrap(context).isFinishing() && !Globals.unwrap(context).isDestroyed()) {
+                        dialog.show();
+                        editText.requestFocus();
+                        editText.selectAll();
+                        editText.post(() -> ((InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE))
+                                .showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT));
+                    }
+                });
+    }
+
+    private void submitNumberOperation(DialogClickListener listener) {
+        runPriceOperation(result, () -> {
+            listener.clicked();
+            if (result != null && !result.isEmpty()) dialog.dismiss();
+        });
+    }
 
 
     // ---- Data output Dialog ----
@@ -998,8 +1040,7 @@ public class DialogData {
                         result = normalizeDecimalResult(v.getText().toString());
 
                         if (isValidDecimalResult(result)) {
-                            listener.clicked();
-                            dialog.dismiss();
+                            submitNumberOperation(listener);
                         } else {
                             Toast.makeText(
                                     dialog.getContext(),
@@ -1020,8 +1061,7 @@ public class DialogData {
                     Log.e("setOperation", "DecimalNumber.result: " + result);
 
                     if (isValidDecimalResult(result)) {
-                        listener.clicked();
-                        dialog.dismiss();
+                        submitNumberOperation(listener);
                     } else {
                         Toast.makeText(
                                 dialog.getContext(),
@@ -1082,10 +1122,7 @@ public class DialogData {
                         // Your action on done
                         //todo hide keyborad
                         result = v.getText().toString();
-                        listener.clicked();
-                        if (result != null && !result.equals("")) {
-                            dialog.dismiss();
-                        }
+                        submitNumberOperation(listener);
                         return true;
                     }
                     return false;
@@ -1094,10 +1131,7 @@ public class DialogData {
                     result = editText.getText().toString();
                     Log.e("setOperation", "Number.result: " + result);
 
-                    listener.clicked();
-                    if (result != null && !result.equals("")) {
-                        dialog.dismiss();
-                    }
+                    submitNumberOperation(listener);
                 });
                 break;
 

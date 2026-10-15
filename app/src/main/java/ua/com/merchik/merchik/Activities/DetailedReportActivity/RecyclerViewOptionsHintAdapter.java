@@ -12,9 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Collections;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.RecentItem;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
@@ -60,9 +62,17 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
                         break;
 
                     case ("price") :
-                        if (!PriceSaveGuard.savePrice(mContext, reportPrepareTovar, recentItem.getValue(), false)) return;
-                        saved = true;
-                        break;
+                        dialog.hide();
+                        PriceSaveGuard.confirmPriceSave(Globals.unwrap(mContext), Collections.singletonList(reportPrepareTovar),
+                                recentItem.getValue(), false, () -> {
+                                    if (!PriceSaveGuard.savePrice(mContext, reportPrepareTovar, recentItem.getValue(), false)) {
+                                        dialog.show();
+                                        return;
+                                    }
+                                    Toast.makeText(mContext, "Внесено: " + recentItem.getValue(), Toast.LENGTH_LONG).show();
+                                    dialog.dismiss();
+                                }, dialog::show);
+                        return;
 
                     case ("amount") :
                         saved = ReportPrepareRealm.updateFields(reportPrepareTovar, current -> {

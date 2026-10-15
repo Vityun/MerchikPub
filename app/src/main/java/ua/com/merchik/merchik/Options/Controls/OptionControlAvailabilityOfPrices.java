@@ -635,6 +635,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
 
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(editTpl, tov, "", ""));
+                dialog.tovarOptions = editTpl;
+                dialog.reportPrepareDB = reportPrepareDB;
 
                 // Заполняем операции для цен: operationType будет Number для поля price
                 dialog.setOperationSpinnerData(setMapData(Globals.OptionControlName.ERROR_ID));

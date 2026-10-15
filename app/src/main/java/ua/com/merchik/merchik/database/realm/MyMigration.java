@@ -370,6 +370,23 @@ public class MyMigration implements RealmMigration {
             }
         }
 
+        if (newVersion >= 33) {
+            RealmObjectSchema promoDB = schema.get("PromoDB");
+
+            if (promoDB != null) {
+                if (!promoDB.hasField("discountPercent")) {
+                    promoDB.addField("discountPercent", int.class)
+                            .transform(obj -> obj.setInt("discountPercent", 0));
+                }
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "PromoDB schema is null");
+            }
+
+            if (oldVersion < 33) {
+                oldVersion = 33;
+            }
+        }
+
     }
 }
 

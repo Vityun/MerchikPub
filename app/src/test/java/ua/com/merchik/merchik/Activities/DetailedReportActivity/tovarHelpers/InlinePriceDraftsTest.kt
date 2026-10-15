@@ -4,6 +4,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class InlinePriceDraftsTest {
+    @Test
+    fun discountWarningRetainsPromotionNameAndProductLabelWhenEditingBeforePrice() {
+        val fixture = Fixture()
+        fixture.prices = InlinePriceValues("80", "100", "(10) Juice 0.95 l", 20, "Summer 20%")
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finish(before)
+        val prices = controller.nextError()!!.draft.prices
+        assertEquals("(10) Juice 0.95 l", prices.product)
+        assertEquals("Summer 20%", prices.discountCheck().promotionName)
+        assertEquals("36", prices.discountCheck().expectedDiscountText())
+    }
+
     private val current = InlinePriceField(1, "price", "10", false)
     private val before = InlinePriceField(1, "price_before_promotion", "10", true)
 
@@ -172,5 +185,124 @@ class InlinePriceDraftsTest {
         assertEquals("1500", fixture.stored[before])
         assertNotNull(controller.nextError())
         assertEquals("1235", fixture.prices.priceMin)
+    }
+
+    @Test
+    fun discountWarningStaysInDraftUntilEditingEndsAndCanBeOverridden() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        assertTrue(controller.drafts.value.getValue(before).invalidDiscount)
+        assertNull(controller.nextError())
+        assertEquals("100", fixture.prices.priceMin)
+        controller.finish(before)
+        val error = controller.nextError()!!
+        controller.markShown(error)
+        controller.approveDiscount(error)
+        assertEquals("180", fixture.prices.priceMin)
+        assertEquals(1, fixture.writes)
+        assertTrue(fixture.stored.isEmpty())
+        assertNull(controller.nextError())
+    }
+
+    @Test
+    fun refusalDiscardsOnlyLastFieldAndRequestsItsFocus() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finishAll()
+        controller.refuseDiscount(controller.nextError()!!)
+        assertEquals("100", fixture.prices.priceMin)
+        assertEquals("80", fixture.prices.price)
+        assertEquals(0, fixture.writes)
+        assertTrue(fixture.stored.isEmpty())
+        assertEquals(before, controller.focusRequest.value)
+        controller.focusRestored(before)
+        assertNull(controller.focusRequest.value)
+    }
+
+    @Test
+    fun discountedDraftSurvivesBackgroundAndRecreation() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(current, "90")
+        controller.finishAll()
+        val restored = fixture.controller()
+        assertTrue(restored.nextError()!!.draft.invalidDiscount)
+        assertEquals("80", fixture.prices.price)
+    }
+
+    @Test
+    fun changedPercentageInvalidatesPendingApproval() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finish(before)
+        val error = controller.nextError()!!
+        controller.markShown(error)
+        fixture.prices = fixture.prices.copy(discountPercent = 30)
+        controller.approveDiscount(error)
+        assertEquals(0, fixture.writes)
+        assertEquals(30, controller.nextError()!!.draft.prices.discountPercent)
+    }
+
+    @Test
+    fun approvalCannotBypassOldPriceOrderErrorAfterOtherPriceChanges() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finish(before)
+        val error = controller.nextError()!!
+        fixture.prices = fixture.prices.copy(price = "200")
+        controller.approveDiscount(error)
+        assertEquals(0, fixture.writes)
+        val pending = controller.nextError()!!.draft
+        assertTrue(pending.invalidPrice)
+        assertFalse(pending.invalidDiscount)
+    }
+
+    @Test
+    fun correctingDiscountWarningSavesWithoutDialogAndZeroStillClearsBothPrices() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(current, "9")
+        assertEquals(0, fixture.writes)
+        controller.change(current, "83")
+        assertEquals("83", fixture.prices.price)
+        assertTrue(controller.drafts.value.isEmpty())
+        controller.change(current, "")
+        controller.change(before, "")
+        assertEquals("0", fixture.prices.price)
+        assertEquals("0", fixture.prices.priceMin)
+        controller.finishAll()
+        assertNull(controller.nextError())
+    }
+
+    @Test
+    fun refusingAnOldWarningDoesNotDiscardANewerDraft() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finish(before)
+        val oldError = controller.nextError()!!
+        controller.change(before, "190")
+        controller.refuseDiscount(oldError)
+        assertEquals("190", fixture.stored[before])
+        assertNull(controller.focusRequest.value)
+    }
+
+    @Test
+    fun rejectedConfirmedWriteKeepsDraftAndRequestsAnotherMessage() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finish(before)
+        val error = controller.nextError()!!
+        controller.markShown(error)
+        fixture.rejectWrite = true
+        controller.approveDiscount(error)
+        assertEquals("180", fixture.stored[before])
+        assertNotNull(controller.nextError())
+        assertEquals("100", fixture.prices.priceMin)
     }
 }

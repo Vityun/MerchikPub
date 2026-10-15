@@ -85,7 +85,7 @@ public class RealmManager {
         Realm.init(context);
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
-                .schemaVersion(32)
+                .schemaVersion(33)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -987,11 +987,11 @@ public class RealmManager {
      * @param list
      */
     public static boolean setPromo(List<PromoDB> list) {
+        if (list == null) return false;
+        if (list.isEmpty()) return true;
+
         Log.e("REALM_DB_UPDATE", "setPromo_S");
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(PromoDB.class);
-        INSTANCE.copyToRealmOrUpdate(list);
-        INSTANCE.commitTransaction();
+        INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(list));
         Log.e("REALM_DB_UPDATE", "setPromo_E");
         return true;
     }

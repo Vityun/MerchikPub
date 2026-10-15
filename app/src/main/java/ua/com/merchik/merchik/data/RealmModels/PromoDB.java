@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.data.RealmModels;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -22,6 +24,8 @@ public class PromoDB extends RealmObject implements DataObjectUI {
     private String parentId;
     private String dtUpdate;
     private String authorId;
+    @SerializedName("discount_percent")
+    private int discountPercent = 0;
 
     public String getID() {
         return ID;
@@ -69,6 +73,14 @@ public class PromoDB extends RealmObject implements DataObjectUI {
 
     public void setAuthorId(String authorId) {
         this.authorId = authorId;
+    }
+
+    public int getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(int discountPercent) {
+        this.discountPercent = discountPercent;
     }
 
     @NonNull

@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -62,6 +65,10 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
     val activity = context.priceEditorActivity() as? ComponentActivity
     var active by remember { mutableStateOf(owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
     var dialogVisible by remember { mutableStateOf(false) }
+    val focusRequest by drafts.focusRequest.collectAsState()
+    LaunchedEffect(focusRequest, active, dialogVisible) {
+        if (active && !dialogVisible) focusRequest?.let { viewModel.requestScrollToVisit(it.itemId) }
+    }
 
     DisposableEffect(drafts, owner, activity) {
         val handler = Handler(Looper.getMainLooper())
@@ -75,8 +82,15 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
                 val error = drafts.nextError()
                 if (error != null) {
                     val prices = error.draft.prices
+                    val onDismiss: () -> Unit = {
+                        dialogVisible = false
+                        drafts.requestNotification()
+                    }
                     val builder = if (error.draft.invalidPrice) {
                         PriceSaveGuard.priceErrorDialog(activity, prices.product, prices.price, prices.priceMin)
+                    } else if (error.draft.invalidDiscount) {
+                        PriceSaveGuard.discountDialog(activity, prices.product, prices.discountCheck(),
+                            { drafts.approveDiscount(error) }, { drafts.refuseDiscount(error) }, onDismiss)
                     } else {
                         MessageDialogBuilder(activity)
                             .setTitle("Изменения не сохранены")
@@ -88,11 +102,7 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
                     drafts.markShown(error)
                     dialog = builder
                     dialogVisible = true
-                    val onDismiss: () -> Unit = {
-                        dialogVisible = false
-                        drafts.requestNotification()
-                    }
-                    builder.setOnDismissListener(onDismiss)
+                    if (!error.draft.invalidDiscount) builder.setOnDismissListener(onDismiss)
                     builder.show()
                 }
             }
@@ -145,9 +155,18 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
     }
     val drafts by binding.drafts.drafts.collectAsState()
     val draft = drafts[field]
+    val focusRequest by binding.drafts.focusRequest.collectAsState()
+    val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     var focused by remember { mutableStateOf(false) }
+    LaunchedEffect(focusRequest, binding.tooltipEnabled) {
+        if (focusRequest == field && binding.tooltipEnabled) {
+            focusRequester.requestFocus()
+            keyboard?.show()
+            binding.drafts.focusRestored(field)
+        }
+    }
     DisposableEffect(binding.drafts, field) {
         onDispose { if (focused) binding.drafts.finish(field) }
     }
@@ -160,12 +179,15 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
                 binding.drafts.change(field, it)
             },
             controlled = true,
+            modifier = Modifier.focusRequester(focusRequester),
             errorMessage = if (draft?.invalidPrice == true) {
                 if (field.beforePromotion) {
                     "АКЦИОННАЯ цена (${draft.prices.price} грн) не может быть выше чем цена ДО начала акции"
                 } else {
                     "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${draft.prices.priceMin} грн)"
                 }
+            } else if (draft?.invalidDiscount == true) {
+                "Проверьте цену ДО начала акции и текущую"
             } else null,
             tooltipEnabled = binding.tooltipEnabled,
             onFocusChange = { hasFocus ->

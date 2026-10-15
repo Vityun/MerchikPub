@@ -838,7 +838,8 @@ fun DecimalNumberInput(
     errorMessage: String? = null,
     tooltipEnabled: Boolean = true,
     onFocusChange: (Boolean) -> Unit = {},
-    onDone: (() -> Unit)? = null
+    onDone: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     var localValue by rememberInlineInputValue(value, numeric = true)
     var inputState by remember { mutableStateOf(InlineNumberInputState()) }
@@ -865,7 +866,7 @@ fun DecimalNumberInput(
             keyboardActions = KeyboardActions(onDone = {
                 if (onDone != null) onDone() else defaultKeyboardAction(ImeAction.Done)
             }),
-            modifier = Modifier
+            modifier = modifier
                 .width(152.dp)
                 .height(38.dp)
                 .onFocusChanged {

@@ -1450,7 +1450,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 if (reportHint.getState()) {
                                     for (ReportHintList item : reportHint.getList()) {
                                         if (tpl.getOrderField().equals(item.getField())) {
-                                            dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
+                                            dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> dialog.runPriceOperation(value, () -> {
                                                 if (!operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null)) return;
                                                 Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
                                                 refreshElement(cd2, list.getiD());
@@ -1459,7 +1459,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 }
                                                 dialog.dismiss();
                                                 dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-                                            }), setLayout());
+                                            })), setLayout());
                                         }
                                     }
 //                            dialog.show();

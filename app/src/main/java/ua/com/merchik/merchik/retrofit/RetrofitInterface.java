@@ -473,7 +473,8 @@ public interface RetrofitInterface {
      */
     @POST("mobile_app.php?")
     Call<PromoTableResponce> GET_PROMO_LIST(@Query("mod") String mod,
-                                            @Query("act") String act);
+                                           @Query("act") String act,
+                                           @Query("dt") long vpi);
 
 
     /**

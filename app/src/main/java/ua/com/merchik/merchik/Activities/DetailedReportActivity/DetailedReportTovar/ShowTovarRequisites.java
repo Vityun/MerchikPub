@@ -347,14 +347,14 @@ public class ShowTovarRequisites {
                                 for (ReportHintList item : reportHint.getList()) {
                                     if (tpl.getOrderField().equals(item.getField())) {
 
-                                        dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
+                                        dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> dialog.runPriceOperation(value, () -> {
                                                     if (!operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null)) return;
                                                     Toast.makeText(context, "Внесено: " + value, Toast.LENGTH_LONG).show();
 //                                            refreshElement(cd2, list.getiD());
 //                                            notifyItemChanged(adapterPosition);
                                                     dialog.dismiss();
 //                                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-                                                }), setLayout()
+                                                })), setLayout()
                                         );
                                     }
                                 }

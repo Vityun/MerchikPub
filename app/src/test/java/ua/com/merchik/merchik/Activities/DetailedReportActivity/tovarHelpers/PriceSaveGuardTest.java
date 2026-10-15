@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,6 +14,24 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PriceSaveGuardTest {
+    @Test
+    public void productLabelContainsCodeNameAndWeight() {
+        TovarDB product = new TovarDB();
+        product.setNm(" Juice ");
+        product.setWeight(" 0.95 l ");
+        assertEquals("(141609) Juice 0.95 l", PriceSaveGuard.productLabel("141609", product));
+    }
+
+    @Test
+    public void productLabelOmitsMissingPartsWithoutNullText() {
+        assertEquals("(141609)", PriceSaveGuard.productLabel("141609", null));
+        TovarDB product = new TovarDB();
+        assertEquals("(141609)", PriceSaveGuard.productLabel("141609", product));
+        product.setNm("Juice");
+        product.setWeight(" ");
+        assertEquals("(141609) Juice", PriceSaveGuard.productLabel("141609", product));
+    }
+
     @Test
     public void onlyMissingPromotionTypeCanBeFilledAutomatically() {
         for (String missing : new String[]{null, "", " ", "0", " 0 "}) {

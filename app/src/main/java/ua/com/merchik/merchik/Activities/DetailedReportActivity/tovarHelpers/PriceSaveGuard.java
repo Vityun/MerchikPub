@@ -8,11 +8,16 @@ import android.widget.Toast;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -35,6 +40,17 @@ public final class PriceSaveGuard {
 
     public static boolean savePrice(Context context, ReportPrepareDB snapshot, String value,
                                     boolean beforePromotion, boolean showError) {
+        return savePrice(context, snapshot, value, beforePromotion, showError, false, null);
+    }
+
+    public static boolean saveInlinePrice(Context context, ReportPrepareDB snapshot, String value,
+                                          boolean beforePromotion, PromotionPriceCheck approval) {
+        return savePrice(context, snapshot, value, beforePromotion, false, true, approval);
+    }
+
+    private static boolean savePrice(Context context, ReportPrepareDB snapshot, String value,
+                                     boolean beforePromotion, boolean showError,
+                                     boolean checkDiscount, PromotionPriceCheck approval) {
         if (context == null) {
             Globals.writeToMLOG("ERROR", "PriceSaveGuard", "No editor context; price not saved");
             return false;
@@ -55,6 +71,10 @@ public final class PriceSaveGuard {
                 invalidPrices[0] = price;
                 invalidPrices[1] = priceMin;
                 return false;
+            }
+            if (checkDiscount) {
+                PromotionPriceCheck check = getPromotionPriceCheck(current, price, priceMin);
+                if (check.outsideRange() && !check.matches(approval)) return false;
             }
             // Decide from the current DB row, not from the possibly stale editor snapshot.
             markPromotionPresent[0] = hasBothPositivePrices(price, priceMin);
@@ -90,10 +110,7 @@ public final class PriceSaveGuard {
             if (!showError) return false;
             String tovarId = snapshot.getTovarId();
             TovarDB tovar = TovarRealm.getById(tovarId);
-            String product = "(" + tovarId + ")";
-            if (tovar != null && tovar.getNm() != null) {
-                product += " " + tovar.getNm();
-            }
+            String product = productLabel(tovarId, tovar);
             Globals.writeToMLOG("INFO", "PriceSaveGuard",
                     "Rejected: rpId=" + snapshot.getID() + ", dad2=" + snapshot.getCodeDad2()
                             + ", tovarId=" + tovarId + ", beforePromotion=" + beforePromotion
@@ -146,6 +163,117 @@ public final class PriceSaveGuard {
             return null;
         }
         return promoId;
+    }
+
+    public static int getDiscountPercent(ReportPrepareDB current) {
+        PromoDB promo = getPromotion(current);
+        return promo == null ? 0 : promo.getDiscountPercent();
+    }
+
+    private static PromoDB getPromotion(ReportPrepareDB current) {
+        if (current == null) return null;
+        String promoId = current.getAkciyaId();
+        if (isPromotionTypeMissing(promoId)) promoId = resolvePromotionTypeId(current);
+        return isPromotionTypeMissing(promoId) ? null : PromoRealm.getPromoDBById(promoId);
+    }
+
+    public static PromotionPriceCheck getPromotionPriceCheck(ReportPrepareDB current, String price, String before) {
+        PromoDB promo = getPromotion(current);
+        return new PromotionPriceCheck(price, before, promo == null ? 0 : promo.getDiscountPercent(),
+                promo == null ? "" : promo.getNm());
+    }
+
+    public static String productLabel(String tovarId, TovarDB tovar) {
+        StringBuilder result = new StringBuilder("(").append(tovarId).append(")");
+        if (tovar != null) {
+            for (String part : new String[]{tovar.getNm(), tovar.getWeight()}) {
+                if (part != null && !part.trim().isEmpty()) result.append(" ").append(part.trim());
+            }
+        }
+        return result.toString();
+    }
+
+    public static MessageDialogBuilder discountDialog(Activity activity, String product,
+                                                       PromotionPriceCheck check,
+                                                       Runnable save, Runnable refuse) {
+        return discountDialog(activity, product, check, save, refuse, () -> {});
+    }
+
+    public static MessageDialogBuilder discountDialog(Activity activity, String product,
+                                                       PromotionPriceCheck check,
+                                                       Runnable save, Runnable refuse, Runnable dismissed) {
+        boolean[] answered = {false};
+        String promotion = check.promotionName.isEmpty() ? "текущей акции"
+                : "акции «" + TextUtils.htmlEncode(check.promotionName) + "»";
+        return new MessageDialogBuilder(activity)
+                .setTitle("Товари")
+                .setSubTitle(product)
+                .setStatus(DialogStatus.ALERT)
+                .setMessage("Вы указали цену ДО начала акции " + TextUtils.htmlEncode(check.priceBefore)
+                        + " грн и текущую АКЦИОННУЮ цену " + TextUtils.htmlEncode(check.price)
+                        + " грн. При этом скидка по " + promotion + " составляет " + check.discountPercent
+                        + "%. Предполагаемая сумма скидки: " + check.expectedDiscountText()
+                        + " грн. Это ориентировочная разница между ценой ДО начала акции и текущей АКЦИОННОЙ ценой."
+                        + "<br><br>Исключением может быть ОТСУТСТВИЕ акции или другая причина. "
+                        + "Проверьте и при необходимости исправьте внесённые данные.<br><br>ОТКАЗАТЬСЯ от сохранения?")
+                .setOnConfirmAction("Да", () -> { answered[0] = true; refuse.run(); return Unit.INSTANCE; })
+                .setOnCancelAction("Нет", () -> { answered[0] = true; save.run(); return Unit.INSTANCE; })
+                .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
+                    if (!answered[0]) refuse.run();
+                    dismissed.run();
+                    return Unit.INSTANCE;
+                });
+    }
+
+    /** Legacy editors resume their existing save/next-editor callbacks only after confirmation. */
+    public static void confirmPriceSave(Activity activity, List<ReportPrepareDB> rows, String value,
+                                        boolean beforePromotion, Runnable save, Runnable refuse) {
+        List<Long> ids = new ArrayList<>();
+        for (ReportPrepareDB row : rows) if (row != null) ids.add(row.getID());
+        confirmPriceSave(activity, ids, value, beforePromotion, new HashMap<>(), save, refuse);
+    }
+
+    private static void confirmPriceSave(Activity activity, List<Long> ids, String value,
+                                         boolean beforePromotion, Map<Long, PromotionPriceCheck> approvals,
+                                         Runnable save, Runnable refuse) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
+        // Re-read all rows after each answer; a background exchange must not invalidate an approval silently.
+        Map<Long, PromotionPriceCheck> checks = new LinkedHashMap<>();
+        Map<Long, String> products = new HashMap<>();
+        for (Long id : ids) {
+            ReportPrepareDB current = ReportPrepareRealm.getByIdCopy(id);
+            if (current == null) {
+                Toast.makeText(activity, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+                refuse.run();
+                return;
+            }
+            String price = beforePromotion ? current.getPrice() : value;
+            String before = beforePromotion ? value : current.getPriceMin();
+            TovarDB tovar = TovarRealm.getById(current.getTovarId());
+            String product = productLabel(current.getTovarId(), tovar);
+            if (isPriceAboveBeforePromotion(price, before)) {
+                priceErrorDialog(activity, product, price, before)
+                        .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
+                            refuse.run(); return Unit.INSTANCE;
+                        }).show();
+                return;
+            }
+            checks.put(id, getPromotionPriceCheck(current, price, before));
+            products.put(id, product);
+        }
+        // In a bulk editor, hard errors in any product take precedence over discount warnings.
+        for (Map.Entry<Long, PromotionPriceCheck> entry : checks.entrySet()) {
+            Long id = entry.getKey();
+            PromotionPriceCheck check = entry.getValue();
+            if (check.outsideRange() && !check.matches(approvals.get(id))) {
+                discountDialog(activity, products.get(id), check, () -> {
+                    approvals.put(id, check);
+                    confirmPriceSave(activity, ids, value, beforePromotion, approvals, save, refuse);
+                }, refuse).show();
+                return;
+            }
+        }
+        save.run();
     }
 
     static boolean isPromotionTypeMissing(String promoId) {

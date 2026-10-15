@@ -28,6 +28,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionPriceCheck
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceDrafts
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceField
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceValues
@@ -186,10 +187,13 @@ class TovarDBViewModel @Inject constructor(
             restored = restored,
             readPrices = { field ->
                 val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId)
-                val name = TovarRealm.getById(field.tovarId)?.nm.orEmpty()
-                InlinePriceValues(rp?.price.orEmpty(), rp?.priceMin.orEmpty(), "(${field.tovarId}) $name")
+                val name = PriceSaveGuard.productLabel(field.tovarId, TovarRealm.getById(field.tovarId))
+                val promotion = PriceSaveGuard.getPromotionPriceCheck(rp, rp?.price, rp?.priceMin)
+                InlinePriceValues(rp?.price.orEmpty(), rp?.priceMin.orEmpty(), name,
+                    promotion.discountPercent, promotion.promotionName)
             },
             savePrice = { field, value -> saveInlinePrice(dad2, field, value) },
+            saveConfirmedPrice = { field, value, prices -> saveInlinePrice(dad2, field, value, prices.discountCheck()) },
             store = { drafts ->
                 val entries = JSONArray()
                 drafts.forEach { (field, value) ->
@@ -205,13 +209,13 @@ class TovarDBViewModel @Inject constructor(
         return session
     }
 
-    private fun saveInlinePrice(dad2: String, field: InlinePriceField, value: String): Boolean {
+    private fun saveInlinePrice(dad2: String, field: InlinePriceField, value: String, approval: PromotionPriceCheck? = null): Boolean {
         if (dad2 != getCodeDad2String()) return false
         return try {
             val wp = RealmManager.getWorkPlanRowByCodeDad2(dad2.toLong()) ?: return false
             val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId) ?: createNewRPRow(field.tovarId, wp)
             // The guard validates against the current row inside the Realm transaction.
-            if (!PriceSaveGuard.savePrice(context, rp, value, field.beforePromotion, false)) return false
+            if (!PriceSaveGuard.saveInlinePrice(context, rp, value, field.beforePromotion, approval)) return false
             invalidateProductCodeItemCache(field.itemId, field.tovarId)
             onInlineRowPersisted(field.itemId, field.rowId)
             true
@@ -2601,6 +2605,12 @@ class TovarDBViewModel @Inject constructor(
 
             dialog.tovarOptions = tpl
             dialog.reportPrepareDB = previewRp
+            dialog.setPriceRowsProvider {
+                tovars.map { tovar ->
+                    RealmManager.getTovarReportPrepare(cd2, tovar.getiD())
+                        ?: createNewRPRow(tovar.getiD(), wpDataDB)
+                }
+            }
 
             when (tpl.getOptionControlName()) {
                 OptionControlName.AKCIYA_ID -> {

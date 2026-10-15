@@ -10,11 +10,21 @@ data class InlinePriceField(
     val beforePromotion: Boolean
 )
 
-data class InlinePriceValues(val price: String, val priceMin: String, val product: String)
+data class InlinePriceValues(
+    val price: String,
+    val priceMin: String,
+    val product: String,
+    val discountPercent: Int = 0,
+    val promotionName: String = ""
+) {
+    fun discountCheck() = PromotionPriceCheck(price, priceMin, discountPercent, promotionName)
+}
 
 data class InlinePriceDraft(val value: String, val prices: InlinePriceValues) {
     val invalidPrice: Boolean
         get() = PriceSaveGuard.isPriceAboveBeforePromotion(prices.price, prices.priceMin)
+    val invalidDiscount: Boolean
+        get() = !invalidPrice && prices.discountCheck().outsideRange()
 }
 
 data class InlinePriceError(val field: InlinePriceField, val draft: InlinePriceDraft)
@@ -24,7 +34,8 @@ class InlinePriceDrafts(
     restored: Map<InlinePriceField, String>,
     private val readPrices: (InlinePriceField) -> InlinePriceValues,
     private val savePrice: (InlinePriceField, String) -> Boolean,
-    private val store: (Map<InlinePriceField, String>) -> Unit
+    private val store: (Map<InlinePriceField, String>) -> Unit,
+    private val saveConfirmedPrice: (InlinePriceField, String, InlinePriceValues) -> Boolean = { field, value, _ -> savePrice(field, value) }
 ) {
     private val _drafts = MutableStateFlow(restored.mapValues { (field, value) -> draft(field, value) })
     val drafts = _drafts.asStateFlow()
@@ -32,6 +43,8 @@ class InlinePriceDrafts(
     private val reported = mutableMapOf<InlinePriceField, InlinePriceDraft>()
     private val _notificationVersion = MutableStateFlow(0)
     val notificationVersion = _notificationVersion.asStateFlow()
+    private val _focusRequest = MutableStateFlow<InlinePriceField?>(null)
+    val focusRequest = _focusRequest.asStateFlow()
 
     private fun draft(field: InlinePriceField, value: String): InlinePriceDraft {
         val entered = value.ifBlank { "0" }
@@ -55,7 +68,7 @@ class InlinePriceDrafts(
         val value = _drafts.value[field]?.value ?: return
         val current = draft(field, value)
         _drafts.value = _drafts.value + (field to current)
-        if (current.invalidPrice || value.isBlank() || value.endsWith(".")) return
+        if (current.invalidPrice || current.invalidDiscount || value.isBlank() || value.endsWith(".")) return
         if (!savePrice(field, value)) {
             // The transaction may reject a price changed by another editor/synchronization.
             _drafts.value = _drafts.value + (field to draft(field, value))
@@ -105,6 +118,35 @@ class InlinePriceDrafts(
     fun markShown(error: InlinePriceError) {
         reported[error.field] = error.draft
         pending.remove(error.field)
+    }
+
+    fun approveDiscount(error: InlinePriceError) {
+        val current = _drafts.value[error.field]?.let { draft(error.field, it.value) } ?: return
+        if (current == error.draft && !current.invalidPrice &&
+            saveConfirmedPrice(error.field, current.value, current.prices)) {
+            _drafts.value = _drafts.value - error.field
+            pending.remove(error.field)
+            reported.remove(error.field)
+            persistDrafts()
+        } else {
+            reported.remove(error.field)
+            finish(error.field)
+        }
+        requestNotification()
+    }
+
+    fun refuseDiscount(error: InlinePriceError) {
+        // Discard only the value the user was asked about, never a newer edit.
+        if (_drafts.value[error.field]?.value != error.draft.value) return
+        _drafts.value = _drafts.value - error.field
+        pending.remove(error.field)
+        reported.remove(error.field)
+        persistDrafts()
+        _focusRequest.value = error.field
+    }
+
+    fun focusRestored(field: InlinePriceField) {
+        if (_focusRequest.value == field) _focusRequest.value = null
     }
 
     fun requestNotification() {
