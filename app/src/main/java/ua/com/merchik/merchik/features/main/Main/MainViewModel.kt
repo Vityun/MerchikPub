@@ -1081,10 +1081,13 @@ abstract class MainViewModel(
         }
     }
 
+    private var lastWorkPlanFilterLog: String? = null
+
     private suspend fun recomputeDataItems(
         uiState: StateUI, rangeStart: LocalDate?, rangeEnd: LocalDate?, distanceMeters: Float
     ) {
         val selectedIdsSnapshot = ScrollDataHolder.instance().getAllSnapshot()
+        var filterLog: String? = null
 
         val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
             val header = uiState.itemsHeader
@@ -1094,6 +1097,7 @@ abstract class MainViewModel(
                 items = uiState.items, selectedIds = selectedIdsSnapshot
             )
 
+            var filterError: String? = null
             val result: FilterAndSortResult = try {
                 filterAndSortDataItems(
                     items = restoredSourceItems,
@@ -1105,6 +1109,7 @@ abstract class MainViewModel(
                     searchText = uiState.filters?.searchText
                 )
             } catch (e: Throwable) {
+                filterError = e.javaClass.simpleName
                 Globals.writeToMLOG(
                     "ERROR", "MainViewModel.recomputeDataItems", "filterAndSortDataItems failed: $e"
                 )
@@ -1114,6 +1119,18 @@ abstract class MainViewModel(
                     isActiveFiltered = false,
                     isActiveSorted = false,
                     isActiveGrouped = false
+                )
+            }
+
+            if (this@MainViewModel is WpDataDBViewModel) {
+                filterLog = buildWorkPlanFilterLog(
+                    context = contextUI.name,
+                    before = restoredSourceItems.size,
+                    visible = result.items,
+                    filters = uiState.filters,
+                    rangeStart = rangeStart,
+                    rangeEnd = rangeEnd,
+                    error = filterError
                 )
             }
 
@@ -1140,6 +1157,12 @@ abstract class MainViewModel(
 
         if (_groups.value != shiftedGroups) {
             _groups.value = shiftedGroups
+        }
+        filterLog?.let { message ->
+            if (message != lastWorkPlanFilterLog) {
+                Globals.writeToMLOG("INFO", "WorkPlanFilters", message)
+                lastWorkPlanFilterLog = message
+            }
         }
     }
 

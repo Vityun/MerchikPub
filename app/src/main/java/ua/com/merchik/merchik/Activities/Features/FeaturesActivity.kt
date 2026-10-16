@@ -324,7 +324,7 @@ class FeaturesActivity : AppCompatActivity() {
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
             val saved = DetailedReportActivity.savePhoto(Globals(), this)
             if (saved && intent.getStringExtra("viewModel") == SamplePhotoSDBViewModel::class.java.canonicalName) {
-                finishSamplePhotoCapture()
+                reportSamplePhotoCapture()
             }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
             MakePhoto.getPendingPhotoNum(this)?.takeIf { it.isNotBlank() }?.let {
@@ -359,7 +359,7 @@ class FeaturesActivity : AppCompatActivity() {
         if (anchoredTransition) overridePendingTransition(0, 0)
     }
 
-    private fun finishSamplePhotoCapture() {
+    private fun reportSamplePhotoCapture() {
         try {
             val source = Gson().fromJson(intent.getStringExtra("dataJson"), JsonObject::class.java)
             val visitId = source?.get("wpDataDBId")?.asString?.toLongOrNull()
@@ -371,7 +371,6 @@ class FeaturesActivity : AppCompatActivity() {
             Globals.writeToMLOG("ERROR", "FeaturesActivity/samplePhotoResult", "error=$error")
         }
         setResult(RESULT_OK, Intent().putExtra("photo_saved", true))
-        finish()
     }
 
     private fun completeAnimatedFinish() {
