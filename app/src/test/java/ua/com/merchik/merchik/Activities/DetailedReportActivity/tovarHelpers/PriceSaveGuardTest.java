@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 
 import static org.junit.Assert.assertEquals;
@@ -14,6 +15,33 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PriceSaveGuardTest {
+    @Test
+    public void manualNoPromotionWinsOverPricesUntilManuallyEnabled() {
+        assertFalse(PriceSaveGuard.shouldAutoMarkPromotion("80", "100", "2"));
+        assertFalse(PriceSaveGuard.shouldAutoMarkPromotion("100", "100.00", " 2 "));
+        for (String initial : new String[]{null, "", "0", "1"}) {
+            assertTrue(PriceSaveGuard.shouldAutoMarkPromotion("80", "100", initial));
+            assertFalse(PriceSaveGuard.shouldAutoMarkPromotion("0", "100", initial));
+        }
+        ReportPrepareDB row = new ReportPrepareDB();
+        row.setAkciya("2");
+        row.setAkciyaId("357");
+        assertEquals(0, PriceSaveGuard.getDiscountPercent(row));
+        assertFalse(PriceSaveGuard.getPromotionPriceCheck(row, "80", "180").outsideRange());
+        assertEquals("357", row.getAkciyaId());
+        assertEquals("2", row.getAkciya());
+        row.setAkciya("1");
+        assertTrue(PriceSaveGuard.shouldAutoMarkPromotion("80", "100", row.getAkciya()));
+    }
+
+    @Test
+    public void comparesPricesAtDisplayedCentPrecision() {
+        assertFalse(PriceSaveGuard.isPriceAboveBeforePromotion("95.90", "95.9"));
+        assertFalse(PriceSaveGuard.isPriceAboveBeforePromotion("95.904", "95.899999"));
+        assertTrue(PriceSaveGuard.isPriceAboveBeforePromotion("95.905", "95.90"));
+        assertTrue(PriceSaveGuard.isPriceAboveBeforePromotion("100.01", "100.00"));
+    }
+
     @Test
     public void productLabelContainsCodeNameAndWeight() {
         TovarDB product = new TovarDB();

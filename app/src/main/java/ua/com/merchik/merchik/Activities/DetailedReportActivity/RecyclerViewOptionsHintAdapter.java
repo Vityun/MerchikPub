@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Collections;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -48,7 +49,7 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
         }
 
         public void bind(RecentItem recentItem){
-            button.setText(recentItem.getValue());
+            button.setText("price".equals(dataType) ? PriceDisplay.format(recentItem.getValue()) : recentItem.getValue());
             button.setOnClickListener(view -> {
 
                 boolean saved;
@@ -69,7 +70,7 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
                                         dialog.show();
                                         return;
                                     }
-                                    Toast.makeText(mContext, "Внесено: " + recentItem.getValue(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(mContext, "Внесено: " + PriceDisplay.format(recentItem.getValue()), Toast.LENGTH_LONG).show();
                                     dialog.dismiss();
                                 }, dialog::show);
                         return;

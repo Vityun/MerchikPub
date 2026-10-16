@@ -211,53 +211,7 @@ public class CustomExchange {
                 case "coments_to_photo":
                     try {// Выгрузка изменённых комментариев
                         Toast.makeText(context, "Вивантажую коментарі до фото", Toast.LENGTH_LONG).show();
-                        exchange.sendPhotoInformation(exchange.getPhotoInfoToUpload(Exchange.UploadPhotoInfo.COMMENT), new ExchangeInterface.ExchangeResponseInterface() {
-                            @Override
-                            public <T> void onSuccess(List<T> data) {
-                                try {
-                                    List<PhotoInfoResponseList> photo = (List<PhotoInfoResponseList>) data;
-                                    if (photo.size() > 0) {
-                                        Integer[] ids = new Integer[photo.size()];
-                                        int count = 0;
-                                        for (PhotoInfoResponseList item : photo) {
-                                            ids[count++] = item.elementId;
-                                        }
-
-                                        Log.e("sendPhotoInformation", "photo.size(): " + photo.size());
-
-                                        Log.e("sendPhotoInformation", "photoIds: " + Arrays.toString(ids));
-
-                                        List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
-                                        Log.e("sendPhotoInformation", "stackPhoto: " + stackPhoto.size());
-
-                                        for (StackPhotoDB item : stackPhoto) {
-                                            for (PhotoInfoResponseList listItem : photo) {
-                                                if (listItem.elementId.equals(item.getId())) {
-                                                    if (listItem.state) {
-                                                        item.setCommentUpload(false);
-                                                        Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                                    } else {
-                                                        item.setCommentUpload(false);
-                                                        item.setComment(listItem.error);
-                                                        Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                                        Log.e("sendPhotoInformation", "listItem.error: " + listItem.error);
-                                                    }
-                                                    Log.e("sendPhotoInformation", "stackPhoto item save: " + item.photoServerId);
-                                                    StackPhotoRealm.setAll(Collections.singletonList(item));
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("ERROR", "sendPhotoInformation(getPhotoInfoToUpload(UploadPhotoInfo.COMMENT)", "Exception e: " + e);
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-
-                            }
-                        });
+                        exchange.sendPhotoComments();
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "CustomExchange/startExchangeBySyncTable/coments_to_photo", "Exception e: " + e);
                     }

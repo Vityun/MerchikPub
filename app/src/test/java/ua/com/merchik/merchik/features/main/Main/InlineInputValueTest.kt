@@ -5,6 +5,30 @@ import org.junit.Test
 
 class InlineInputValueTest {
     @Test
+    fun pricesDisplayCentsWithoutPaddingTheValueBeingEdited() {
+        val idle = InlineNumberInputState()
+        assertEquals("10.00", idle.displayedValue("10", formatAsPrice = true))
+        assertEquals("5.60", idle.displayedValue("5.6", formatAsPrice = true))
+        val editing = idle.onFocusChanged(true, "10")
+        assertEquals("10", editing.displayedValue("10", formatAsPrice = true))
+        assertEquals("12.", editing.onInput("12.").displayedValue("12.", formatAsPrice = true))
+        assertEquals("12.00", editing.onFocusChanged(false, "12").displayedValue("12", formatAsPrice = true))
+        assertEquals("10", idle.displayedValue("10"))
+    }
+
+    @Test
+    fun formattedPricesKeepZeroClearingAndExplicitZeroBehavior() {
+        val idle = InlineNumberInputState()
+        assertEquals("0.00", idle.displayedValue("0", formatAsPrice = true))
+        val editing = idle.onFocusChanged(true, "0")
+        assertEquals("", editing.displayedValue("0", formatAsPrice = true))
+        assertEquals("0", editing.onInput("0").displayedValue("0", formatAsPrice = true))
+        val cleared = editing.onInput("")
+        assertEquals("", cleared.displayedValue("0", formatAsPrice = true))
+        assertEquals("0.00", cleared.onFocusChanged(false, "0").displayedValue("0", formatAsPrice = true))
+    }
+
+    @Test
     fun initialZeroIsHiddenWhenEditingStarts() {
         for (zero in listOf("0", "0.00", "0,00")) {
             val state = InlineNumberInputState().onFocusChanged(true, zero)

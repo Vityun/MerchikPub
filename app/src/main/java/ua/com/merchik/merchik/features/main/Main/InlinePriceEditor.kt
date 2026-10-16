@@ -35,6 +35,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceDrafts
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay
+import ua.com.merchik.merchik.Globals.OptionControlName
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
@@ -150,7 +152,9 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
     val binding = LocalInlinePriceEditor.current
     val field = remember(binding?.drafts, itemId, row.rowId) { binding?.viewModel?.inlinePriceField(itemId, row) }
     if (binding == null || field == null) {
-        DecimalNumberEditorRow(row.title, row.value, onValueChange)
+        val control = row.option.optionControlName
+        DecimalNumberEditorRow(row.title, row.value, onValueChange,
+            formatAsPrice = control == OptionControlName.PRICE || control == OptionControlName.PRICE_BEFORE_PROMOTION)
         return
     }
     val drafts by binding.drafts.drafts.collectAsState()
@@ -179,12 +183,13 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
                 binding.drafts.change(field, it)
             },
             controlled = true,
+            formatAsPrice = true,
             modifier = Modifier.focusRequester(focusRequester),
             errorMessage = if (draft?.invalidPrice == true) {
                 if (field.beforePromotion) {
-                    "АКЦИОННАЯ цена (${draft.prices.price} грн) не может быть выше чем цена ДО начала акции"
+                    "АКЦИОННАЯ цена (${PriceDisplay.format(draft.prices.price)} грн) не может быть выше чем цена ДО начала акции"
                 } else {
-                    "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${draft.prices.priceMin} грн)"
+                    "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${PriceDisplay.format(draft.prices.priceMin)} грн)"
                 }
             } else if (draft?.invalidDiscount == true) {
                 "Проверьте цену ДО начала акции и текущую"

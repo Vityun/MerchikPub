@@ -839,7 +839,8 @@ fun DecimalNumberInput(
     tooltipEnabled: Boolean = true,
     onFocusChange: (Boolean) -> Unit = {},
     onDone: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    formatAsPrice: Boolean = false
 ) {
     var localValue by rememberInlineInputValue(value, numeric = true)
     var inputState by remember { mutableStateOf(InlineNumberInputState()) }
@@ -847,7 +848,7 @@ fun DecimalNumberInput(
 
     ValidationTooltip(errorMessage, inputState.focused && tooltipEnabled) {
         BasicTextField(
-            value = inputState.displayedValue(currentValue),
+            value = inputState.displayedValue(currentValue, formatAsPrice),
             onValueChange = { input ->
                 val prepared = normalizeDecimalNumberInput(input)
                 inputState = inputState.onInput(prepared)
@@ -1044,7 +1045,8 @@ fun NumberEditorRow(
 fun DecimalNumberEditorRow(
     title: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    formatAsPrice: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -1060,7 +1062,8 @@ fun DecimalNumberEditorRow(
 
         DecimalNumberInput(
             value = value,
-            onValueChange = onValueChange
+            onValueChange = onValueChange,
+            formatAsPrice = formatAsPrice
         )
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay
+
 internal data class InlineNumberInputState(
     val focused: Boolean = false,
     private val hideZero: Boolean = false
@@ -11,8 +13,11 @@ internal data class InlineNumberInputState(
 
     fun onInput(value: String): InlineNumberInputState = copy(hideZero = value.isBlank())
 
-    fun displayedValue(value: String): String =
-        if (focused && hideZero && value.isNumericZero()) "" else value
+    fun displayedValue(value: String, formatAsPrice: Boolean = false): String = when {
+        formatAsPrice && !focused -> PriceDisplay.format(value)
+        focused && hideZero && value.isNumericZero() -> ""
+        else -> value
+    }
 }
 
 private fun String.isNumericZero(): Boolean =

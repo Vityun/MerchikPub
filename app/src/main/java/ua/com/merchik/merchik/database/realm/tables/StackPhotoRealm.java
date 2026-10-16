@@ -10,12 +10,106 @@ import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
 
 public class StackPhotoRealm {
+
+    private interface PhotoUpdate {
+        boolean apply(StackPhotoDB current);
+    }
+
+    private static boolean updateExisting(StackPhotoDB snapshot, String operation, PhotoUpdate update) {
+        if (snapshot == null || (RealmObject.isManaged(snapshot) && !RealmObject.isValid(snapshot))) {
+            Globals.writeToMLOG("ERROR", "StackPhotoSync", operation + ": invalid snapshot");
+            return false;
+        }
+        int localId = snapshot.getId();
+        boolean[] applied = {false};
+        INSTANCE.executeTransaction(realm -> {
+            StackPhotoDB current = realm.where(StackPhotoDB.class).equalTo("id", localId).findFirst();
+            if (StackPhotoSyncPolicy.samePhoto(current, snapshot)) applied[0] = update.apply(current);
+            Globals.writeToMLOG("INFO", "StackPhotoSync", operation + ": localId=" + localId
+                    + ", hash=" + snapshot.getPhoto_hash() + ", applied=" + applied[0]
+                    + ", serverId=" + (current == null ? null : current.getPhotoServerId())
+                    + ", commentPending=" + (current != null && current.isCommentUpload()));
+        });
+        return applied[0];
+    }
+
+    public static boolean markUploadSucceeded(StackPhotoDB sent) {
+        return updateExisting(sent, "uploadSuccess", current ->
+                StackPhotoSyncPolicy.uploadSucceeded(current, sent, System.currentTimeMillis()));
+    }
+
+    public static boolean markUploadFailed(StackPhotoDB sent, String error) {
+        return updateExisting(sent, "uploadFailure", current ->
+                StackPhotoSyncPolicy.uploadFailed(current, sent, error, System.currentTimeMillis()));
+    }
+
+    public static boolean updateServerDetails(StackPhotoDB sent, String serverId, String url, long uploadedAt) {
+        return updateExisting(sent, "serverDetails responseId=" + serverId, current ->
+                StackPhotoSyncPolicy.receivedServerDetails(current, sent, serverId, url, uploadedAt));
+    }
+
+    public static boolean saveComment(StackPhotoDB snapshot, String text) {
+        long now = System.currentTimeMillis() / 1000;
+        boolean saved = updateExisting(snapshot, "editComment", current -> {
+            StackPhotoSyncPolicy.editComment(current, text, now);
+            return true;
+        });
+        if (saved && !RealmObject.isManaged(snapshot)) {
+            StackPhotoSyncPolicy.editComment(snapshot, text, now);
+        }
+        return saved;
+    }
+
+    public static boolean saveRating(StackPhotoDB snapshot, String mark, String comment) {
+        long now = System.currentTimeMillis() / 1000;
+        boolean saved = updateExisting(snapshot, "editRating", current -> {
+            current.setMark(mark);
+            current.setMarkUpload(true);
+            if (comment != null) StackPhotoSyncPolicy.editComment(current, comment, now);
+            return true;
+        });
+        if (saved && !RealmObject.isManaged(snapshot)) {
+            snapshot.setMark(mark);
+            snapshot.setMarkUpload(true);
+            if (comment != null) StackPhotoSyncPolicy.editComment(snapshot, comment, now);
+        }
+        return saved;
+    }
+
+    public static boolean saveDvi(StackPhotoDB snapshot, int dvi) {
+        boolean saved = updateExisting(snapshot, "editDvi", current -> {
+            current.setDvi(dvi);
+            current.setDviUpload(true);
+            return true;
+        });
+        if (saved && !RealmObject.isManaged(snapshot)) {
+            snapshot.setDvi(dvi);
+            snapshot.setDviUpload(true);
+        }
+        return saved;
+    }
+
+    public static void acknowledgeComments(List<PhotoInformationData> sent) {
+        INSTANCE.executeTransaction(realm -> {
+            for (PhotoInformationData item : sent) {
+                int localId = Integer.parseInt(item.element_id);
+                StackPhotoDB current = realm.where(StackPhotoDB.class).equalTo("id", localId).findFirst();
+                boolean cleared = StackPhotoSyncPolicy.acknowledgeComment(current, item);
+                Globals.writeToMLOG("INFO", "StackPhotoSync", "commentAck: localId=" + localId
+                        + ", serverId=" + item.id + ", cleared=" + cleared
+                        + (cleared ? "" : ", reason=changed_or_missing"));
+            }
+        });
+    }
 
     public static void setAll(List<StackPhotoDB> data) {
         INSTANCE.beginTransaction();

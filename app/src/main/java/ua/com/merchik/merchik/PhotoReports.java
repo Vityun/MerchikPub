@@ -34,6 +34,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -160,12 +161,7 @@ public class PhotoReports {
                 @Override
                 public void onSuccess(StackPhotoDB photoDB, String s) {
                     Toast.makeText(mContext, "Фото номер: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
-                    photoDB.setError(null);
-                    photoDB.setUpload_to_server(System.currentTimeMillis());
-                    realm.executeTransaction(realm -> {
-                        realm.insertOrUpdate(photoDB);
-                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess/realm.executeTransaction", "onSuccess. Фото выгружено. Отмечено в Realm");
-                    });
+                    StackPhotoRealm.markUploadSucceeded(photoDB);
 
                     realmResults.remove(photoDB);
                     String filePath = photoDB.getPhoto_num();
@@ -176,13 +172,7 @@ public class PhotoReports {
 
                 @Override
                 public void onFailure(StackPhotoDB photoDB, String error) {
-                    realm.executeTransaction(realm -> {
-                        photoDB.setError(1);
-                        photoDB.setErrorTime(System.currentTimeMillis());
-                        photoDB.setErrorTxt(error);
-                        realm.insertOrUpdate(photoDB);
-                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure/realm.executeTransaction", "onFailure. Фото с ошибкой. Отмечено в Realm");
-                    });
+                    StackPhotoRealm.markUploadFailed(photoDB, error);
 
                     realmResults.remove(photoDB);
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "failure. photo id: " + photoDB.getId() + " ERROR MSG: " + error + " ///left to unload: " + realmResults.size());
@@ -195,12 +185,16 @@ public class PhotoReports {
                     // Проверяем, существует ли файл
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " + file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
 
-                    if (!isImageValid(file))
-                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()
-                                && isPhotoOlderThan10Minutes(photoDB)) {
+                    if (!isImageValid(file)) {
+                        StackPhotoDB currentPhoto = StackPhotoRealm.getById(photoDB.getId());
+                        if (StackPhotoSyncPolicy.samePhoto(currentPhoto, photoDB)
+                                && currentPhoto.getUpload_to_server() == 0
+                                && (currentPhoto.getPhotoServerId() == null || currentPhoto.getPhotoServerId().isEmpty())
+                                && isPhotoOlderThan10Minutes(currentPhoto)) {
                             StackPhotoRealm.deleteByPhotoNum(filePath);
                             Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/deleteByPhotoNum", "isImageValid: " + isImageValid(file) + ", file delete ");
                         }
+                    }
                 }
             });
         } else {

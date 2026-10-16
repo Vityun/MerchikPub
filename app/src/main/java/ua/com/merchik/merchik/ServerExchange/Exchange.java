@@ -135,7 +135,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponseList;
-import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsMarksListServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsSendMarksServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.TARCommentData.TARCommentsServerData;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformation;
@@ -182,6 +181,7 @@ public class Exchange {
     //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ExecutorService executor = Executors.newFixedThreadPool(16);
     private static final AtomicBoolean START_EXCHANGE_RUNNING = new AtomicBoolean(false);
+    private static final AtomicBoolean PHOTO_COMMENTS_RUNNING = new AtomicBoolean(false);
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final PhotoDownload server;
@@ -820,53 +820,7 @@ public class Exchange {
 
                                 }
                             });    // Выгрузка изменённых ДВИ
-                            sendPhotoInformation(getPhotoInfoToUpload(UploadPhotoInfo.COMMENT), new ExchangeInterface.ExchangeResponseInterface() {
-                                @Override
-                                public <T> void onSuccess(List<T> data) {
-                                    try {
-                                        List<PhotoInfoResponseList> photo = (List<PhotoInfoResponseList>) data;
-                                        if (photo.size() > 0) {
-                                            Integer[] ids = new Integer[photo.size()];
-                                            int count = 0;
-                                            for (PhotoInfoResponseList item : photo) {
-                                                ids[count++] = item.elementId;
-                                            }
-
-                                            Log.e("sendPhotoInformation", "photo.size(): " + photo.size());
-
-                                            Log.e("sendPhotoInformation", "photoIds: " + Arrays.toString(ids));
-
-                                            List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
-                                            Log.e("sendPhotoInformation", "stackPhoto: " + stackPhoto.size());
-
-                                            for (StackPhotoDB item : stackPhoto) {
-                                                for (PhotoInfoResponseList listItem : photo) {
-                                                    if (listItem.elementId.equals(item.getId())) {
-                                                        if (listItem.state) {
-                                                            item.setCommentUpload(false);
-                                                            Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                                        } else {
-                                                            item.setCommentUpload(false);
-                                                            item.setComment(listItem.error);
-                                                            Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                                            Log.e("sendPhotoInformation", "listItem.error: " + listItem.error);
-                                                        }
-                                                        Log.e("sendPhotoInformation", "stackPhoto item save: " + item.photoServerId);
-                                                        StackPhotoRealm.setAll(Collections.singletonList(item));
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        Globals.writeToMLOG("ERROR", "sendPhotoInformation(getPhotoInfoToUpload(UploadPhotoInfo.COMMENT)", "Exception e: " + e);
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-
-                                }
-                            });    // Выгрузка изменённых комментариев
+                            sendPhotoComments();
                             sendPhotoInformation(getPhotoInfoToUpload(UploadPhotoInfo.RATING), new ExchangeInterface.ExchangeResponseInterface() {
                                 @Override
                                 public <T> void onSuccess(List<T> data) {
@@ -1620,6 +1574,58 @@ public class Exchange {
         }
     }
 
+    public void sendPhotoComments() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            MAIN_HANDLER.post(this::sendPhotoComments);
+            return;
+        }
+        if (!PHOTO_COMMENTS_RUNNING.compareAndSet(false, true)) return;
+        try {
+            // Keep the exact request until its ACK; never acknowledge newer local text.
+            final PhotoInformation request = getPhotoInfoToUpload(UploadPhotoInfo.COMMENT);
+            if (request == null || request.data == null || request.data.isEmpty()) {
+                PHOTO_COMMENTS_RUNNING.set(false);
+                return;
+            }
+            sendPhotoInformation(request, new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    try {
+                        List<PhotoInfoResponseList> response = (List<PhotoInfoResponseList>) data;
+                        for (PhotoInfoResponseList item : response) {
+                            if (item != null) Globals.writeToMLOG("INFO", "StackPhotoSync",
+                                    "commentResponse: localId=" + item.elementId + ", state=" + item.state
+                                            + ", error=" + item.error);
+                        }
+                        List<PhotoInformationData> accepted = new ArrayList<>();
+                        for (PhotoInformationData sent : request.data) {
+                            if (StackPhotoSyncPolicy.commentAccepted(sent, response)) {
+                                accepted.add(sent);
+                            } else {
+                                Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentNotAccepted: localId="
+                                        + sent.element_id + ", serverId=" + sent.id + ", keptPending=true");
+                            }
+                        }
+                        if (!accepted.isEmpty()) StackPhotoRealm.acknowledgeComments(accepted);
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentAck: " + e);
+                    } finally {
+                        PHOTO_COMMENTS_RUNNING.set(false);
+                    }
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    PHOTO_COMMENTS_RUNNING.set(false);
+                    Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentUpload: " + error + ", keptPending=true");
+                }
+            });
+        } catch (Exception e) {
+            PHOTO_COMMENTS_RUNNING.set(false);
+            Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentUpload: " + e);
+        }
+    }
+
     /* выгрузка доп информации к фото */
     public void sendPhotoInformation(PhotoInformation data, ExchangeInterface.ExchangeResponseInterface exchange) {
         if (data != null) {
@@ -1642,19 +1648,26 @@ public class Exchange {
                             Globals.writeToMLOG("INFO", "sendPhotoInformation.onResponse", "response: " + response);
 
                             if (response.body() != null) {
+                                if ("set_comment".equals(data.act) && !response.body().state) {
+                                    exchange.onFailure("Server rejected set_comment: " + new Gson().toJson(response.body()));
+                                    return;
+                                }
                                 Globals.writeToMLOG("INFO", "sendPhotoInformation.onResponse", "response.body(): " + response.body());
                                 if (response.body().list != null && response.body().list.size() > 0) {
                                     Globals.writeToMLOG("INFO", "sendPhotoInformation.onResponse", "response.body().list.size(): " + response.body().list.size());
                                     exchange.onSuccess(response.body().list);
+                                    return;
                                 }
                             }
                         }
+                        exchange.onFailure("HTTP " + response.code() + ": missing photo result list");
                     }
 
                     @Override
                     public void onFailure(Call<PhotoInfoResponse> call, Throwable t) {
                         Log.e("sendPhotoInformation", "t:" + t);
                         Globals.writeToMLOG("INFO", "sendPhotoInformation.onFailure", "Throwable t: " + t);
+                        exchange.onFailure(t.toString());
                     }
                 });
             }
@@ -1726,6 +1739,7 @@ public class Exchange {
             case COMMENT:
                 res.act = "set_comment";
                 for (StackPhotoDB item : stackPhotoDB) {
+                    if ("0".equals(item.getPhotoServerId())) continue;
                     PhotoInformationData info = new PhotoInformationData();
                     info.element_id = String.valueOf(item.getId());
                     info.id = item.getPhotoServerId();
@@ -2679,82 +2693,86 @@ public class Exchange {
     private static boolean isARMarkUploading = false;
 
     public void sendARMark() {
-        if (isARMarkUploading) return;
-        isARMarkUploading = true;
-
-        Log.e("sendARMark", "sendARMark: START");
-
-        StandartData data = new StandartData();
-        data.mod = "additional_requirements";
-        data.act = "set_score";
-
-        List<AdditionalRequirementsMarkDB> list = AdditionalRequirementsMarkRealm.getToUpload();
-//        List<AdditionalRequirementsMarkDB> list = RealmManager.INSTANCE.copyFromRealm(realmList);
-        List<MarkData> markLIST = new ArrayList<>();
-
-        if (list == null || list.isEmpty()) {
-            Globals.writeToMLOG("INFO", "sendARMark", "list to download: NULL");
-            isARMarkUploading = false;
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            MAIN_HANDLER.post(this::sendARMark);
             return;
         }
-        Globals.writeToMLOG("INFO", "sendARMark", "list: " + list.size());
+        if (isARMarkUploading) return;
+        final int userId = Globals.getCurrentUserId();
+        if (userId <= 0) return;
+        isARMarkUploading = true;
 
+        try {
+            final List<AdditionalRequirementsMarkDB> list = AdditionalRequirementsMarkRealm.getToUpload(userId);
+            if (list.isEmpty()) {
+                Globals.writeToMLOG("INFO", "sendARMark", "Queue empty, userId=" + userId);
+                isARMarkUploading = false;
+                return;
+            }
+            StandartData data = new StandartData();
+            data.mod = "additional_requirements";
+            data.act = "set_score";
+            List<MarkData> marks = new ArrayList<>();
+            for (AdditionalRequirementsMarkDB item : list) {
+                MarkData mark = new MarkData();
+                mark.id = String.valueOf(item.getItemId());
+                mark.element_id = item.getItemId();
+                mark.score = item.getScore();
+                mark.tp_id = item.getTp();
+                mark.comment = item.comment;
+                marks.add(mark);
+                Globals.writeToMLOG("INFO", "ARMarkUpload/send", "localId=" + item.getId()
+                        + ", userId=" + userId + ", type=" + item.getTp()
+                        + ", itemId=" + item.getItemId() + ", score=" + item.getScore());
+            }
+            data.data = marks;
+            Gson gson = new Gson();
+            JsonObject request = gson.toJsonTree(data).getAsJsonObject();
+            Globals.writeToMLOG("INFO", "sendARMark", "convertedObject: " + request);
 
-        for (AdditionalRequirementsMarkDB item : list) {
-            MarkData mark = new MarkData();
-
-            mark.id = String.valueOf(item.getItemId());
-            mark.element_id = item.getItemId();
-            mark.score = item.getScore();
-            mark.tp_id = item.getTp();
-            mark.comment = item.comment;
-
-            markLIST.add(mark);
-        }
-
-        data.data = markLIST;
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Log.e("sendARMark", "convertedObject: " + convertedObject);
-        Globals.writeToMLOG("INFO", "sendARMark", "convertedObject: " + convertedObject);
-
-        Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<AdditionalRequirementsSendMarksServerData>() {
-            @Override
-            public void onResponse(Call<AdditionalRequirementsSendMarksServerData> call, Response<AdditionalRequirementsSendMarksServerData> response) {
-                try {
-                    if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
-                        List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
-
-                        for (AdditionalRequirementsMarksListServerData item : info) {
-                            if (item.state) {
-                                for (AdditionalRequirementsMarkDB markDB : list) {
-                                    if (item.elementId.equals(markDB.getItemId())) {
-                                        markDB.setUploadStatus(String.valueOf(System.currentTimeMillis()));
-                                    }
-                                }
+            RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, request)
+                    .enqueue(new Callback<AdditionalRequirementsSendMarksServerData>() {
+                @Override
+                public void onResponse(Call<AdditionalRequirementsSendMarksServerData> call, Response<AdditionalRequirementsSendMarksServerData> response) {
+                    try {
+                        AdditionalRequirementsSendMarksServerData body = response.body();
+                        Globals.writeToMLOG("INFO", "ARMarkUpload/response", "userId=" + userId
+                                + ", http=" + response.code() + ", body=" + gson.toJson(body));
+                        if (Globals.getCurrentUserId() != userId) {
+                            Globals.writeToMLOG("INFO", "ARMarkUpload/response", "User changed; keep pending");
+                            return;
+                        }
+                        if (!response.isSuccessful() || body == null || Boolean.FALSE.equals(body.getState())) return;
+                        Set<Integer> accepted = new HashSet<>();
+                        for (AdditionalRequirementsMarkDB sent : list) {
+                            if (AdditionalRequirementsMarkUploadPolicy.wasAccepted(sent.getItemId(), body.getList())) {
+                                accepted.add(sent.getItemId());
                             }
                         }
-                        AdditionalRequirementsMarkRealm.setDataToDBWithOutDel(list);
+                        List<String> cleared = AdditionalRequirementsMarkRealm.acknowledgeUpload(list, accepted);
+                        for (AdditionalRequirementsMarkDB sent : list) {
+                            Globals.writeToMLOG("INFO", "ARMarkUpload/ack", "localId=" + sent.getId()
+                                    + ", type=" + sent.getTp() + ", itemId=" + sent.getItemId()
+                                    + ", score=" + sent.getScore() + ", accepted=" + accepted.contains(sent.getItemId())
+                                    + ", cleared=" + cleared.contains(sent.getId()));
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception: " + e);
+                    } finally {
+                        isARMarkUploading = false;
                     }
-                    isARMarkUploading = false;
-
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(set to DB) e: " + e);
-                    isARMarkUploading = false;
                 }
 
-            }
-
-            @Override
-            public void onFailure(Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
-                isARMarkUploading = false;
-                Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
-            }
-        });
+                @Override
+                public void onFailure(Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
+                    isARMarkUploading = false;
+                    Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
+                }
+            });
+        } catch (Exception e) {
+            isARMarkUploading = false;
+            Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark", "Exception: " + e);
+        }
     }
 
     /**

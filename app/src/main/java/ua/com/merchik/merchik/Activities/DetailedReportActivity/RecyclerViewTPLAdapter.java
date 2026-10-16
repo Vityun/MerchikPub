@@ -46,6 +46,7 @@ import java.util.Map;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
@@ -185,6 +186,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private TextView textView;
         private EditText editText;
         private Button subtraction, additions;
+        private TextWatcher valueWatcher;
+        private boolean updatingDisplay;
+        private String rawPriceValue;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -195,10 +199,15 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         public void bind(TovarOptions item) {
+            if (valueWatcher != null) editText.removeTextChangedListener(valueWatcher);
+            editText.setOnFocusChangeListener(null);
+            boolean price = item.getOptionControlName() == Globals.OptionControlName.PRICE
+                    || item.getOptionControlName() == PRICE_BEFORE_PROMOTION;
+            rawPriceValue = getDataFromReportPrepare(item, dataRp);
             textView.setText(item.getOptionLong() + ": ");
-            editText.setText(getDataFromReportPrepare(item, dataRp));
+            editText.setText(price && !editText.hasFocus() ? PriceDisplay.format(rawPriceValue) : rawPriceValue);
 
-            editText.addTextChangedListener(new TextWatcher() {
+            valueWatcher = new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -211,6 +220,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                 @Override
                 public void afterTextChanged(Editable editable) {
+                    if (updatingDisplay) return;
+                    rawPriceValue = editable.toString();
                     click.getData(item, editable.toString(), null);
                     if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
                             item.getOptionControlName().equals(Globals.OptionControlName.UP) && !editText.getText().toString().equals("")) {
@@ -233,7 +244,19 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                     }
                 }
-            });
+            };
+            editText.addTextChangedListener(valueWatcher);
+            if (price) {
+                editText.setOnFocusChangeListener((view, hasFocus) -> {
+                    updatingDisplay = true;
+                    try {
+                        editText.setText(hasFocus ? rawPriceValue : PriceDisplay.format(rawPriceValue));
+                        if (hasFocus) editText.selectAll();
+                    } finally {
+                        updatingDisplay = false;
+                    }
+                });
+            }
 
             if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
                     item.getOptionControlName().equals(Globals.OptionControlName.UP)) {

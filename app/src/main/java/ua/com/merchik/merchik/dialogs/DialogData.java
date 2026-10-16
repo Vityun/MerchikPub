@@ -57,6 +57,7 @@ import java.util.function.Supplier;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -123,6 +124,7 @@ public class DialogData {
     }
 
     private void submitNumberOperation(DialogClickListener listener) {
+        if (priceInput) result = PriceDisplay.editorResult(result, originalPriceInput);
         runPriceOperation(result, () -> {
             listener.clicked();
             if (result != null && !result.isEmpty()) dialog.dismiss();
@@ -132,6 +134,8 @@ public class DialogData {
 
     // ---- Data output Dialog ----
     private String result;
+    private boolean priceInput;
+    private String originalPriceInput;
     private String result2;
     private int score;
 
@@ -906,6 +910,11 @@ public class DialogData {
      * 4 - Spinner выбор
      */
     public void setOperation(Operations operation, String data, Map<Integer, String> map, DialogClickListener listener) {
+        priceInput = (operation == Operations.Number || operation == Operations.DecimalNumber)
+                && tovarOptions != null
+                && (tovarOptions.getOptionControlName() == Globals.OptionControlName.PRICE
+                || tovarOptions.getOptionControlName() == Globals.OptionControlName.PRICE_BEFORE_PROMOTION);
+        originalPriceInput = priceInput ? data : null;
         listenerOK = listener;
         operationLayout.setVisibility(View.VISIBLE);
         ok.setVisibility(View.VISIBLE);
@@ -986,7 +995,7 @@ public class DialogData {
                 if (data != null && data.equals("Введіть значення")) {
                     editText.setHint(data);
                 } else {
-                    String prepared = normalizeDecimalInput(data);
+                    String prepared = priceInput ? PriceDisplay.format(data) : normalizeDecimalInput(data);
                     editText.setText(prepared);
                 }
 
@@ -1106,10 +1115,10 @@ public class DialogData {
 
             case Number:
                 editText.setVisibility(View.VISIBLE);
-                if (data.equals("Введіть значення")) {
+                if ("Введіть значення".equals(data)) {
                     editText.setHint(data);
                 } else
-                    editText.setText(data);
+                    editText.setText(priceInput ? PriceDisplay.format(data) : data);
                 editText.setSelection(editText.getText().length());
 
                 editText.setSelectAllOnFocus(true);

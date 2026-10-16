@@ -131,6 +131,7 @@ import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
@@ -1822,10 +1823,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                             Log.e("startUploading", "onSuccess");
                             Toast.makeText(toolbar_menus.this, "Фото номер: " + finalId1 + " успешно выгружено", Toast.LENGTH_LONG).show();
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                current.setError(null);
-                                RealmManager.INSTANCE.insertOrUpdate(current);
-                            });
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
@@ -1840,12 +1837,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                             Log.e("startUploading", "onFailure " + s + ".");
 //                            Toast.makeText(toolbar_menus.this, "При выгрузке фото: " + current.getPhoto_num() + " возникла ошибка: " + s, Toast.LENGTH_LONG).show();
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                current.setError(1);
-                                current.setErrorTime(System.currentTimeMillis());
-                                current.setErrorTxt(s);
-                                RealmManager.INSTANCE.insertOrUpdate(current);
-                            });
+                            StackPhotoRealm.markUploadFailed(current, s);
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
@@ -2061,15 +2053,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         File file = new File(photoDB.getPhoto_num());
 
-        // УДАЛИТЬ, КОСТЫЛЯКА
-        final Realm.Transaction transaction = realm -> {
-            photoDB.setUpload_to_server(System.currentTimeMillis());
-//            RealmManager.INSTANCE.copyToRealmOrUpdate(photoDB);
-        };
+        final Runnable markUploaded = () -> StackPhotoRealm.markUploadSucceeded(photoDB);
 
         if (file.length() == 0) {
-            RealmManager.INSTANCE.executeTransaction(transaction);
-//            RealmManager.stackPhotoSavePhoto(photoDB);
             callback.onFailure("ЭТО ПУСТОЕ ФОТО, ЕГО НЕЛЬЗЯ ВЫГРУЗИТЬ. Скрин этой ошибки руководителю.");
             return;
         }
@@ -2141,8 +2127,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                 Log.e("photoUploadToServer", "obj.getRes(): " + obj.getRes());
 
                                                 if (obj.getRes().equals("true") || obj.getRes().equals("1")) {
-                                                    RealmManager.INSTANCE.executeTransaction(transaction);
-                                                    RealmManager.stackPhotoSavePhoto(photoDB);
+                                                    markUploaded.run();
 
                                                     Toast.makeText(toolbar_menus.this, "Фото " + photoId + " выгружено на сервер.", Toast.LENGTH_SHORT).show();
                                                 } else {
@@ -2175,18 +2160,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
 
                                                     try {
-                                                        RealmManager.INSTANCE.executeTransaction(transaction);
-                                                        RealmManager.stackPhotoSavePhoto(photoDB);
+                                                        markUploaded.run();
                                                     } catch (Exception e) {
                                                     }
 
                                                 } else {
                                                     globals.writeToMLOG(" TOOLBAR.photoUploadToServer.onResponse.SECOND.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
-                                                    try {
-                                                        RealmManager.INSTANCE.executeTransaction(transaction);
-                                                        RealmManager.stackPhotoSavePhoto(photoDB);
-                                                    } catch (Exception e) {
-                                                    }
                                                 }
 
 
@@ -2318,16 +2297,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                             }
                                                         }
 
-                                                        itemApp.setGet_on_server(serverTime);
-                                                        itemApp.setPhotoServerId(itemSite.getID());
-
-                                                        String photoUrl = itemSite.getPhotoUrl();
-                                                        if (photoUrl != null && !photoUrl.isEmpty()) {
-                                                            itemApp.setPhotoServerURL(photoUrl);
-                                                        }
-
-                                                        // Сохраняем обновлённый объект
-                                                        RealmManager.stackPhotoSavePhoto(itemApp);
+                                                        StackPhotoRealm.updateServerDetails(itemApp,
+                                                                itemSite.getID(), itemSite.getPhotoUrl(), serverTime);
 
 //                                                        Log.e("CHECK_HASH", "Запись в БД");
 //                                                        RealmManager.INSTANCE.executeTransaction(realm -> {

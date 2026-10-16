@@ -173,13 +173,9 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                             dialog.getComment(stackPhotoDB.getComment(), () -> {
                                 Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
                                 Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB.getComment(): " + stackPhotoDB.getComment());
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    stackPhotoDB.setComment(dialog.commentResult);
-                                    stackPhotoDB.setCommentUpload(true);
-                                    dialog.isCommentSave = true;
-                                });
-                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-                                Toast.makeText(image.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                                dialog.isCommentSave = StackPhotoRealm.saveComment(stackPhotoDB, dialog.commentResult);
+                                Toast.makeText(image.getContext(), dialog.isCommentSave ? "Комментарий сохранён"
+                                        : "Комментарий не сохранён. Откройте фото повторно.", Toast.LENGTH_LONG).show();
                             });
 
                             try {

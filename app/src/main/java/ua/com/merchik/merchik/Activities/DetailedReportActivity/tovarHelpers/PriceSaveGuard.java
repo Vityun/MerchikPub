@@ -77,7 +77,7 @@ public final class PriceSaveGuard {
                 if (check.outsideRange() && !check.matches(approval)) return false;
             }
             // Decide from the current DB row, not from the possibly stale editor snapshot.
-            markPromotionPresent[0] = hasBothPositivePrices(price, priceMin);
+            markPromotionPresent[0] = shouldAutoMarkPromotion(price, priceMin, current.getAkciya());
             if (markPromotionPresent[0] && isPromotionTypeMissing(current.getAkciyaId())) {
                 promotionTypeToSave[0] = resolvePromotionTypeId(current);
             }
@@ -171,7 +171,7 @@ public final class PriceSaveGuard {
     }
 
     private static PromoDB getPromotion(ReportPrepareDB current) {
-        if (current == null) return null;
+        if (current == null || isPromotionExplicitlyAbsent(current.getAkciya())) return null;
         String promoId = current.getAkciyaId();
         if (isPromotionTypeMissing(promoId)) promoId = resolvePromotionTypeId(current);
         return isPromotionTypeMissing(promoId) ? null : PromoRealm.getPromoDBById(promoId);
@@ -209,13 +209,13 @@ public final class PriceSaveGuard {
                 .setTitle("Товари")
                 .setSubTitle(product)
                 .setStatus(DialogStatus.ALERT)
-                .setMessage("Вы указали цену ДО начала акции " + TextUtils.htmlEncode(check.priceBefore)
-                        + " грн и текущую АКЦИОННУЮ цену " + TextUtils.htmlEncode(check.price)
+                .setMessage("Вы указали цену ДО начала акции " + TextUtils.htmlEncode(PriceDisplay.format(check.priceBefore))
+                        + " грн и текущую АКЦИОННУЮ цену " + TextUtils.htmlEncode(PriceDisplay.format(check.price))
                         + " грн. При этом скидка по " + promotion + " составляет " + check.discountPercent
-                        + "%. Предполагаемая сумма скидки: " + check.expectedDiscountText()
-                        + " грн. Это ориентировочная разница между ценой ДО начала акции и текущей АКЦИОННОЙ ценой."
-                        + "<br><br>Исключением может быть ОТСУТСТВИЕ акции или другая причина. "
-                        + "Проверьте и при необходимости исправьте внесённые данные.<br><br>ОТКАЗАТЬСЯ от сохранения?")
+                        + "%. Предполагаемая сумма скидки должна быть: " + check.expectedDiscountText()
+                        + " грн, а у вас она составляет " + check.actualDiscountText() + " грн" +
+                        ". Возможно вы указали цену не правильно? Перепроверьте это." +
+                        "<br><br>ОТКАЗАТЬСЯ от сохранения цены?")
                 .setOnConfirmAction("Да", () -> { answered[0] = true; refuse.run(); return Unit.INSTANCE; })
                 .setOnCancelAction("Нет", () -> { answered[0] = true; save.run(); return Unit.INSTANCE; })
                 .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
@@ -297,8 +297,8 @@ public final class PriceSaveGuard {
                 .setTitle("Изменения не сохранены")
                 .setStatus(DialogStatus.ERROR)
                 .setMessage("У товара " + TextUtils.htmlEncode(product)
-                        + " АКЦИОННАЯ цена (" + TextUtils.htmlEncode(price)
-                        + " грн) выше чем цена ДО начала акции (" + TextUtils.htmlEncode(priceMin)
+                        + " АКЦИОННАЯ цена (" + TextUtils.htmlEncode(PriceDisplay.format(price))
+                        + " грн) выше чем цена ДО начала акции (" + TextUtils.htmlEncode(PriceDisplay.format(priceMin))
                         + " грн).<br><br>Проверьте цены и введите корректные значения.")
                 .setOnConfirmAction("Закрыть", () -> Unit.INSTANCE);
     }
@@ -307,7 +307,17 @@ public final class PriceSaveGuard {
         BigDecimal current = positivePrice(price);
         BigDecimal beforePromotion = positivePrice(priceMin);
         // Missing prices are checked by the options; do not block entering the first of the two prices.
-        return current != null && beforePromotion != null && current.compareTo(beforePromotion) > 0;
+        return current != null && beforePromotion != null
+                && PriceDisplay.cents(current).compareTo(PriceDisplay.cents(beforePromotion)) > 0;
+    }
+
+    static boolean shouldAutoMarkPromotion(String price, String priceMin, String akciya) {
+        return !isPromotionExplicitlyAbsent(akciya) && hasBothPositivePrices(price, priceMin);
+    }
+
+    private static boolean isPromotionExplicitlyAbsent(String akciya) {
+        // 0 = not selected, 1 = present, 2 = explicitly absent. Respect the persisted choice.
+        return akciya != null && "2".equals(akciya.trim());
     }
 
     static boolean hasBothPositivePrices(String price, String priceMin) {

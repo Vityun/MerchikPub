@@ -5,6 +5,35 @@ import org.junit.Test
 
 class InlinePriceDraftsTest {
     @Test
+    fun equalPricesSaveWithoutWarningAndWithoutChangingStorageFormat() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "95.90", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(current, "95.9")
+        assertEquals("95.9", fixture.prices.price)
+        controller.change(before, "95.899999")
+        assertEquals("95.899999", fixture.prices.priceMin)
+        controller.finishAll()
+        assertNull(controller.nextError())
+        assertTrue(controller.drafts.value.isEmpty())
+        assertEquals(2, fixture.writes)
+    }
+
+    @Test
+    fun disablingPromotionBeforeDeferredWarningAllowsSavingTheDraft() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "180")
+        controller.finishAll()
+        fixture.prices = fixture.prices.copy(discountPercent = 0)
+        assertNull(controller.nextError())
+        assertEquals("180", fixture.prices.priceMin)
+        assertTrue(fixture.stored.isEmpty())
+        controller.change(before, "79")
+        controller.finishAll()
+        assertTrue(controller.nextError()!!.draft.invalidPrice)
+    }
+
+    @Test
     fun discountWarningRetainsPromotionNameAndProductLabelWhenEditingBeforePrice() {
         val fixture = Fixture()
         fixture.prices = InlinePriceValues("80", "100", "(10) Juice 0.95 l", 20, "Summer 20%")

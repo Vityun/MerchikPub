@@ -56,6 +56,7 @@ import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 
 public class DialogFullPhoto {
@@ -199,13 +200,7 @@ public class DialogFullPhoto {
                     int pos = POSITION_ADAPTER;
                     Log.e("!!!!!!","+++");
                     StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        row.setComment(comment.getText().toString());
-                        row.setCommentUpload(true);
-                        row.setVpi(System.currentTimeMillis() / 1000);
-                        isCommentSave = true;
-                    });
-                    RealmManager.stackPhotoSavePhoto(row);
+                    isCommentSave = StackPhotoRealm.saveComment(row, comment.getText().toString());
                     it.dismiss();
                     clickListener.clicked();
                 })
@@ -433,16 +428,7 @@ public class DialogFullPhoto {
                         dvi.setOnClickListener((v) -> {
                             Log.e("CheckBoxDVI", "click");
                             StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
-                            RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                if (dviVal) {
-                                    row.setDvi(0);
-                                } else {
-                                    row.setDvi(1);
-                                }
-//                            row.setDtUpdate(System.currentTimeMillis() / 1000);
-                                row.setDviUpload(true);
-                            });
-                            RealmManager.stackPhotoSavePhoto(row);
+                            StackPhotoRealm.saveDvi(row, dvi.isChecked() ? 1 : 0);
                             Log.e("CheckBoxDVI", "row.isDviUpload(): " + row.isDviUpload());
 
                             Toast.makeText(context, "Фото установлено на ДВИ", Toast.LENGTH_SHORT).show();
@@ -580,16 +566,10 @@ public class DialogFullPhoto {
                 }
             }
             default -> {
-                RealmManager.INSTANCE.executeTransaction((realm) -> {
-                    row.setMark(String.valueOf(rate));
-                    row.setMarkUpload(true);
-                    if (comment != null && !comment.equals("") && comment.length() > 1) {
-                        row.setComment(comment);
-                        row.setCommentUpload(true);
-                        isCommentSave = true;
-                    }
-                });
-                RealmManager.stackPhotoSavePhoto(row);
+                String newComment = comment != null && comment.length() > 1 ? comment : null;
+                if (StackPhotoRealm.saveRating(row, String.valueOf(rate), newComment) && newComment != null) {
+                    isCommentSave = true;
+                }
             }
         }
     }
@@ -752,14 +732,12 @@ public class DialogFullPhoto {
 
             if (commentThis != null && commentThis.length() > 10) {
                 StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
-//                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    row.setComment(commentThis);
-                    row.setCommentUpload(true);
-                    row.setVpi(System.currentTimeMillis() / 1000);
-                    isCommentSave = true;
-//                });
-                RealmManager.stackPhotoSavePhoto(row);
-                comment.setText(commentThis);
+                isCommentSave = StackPhotoRealm.saveComment(row, commentThis);
+                if (isCommentSave) {
+                    comment.setText(commentThis);
+                } else {
+                    Toast.makeText(dialog.context, "Коментар НЕ збережено. Відкрийте фото повторно.", Toast.LENGTH_LONG).show();
+                }
             } else {
                 Toast.makeText(dialog.context, "Коментар НЕ збережено. Заповніть поле для коментаря!", Toast.LENGTH_LONG).show();
             }

@@ -441,12 +441,9 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     dialog.getComment(photoLogDat.getComment(), () -> {
                         Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
                         Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            photoLogDat.setComment(dialog.commentResult);
-                            photoLogDat.setCommentUpload(true);
-                        });
-                        RealmManager.stackPhotoSavePhoto(photoLogDat);
-                        Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                        dialog.isCommentSave = StackPhotoRealm.saveComment(photoLogDat, dialog.commentResult);
+                        Toast.makeText(mContext, dialog.isCommentSave ? "Комментарий сохранён"
+                                : "Комментарий не сохранён. Откройте фото повторно.", Toast.LENGTH_LONG).show();
                     });
 
 

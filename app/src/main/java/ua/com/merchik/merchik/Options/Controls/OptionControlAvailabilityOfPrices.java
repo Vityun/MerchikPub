@@ -35,6 +35,7 @@ import java.util.Objects;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -245,21 +246,20 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         + ", priceMin=" + safe(item.getPriceMin())
                         + ", priceMax=" + safe(item.getPriceMax());
                 if (isMinMaxOption && hasRequiredOsvPrice && hasPrice) {
-                    double price = Double.parseDouble(item.getPrice().trim().replace(",", "."));
-                    double priceMin = Double.parseDouble(item.getPriceMin().trim().replace(",", "."));
-                    double priceMax = Double.parseDouble(item.getPriceMax().trim().replace(",", "."));
-                    if (price > priceMin || price > priceMax) {
+                    boolean aboveMin = PriceSaveGuard.isPriceAboveBeforePromotion(item.getPrice(), item.getPriceMin());
+                    boolean aboveMax = PriceSaveGuard.isPriceAboveBeforePromotion(item.getPrice(), item.getPriceMax());
+                    if (aboveMin || aboveMax) {
                         err++;
                         invalidPriceCount++;
                         item.errorExist = 1;
                         item.find = 0;
-                        String priceBeforePromotion = price > priceMin ? item.getPriceMin() : item.getPriceMax();
+                        String priceBeforePromotion = aboveMin ? item.getPriceMin() : item.getPriceMax();
                         invalidPriceMsg.append("у товара ")
                                 .append(createLinkedString(msg, item, tov))
                                 .append(" АКЦИОННАЯ цена (")
-                                .append(item.getPrice())
+                                .append(PriceDisplay.format(item.getPrice()))
                                 .append(" грн) выше чем цена ДО начала акции (")
-                                .append(priceBeforePromotion)
+                                .append(PriceDisplay.format(priceBeforePromotion))
                                 .append(" грн)\n");
                         appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
                                 "result=PRICE_ABOVE_PRE_PROMOTION, face=" + safe(item.getFace()) + ", " + priceCheck);
