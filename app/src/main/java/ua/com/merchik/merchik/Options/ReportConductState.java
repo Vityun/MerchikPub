@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options;
 
 import java.util.UUID;
 import androidx.annotation.Keep;
+import ua.com.merchik.merchik.Utils.WorkTimeRules;
 
 /** Local delivery state, independent of the work-plan upload flag. */
 @Keep
@@ -26,6 +27,9 @@ public final class ReportConductState {
     public boolean conductAfterWorkEnd;
 
     public void requestWorkEnd(long visitStart, long clientStart, Long requestedEnd) {
+        if (!WorkTimeRules.consistent(visitStart, clientStart, 0, 0)) {
+            throw new IllegalStateException("Inconsistent work start");
+        }
         if (visitStart <= 0) throw new IllegalStateException("Work has not started");
         this.visitStart = visitStart;
         this.clientStart = clientStart;
@@ -40,6 +44,7 @@ public final class ReportConductState {
 
     public long resolveWorkEnd(long nowSeconds) {
         long end = requestedWorkEnd != null ? requestedWorkEnd : nowSeconds;
+        if (WorkTimeRules.seconds(end) != end) throw new IllegalStateException("Work end must be seconds");
         if (end < visitStart || end < clientStart) {
             throw new IllegalStateException("Work end precedes work start");
         }

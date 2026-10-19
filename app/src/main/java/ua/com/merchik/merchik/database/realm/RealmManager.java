@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.database.realm;
 
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 
 import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
 import static ua.com.merchik.merchik.Utils.GPSUtils.distanceMeters;
@@ -263,19 +264,6 @@ public class RealmManager {
             }
             // Проверяем, есть ли такая запись в локальной базе
             if (localItem != null) {
-                // Проверяем, начал ли пользователь работы по этой записи
-                boolean workStarted = (localItem.getVisit_start_dt() > 0 &&
-                        localItem.getClient_start_dt() > 0) ||
-                        (localItem.getVisit_end_dt() > 0 &&
-                                localItem.getClient_end_dt() > 0);
-                Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "SKIPPED -> WpDataDB dad2: " + serverItem.getCode_dad2());
-                boolean isStatus = serverItem.getStatus() == 0;
-                Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "local work: " + workStarted + "serverItem isStatus: " + isStatus);
-                if (workStarted && isStatus) {
-                    // Пропускаем записи, по которым уже начаты работы
-                    continue;
-                }
-
                 // Копируем ID существующей записи, чтобы обновить ее, а не создать новую
                 Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "WpDataDB dad2: " + serverItem.getCode_dad2() +
                         " | id local: " + localItem.getId() + " | id server: " + serverItem.getId());
@@ -301,8 +289,17 @@ public class RealmManager {
                 }
             }
             // Вставляем или обновляем данные
-            if (!dataToUpdate.isEmpty()) {
-                r.insertOrUpdate(dataToUpdate);
+            for (WpDataDB incoming : dataToUpdate) {
+                WpDataDB current = r.where(WpDataDB.class).equalTo("code_dad2", incoming.getCode_dad2()).findFirst();
+                if (current != null) {
+                    WpWorkTimes.normalize(current, "server.before");
+                    if ((current.getVisit_start_dt() > 0 || current.getClient_start_dt() > 0)
+                            && incoming.getStatus() == 0) {
+                        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "SKIPPED started visit, dad2=" + incoming.getCode_dad2());
+                        continue;
+                    }
+                }
+                if (WpWorkTimes.mergeServer(incoming, current)) r.insertOrUpdate(incoming);
             }
         });
 
@@ -513,291 +510,22 @@ public class RealmManager {
         }
     }
 
-    /**
-     * Запись в Реалм Плана работ
-     *
-     * @param wpData список данных с сервера
-     */
+    /** Legacy entry points share the same protected server merge. */
     public static void setWpData(List<WpDataDB> wpData) {
-        Globals.writeToMLOG("INFO", "RealmManager.setWpData", "wpDataDBList.size(): " + wpData.size());
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(WpDataDB.class);
-        INSTANCE.copyToRealmOrUpdate(wpData);
-        INSTANCE.commitTransaction();
-        Log.e("REALM_DB_UPDATE", "WP_DATA_END");
+        updateWorkPlanFromServer(wpData);
     }
 
-    /**
-     * 12.08.2020
-     * <p>
-     * Обновление Плана работ 2мя циклами.
-     * Первой прогонкой мы получаем данные которые обновились
-     * Второй прогонкой - удаляем устаревшие или удалённые данные
-     *
-     * @return
-     */
-
     public static ArrayList<WpDataDB> setWpDataAutoNew(List<WpDataDB> serverData) {
-        ArrayList<WpDataDB> sendOnServer = new ArrayList<>();
-
-        RealmResults<WpDataDB> wpDataDBList1 = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                .findAll();
-
-        Log.e("WP_DATA_UPDATE", "Количество данных что пришло с сервера: " + serverData.size());
-        Log.e("WP_DATA_UPDATE", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
-
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных что пришло с сервера: " + serverData.size());
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
-
-        // 1 цикл. Прогоняем данные которые пришли с сервераи надо обновить или добавить по ВПИ
-        // По скольку с ID не одноначная ситуация (это не надёжный параметр который может внезапно меняться)
-        // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
-        INSTANCE.beginTransaction();
-        for (WpDataDB wp : serverData) {
-            WpDataDB row = INSTANCE.where(WpDataDB.class).equalTo("code_dad2", wp.getCode_dad2())
-                    .equalTo("user_id", wp.getUser_id())
-                    .equalTo("client_id", wp.getClient_id())
-                    .equalTo("isp", wp.getIsp())
-                    .findFirst();
-
-            Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
-
-            if (row != null) {   // Если запись в бд есть
-                WpDataDB debug = INSTANCE.copyFromRealm(row);
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
-
-                // Это делаем для Лога, возможно нужно будет имплементировать в работу
-                if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)) {
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
-                }
-
-                if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
-                    Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
-                    Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
-
-                    if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0) {
-                        wp.setVisit_start_dt(row.getVisit_start_dt());
-                        wp.setClient_start_dt(row.getClient_start_dt());
-                    } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0) {
-                        wp.setVisit_end_dt(row.getVisit_end_dt());
-                        wp.setClient_end_dt(row.getClient_end_dt());
-                    }
-
-                    INSTANCE.copyToRealmOrUpdate(wp);
-                } else {
-                    // ТУТ ДЕЛАЮ ВЫГРУЗКУ НОВЫХ ДАННЫХ. ИЛИ СОБИРАЮ ДАННЫЕ ДЛЯ ТОГО ЧТО Б ПОТОМ ВЫГРУЗИТЬ.
-                    Log.e("setWpDataAuto", "Эти данные на моей стороне более новые. Надо выгружать");
-
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                    sendOnServer.add(row);
-                    Log.e("WP_DATA_UPDATE", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")"); // Не нужно ли тут начать выгрузку этих самых данных?
-                }
-            } else {
-                Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
-                // Если записи в БД нет - просто записываем её туда.
-                Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
-
-                INSTANCE.copyToRealmOrUpdate(wp);
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        // 2 цикл. Прогоняем данные которые надо удалить.
-        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                .findAll();
-
-
-        INSTANCE.beginTransaction();
-        for (WpDataDB local : localData) {
-            if (!serverData.contains(local)) {
-                local.deleteFromRealm();
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        return sendOnServer;
+        return setWpDataAuto(serverData);
     }
 
     public static ArrayList<WpDataDB> setWpDataAuto2(List<WpDataDB> serverData) {
-        ArrayList<WpDataDB> sendOnServer = new ArrayList<>();
-
-        // Логирование входящих данных
-        Log.e("WP_DATA_UPDATE", "С сервера получено: " + serverData.size());
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "С сервера получено: " + serverData.size());
-
-        // Получаем все локальные данные и строим map для быстрого поиска
-        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class).findAll();
-        Log.e("WP_DATA_UPDATE", "Локальных данных до обновления: " + localData.size());
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальных данных до обновления: " + localData.size());
-
-        Map<String, WpDataDB> localMap = new HashMap<>();
-        for (WpDataDB local : localData) {
-            String key = generateKey(local);
-            localMap.put(key, local);
-        }
-
-        INSTANCE.beginTransaction();
-        for (WpDataDB wp : serverData) {
-            String key = generateKey(wp);
-            WpDataDB local = localMap.get(key);
-
-            Globals.writeToMLOG("INFO", "setWpDataAuto", "Серверная запись: " + new Gson().toJson(wp));
-
-            if (local != null) {
-                WpDataDB debug = INSTANCE.copyFromRealm(local);
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная запись: " + new Gson().toJson(debug));
-
-                // Лог-граничные ситуации
-                if ((wp.getVisit_start_dt() == 0 && local.getVisit_start_dt() > 0) ||
-                        (wp.getVisit_end_dt() == 0 && local.getVisit_end_dt() > 0)) {
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Случай для отладки: Сервер и Локальная запись различны по visit");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Серверная: " + new Gson().toJson(wp));
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная: " + new Gson().toJson(debug));
-                }
-
-                if (wp.getDt_update() >= local.getDt_update()) {
-                    Log.e("setWpDataAuto", "Обновляю локальную запись новыми данными");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Обновляю локальную запись (" + wp.getDt_update() + " >= " + local.getDt_update() + ")");
-
-                    // Копируем локальные временные значения, если серверные не заданы
-                    // 13.05.25 Петров предложил если работы начаты или окончены, оставляем те данные что в приложении
-                    if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 &&
-                            local.getVisit_start_dt() > 0 && local.getClient_start_dt() > 0) {
-                        wp = local;
-                    } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 &&
-                            local.getVisit_end_dt() > 0 && local.getClient_end_dt() > 0) {
-                        wp = local;
-                    }
-
-                    INSTANCE.copyToRealmOrUpdate(wp);
-                } else {
-                    Log.e("setWpDataAuto", "Локальная запись новее, добавляю в sendOnServer");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная запись новее (" + wp.getDt_update() + " < " + local.getDt_update() + ")");
-                    sendOnServer.add(local);
-                }
-            } else {
-                Log.e("setWpDataAuto", "Новая запись, добавляю в БД: " + wp.getCode_dad2());
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "Новая запись, добавляю в БД: " + wp.getCode_dad2());
-                INSTANCE.copyToRealmOrUpdate(wp);
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        // Удаление локальных записей, которых нет на сервере
-        Set<String> serverKeys = serverData.stream()
-                .map(RealmManager::generateKey)
-                .collect(Collectors.toSet());
-
-        INSTANCE.beginTransaction();
-        for (WpDataDB local : localData) {
-            String key = generateKey(local);
-            if (!serverKeys.contains(key)) {
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "Удаляю локальную запись: " + local.getCode_dad2());
-                local.deleteFromRealm();
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        return sendOnServer;
-    }
-
-    private static String generateKey(WpDataDB data) {
-        return data.getCode_dad2() + "_";
+        return setWpDataAuto(serverData);
     }
 
     public static ArrayList<WpDataDB> setWpDataAuto(List<WpDataDB> serverData) {
-        ArrayList<WpDataDB> sendOnServer = new ArrayList<>();
-
-        RealmResults<WpDataDB> wpDataDBList1 = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                .findAll();
-
-        Log.e("WP_DATA_UPDATE", "Количество данных что пришло с сервера: " + serverData.size());
-        Log.e("WP_DATA_UPDATE", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
-
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных что пришло с сервера: " + serverData.size());
-        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
-
-        // 1 цикл. Прогоняем данные которые пришли с сервераи надо обновить или добавить по ВПИ
-        // По скольку с ID не одноначная ситуация (это не надёжный параметр который может внезапно меняться)
-        // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
-        INSTANCE.beginTransaction();
-        for (WpDataDB wp : serverData) {
-            WpDataDB row = INSTANCE.where(WpDataDB.class).equalTo("code_dad2", wp.getCode_dad2())
-                    .equalTo("user_id", wp.getUser_id())
-                    .equalTo("client_id", wp.getClient_id())
-                    .equalTo("isp", wp.getIsp())
-                    .findFirst();
-
-            Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
-
-            if (row != null) {   // Если запись в бд есть
-                WpDataDB debug = INSTANCE.copyFromRealm(row);
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
-
-                // Это делаем для Лога, возможно нужно будет имплементировать в работу
-                if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)) {
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
-                }
-
-                if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
-                    Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
-                    Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
-
-                    if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0) {
-                        wp.setVisit_start_dt(row.getVisit_start_dt());
-                        wp.setClient_start_dt(row.getClient_start_dt());
-                    } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0) {
-                        wp.setVisit_end_dt(row.getVisit_end_dt());
-                        wp.setClient_end_dt(row.getClient_end_dt());
-                    }
-
-                    INSTANCE.copyToRealmOrUpdate(wp);
-                } else {
-                    // ТУТ ДЕЛАЮ ВЫГРУЗКУ НОВЫХ ДАННЫХ. ИЛИ СОБИРАЮ ДАННЫЕ ДЛЯ ТОГО ЧТО Б ПОТОМ ВЫГРУЗИТЬ.
-                    Log.e("setWpDataAuto", "Эти данные на моей стороне более новые. Надо выгружать");
-
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                    sendOnServer.add(row);
-                    Log.e("WP_DATA_UPDATE", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")"); // Не нужно ли тут начать выгрузку этих самых данных?
-                }
-            } else {
-                Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
-                // Если записи в БД нет - просто записываем её туда.
-                Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
-
-                INSTANCE.copyToRealmOrUpdate(wp);
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        // 2 цикл. Прогоняем данные которые надо удалить.
-        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                .findAll();
-
-
-        INSTANCE.beginTransaction();
-        for (WpDataDB local : localData) {
-            if (!serverData.contains(local)) {
-                local.deleteFromRealm();
-            }
-        }
-        INSTANCE.commitTransaction();
-
-        return sendOnServer;
+        updateWorkPlanFromServer(serverData);
+        return new ArrayList<>(INSTANCE.copyFromRealm(WpDataRealm.getWpDataToUpdate()));
     }
 
     /**
@@ -1266,81 +994,11 @@ public class RealmManager {
 
     @Nullable
     public static WpDataDB saveWpDataCommentSafely(WpDataDB source, String comment, long updateTimeSec) {
-        if (source == null) {
-            return null;
-        }
-
-        final WpDataDB[] saved = new WpDataDB[1];
-
-        INSTANCE.executeTransaction(realm -> {
-            WpDataDB target = null;
-            if (source.getId() != 0) {
-                target = realm.where(WpDataDB.class)
-                        .equalTo("ID", source.getId())
-                        .findFirst();
-            }
-            if (target == null && source.getCode_dad2() != 0) {
-                target = realm.where(WpDataDB.class)
-                        .equalTo("code_dad2", source.getCode_dad2())
-                        .findFirst();
-            }
-            if (target == null) {
-                Globals.writeToMLOG(
-                        "ERROR",
-                        "RealmManager.saveWpDataCommentSafely",
-                        "wpData row not found, id=" + source.getId() + ", dad2=" + source.getCode_dad2()
-                );
-                return;
-            }
-
-            if ((source.getVisit_end_dt() <= 0 && target.getVisit_end_dt() > 0)
-                    || (source.getClient_end_dt() <= 0 && target.getClient_end_dt() > 0)) {
-                Globals.writeToMLOG(
-                        "INFO",
-                        "RealmManager.saveWpDataCommentSafely",
-                        "stale wpData source ignored, dad2=" + target.getCode_dad2()
-                                + ", sourceVisitEnd=" + source.getVisit_end_dt()
-                                + ", dbVisitEnd=" + target.getVisit_end_dt()
-                                + ", sourceClientEnd=" + source.getClient_end_dt()
-                                + ", dbClientEnd=" + target.getClient_end_dt()
-                );
-            }
-
-            mergeNonZeroWorkProgress(target, source);
-            target.setDt_update(updateTimeSec);
+        return WpWorkTimes.updateFields(source, true, target -> {
             target.user_comment = comment;
             target.user_comment_author_id = target.getUser_id();
             target.user_comment_dt_update = updateTimeSec;
-            target.startUpdate = true;
-
-            saved[0] = realm.copyFromRealm(target);
         });
-
-        return saved[0];
-    }
-
-    private static void mergeNonZeroWorkProgress(WpDataDB target, WpDataDB source) {
-        if (target == null || source == null) {
-            return;
-        }
-
-        if (target.getVisit_start_dt() <= 0 && source.getVisit_start_dt() > 0) {
-            target.setVisit_start_dt(source.getVisit_start_dt());
-        }
-        if (target.getClient_start_dt() <= 0 && source.getClient_start_dt() > 0) {
-            target.setClient_start_dt(source.getClient_start_dt());
-        }
-        if (target.getVisit_end_dt() <= 0 && source.getVisit_end_dt() > 0) {
-            target.setVisit_end_dt(source.getVisit_end_dt());
-        }
-        if (target.getClient_end_dt() <= 0 && source.getClient_end_dt() > 0) {
-            target.setClient_end_dt(source.getClient_end_dt());
-        }
-        if ((target.client_work_duration == null || target.client_work_duration <= 0)
-                && source.client_work_duration != null
-                && source.client_work_duration > 0) {
-            target.client_work_duration = source.client_work_duration;
-        }
     }
 
     @Nullable
@@ -2135,6 +1793,9 @@ public class RealmManager {
      * Сбор данных(План Работ) для выгрузки на сервер
      */
     public static ArrayList<WpDataUploadToServ> getWpDataToSend() {
+        INSTANCE.executeTransaction(realm -> {
+            for (WpDataDB wp : realm.where(WpDataDB.class).findAll()) WpWorkTimes.normalize(wp, "legacy.upload");
+        });
         List<WpDataDB> list = INSTANCE.where(WpDataDB.class)
 //                .isNull("dt")
                 .findAll();
@@ -2142,7 +1803,7 @@ public class RealmManager {
         ArrayList<WpDataUploadToServ> wpDataList = new ArrayList<>();
         if (list != null) {
             for (WpDataDB l : list) {
-                if (l.getVisit_start_dt() > 0 || l.getVisit_end_dt() > 0) {
+                if (WpWorkTimes.valid(l) && (l.getVisit_start_dt() > 0 || l.getVisit_end_dt() > 0)) {
                     wpDataList.add(new WpDataUploadToServ(String.valueOf(l.getId()), String.valueOf(l.getCode_dad2()), String.valueOf(l.getUser_id()), String.valueOf(l.getClient_id()), String.valueOf(l.getIsp()),
 
                             String.valueOf(l.getVisit_start_dt()), String.valueOf(l.getVisit_end_dt()), String.valueOf(l.getClient_start_dt()), String.valueOf(l.getClient_end_dt()),
@@ -2164,12 +1825,16 @@ public class RealmManager {
      * Это сделано сейчас для потому что переделываем выгрузку под новый стандарт
      */
     public static List<StartEndData> getWpDataStartEndWork() {
+        INSTANCE.executeTransaction(realm -> {
+            for (WpDataDB wp : WpDataRealm.getWpDataToUpdate()) WpWorkTimes.normalize(wp, "upload");
+        });
         List<WpDataDB> list = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataToUpdate());
         List<StartEndData> res = new ArrayList<>();
 
         int id = 0;
         if (list != null && !list.isEmpty()) {
             for (WpDataDB l : list) {
+                if (!WpWorkTimes.valid(l)) continue;
                 if (l.startUpdate || l.getSetStatus() > 0) {
                     id++;
                     StartEndData item = new StartEndData();

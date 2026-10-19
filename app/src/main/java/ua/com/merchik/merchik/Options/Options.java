@@ -187,6 +187,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
@@ -3103,13 +3104,7 @@ public class Options {
             distance = 0;
         }
 
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            if (wpDataDB != null) {
-                wpDataDB.setVisit_start_geo_distance(distance);
-                realm.insertOrUpdate(wpDataDB);
-//                Toast.makeText(context, "Данные о местоположении внесены.", Toast.LENGTH_LONG).show();
-            }
-        });
+        WpWorkTimes.updateFields(wpDataDB, false, current -> current.setVisit_start_geo_distance(distance));
     }
 
     //--------------------- НАЧАЛО РАБОТЫ -----------------------
@@ -3235,13 +3230,9 @@ public class Options {
         } else {
             try {
                 long startTime = System.currentTimeMillis() / 1000;
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                    wpDataDB.setVisit_start_dt(startTime);
-                    wpDataDB.setClient_start_dt(startTime);
-                    wpDataDB.startUpdate = true;
-                    realm.insertOrUpdate(wpDataDB);
-                });
+                if (WpWorkTimes.start(wpDataDB, startTime) == null) {
+                    throw new IllegalStateException("Cannot save work start, dad2=" + wpDataDB.getCode_dad2());
+                }
 
                 // Это жосткие костыли
                 Exchange exchange = new Exchange();
@@ -3409,7 +3400,19 @@ public class Options {
     private void showEndWorkDialog(Context context, Object dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener listener) {
         long startTime = 0;
         if (dataDB instanceof WpDataDB) {
-            startTime = ((WpDataDB) dataDB).getVisit_start_dt();
+            WpDataDB current = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) dataDB).getCode_dad2());
+            if (!WpWorkTimes.valid(current)) {
+                Toast.makeText(context, "Некорректные данные времени визита. Выполните обмен данными.", Toast.LENGTH_LONG).show();
+                listener.onUnlockCodeFailure();
+                return;
+            }
+            if (current.getVisit_end_dt() > 0) {
+                optionEndWork_138520(context, current, optionsDB, type, mode, listener, null);
+                return;
+            }
+            showEndWorkDialog(context, current.getVisit_start_dt(), requestedEndTime ->
+                    optionEndWork_138520(context, current, optionsDB, type, mode, listener, requestedEndTime));
+            return;
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             Long start = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
             startTime = start != null ? start : 0;
@@ -3515,6 +3518,12 @@ public class Options {
     private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener, Long requestedEndTime) {
         boolean result = false;
         try {
+            wpDataDB = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+            if (!WpWorkTimes.valid(wpDataDB)) {
+                Toast.makeText(context, "Некорректные данные времени визита. Выполните обмен данными.", Toast.LENGTH_LONG).show();
+                unlockCodeResultListener.onUnlockCodeFailure();
+                return false;
+            }
             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
             if (wpDataDB.getVisit_end_dt() > 0) {
                 Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();

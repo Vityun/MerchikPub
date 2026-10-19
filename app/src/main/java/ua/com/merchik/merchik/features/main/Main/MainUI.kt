@@ -122,6 +122,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -170,6 +171,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogChoice
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogSingleChoice
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
@@ -218,7 +220,7 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
     val optionsViewModel = (viewModel as? OptionsDBViewModel)
         ?.takeIf { it.contextUI == ContextUI.OPTIONS_IN_CONTAINER }
 
-    var showQuestionAnswerDialog by remember { mutableStateOf(false) }
+    var showQuestionAnswerDialog by rememberSaveable(viewModel.dataJson) { mutableStateOf(false) }
     var showCustomAditionalConfirmDialog by remember { mutableStateOf(false) }
     var showCustomAditionalDialog by remember { mutableStateOf(false) }
     var customAditionalDate by remember { mutableStateOf("") }
@@ -2761,15 +2763,68 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
         Log.e("additionalEarningsDialogData", "final")
     }
 
+    if (viewModel is AchievementsSDBViewModel &&
+        (context as? Activity)?.intent?.getBooleanExtra(EXTRA_ONE_TIME_PAYMENT_INCREASE, false) == true
+    ) {
+        OneTimePaymentIncreaseDialogs(viewModel)
+    }
+
     if (showQuestionAnswerDialog) {
         val theme = ThemeRealm.getThemeById("610")
+        var pendingPaymentIncreaseChoice by rememberSaveable(viewModel.dataJson) {
+            mutableStateOf<String?>(null)
+        }
+        var isOneTimePaymentIncrease by rememberSaveable(viewModel.dataJson) {
+            mutableStateOf<Boolean?>(null)
+        }
         theme?.let {
-            QuestionAnswerDialog(
+            if (isOneTimePaymentIncrease == null) {
+                val choiceTitle = remember {
+                    ThemeRealm.getThemeById("610")?.nm?.takeIf { name -> name.isNotBlank() } ?: it.nm
+                }
+                MessageDialog(
+                    title = choiceTitle,
+                    status = DialogStatus.NORMAL,
+                    message = "Вы хотите повышение оплаты РАЗОВОЕ (переработка) или на ПОСТОЯННОЙ основе?",
+                    okButtonName = "ОК",
+                    onDismiss = {
+                        // MessageDialog also dismisses after confirmation; keep the next step open.
+                        if (isOneTimePaymentIncrease == null) showQuestionAnswerDialog = false
+                    },
+                    onConfirmAction = {
+                        isOneTimePaymentIncrease = when (pendingPaymentIncreaseChoice) {
+                            "one_time" -> true
+                            "permanent" -> false
+                            else -> null
+                        }
+                    },
+                    singleChoice = MessageDialogSingleChoice(
+                        options = listOf(
+                            MessageDialogChoice("one_time", "Разовое (переработка)"),
+                            MessageDialogChoice("permanent", "На постоянной основе")
+                        ),
+                        selectedKey = pendingPaymentIncreaseChoice,
+                        onSelected = { choice -> pendingPaymentIncreaseChoice = choice }
+                    )
+                )
+            } else if (isOneTimePaymentIncrease == true) {
+                LaunchedEffect(viewModel) {
+                    try {
+                        val activity = context as? Activity ?: error("Не найден экран выбора темы")
+                        openOneTimePaymentIncrease(activity, viewModel.dataJson)
+                    } catch (error: Exception) {
+                        Globals.writeToMLOG("ERROR", "OneTimePaymentIncrease/open", "error=$error")
+                        Toast.makeText(context, "Не удалось открыть достижения. Повторите попытку.", Toast.LENGTH_LONG).show()
+                    }
+                    showQuestionAnswerDialog = false
+                }
+            } else QuestionAnswerDialog(
                 viewModel = viewModel,
                 state = QuestionAnswerDialogUiState(
                     address = "повна адреса",
                     client = "РОга и Копыта",
-                    dad2 = "только для отладки"
+                    dad2 = "только для отладки",
+                    isOneTimePaymentIncrease = isOneTimePaymentIncrease == true
                 ),
                 themeTitle = it.nm,
                 themeComment = it.comment,

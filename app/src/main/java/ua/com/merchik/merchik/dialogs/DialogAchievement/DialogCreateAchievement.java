@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -50,11 +51,13 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -332,6 +335,22 @@ public class DialogCreateAchievement {
 
     public void show() {
         if (dialog != null) dialog.show();
+    }
+
+    public void setOnShowListener(DialogInterface.OnShowListener listener) {
+        if (dialog != null) dialog.setOnShowListener(listener);
+    }
+
+    public void setOnDismissListener(DialogInterface.OnDismissListener listener) {
+        if (dialog != null) dialog.setOnDismissListener(listener);
+    }
+
+    public void setTheme(int themeId) {
+        ThemeDB selectedTheme = ThemeRealm.getThemeById(String.valueOf(themeId));
+        AchievementDataHolder holder = AchievementDataHolder.Companion.instance();
+        holder.setThemeId(themeId);
+        holder.setThemeName(selectedTheme != null ? selectedTheme.getNm() : String.valueOf(themeId));
+        setTextUI();
     }
 
     public void dismiss() {

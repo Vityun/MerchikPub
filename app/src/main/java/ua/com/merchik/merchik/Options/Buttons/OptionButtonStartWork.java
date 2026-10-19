@@ -17,6 +17,7 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder;
 import ua.com.merchik.merchik.trecker;
@@ -143,13 +144,9 @@ public class OptionButtonStartWork<T> extends OptionControl {
                 );
 
                 long startTime = System.currentTimeMillis() / 1000;
-                wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                wpDataDB.setVisit_start_dt(startTime);
-                wpDataDB.setClient_start_dt(startTime);
-                wpDataDB.startUpdate = true;
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    realm.insertOrUpdate(wpDataDB);
-                });
+                if (WpWorkTimes.start(wpDataDB, startTime) == null) {
+                    throw new IllegalStateException("Cannot save work start, dad2=" + wpDataDB.getCode_dad2());
+                }
 
                 // Это жосткие костыли
                 Exchange exchange = new Exchange();

@@ -16,6 +16,58 @@ import static org.junit.Assert.assertTrue;
 
 public class PriceSaveGuardTest {
     @Test
+    public void noPromotionFillsBothMissingPricesWithCurrentPrice() {
+        assertEquals("95.90", PriceSaveGuard.missingPricesForNoPromotion("2", "95.90", "0", "0"));
+        assertEquals("95.90", PriceSaveGuard.missingPricesForNoPromotion(" 2 ", "95.90", "0.00", "0,00"));
+    }
+
+    @Test
+    public void noPromotionTreatsEmptyPricesAsZero() {
+        for (String min : new String[]{null, "", " ", "0", "0.00", "0,00"}) {
+            for (String max : new String[]{null, "", " ", "0", "0.00", "0,00"}) {
+                assertEquals("10", PriceSaveGuard.missingPricesForNoPromotion("2", "10", min, max));
+            }
+        }
+    }
+
+    @Test
+    public void noPromotionPreservesStoredPricePrecisionAndFormat() {
+        for (String price : new String[]{"5.6", "95.904", " 19,99 ", "0.01"}) {
+            assertEquals(price, PriceSaveGuard.missingPricesForNoPromotion("2", price, "0", "0"));
+        }
+    }
+
+    @Test
+    public void pricesAreNotFilledWithoutExplicitNoPromotion() {
+        for (String akciya : new String[]{null, "", " ", "0", "1", "3"}) {
+            assertNull(PriceSaveGuard.missingPricesForNoPromotion(akciya, "10", "0", "0"));
+        }
+    }
+
+    @Test
+    public void noPromotionDoesNotFillPricesFromMissingOrInvalidCurrentPrice() {
+        for (String price : new String[]{null, "", " ", "0", "0.00", "0,00", "-1", "abc", "NaN", "Infinity", "1,2,3"}) {
+            assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", price, "0", "0"));
+        }
+    }
+
+    @Test
+    public void noPromotionDoesNotOverwriteEitherExistingBeforePrice() {
+        assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", "20", "0"));
+        assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", "0", "20"));
+        assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", "20", "20"));
+        assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", "0.001", "0"));
+    }
+
+    @Test
+    public void noPromotionDoesNotOverwriteInvalidBeforePrices() {
+        for (String invalid : new String[]{"-1", "abc", "NaN", "Infinity", "1,2,3"}) {
+            assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", invalid, "0"));
+            assertNull(PriceSaveGuard.missingPricesForNoPromotion("2", "10", "0", invalid));
+        }
+    }
+
+    @Test
     public void manualNoPromotionWinsOverPricesUntilManuallyEnabled() {
         assertFalse(PriceSaveGuard.shouldAutoMarkPromotion("80", "100", "2"));
         assertFalse(PriceSaveGuard.shouldAutoMarkPromotion("100", "100.00", " 2 "));

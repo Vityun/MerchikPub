@@ -41,6 +41,7 @@ import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.dataLayer.common.VizitShowcaseDataHolder;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -381,13 +382,9 @@ public class DetailedReportButtons {
             distance = 0;
         }
 
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            if (wp != null) {
-                wp.setVisit_start_geo_distance(distance);
-                realm.insertOrUpdate(wp);
-                Toast.makeText(context, "Данные о местоположении внесены.", Toast.LENGTH_LONG).show();
-            }
-        });
+        if (WpWorkTimes.updateFields(wp, false, current -> current.setVisit_start_geo_distance(distance)) != null) {
+            Toast.makeText(context, "Данные о местоположении внесены.", Toast.LENGTH_LONG).show();
+        }
 
     }
 

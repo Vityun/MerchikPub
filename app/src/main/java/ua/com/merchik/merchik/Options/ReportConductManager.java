@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 
 public final class ReportConductManager {
     private static final String TAG = "ReportConduct";
@@ -87,6 +88,7 @@ public final class ReportConductManager {
         state.dad2 = dad2;
         if (requestWorkEnd) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+            if (!WpWorkTimes.valid(wp)) throw new IllegalStateException("Invalid visit work-time pairs");
             if (wp == null || wp.getVisit_end_dt() != 0 || wp.getClient_end_dt() != 0) {
                 throw new IllegalStateException("Visit is missing or already finished");
             }
@@ -129,6 +131,7 @@ public final class ReportConductManager {
         }
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
         if (wp == null) throw new IllegalStateException("Visit is no longer available");
+        if (!WpWorkTimes.valid(wp)) throw new IllegalStateException("Invalid visit work-time pairs");
         state.visitStart = wp.getVisit_start_dt();
         state.visitEnd = wp.getVisit_end_dt();
         state.clientStart = wp.getClient_start_dt();
@@ -236,7 +239,7 @@ public final class ReportConductManager {
                     ReportConductUi.showResult(state.dad2);
                     continue;
                 }
-                if (!state.matchesWorkTimes(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
+                if (!WpWorkTimes.valid(wp) || !state.matchesWorkTimes(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
                         wp.getClient_start_dt(), wp.getClient_end_dt())) {
                     state.stage = ReportConductState.Stage.WAITING_CHECK;
                     save(state);

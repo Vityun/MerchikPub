@@ -90,6 +90,7 @@ import ua.com.merchik.merchik.ServerExchange.workmager.WpDataDateLogWorker;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
+import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -1201,7 +1202,9 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.setPhoto_num(photoFile.getAbsolutePath());
                 photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
-                photo.dt = MakePhoto.dt;
+                // Use the saved photo's date: static capture state may belong to another shot.
+                photo.dt = PhotoDateUtils.resolveSeconds(
+                        photo.getDt(), photo.getTime_event());
 
                 photo.img_src_id = MakePhoto.img_src_id;
                 photo.showcase_id = MakePhoto.showcase_id;

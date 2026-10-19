@@ -5,6 +5,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,9 +18,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +36,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
+import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
@@ -64,6 +64,9 @@ public class PhotoReports {
 
     /*Список/очередь на выгрузку фотоотчётов*/
     private List<StackPhotoDB> realmResults = new ArrayList<>();
+    private final Handler uploadHandler = new Handler(Looper.getMainLooper());
+    private StackPhotoDB uploadingPhoto;
+    private int failedPhotos;
 
     public enum UploadType {
         SINGLE,
@@ -86,6 +89,14 @@ public class PhotoReports {
      * Выгрузка фотоотчётов.
      */
     public void uploadPhotoReports(UploadType type) {
+        if (!permission) {
+            if (type == UploadType.MULTIPLE) {
+                Toast.makeText(mContext, "Выгрузка уже выполняется. Дождитесь окончания.", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+        realmResults.clear();
+        failedPhotos = 0;
         getDataToUpload();  // Подготовка данных к выгрузке
 
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
@@ -104,8 +115,17 @@ public class PhotoReports {
                         DialogData dialog = new DialogData(mContext);
                         dialog.setTitle("Выгрузка фотоотчётов");
                         dialog.setText(msg);
-                        dialog.setOk("Ок", () -> send(type));
+                        boolean[] confirmed = {false};
+                        dialog.setOk("Ок", () -> {
+                            if (confirmed[0]) return;
+                            confirmed[0] = true;
+                            dialog.dismiss();
+                            send(type);
+                        });
                         dialog.setClose(dialog::dismiss);
+                        dialog.setOnDismissAction(() -> {
+                            if (!confirmed[0]) permission = true;
+                        });
                         dialog.show();
                     } else {
                         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start MULTIPLE upload permission false. Я уже нажал на кнопку 'Выгрузить фото' и жду пока выгрузка закончится");
@@ -153,61 +173,46 @@ public class PhotoReports {
      * выгрузка и сохранение результатов
      */
     private void send(UploadType type) {
+        if (permission || uploadingPhoto != null) return;
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "Start SEND. size to unload: " + realmResults.size());
         Log.e("StartPhotoUpload", "++++++++++");
         if (!realmResults.isEmpty()) {
             StackPhotoDB current = realmResults.get(0);
-            buildCall(current, new ExchangeInterface.UploadPhotoReports() {
+            uploadingPhoto = current;
+            ExchangeInterface.UploadPhotoReports callback = new ExchangeInterface.UploadPhotoReports() {
                 @Override
                 public void onSuccess(StackPhotoDB photoDB, String s) {
-                    Toast.makeText(mContext, "Фото номер: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
-                    StackPhotoRealm.markUploadSucceeded(photoDB);
-
-                    realmResults.remove(photoDB);
-                    String filePath = photoDB.getPhoto_num();
-                    File file = new File(filePath);
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + ", file.length(): " + file.length() + ", left to unload: " + realmResults.size());
-                    send(type);
+                    completePhoto(current, type, true, s, false);
                 }
 
                 @Override
                 public void onFailure(StackPhotoDB photoDB, String error) {
-                    StackPhotoRealm.markUploadFailed(photoDB, error);
-
-                    realmResults.remove(photoDB);
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "failure. photo id: " + photoDB.getId() + " ERROR MSG: " + error + " ///left to unload: " + realmResults.size());
-                    send(type);
-
-                    // Путь к файлу (пример: photoDB.getPhoto_num() возвращает путь в виде String)
-                    String filePath = photoDB.getPhoto_num();
-                    // Создаем объект File
-                    File file = new File(filePath);
-                    // Проверяем, существует ли файл
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " + file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
-
-                    if (!isImageValid(file)) {
-                        StackPhotoDB currentPhoto = StackPhotoRealm.getById(photoDB.getId());
-                        if (StackPhotoSyncPolicy.samePhoto(currentPhoto, photoDB)
-                                && currentPhoto.getUpload_to_server() == 0
-                                && (currentPhoto.getPhotoServerId() == null || currentPhoto.getPhotoServerId().isEmpty())
-                                && isPhotoOlderThan10Minutes(currentPhoto)) {
-                            StackPhotoRealm.deleteByPhotoNum(filePath);
-                            Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/deleteByPhotoNum", "isImageValid: " + isImageValid(file) + ", file delete ");
-                        }
-                    }
+                    completePhoto(current, type, false, error, true);
                 }
-            });
+            };
+            try {
+                buildCall(current, callback);
+            } catch (Exception error) {
+                Globals.writeToMLOG("ERROR", "PhotoReports/prepare",
+                        photoDiagnostic(current) + ", error=" + Log.getStackTraceString(error));
+                // Metadata/preparation errors must never delete the photo or stop the queue.
+                completePhoto(current, type, false, "Ошибка подготовки фото: " + error, false);
+            }
         } else {
+            permission = true;
             switch (type) {
                 case MULTIPLE:
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/Send", "MULTIPLE/ выгрузка окончена");
 
-                    // ВСЕ ФОТО БЫЛИ ВЫГРУЖЕНЫ
-                    DialogData dialogData = new DialogData(mContext);
-                    dialogData.setTitle("Выгрузка фото");
-                    dialogData.setText("Выгрузка окончена");
-                    dialogData.show();
-                    permission = true;
+                    if (mContext instanceof Activity && !((Activity) mContext).isFinishing()
+                            && !((Activity) mContext).isDestroyed()) {
+                        DialogData dialogData = new DialogData(mContext);
+                        dialogData.setTitle("Выгрузка фото");
+                        dialogData.setText(failedPhotos == 0 ? "Выгрузка окончена" :
+                                "Выгрузка окончена. Ошибки при обработке фото: " + failedPhotos +
+                                        ". Подробности смотрите в журнале фото.");
+                        dialogData.show();
+                    }
                     break;
 
                 case AUTO:
@@ -218,6 +223,55 @@ public class PhotoReports {
             }
 
         }
+    }
+
+    private void completePhoto(StackPhotoDB photo, UploadType type, boolean success,
+                               String message, boolean checkInvalidFile) {
+        if (uploadingPhoto != photo) return;
+        try {
+            if (success) {
+                if (!StackPhotoRealm.markUploadSucceeded(photo)) {
+                    throw new IllegalStateException("Не удалось сохранить результат выгрузки фото");
+                }
+                Toast.makeText(mContext, "Фото номер: " + photo.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
+            } else {
+                failedPhotos++;
+                StackPhotoRealm.markUploadFailed(photo, message);
+                if (checkInvalidFile) removeInvalidPhotoAfterFailure(photo);
+            }
+            Globals.writeToMLOG("INFO", "PhotoReports/result", "id=" + photo.getId()
+                    + ", success=" + success + ", message=" + message);
+        } catch (Exception error) {
+            if (success) failedPhotos++;
+            Globals.writeToMLOG("ERROR", "PhotoReports/result", photoDiagnostic(photo)
+                    + ", error=" + Log.getStackTraceString(error));
+        } finally {
+            realmResults.remove(photo);
+            uploadingPhoto = null;
+            // Post instead of recursing: a batch of invalid records must not grow the stack.
+            uploadHandler.post(() -> send(type));
+        }
+    }
+
+    private void removeInvalidPhotoAfterFailure(StackPhotoDB photo) {
+        String filePath = photo.getPhoto_num();
+        if (filePath == null || filePath.isEmpty()) return;
+        File file = new File(filePath);
+        if (!isImageValid(file)) {
+            StackPhotoDB currentPhoto = StackPhotoRealm.getById(photo.getId());
+            if (StackPhotoSyncPolicy.samePhoto(currentPhoto, photo)
+                    && currentPhoto.getUpload_to_server() == 0
+                    && (currentPhoto.getPhotoServerId() == null || currentPhoto.getPhotoServerId().isEmpty())
+                    && isPhotoOlderThan10Minutes(currentPhoto)) {
+                StackPhotoRealm.deleteByPhotoNum(filePath);
+            }
+        }
+    }
+
+    private static String photoDiagnostic(StackPhotoDB photo) {
+        return "id=" + photo.getId() + ", dad2=" + photo.getCode_dad2()
+                + ", dt=" + photo.getDt() + ", time_event=" + photo.getTime_event()
+                + ", file=" + photo.getPhoto_num();
     }
 
     public static boolean isImageValid(File file) {
@@ -259,6 +313,11 @@ public class PhotoReports {
         for (StackPhotoDB photo : res) {
             if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
                 String filePath = photo.getPhoto_num();
+                if (filePath == null || filePath.trim().isEmpty()) {
+                    Globals.writeToMLOG("ERROR", "PhotoReports/getDataToUpload", photoDiagnostic(photo)
+                            + ", reason=empty_file_path");
+                    continue;
+                }
                 if (pendingPhotoNum != null && pendingPhotoNum.equals(filePath)) {
                     Globals.writeToMLOG("INFO", "PhotoReports.getDataToUpload", "skip pending MakePhoto: " + filePath);
                     continue;
@@ -328,14 +387,8 @@ public class PhotoReports {
         if (photoDB.getAddr_id() != null) {
             addr_id = String.valueOf(photoDB.getAddr_id());
         }
-        if (photoDB.getTime_event() != null) {
-//            date = photoDB.getTime_event();
-            //13.10.2026 изменил
-            date = Instant.ofEpochSecond(photoDB.dt)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        }
+        date = PhotoDateUtils.uploadDate(photoDB.getDt(), photoDB.getTime_event());
+        Globals.writeToMLOG("INFO", "PhotoReports/date", photoDiagnostic(photoDB) + ", uploadDate=" + date);
         if (photoDB.getPhoto_type() != null) {
             img_type_id = String.valueOf(photoDB.getPhoto_type());
         }

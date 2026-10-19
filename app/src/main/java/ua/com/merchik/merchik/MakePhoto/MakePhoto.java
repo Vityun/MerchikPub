@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
@@ -677,11 +678,14 @@ public class MakePhoto {
 
             if (data instanceof TasksAndReclamationsSDB) {
                 wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
+                dt = PhotoDateUtils.resolveSeconds(
+                        ((TasksAndReclamationsSDB) data).dt, wpDataObj.getDate());
             } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
                 dt = wpDataDB.getDt().getTime() / 1000;
             }
+            wpDataObj.setDate(PhotoDateUtils.uploadDate(dt, wpDataObj.getDate()));
             wpDataObj.setPhotoType(photoType);
             wpDataObj.setCustomerTypeGrpS(photoCustomerGroup);
 

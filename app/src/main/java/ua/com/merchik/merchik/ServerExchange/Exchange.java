@@ -153,6 +153,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
@@ -2531,30 +2532,18 @@ public class Exchange {
      */
     public void saveWpDataResult(List<WpDataUpdateResponseList> data, List<StartEndData> sentSnapshot) {
         try {
+            if (data == null || data.isEmpty()) return;
             Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data size: " + data.size());
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonOutput = gson.toJson(data);
             Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data result: " + jsonOutput);
 
-            if (data == null || data.isEmpty()) {
-                return;
-            }
-
-            Long[] ids = new Long[data.size()];
-            int count = 0;
-            for (WpDataUpdateResponseList item : data) {
-                ids[count++] = item.elementId;
-            }
-
-            List<WpDataDB> wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByIds(ids));
-            List<WpDataDB> saveWp = new ArrayList<>();
-
-            for (WpDataDB item : wp) {
+            RealmManager.INSTANCE.executeTransaction(realm -> {
                 for (WpDataUpdateResponseList respItem : data) {
-
-                    if (!respItem.elementId.equals(item.getId()) || respItem.data == null) {
-                        continue;
-                    }
+                    if (respItem == null || respItem.elementId == null || respItem.data == null) continue;
+                    if (respItem.error != null && !respItem.error.isEmpty()) continue;
+                    WpDataDB item = realm.where(WpDataDB.class).equalTo("ID", respItem.elementId).findFirst();
+                    if (item == null || !WpWorkTimes.normalize(item, "upload.ack")) continue;
 
                     // Ищем snapshot именно той записи, которая была отправлена
                     StartEndData sentItem = findSentSnapshot(sentSnapshot, item.getId());
@@ -2574,11 +2563,14 @@ public class Exchange {
                             || respItem.data.clientStartDt
                             || respItem.data.clientEndDt
                             || respItem.data.userComment
-                            || respItem.data.user_opinion_id) {
+                            || respItem.data.user_opinion_id
+                            || respItem.data.client_work_duration
+                            || respItem.data.dtUpdate
+                            || respItem.data.statusSet) {
 
                         // Снимаем startUpdate ТОЛЬКО если запись локально не изменилась
                         // после того, как этот snapshot был отправлен
-                        if (isSameAsSentSnapshot(item, sentItem)) {
+                        if (WpWorkTimes.matchesSentSnapshot(item, sentItem)) {
                             item.startUpdate = false;
 
                             Globals.writeToMLOG(
@@ -2587,22 +2579,15 @@ public class Exchange {
                                     "startUpdate=false for item id = " + item.getId()
                             );
                         } else {
-                            item.startUpdate = true;
-
                             Globals.writeToMLOG(
                                     "INFO",
                                     "Exchange.saveWpDataResult",
-                                    "local data changed after send, keep startUpdate=true for item id = " + item.getId()
+                                    "local data changed after send; ignore stale ACK, dad2=" + item.getCode_dad2()
                             );
                         }
                     }
-
-                    saveWp.add(item);
-                    break;
                 }
-            }
-
-            WpDataRealm.setWpData(saveWp);
+            });
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "Exchange.saveWpDataResult.ERROR", "Exception e: " + e);
@@ -2622,30 +2607,6 @@ public class Exchange {
             }
         }
         return null;
-    }
-    private boolean isSameAsSentSnapshot(WpDataDB db, StartEndData sent) {
-        if (db == null || sent == null) return false;
-
-        return safeEquals(String.valueOf(db.getVisit_start_dt()), sent.visit_start_dt)
-                && safeEquals(String.valueOf(db.getVisit_end_dt()), sent.visit_end_dt)
-                && safeEquals(String.valueOf(db.getClient_start_dt()), sent.client_start_dt)
-                && safeEquals(String.valueOf(db.getClient_end_dt()), sent.client_end_dt)
-                && safeEquals(String.valueOf(db.client_work_duration), sent.client_work_duration)
-                && safeEquals(String.valueOf(db.getSetStatus()), sent.status_set)
-
-                && safeEquals(db.user_comment, sent.user_comment)
-                && safeEquals(db.user_comment_author_id, sent.user_comment_author_id)
-                && safeEquals(db.user_comment_dt_update, sent.user_comment_dt_update)
-
-                && safeEquals(String.valueOf(db.getUser_opinion_id()), sent.user_opinion_id)
-                && safeEquals(String.valueOf(db.getUser_opinion_author_id()), sent.user_opinion_author_id)
-                && safeEquals(db.getUser_opinion_dt_update(), sent.user_opinion_dt_update);
-    }
-    private boolean safeEquals(Object a, Object b) {
-        return java.util.Objects.equals(
-                a == null ? null : String.valueOf(a),
-                b == null ? null : String.valueOf(b)
-        );
     }
 //    public void saveWpDataResult(List<WpDataUpdateResponseList> data) {
 //        try {

@@ -14,7 +14,6 @@ import androidx.core.app.ActivityCompat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import io.realm.Realm;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -26,7 +25,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
-import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel;
 
 public class OptionButtonUserOpinion<T> extends OptionControl {
@@ -97,16 +96,10 @@ public class OptionButtonUserOpinion<T> extends OptionControl {
                 opinionName = opinionDataHolder.getOpinionName();
                 long startTime = System.currentTimeMillis() / 1000;
 
-                RealmManager.INSTANCE.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        wpDataDB.setDt_update(startTime);
-                        wpDataDB.setUser_opinion_id(String.valueOf(opinionID));
-                        wpDataDB.setUser_opinion_author_id(String.valueOf(wpDataDB.getUser_id()));
-                        wpDataDB.setUser_opinion_dt_update(startTime);
-                        wpDataDB.startUpdate = true;
-                        realm.insertOrUpdate(wpDataDB);
-                    }
+                WpWorkTimes.updateFields(wpDataDB, true, current -> {
+                    current.setUser_opinion_id(String.valueOf(opinionID));
+                    current.setUser_opinion_author_id(String.valueOf(current.getUser_id()));
+                    current.setUser_opinion_dt_update(startTime);
                 });
             }
 

@@ -10,9 +10,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class CustomDateTypeAdapter extends TypeAdapter<Date> {
     private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+    public CustomDateTypeAdapter() {
+        format.setTimeZone(TimeZone.getTimeZone("Europe/Kiev"));
+    }
 
     @Override
     public Date read(JsonReader reader) throws IOException {
@@ -45,7 +50,9 @@ public class CustomDateTypeAdapter extends TypeAdapter<Date> {
             }
 
             // Обычный формат yyyy-MM-dd
-            return format.parse(dateString);
+            synchronized (format) {
+                return format.parse(dateString);
+            }
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -60,7 +67,11 @@ public class CustomDateTypeAdapter extends TypeAdapter<Date> {
         if (value == null) {
             writer.nullValue();
         } else {
-            writer.value(format.format(value));
+            String formatted;
+            synchronized (format) {
+                formatted = format.format(value);
+            }
+            writer.value(formatted);
         }
     }
 }

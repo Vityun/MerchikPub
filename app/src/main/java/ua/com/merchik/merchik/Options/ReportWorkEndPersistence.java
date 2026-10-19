@@ -3,12 +3,15 @@ package ua.com.merchik.merchik.Options;
 import io.realm.Realm;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.Utils.WorkTimeRules;
 
 /** Applies only an authorized work end, without overwriting the rest of a stale visit snapshot. */
 final class ReportWorkEndPersistence {
     private ReportWorkEndPersistence() { }
 
     static boolean save(Realm realm, ReportConductState state, long nowSeconds) {
+        if (state.visitStart <= 0 || state.visitEnd <= 0
+                || !WorkTimeRules.consistent(state.visitStart, state.clientStart, state.visitEnd, state.clientEnd)) return false;
         boolean[] saved = {false};
         realm.executeTransaction(owner -> {
             WpDataDB wp = owner.where(WpDataDB.class).equalTo("code_dad2", state.dad2).findFirst();

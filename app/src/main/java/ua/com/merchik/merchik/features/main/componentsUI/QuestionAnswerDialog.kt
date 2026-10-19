@@ -127,7 +127,8 @@ data class QuestionAnswerDialogUiState(
     val totalUpOnShowcase: Int = 0,
     val reportPrepareCount: Int = 0,
 
-    val comment: String = ""
+    val comment: String = "",
+    val isOneTimePaymentIncrease: Boolean = false
 )
 
 private val QuestionAnswerCorner = 8.dp

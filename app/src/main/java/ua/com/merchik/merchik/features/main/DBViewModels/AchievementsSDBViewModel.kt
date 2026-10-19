@@ -227,14 +227,7 @@ class AchievementsSDBViewModel @Inject constructor(
 
     override fun onClickAdditionalContent() {
         super.onClickAdditionalContent()
-        val dialogCreateAchievement = DialogCreateAchievement(context)
-        val wpDataDB = getAchievementWpDataOrNull()
-        wpDataDB?.let {
-            dialogCreateAchievement.setData(wpDataDB)
-            dialogCreateAchievement.setClose { dialogCreateAchievement.dismiss() }
-            dialogCreateAchievement.setTitle("Створення нового Досягнення")
-            dialogCreateAchievement.buttonPhotoTo()
-            dialogCreateAchievement.buttonPhotoAfter()
+        createAchievementDialog()?.let { dialogCreateAchievement ->
             dialogCreateAchievement.show()
 
             val dialogData = DialogData(context)
@@ -245,6 +238,20 @@ class AchievementsSDBViewModel @Inject constructor(
             )
             dialogData.setClose { dialogData.dismiss() }
             dialogData.show()
+        }
+    }
+
+    fun createAchievementDialog(themeId: Int? = null): DialogCreateAchievement? {
+        val owner = context ?: return null
+        val wpDataDB = getAchievementWpDataOrNull() ?: return null
+        return DialogCreateAchievement(owner).apply {
+            setData(wpDataDB)
+            setClose { dismiss() }
+            setTitle("Створення нового Досягнення")
+            buttonPhotoTo()
+            buttonPhotoAfter()
+            // setData resets the holder, so apply the initial theme afterwards.
+            themeId?.let { setTheme(it) }
         }
     }
 

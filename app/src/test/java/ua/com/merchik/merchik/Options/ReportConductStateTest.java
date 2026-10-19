@@ -6,6 +6,31 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ReportConductStateTest {
+    @Test(expected = IllegalStateException.class)
+    public void inconsistentStartCannotAuthorizeEnd() {
+        new ReportConductState().requestWorkEnd(100, 110, null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void missingClientStartCannotAuthorizeEnd() {
+        new ReportConductState().requestWorkEnd(100, 0, null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void millisecondsCannotBecomeWorkEnd() {
+        unfinished(1792346400000L).prepareWorkEnd(1792346400L, true);
+    }
+
+    @Test public void repairDoesNotGrantConductConsent() {
+        ReportConductState state = new ReportConductState();
+        ua.com.merchik.merchik.Utils.WorkTimeRules.Times times =
+                ua.com.merchik.merchik.Utils.WorkTimeRules.normalize(100, 100, 0, 200);
+        state.visitStart = state.clientStart = times.start;
+        state.visitEnd = state.clientEnd = times.end;
+        assertFalse(state.canSend(Long.MAX_VALUE));
+        assertFalse(state.canApplyWorkEnd(100, 200, 100, 200));
+    }
+
     private final Gson gson = new Gson();
 
     private ReportConductState restored(ReportConductState state) {
@@ -103,7 +128,7 @@ public class ReportConductStateTest {
         ReportConductState state = new ReportConductState();
         state.userId = 216646;
         state.dad2 = 1141026037940061377L;
-        state.requestWorkEnd(100, 110, requestedEnd);
+        state.requestWorkEnd(100, 100, requestedEnd);
         return state;
     }
 
@@ -115,7 +140,7 @@ public class ReportConductStateTest {
         assertTrue(loaded.awaitingDecision());
         assertEquals(0, loaded.visitEnd);
         assertEquals(0, loaded.clientEnd);
-        assertFalse(loaded.canApplyWorkEnd(100, 0, 110, 0));
+        assertFalse(loaded.canApplyWorkEnd(100, 0, 100, 0));
         assertFalse(loaded.canSend(Long.MAX_VALUE));
     }
 
@@ -142,7 +167,7 @@ public class ReportConductStateTest {
         state.prepareWorkEnd(250, true);
         ReportConductState loaded = restored(state);
         assertEquals(ReportConductState.Stage.FINALIZING_WORK_END, loaded.stage);
-        assertTrue(loaded.canApplyWorkEnd(100, 0, 110, 0));
+        assertTrue(loaded.canApplyWorkEnd(100, 0, 100, 0));
         assertFalse(loaded.awaitingDecision());
         assertFalse(loaded.canSend(Long.MAX_VALUE));
         loaded.workEndSaved();
@@ -155,21 +180,21 @@ public class ReportConductStateTest {
         ReportConductState state = unfinished(null);
         state.prepareWorkEnd(250, true);
         ReportConductState loaded = restored(state);
-        assertTrue(loaded.canApplyWorkEnd(100, 250, 110, 250));
+        assertTrue(loaded.canApplyWorkEnd(100, 250, 100, 250));
         loaded.workEndSaved();
         ReportConductState ready = restored(loaded);
-        assertTrue(ready.matchesWorkTimes(100, 250, 110, 250));
+        assertTrue(ready.matchesWorkTimes(100, 250, 100, 250));
         assertEquals(ReportConductState.Stage.READY, ready.stage);
-        assertFalse(ready.canApplyWorkEnd(100, 250, 110, 250));
+        assertFalse(ready.canApplyWorkEnd(100, 250, 100, 250));
     }
 
     @Test public void recoveryCannotOverwriteChangedStartOrOtherCompletion() {
         ReportConductState state = unfinished(null);
         state.prepareWorkEnd(250, true);
-        assertFalse(state.canApplyWorkEnd(101, 0, 110, 0));
-        assertFalse(state.canApplyWorkEnd(100, 0, 111, 0));
-        assertFalse(state.canApplyWorkEnd(100, 260, 110, 260));
-        assertFalse(state.canApplyWorkEnd(100, 250, 110, 0));
+        assertFalse(state.canApplyWorkEnd(101, 0, 100, 0));
+        assertFalse(state.canApplyWorkEnd(100, 0, 101, 0));
+        assertFalse(state.canApplyWorkEnd(100, 260, 100, 260));
+        assertFalse(state.canApplyWorkEnd(100, 250, 100, 0));
     }
 
     @Test public void noPenaltiesWithPhotoWarningStillNeedsSeparateConductConsent() {

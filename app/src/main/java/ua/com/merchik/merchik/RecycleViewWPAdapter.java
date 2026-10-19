@@ -49,7 +49,7 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 
@@ -485,7 +485,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                     addrTxt = "Адреса не визначена";
                 }
                 wpDataDB.setAddr_txt(addrTxt);
-                WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
+                WpWorkTimes.updateFields(wpDataDB, false, current -> {
+                    current.setAddr_txt(wpDataDB.getAddr_txt());
+                    current.setAddr_location_xd(wpDataDB.getAddr_location_xd());
+                    current.setAddr_location_yd(wpDataDB.getAddr_location_yd());
+                });
             }
 
             String msg = String.format("Дата: %s\nАдреса: %s\nКлієнт: %s\nВиконавець: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());

@@ -294,7 +294,7 @@ class TovarDBViewModel @Inject constructor(
 
         val refreshedRows = rows.map { row ->
             if (!isSameTovarOption(row.option, changedTpl) &&
-                !isPromotionRowAffectedByPrice(row.option, changedTpl)
+                !isRelatedPriceOrPromotionRow(row.option, changedTpl)
             ) {
                 row
             } else {
@@ -341,12 +341,14 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
-    private fun isPromotionRowAffectedByPrice(row: TovarOptions, changed: TovarOptions): Boolean {
+    private fun isRelatedPriceOrPromotionRow(row: TovarOptions, changed: TovarOptions): Boolean {
         val changedControl = changed.getOptionControlName()
         val rowControl = row.getOptionControlName()
-        return (changedControl == OptionControlName.PRICE ||
+        return ((changedControl == OptionControlName.PRICE ||
                 changedControl == OptionControlName.PRICE_BEFORE_PROMOTION) &&
-                (rowControl == OptionControlName.AKCIYA_ID || rowControl == OptionControlName.AKCIYA)
+                (rowControl == OptionControlName.AKCIYA_ID || rowControl == OptionControlName.AKCIYA)) ||
+                ((changedControl == OptionControlName.AKCIYA_ID || changedControl == OptionControlName.AKCIYA) &&
+                        rowControl == OptionControlName.PRICE_BEFORE_PROMOTION)
     }
 
     private fun isSameTovarOption(
@@ -1197,7 +1199,7 @@ class TovarDBViewModel @Inject constructor(
 
         val updatedMap = current.rowsByItemId.toMutableMap()
         updatedMap[itemId] = rows.map { row ->
-            if (row.rowId == rowId || isPromotionRowAffectedByPrice(row.option, existingRow.option)) {
+            if (row.rowId == rowId || isRelatedPriceOrPromotionRow(row.option, existingRow.option)) {
                 refreshProductCodeRowFromReportPrepare(row, rp)
             } else {
                 row
@@ -3411,16 +3413,23 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.AKCIYA_ID -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data)
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2)
-                saved = ReportPrepareRealm.updateFields(snapshot) { table ->
+                var missingPrice: String? = null
+                saved = ReportPrepareRealm.updateFields(snapshot, { table ->
+                    // Resolve once from the current row; mirror the same value to the UI snapshot.
+                    missingPrice = PriceSaveGuard.missingPricesForNoPromotion(
+                        data2, table.price, table.priceMin, table.priceMax
+                    )
+                    true
+                }, { table ->
                     table.setAkciyaId(data.orEmpty())
                     table.setAkciya(data2.orEmpty())
-//                    table.setAkciyaId(data)
-//                    if (data2 != null && !data2.isEmpty()) {
-//                        table.setAkciya(data2)
-//                    }
+                    missingPrice?.let { price ->
+                        table.setPriceMin(price)
+                        table.setPriceMax(price)
+                    }
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
-                }
+                })
             }
 
             OptionControlName.NOTES -> {

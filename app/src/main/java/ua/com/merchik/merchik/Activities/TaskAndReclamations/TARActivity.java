@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CustomString;
+import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -650,8 +651,10 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
             stackPhotoDB.setId(id);
-            stackPhotoDB.setDt(tasksAndReclamationsSDB.dt);
-            stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(tasksAndReclamationsSDB.dt, "yyyy-MM-dd"));
+            stackPhotoDB.setDt(PhotoDateUtils.resolveSeconds(
+                    tasksAndReclamationsSDB.dt, null));
+            stackPhotoDB.setTime_event(PhotoDateUtils.uploadDate(
+                    stackPhotoDB.getDt(), null));
 
             stackPhotoDB.setAddr_id(tasksAndReclamationsSDB.addr);
             stackPhotoDB.setAddressTxt(tasksAndReclamationsSDB.addrNm);

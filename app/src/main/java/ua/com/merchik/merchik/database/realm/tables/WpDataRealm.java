@@ -34,10 +34,7 @@ public class WpDataRealm {
      * Переписанное сохранение плана работ
      */
     public static void setWpData(List<WpDataDB> wpData) {
-        Globals.writeToMLOG("INFO", "WpDataRealm/setWpData/", " List<WpDataDB> wpData.size: " + wpData.size());
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(wpData);
-        INSTANCE.commitTransaction();
+        RealmManager.updateWorkPlanFromServer(wpData);
     }
 
     /**

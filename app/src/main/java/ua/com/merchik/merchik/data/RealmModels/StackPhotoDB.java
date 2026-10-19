@@ -13,6 +13,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 import ua.com.merchik.merchik.features.main.StackPhotoDBOverride;
@@ -157,6 +158,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
         this.client_id = client_id;
         this.theme_id = theme_id;
         this.time_event = time_event;
+        this.dt = PhotoDateUtils.resolveSeconds(null, time_event);
         this.vpi = vpi;
         this.create_time = create_time;
         this.upload_to_server = upload_to_server;

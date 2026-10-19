@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import io.realm.Realm
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
@@ -58,6 +57,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
@@ -102,13 +102,10 @@ fun OpinionAndCommentView(
                 opinionID = opinionDataHolder.opinionID
                 opinionName = opinionDataHolder.opinionName!!
                 val startTime = System.currentTimeMillis() / 1000
-                RealmManager.INSTANCE.executeTransaction { realm: Realm ->
-                    wpDataDB.dt_update = startTime
-                    wpDataDB.user_opinion_id = opinionID.toString()
-                    wpDataDB.user_opinion_author_id = wpDataDB.user_id.toString()
-                    wpDataDB.user_opinion_dt_update = startTime
-                    wpDataDB.startUpdate = true
-                    realm.insertOrUpdate(wpDataDB)
+                WpWorkTimes.updateFields(wpDataDB, true) { current ->
+                    current.user_opinion_id = opinionID.toString()
+                    current.user_opinion_author_id = current.user_id.toString()
+                    current.user_opinion_dt_update = startTime
                 }
             }
         }

@@ -315,6 +315,24 @@ public final class PriceSaveGuard {
         return !isPromotionExplicitlyAbsent(akciya) && hasBothPositivePrices(price, priceMin);
     }
 
+    public static String missingPricesForNoPromotion(String akciya, String price,
+                                                     String priceMin, String priceMax) {
+        if (!isPromotionExplicitlyAbsent(akciya) || positivePrice(price) == null
+                || !isEmptyOrZeroPrice(priceMin) || !isEmptyOrZeroPrice(priceMax)) {
+            return null;
+        }
+        return price;
+    }
+
+    private static boolean isEmptyOrZeroPrice(String value) {
+        if (value == null || value.trim().isEmpty()) return true;
+        try {
+            return new BigDecimal(value.trim().replace(',', '.')).signum() == 0;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
     private static boolean isPromotionExplicitlyAbsent(String akciya) {
         // 0 = not selected, 1 = present, 2 = explicitly absent. Respect the persisted choice.
         return akciya != null && "2".equals(akciya.trim());

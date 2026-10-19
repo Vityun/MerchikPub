@@ -24,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -49,6 +48,7 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -200,7 +200,11 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                         addrTxt = "Адресс не определён";
                     }
                     wpDataDB.setAddr_txt(addrTxt);
-                    WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
+                    WpWorkTimes.updateFields(wpDataDB, false, current -> {
+                        current.setAddr_txt(wpDataDB.getAddr_txt());
+                        current.setAddr_location_xd(wpDataDB.getAddr_location_xd());
+                        current.setAddr_location_yd(wpDataDB.getAddr_location_yd());
+                    });
                 }
 
                 String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());

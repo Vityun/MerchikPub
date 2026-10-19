@@ -46,6 +46,7 @@ public class MyApplication extends Application {
         Globals.restoreCurrentUserIdFromPrefs(this);
         Globals.restoreCurrentSessionFromPrefs(this);
         Globals.restoreCurrentTokenFromPrefs(this);
+        ua.com.merchik.merchik.database.realm.tables.WpWorkTimes.repairExisting(this);
         registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
