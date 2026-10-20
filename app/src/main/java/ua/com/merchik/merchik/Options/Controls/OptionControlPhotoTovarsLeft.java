@@ -90,9 +90,12 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
-        // 29.05.24 -- Адрес убрал с запроса, потому что в 1С его нет
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, null, null,  null, PHOTO_TOV_LEFT, null);
+        // Любой адрес/клиент, но только исполнитель проверяемого визита.
+        int userId = wpDataDB.getUser_id();
+        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, null, null, null, PHOTO_TOV_LEFT, null);
 
+        Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/query",
+                "dad2=" + dad2 + ", userId=" + userId + ", fromMs=" + dateFrom + ", toMs=" + dateTo);
         Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto: " + stackPhoto);
         if (stackPhoto != null){
             Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto: " + stackPhoto.size());

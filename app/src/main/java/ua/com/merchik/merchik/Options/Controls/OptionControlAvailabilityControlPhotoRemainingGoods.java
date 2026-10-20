@@ -166,13 +166,10 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 //                    }
 //                }
                 if (tovIds.isEmpty()){
-
                     for (int i = 0; i < reportPrepare.size(); i++) {
                         addUniqueTovarId(tovIds, reportPrepare.get(i).getTovarId());
                     }
-
                 }
-
             }
 
             //3.3. получаем список СЕТЕЙ для которых установлен признак ОСВ.
@@ -192,9 +189,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             }
 
 
-            //4.0. получим данные о размещенных ФОТ по конкретному ДАД2
-            String[] tovIdsArray = tovIds.toArray(new String[0]);
-            List<StackPhotoDB> stackPhotoList = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, tovIdsArray); // Тип фото, Исполнитель, Дад2, Список Товаров . 4-Фото Остатков Товаров,
+            // Проверяем все ФОТ визита: дубль может быть привязан и к товару вне ОСВ.
+            List<StackPhotoDB> stackPhotoList = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, null);
+            RemainingGoodsPhotoIndex photoIndex = createPhotoIndex(stackPhotoList);
 
             //5.2. заполним ее данными ОСВ
             if ((!additionalRequirementsGroup.isEmpty() && found)) {
@@ -216,11 +213,14 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                     }
 
                     int face = parseIntSafe(item.face);
-                    if (face == 0 && !hasPhotoForTovar(stackPhotoList, tovarId)) {
+                    if (face == 0 && !photoIndex.hasPhotoForTovar(tovarId)) {
                         TovarDB tovar = TovarRealm.getById(tovarId);
                         if (tovar != null) {
                             item.error = 1;
                             item.errorNote = buildTovarErrorNote(tovar);
+                            String duplicateNote = photoIndex.hasDuplicatePhotoForTovar(tovarId)
+                                    ? " - світлина повторюється у різних товарів. "
+                                    + "Додайте окрему світлину для цього товару." : "";
 
                             Globals.writeToMLOG("INFO", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption",
                                     "error tovar: " + tovar.getiD()
@@ -228,8 +228,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                                             + ", face: " + item.face
                                             + ", oborotvedNum: " + item.oborotvedNum
                                             + ", amount: " + item.amount
-                                            + ", " + item.errorNote);
-                            tovs.append(createLinkedString(item.errorNote, item)).append("\n");
+                                            + ", " + item.errorNote + duplicateNote);
+                            tovs.append(createLinkedString(item.errorNote, item))
+                                    .append(duplicateNote).append("\n");
                         }
                     }
                 }
@@ -362,16 +363,30 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
         return !isEmpty(tovarId) && tovIds != null && tovIds.contains(tovarId);
     }
 
-    private boolean hasPhotoForTovar(List<StackPhotoDB> stackPhotoList, String tovarId) {
-        if (stackPhotoList == null || isEmpty(tovarId)) return false;
+    private RemainingGoodsPhotoIndex createPhotoIndex(List<StackPhotoDB> stackPhotoList) {
+        RemainingGoodsPhotoIndex index = new RemainingGoodsPhotoIndex();
+        if (stackPhotoList == null) return index;
 
         for (StackPhotoDB stackPhoto : stackPhotoList) {
-            if (stackPhoto != null && tovarId.equals(stackPhoto.tovar_id)) {
-                return true;
-            }
+            if (stackPhoto == null) continue;
+            index.addPhoto(stackPhoto.getId(), stackPhoto.getCreate_time(),
+                    stackPhoto.tovar_id, stackPhoto.getPhoto_hash());
         }
 
-        return false;
+        StringBuilder duplicates = new StringBuilder();
+        for (StackPhotoDB stackPhoto : stackPhotoList) {
+            if (stackPhoto == null || index.getTovarsForHash(stackPhoto.getPhoto_hash()).size() < 2) continue;
+            duplicates.append("{localId=").append(stackPhoto.getId())
+                    .append(", serverId=").append(stackPhoto.getPhotoServerId())
+                    .append(", hash=").append(stackPhoto.getPhoto_hash())
+                    .append(", originalId=").append(index.getOriginalPhotoId(stackPhoto.getPhoto_hash()))
+                    .append(", tovarId=").append(stackPhoto.tovar_id).append("} ");
+        }
+        if (duplicates.length() > 0) {
+            Globals.writeToMLOG("INFO", "OptionControlAvailabilityControlPhotoRemainingGoods/photoHashConflict",
+                    "dad2=" + dad2 + ", userId=" + userId + ", photos=" + duplicates);
+        }
+        return index;
     }
 
     private String buildTovarErrorNote(TovarDB tovar) {

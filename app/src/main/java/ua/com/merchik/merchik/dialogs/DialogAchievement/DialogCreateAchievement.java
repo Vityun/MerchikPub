@@ -353,6 +353,18 @@ public class DialogCreateAchievement {
         setTextUI();
     }
 
+    public void setComment(String text) {
+        comment.setText(text);
+        comment.setSelection(comment.length());
+    }
+
+    public void setRequirementClient(int requirementId, String requirementName) {
+        AchievementDataHolder holder = AchievementDataHolder.Companion.instance();
+        holder.setRequirementClientId(requirementId);
+        holder.setRequirementClientName(requirementName);
+        setTextUI();
+    }
+
     public void dismiss() {
         if (dialog != null) dialog.dismiss();
         onUpdateUI = null;

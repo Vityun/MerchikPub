@@ -2808,14 +2808,7 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
                     )
                 )
             } else if (isOneTimePaymentIncrease == true) {
-                LaunchedEffect(viewModel) {
-                    try {
-                        val activity = context as? Activity ?: error("Не найден экран выбора темы")
-                        openOneTimePaymentIncrease(activity, viewModel.dataJson)
-                    } catch (error: Exception) {
-                        Globals.writeToMLOG("ERROR", "OneTimePaymentIncrease/open", "error=$error")
-                        Toast.makeText(context, "Не удалось открыть достижения. Повторите попытку.", Toast.LENGTH_LONG).show()
-                    }
+                OneTimePaymentIncreaseEntry(viewModel, it.nm, it.comment) {
                     showQuestionAnswerDialog = false
                 }
             } else QuestionAnswerDialog(
@@ -2832,10 +2825,10 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
                 onDismiss = {
                     showQuestionAnswerDialog = false
                 },
-                onSave = { result ->
-                    // тут потом сохраним QuestionAnswerDB
+                onSave = { _: String ->
                     showQuestionAnswerDialog = false
-                }
+                },
+                preparedSnapshot = null
             )
         }
     }

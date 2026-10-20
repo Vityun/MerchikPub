@@ -50,6 +50,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -141,25 +142,31 @@ private val QuestionAnswerSuffixColumnWidth = 56.dp
 private const val QUESTION_PAY_INCREASE_ID = 610
 
 @Composable
-fun QuestionAnswerDialog(
+internal fun QuestionAnswerDialog(
     viewModel: MainViewModel,
     state: QuestionAnswerDialogUiState,
     themeTitle: String,
     themeComment: String,
     hint: String,
     onDismiss: () -> Unit,
-    onSave: (QuestionAnswerDialogUiState) -> Unit
+    onSave: (String) -> Unit,
+    preparedSnapshot: QuestionAnswerPaymentSnapshot? = null
 ) {
 
     val codeDad2 = Gson().fromJson(viewModel.dataJson, Long::class.java)
     val wpdata = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
 
 
-    val calculatedData = remember(wpdata?.code_dad2) {
-        calculateQuestionAnswerData(
-            wpdata = wpdata,
-            periodDays = 30
+    val paymentSnapshot = remember(wpdata?.code_dad2, state.isOneTimePaymentIncrease, preparedSnapshot) {
+        preparedSnapshot ?: calculateQuestionAnswerPaymentSnapshot(
+            wpdata, state.isOneTimePaymentIncrease
         )
+    }
+    val calculatedData = paymentSnapshot.calculatedData
+    val currentVisit = paymentSnapshot.currentVisit
+    val durationBelowAverage = paymentSnapshot.isDurationBelowAverage
+    var showShortDurationMessage by rememberSaveable(wpdata?.code_dad2, durationBelowAverage) {
+        mutableStateOf(durationBelowAverage)
     }
 
     val factPeriodTooltip = remember(calculatedData) {
@@ -222,18 +229,13 @@ fun QuestionAnswerDialog(
     var showValidationErrors by remember { mutableStateOf(false) }
     var validationShakeTrigger by remember { mutableIntStateOf(0) }
 
-    val statementTemplate = remember {
-        viewModel.getTranslateString(
-            "Я, {USER}, зазвичай витрачаю на роботу з цим клієнтом у цiй ТТ {DURATION_FACT} хвилин, " +
-                    "при цьому, зазвичай, за вiзит піднімаю на вітрину приблизно {UP_FACT} одиниць товару і отримую на руки близько {CASH_FACT} грн/вiзит, " +
-                    "при цьому втрачаю на сигналах за опціями {CASH_PENALTY_FACT} грн/вiзит. " +
-                    "Вважаю, що оплата недостатня. Хочу, щоб вона становила {DESIRED_CASH} грн/вiзит. " +
-                    "Або збільшити кількість візитів, зараз в середньому {VISITS_PER_WEEK_FACT} вiзитiв на тиждень, хочу щоб становила {VISITS_PER_WEEK} вiзитiв в тиждень. " +
-                    "Крім того, хочу зазначити:",
-            100500
-        )
+    val isOneTimePaymentIncrease = state.isOneTimePaymentIncrease
+    val statementTemplate = remember(viewModel, isOneTimePaymentIncrease) {
+        questionAnswerStatementTemplate(isOneTimePaymentIncrease) { text, translationId ->
+            viewModel.getTranslateString(text, translationId)
+        }
     }
-
+    val commentPlaceholder = questionAnswerCommentPlaceholder(isOneTimePaymentIncrease)
     fun openValueDialog(
         title: String,
         text: String,
@@ -270,6 +272,7 @@ fun QuestionAnswerDialog(
                     wpdata = wpdata,
                     themeTitle = themeTitle,
                     statementTemplate = statementTemplate,
+                    currentVisit = currentVisit,
 
                     avgWorkDurationFact = avgWorkDurationFact,
                     avgUpOnShowcaseFact = avgUpOnShowcaseFact,
@@ -278,7 +281,7 @@ fun QuestionAnswerDialog(
                     visitsPerWeekFact = calculatedData.visitsPerWeekFact,
 
                     desiredCash = wantReceivePlan,
-                    desiredVisitsPerWeek = visitsPerWeekPlan,
+                    desiredVisitsPerWeek = if (isOneTimePaymentIncrease) "" else visitsPerWeekPlan,
 
                     totalUpOnShowcase = calculatedData.totalUpOnShowcase,
                     reportPrepareCount = calculatedData.reportPrepareCount,
@@ -458,6 +461,8 @@ fun QuestionAnswerDialog(
                                 QuestionAnswerStatementBlock(
                                     viewModel = viewModel,
                                     statementTemplate = statementTemplate,
+                                    currentVisit = currentVisit,
+                                    commentPlaceholder = commentPlaceholder,
                                     userName = wpdata.user_txt,
                                     dad2 = wpdata.code_dad2,
                                     durationFact = avgWorkDurationFact,
@@ -477,12 +482,16 @@ fun QuestionAnswerDialog(
                                     comment = comment,
                                     onDesiredCashClick = {
                                         openValueDialog(
-                                            title = "Бажана оплата",
-                                            text = "Вкажіть суму, яку ви вважаєте справедливою за виконання робіт по цьому клієнту/адресi (грн/вiзит).",
+                                            title = if (isOneTimePaymentIncrease) "Разова премія" else "Бажана оплата",
+                                            text = if (isOneTimePaymentIncrease) {
+                                                "Вкажіть суму разової премії за поточний візит (грн)."
+                                            } else {
+                                                "Вкажіть суму, яку ви вважаєте справедливою за виконання робіт по цьому клієнту/адресi (грн/вiзит)."
+                                            },
                                             currentValue = wantReceivePlan,
                                             onValueChanged = {
                                                 wantReceivePlan = it
-                                                if (it.isNotBlank() && visitsPerWeekPlan.isNotBlank()) {
+                                                if (!questionAnswerHasEmptyRequiredFields(isOneTimePaymentIncrease, it, visitsPerWeekPlan)) {
                                                     showValidationErrors = false
                                                 }
                                             }
@@ -535,9 +544,12 @@ fun QuestionAnswerDialog(
                             }
 
                             Button(
+                                enabled = !durationBelowAverage,
                                 onClick = {
-                                    val hasEmptyRequiredFields =
-                                        wantReceivePlan.isBlank() || visitsPerWeekPlan.isBlank()
+                                    if (durationBelowAverage) return@Button
+                                    val hasEmptyRequiredFields = questionAnswerHasEmptyRequiredFields(
+                                        isOneTimePaymentIncrease, wantReceivePlan, visitsPerWeekPlan
+                                    )
 
                                     if (hasEmptyRequiredFields) {
                                         showValidationErrors = true
@@ -552,37 +564,56 @@ fun QuestionAnswerDialog(
                                         return@Button
                                     }
 
-                                    if (isCheckingRecentComplaint) {
-                                        return@Button
-                                    }
-
-                                    coroutineScope.launch {
-                                        isCheckingRecentComplaint = true
-
-                                        val complaintKey = ComplaintKey(
-                                            themeId = QUESTION_PAY_INCREASE_ID,
-                                            clientId = wpdata.client_id.orEmpty(),
-                                            addressId = wpdata.addr_id.toString()
-                                        )
-
-                                        val lastComplaintDate = runCatching {
-                                            findRecentComplaintDate(complaintKey)
-                                        }.onFailure { error ->
-                                            Globals.writeToMLOG(
-                                                "ERROR",
-                                                "QuestionAnswerDialog/findRecentComplaintDate",
-                                                "Exception: $error"
+                                    submitQuestionAnswer(
+                                        isOneTimePaymentIncrease = isOneTimePaymentIncrease,
+                                        prepareStatement = {
+                                            buildQuestionAnswerSavedText(
+                                                template = statementTemplate,
+                                                userName = wpdata.user_txt.orEmpty(),
+                                                durationFact = avgWorkDurationFact,
+                                                upFact = avgUpOnShowcaseFact,
+                                                cashFact = wantReceiveFact,
+                                                cashPenaltyFact = avgCashPenaltyFact,
+                                                visitsPerWeekFact = calculatedData.visitsPerWeekFact,
+                                                desiredCash = wantReceivePlan,
+                                                desiredVisitsPerWeek = "",
+                                                comment = comment,
+                                                currentVisit = currentVisit
                                             )
-                                        }.getOrNull()
+                                        },
+                                        onOneTimeSave = onSave,
+                                        onPermanentSave = {
+                                            if (!isCheckingRecentComplaint) {
+                                                coroutineScope.launch {
+                                                    isCheckingRecentComplaint = true
 
-                                        isCheckingRecentComplaint = false
+                                                    val complaintKey = ComplaintKey(
+                                                        themeId = QUESTION_PAY_INCREASE_ID,
+                                                        clientId = wpdata.client_id.orEmpty(),
+                                                        addressId = wpdata.addr_id.toString()
+                                                    )
 
-                                        if (lastComplaintDate != null) {
-                                            recentComplaintDateSeconds = lastComplaintDate
-                                        } else {
-                                            saveComplaintNow()
+                                                    val lastComplaintDate = runCatching {
+                                                        findRecentComplaintDate(complaintKey)
+                                                    }.onFailure { error ->
+                                                        Globals.writeToMLOG(
+                                                            "ERROR",
+                                                            "QuestionAnswerDialog/findRecentComplaintDate",
+                                                            "Exception: $error"
+                                                        )
+                                                    }.getOrNull()
+
+                                                    isCheckingRecentComplaint = false
+
+                                                    if (lastComplaintDate != null) {
+                                                        recentComplaintDateSeconds = lastComplaintDate
+                                                    } else {
+                                                        saveComplaintNow()
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
+                                    )
 //                                    coroutineScope.launch {
 //                                        runCatching {
 //                                            saveQuestionAnswerToDb(
@@ -637,6 +668,19 @@ fun QuestionAnswerDialog(
                 }
             }
         }
+    }
+
+    if (showShortDurationMessage) {
+        MessageDialog(
+            title = "Повышение оплаты",
+            subTitle = RoomManager.SQL_DB.themeDao().getById("1378").nm ?: "",
+            status = DialogStatus.ALERT,
+            message = "Нельзя запрашивать РАЗОВОЕ повышение оплаты, если продолжительность работы " +
+                    "по текущему визиту меньше среднего времени, которое вы обычно тратите на визит в этой ТТ.",
+            okButtonName = "ОК",
+            onDismiss = { showShortDurationMessage = false },
+            onConfirmAction = { showShortDurationMessage = false }
+        )
     }
 
     recentComplaintDateSeconds?.let { createdAtSeconds ->
@@ -1088,6 +1132,8 @@ private fun QuestionAnswerSmallClickableField(
 private fun QuestionAnswerStatementBlock(
     viewModel: MainViewModel,
     statementTemplate: String,
+    currentVisit: QuestionAnswerVisitDetails,
+    commentPlaceholder: String,
     userName: String,
     dad2: Long,
     durationFact: String,
@@ -1139,6 +1185,19 @@ private fun QuestionAnswerStatementBlock(
                         tooltip = upTooltip
                     ),
 
+                    QuestionAnswerStatementInsert.Text(
+                        key = "{VISIT_DATE}",
+                        value = currentVisit.date
+                    ),
+
+                    QuestionAnswerStatementInsert.ReadOnly(
+                        key = "{CURRENT_VISIT_DURATION}",
+                        value = currentVisit.durationMinutes,
+                        tooltip = "Тривалість поточного візиту від початку до завершення робіт. " +
+                                "Якщо роботу ще не завершено, тривалість визначена на момент відкриття цієї форми.",
+                        showDetails = false
+                    ),
+
                     QuestionAnswerStatementInsert.ReadOnly(
                         key = "{CASH_FACT}",
                         value = cashFact,
@@ -1183,9 +1242,7 @@ private fun QuestionAnswerStatementBlock(
                 value = comment,
                 onValueChange = onCommentChange,
                 modifier = commentModifier,
-                placeholder = "Тут додайте усі фактори, котрі суттєво впливають на тривалість виконання робіт. " +
-                        "Складнощі з: (планограмами, персоналом, складом, фасуванням, і т.д.) та вкажіть свої аргументи щодо збільшення кількості візитів, або вартості."
-
+                placeholder = commentPlaceholder
             )
         }
     }
@@ -1202,7 +1259,8 @@ private sealed class QuestionAnswerStatementInsert(
     data class ReadOnly(
         override val key: String,
         val value: String,
-        val tooltip: String
+        val tooltip: String,
+        val showDetails: Boolean = true
     ) : QuestionAnswerStatementInsert(key)
 
     data class Editable(
@@ -1246,7 +1304,14 @@ private fun QuestionAnswerStatementTemplateText(
                 ) {
                     when (insert) {
                         is QuestionAnswerStatementInsert.ReadOnly -> {
-                            TooltipWithDetails(
+                            if (!insert.showDetails) {
+                                Tooltip(text = insert.tooltip) {
+                                    QuestionAnswerInlineReadOnlyChip(
+                                        value = insert.value,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            } else TooltipWithDetails(
                                 text = insert.tooltip,
                                 onDetailsClick = {
                                     viewModel.launcher?.let { launcher ->
@@ -1613,10 +1678,25 @@ private fun splitQuestionAnswerTemplate(
     return result
 }
 
+// A one-time request is a draft for the open achievement, not a journal entry.
+internal fun submitQuestionAnswer(
+    isOneTimePaymentIncrease: Boolean,
+    prepareStatement: () -> String,
+    onOneTimeSave: (String) -> Unit,
+    onPermanentSave: () -> Unit
+) {
+    if (isOneTimePaymentIncrease) {
+        onOneTimeSave(prepareStatement())
+    } else {
+        onPermanentSave()
+    }
+}
+
 private suspend fun saveQuestionAnswerToDb(
     wpdata: WpDataDB,
     themeTitle: String,
     statementTemplate: String,
+    currentVisit: QuestionAnswerVisitDetails,
 
     avgWorkDurationFact: String,
     avgUpOnShowcaseFact: String,
@@ -1645,7 +1725,8 @@ private suspend fun saveQuestionAnswerToDb(
         visitsPerWeekFact = visitsPerWeekFact,
         desiredCash = desiredCash,
         desiredVisitsPerWeek = desiredVisitsPerWeek,
-        comment = comment
+        comment = comment,
+        currentVisit = currentVisit
     )
 
     val avgAnswerText = buildString {
@@ -1707,7 +1788,7 @@ private suspend fun saveQuestionAnswerToDb(
 //    }
 }
 
-private fun buildQuestionAnswerSavedText(
+internal fun buildQuestionAnswerSavedText(
     template: String,
     userName: String,
     durationFact: String,
@@ -1717,7 +1798,8 @@ private fun buildQuestionAnswerSavedText(
     visitsPerWeekFact: String,
     desiredCash: String,
     desiredVisitsPerWeek: String,
-    comment: String
+    comment: String,
+    currentVisit: QuestionAnswerVisitDetails = QuestionAnswerVisitDetails()
 ): String {
     val result = template
         .replace("{USER}", userName.ifBlank { "0" })
@@ -1728,6 +1810,8 @@ private fun buildQuestionAnswerSavedText(
         .replace("{VISITS_PER_WEEK_FACT}", visitsPerWeekFact.ifBlank { "0" })
         .replace("{DESIRED_CASH}", desiredCash.ifBlank { "не вказано" })
         .replace("{VISITS_PER_WEEK}", desiredVisitsPerWeek.ifBlank { "не вказано" })
+        .replace("{VISIT_DATE}", currentVisit.date)
+        .replace("{CURRENT_VISIT_DURATION}", currentVisit.durationMinutes)
 
     return if (comment.isBlank()) {
         result
@@ -1736,12 +1820,42 @@ private fun buildQuestionAnswerSavedText(
     }
 }
 
-private data class QuestionAnswerCalculatedData(
+internal data class QuestionAnswerPaymentSnapshot(
+    val calculatedData: QuestionAnswerCalculatedData,
+    val currentVisit: QuestionAnswerVisitDetails,
+    val isOneTimePaymentIncrease: Boolean
+) {
+    val isDurationBelowAverage: Boolean
+        get() = isOneTimeDurationBelowAverage(
+            isOneTimePaymentIncrease,
+            currentVisit.preciseDurationMinutes,
+            calculatedData.avgWorkDurationMinutes
+        )
+}
+
+internal fun calculateQuestionAnswerPaymentSnapshot(
+    wpdata: WpDataDB?,
+    isOneTimePaymentIncrease: Boolean
+): QuestionAnswerPaymentSnapshot = QuestionAnswerPaymentSnapshot(
+    calculatedData = calculateQuestionAnswerData(wpdata, isOneTimePaymentIncrease = isOneTimePaymentIncrease),
+    currentVisit = questionAnswerVisitDetails(
+        date = wpdata?.dt,
+        visitStart = wpdata?.visit_start_dt ?: 0L,
+        clientStart = wpdata?.client_start_dt ?: 0L,
+        visitEnd = wpdata?.visit_end_dt ?: 0L,
+        clientEnd = wpdata?.client_end_dt ?: 0L,
+        nowSeconds = System.currentTimeMillis() / 1000L
+    ),
+    isOneTimePaymentIncrease = isOneTimePaymentIncrease
+)
+
+internal data class QuestionAnswerCalculatedData(
     val periodFromText: String = "",
     val periodToText: String = "",
     val visitsCount: Int = 0,
 
     val avgWorkDurationFact: String = "0",
+    val avgWorkDurationMinutes: Double = 0.0,
     val avgUpOnShowcaseFact: String = "0",
     val wantReceiveFact: String = "0",
     val avgCashPenaltyFact: String = "0",
@@ -1754,7 +1868,8 @@ private data class QuestionAnswerCalculatedData(
 
 private fun calculateQuestionAnswerData(
     wpdata: WpDataDB?,
-    periodDays: Int = 30
+    periodDays: Int = 30,
+    isOneTimePaymentIncrease: Boolean = false
 ): QuestionAnswerCalculatedData {
     if (wpdata == null) return QuestionAnswerCalculatedData()
 
@@ -1780,18 +1895,25 @@ private fun calculateQuestionAnswerData(
                 visit.code_dad2 > 0L
             }
 
-        val workDurationMinutes = visits.mapNotNull { visit ->
-            calculateVisitDurationMinutes(
+        val workDurations = visits.mapNotNull { visit ->
+            val minutes = calculateVisitDurationMinutes(
                 start = visit.visit_start_dt,
                 end = visit.client_end_dt
+            ) ?: return@mapNotNull null
+            QuestionAnswerWorkDuration(
+                minutes = minutes,
+                clientStart = visit.client_start_dt,
+                clientEnd = visit.client_end_dt,
+                reportId = visit.doc_num_otchet_id
             )
         }
 
-        val avgWorkDurationFact = if (workDurationMinutes.isNotEmpty()) {
-            formatQuestionAnswerNumber(workDurationMinutes.average())
-        } else {
-            "0"
-        }
+        val avgWorkDurationMinutes = questionAnswerAverageWorkDuration(
+            durations = workDurations,
+            clientId = wpdata.client_id,
+            isOneTimePaymentIncrease = isOneTimePaymentIncrease
+        )
+        val avgWorkDurationFact = formatQuestionAnswerNumber(avgWorkDurationMinutes)
 
         val dad2List = visits
             .map { it.code_dad2 }
@@ -1846,6 +1968,7 @@ private fun calculateQuestionAnswerData(
             periodToText = periodToText,
             visitsCount = visits.size,
             avgWorkDurationFact = avgWorkDurationFact,
+            avgWorkDurationMinutes = avgWorkDurationMinutes,
             avgUpOnShowcaseFact = avgUpOnShowcaseFact,
             wantReceiveFact = formatQuestionAnswerNumber(wpdata.cash_ispolnitel),
             visitsPerWeekFact = visitsPerWeekFact,
