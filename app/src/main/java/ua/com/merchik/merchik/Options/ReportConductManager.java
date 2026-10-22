@@ -148,16 +148,43 @@ public final class ReportConductManager {
             throw new IllegalStateException("Work-end decision is no longer active");
         }
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        finishWorkEnd(state, wp, conductAfterWorkEnd, false);
+    }
+
+    public static boolean canFinishWithoutConduct(WpDataDB wp) {
+        return wp != null && ReportConductState.canFinishWithoutConduct(wp.getVisit_end_dt(),
+                wp.getClient_end_dt(), wp.getFot_user_id(), wp.getDot_user_id());
+    }
+
+    public static void finishWorkEndWithoutConduct(long dad2, Long requestedEnd) {
+        ReportConductState state = get(dad2);
+        if (state == null || !state.awaitingDecision()) {
+            throw new IllegalStateException("Work-end decision is no longer active");
+        }
+        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        if (!canFinishWithoutConduct(wp) || !WpWorkTimes.valid(wp)) {
+            throw new IllegalStateException("Visit cannot be finished without conduct");
+        }
+        if (!state.workEndRequested) {
+            state.requestWorkEnd(wp.getVisit_start_dt(), wp.getClient_start_dt(), requestedEnd);
+        }
+        finishWorkEnd(state, wp, false, true);
+    }
+
+    private static void finishWorkEnd(ReportConductState state, WpDataDB wp,
+                                      boolean conductAfterWorkEnd, boolean withoutConduct) {
+        long dad2 = state.dad2;
         if (wp == null || !state.matchesUnfinishedWork(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
                 wp.getClient_start_dt(), wp.getClient_end_dt())) {
             cancelDecision(dad2);
             throw new IllegalStateException("Visit changed; repeat the work-end check");
         }
         // Journal consent first: Realm and SharedPreferences cannot share a transaction.
-        state.prepareWorkEnd(System.currentTimeMillis() / 1000, conductAfterWorkEnd);
+        if (withoutConduct) state.prepareWorkEndWithoutConduct(System.currentTimeMillis() / 1000);
+        else state.prepareWorkEnd(System.currentTimeMillis() / 1000, conductAfterWorkEnd);
         save(state);
         log("INFO", dad2, "FINALIZING_WORK_END: consent saved, end=" + state.visitEnd
-                + ", conduct=" + conductAfterWorkEnd);
+                + ", conduct=" + conductAfterWorkEnd + ", withoutConduct=" + withoutConduct);
         if (!commitWorkEnd(state)) throw new IllegalStateException("Visit changed before work-end commit");
     }
 
@@ -172,6 +199,9 @@ public final class ReportConductManager {
         state.workEndSaved();
         save(state);
         log("INFO", state.dad2, "WORK_END_SAVED: end=" + state.visitEnd);
+        if (state.stage == ReportConductState.Stage.FINISHED_WITHOUT_CONDUCT) {
+            log("INFO", state.dad2, "FINISHED_WITHOUT_CONDUCT: no command authorized");
+        }
         if (state.stage == ReportConductState.Stage.READY) log("INFO", state.dad2, "READY: command saved");
         ReportConductUi.workEndSaved(state.dad2);
         return true;

@@ -6,6 +6,103 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ReportConductStateTest {
+    @Test public void unfinishedVisitWithEitherOperatorCanFinishWithoutConduct() {
+        assertTrue(ReportConductState.canFinishWithoutConduct(0, 0, 123, 0));
+        assertTrue(ReportConductState.canFinishWithoutConduct(0, 0, 0, 123));
+        assertTrue(ReportConductState.canFinishWithoutConduct(0, 0, 123, 456));
+    }
+
+    @Test public void missingOperatorsHideFinishWithoutConduct() {
+        assertFalse(ReportConductState.canFinishWithoutConduct(0, 0, 0, 0));
+        assertFalse(ReportConductState.canFinishWithoutConduct(0, 0, -1, 0));
+        assertFalse(ReportConductState.canFinishWithoutConduct(0, 0, 0, -1));
+    }
+
+    @Test public void eitherSavedEndHidesFinishWithoutConduct() {
+        assertFalse(ReportConductState.canFinishWithoutConduct(200, 200, 123, 456));
+        assertFalse(ReportConductState.canFinishWithoutConduct(200, 0, 123, 456));
+        assertFalse(ReportConductState.canFinishWithoutConduct(0, 200, 123, 456));
+    }
+
+    @Test public void finishWithoutConductSavesMatchingTimesAndEndsDecision() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEndWithoutConduct(250);
+        assertFalse(state.canSend(Long.MAX_VALUE));
+        state.workEndSaved();
+        assertEquals(250, state.visitEnd);
+        assertEquals(250, state.clientEnd);
+        assertEquals(ReportConductState.Stage.FINISHED_WITHOUT_CONDUCT, state.stage);
+        assertFalse(state.workEndRequested);
+        assertFalse(state.conductAfterWorkEnd);
+        assertFalse(state.awaitingDecision());
+        assertFalse(state.canSend(Long.MAX_VALUE));
+        assertFalse(state.resultPending);
+    }
+
+    @Test public void finishWithoutConductRetainsPreviouslyEnteredDuration() {
+        ReportConductState state = unfinished(2080L);
+        state.stage = ReportConductState.Stage.WAITING_CONFIRMATION;
+        state.prepareWorkEndWithoutConduct(5000);
+        state.workEndSaved();
+        assertEquals(2080, state.visitEnd);
+        assertEquals(2080, state.clientEnd);
+    }
+
+    @Test public void finishWithoutConductRecoversCrashBeforeCommitWithoutAuthorizingCommand() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEndWithoutConduct(250);
+        ReportConductState loaded = restored(state);
+        assertTrue(loaded.finishWithoutConduct);
+        assertTrue(loaded.canApplyWorkEnd(100, 0, 100, 0));
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+        loaded.workEndSaved();
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+        assertFalse(loaded.awaitingDecision());
+    }
+
+    @Test public void finishWithoutConductRecoversCrashAfterRealmCommitIdempotently() {
+        ReportConductState state = unfinished(250L);
+        state.prepareWorkEndWithoutConduct(1000);
+        ReportConductState loaded = restored(state);
+        assertTrue(loaded.canApplyWorkEnd(100, 250, 100, 250));
+        assertFalse(loaded.canApplyWorkEnd(100, 260, 100, 260));
+        loaded.workEndSaved();
+        ReportConductState finished = restored(loaded);
+        assertEquals(ReportConductState.Stage.FINISHED_WITHOUT_CONDUCT, finished.stage);
+        assertFalse(finished.awaitingDecision());
+        assertFalse(finished.canSend(Long.MAX_VALUE));
+        assertFalse(finished.canApplyWorkEnd(100, 250, 100, 250));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void finishedWithoutConductCannotBeApprovedByOldCallback() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEndWithoutConduct(250);
+        state.workEndSaved();
+        state.approve();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void repeatedFinishWithoutConductDoesNotChangeEnd() {
+        ReportConductState state = unfinished(null);
+        state.prepareWorkEndWithoutConduct(250);
+        state.prepareWorkEndWithoutConduct(300);
+    }
+
+    @Test public void explicitNewDecisionCanConductPreviouslyFinishedVisit() {
+        ReportConductState finished = unfinished(null);
+        finished.prepareWorkEndWithoutConduct(250);
+        finished.workEndSaved();
+        ReportConductState next = new ReportConductState();
+        next.dad2 = finished.dad2;
+        next.visitStart = next.clientStart = 100;
+        next.visitEnd = next.clientEnd = 250;
+        next.approve();
+        assertNotEquals(finished.revision, next.revision);
+        assertTrue(next.canSend(0));
+        assertFalse(finished.canSend(Long.MAX_VALUE));
+    }
+
     @Test(expected = IllegalStateException.class)
     public void inconsistentStartCannotAuthorizeEnd() {
         new ReportConductState().requestWorkEnd(100, 110, null);

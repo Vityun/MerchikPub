@@ -169,6 +169,7 @@ public class DialogData {
     private Button ok, okRv, okRecycler, cancel, cancel2;
     private Button operationButton1, operationButton2;
     private AppCompatCheckBox bottomCheckbox;
+    private Button bottomAction;
     // ---- UI end ----
 
     private boolean dismissOnlyByButtonsMode = false;
@@ -467,6 +468,46 @@ public class DialogData {
         bottomCheckbox.setText(label);
         bottomCheckbox.setChecked(checked);
         bottomCheckbox.setOnCheckedChangeListener(listener);
+    }
+
+    public void setBottomActionNotClose(CharSequence label, DialogClickListener listener) {
+        if (bottomAction == null) {
+            float density = context.getResources().getDisplayMetrics().density;
+            bottomAction = new Button(context);
+            bottomAction.setId(View.generateViewId());
+            bottomAction.setTextSize(14);
+            bottomAction.setAllCaps(false);
+            bottomAction.setMinHeight(Math.round(48 * density));
+            bottomAction.setPadding(Math.round(20 * density), bottomAction.getPaddingTop(),
+                    Math.round(20 * density), bottomAction.getPaddingBottom());
+
+            View anchor = cancel2.getVisibility() == View.VISIBLE ? cancel2
+                    : ok.getVisibility() == View.VISIBLE ? ok : text;
+            ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.constrainedWidth = true;
+            params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.horizontalBias = 1;
+            params.topToBottom = anchor.getId();
+            params.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+            params.setMarginStart(Math.round(16 * density));
+            params.setMarginEnd(Math.round(16 * density));
+            params.topMargin = Math.round(8 * density);
+            params.bottomMargin = Math.round(16 * density);
+            layoutDialog.addView(bottomAction, params);
+
+            ConstraintLayout.LayoutParams anchorParams = (ConstraintLayout.LayoutParams) anchor.getLayoutParams();
+            anchorParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET;
+            anchorParams.bottomToTop = bottomAction.getId();
+            if (anchor == cancel2) {
+                anchorParams.topToBottom = ok.getVisibility() == View.VISIBLE ? ok.getId() : text.getId();
+            }
+            anchorParams.bottomMargin = 0;
+            anchor.setLayoutParams(anchorParams);
+        }
+        bottomAction.setText(label);
+        bottomAction.setOnClickListener(v -> listener.clicked());
     }
 
     public void setDismissOnlyByButtonsMode(boolean enabled) {

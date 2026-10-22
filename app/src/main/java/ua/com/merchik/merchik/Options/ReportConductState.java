@@ -8,7 +8,7 @@ import ua.com.merchik.merchik.Utils.WorkTimeRules;
 @Keep
 public final class ReportConductState {
     @Keep
-    public enum Stage { WAITING_CHECK, WAITING_CONFIRMATION, FINALIZING_WORK_END, READY, ACCEPTED, REJECTED }
+    public enum Stage { WAITING_CHECK, WAITING_CONFIRMATION, FINALIZING_WORK_END, READY, ACCEPTED, REJECTED, FINISHED_WITHOUT_CONDUCT }
 
     public int userId;
     public long dad2;
@@ -25,6 +25,11 @@ public final class ReportConductState {
     public boolean workEndRequested;
     public Long requestedWorkEnd;
     public boolean conductAfterWorkEnd;
+    public boolean finishWithoutConduct;
+
+    public static boolean canFinishWithoutConduct(long visitEnd, long clientEnd, int fotUserId, int dotUserId) {
+        return visitEnd == 0 && clientEnd == 0 && (fotUserId > 0 || dotUserId > 0);
+    }
 
     public void requestWorkEnd(long visitStart, long clientStart, Long requestedEnd) {
         if (!WorkTimeRules.consistent(visitStart, clientStart, 0, 0)) {
@@ -57,7 +62,13 @@ public final class ReportConductState {
         }
         visitEnd = clientEnd = resolveWorkEnd(nowSeconds);
         this.conductAfterWorkEnd = conductAfterWorkEnd;
+        finishWithoutConduct = false;
         stage = Stage.FINALIZING_WORK_END;
+    }
+
+    public void prepareWorkEndWithoutConduct(long nowSeconds) {
+        prepareWorkEnd(nowSeconds, false);
+        finishWithoutConduct = true;
     }
 
     public boolean canApplyWorkEnd(long visitStart, long visitEnd, long clientStart, long clientEnd) {
@@ -71,7 +82,7 @@ public final class ReportConductState {
         workEndRequested = false;
         requestedWorkEnd = null;
         workDataUploaded = false;
-        stage = Stage.WAITING_CHECK;
+        stage = finishWithoutConduct ? Stage.FINISHED_WITHOUT_CONDUCT : Stage.WAITING_CHECK;
         if (conductAfterWorkEnd) approve();
     }
 
@@ -89,6 +100,7 @@ public final class ReportConductState {
     }
 
     public void approve() {
+        if (finishWithoutConduct) throw new IllegalStateException("A new decision is required to conduct this report");
         if (workEndRequested) throw new IllegalStateException("Work end must be committed before delivery");
         stage = Stage.READY;
         retryAfter = 0;

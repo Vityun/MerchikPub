@@ -5,6 +5,7 @@ import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +71,6 @@ public class OptionControlMP<T> extends OptionControl {
                 if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")) {
                     distanceMin = 800;
                 }
-
 
                 if (addressSDB != null) {
                     int kps = addressSDB.kps;

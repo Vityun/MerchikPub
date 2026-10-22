@@ -137,7 +137,10 @@ public final class ReportConductUi {
                     }
                 } catch (Exception e) { ReportConductManager.log("ERROR", dad2, "work-end UI refresh: " + e); }
             }
-            if (state != null && state.stage == ReportConductState.Stage.READY) closeApprovedDialog(entry.getKey());
+            if (state != null && (state.stage == ReportConductState.Stage.READY
+                    || state.stage == ReportConductState.Stage.FINISHED_WITHOUT_CONDUCT)) {
+                closeApprovedDialog(entry.getKey());
+            }
         }
     }
 

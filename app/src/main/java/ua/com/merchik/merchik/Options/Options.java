@@ -1602,6 +1602,12 @@ public class Options {
                                 dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
                             }
                         }
+                        // wp may contain a preview end; visibility must use persisted work times.
+                        if (ReportConductManager.canFinishWithoutConduct(
+                                WpDataRealm.getWpDataRowByDad2Id(wp.getCode_dad2()))) {
+                            dialog.setBottomActionNotClose("Завершити без проведення",
+                                    () -> finishWithoutConduct(context, wp.getCode_dad2()));
+                        }
                         ReportConductUi.show(context, wp.getCode_dad2(), dialog);
                         Log.e("optionNotConduct", "3 " + resStr);
 
@@ -1719,6 +1725,42 @@ public class Options {
                         });
             }
         }, requestWorkEnd, requestedEnd, onWorkEndSaved);
+    }
+
+    private void finishWithoutConduct(Context context, long dad2) {
+        if (!ReportConductUi.canSubmit(context, dad2)) return;
+        ReportConductState decision = ReportConductManager.get(dad2);
+        if (decision == null) return;
+        WpDataDB current = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        if (!ReportConductManager.canFinishWithoutConduct(current) || !WpWorkTimes.valid(current)
+                || current.getVisit_start_dt() <= 0) {
+            Toast.makeText(context, "Не вдалося завершити роботу. Перевірте дані відвідування.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String revision = decision.revision;
+        Consumer<Long> saveEnd = requestedEnd -> {
+            try {
+                if (!ReportConductUi.canSubmit(context, dad2)) return;
+                ReportConductState active = ReportConductManager.get(dad2);
+                if (active == null || !revision.equals(active.revision)) return;
+                WpDataDB latest = WpDataRealm.getWpDataRowByDad2Id(dad2);
+                if (latest == null || latest.getVisit_start_dt() != current.getVisit_start_dt()
+                        || latest.getClient_start_dt() != current.getClient_start_dt()) {
+                    throw new IllegalStateException("Work start changed while confirming work end");
+                }
+                ReportConductManager.finishWorkEndWithoutConduct(dad2, requestedEnd);
+                ReportConductUi.closeApprovedDialog(context);
+                Toast.makeText(context, "Роботу завершено без проведення звіту.", Toast.LENGTH_LONG).show();
+                syncConductWorkData();
+            } catch (Exception e) {
+                ReportConductManager.log("ERROR", dad2, "finish without conduct: " + e);
+                if (ReportConductUi.canShow(context)) {
+                    Toast.makeText(context, "Не вдалося завершити роботу. Повторіть спробу.", Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        if (decision.workEndRequested) saveEnd.accept(decision.requestedWorkEnd);
+        else showEndWorkDialog(context, current.getVisit_start_dt(), saveEnd);
     }
 
     private void submitConduct(Context context, WpDataDB wp, boolean uploadPhotos) {

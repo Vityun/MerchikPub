@@ -421,6 +421,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             }
         }
 
+        Globals.writeToMLOG("INFO", "AvailabilityOfPrices/input","spannableStringBuilder: " + spannableStringBuilder);
+
         String resultReason;
         if (reportPrepare.isEmpty() || totalRelevant == 0) {
             resultReason = "NO_RELEVANT_REPORT_ROWS";
