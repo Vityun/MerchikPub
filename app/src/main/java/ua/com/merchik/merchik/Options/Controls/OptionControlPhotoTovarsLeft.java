@@ -92,7 +92,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
     private void executeOption() {
         // Любой адрес/клиент, но только исполнитель проверяемого визита.
         int userId = wpDataDB.getUser_id();
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, null, null, null, PHOTO_TOV_LEFT, null);
+        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, null, null, null, PHOTO_TOV_LEFT, null));
 
         Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/query",
                 "dad2=" + dad2 + ", userId=" + userId + ", fromMs=" + dateFrom + ", toMs=" + dateTo);

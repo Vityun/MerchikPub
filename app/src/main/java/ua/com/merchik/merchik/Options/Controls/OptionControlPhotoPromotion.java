@@ -188,7 +188,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // 5.0
 
         List<StackPhotoDB> stackPhotoDBS = new ArrayList<>();
-        stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), photoType);
+        stackPhotoDBS = OptionPhotoFiles.ready(RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), photoType));
         int size = 0;
 
         // 6.0

@@ -162,8 +162,8 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             // 3.1
             // ШЕВА ПРОСИТ 45 ТИП СЮДА ДОБАВИТЬ
-            stackPhotoDBSList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0)); // 0 - Фото Витрины
-            List<StackPhotoDB> stackPhotoDBSList45 = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45)); // 0 - Фото Витрины
+            stackPhotoDBSList = OptionPhotoFiles.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0))); // 0 - Фото Витрины
+            List<StackPhotoDB> stackPhotoDBSList45 = OptionPhotoFiles.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45))); // 0 - Фото Витрины
             stackPhotoDBSList.addAll(stackPhotoDBSList45);
             Globals.writeToMLOG("INFO", "OptionControlPhotoShowcase/input",
                     describeOption(optionDB) + ", mode=" + nnkMode

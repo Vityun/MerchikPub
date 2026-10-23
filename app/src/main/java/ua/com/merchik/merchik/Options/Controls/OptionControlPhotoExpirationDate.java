@@ -143,7 +143,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = selectReportPrepareByTovarAndExpire(reportPrepareRaw);
 
         // 5.0
-        List<StackPhotoDB> stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, PHOTO_EXPIRATION_DATE);
+        List<StackPhotoDB> stackPhotoDBS = OptionPhotoFiles.ready(RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, PHOTO_EXPIRATION_DATE));
         if (stackPhotoDBS == null) {
             stackPhotoDBS = new ArrayList<>();
         }

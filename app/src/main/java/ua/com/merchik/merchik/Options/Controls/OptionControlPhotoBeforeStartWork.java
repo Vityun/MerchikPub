@@ -2,7 +2,8 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
 
-import io.realm.RealmResults;
+import java.util.List;
+
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -45,8 +46,12 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
 
     private void executeOption() {
         try {
-            RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getCode_dad2(), 14);
-            DVI = stackPhotoDB.where().sum("dvi");
+            List<StackPhotoDB> stackPhotoDB = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getCode_dad2(), 14));
+            long dviSum = 0;
+            for (StackPhotoDB photo : stackPhotoDB) {
+                if (photo.dvi != null) dviSum += photo.dvi;
+            }
+            DVI = dviSum;
 
             int min = 0;
             if (optionDB.getAmountMin() != null){

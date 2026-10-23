@@ -795,7 +795,7 @@ public class Exchange {
                                                 ids[count++] = item.elementId;
                                             }
 
-                                            List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByIds(ids));
+                                            List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
 
                                             for (StackPhotoDB item : stackPhoto) {
                                                 for (PhotoInfoResponseList listItem : photo) {
@@ -834,7 +834,7 @@ public class Exchange {
                                                 ids[count++] = item.elementId;
                                             }
 
-                                            List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByIds(ids));
+                                            List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
 
                                             for (StackPhotoDB item : stackPhoto) {
                                                 for (PhotoInfoResponseList listItem : photo) {

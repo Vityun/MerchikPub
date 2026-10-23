@@ -117,7 +117,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
 
             //2.0. проверим наличие фото. Ступенями для того, чтобы ускорить проведение документа
             if (themeId != null && (themeId == 1178 || themeId == 1003)) {   // 1178-выкуп продукции, 1003-курьерские
-                stackPhotoDBList = StackPhotoRealm.getPhoto(dateFrom, dateTo, wp.getUser_id(), wp.getAddr_id(), wp.getClient_id(), wp.getCode_dad2(), StackPhotoDB.PHOTO_CART_WITH_GOODS, null);
+                stackPhotoDBList = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, wp.getUser_id(), wp.getAddr_id(), wp.getClient_id(), wp.getCode_dad2(), StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
 
                 photoCount = stackPhotoDBList.size();
                 photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
@@ -130,7 +130,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 if (experience > 30 && usersSDBDocument != null && usersSDBDocument.reportDate40 != null && dateDocument > usersSDBDocument.reportDate40.getTime() / 1000) {
                     workCount = wpDataSize;
                     if (workCount > 3) {
-                        stackPhotoDBList = StackPhotoRealm.getPhoto(dateFrom * 1000, dateTo * 1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null);
+                        stackPhotoDBList = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom * 1000, dateTo * 1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
                         photoCount = stackPhotoDBList.size();
 //                        photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
                         photoDVICount = stackPhotoDBList.stream()

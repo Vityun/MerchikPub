@@ -100,7 +100,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         }
 
         // Получаем Фото Товара с Тележки (4)
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
+        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
                 Clock.getDatePeriodLong(documentDate, 3),   // 29.05.24. поправил с +1 на +3, что б в промежуток за пару дней попадали фотки.
                 null,
@@ -108,7 +108,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 null,
                 dad2,
                 PHOTO_CART_WITH_GOODS,
-                null);
+                null));
 
 //        try {
 //            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/stackPhoto!!!!: " + stackPhoto);
@@ -124,7 +124,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
-                stackPhoto = StackPhotoRealm.getPhoto(
+                stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -3),  // 18.04.23. Жаловались что не видит фото опция. Я так ещё подфиксил (1 на 3 изменил)
                         Clock.getDatePeriodLong(documentDate, 3),
                         null,
@@ -132,7 +132,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         null,
                         dad2,
                         PHOTO_SHOWCASE_BEFORE_START_WORK,
-                        null);
+                        null));
 
                 if (stackPhoto != null) {
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
@@ -207,7 +207,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         }
 
         //5.3. построчно анализируем
-        if (sumUp > 0 && stackPhotoSize == 0) {
+        if (sumUp > 0 && stackPhotoSize == 0 && addressSDB.tpId != 383) { // 23.10.26 добавил исключние ашан, по аналогии с ФТТ
             tznNotes.append("Поднято ").append(sumUp).append(" единиц товара, но при этом нет ФТТ (Фото Тележки с Товаром) подтверждающего это.");
             tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize > 0) {

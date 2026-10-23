@@ -115,16 +115,17 @@ public class TovarRequisites {
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
+                    Activity activity = findActivity(context);
+                    if (activity == null) {
+                        Globals.writeToMLOG("ERROR", "TovarRequisites.createDialog", "Photo capture: Activity not found");
+                        Toast.makeText(context, "Не вдалося відкрити фото", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     if (useSamplePhotos) {
-                        Activity activity = findActivity(context);
-                        if (activity == null) {
-                            Toast.makeText(context, "Не вдалося відкрити зразки фото", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
                         ProductPhotoCapture.open(activity, wpDataDB, optionsDB, photoType, selectedTovarId,
                                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158);
                     } else {
-                        new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
+                        new MakePhoto().pressedMakePhoto(activity, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
                     }
                 },
                 "Вибрати з галереї",
@@ -149,15 +150,21 @@ public class TovarRequisites {
 
     private void openGallery(Context context, WpDataDB wpDataDB, String selectedTovarId, DialogData sourceDialog) {
         try {
+            Activity activity = findActivity(context);
+            if (activity == null) {
+                Globals.writeToMLOG("ERROR", "TovarRequisites.openGallery", "Activity not found");
+                Toast.makeText(context, "Не вдалося відкрити галерею", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Globals.writeToMLOG("INFO", "Вибрати з галереї", "PhotoPickerUtils.createSingleImageChooser()");
             MakePhotoFromGaleryWpDataDB = wpDataDB;
             MakePhotoFromGalery.tovarId = selectedTovarId;
             MakePhotoFromGalery.photoType = photoType;
             Intent intent = PhotoPickerUtils.createSingleImageChooser();
-            if (context instanceof DetailedReportActivity) {
-                ((DetailedReportActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
-            } else if (context instanceof FeaturesActivity) {
-                ((FeaturesActivity) context).startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+            if (activity instanceof DetailedReportActivity) {
+                activity.startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
+            } else if (activity instanceof FeaturesActivity) {
+                activity.startActivityForResult(intent, MakePhoto.PICK_GALLERY_IMAGE_REQUEST);
                 sourceDialog.dismiss();
             }
         } catch (Exception e) {

@@ -291,20 +291,22 @@ public class OptionControlPhoto<T> extends OptionControl {
                     + ", codeIza=" + Arrays.toString(codeIZAForGetStackPhotoDB)
                     + ", requiredBeforeExceptions=" + m;
 //        получаем данные из таблицы фото
-            RealmResults<StackPhotoDB> stackPhotoDB =
+            RealmResults<StackPhotoDB> photoRows =
                     dad2ForGetStackPhotoDB > 0 ?
                             StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
                             StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
-            diagnosticContext += ", matchedPhotos=" + stackPhotoDB.size();
+            List<StackPhotoDB> stackPhotoDB = OptionPhotoFiles.ready(photoRows);
+            diagnosticContext += ", photoRows=" + photoRows.size()
+                    + ", ignoredIncompletePhotos=" + (photoRows.size() - stackPhotoDB.size())
+                    + ", matchedPhotos=" + stackPhotoDB.size();
             if ("164354".equals(optionId)) {
                 diagnosticContext += ", matchedPhotoSample=" + describePhotosForDiagnostic(stackPhotoDB);
             }
             if (dad2ForGetStackPhotoDB == 0) {
-                RealmResults<StackPhotoDB> visitPhotos = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);
-                long missingCodeIza = visitPhotos.where()
-                        .beginGroup().isNull("code_iza").or().equalTo("code_iza", "").endGroup()
-                        .count();
+                List<StackPhotoDB> visitPhotos = OptionPhotoFiles.ready(StackPhotoRealm.getPhotosByDAD2(dad2, photoType));
+                long missingCodeIza = visitPhotos.stream()
+                        .filter(photo -> photo.getCode_iza() == null || photo.getCode_iza().isEmpty()).count();
                 diagnosticContext += ", currentVisitPhotos=" + visitPhotos.size()
                         + ", currentVisitPhotosWithoutCodeIza=" + missingCodeIza;
                 if ("164354".equals(optionId)) {
@@ -412,13 +414,13 @@ public class OptionControlPhoto<T> extends OptionControl {
             // 3.2
             if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
                 signal = true;
-                RealmResults<StackPhotoDB> stackPhotoFor132971 =
-                        StackPhotoRealm.getPhotosForTypeAndExamples(
+                List<StackPhotoDB> stackPhotoFor132971 =
+                        OptionPhotoFiles.ready(StackPhotoRealm.getPhotosForTypeAndExamples(
                                 dad2,
                                 31,
                                 "78",
                                 "94"
-                        );
+                        ));
                 spannableStringBuilder.append("Не знайдено жодного фото ")
                         .append(item != null ? item.getNm() : photoTypeName)
                         .append(" по даному відвідуванню");
@@ -443,9 +445,9 @@ public class OptionControlPhoto<T> extends OptionControl {
             // 3.3
             // для 141361 от 27.03.2025
             if (optionId.equals("141361")) {
-                RealmResults<StackPhotoDB> stackPhotoDB141361 = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
-                long count = stackPhotoDB141361.where()
-                        .in("example_id", new String[]{"78", "94"})
+                List<StackPhotoDB> stackPhotoDB141361 = OptionPhotoFiles.ready(StackPhotoRealm.getPhotosByDAD2(dad2, 31));
+                long count = stackPhotoDB141361.stream()
+                        .filter(photo -> "78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id()))
                         .count();
                 if (count > 0) {
                     m = 2;

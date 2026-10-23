@@ -94,7 +94,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         int userId = wpDataDB.getUser_id();
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, addrId, clientId, null, PHOTO_TOV_LEFT, null);
+        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, addrId, clientId, null, PHOTO_TOV_LEFT, null));
         Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeftClient", "stackPhoto size: " + stackPhoto.size() +
                 " | dad2: " + dad2 + " | userId: " + userId +
                 " | dateFrom: " + dateFrom + " | dateTo: " + dateTo + " | addrId and client: " + addrId + ", " + clientId + " | tpId: " + tpId);
