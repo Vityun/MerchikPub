@@ -115,7 +115,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
                     .append(" Сотрудником ").append(usersSDB.fio).append(" выполнено ").append(stackPhoto.size())
                     .append(" ФОТ (Фото Остатков Товаров)");
             signal = false;
-        } else if (usersSDB.reportDate20 == null || documentDate <= usersSDB.reportDate20.getTime() || (usersSDB.reportDate20 != null && usersSDB.reportCount < 30)) {
+        } else if (usersSDB.reportDate20 == null || (documentDate <= usersSDB.reportDate20.getTime() && (usersSDB.reportDate20 != null && usersSDB.reportCount < 30))) {
             stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для исполнителей не провевших 20-ть отчетов");
             signal = false;
 //        } else if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {

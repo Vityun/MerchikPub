@@ -14,6 +14,7 @@ import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
@@ -53,8 +54,14 @@ public class StackPhotoRealm {
     }
 
     public static boolean updateServerDetails(StackPhotoDB sent, String serverId, String url, long uploadedAt) {
-        return updateExisting(sent, "serverDetails responseId=" + serverId, current ->
-                StackPhotoSyncPolicy.receivedServerDetails(current, sent, serverId, url, uploadedAt));
+        boolean[] commentPending = {false};
+        boolean saved = updateExisting(sent, "serverDetails responseId=" + serverId, current -> {
+            boolean applied = StackPhotoSyncPolicy.receivedServerDetails(current, sent, serverId, url, uploadedAt);
+            commentPending[0] = applied && current.isCommentUpload();
+            return applied;
+        });
+        if (commentPending[0]) PhotoCommentSync.changed();
+        return saved;
     }
 
     public static boolean saveComment(StackPhotoDB snapshot, String text) {
@@ -66,6 +73,7 @@ public class StackPhotoRealm {
         if (saved && !RealmObject.isManaged(snapshot)) {
             StackPhotoSyncPolicy.editComment(snapshot, text, now);
         }
+        if (saved) PhotoCommentSync.changed();
         return saved;
     }
 
@@ -82,6 +90,7 @@ public class StackPhotoRealm {
             snapshot.setMarkUpload(true);
             if (comment != null) StackPhotoSyncPolicy.editComment(snapshot, comment, now);
         }
+        if (saved && comment != null) PhotoCommentSync.changed();
         return saved;
     }
 

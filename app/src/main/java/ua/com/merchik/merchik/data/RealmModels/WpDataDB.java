@@ -1076,6 +1076,10 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         return code_iza;
     }
 
+    public String getDuration_plan() {
+        return duration_plan;
+    }
+
     public void setCode_iza(String code_iza) {
         this.code_iza = code_iza;
     }

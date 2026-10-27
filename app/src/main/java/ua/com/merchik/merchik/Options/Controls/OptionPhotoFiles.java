@@ -4,19 +4,22 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
-/** File evidence for option checks only; does not change stored photos or sample queries. */
+/** Photo evidence for option checks only; does not change stored photos or sample queries. */
 final class OptionPhotoFiles {
     private OptionPhotoFiles() { }
 
     static boolean isReady(StackPhotoDB photo) {
         if (photo == null) return false;
+        // Server-confirmed photos do not require a downloaded local copy.
+        if (PhotoEvidencePolicy.hasServerPhotoId(photo.getPhotoServerId())) return true;
         String path = photo.getPhoto_num();
         if (path == null || path.trim().isEmpty()) return false;
         try {
             File file = new File(path);
-            // Upload state and server ID do not tell us whether this file is a camera placeholder.
+            // Without server confirmation, reject empty camera placeholders regardless of upload state.
             return file.isFile() && file.length() > 0;
         } catch (SecurityException ignored) {
             return false;

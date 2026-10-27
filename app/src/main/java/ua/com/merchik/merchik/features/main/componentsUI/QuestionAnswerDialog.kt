@@ -230,8 +230,10 @@ internal fun QuestionAnswerDialog(
     var validationShakeTrigger by remember { mutableIntStateOf(0) }
 
     val isOneTimePaymentIncrease = state.isOneTimePaymentIncrease
-    val statementTemplate = remember(viewModel, isOneTimePaymentIncrease) {
-        questionAnswerStatementTemplate(isOneTimePaymentIncrease) { text, translationId ->
+    val statementTemplate = remember(viewModel, isOneTimePaymentIncrease,
+        paymentSnapshot.isPlannedDuration, paymentSnapshot.isServerDuration) {
+        questionAnswerStatementTemplate(isOneTimePaymentIncrease,
+            paymentSnapshot.isPlannedDuration, paymentSnapshot.isServerDuration) { text, translationId ->
             viewModel.getTranslateString(text, translationId)
         }
     }
@@ -466,7 +468,11 @@ internal fun QuestionAnswerDialog(
                                     userName = wpdata.user_txt,
                                     dad2 = wpdata.code_dad2,
                                     durationFact = avgWorkDurationFact,
-                                    durationTooltip = "Це середня тривалість робіт. $factPeriodTooltip",
+                                    durationTooltip = when {
+                                        paymentSnapshot.isPlannedDuration -> "Це планова тривалість поточного візиту."
+                                        paymentSnapshot.isServerDuration -> "Це середня фактична тривалість за даними сервера, без поточного візиту."
+                                        else -> "Це середня тривалість робіт. $factPeriodTooltip"
+                                    },
                                     upFact = avgUpOnShowcaseFact,
                                     upTooltip = upTooltip,
                                     cashFact = wantReceiveFact,
@@ -676,7 +682,8 @@ internal fun QuestionAnswerDialog(
             subTitle = RoomManager.SQL_DB.themeDao().getById("1378").nm ?: "",
             status = DialogStatus.ALERT,
             message = "Нельзя запрашивать РАЗОВОЕ повышение оплаты, если продолжительность работы " +
-                    "по текущему визиту меньше среднего времени, которое вы обычно тратите на визит в этой ТТ.",
+                    if (paymentSnapshot.isPlannedDuration) "по текущему визиту меньше планового времени этого визита."
+                    else "по текущему визиту меньше среднего времени, которое вы обычно тратите на визит в этой ТТ.",
             okButtonName = "ОК",
             onDismiss = { showShortDurationMessage = false },
             onConfirmAction = { showShortDurationMessage = false }
@@ -1823,7 +1830,9 @@ internal fun buildQuestionAnswerSavedText(
 internal data class QuestionAnswerPaymentSnapshot(
     val calculatedData: QuestionAnswerCalculatedData,
     val currentVisit: QuestionAnswerVisitDetails,
-    val isOneTimePaymentIncrease: Boolean
+    val isOneTimePaymentIncrease: Boolean,
+    val isPlannedDuration: Boolean = false,
+    val isServerDuration: Boolean = false
 ) {
     val isDurationBelowAverage: Boolean
         get() = isOneTimeDurationBelowAverage(

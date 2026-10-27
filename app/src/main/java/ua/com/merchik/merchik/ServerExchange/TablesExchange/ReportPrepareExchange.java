@@ -36,7 +36,7 @@ public class ReportPrepareExchange {
         data.code_dad2 = code_dad2;
 
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-        data.dt_change_to = String.valueOf(synchronizationTimetableDB == null ? 0 : synchronizationTimetableDB.getVpi_app());
+        data.dt_change_from = String.valueOf(synchronizationTimetableDB == null ? 0 : synchronizationTimetableDB.getVpi_app());  // 27.10.2026 поменял с dt_change_to на dt_change_from
 
         Gson gson = new Gson();
         String json = gson.toJson(data);

@@ -194,6 +194,7 @@ class TovarDBViewModel @Inject constructor(
             },
             savePrice = { field, value -> saveInlinePrice(dad2, field, value) },
             saveConfirmedPrice = { field, value, prices -> saveInlinePrice(dad2, field, value, prices.discountCheck()) },
+            onInputFinished = { field -> finishInlinePrice(dad2, field) },
             store = { drafts ->
                 val entries = JSONArray()
                 drafts.forEach { (field, value) ->
@@ -222,6 +223,19 @@ class TovarDBViewModel @Inject constructor(
         } catch (e: Exception) {
             Globals.writeToMLOG("ERROR", "InlinePriceDrafts", "dad2=$dad2, tovar=${field.tovarId}: $e")
             false
+        }
+    }
+
+    private fun finishInlinePrice(dad2: String, field: InlinePriceField) {
+        if (field.beforePromotion || dad2 != getCodeDad2String()) return
+        try {
+            val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId) ?: return
+            if (PriceSaveGuard.fillMissingPricesForNoPromotion(rp)) {
+                invalidateProductCodeItemCache(field.itemId, field.tovarId)
+                onInlineRowPersisted(field.itemId, field.rowId)
+            }
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "InlinePriceDrafts/finish", "dad2=$dad2, tovar=${field.tovarId}: $e")
         }
     }
 
@@ -344,7 +358,9 @@ class TovarDBViewModel @Inject constructor(
     private fun isRelatedPriceOrPromotionRow(row: TovarOptions, changed: TovarOptions): Boolean {
         val changedControl = changed.getOptionControlName()
         val rowControl = row.getOptionControlName()
-        return ((changedControl == OptionControlName.PRICE ||
+        return (changedControl == OptionControlName.PRICE &&
+                rowControl == OptionControlName.PRICE_BEFORE_PROMOTION) ||
+                ((changedControl == OptionControlName.PRICE ||
                 changedControl == OptionControlName.PRICE_BEFORE_PROMOTION) &&
                 (rowControl == OptionControlName.AKCIYA_ID || rowControl == OptionControlName.AKCIYA)) ||
                 ((changedControl == OptionControlName.AKCIYA_ID || changedControl == OptionControlName.AKCIYA) &&

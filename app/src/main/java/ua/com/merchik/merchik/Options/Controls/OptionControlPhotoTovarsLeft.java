@@ -65,7 +65,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
                 executeOption();
             }
         }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "OptionControlPhotoTovarsLeft", "Exception e: " + e);
+            logOptionError("execute", e);
         }
     }
 
@@ -81,6 +81,17 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
 
             usersSDB = SQL_DB.usersDao().getById(wp.getUser_id());
             addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
+
+            Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/input",
+                    describeOption(optionDB) + ", mode=" + nnkMode
+                            + ", userId=" + wp.getUser_id() + ", addrId=" + addrId + ", clientId=" + clientId
+                            + ", documentDateMs=" + documentDate + ", amountMax=" + optionDB.getAmountMax()
+                            + ", userFound=" + (usersSDB != null) + ", addressFound=" + (addressSDB != null)
+                            + ", tpId=" + (addressSDB == null ? null : addressSDB.tpId)
+                            + ", reportCount=" + (usersSDB == null ? null : usersSDB.reportCount)
+                            + ", reportDate01Ms=" + (usersSDB == null || usersSDB.reportDate01 == null ? null : usersSDB.reportDate01.getTime())
+                            + ", reportDate05Ms=" + (usersSDB == null || usersSDB.reportDate05 == null ? null : usersSDB.reportDate05.getTime())
+                            + ", reportDate20Ms=" + (usersSDB == null || usersSDB.reportDate20 == null ? null : usersSDB.reportDate20.getTime()));
 
             tpId = addressSDB.tpId;
 
@@ -106,11 +117,13 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
             Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto id's: " + stringBuilder);
         }
 
-
+        String branch;
         if (tpId == 8923 && (usersSDB.reportDate01 != null || usersSDB.reportDate05.getTime() >= documentDate)) {
+            branch = "NOVUS_EXCEPTION";
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");
             signal = false;
         } else if (tpId == 8923 && stackPhoto.size() < COL_MIN) {
+            branch = "NOVUS_MISSING_PHOTOS";
             stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" есть ").append(stackPhoto.size())
@@ -118,27 +131,38 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
                     .append(COL_MIN).append(" (не более 10-и)");
             signal = true;
         } else if (stackPhoto.size() > 0) {
+            branch = "PHOTOS_FOUND";
             stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" Сотрудником ").append(usersSDB.fio).append(" выполнено ").append(stackPhoto.size())
                     .append(" ФОТ (Фото Остатков Товаров)");
             signal = false;
-        } else if (usersSDB.reportDate20 == null || documentDate <= usersSDB.reportDate20.getTime() || (usersSDB.reportDate20 != null && usersSDB.reportCount < 30)) {
+        } else if (usersSDB.reportDate20 == null || (documentDate <= usersSDB.reportDate20.getTime() && (usersSDB.reportDate20 != null && usersSDB.reportCount < 30))) {
+            branch = usersSDB.reportDate20 == null ? "NO_20TH_REPORT_DATE"
+                    : documentDate <= usersSDB.reportDate20.getTime() ? "VISIT_NOT_AFTER_20TH_REPORT"
+                    : "REPORT_COUNT_BELOW_30";
             stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для исполнителей не провевших 20-ть отчетов");
             signal = false;
         } else if (System.currentTimeMillis()/1000 < 1683849600 && Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
+            branch = "LEGACY_NETWORK_EXCEPTION";
             stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
             signal = false;
         }else if (System.currentTimeMillis()/1000 > 1683849600 && Arrays.stream(groupsNew).anyMatch(x -> Objects.equals(x, tpId))){
+            branch = "ATB_EXCEPTION";
             stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
             signal = false;
         }else {
+            branch = "MISSING_PHOTOS";
             stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" Сотрудником ").append(usersSDB.fio).append(" НЕ выполнено ни одного ФОТ (Фото Остатков Товаров) по ЛЮБОМУ Адресо/Клиенту.");
             signal = true;
         }
 
+        Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/calculation",
+                describeOption(optionDB) + ", mode=" + nnkMode + ", branch=" + branch
+                        + ", photoCount=" + (stackPhoto == null ? null : stackPhoto.size())
+                        + ", calculatedSignal=" + signal);
         saveOptionResultInDB();
 
         if (signal) {
@@ -149,7 +173,16 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете вносить отчетность корректно.");
             }
         }
-        checkUnlockCode(optionDB);
+        String signalBeforeUnlock = optionDB.getIsSignal();
+        String blockPnsBeforeUnlock = optionDB.getBlockPns();
+        boolean blockedBeforeUnlock = isBlockOption();
+        boolean unlockCheckPassed = checkUnlockCode(optionDB);
+        Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/result",
+                describeOption(optionDB) + ", mode=" + nnkMode + ", branch=" + branch
+                        + ", calculatedSignal=" + signal + ", signalBeforeUnlock=" + signalBeforeUnlock
+                        + ", blockPnsBeforeUnlock=" + blockPnsBeforeUnlock
+                        + ", blockedBeforeUnlock=" + blockedBeforeUnlock + ", blockedAfterUnlock=" + isBlockOption()
+                        + ", unlockCheckPassed=" + unlockCheckPassed);
     }
 
     /**

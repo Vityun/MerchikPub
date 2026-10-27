@@ -54,14 +54,142 @@ class InlinePriceDraftsTest {
         var stored = emptyMap<InlinePriceField, String>()
         var writes = 0
         var rejectWrite = false
+        var promotion = "0"
+        var priceMax = "0"
+        val completed = mutableListOf<InlinePriceField>()
 
-        fun controller() = InlinePriceDrafts(stored, { prices }, { field, value ->
+        fun controller(autoFill: Boolean = false) = InlinePriceDrafts(stored, { prices }, { field, value ->
             if (rejectWrite) false else {
                 prices = if (field.beforePromotion) prices.copy(priceMin = value) else prices.copy(price = value)
                 writes++
                 true
             }
-        }, { stored = it })
+        }, { stored = it }, onInputFinished = { field ->
+            completed.add(field)
+            if (autoFill && !field.beforePromotion) {
+                PriceSaveGuard.missingPricesForNoPromotion(promotion, prices.price, prices.priceMin, priceMax)?.let {
+                    prices = prices.copy(priceMin = it)
+                    priceMax = it
+                }
+            }
+        })
+    }
+
+    @Test
+    fun noPromotionSelectedFirstFillsBothPricesOnlyAfterFullInput() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        for (value in listOf("2", "20", "20.5", "20.50")) {
+            controller.change(current, value)
+            assertEquals(value, fixture.prices.price)
+            assertEquals("0", fixture.prices.priceMin)
+            assertEquals("0", fixture.priceMax)
+            assertTrue(fixture.completed.isEmpty())
+            assertTrue(controller.drafts.value.isEmpty())
+        }
+        controller.finish(current)
+        assertEquals("20.50", fixture.prices.priceMin)
+        assertEquals("20.50", fixture.priceMax)
+        assertNull(controller.nextError())
+        controller.finish(current)
+        controller.finishAll()
+        assertEquals(listOf(current), fixture.completed)
+    }
+
+    @Test
+    fun pauseCompletesAlreadySavedPriceWithoutRemainingDraft() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "20")
+        assertTrue(controller.drafts.value.isEmpty())
+        controller.finishAll()
+        assertEquals("20", fixture.prices.priceMin)
+        assertEquals("20", fixture.priceMax)
+        assertEquals(listOf(current), fixture.completed)
+    }
+
+    @Test
+    fun incompleteCurrentPriceFillsBothPricesAfterDecimalIsFinished() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "20.")
+        assertEquals("0", fixture.prices.price)
+        controller.finishAll()
+        assertEquals("20", fixture.prices.price)
+        assertEquals("20", fixture.prices.priceMin)
+        assertEquals("20", fixture.priceMax)
+        assertEquals(listOf(current), fixture.completed)
+    }
+
+    @Test
+    fun completionPreservesPricesEnteredInAnotherEditor() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "20")
+        fixture.prices = fixture.prices.copy(priceMin = "30")
+        fixture.priceMax = "35"
+        controller.finishAll()
+        assertEquals("30", fixture.prices.priceMin)
+        assertEquals("35", fixture.priceMax)
+    }
+
+    @Test
+    fun completionDoesNotFillPricesIfPromotionWasEnabledAgain() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "20")
+        fixture.promotion = "1"
+        controller.finishAll()
+        assertEquals("0", fixture.prices.priceMin)
+        assertEquals("0", fixture.priceMax)
+    }
+
+    @Test
+    fun rejectedSaveCompletesOnlyAfterSuccessfulRetry() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("0", "0", "Product")
+            rejectWrite = true
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "20")
+        controller.finishAll()
+        assertTrue(fixture.completed.isEmpty())
+        assertEquals("0", fixture.prices.priceMin)
+        fixture.rejectWrite = false
+        assertNull(controller.nextError())
+        assertEquals("20", fixture.prices.priceMin)
+        assertEquals("20", fixture.priceMax)
+        assertEquals(listOf(current), fixture.completed)
+    }
+
+    @Test
+    fun clearingCurrentPriceDoesNotFillBeforePrices() {
+        val fixture = Fixture().apply {
+            promotion = "2"
+            prices = InlinePriceValues("20", "0", "Product")
+        }
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "")
+        controller.finishAll()
+        assertEquals("0", fixture.prices.price)
+        assertEquals("0", fixture.prices.priceMin)
+        assertEquals("0", fixture.priceMax)
     }
 
     @Test
@@ -232,6 +360,7 @@ class InlinePriceDraftsTest {
         assertEquals(1, fixture.writes)
         assertTrue(fixture.stored.isEmpty())
         assertNull(controller.nextError())
+        assertEquals(listOf(before), fixture.completed)
     }
 
     @Test
@@ -248,6 +377,8 @@ class InlinePriceDraftsTest {
         assertEquals(before, controller.focusRequest.value)
         controller.focusRestored(before)
         assertNull(controller.focusRequest.value)
+        controller.finishAll()
+        assertTrue(fixture.completed.isEmpty())
     }
 
     @Test

@@ -196,8 +196,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         }
 
 
-        Long dtFrom = wp.getDt().getTime() / 1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
-        Long dtTo = wp.getDt().getTime() / 1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
+        Long dtFrom = (wp.getDt().getTime() / 1000) - (6 * 24 * 60 * 60);   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
+        Long dtTo = (wp.getDt().getTime() / 1000) + (3 * 24 * 60 * 60);   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
 
         // Формирование Сигналов для БЛОКИРОВКИ
         List<String> clientExclusionList = List.of(
@@ -210,8 +210,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             signal = true;
             signalReason = "ALL_GOODS_MISSING";
 
-            List<SMSPlanSDB> smsPlanSDBS = SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
-            List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
+            List<SMSPlanSDB> smsPlanSDBS = findSmsPlan(dtFrom, dtTo, 1172);
+            List<SMSLogSDB> smsLogSDBS = findSmsLog(dtFrom, dtTo, 1172);
 
             if (smsPlanSDBS != null && smsPlanSDBS.size() > 0) {
                 signal = false;
@@ -242,11 +242,11 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 signalReason = "CLIENT_COMMENT";
                 spannableStringBuilder.append(" Але, сигнал знятий, так як наданий коментар про ПРИЧИНИ відсутності товару.");
             }
-            else if (SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
+            else if (findSmsPlan(dtFrom, dtTo, 727).size() > 0) {
                 signal = false;
                 signalReason = "SMS_PLAN_727";
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
-            } else if (SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
+            } else if (findSmsLog(dtFrom, dtTo, 727).size() > 0) {
                 signal = false;
                 signalReason = "SMS_LOG_727";
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
@@ -315,6 +315,48 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                         + ", blockPnsBeforeVitmark=" + blockPnsBeforeVitmark
                         + ", calculatedSignal=" + signal + ", signalReason=" + signalReason
                         + ", blocked=" + isBlockOption());
+    }
+
+    private List<SMSPlanSDB> findSmsPlan(Long from, Long to, int topic) {
+        List<SMSPlanSDB> rows = SQL_DB.smsPlanDao().getAll(from, to, topic, wp.getAddr_id(), wp.getClient_id());
+        logSmsLookup("sms_plan", topic, from, to, rows);
+        return rows;
+    }
+
+    private List<SMSLogSDB> findSmsLog(Long from, Long to, int topic) {
+        Log.e("AvailabilityDetailed","from: " + from + " | to: " + to + " | topic: " + topic);
+        List<SMSLogSDB> rows = SQL_DB.smsLogDao().getAll(from, to, topic, wp.getAddr_id(), wp.getClient_id());
+        logSmsLookup("sms_log", topic, from, to, rows);
+        return rows;
+    }
+
+    private void logSmsLookup(String source, int topic, long from, long to, List<?> rows) {
+        try {
+            int count = rows == null ? 0 : rows.size();
+            int shown = Math.min(count, SmsControlDiagnostics.MAX_MATCHES);
+            int currentUser = Globals.getCurrentUserId();
+            Globals.writeToMLOG("INFO", "OptionControlAvailabilityDetailedReport/smsLookup",
+                    describeOption(optionDB) + ", mode=" + nnkMode + ", source=" + source
+                            + ", topic=" + topic + ", addrId=" + wp.getAddr_id() + ", clientId=" + clientId
+                            + ", visitUserId=" + wp.getUser_id() + ", currentUserId=" + currentUser
+                            + ", fromSec=" + from + ", toSec=" + to
+                            + ", fromKyiv=" + SmsControlDiagnostics.time(from)
+                            + ", toKyiv=" + SmsControlDiagnostics.time(to)
+                            + ", matched=" + count + ", shown=" + shown + ", omitted=" + (count - shown)
+                            + ", scope=address_client_topic_period_only");
+            Gson gson = new Gson();
+            for (int i = 0; i < shown; i++) {
+                Globals.writeToMLOG("INFO", "OptionControlAvailabilityDetailedReport/smsMatch",
+                        "dad2=" + dad2 + ", mode=" + nnkMode + ", source=" + source
+                                + ", topic=" + topic + ", index=" + (i + 1) + ", metadata="
+                                + SmsControlDiagnostics.metadata(gson.toJsonTree(rows.get(i)).getAsJsonObject(),
+                                dad2, wp.getUser_id(), currentUser));
+            }
+        } catch (Exception e) {
+            // Diagnostics must never change the result of an option check.
+            Globals.writeToMLOG("WARN", "OptionControlAvailabilityDetailedReport/smsLookup",
+                    "dad2=" + dad2 + ", source=" + source + ", diagnosticsFailed=" + e.getClass().getSimpleName());
+        }
     }
 
     private SpannableString createLinkedString(String msg, String link) {

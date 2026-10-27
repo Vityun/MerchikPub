@@ -1513,6 +1513,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     exchange = new Exchange();
                                 }
                                 exchange.setContext(toolbar_menus.this);
+                                exchange.sendPhotoComments();
 
 //                        loadingStart();
 

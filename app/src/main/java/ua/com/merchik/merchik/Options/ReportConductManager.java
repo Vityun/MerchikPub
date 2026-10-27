@@ -16,6 +16,7 @@ import java.util.Set;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
@@ -196,6 +197,7 @@ public final class ReportConductManager {
             log("ERROR", state.dad2, "Work-end commit rejected: visit missing or work times changed");
             return false;
         }
+        OvertimeOfferManager.workEndSaved(state.dad2);
         state.workEndSaved();
         save(state);
         log("INFO", state.dad2, "WORK_END_SAVED: end=" + state.visitEnd);
@@ -280,6 +282,11 @@ public final class ReportConductManager {
                 if (!state.workDataUploaded && wp.startUpdate) continue;
                 if (ReportPrepareSync.hasPendingVisit(state.dad2)) {
                     ReportPrepareSync.flushVisit(state.dad2);
+                    continue;
+                }
+                if (PhotoCommentSync.hasPendingVisit(state.dad2)) {
+                    log("INFO", state.dad2, "WAIT photo comments ACK; document_complete kept queued");
+                    PhotoCommentSync.flush();
                     continue;
                 }
                 state.retryAfter = System.currentTimeMillis() + RETRY_MS;

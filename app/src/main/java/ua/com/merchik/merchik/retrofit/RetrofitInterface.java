@@ -206,6 +206,9 @@ public interface RetrofitInterface {
                                       @Query("dt_change_from") long vpi);
 
     @POST("mobile_app.php?")
+    Call<JsonObject> GET_AVERAGE_WORK_TIME(@Body JsonObject json);
+
+    @POST("mobile_app.php?")
     Call<WpDataServer> GET_WPDATA_VPI(
             @Header("ContentType") String content,
             @Body JsonObject json);

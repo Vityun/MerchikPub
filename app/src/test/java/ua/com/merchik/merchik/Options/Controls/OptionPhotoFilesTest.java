@@ -65,13 +65,33 @@ public class OptionPhotoFilesTest {
         assertTrue(OptionPhotoFiles.isReady(downloaded));
     }
 
-    @Test public void serverIdDoesNotBypassFileRequirement() throws Exception {
-        for (String path : new String[]{null, "", temporary.newFile().getPath(),
+    @Test public void serverPhotoCountsWithoutLocalFile() throws Exception {
+        for (String path : new String[]{null, "", " ", temporary.newFile().getPath(),
                 new File(temporary.getRoot(), "missing.jpg").getPath()}) {
-            StackPhotoDB incomplete = photo(path);
-            incomplete.setPhotoServerId("59904767");
-            incomplete.setUpload_to_server(1);
-            assertFalse(OptionPhotoFiles.isReady(incomplete));
+            StackPhotoDB server = photo(path);
+            server.setPhotoServerId("59904767");
+            server.setUpload_to_server(0);
+            assertTrue(OptionPhotoFiles.isReady(server));
+        }
+    }
+
+    @Test public void invalidServerIdStillRequiresLocalFile() throws Exception {
+        String readyPath = finishedFile().getPath();
+        for (String id : new String[]{null, "", " ", "0", "00", "-1", "null", "abc", "1.2",
+                "9999999999999999999999999999"}) {
+            StackPhotoDB row = photo(null);
+            row.setPhotoServerId(id);
+            assertFalse("serverId=" + id, OptionPhotoFiles.isReady(row));
+            row.setPhoto_num(readyPath);
+            assertTrue("serverId=" + id, OptionPhotoFiles.isReady(row));
+        }
+    }
+
+    @Test public void uploadFlagAloneDoesNotBypassFileRequirement() throws Exception {
+        for (String path : new String[]{null, temporary.newFile().getPath()}) {
+            StackPhotoDB row = photo(path);
+            row.setUpload_to_server(1);
+            assertFalse(OptionPhotoFiles.isReady(row));
         }
     }
 
@@ -91,10 +111,19 @@ public class OptionPhotoFilesTest {
         assertFalse(OptionPhotoFiles.isReady(row));
     }
 
+    @Test public void serverPhotoStillCountsAfterLocalFileDeleted() throws Exception {
+        File file = finishedFile();
+        StackPhotoDB row = photo(file.getPath());
+        row.setPhotoServerId("59904767");
+        assertTrue(OptionPhotoFiles.isReady(row));
+        Files.delete(file.toPath());
+        assertTrue(OptionPhotoFiles.isReady(row));
+    }
+
     @Test public void filtersWithoutMutatingInputOrPhotoMetadata() throws Exception {
         StackPhotoDB incomplete = photo(temporary.newFile().getPath());
         StackPhotoDB local = photo(finishedFile().getPath());
-        StackPhotoDB server = photo(finishedFile().getPath());
+        StackPhotoDB server = photo(null);
         server.setPhotoServerId("59904767");
         local.setExample_id("78");
         local.setComment("Warehouse is empty");

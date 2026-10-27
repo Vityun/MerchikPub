@@ -10,10 +10,14 @@ import java.util.TimeZone
 
 internal fun questionAnswerStatementTemplate(
     isOneTimePaymentIncrease: Boolean,
+    isPlannedDuration: Boolean = false,
+    isServerDuration: Boolean = false,
     translate: (String, Long) -> String
 ): String = if (isOneTimePaymentIncrease) {
     // No translation ID has been assigned to the one-time statement yet.
-    "Зазвичай, пiд час вiзиту, я витрачаю на роботу у цiй ТТ у середньому близько {DURATION_FACT} хвилин, " +
+    (if (isPlannedDuration) "Планова тривалість роботи у цій ТТ становить {DURATION_FACT} хвилин, "
+    else if (isServerDuration) "Середня фактична тривалість попереднiх роботи у цій ТТ становить {DURATION_FACT} хвилин, "
+    else "Зазвичай, пiд час вiзиту, я витрачаю на роботу у цiй ТТ у середньому близько {DURATION_FACT} хвилин, ") +
             "при цьому підіймаю на вітрину приблизно {UP_FACT} одиниць товару, але пiд час ПОТОЧНОГО вiзиту (за {VISIT_DATE}) " +
             "фактична тривалiсть склала {CURRENT_VISIT_DURATION} хв. Прошу надати РАЗОВУ премiю у розмiрi {DESIRED_CASH} грн. " +
             "Хочу зазначити що пiд час ПОТОЧНОГО вiзиту я виконав наступнi дії:"

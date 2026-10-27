@@ -35,11 +35,15 @@ class InlinePriceDrafts(
     private val readPrices: (InlinePriceField) -> InlinePriceValues,
     private val savePrice: (InlinePriceField, String) -> Boolean,
     private val store: (Map<InlinePriceField, String>) -> Unit,
-    private val saveConfirmedPrice: (InlinePriceField, String, InlinePriceValues) -> Boolean = { field, value, _ -> savePrice(field, value) }
+    private val saveConfirmedPrice: (InlinePriceField, String, InlinePriceValues) -> Boolean = { field, value, _ -> savePrice(field, value) },
+    private val onInputFinished: (InlinePriceField) -> Unit = {}
 ) {
     private val _drafts = MutableStateFlow(restored.mapValues { (field, value) -> draft(field, value) })
     val drafts = _drafts.asStateFlow()
     private val pending = restored.keys.toMutableSet()
+    // Successful prefixes leave drafts immediately, but still need one completion callback.
+    private val edited = restored.keys.toMutableSet()
+    private val finished = restored.keys.toMutableSet()
     private val reported = mutableMapOf<InlinePriceField, InlinePriceDraft>()
     private val _notificationVersion = MutableStateFlow(0)
     val notificationVersion = _notificationVersion.asStateFlow()
@@ -55,6 +59,8 @@ class InlinePriceDrafts(
     }
 
     fun change(field: InlinePriceField, value: String) {
+        edited.add(field)
+        finished.remove(field)
         reported.remove(field)
         pending.remove(field)
         _drafts.value = _drafts.value + (field to draft(field, value))
@@ -78,10 +84,18 @@ class InlinePriceDrafts(
         pending.remove(field)
         reported.remove(field)
         persistDrafts()
+        notifyFinished(field)
     }
 
     fun finish(field: InlinePriceField) {
-        val value = _drafts.value[field]?.value ?: return
+        if (field !in edited && field !in _drafts.value) return
+        finished.add(field)
+        val value = _drafts.value[field]?.value
+        if (value == null) {
+            notifyFinished(field)
+            revalidate()
+            return
+        }
         if (value.endsWith(".") && value.length > 1) {
             _drafts.value = _drafts.value + (field to draft(field, value.dropLast(1)))
         }
@@ -94,7 +108,14 @@ class InlinePriceDrafts(
     }
 
     fun finishAll() {
-        _drafts.value.keys.toList().forEach(::finish)
+        (edited + _drafts.value.keys).toList().forEach(::finish)
+    }
+
+    private fun notifyFinished(field: InlinePriceField) {
+        if (field in finished && field !in _drafts.value && edited.remove(field)) {
+            finished.remove(field)
+            onInputFinished(field)
+        }
     }
 
     fun revalidate() {
@@ -128,6 +149,7 @@ class InlinePriceDrafts(
             pending.remove(error.field)
             reported.remove(error.field)
             persistDrafts()
+            notifyFinished(error.field)
         } else {
             reported.remove(error.field)
             finish(error.field)
@@ -141,6 +163,8 @@ class InlinePriceDrafts(
         _drafts.value = _drafts.value - error.field
         pending.remove(error.field)
         reported.remove(error.field)
+        edited.remove(error.field)
+        finished.remove(error.field)
         persistDrafts()
         _focusRequest.value = error.field
     }

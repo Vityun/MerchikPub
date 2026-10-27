@@ -294,6 +294,19 @@ public class ReportConductStateTest {
         assertFalse(state.canApplyWorkEnd(100, 250, 100, 0));
     }
 
+    @Test public void formerReplayVisitKeepsItsSavedEndWhenOldDecisionResumes() {
+        long start = 1792936745L;
+        long savedEnd = 1792940072L;
+        ReportConductState state = new ReportConductState();
+        state.dad2 = 1261026024655061457L;
+        state.requestWorkEnd(start, start, start + 3600);
+        assertFalse(state.matchesUnfinishedWork(start, savedEnd, start, savedEnd));
+        state.prepareWorkEnd(start + 7200, true);
+        ReportConductState loaded = restored(state);
+        assertFalse(loaded.canApplyWorkEnd(start, savedEnd, start, savedEnd));
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+    }
+
     @Test public void noPenaltiesWithPhotoWarningStillNeedsSeparateConductConsent() {
         ReportConductState state = unfinished(null);
         state.prepareWorkEnd(250, false);

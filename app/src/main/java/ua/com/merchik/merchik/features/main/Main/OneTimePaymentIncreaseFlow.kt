@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import com.google.gson.Gson
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Options.OvertimeOfferManager
 import ua.com.merchik.merchik.Utils.WorkTimeRules
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -61,10 +62,27 @@ private fun loadOneTimePaymentIncreaseVisit(dataJson: String?): WpDataDB {
 private fun WpDataDB.canRequestOneTimePaymentIncrease(): Boolean =
     canRequestOneTimePaymentIncrease(visit_start_dt, client_start_dt, visit_end_dt, client_end_dt)
 
-private fun prepareOneTimePaymentIncrease(dataJson: String?): QuestionAnswerPaymentSnapshot? {
+private fun prepareOneTimePaymentIncrease(
+    dataJson: String?,
+    activity: Activity? = null
+): QuestionAnswerPaymentSnapshot? {
     val visit = loadOneTimePaymentIncreaseVisit(dataJson)
     if (!visit.canRequestOneTimePaymentIncrease()) return null
-    return calculateQuestionAnswerPaymentSnapshot(visit, isOneTimePaymentIncrease = true)
+    val snapshot = calculateQuestionAnswerPaymentSnapshot(visit, isOneTimePaymentIncrease = true)
+    val offerJson = activity?.intent?.getStringExtra(OvertimeOfferManager.EXTRA_OFFER)
+        ?: return snapshot
+    val offer = Gson().fromJson(offerJson, OvertimeOfferManager.Offer::class.java)
+    require(OvertimeOfferManager.matches(offer, visit) && offer.baselineSeconds?.signum() == 1) {
+        "Дані відвідування змінилися. Відкрийте заявку повторно з відвідування."
+    }
+    return snapshot.copy(
+        calculatedData = snapshot.calculatedData.copy(
+            avgWorkDurationFact = offer.baselineText(),
+            avgWorkDurationMinutes = offer.baselineMinutes()
+        ),
+        isPlannedDuration = offer.isPlanned,
+        isServerDuration = !offer.isPlanned
+    )
 }
 
 internal fun openOneTimePaymentIncrease(activity: Activity, dataJson: String?): Boolean {
@@ -162,10 +180,25 @@ internal fun OneTimePaymentIncreaseDialogs(viewModel: AchievementsSDBViewModel) 
     var achievementDialog by remember(viewModel) { mutableStateOf<DialogCreateAchievement?>(null) }
     var openingError by remember { mutableStateOf<String?>(null) }
     var showUnfinishedVisitMessage by rememberSaveable(viewModel.dataJson) { mutableStateOf(false) }
-    val preparedSnapshot = remember(viewModel.dataJson) {
-        runCatching { prepareOneTimePaymentIncrease(viewModel.dataJson) }.getOrNull()
+    val preparation = remember(viewModel.dataJson) {
+        runCatching {
+            prepareOneTimePaymentIncrease(viewModel.dataJson, viewModel.context as? Activity)
+        }
     }
+    val preparedSnapshot = preparation.getOrNull()
     var rejectedFormClosed by rememberSaveable(viewModel.dataJson) { mutableStateOf(false) }
+
+    if (preparation.isFailure) {
+        MessageDialog(
+            title = "Перепрацювання",
+            status = DialogStatus.ALERT,
+            message = preparation.exceptionOrNull()?.message ?: "Не вдалося підготувати заявку.",
+            okButtonName = "ОК",
+            onDismiss = { (viewModel.context as? Activity)?.finish() },
+            onConfirmAction = { (viewModel.context as? Activity)?.finish() }
+        )
+        return
+    }
 
     // A restored screen can receive updated work times; do not recreate an achievement in that case.
     if (preparedSnapshot?.isDurationBelowAverage == true) {

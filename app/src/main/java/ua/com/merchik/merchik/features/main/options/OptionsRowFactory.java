@@ -274,6 +274,7 @@ public final class OptionsRowFactory<T> {
                     || optionId == 139337 // для теста кнопка Индульгенция
                     || optionId == 175014
                     || optionId == 175015 //  фото единиці товара+ценик
+                    || optionId == 175175 // Дет Отчет (фейсы)
             ) {
                 row.backgroundRes = R.drawable.bg_temp;
                 textInteger2.visibility = View.VISIBLE;

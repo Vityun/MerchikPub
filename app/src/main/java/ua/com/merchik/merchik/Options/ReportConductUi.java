@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.Options;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 
 import androidx.lifecycle.Lifecycle;
@@ -24,6 +26,7 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 /** Owns only visible UI; durable decisions and requests live in ReportConductManager. */
 public final class ReportConductUi {
     private static final Map<Activity, Session> SESSIONS = new HashMap<>();
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
 
     private static final class Session {
         long dad2;
@@ -34,6 +37,7 @@ public final class ReportConductUi {
         LifecycleEventObserver observer;
         boolean conducting;
         boolean resultShowing;
+        boolean overtimeShowing;
         Runnable onWorkEndSaved;
     }
 
@@ -63,6 +67,7 @@ public final class ReportConductUi {
             Options.resumePendingConduct(activity, dad2);
         }
         ReportConductManager.flushPending();
+        OvertimeOfferManager.resume(dad2);
     }
 
     public static boolean begin(Context context, long dad2) {
@@ -73,7 +78,7 @@ public final class ReportConductUi {
                                 Long requestedEnd, Runnable onWorkEndSaved) {
         Activity activity = activity(context);
         Session session = SESSIONS.get(activity);
-        if (session != null && (session.conducting || session.resultShowing)) return false;
+        if (session != null && (session.conducting || session.resultShowing || session.overtimeShowing)) return false;
         if (!ReportConductManager.begin(dad2, requestWorkEnd, requestedEnd)) {
             Toast.makeText(context, "Команда вже збережена та очікує передачі на сервер.", Toast.LENGTH_LONG).show();
             return false;
@@ -177,11 +182,15 @@ public final class ReportConductUi {
         if (canShow(context) && state != null && state.revision.equals(expected.revision)) {
             ReportConductManager.cancelDecision(dad2);
         }
+        deferOvertimeOffer(dad2);
     }
 
     public static void release(Context context) {
         Session session = SESSIONS.get(activity(context));
-        if (session != null) session.conducting = false;
+        if (session != null) {
+            session.conducting = false;
+            deferOvertimeOffer(session.dad2);
+        }
     }
 
     public static void closeApprovedDialog(Context context) {
@@ -192,6 +201,58 @@ public final class ReportConductUi {
         session.dismiss = null;
         session.dialogToken = null;
         if (dismiss != null) dismiss.run();
+        deferOvertimeOffer(session.dad2);
+    }
+
+    private static void deferOvertimeOffer(long dad2) {
+        MAIN.post(() -> showOvertimeOffer(dad2));
+    }
+
+    public static void showOvertimeOffer(long dad2) {
+        try { showOvertimeOfferNow(dad2); }
+        catch (Exception e) { ReportConductManager.log("ERROR", dad2, "overtime UI: " + e); }
+    }
+
+    private static void showOvertimeOfferNow(long dad2) {
+        OvertimeOfferManager.Offer offer = OvertimeOfferManager.ready(dad2);
+        if (offer == null) return;
+        ReportConductState state = ReportConductManager.get(dad2);
+        if (state != null && (state.awaitingDecision() || state.resultPending)) return;
+        for (Session session : SESSIONS.values()) {
+            if (session.dad2 == dad2 && session.userId == Globals.getCurrentUserId()
+                    && session.overtimeShowing) return;
+        }
+        for (Map.Entry<Activity, Session> entry : SESSIONS.entrySet()) {
+            Activity activity = entry.getKey();
+            Session session = entry.getValue();
+            if (session.dad2 != dad2 || session.userId != Globals.getCurrentUserId()
+                    || session.conducting || session.resultShowing || session.overtimeShowing
+                    || session.dialogToken != null || !canShow(activity)) continue;
+            Object token = new Object();
+            MessageDialogBuilder dialog = new MessageDialogBuilder(activity)
+                    .setTitle("Перепрацювання")
+                    .setStatus(DialogStatus.NORMAL)
+                    .setMessage(OvertimeOfferManager.message(offer))
+                    .setOnConfirmAction("Оформити заявку", () -> {
+                        OvertimeOfferManager.open(activity, offer);
+                        return Unit.INSTANCE;
+                    })
+                    .setOnCancelAction("Не зараз", () -> Unit.INSTANCE);
+            session.overtimeShowing = true;
+            session.dialogToken = token;
+            session.dismiss = dialog::dismiss;
+            dialog.setOnDismissListener((DialogDismissListener) () -> {
+                if (SESSIONS.get(activity) != session || session.dialogToken != token
+                        || session.userId != Globals.getCurrentUserId()) return;
+                session.overtimeShowing = false;
+                session.dialogToken = null;
+                session.dismiss = null;
+                OvertimeOfferManager.dismiss(offer);
+                showResult(dad2);
+            });
+            dialog.show();
+            return;
+        }
     }
 
     public static void showResult(long dad2) {
@@ -200,7 +261,8 @@ public final class ReportConductUi {
         for (Map.Entry<Activity, Session> entry : SESSIONS.entrySet()) {
             Session session = entry.getValue();
             if (session.dad2 != dad2 || session.userId != Globals.getCurrentUserId()
-                    || session.conducting || session.resultShowing || !canShow(entry.getKey())) continue;
+                    || session.conducting || session.resultShowing || session.overtimeShowing
+                    || !canShow(entry.getKey())) continue;
             Activity activity = entry.getKey();
             Object token = new Object();
             MessageDialogBuilder dialog = new MessageDialogBuilder(activity)
@@ -215,6 +277,7 @@ public final class ReportConductUi {
                 session.dismiss = null;
                 session.dialogToken = null;
                 if (canShow(activity)) ReportConductManager.resultShown(dad2, state.revision);
+                deferOvertimeOffer(dad2);
             });
             session.resultShowing = true;
             session.dialogToken = token;

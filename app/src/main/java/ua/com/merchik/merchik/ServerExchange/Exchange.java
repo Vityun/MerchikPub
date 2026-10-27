@@ -182,7 +182,6 @@ public class Exchange {
     //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ExecutorService executor = Executors.newFixedThreadPool(16);
     private static final AtomicBoolean START_EXCHANGE_RUNNING = new AtomicBoolean(false);
-    private static final AtomicBoolean PHOTO_COMMENTS_RUNNING = new AtomicBoolean(false);
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final PhotoDownload server;
@@ -1576,55 +1575,7 @@ public class Exchange {
     }
 
     public void sendPhotoComments() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            MAIN_HANDLER.post(this::sendPhotoComments);
-            return;
-        }
-        if (!PHOTO_COMMENTS_RUNNING.compareAndSet(false, true)) return;
-        try {
-            // Keep the exact request until its ACK; never acknowledge newer local text.
-            final PhotoInformation request = getPhotoInfoToUpload(UploadPhotoInfo.COMMENT);
-            if (request == null || request.data == null || request.data.isEmpty()) {
-                PHOTO_COMMENTS_RUNNING.set(false);
-                return;
-            }
-            sendPhotoInformation(request, new ExchangeInterface.ExchangeResponseInterface() {
-                @Override
-                public <T> void onSuccess(List<T> data) {
-                    try {
-                        List<PhotoInfoResponseList> response = (List<PhotoInfoResponseList>) data;
-                        for (PhotoInfoResponseList item : response) {
-                            if (item != null) Globals.writeToMLOG("INFO", "StackPhotoSync",
-                                    "commentResponse: localId=" + item.elementId + ", state=" + item.state
-                                            + ", error=" + item.error);
-                        }
-                        List<PhotoInformationData> accepted = new ArrayList<>();
-                        for (PhotoInformationData sent : request.data) {
-                            if (StackPhotoSyncPolicy.commentAccepted(sent, response)) {
-                                accepted.add(sent);
-                            } else {
-                                Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentNotAccepted: localId="
-                                        + sent.element_id + ", serverId=" + sent.id + ", keptPending=true");
-                            }
-                        }
-                        if (!accepted.isEmpty()) StackPhotoRealm.acknowledgeComments(accepted);
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentAck: " + e);
-                    } finally {
-                        PHOTO_COMMENTS_RUNNING.set(false);
-                    }
-                }
-
-                @Override
-                public void onFailure(String error) {
-                    PHOTO_COMMENTS_RUNNING.set(false);
-                    Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentUpload: " + error + ", keptPending=true");
-                }
-            });
-        } catch (Exception e) {
-            PHOTO_COMMENTS_RUNNING.set(false);
-            Globals.writeToMLOG("ERROR", "StackPhotoSync", "commentUpload: " + e);
-        }
+        PhotoCommentSync.flush();
     }
 
     /* выгрузка доп информации к фото */

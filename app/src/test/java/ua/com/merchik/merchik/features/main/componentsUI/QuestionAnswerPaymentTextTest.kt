@@ -7,6 +7,24 @@ import java.util.Date
 import java.util.TimeZone
 
 class QuestionAnswerPaymentTextTest {
+    @Test fun serverAverageIsNotDescribedAsLocalPersonalHistory() {
+        val template = questionAnswerStatementTemplate(true, isServerDuration = true) { _, _ ->
+            error("One-time text has no translation ID")
+        }
+        assertTrue(template.contains("за даними сервера"))
+        assertFalse(template.contains("Планова тривалість"))
+        assertTrue(template.contains("{DURATION_FACT}"))
+    }
+
+    @Test fun plannedDurationIsNotDescribedAsHistoricalAverage() {
+        val template = questionAnswerStatementTemplate(true, isPlannedDuration = true) { _, _ ->
+            error("One-time text has no translation ID")
+        }
+        assertTrue(template.startsWith("Планова тривалість"))
+        assertFalse(template.contains("у середньому"))
+        assertTrue(template.contains("{CURRENT_VISIT_DURATION}"))
+    }
+
     private val start = Instant.parse("2026-10-19T12:00:00Z").epochSecond
     private val visitDate = Date.from(Instant.parse("2026-10-18T21:00:00Z"))
 

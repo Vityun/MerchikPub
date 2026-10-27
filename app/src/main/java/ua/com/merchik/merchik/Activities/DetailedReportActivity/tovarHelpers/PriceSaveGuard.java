@@ -61,6 +61,7 @@ public final class PriceSaveGuard {
         }
 
         String[] invalidPrices = new String[2];
+        String[] missingBeforePrice = {null};
         boolean[] markPromotionPresent = {false};
         String[] promotionTypeToSave = {null};
         long changedAt = System.currentTimeMillis() / 1000;
@@ -76,6 +77,11 @@ public final class PriceSaveGuard {
                 PromotionPriceCheck check = getPromotionPriceCheck(current, price, priceMin);
                 if (check.outsideRange() && !check.matches(approval)) return false;
             }
+            // Inline input saves prefixes; fill its missing prices only when editing finishes.
+            if (!beforePromotion && !checkDiscount) {
+                missingBeforePrice[0] = missingPricesForNoPromotion(current.getAkciya(), value,
+                        current.getPriceMin(), current.getPriceMax());
+            }
             // Decide from the current DB row, not from the possibly stale editor snapshot.
             markPromotionPresent[0] = shouldAutoMarkPromotion(price, priceMin, current.getAkciya());
             if (markPromotionPresent[0] && isPromotionTypeMissing(current.getAkciyaId())) {
@@ -88,6 +94,10 @@ public final class PriceSaveGuard {
                 current.setPriceMax(value);
             } else {
                 current.setPrice(value);
+                if (missingBeforePrice[0] != null) {
+                    current.setPriceMin(missingBeforePrice[0]);
+                    current.setPriceMax(missingBeforePrice[0]);
+                }
             }
             if (markPromotionPresent[0]) {
                 current.setAkciya("1");
@@ -130,6 +140,21 @@ public final class PriceSaveGuard {
             Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
         }
         return saved;
+    }
+
+    public static boolean fillMissingPricesForNoPromotion(ReportPrepareDB snapshot) {
+        String[] missingPrice = {null};
+        long changedAt = System.currentTimeMillis() / 1000;
+        return ReportPrepareRealm.updateFields(snapshot, current -> {
+            missingPrice[0] = missingPricesForNoPromotion(current.getAkciya(), current.getPrice(),
+                    current.getPriceMin(), current.getPriceMax());
+            return missingPrice[0] != null;
+        }, current -> {
+            current.setPriceMin(missingPrice[0]);
+            current.setPriceMax(missingPrice[0]);
+            current.setUploadStatus(1);
+            current.setDtChange(changedAt);
+        });
     }
 
     private static String resolvePromotionTypeId(ReportPrepareDB current) {
