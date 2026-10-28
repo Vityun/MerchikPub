@@ -108,6 +108,7 @@ public enum TableName {
     WP_DATA_PAUSE("wp_data_pause"),
     DYNAMIC_ACHIEVEMENTS("dynamic_achievements"),
     DYNAMIC_PHOTO("dynamic_photo"),
+    PLAN_RESULTS_DYNAMIC("plan_results_dynamic"),
     LOG("log"),
 
 

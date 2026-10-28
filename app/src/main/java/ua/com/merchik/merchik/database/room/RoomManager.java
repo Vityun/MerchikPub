@@ -57,7 +57,8 @@ public class RoomManager {
                         MIGRATION_80_81,
                         MIGRATION_81_82,
                         MIGRATION_82_83,
-                        MIGRATION_83_84
+                        MIGRATION_83_84,
+                        MIGRATION_84_85
                 )
                 .build();
 
@@ -1105,6 +1106,19 @@ public class RoomManager {
                             "WHERE tableName = 'achievements'"
             );
             achievementsSchemaMigrated = true;
+        }
+    };
+
+    public static final Migration MIGRATION_84_85 = new Migration(84, 85) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `plan_results_dynamic` ("
+                    + "`ID` TEXT NOT NULL, `isp` TEXT, `client_id` TEXT NOT NULL, `addr_id` TEXT NOT NULL, "
+                    + "`yearmonth` TEXT NOT NULL, `ob_prod_plan` TEXT, `avg_num_plan` TEXT, `num_main_plan` TEXT, "
+                    + "`ob_prod_done` TEXT, `avg_num_done` TEXT, `num_main_done` TEXT, `avg_oos` TEXT, "
+                    + "`total_face` TEXT, `total_sku` TEXT, `total_documents` TEXT, `last_phot` TEXT, PRIMARY KEY(`ID`))");
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_plan_results_dynamic_yearmonth_client_id_addr_id` "
+                    + "ON `plan_results_dynamic` (`yearmonth`, `client_id`, `addr_id`)");
         }
     };
 }

@@ -451,7 +451,6 @@ public class OptionControlPhoto<T> extends OptionControl {
                         .count();
                 if (count > 0) {
                     m = 2;
-                    int photoWithComment = 0;
                     spannableStringBuilder.clear();
                     SpannableStringBuilder baseEmptyComment = new SpannableStringBuilder("У свiтлин: ");
                     boolean hasPhotoWithoutComment = false;
@@ -459,9 +458,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                     for (StackPhotoDB photo : stackPhotoDBList) {
                         if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
                             String comment = photo.getComment();
-                            if (comment != null && comment.length() > 10) {
-                                photoWithComment++;
-                            } else {
+                            if (comment == null || comment.length() <= 10) {
                                 if (hasPhotoWithoutComment) baseEmptyComment.append(", ");
                                 String photoId = photo.getPhotoServerId();
                                 String photoLabel = isEmpty1c(photoId)
@@ -471,16 +468,14 @@ public class OptionControlPhoto<T> extends OptionControl {
                             }
                         }
                     }
-                    if (photoWithComment < m) {
-                        if (count < 2) {
+                    if (count < m || hasPhotoWithoutComment) {
+                        if (count < m) {
                             signal = true;
                             spannableStringBuilder.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 (або 94) має бути не менше ніж ")
                                     .append(String.valueOf(m))
                                     .append(", а зроблено: ")
                                     .append(String.valueOf(count));
-                        } else
-//                    if (baseEmptyComment.length() > 20)
-                        {
+                        } else {
                             notCloseSpannableStringBuilderDialog = true;
                             signal = true;
                             spannableStringBuilder.append(baseEmptyComment)

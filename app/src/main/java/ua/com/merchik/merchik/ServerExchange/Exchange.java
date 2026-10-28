@@ -1073,6 +1073,12 @@ public class Exchange {
                         }
 
                         try {
+                            new TablesLoadingUnloading().downloadResultsDynamic();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "startExchange/downloadResultsDynamic", "Exception e: " + e);
+                        }
+
+                        try {
                             new TablesLoadingUnloading().downloadLogList();
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "startExchange/downloadLogList", "Exception e: " + e);

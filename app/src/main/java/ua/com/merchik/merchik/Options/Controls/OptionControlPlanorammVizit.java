@@ -89,17 +89,27 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
             if (wpDataDB != null) {
                 code_dad2 = wpDataDB.getCode_dad2();
             }
+            Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/start",
+                    "dad2=" + code_dad2 + ", mode=" + nnkMode
+                            + ", optionRowId=" + (optionDB != null ? optionDB.getID() : null)
+                            + ", blockPns=" + (optionDB != null ? optionDB.getBlockPns() : null)
+                            + ", userId=" + (wpDataDB != null ? wpDataDB.getUser_id() : null)
+                            + ", visitDate=" + (wpDataDB != null ? wpDataDB.getDt() : null)
+                            + ", visitStart=" + (wpDataDB != null ? wpDataDB.getVisit_start_dt() : null)
+                            + ", visitEnd=" + (wpDataDB != null ? wpDataDB.getVisit_end_dt() : null));
             //3.0. створимо перелік ідентифікаторів Планограм, котрі БУЛИ актуальні на момент початку роботи по цьому відвідуванню.
             //3.1. Ідея така! У момент початку робіт з цією опцією (можливо при інших обставинах) генерується перелік записів у таблицю ПланограмиПоВізитам по кожному ідентифікатору планограм окремо. Таким чином ми отримаємо перелік планограм (+ідентифікаторів ) актуальний на момент початку робіт і більш ми його не змінюємо, а користувач на боці Додатку визначає до якої вітрини має відношення дана планограма.
             List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList;
             try {
                 planogrammVizitShowcaseSDBList = SQL_DB.planogrammVizitShowcaseDao().getByCodeDad2(wpDataDB.getCode_dad2());
             } catch (Exception e) {
-                Globals.writeToMLOG("ERROR","OptionControlPlanorammVizit.executeOption","Exception: " + e.getMessage());
+                Globals.writeToMLOG("ERROR", "OptionControlPlanorammVizit/query",
+                        "dad2=" + code_dad2 + ", fallbackToEmpty=true, exception=" + e);
                 planogrammVizitShowcaseSDBList = List.of();
             }
 
-            Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","planogrammVizitShowcaseSDBList.size: " + planogrammVizitShowcaseSDBList.size());
+            Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit.executeOption",
+                    "dad2=" + code_dad2 + ", planogrammVizitShowcaseSDBList.size: " + planogrammVizitShowcaseSDBList.size());
 
             //4.0. тепер треба перевірити чи до усіх планограм визначені вітрини, або світлини ДО. або встановлені низькі оцінки ... Ідея така ..
             // Виконується перевірка наявності планограм встановлених до моменту початку візиту, а потім з"ясовується, чи визначені вітрини, до котрих стосуються зазначені планограми. Якщо вітрини, на момент виконання робіт, ще нема, то виконується світлина ДО з зазначенням іденифікатора планогрмаи як джерела. І у випадку, якщо виконавець вважає, що планограма "крива" (не має виконуватись у даній ТТ), то він ставить їй низьку оцінку та коментар.
@@ -112,6 +122,19 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
                 );
                 Integer score = vote != null ? vote.score : null;
                 item.score = score == null ? "0" : String.valueOf(score);
+                Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/item",
+                        "dad2=" + code_dad2 + ", rowId=" + item.id
+                                + ", planogramId=" + item.planogram_id + ", planogramPhotoId=" + item.planogram_photo_id
+                                + ", showcaseId=" + item.showcase_id + ", showcasePhotoId=" + item.showcase_photo_id
+                                + ", photoDoId=" + item.photo_do_id + ", photoDoHash=" + item.photo_do_hash
+                                + ", uploadStatus=" + item.uploadStatus + ", dtUpdate=" + item.dt_update
+                                + ", authorId=" + item.author_id
+                                + ", voteId=" + (vote != null ? vote.id : null)
+                                + ", voteServerId=" + (vote != null ? vote.serverId : null)
+                                + ", voterId=" + (vote != null ? vote.voterId : null)
+                                + ", voteDtUpload=" + (vote != null ? vote.dtUpload : null)
+                                + ", voteScore=" + score + ", effectiveScore=" + item.score
+                                + ", voteCommentLength=" + (vote != null && vote.comments != null ? vote.comments.length() : 0));
 
 //                String comment = "\nДля планограми: " + item.planogram_id + " (" + item.planogram_photo_id + ")";
 //                StackPhotoDB stackPhotoDB = RealmManager.getPhotoByPhotoId(item.planogram_photo_id.toString());
@@ -149,6 +172,11 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
 
                 boolean isShowcaseMissing = item.showcase_id == 0 && item.photo_do_id == 0 && (item.photo_do_hash == null || item.photo_do_hash.isEmpty() || item.photo_do_hash.equals("0"));
                 boolean isRatingMissing = item.score.equals("0");
+                Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/itemDecision",
+                        "dad2=" + code_dad2 + ", rowId=" + item.id
+                                + ", showcaseOrPhotoMissing=" + isShowcaseMissing
+                                + ", ratingMissing=" + isRatingMissing
+                                + ", issue=" + (isShowcaseMissing && isRatingMissing));
                 notCloseSpannableStringBuilderDialog = true;
                 if (isShowcaseMissing && isRatingMissing) {
                     signal = true;
@@ -189,8 +217,15 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
 
             //6.0. исключения
             //6.1. исключение на период отладки
+            Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/beforeExceptions",
+                    "dad2=" + code_dad2 + ", rows=" + planogrammVizitShowcaseSDBList.size()
+                            + ", issues=" + issuesCount + ", signal=" + signal
+                            + ", userFound=" + (documentUser != null)
+                            + ", reportDate20=" + (documentUser != null ? documentUser.reportDate20 : null));
             if (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
                 signal = false;
+                Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/exception",
+                        "dad2=" + code_dad2 + ", reason=REPORT_20, signal=false");
                 spannableStringBuilder.append("\n\nАле виконавець не провів свій 20-й звіт і робимо виняток");
             }
 //            LocalDate debugUntilDate = LocalDate.of(2025, 5, 1);
@@ -215,9 +250,19 @@ public class OptionControlPlanorammVizit<T> extends OptionControl {
 
             setIsBlockOption(signal);
 
-            checkUnlockCode(optionDB);
+            Globals.writeToMLOG("INFO","OptionControlPlanorammVizit.executeOption","spannableStringBuilder: " + spannableStringBuilder);
+
+            boolean unlockCheckPassed = checkUnlockCode(optionDB);
+            Globals.writeToMLOG("INFO", "OptionControlPlanorammVizit/result",
+                    "dad2=" + code_dad2 + ", mode=" + nnkMode
+                            + ", rows=" + planogrammVizitShowcaseSDBList.size() + ", issues=" + issuesCount
+                            + ", signal=" + signal + ", unlockCheckPassed=" + unlockCheckPassed
+                            + ", isBlockOption=" + isBlockOption()
+                            + ", storedSignal=" + (optionDB != null ? optionDB.getIsSignal() : null)
+                            + ", blockPns=" + (optionDB != null ? optionDB.getBlockPns() : null));
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlPlanorammVizit/executeOption", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlPlanorammVizit/executeOption",
+                    "dad2=" + code_dad2 + ", mode=" + nnkMode + ", exception=" + e);
         }
     }
 
