@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -22,6 +25,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.DynamicPhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
+import ua.com.merchik.merchik.database.room.AppDatabase;
 
 public class DynamicPhotoStackPhotoExchange {
 
@@ -29,6 +33,9 @@ public class DynamicPhotoStackPhotoExchange {
     private static final int REQUEST_CHUNK_SIZE = 200;
     private static final int IDS_PREVIEW_LIMIT = 25;
     private static final AtomicBoolean RUNNING = new AtomicBoolean(false);
+    private int userId;
+    private String sessionId;
+    private AppDatabase database;
 
     public boolean downloadMissingFromDynamicPhotoTableAsync() {
         if (SQL_DB == null) {
@@ -41,10 +48,15 @@ public class DynamicPhotoStackPhotoExchange {
             return false;
         }
 
+        userId = Globals.getCurrentUserId();
+        sessionId = Globals.getCurrentSessionId();
+        database = SQL_DB;
         Single.fromCallable(this::collectMissingDynamicPhotoStackPhotoIds)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(result -> {
+                    if (!continueCurrentSession()) return;
                     logInfo("check", result.toLogMessage(previewIds(result.missingPhotoIds)));
 
                     if (result.missingPhotoIds.isEmpty()) {
@@ -62,7 +74,7 @@ public class DynamicPhotoStackPhotoExchange {
     }
 
     private DynamicPhotoStackPhotoCheckResult collectMissingDynamicPhotoStackPhotoIds() {
-        List<DynamicPhotoSDB> rows = SQL_DB.dynamicPhotoDao().getAll();
+        List<DynamicPhotoSDB> rows = database.dynamicPhotoDao().getAll();
         LinkedHashSet<String> uniquePhotoIds = new LinkedHashSet<>();
 
         if (rows != null) {
@@ -131,6 +143,7 @@ public class DynamicPhotoStackPhotoExchange {
     }
 
     private void downloadChunk(List<List<String>> chunks, int chunkIndex, int totalMissingCount) {
+        if (!continueCurrentSession()) return;
         if (chunkIndex >= chunks.size()) {
             logInfo(
                     "request.complete",
@@ -196,6 +209,14 @@ public class DynamicPhotoStackPhotoExchange {
             );
             downloadChunk(chunks, chunkIndex + 1, totalMissingCount);
         }
+    }
+
+    private boolean continueCurrentSession() {
+        if (database == SQL_DB && userId == Globals.getCurrentUserId()
+                && Objects.equals(sessionId, Globals.getCurrentSessionId())) return true;
+        logInfo("stop", "account/session/database changed");
+        RUNNING.set(false);
+        return false;
     }
 
     private List<List<String>> splitIntoChunks(List<String> source) {

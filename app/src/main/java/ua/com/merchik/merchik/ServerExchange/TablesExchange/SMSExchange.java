@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -63,6 +65,7 @@ public class SMSExchange {
                                 if (response.body().list != null && response.body().list.size() > 0) {
                                     SQL_DB.smsPlanDao().insertAllCompletable(response.body().list)
                                             .subscribeOn(Schedulers.io())
+                                            .compose(ExchangeWork.track())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
@@ -146,6 +149,7 @@ public class SMSExchange {
                                     SQL_DB.smsLogDao().insertAllCompletable(response.body().list)
                                             .subscribeOn(Schedulers.io())
                                             .observeOn(AndroidSchedulers.mainThread())
+                                            .compose(ExchangeWork.track())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {

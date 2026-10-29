@@ -12,7 +12,6 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -26,63 +25,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 public class StandartExchange {
 
     public void downloadStandartTable(ExchangeInterface.ExchangeResponseInterface exchange) {
-        try {
-            StandartData data = new StandartData();
-            data.mod = "standart";
-            data.act = "list";
-
-            // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("standart_table");
-//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
-//            data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 142);
-//            data.dt_change_from = "0";
-
-//            data.date_from = "";
-//            data.date_to = "";
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            retrofit2.Call<StandartResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_STANDART(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<StandartResponse>() {
-                @Override
-                public void onResponse(Call<StandartResponse> call, Response<StandartResponse> response) {
-                    Log.e("test", "response: " + response);
-                    if (response.isSuccessful() && response.body() != null
-                            && response.body().list != null && !response.body().list.isEmpty())
-                        exchange.onSuccess(response.body().list);
-
-                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                }
-
-                @Override
-                public void onFailure(Call<StandartResponse> call, Throwable t) {
-                    Log.e("test", "Throwable: " + t);
-                    exchange.onFailure(null);
-                }
-            });
-
-
-//            {
-//                retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, convertedObject);
-//                call1.enqueue(new Callback<JsonObject>() {
-//                    @Override
-//                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                        Log.d("smarti", "onResponse: ");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<JsonObject> call, Throwable t) {
-//                        Log.d("smarti", "onResponse: ");
-//                    }
-//                });
-//            }
-        } catch (Exception e) {
-
-        }
+        ReferenceDataExchange.standards(exchange);
     }
 
 

@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.OptionsServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -43,6 +44,7 @@ public class OptionsExchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        RnoVisitDataExchange.authorizeTargetedRequest(convertedObject);
 
         retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<OptionsServer>() {

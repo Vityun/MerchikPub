@@ -21,5 +21,11 @@ public interface PlanogrammAddressDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammAddressSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammAddressSDB> data);
+
+    @Query("SELECT COUNT(*) FROM planogramm_address")
+    long count();
+
     // ----------------------------------------------------
 }

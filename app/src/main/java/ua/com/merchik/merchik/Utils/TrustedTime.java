@@ -62,15 +62,7 @@ public final class TrustedTime {
     }
 
     public static long syncWatermarkSec(long previousWatermarkSec, long overlapSec) {
-        Long trustedNow = nowServerSecOrNull();
-        if (trustedNow == null) {
-            Globals.writeToMLOG(
-                    "WARN",
-                    TAG + "/syncWatermarkSec",
-                    "No trusted server time. Keep previousWatermarkSec=" + previousWatermarkSec
-            );
-            return Math.max(0L, previousWatermarkSec);
-        }
+        long trustedNow = nowServerSecOrLocalSec();
 
         long safeOverlapSec = Math.max(0L, overlapSec);
         long candidate = Math.max(0L, trustedNow - safeOverlapSec);

@@ -128,6 +128,8 @@ public final class SynchronizationTimetableRepository {
                 upsertLegacy(row);
             }
         }
+        // Upgrade existing settings without resetting timestamps, counts or statuses.
+        dao.updateSyncPeriod(TableName.PLAN_RESULTS_DYNAMIC, ResultsDynamicSyncPolicy.SYNC_PERIOD_SECONDS);
     }
 
     public static void resetToDefaults() {
@@ -137,6 +139,7 @@ public final class SynchronizationTimetableRepository {
         }
 
         dao.clear();
+        RoomManager.SQL_DB.synchronizationCursorDao().clear();
         for (SynchronizationTimetableDB row : defaultLegacyRows()) {
             upsertLegacy(row);
         }
@@ -263,7 +266,10 @@ public final class SynchronizationTimetableRepository {
                 row(50, "dynamic_achievements", 600, 0, 0, "dynamic_achievements", 0),
                 row(51, "dynamic_photo", 600, 0, 0, "dynamic_photo", 0),
                 row(52, "log", 600, 0, 0, "log", 0),
-                row(53, "plan_results_dynamic", 600, 0, 0, "plan_results_dynamic", 0)
+                row(53, "plan_results_dynamic", ResultsDynamicSyncPolicy.SYNC_PERIOD_SECONDS, 0, 0, "plan_results_dynamic", 0),
+                row(54, "chat", 600, 0, 0, "chat messages", 0),
+                row(55, "chat_grp", 600, 0, 0, "chat groups", 0),
+                row(56, "site_objects", 600, 0, 0, "site_objects", 0)
         );
     }
 

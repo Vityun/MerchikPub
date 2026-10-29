@@ -140,6 +140,7 @@ public class RetrofitBuilder {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .addCallAdapterFactory(new ExchangeCallAdapterFactory())
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
                 .client(client)
                 .build();

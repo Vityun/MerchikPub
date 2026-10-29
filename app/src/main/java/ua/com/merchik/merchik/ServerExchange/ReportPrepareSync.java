@@ -211,10 +211,17 @@ public final class ReportPrepareSync {
 
     public static void download(JsonObject request, boolean advanceWatermark,
                                 Callback<ReportPrepareServer> callback) {
+        download(request, advanceWatermark, callback, () -> { }, rows -> { });
+    }
+
+    public static void download(JsonObject request, boolean advanceWatermark,
+                                Callback<ReportPrepareServer> callback, Runnable requireCurrent,
+                                Consumer<List<ReportPrepareDB>> beforeSave) {
         int user = Globals.getCurrentUserId();
         JsonObject snapshot = request.deepCopy();
         onMain(() -> enqueue(done -> {
             ensureUser();
+            RnoVisitDataExchange.authorizeTargetedRequest(snapshot);
             Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface()
                     .ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, snapshot);
             if (user != Globals.getCurrentUserId()) {
@@ -223,6 +230,7 @@ public final class ReportPrepareSync {
                 return;
             }
             try {
+                requireCurrent.run();
                 call.enqueue(new Callback<ReportPrepareServer>() {
                     @Override public void onResponse(Call<ReportPrepareServer> call,
                                                      Response<ReportPrepareServer> response) {
@@ -231,9 +239,11 @@ public final class ReportPrepareSync {
                                 callback.onFailure(call, new IllegalStateException("User changed; response ignored"));
                                 return;
                             }
+                            requireCurrent.run();
                             ReportPrepareServer body = response.body();
                             if (response.isSuccessful() && body != null && Boolean.TRUE.equals(body.getState())
                                     && body.getList() != null) {
+                                beforeSave.accept(body.getList());
                                 boolean merged = ReportPrepareRealm.mergeServerRows(body.getList());
                                 log("DOWNLOAD rows=" + body.getList().size() + ", fullyMerged=" + merged);
                                 // Do not advance past rows deferred because of local edits.
@@ -330,16 +340,24 @@ public final class ReportPrepareSync {
 
     private static void onMain(Runnable action) {
         if (Looper.myLooper() == Looper.getMainLooper()) action.run();
-        else MAIN.post(action);
+        else ExchangeWork.dispatch(MAIN::post, action);
     }
 
     private static void enqueue(Consumer<Runnable> action, Consumer<RuntimeException> onError) {
+        ExchangeRunTracker.Ticket ticket = ExchangeWork.TRACKER.beginWork();
         QUEUE.submit(done -> action.accept(() -> {
-            done.run();
-            scheduleNext();
+            try {
+                done.run();
+                scheduleNext();
+            } finally {
+                ticket.close();
+            }
         }), error -> {
             try { onError.accept(error); }
-            finally { scheduleNext(); }
+            finally {
+                try { scheduleNext(); }
+                finally { ticket.close(); }
+            }
         });
     }
 

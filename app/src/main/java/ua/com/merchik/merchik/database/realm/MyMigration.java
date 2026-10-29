@@ -370,6 +370,13 @@ public class MyMigration implements RealmMigration {
             }
         }
 
+        if (newVersion >= 34) {
+            RealmObjectSchema wpData = schema.get("WpDataDB");
+            if (wpData != null && !wpData.hasField("code_dad2_hash")) {
+                wpData.addField("code_dad2_hash", String.class);
+            }
+        }
+
         if (newVersion >= 33) {
             RealmObjectSchema promoDB = schema.get("PromoDB");
 

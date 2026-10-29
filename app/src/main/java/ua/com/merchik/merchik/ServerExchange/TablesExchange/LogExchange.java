@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -39,6 +41,7 @@ public class LogExchange {
         Single.fromCallable(this::downloadSync)
                 .subscribeOn(Schedulers.io())
                 .doFinally(() -> RUNNING.set(false))
+                .compose(ExchangeWork.track())
                 .subscribe(
                         summary -> writeLog("INFO", summary),
                         throwable -> writeLog("ERROR", "failed; VPI unchanged: " + throwable)
@@ -60,7 +63,7 @@ public class LogExchange {
         }
 
         // Advance only after the response is saved, using the time before the request.
-        Long requestStartedSec = TrustedTime.nowServerSecOrNull();
+        long requestStartedSec = TrustedTime.nowServerSecOrLocalSec();
         try {
             JsonObject request = new JsonObject();
             request.addProperty("mod", "log");
@@ -92,11 +95,8 @@ public class LogExchange {
             int savedRows = body.list.size();
             writeLog("INFO", "response: state=true, savedRows=" + savedRows);
 
-            long nextVpi = requestStartedSec != null ? requestStartedSec : previousVpi;
+            long nextVpi = requestStartedSec;
             saveSyncInfo(syncInfo, nextVpi, savedRows, DownloadStatus.SUCCESS);
-            if (requestStartedSec == null) {
-                writeLog("WARN", "No trusted server time; keeping VPI=" + previousVpi);
-            }
             return "saved=" + savedRows + ", VPI=" + previousVpi + " -> " + nextVpi;
         } catch (Exception e) {
             saveSyncInfo(syncInfo, previousVpi, syncInfo.getDownloadedItems(), DownloadStatus.ERROR);

@@ -2476,66 +2476,7 @@ public class menu_main extends AppCompatActivity {
      * Также запускает автовыгрузку фоток
      */
     public void cronCheckUploadsPhotoOnServer() {
-        try {
-            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
-
-            if (!realmResults.isEmpty()) {
-                Toast.makeText(menu_main.this, "Сервер не обработал: " + realmResults.size() + 1 + " фоток.", Toast.LENGTH_SHORT);
-
-                String mod = "images_view";
-                String act = "list_image";
-                String noLimit = "no_limit";
-                String date_from = Clock.lastWeek();
-                String date_to = Clock.tomorrow7;
-                ArrayList<String> listHash = new ArrayList<>();
-
-                for (int i = 0; i < realmResults.size(); i++) {
-                    listHash.add(i, realmResults.get(i).getPhoto_hash());
-                }
-
-                retrofit2.Call<PhotoHash> call = RetrofitBuilder.getRetrofitInterface()
-                        .SEND_PHOTO_HASH(mod, act, noLimit, date_from, date_to, listHash);
-                call.enqueue(new retrofit2.Callback<PhotoHash>() {
-                    @Override
-                    public void onResponse(Call<PhotoHash> call, Response<PhotoHash> response) {
-
-                        try {
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().getState()) {
-                                    if (response.body().getTotalPages() > 0) {
-                                        List<PhotoHashList> list = response.body().getList();
-                                        for (int i = 0; i < list.size(); i++) {
-                                            for (int j = 0; j < realmResults.size(); j++) {
-                                                if (list.get(i).getHash().equals(realmResults.get(j).getPhoto_hash())) {
-                                                    int finalJ = j;
-                                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                        realmResults.get(finalJ).setGet_on_server(System.currentTimeMillis());
-                                                    });
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        Toast.makeText(menu_main.this, "Фото для проверки есть, но сервером ещё не обработаны.", Toast.LENGTH_SHORT).show();
-                                    }
-                                } else {
-                                }
-                            }
-                        } catch (Exception e) {
-                            Toast.makeText(menu_main.this, "Ошибка при проверке фото с сервера: " + e, Toast.LENGTH_SHORT).show();
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<PhotoHash> call, Throwable t) {
-                    }
-                });
-            } else {
-            }
-        } catch (Exception e) {
-            Toast.makeText(menu_main.this, "Ошибка при проверке фото: " + e, Toast.LENGTH_SHORT).show();
-        }
-
+        ua.com.merchik.merchik.ServerExchange.PhotoHashExchange.refresh();
     }
 
     /**

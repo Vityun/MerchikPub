@@ -33,6 +33,10 @@ public interface SynchronizationTimetableDao {
     @Update
     void update(SynchronizationTimeTable entity);
 
+    @Query("UPDATE synchronization_timetable SET syncPeriodSeconds = :periodSeconds "
+            + "WHERE tableName = :name AND syncPeriodSeconds != :periodSeconds")
+    void updateSyncPeriod(TableName name, long periodSeconds);
+
     @Query("DELETE FROM synchronization_timetable")
     void clear();
 

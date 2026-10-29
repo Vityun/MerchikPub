@@ -21,6 +21,7 @@ import com.google.gson.GsonBuilder
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.ServerExchange.workmager.ChatSyncWorker
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -52,6 +53,10 @@ class FcmService : FirebaseMessagingService() {
         val fromServerChannelId = m.notification?.channelId ?: data["channel_id"]
         val typeOrChannel = data["type"] ?: data["channel"] ?: fromServerChannelId
         val channelId = resolveChannelId(typeOrChannel)
+
+        if (channelId == getString(R.string.channel_chat)) {
+            ChatSyncWorker.onFcmChat(this)
+        }
 
         // 4) Замена уведомлений парой (tag,id)
         val tag = data["tag"] ?: m.notification?.tag ?: channelId

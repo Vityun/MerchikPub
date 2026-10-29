@@ -91,6 +91,7 @@ import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.MyApplication;
+import ua.com.merchik.merchik.ServerExchange.workmager.ChatSyncWorker;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.PauseWorkStateHolder;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -811,7 +812,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
          * хочу синхронізовувати(це в мене костиляка, на неї можна не зациклюватись)*/
         item.getActionView().setOnLongClickListener(v -> {
             synchronizationSignal("SIGNAL", null);
-            synchronizationSignal("SHOW_MASSAGE", 1);
 
             new CustomExchange().showDialogExchange(this);
 
@@ -827,7 +827,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
          * вивантаження фото, повна синхронізація таблиць*/
         item.getActionView().setOnClickListener(v -> {
             synchronizationSignal("SIGNAL", null);
-            synchronizationSignal("SHOW_MASSAGE", 2);
 
             PopupMenu popup = new PopupMenu(toolbar_menus.this, v);
             MenuInflater inflater1 = popup.getMenuInflater();
@@ -872,17 +871,24 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                         exchange = new Exchange();
                                     }
                                     exchange.setContext(this);
-                                    Exchange.exchangeTime = 0;
                                     if (exchange.getViewModel() == null)
                                         exchange.setViewModel(cronchikViewModel);
-                                    exchange.startExchange();
-                                    new TablesLoadingUnloading().downloadAllTables(this, cronchikViewModel);
-
+                                    boolean started = exchange.startManualExchange(() ->
+                                            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                                                if (!ua.com.merchik.merchik.ServerExchange.ExchangeWork.TRACKER.isRunning()) loadingFinish();
+                                                progress.onCompleted();
+                                            }));
+                                    if (!started) {
+                                        Toast.makeText(this, "Обмін вже виконується. Дочекайтеся його завершення.", Toast.LENGTH_SHORT).show();
+                                        return Unit.INSTANCE;
+                                    }
                                     loadingStart();
                                     loadingDialog.show();
                                     progress.onNextEvent("Виконую Синхронізацію з сервером", 18_700);
 //                        exchange.uploadTARComments(null);
                                 } catch (Exception e) {
+                                    loadingFinish();
+                                    progress.onCanceledNoAnim();
                                     Log.d("test", "test" + e);
                                     Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + e);
                                     Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
@@ -908,18 +914,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             public void onSuccess(String data) {
                                                 Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
 //                                    progress.dismiss();
-                                                loadingFinish();
-                                                progress.onNextEvent("");
-                                                progress.onCompleted();
                                                 Toast.makeText(getApplicationContext(), "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
                                             }
 
                                             @Override
                                             public void onFailure(String error) {
                                                 Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
-                                                loadingFinish();
-                                                progress.onNextEvent("");
-                                                progress.onCompleted();
                                             }
                                         });
                                     } else {
@@ -2239,122 +2239,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      * Также запускает автовыгрузку фоток
      */
     public void cronCheckUploadsPhotoOnServer() {
-        try {
-//            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
-            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
-
-            Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
-
-            Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", " START realmResults/size: " + realmResults.size());
-
-            if (!realmResults.isEmpty()) {
-                Toast.makeText(toolbar_menus.this, "Сервер не обработал: " + realmResults.size() + 1 + " фоток.", Toast.LENGTH_SHORT);
-
-                ArrayList<String> listHash = new ArrayList<>();
-                for (int i = 0; i < realmResults.size(); i++) {
-                    listHash.add(i, realmResults.get(i).getPhoto_hash());
-                }
-
-                Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "listHash: " + listHash);
-
-                String mod = "images_view";
-                String act = "list_image";
-                String noLimit = "no_limit";
-                String date_from = Clock.lastWeek();
-                String date_to = Clock.tomorrow7;
-
-
-                retrofit2.Call<PhotoHash> call = RetrofitBuilder.getRetrofitInterface()
-                        .SEND_PHOTO_HASH(mod, act, noLimit, date_from, date_to, listHash);
-                call.enqueue(new retrofit2.Callback<PhotoHash>() {
-                    @Override
-                    public void onResponse(Call<PhotoHash> call, Response<PhotoHash> response) {
-                        try {
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().getState()) {
-                                    if (response.body().getList() != null && response.body().getList().size() > 0) {
-                                        List<PhotoHashList> list = response.body().getList();
-
-                                        Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "list: " + list.size());
-
-                                        for (PhotoHashList itemSite : list) {
-                                            for (StackPhotoDB itemApp : realmResults) {
-
-                                                String hashSite = itemSite.imgHash;
-                                                String hashApp = itemApp.getPhoto_hash();
-
-                                                if (hashSite.equals(hashApp)) {
-                                                    Log.e("CHECK_HASH", "Данные найдены. HashS: " + hashSite + " \tHashS: " + hashApp);
-                                                    try {
-                                                        // Обновление itemApp из itemSite
-                                                        String dtUpload = itemSite.getDtUpload();
-                                                        long serverTime = System.currentTimeMillis();  // значение по умолчанию
-
-                                                        if (dtUpload != null) {
-                                                            try {
-                                                                serverTime = Long.parseLong(dtUpload);
-                                                            } catch (NumberFormatException e) {
-                                                                Log.e("ConversionError", "Cannot convert dtUpload to long: " + dtUpload, e);
-                                                            }
-                                                        }
-
-                                                        StackPhotoRealm.updateServerDetails(itemApp,
-                                                                itemSite.getID(), itemSite.getPhotoUrl(), serverTime);
-
-//                                                        Log.e("CHECK_HASH", "Запись в БД");
-//                                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                                            itemApp.setGet_on_server(System.currentTimeMillis());
-//                                                            if (itemSite.getPhotoUrl() != null)
-//                                                                itemApp.setPhotoServerURL(itemSite.getPhotoUrl());
-//                                                            itemApp.setPhotoServerId(itemSite.getID());
-//                                                            String dtUpload = itemSite.getDtUpload();
-//                                                            if (dtUpload != null) {
-//                                                                try {
-//                                                                    long dtUploadLong = Long.parseLong(dtUpload);
-//                                                                    itemApp.setGet_on_server(dtUploadLong);
-//                                                                } catch (NumberFormatException e) {
-//                                                                    Log.e("ConversionError", "Cannot convert dtUpload to long: " + dtUpload);
-//                                                                }
-//                                                            }
-//                                                        });
-//                                                        RealmManager.stackPhotoSavePhoto(itemApp);
-                                                    } catch (Exception e) {
-                                                        Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
-                                                    }
-                                                } else {
-                                                    Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: else");
-                                                }
-
-                                            }
-                                        }
-
-                                    } else {
-                                        Log.d("test", "Нет данных1");
-                                    }
-                                } else {
-                                    Log.d("test", "Нет данных2");
-                                }
-                            }
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "GLOBAL Exception e: " + e);
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<PhotoHash> call, Throwable t) {
-                        Log.d("test", "Нет данных3");
-                        Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Throwable t: " + t);
-                    }
-                });
-            } else {
-                Log.d("test", "Нет данных4");
-            }
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Exception e2: " + e);
-//            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото: " + e, Toast.LENGTH_SHORT).show();
-        }
-
+        ua.com.merchik.merchik.ServerExchange.PhotoHashExchange.refresh();
     }
 
 
@@ -3117,6 +3002,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             Log.e("WEB_SOCKET_TEST", "wsData.chat.msg: " + wsData.chat.msg);
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
                                             new ChatSDB().saveChatFromWebSocket(wsData.chat);
+                                            ChatSyncWorker.onWebSocketChat(context);
                                             break;
                                         case "global_notice":
                                             if (handleGlobalNotice(wsData)) {
@@ -3185,8 +3071,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         @Override
                         public void onSuccess(String data) {
                             // Типо всё ок
+                            internetStatusG = Globals.InternetStatus.INTERNET;
                             if (extra != null && extra.equals("SHOW_MASSAGE")) {
-                                internetStatusG = Globals.InternetStatus.INTERNET;
 //                                Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
                                 Toast.makeText(toolbar_menus.this, "Все нормально, сервер merchik онлайн", Toast.LENGTH_LONG).show();
                             } else if (extra != null && extra.equals("SIGNAL")) {
@@ -3202,8 +3088,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                         @Override
                         public void onFailure(String error) {
+                            internetStatusG = Globals.InternetStatus.NO_SERVER;
                             if (extra != null && extra.equals("SHOW_MASSAGE")) {
-                                internetStatusG = Globals.InternetStatus.NO_SERVER;
                                 Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
                             } else if (extra != null && extra.equals("SIGNAL")) {
                                 if (background instanceof ShapeDrawable) {
@@ -3217,8 +3103,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         }
                     });
                 } else {
+                    internetStatusG = Globals.InternetStatus.NO_INTERNET;
                     if (extra != null && extra.equals("SHOW_MASSAGE")) {
-                        internetStatusG = Globals.InternetStatus.NO_INTERNET;
                         Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
                     } else if (extra != null && extra.equals("SIGNAL")) {
                         if (background instanceof ShapeDrawable) {

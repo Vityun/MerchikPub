@@ -110,6 +110,9 @@ public enum TableName {
     DYNAMIC_PHOTO("dynamic_photo"),
     PLAN_RESULTS_DYNAMIC("plan_results_dynamic"),
     LOG("log"),
+    CHAT("chat"),
+    CHAT_GROUP("chat_grp"),
+    SITE_OBJECTS("site_objects"),
 
 
 

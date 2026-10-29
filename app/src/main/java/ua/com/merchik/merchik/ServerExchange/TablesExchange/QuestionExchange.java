@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -17,7 +16,6 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUpload;
 import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
@@ -29,78 +27,7 @@ public class QuestionExchange {
 
 
     public void downloadQuestionAnswer() {
-        try {
-            StandartData data = new StandartData();
-            data.mod = "quest_data";
-            data.act = "list";
-//            data.code_iza = getIZAList();
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-            Log.e("downloadQuestionAnswer", "quest_data.list start");
-            RetrofitBuilder.getRetrofitInterface().GET_QUESTION_LIST(RetrofitBuilder.contentType, convertedObject)
-                    .enqueue(new Callback<QuestionAnswerResponse>() {
-                        @Override
-                        public void onResponse(Call<QuestionAnswerResponse> call, Response<QuestionAnswerResponse> response) {
-                            Log.e("downloadQuestionAnswer", "quest_data.list onResponse");
-                            QuestionAnswerResponse body = response.body();
-                            int listSize = body != null && body.getList() != null ? body.getList().size() : 0;
-                            Boolean state = body != null ? body.getState() : null;
-                            String error = body != null ? body.getError() : null;
-
-                            Globals.writeToMLOG(
-                                    "INFO",
-                                    "downloadQuestionAnswer/onResponse",
-                                    "quest_data.list code=" + response.code()
-                                            + ", successful=" + response.isSuccessful()
-                                            + ", state=" + state
-                                            + ", listSize=" + listSize
-                                            + ", error=" + error
-                            );
-
-                            if (response.isSuccessful()
-                                    && body != null
-                                    && Boolean.TRUE.equals(body.getState())
-                                    && body.getList() != null
-                                    && !body.getList().isEmpty()) {
-                                Log.e("downloadQuestionAnswer", "quest_data.list size: " + listSize);
-                                SQL_DB.questionAnswerDao().insertAll(body.getList());
-                            }
-//                            if (response.isSuccessful() && response.body() != null &&
-//                            response.body())
-                        }
-
-                        @Override
-                        public void onFailure(Call<QuestionAnswerResponse> call, Throwable t) {
-                            Log.e("downloadQuestionAnswer", "quest_data.list onFailure: " + t.getMessage());
-                            Globals.writeToMLOG(
-                                    "ERROR",
-                                    "downloadQuestionAnswer/onFailure",
-                                    "quest_data.list Throwable: " + t + "\n" + Log.getStackTraceString(t)
-                            );
-
-                        }
-                    });
-//            RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, convertedObject)
-//                    .enqueue(new Callback<JsonObject>() {
-//                        @Override
-//                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                            Log.e("!!!!!!!!","+++++++++++");
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Call<JsonObject> call, Throwable t) {
-//                            Log.e("!!!!!!!!","+++++++++++");
-//
-//                        }
-//                    });
-
-
-
-        } catch (Exception e) {
-            Log.e("MenuMainTest", "Exception e.t:" + e);
-        }
+        ReferenceDataExchange.questions();
     }
 
     private boolean isQuestionAnswersUploading = false;

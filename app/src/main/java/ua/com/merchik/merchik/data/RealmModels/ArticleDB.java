@@ -25,6 +25,16 @@ public class ArticleDB extends RealmObject implements DataObjectUI {
     public ArticleDB() {
     }
 
+    public static ArticleDB fromRoom(ua.com.merchik.merchik.data.Database.Room.ArticleSDB row) {
+        ArticleDB copy = new ArticleDB();
+        copy.iD = String.valueOf(row.id);
+        copy.vendorCode = row.vendorCode;
+        copy.tovarId = row.tovarId == null ? null : row.tovarId.toString();
+        copy.addrTpId = row.addrTpId == null ? null : row.addrTpId.toString();
+        copy.dtUpdate = row.dtUpdate == null ? null : row.dtUpdate.toString();
+        return copy;
+    }
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {

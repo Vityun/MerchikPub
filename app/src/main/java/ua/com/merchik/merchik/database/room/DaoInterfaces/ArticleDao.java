@@ -12,6 +12,9 @@ import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 
 @Dao
 public interface ArticleDao {
+    @Query("SELECT COUNT(*) FROM article")
+    long count();
+
     @Query("SELECT * FROM article")
     List<ArticleSDB> getAll();
 

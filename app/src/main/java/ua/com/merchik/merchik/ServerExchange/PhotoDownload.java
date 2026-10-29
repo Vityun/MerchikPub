@@ -602,47 +602,7 @@ public class PhotoDownload {
      * Получение списка фотографий(таблички) для дальнейшего скачивания.
      */
     public void getPhotoFromServer(PhotoTableRequest data) {
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
-        data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
-//        data.dt_upload = "0";
-//        data.dt_upload = String.valueOf(System.currentTimeMillis()/1000 - 121);
-
-        String contentType = "application/json";
-        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-
-        Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/convertedObject", "convertedObject: " + convertedObject);
-
-        retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<ModImagesView>() {
-            @Override
-            public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
-                try {
-                    int size = 0;
-                    if (response.body() != null && response.body().getState() && response.body().getList() != null) {
-                        size = response.body().getList().size();
-//                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoFromServer/onSuccess", "(фото юзеров которые надо закачать)size: " + size);
-                    }
-                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
-                    if (size > 0) {
-                        synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                        savePhotoInfoToDB(response.body().getList());
-//                        savePhotoToDB(response.body().getList());
-                    }
-
-                    Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
-                Log.e("getPhotoFromServer", "test.t:" + t);
-                Globals.writeToMLOG("ERROR", "" + getClass().getName() + "/getPhotoFromServer/onFailure", "Throwable t: " + t);
-            }
-        });
+        PhotoMetadataExchange.download(data, true, null);
     }
 
 //    private final Semaphore semaphore = new Semaphore(10); // Одновременно выполняются только 10 задач
@@ -933,316 +893,38 @@ public class PhotoDownload {
      *
      * @param data - JSON запрос на сайт для получения списка фоток.
      */
-    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest
-                                                  data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
-        Log.e("getPhotoInfo2", "HERE");
-        JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-        String requestJson = object.toString();
-        Globals.writeToMLOG("INFO", "PhotoDownload/getPhotoInfoAndSaveItToDB/request", "request=" + requestJson);
-
-        {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
-            call.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.d("smarti", "onResponse: ");
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.d("smarti", "onResponse: ");
-                }
-            });
-        }
-
-        retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
-        call.enqueue(new retrofit2.Callback<ModImagesView>() {
-            @Override
-            public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
-                try {
-                    Globals.writeToMLOG(
-                            "INFO",
-                            "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
-                            "request=" + requestJson +
-                                    ", httpCode=" + response.code() +
-                                    ", successful=" + response.isSuccessful() +
-                                    ", body=" + new Gson().toJson(response.body())
-                    );
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            if (response.body().getState() && response.body().getList() != null && response.body().getList().size() > 0) {
-                                savePhotoInfoToDB(response.body().getList(), clickUpdatePhoto);
-                            } else {
-                                clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
-                                Globals.writeToMLOG("INFO", "getPhotoInfoAndSaveItToDB",
-                                        "request=" + requestJson +
-                                                ", response.body().getState(): " + response.body().getState() +
-                                                ", response.body().getList() == NULL OR 0" +
-                                                ", body=" + new Gson().toJson(response.body()));
-                            }
-                        } else {
-                            Globals.writeToMLOG(
-                                    "ERROR",
-                                    "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
-                                    "request=" + requestJson + ", response.body() == null"
-                            );
-                            clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
-                        }
-                    } else {
-                        Globals.writeToMLOG(
-                                "ERROR",
-                                "PhotoDownload/getPhotoInfoAndSaveItToDB/response",
-                                "request=" + requestJson +
-                                        ", httpCode=" + response.code() +
-                                        ", message=" + response.message()
-                        );
-                        clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
-                    }
-
-                } catch (Exception e) {
-                    clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
-                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "request=" + requestJson + ", Не удалось сохранить фото в БД. Exception e: " + e);
-                }
+    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data,
+                                         Clicks.clickObjectAndStatus<StackPhotoDB> callback) {
+        PhotoMetadataExchange.download(data, false, new Clicks.clickObjectAndStatus<PhotoMetadataExchange.Result>() {
+            @Override public void onSuccess(PhotoMetadataExchange.Result result) {
+                if (result.photos.isEmpty()) callback.onFailure("Дані фотографії відсутні.");
+                else callback.onSuccess(result.photos.get(0));
             }
-
-            @Override
-            public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
-                Log.e("getPhotoInfo2", "test.t:" + t);
-                Globals.writeToMLOG(
-                        "ERROR",
-                        "PhotoDownload/getPhotoInfoAndSaveItToDB/onFailure",
-                        "request=" + requestJson + ", throwable=" + t
-                );
-                clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Throwable: " + t);
-            }
+            @Override public void onFailure(String error) { callback.onFailure(error); }
         });
     }
 
-    // ####################### date_to = 2024-12-16 ???? какого х!
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
-        Log.e("getPhotoInfo2", "HERE");
-        JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-
-//        {
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
-//            call.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//            });
-//        }
-
-        retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
-        call.enqueue(new retrofit2.Callback<ModImagesView>() {
-            @Override
-            public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
-                try {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            if (response.body().getState() && response.body().getList() != null && response.body().getList().size() > 0) {
-                                savePhotoInfoToDB(response.body().getList());
-                            }
-                        }
-                    } else {
-                        Log.e("response", "unSuccessful: " + response.toString());
-                        String rr = response.headers().toString();
-                        Log.e("response", "unSuccessful2: " + rr);
-                        String rrr = response.message();
-                    }
-
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "Не удалось сохранить фото в БД. Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
-                Log.e("getPhotoInfo2", "test.t:" + t);
-            }
-        });
+        PhotoMetadataExchange.download(data, true, null);
     }
 
-
-    /**
-     * 17.03.2021
-     * Сохранение записей о фотках в БД.
-     * <p>
-     * Спустя куча костылей стало очевидно что что б фотки не выгружались на сервер - надо им
-     * поставить признак что они уже выгружались.
-     * <p>
-     * Эта функция в перспективе будет расширяться как и стэкфото
-     * <p>
-     * 28.02.23. Добавил Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto для того что б
-     * была возможность вернуть фотку которую только что загрузили. На момент написания коммента,
-     * понимаю что надо будет потом сделать адекватнее и возращать список.
-     */
-    /**
-     * MERCHIK_1 24.11.2024
-     * Можливо через саме це місце треба буде грейдити інтерфейс користувача коли йому завантажилися фото, які його цікавлять
-     */
-    public void savePhotoInfoToDB
-    (List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
-        List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
-        int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
-        String firstExistingPhotoId = null;
-
-        // Перебираем полученные от сервера данные и формируем список для записи.
-        for (ModImagesViewList item : list) {
-
-            // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
-            StackPhotoDB existingPhoto = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID());
-            if (existingPhoto == null) {
-                StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                stackPhotoDB.setId(id);
-
-                stackPhotoDB.setDt(item.getDt());
-
-                stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-
-                stackPhotoDB.setPhotoServerId(item.getID());
-                stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-
-                stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
-
-                stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
-
-                stackPhotoDB.setClient_id(item.getClientId());
-                stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
-
-                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
-
-                stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
-
-                stackPhotoDB.setComment(item.getComments());
-                stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
-
-                stackList.add(stackPhotoDB);
-
-                id++;
-            } else {
-                updateExistingPhotoComment(existingPhoto, item.getComments());
-                if (firstExistingPhotoId == null) {
-                    firstExistingPhotoId = item.getID();
-                }
-            }
-        }
-        RealmManager.stackPhotoSavePhoto(stackList);
-        StackPhotoDB result = stackList.isEmpty()
-                ? StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(firstExistingPhotoId)
-                : stackList.get(0);
-        if (result != null) {
-            clickUpdatePhoto.onSuccess(result);
-        } else {
-            clickUpdatePhoto.onFailure("Дані фотографії відсутні.");
+    public void savePhotoInfoToDB(List<ModImagesViewList> rows,
+                                  Clicks.clickObjectAndStatus<StackPhotoDB> callback) {
+        try {
+            List<StackPhotoDB> saved = PhotoMetadataExchange.save(RealmManager.INSTANCE, rows,
+                    System.currentTimeMillis() / 1000, () -> { });
+            if (saved.isEmpty()) callback.onFailure("Дані фотографії відсутні.");
+            else callback.onSuccess(saved.get(0));
+        } catch (Exception error) {
+            callback.onFailure(error.toString());
         }
     }
 
-    public void savePhotoInfoToDB(List<ModImagesViewList> list) {
-        List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
-        int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
-
-        // Перебираем полученные от сервера данные и формируем список для записи.
-        for (ModImagesViewList item : list) {
-
-            // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
-
-
-            StackPhotoDB existingPhoto = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID());
-            if (existingPhoto == null) {
-                StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                try {
-                    stackPhotoDB.setId(id);
-
-                    stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
-
-                    stackPhotoDB.code_dad2 = Long.parseLong(Objects.requireNonNullElse(item.codeDad2, "0"));
-
-                    stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
-
-                    stackPhotoDB.photo_hash = Objects.requireNonNullElse(item.imgHash, "");
-                    stackPhotoDB.tovar_id = Objects.requireNonNullElse(item.getTovarId(), "");
-
-                    stackPhotoDB.showcase_id = item.showcase_id;
-                    stackPhotoDB.setCode_iza(item.codeIZA);
-                    stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
-
-
-                    stackPhotoDB.setVpi(System.currentTimeMillis() / 1000);
-                    stackPhotoDB.setDt(item.getDt());
-
-                    stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                    stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                    stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-
-                    stackPhotoDB.setPhotoServerId(item.getID());
-                    stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-
-                    stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                    stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
-
-                    stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                    stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
-                    stackPhotoDB.setClient_id(item.getClientId());
-                    stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
-
-                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                    stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
-
-                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
-
-                    stackPhotoDB.setCode_iza(item.codeIZA);
-
-                    stackPhotoDB.setExample_id(Objects.requireNonNullElse(item.getExample_id(), "0"));
-                    stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(), "0"));
-                    stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(), "0"));
-                    stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(), "0"));
-
-                    stackPhotoDB.setComment(item.getComments());
-
-                } catch (Exception e) {
-                    Log.e("Exception", "e: " + e.getMessage());
-                }
-                stackList.add(stackPhotoDB);
-
-                id++;
-            } else {
-                updateExistingPhotoComment(existingPhoto, item.getComments());
-            }
-        }
-        RealmManager.stackPhotoSavePhoto(stackList);
+    public void savePhotoInfoToDB(List<ModImagesViewList> rows) {
+        PhotoMetadataExchange.save(RealmManager.INSTANCE, rows, System.currentTimeMillis() / 1000, () -> { });
     }
 
-    private void updateExistingPhotoComment(StackPhotoDB existingPhoto, String serverComment) {
-        if (serverComment == null || serverComment.trim().isEmpty()) {
-            return;
-        }
-        String localComment = existingPhoto.getComment();
-        if (localComment != null && !localComment.trim().isEmpty()) {
-            return;
-        }
 
-        // Recheck the current Realm row and update only the received comment and its local timestamp.
-        RealmManager.INSTANCE.executeTransaction(realm -> {
-            StackPhotoDB photo = realm.where(StackPhotoDB.class)
-                    .equalTo("photoServerId", existingPhoto.getPhotoServerId())
-                    .findFirst();
-            if (photo != null && (photo.getComment() == null || photo.getComment().trim().isEmpty())) {
-                photo.setComment(serverComment);
-                photo.setVpi(System.currentTimeMillis() / 1000);
-            }
-        });
-    }
 
 
     /**
@@ -1382,54 +1064,28 @@ public class PhotoDownload {
     }
 
     public void savePhotoToDB2(List<ImagesViewListImageList> data) {
+        // Metadata is already committed by PhotoMetadataExchange, independently of file download.
         for (ImagesViewListImageList item : data) {
-            if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(item.id)) == null) {
-                downloadPhoto(item.photoUrl, new ExchangeInterface.ExchangePhoto() {
-                    @Override
-                    public void onSuccess(Bitmap bitmap) {
-                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "String.valueOf(item.id): " + String.valueOf(item.id));
-                        try {
-                            StackPhotoDB photoDB = new StackPhotoDB();
-                            photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
-                            photoDB.setPhotoServerId(String.valueOf(item.id));
-                            photoDB.setDt(item.dt);
-                            photoDB.setClient_id(item.clientId);
-                            photoDB.setAddr_id(item.addrId);
-                            photoDB.setUser_id(item.merchikId);
-                            photoDB.setPhoto_type(item.photoTp);
-
-                            photoDB.setCreate_time(item.dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                            photoDB.setUpload_to_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
-                            photoDB.setGet_on_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
-
-//                            photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
-                            photoDB.setApprove(item.approve);
-
-                            photoDB.setDvi(item.dvi);
-                            photoDB.setPhotoServerURL(item.photoUrl);
-                            photoDB.setVpi(System.currentTimeMillis() / 1000);
-
-
-//                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
-
-                            // TODO проверить правильно ли стоит item.id или должен быть
-                            savePhotoAndUpdateStackPhotoDB("/Planogram", "" + item.id, bitmap, photoDB);
-
-//                            RealmManager.stackPhotoSavePhoto(photoDB);
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/Planogram", "Exception e: " + e);
-                        }
-
+            StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(item.id));
+            if (photo == null || (photo.getPhoto_num() != null && !photo.getPhoto_num().isEmpty())) continue;
+            downloadPhoto(item.photoUrl, new ExchangeInterface.ExchangePhoto() {
+                @Override public void onSuccess(Bitmap bitmap) {
+                    try {
+                        String path = Globals.savePhotoToPhoneMemory("/Planogram", String.valueOf(item.id), bitmap);
+                        if (path == null) return;
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            StackPhotoDB current = realm.where(StackPhotoDB.class).equalTo("id", photo.getId()).findFirst();
+                            if (StackPhotoSyncPolicy.samePhoto(current, photo)) current.setPhoto_num(path);
+                        });
+                    } catch (Exception error) {
+                        Globals.writeToMLOG("ERROR", "PhotoDownload/planogramFile", error.toString());
                     }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/Planogram", "error: " + error);
-                    }
-                });
-            }
+                }
+                @Override public void onFailure(String error) {
+                    Globals.writeToMLOG("ERROR", "PhotoDownload/planogramFile", error);
+                }
+            });
         }
-
     }
 
 

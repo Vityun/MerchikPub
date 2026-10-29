@@ -1,135 +1,89 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
 
-import android.util.Log;
-
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.ServerExchange.SyncExchangeTrace;
+import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
+import ua.com.merchik.merchik.data.Database.Room.SynchronizationCursorSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShelfSizeResponse;
-import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.database.room.AppDatabase;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-/**
- * 18.01.23.
- * Таблица БД. (загрузка, очевидно же)
- * Длин Полочного пространства.
- */
 public class ShelfSizeExchange {
+    private static final AtomicBoolean RUNNING = new AtomicBoolean();
 
     public void downloadShelfSize() {
-        downloadShelfSizeData(new Click() {
-            @Override
-            public <T> void onSuccess(T data) {
-                saveShelfSize((ShelfSizeResponse) data);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.e("ShelfSizeExchange", "Error data: " + error);
-            }
-        });
+        if (!RUNNING.compareAndSet(false, true)) return;
+        AppDatabase db = RoomManager.SQL_DB;
+        int userId = Globals.getCurrentUserId();
+        String session = Globals.getCurrentSessionId();
+        Completable.fromAction(() -> download(db, userId, session))
+                .subscribeOn(Schedulers.io())
+                .doFinally(() -> RUNNING.set(false))
+                .compose(ExchangeWork.track())
+                .subscribe(() -> { }, error -> Globals.writeToMLOG(
+                        "ERROR", "ShelfSizeExchange", "VPI unchanged: " + error));
     }
 
-    /**
-     * 18.01.23.
-     * Тут происходит сохранение Длин Полочного пространства
-     *
-     * @param data
-     */
-    private void saveShelfSize(ShelfSizeResponse data) {
-        Log.e("ShelfSizeExchange", "data: " + data);
-
-
-        Log.e("ShelfSizeExchange", "data: " + new Gson().toJson(data));
+    private void download(AppDatabase db, int userId, String session) throws Exception {
+        requireCurrent(db, userId, session);
+        Long started = TrustedTime.nowServerSecOrLocalSec();
+        LocalDate today = FilteredSyncPolicy.shelfDate(started != null
+                ? started : System.currentTimeMillis() / 1000L);
+        String scope = FilteredSyncPolicy.accountScope(userId, FilteredSyncPolicy.shelfScope(today));
+        SynchronizationCursorSDB cursor = db.synchronizationCursorDao().get(FilteredSyncPolicy.SHELF_SIZE, scope);
+        long from = FilteredSyncPolicy.requestWatermark(cursor, started,
+                cursor != null && cursor.itemCount == db.shelfSizeDao().count());
+        JsonObject request = FilteredSyncPolicy.shelfRequest(today, from);
+        Globals.writeToMLOG("INFO", "ShelfSizeExchange/start", request.toString());
+        SyncExchangeTrace trace = new SyncExchangeTrace(FilteredSyncPolicy.SHELF_SIZE, from);
         try {
-            Log.e("ShelfSizeExchange", "dataS: " + data.list.size());
-
-
-            if (data != null && data.state && data.list != null && data.list.size() > 0) {
-//                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShelfSizeExchange/onSuccess", " data.list: " + data.list);
-
-                SQL_DB.shelfSizeDao().insertAll(data.list)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.e("ShelfSizeExchange", "onComplete OK");
-                                Globals.writeToMLOG("OK", "ShelfSizeExchange/onResponse/onComplete", "OK");
-                            }
-
-                            @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                Log.e("ShelfSizeExchange", "onError e: " + e);
-                                Globals.writeToMLOG("ERROR", "ShelfSizeExchange/onResponse/onError", "Throwable e: " + e);
-                            }
-                        });
+            Response<ShelfSizeResponse> response = RetrofitBuilder.getRetrofitInterface()
+                    .ShelfSize_DOWNLOAD_TABLE(RetrofitBuilder.contentType, request).execute();
+            if (!response.isSuccessful()) {
+                if (response.errorBody() != null) response.errorBody().close();
+                throw new IllegalStateException("shelf_size HTTP " + response.code());
             }
-
-        } catch (Exception e) {
-            Log.e("ShelfSizeExchange", "Exception e: " + e);
+            ShelfSizeResponse body = response.body();
+            trace.response(body == null ? null : body.state, body == null ? null : body.error,
+                    body == null ? null : body.list);
+            List<ShelfSizeSDB> rows = FilteredSyncPolicy.shelfRows(body);
+            db.runInTransaction(() -> {
+                requireCurrent(db, userId, session);
+                db.shelfSizeDao().upsertAll(rows);
+                db.synchronizationCursorDao().save(FilteredSyncPolicy.savedCursor(
+                        FilteredSyncPolicy.SHELF_SIZE, scope, from, started, db.shelfSizeDao().count()));
+                // A new date range gets a full fetch, including rows created before the old VPI.
+                db.synchronizationCursorDao().deleteOtherScopes(FilteredSyncPolicy.SHELF_SIZE, scope);
+                requireCurrent(db, userId, session);
+            });
+            Globals.writeToMLOG("INFO", "ShelfSizeExchange/saved", "scope=" + scope
+                    + ", rows=" + rows.size() + ", vpi="
+                    + FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.SHELF_SIZE, scope, from, started, 0).vpi);
+            trace.saved(FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.SHELF_SIZE, scope, from, started, 0).vpi);
+        } catch (Exception error) {
+            trace.failed(error);
+            throw error;
         }
     }
 
-    /**
-     * 18.01.23.
-     * Загружаю таблицы Длин Полочного пространства.
-     * <p>
-     * mod=data_list
-     * act=shelf_size
-     * <p>
-     * фильтры:
-     * client_id - клиент
-     * addr_id - адрес
-     * <p>
-     * клиент и адрес могут быть как числом, так и массивом чисел, если вообще будет в них
-     * необходимость
-     * dt_from / dt_to- дата на которую актуальна длина в формате YYYY-MM-DD
-     * это не ВПИ если что
-     */
-    private void downloadShelfSizeData(Click click) {
-        StandartData data = new StandartData();
-        data.mod = "data_list";
-        data.act = "shelf_size";
-
-        data.dt_from = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(System.currentTimeMillis(), -20) / 1000, "yyyy-MM-dd");
-        data.dt_to = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(System.currentTimeMillis(), 1) / 1000, "yyyy-MM-dd");
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Globals.writeToMLOG("INFO", "downloadShelfSizeData", "convertedObject: " + convertedObject);
-
-        retrofit2.Call<ShelfSizeResponse> call = RetrofitBuilder.getRetrofitInterface().ShelfSize_DOWNLOAD_TABLE(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ShelfSizeResponse>() {
-            @Override
-            public void onResponse(Call<ShelfSizeResponse> call, Response<ShelfSizeResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        click.onSuccess(response.body());
-                    } else {
-                        click.onFailure("Что-то пошло не по плану!: " + response);
-                    }
-                } else {
-                    click.onFailure("Что-то пошло не по плану: " + response);
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<ShelfSizeResponse> call, Throwable t) {
-                click.onFailure(t.getMessage());
-            }
-        });
+    private void requireCurrent(AppDatabase db, int userId, String session) {
+        if (db == null || db != RoomManager.SQL_DB || userId != Globals.getCurrentUserId()
+                || !Objects.equals(session, Globals.getCurrentSessionId())) {
+            throw new IllegalStateException("Account/session/database changed");
+        }
     }
 }

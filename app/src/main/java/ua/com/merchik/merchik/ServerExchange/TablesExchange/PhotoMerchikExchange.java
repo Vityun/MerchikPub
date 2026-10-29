@@ -36,8 +36,8 @@ public class PhotoMerchikExchange {
             data.mod = "images_view";
             data.act = "list_image";
             data.nolimit = "1";
-            data.date_from = Clock.today_7;
-            data.date_to = Clock.tomorrow7;
+            data.date_from = Clock.getDatePeriod(-7);
+            data.date_to = Clock.getDatePeriod(7);
 
             Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "PhotoTableRequest data: " + new Gson().toJson(data));
 

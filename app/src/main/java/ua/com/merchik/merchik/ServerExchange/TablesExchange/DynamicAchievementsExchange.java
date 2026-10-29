@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.os.SystemClock;
@@ -50,6 +52,7 @@ public class DynamicAchievementsExchange {
         Single.fromCallable(this::syncSync)
                 .subscribeOn(Schedulers.io())
                 .doFinally(() -> RUNNING.set(false))
+                .compose(ExchangeWork.track())
                 .subscribe(
                         summary -> logInfo("syncInCron", summary),
                         throwable -> logError("syncInCron", messageOf(throwable))
@@ -373,14 +376,6 @@ public class DynamicAchievementsExchange {
     }
 
     private long successfulWatermark(SynchronizationTimeTable syncInfo, long requestToSec) {
-        if (TrustedTime.nowServerSecOrNull() == null) {
-            logWarn(
-                    "watermark",
-                    "trusted server time is empty. Keep previous watermark=" + syncInfo.getLastDownloadTime()
-            );
-            return syncInfo.getLastDownloadTime();
-        }
-
         return Math.max(syncInfo.getLastDownloadTime(), requestToSec);
     }
 

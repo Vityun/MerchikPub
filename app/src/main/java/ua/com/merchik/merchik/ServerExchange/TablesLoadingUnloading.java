@@ -75,6 +75,8 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReferenceDataExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationDevicesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.DynamicAchievementsExchange;
@@ -88,10 +90,8 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.HashElements;
-import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
-import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
-import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults;
 import ua.com.merchik.merchik.data.PPAonResponse;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
@@ -107,7 +107,6 @@ import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AddressTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerTableResponseList;
@@ -206,7 +205,6 @@ public class TablesLoadingUnloading {
     private Context context;
 
     private static String notice = "";
-    private static final Set<String> siteHintsRequestsInFlight = Collections.synchronizedSet(new HashSet<>());
     private static final AtomicBoolean promoDownloadInFlight = new AtomicBoolean(false);
 
     /**
@@ -231,11 +229,26 @@ public class TablesLoadingUnloading {
     }
 
     public void downloadAllTables(Context context) {
+        // The manual exchange already owns a run; initial/standalone downloads start their own.
+        ExchangeRunTracker.Ticket dispatch = ExchangeWork.TRACKER.beginWork();
+        ExchangeRunTracker.Ticket run = ExchangeWork.TRACKER.beginRun(() -> {
+            sync = false;
+            Globals.writeToMLOG("INFO", "Exchange/complete", "table metadata exchange finished");
+        });
+        try {
+            downloadAllTablesInternal(context);
+        } finally {
+            dispatch.close();
+            if (run != null) run.close();
+        }
+    }
+
+    private void downloadAllTablesInternal(Context context) {
         sync = true;
         this.context = context;
         try {
             if (!SiteObjectsLocalDefaults.hasDownloadedObjects()) {
-                downloadSiteHints(String.valueOf(Globals.langId));
+                downloadSiteHints(String.valueOf(Globals.langId), true);
             }
         } catch (Exception e) {
             logInitialDataFailure("site_objects", "Readiness check failed: " + e.getClass().getSimpleName());
@@ -333,6 +346,7 @@ public class TablesLoadingUnloading {
 
                     SQL_DB.tovarGroupDao().insertData(list)
                             .subscribeOn(Schedulers.io())
+                            .compose(ExchangeWork.track())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {
@@ -363,6 +377,7 @@ public class TablesLoadingUnloading {
                     public <T> void onSuccess(List<T> data) {
                         SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
                                 .subscribeOn(Schedulers.io())
+                                .compose(ExchangeWork.track())
                                 .subscribe(new DisposableCompletableObserver() {
                                     @Override
                                     public void onComplete() {
@@ -555,6 +570,7 @@ public class TablesLoadingUnloading {
                         }
                         isdownloadWPData = false;
                         readyWPData = true;
+                        RnoVisitDataExchange.refreshRequestedVisits();
                     } catch (Exception e) {
                         Globals.writeToMLOG(
                                 "ERROR",
@@ -762,24 +778,15 @@ public class TablesLoadingUnloading {
                                 HashElements he = response.body().getHashElements();
                                 Map<String, String> addrMap = he != null ? he.getAddrId() : null;
                                 Map<String, String> clientMap = he != null ? he.getClientId() : null;
-                                Map<String, String> dad2Map = he != null ? he.getCodeDad2() : null;
                                 downloadAddressTableByHash(addrMap);
                                 downloadClientTableByHash(clientMap);
-                                downloadOptionTableByHash(dad2Map);
-                                downloadReportPrepearByHash(dad2Map);
 
 //                                List<String> clientId = new ArrayList<>(clientMap.size());
 //                                for (Map.Entry<String, String> e : clientMap.entrySet()) {
 //                                    clientId.add(e.getKey());
 //                                }
-                                if (dad2Map != null) {
-                                    List<String> dad2 = new ArrayList<>(dad2Map.size());
-
-                                    for (Map.Entry<String, String> e : dad2Map.entrySet()) {
-                                        dad2.add(e.getKey());
-                                    }
-                                    downloadTovarTableDad2(dad2);
-                                }
+                                // WpDataServer attaches dad2 hashes to rows. Visit details are
+                                // downloaded on opening, not for every nearby RNO.
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -820,7 +827,7 @@ public class TablesLoadingUnloading {
 
     private void notifyDownloadWPDataWithCordsComplete(@Nullable Runnable onComplete) {
         if (onComplete == null) return;
-        new Handler(Looper.getMainLooper()).post(() -> {
+        ExchangeWork.dispatch(new Handler(Looper.getMainLooper())::post, () -> {
             try {
                 onComplete.run();
             } catch (Exception e) {
@@ -830,49 +837,7 @@ public class TablesLoadingUnloading {
     }
 
     public void downloadWiFi() {
-        StandartData data = new StandartData();
-
-        data.mod = "location";
-        data.act = "device_list";
-
-        long vpi;
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wifi_mac_location");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWiFi/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else
-            vpi = 0;
-
-        data.dt_change_from = String.valueOf(vpi);
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        RetrofitBuilder.getRetrofitInterface()
-                .GET_LOCATION_DEVICES_RX(RetrofitBuilder.contentType, convertedObject)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(result -> {
-
-                    if (result != null && result.state
-                            && result.list != null && !result.list.isEmpty()) {
-
-                        SQL_DB.locationDevicesDao().upsertAll(result.list);
-
-                        if (sTable != null) {
-                            sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                            RealmManager.setToSynchronizationTimetableDB(sTable);
-                        }
-
-                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.downloadWiFi", "Data inserted successfully. Size: " + result.list.size());
-                    } else
-                        Globals.writeToMLOG("INFO", "TablesLoadingUnloading.downloadWiFi", "data is empty");
-
-                }, throwable -> Globals.writeToMLOG("ERROR", "TablesLoadingUnloading.downloadWiFi", "exeption: " + throwable.getMessage()));
-
-
+        LocationDevicesExchange.download();
     }
 
     //    04.08.2025 новый метод для получения таблицы доп заработков
@@ -907,6 +872,7 @@ public class TablesLoadingUnloading {
 
                 })
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(
                         size -> {
                             Log.e("!!!!!!!!!!!!!", "inserted size: " + size);
@@ -1090,6 +1056,7 @@ public class TablesLoadingUnloading {
                     DOWNLOAD_PLAN_BUDGET_RUNNING.set(false);
                 })
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(
                         size -> {
                             if (size > 0) {
@@ -1329,6 +1296,7 @@ public class TablesLoadingUnloading {
                 })
                 .doFinally(() -> DOWNLOAD_PLAN_BUDGET_RUNNING.set(false))
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(
                         confirmedIds -> {
                             if (confirmedIds != null && !confirmedIds.isEmpty()) {
@@ -1577,6 +1545,7 @@ public class TablesLoadingUnloading {
         }
 
         Disposable d = startUploadChainRx()
+                .compose(ExchangeWork.track())
                 .subscribe(
                         result -> {
                             uploadPlanBudgetInFlight.compareAndSet(subject, null);
@@ -1601,6 +1570,7 @@ public class TablesLoadingUnloading {
         }
 
         Disposable d = startUploadChainRx()
+                .compose(ExchangeWork.track())
                 .subscribe(
                         result -> {
                             uploadPlanBudgetInFlight.compareAndSet(subject, null);
@@ -1845,6 +1815,7 @@ public class TablesLoadingUnloading {
                         }
                     }
                 })
+                .compose(ExchangeWork.track())
                 .subscribe(
                         updatedCount -> {
                             Log.e("UPLOAD", "uploadStatus=0 проставлен для: " + updatedCount);
@@ -1880,6 +1851,7 @@ public class TablesLoadingUnloading {
                 .GET_ADDITIONAL_WORK_COUNT(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(result -> {
 
                     if (result != null && result.state
@@ -1996,8 +1968,10 @@ public class TablesLoadingUnloading {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        RnoVisitDataExchange.authorizeTargetedRequest(convertedObject);
 
-        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2", "dad2=" + dad2
+                + ", hasHash=" + convertedObject.has("code_dad2_hash"));
 
         Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<OptionsServer>() {
@@ -2348,6 +2322,7 @@ public class TablesLoadingUnloading {
                 .GET_OPTIONS_RX(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(optionsServer -> {
                     Log.e("!", "__ " + optionsServer);
                     if (optionsServer.getState() && optionsServer.getList() != null
@@ -2392,12 +2367,14 @@ public class TablesLoadingUnloading {
                 .GET_ADDRESS_RX(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(addressTableResponse -> {
                     if (addressTableResponse.state && addressTableResponse.list != null
                             && !addressTableResponse.list.isEmpty()) {
 //                        RealmManager.setRowToAddress(addressTableResponse.getList());
                         SQL_DB.addressDao().insertData(addressTableResponse.list)
                                 .subscribeOn(Schedulers.io())
+                                .compose(ExchangeWork.track())
                                 .subscribe(new DisposableCompletableObserver() {
                                     @Override
                                     public void onComplete() {
@@ -2447,6 +2424,7 @@ public class TablesLoadingUnloading {
                 .GET_CLIENT_RX(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(clientResponce -> {
                     Log.e("!", "__ " + clientResponce);
                     if (clientResponce != null && clientResponce.state
@@ -2454,6 +2432,7 @@ public class TablesLoadingUnloading {
 //                        CustomerRealm.setAddressTable(clientResponce.list);
                         SQL_DB.customerDao().insertData(clientResponce.list)
                                 .subscribeOn(Schedulers.io())
+                                .compose(ExchangeWork.track())
                                 .subscribe(new DisposableCompletableObserver() {
                                     @Override
                                     public void onComplete() {
@@ -2910,8 +2889,14 @@ id_exclude - иди товаров которые есть в приложени
         // Проходим по каждому элементу списка wpDataDBList
         for (WpDataDB wpDataDB : wpDataDBList) {
             // Добавляем client_id в Set (дубликаты игнорируются)
+            if (RnoVisitDataExchange.requiresPreparation(wpDataDB)) continue;
             uniqueClientIds.add(wpDataDB.getClient_id());
             uniqueDad2.add(wpDataDB.getCode_dad2());
+        }
+
+        if (listId == null && uniqueDad2.isEmpty()) {
+            readyTovarTable = true; // RNO readiness is tracked separately, per visit.
+            return;
         }
 
         long vpi;
@@ -3295,26 +3280,7 @@ id_exclude - иди товаров которые есть в приложени
      * Обновление таблицы: Артикула
      */
     public void downloadArticleTable(Context context) {
-        String mod = "data_list";
-        String act = "tovar_vendor_code_list";
-
-        Call<ArticleTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ARTICLE_T(mod, act);
-        call.enqueue(new Callback<ArticleTableResponse>() {
-            @Override
-            public void onResponse(Call<ArticleTableResponse> call, Response<ArticleTableResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSEArticleTable: " + compactBodyLog(response.body()));
-                    if (response.body().getState()) {
-                        RealmManager.setArticle(response.body().getList());
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArticleTableResponse> call, Throwable t) {
-                Log.e("TAG_TABLE", "FAILUREArticleTable: " + t);
-            }
-        });
+        ReferenceDataExchange.articles();
     }
 
 
@@ -3881,7 +3847,7 @@ id_exclude - иди товаров которые есть в приложени
 
         if (synchTableWp == null || TrustedTime.isSyncDue(synchTableWp.getVpi_app(), synchTableWp.getUpdate_frequency())) {
 //            downloadSiteHints("2");
-            downloadVideoLessons();
+            // Lessons belong to Exchange.startExchange, not to the WP cron as well.
             downloadOborotVed();
 
             Log.e("cronUpdateTables", "Выгрузка данных");
@@ -4357,64 +4323,28 @@ id_exclude - иди товаров которые есть в приложени
      * @param langId
      */
     public static void downloadSiteHints(String langId) {
-        if (!siteHintsRequestsInFlight.add(langId)) return;
-        try {
-            Log.e("downloadSiteHints", "String langId: " + langId);
-
-            String mod = "site_objects";
-            String act = "list";
-//        String lang_id = "2"; //(переменная, в которой передаётся код языка, для которого требуется получить список объектов)
-
-            Call<SiteObjects> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_SITE_HINTS(mod, act, langId);
-            call.enqueue(new Callback<SiteObjects>() {
-                @Override
-                public void onResponse(Call<SiteObjects> call, Response<SiteObjects> response) {
-                    try {
-                        if (response.isSuccessful() && response.body() != null
-                                && Boolean.TRUE.equals(response.body().getState())
-                                && response.body().getObjectList() != null && !response.body().getObjectList().isEmpty()) {
-//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
-                                saveSiteObjectsDB(response.body().getObjectList());
-                                RoomManager.SQL_DB.initStateDao().markSiteLoaded();
-                        } else {
-                            initialDownloadFailed("site_objects", "Empty or invalid response: http=" + response.code());
-                        }
-                    } catch (Exception e) {
-                        logInitialDataFailure("site_objects", "Save failed: " + e.getClass().getSimpleName());
-                        Log.e("downloadSiteHints", "Exception e: " + e);
-                    } finally {
-                        siteHintsRequestsInFlight.remove(langId);
-                    }
-
-                }
-
-                @Override
-                public void onFailure(Call<SiteObjects> call, Throwable t) {
-                    siteHintsRequestsInFlight.remove(langId);
-                    initialDownloadFailed("site_objects", "failure=" + t.getClass().getSimpleName());
-                    Log.e("downloadSiteHints", "FAILURE_E: " + t.getMessage());
-                    Log.e("downloadSiteHints", "FAILURE_E2: " + t);
-                }
-            });
-        } catch (Exception e) {
-            siteHintsRequestsInFlight.remove(langId);
-            initialDownloadFailed("site_objects", "Request failed: " + e.getClass().getSimpleName());
-        }
+        downloadSiteHints(langId, false);
     }
 
+    private static void downloadSiteHints(String langId, boolean startup) {
+        try {
+            Exchange.ExchangeInt callback = new Exchange.ExchangeInt() {
+                @Override
+                public void onSuccess(String message) {
+                    Globals.writeToMLOG("INFO", "downloadSiteHints", message);
+                }
 
-    private static void saveSiteObjectsDB(List<SiteObjectsDB> data) {
-        if (data != null) {
-            Log.e("saveSiteObjectsDB", "data+ : " + data.size());
-            INSTANCE.executeTransaction(realm -> {
-                INSTANCE.delete(SiteObjectsDB.class);
-                INSTANCE.copyToRealmOrUpdate(data);
-            });
-            SiteObjectsLocalDefaults.ensureDurationObjects();
-        } else {
-            Log.e("saveSiteObjectsDB", "data-");
+                @Override
+                public void onFailure(String error) {
+                    initialDownloadFailed("site_objects", error);
+                }
+            };
+            SiteObjectsExchange exchange = new SiteObjectsExchange();
+            if (startup) exchange.downloadStartup(Integer.parseInt(langId), callback);
+            else exchange.downloadSiteObjects(Integer.parseInt(langId), callback);
+        } catch (Exception e) {
+            initialDownloadFailed("site_objects", "Request failed: " + e.getClass().getSimpleName());
         }
-
     }
 
 
@@ -4442,35 +4372,7 @@ id_exclude - иди товаров которые есть в приложени
      * dt - дата"
      */
     public static void downloadVideoLessons() {
-        String mod = "lesson";
-        String act = "list";
-
-        Call<SiteHints> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_VIDEO_LESSONS(mod, act);
-        call.enqueue(new Callback<SiteHints>() {
-            @Override
-            public void onResponse(Call<SiteHints> call, Response<SiteHints> response) {
-                try {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            if (response.body().getState() != null && response.body().getState()) {
-                                if (response.body().getList() != null && response.body().getList().size() > 0) {
-//                                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVideoLessons/onSuccess", "response.body().getList().size(): " + response.body().getList().size());
-                                    saveSiteHintsDB(response.body().getList());
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "downloadVideoLessons", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SiteHints> call, Throwable t) {
-                Log.e("downloadVideoLessons", "FAILURE_E: " + t.getMessage());
-                Log.e("downloadVideoLessons", "FAILURE_E2: " + t);
-            }
-        });
+        ReferenceDataExchange.lessons();
     }
 
     public static void saveSiteHintsDB(List<SiteHintsDB> data) {
@@ -4480,7 +4382,6 @@ id_exclude - иди товаров которые есть в приложени
             if (data != null) {
                 Log.e("downloadVideoLessons", "saveSiteHintsDB/data.size(): " + data.size());
                 INSTANCE.executeTransaction(realm -> {
-                    INSTANCE.delete(SiteHintsDB.class);
                     for (SiteHintsDB item : data) {
                         Log.e("saveSiteHintsDB", "data id: " + item.getID() + " |nm: " + item.getNm());
                         INSTANCE.copyToRealmOrUpdate(item);
@@ -5060,7 +4961,7 @@ id_exclude - иди товаров которые есть в приложени
                 try {
                     if (response.body() != null && response.body().list != null
                             && response.body().state && !response.body().list.isEmpty())
-                        SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
+                        SQL_DB.tovarGroupClientDao().insertData(response.body().list).compose(ExchangeWork.track()).subscribe(new DisposableCompletableObserver() {
                             @Override
                             public void onComplete() {
                                 try {

@@ -332,6 +332,13 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+    @POST("mobile_app.php?")
+    Call<ModImagesView> PHOTO_METADATA_BY_HASH(@Query("mod") String mod,
+                                              @Query("act") String act,
+                                              @Query("nolimit") String noLimit,
+                                              @Query("dt_change_from") String fromSeconds,
+                                              @Query("hash_list[]") List<String> hashes);
+
 
     @POST("mobile_app.php?")
     Call<TovarImgResponse> GET_TOVAR_PHOTO_INFO(@Query("mod") String mod,
@@ -652,8 +659,8 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<SiteHints> DOWNLOAD_VIDEO_LESSONS(
-            @Query("mod") String mod,
-            @Query("act") String act
+            @Header("ContentType") String content,
+            @Body JsonObject data
     );
 
 

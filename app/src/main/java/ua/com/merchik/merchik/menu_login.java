@@ -52,6 +52,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -83,7 +85,8 @@ import ua.com.merchik.merchik.data.synchronization.StartupPolicy;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.Translation.LangListDB;
 import ua.com.merchik.merchik.data.Translation.SiteLanguages;
-import ua.com.merchik.merchik.data.Translation.SiteTranslations;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
+import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Translation.SiteTranslationsList;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -2480,6 +2483,7 @@ public class menu_login extends AppCompatActivity {
             // The language table is still empty on the first launch.
             String languageId = id_lang != null && id_lang.getID() != null
                     ? id_lang.getID() : String.valueOf(Globals.langId);
+            Globals.langId = Integer.parseInt(languageId);
             TablesLoadingUnloading.downloadSiteHints(languageId);
         } catch (Exception e) {
             Log.e("getTableTranslate", "-");
@@ -2512,30 +2516,21 @@ public class menu_login extends AppCompatActivity {
 
         try {
             List<LangListDB> list = RealmManager.getAllLangList();
+            Set<Integer> languages = new LinkedHashSet<>();
+            languages.add(Globals.langId);
             for (LangListDB item : list) {
-                Log.e("getTableTranslate", "item: " + item.getID());
-                String mod2 = "translation";
-                String act2 = "translation_list";
-                String lang = item.getID();
-                retrofit2.Call<SiteTranslations> call2 = RetrofitBuilder.getRetrofitInterface().GET_TRANSLATES(mod2, act2, lang);
-                call2.enqueue(new retrofit2.Callback<SiteTranslations>() {
+                languages.add(Integer.parseInt(item.getID()));
+            }
+            for (int langId : languages) {
+                new TranslationsExchange().downloadTranslations(langId, new ExchangeInterface.Translates() {
                     @Override
-                    public void onResponse(retrofit2.Call<SiteTranslations> call, retrofit2.Response<SiteTranslations> response) {
-                        try {
-                            if (response.body() != null) {
-                                if (response.body().getList() != null) {
-                                    saveTranslates(response.body().getList());
-                                }
-                            }
-
-                        } catch (Exception e) {
-
-                        }
+                    public void onSuccess(List<TranslatesSDB> rows) {
+                        Log.e("getTableTranslate", "langId=" + langId + ", saved=" + rows.size());
                     }
 
                     @Override
-                    public void onFailure(retrofit2.Call<SiteTranslations> call, Throwable t) {
-                        Log.e("getTableTranslate", "t2: " + t);
+                    public void onFailure(String error) {
+                        Log.e("getTableTranslate", "langId=" + langId + ", " + error);
                     }
                 });
             }
@@ -2566,29 +2561,6 @@ public class menu_login extends AppCompatActivity {
             });
         }
     }
-
-    /**
-     * 10.02.2021
-     * Сохранение в БД переводов
-     */
-    private void saveTranslates(List<SiteTranslationsList> data) {
-//        Log.e("saveTranslates", "data: " + data);
-//        for (SiteTranslationsList item : data) {
-//            Log.e("saveTranslates", "item.getID(): " + item.getID());
-//            Log.e("saveTranslates", "item.getNm(): " + item.getNm());
-//            Log.e("saveTranslates", "item.getTitle(): " + item.getTitle());
-//        }
-
-        if (data != null) {
-            INSTANCE.executeTransaction(realm -> {
-                for (SiteTranslationsList item : data) {
-                    INSTANCE.copyToRealmOrUpdate(item);
-                }
-            });
-        }
-
-    }
-
 
     private void setFlagClick() {
         flag.setOnClickListener(v -> {

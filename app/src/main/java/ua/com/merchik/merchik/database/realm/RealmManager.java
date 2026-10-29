@@ -86,7 +86,7 @@ public class RealmManager {
         Realm.init(context);
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
-                .schemaVersion(33)
+                .schemaVersion(34)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -292,6 +292,13 @@ public class RealmManager {
             for (WpDataDB incoming : dataToUpdate) {
                 WpDataDB current = r.where(WpDataDB.class).equalTo("code_dad2", incoming.getCode_dad2()).findFirst();
                 if (current != null) {
+                    String hash = incoming.getCode_dad2_hash();
+                    if (hash == null || hash.trim().isEmpty()) {
+                        incoming.setCode_dad2_hash(current.getCode_dad2_hash());
+                    } else {
+                        // Access metadata must refresh even when local work times are protected.
+                        current.setCode_dad2_hash(hash);
+                    }
                     WpWorkTimes.normalize(current, "server.before");
                     if ((current.getVisit_start_dt() > 0 || current.getClient_start_dt() > 0)
                             && incoming.getStatus() == 0) {

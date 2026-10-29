@@ -12,6 +12,9 @@ public class ArticleResponse {
     @Expose
     public boolean state;
 
+    @SerializedName("error")
+    public String error;
+
     @SerializedName("list")
     @Expose
     public List<ArticleSDB> list = null;

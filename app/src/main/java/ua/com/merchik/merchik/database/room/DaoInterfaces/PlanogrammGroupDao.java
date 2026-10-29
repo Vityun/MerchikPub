@@ -21,5 +21,11 @@ public interface PlanogrammGroupDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammGroupSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammGroupSDB> data);
+
+    @Query("SELECT COUNT(*) FROM planogramm_group")
+    long count();
+
     // ----------------------------------------------------
 }

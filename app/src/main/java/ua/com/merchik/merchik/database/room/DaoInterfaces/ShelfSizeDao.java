@@ -21,6 +21,12 @@ public interface ShelfSizeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<ShelfSizeSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<ShelfSizeSDB> data);
+
+    @Query("SELECT COUNT(*) FROM shelf_size")
+    long count();
+
     // ----------------------------------------------------
 
     @Query("SELECT * FROM shelf_size WHERE client_id = :clientId AND addr_id = :addressId ORDER BY dt DESC")

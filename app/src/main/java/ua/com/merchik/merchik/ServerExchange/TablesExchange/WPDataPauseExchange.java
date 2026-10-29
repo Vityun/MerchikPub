@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.os.SystemClock;
@@ -49,6 +51,7 @@ public class WPDataPauseExchange {
         Single.fromCallable(this::syncSync)
                 .subscribeOn(Schedulers.io())
                 .doFinally(() -> RUNNING.set(false))
+                .compose(ExchangeWork.track())
                 .subscribe(
                         summary -> logInfo("syncInCron", summary),
                         throwable -> logError("syncInCron", throwable.getMessage() != null ? throwable.getMessage() : throwable.toString())

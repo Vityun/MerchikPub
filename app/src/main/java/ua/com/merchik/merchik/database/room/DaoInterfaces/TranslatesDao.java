@@ -17,4 +17,10 @@ public interface TranslatesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<TranslatesSDB> data);
+
+    @Query("SELECT COUNT(*) FROM translates WHERE lang_id = :langId")
+    long countForLanguage(String langId);
+
+    @Query("DELETE FROM translates WHERE lang_id = :langId")
+    void deleteForLanguage(String langId);
 }

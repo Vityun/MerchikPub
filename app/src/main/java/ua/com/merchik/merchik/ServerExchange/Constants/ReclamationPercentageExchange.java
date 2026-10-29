@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.Constants;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -51,6 +53,7 @@ public class ReclamationPercentageExchange {
         if (data != null && data.state != null && data.state && data.list != null && data.list.size() > 0) {
             SQL_DB.reclamationPercentageDao().insertAll(data.list)
                     .subscribeOn(Schedulers.io())
+                    .compose(ExchangeWork.track())
                     .subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -70,6 +72,7 @@ public class FragmentsExchange {
                 if (response.body() != null){
                     SQL_DB.fragmentDao().insertData(response.body().list)
                             .subscribeOn(Schedulers.io())
+                            .compose(ExchangeWork.track())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {

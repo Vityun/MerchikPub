@@ -100,4 +100,7 @@ public interface ChatGrpDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public Completable insertData(List<ChatGrpSDB> data);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ChatGrpSDB> data);
 }

@@ -12,7 +12,7 @@ public class PhotoTableRequest {
     public String id_list;      // Фильтр. список idшников фоток
 
     public String sotr_id;       // Фильтр. ID сотрудника по которому надо отобрать фото
-    public String dt_upload;    // Время последнего изменения (для того что б не качать себе каждый раз фулл обьем)
+    public String dt_change_from; // Incremental cursor, Unix seconds.
     public String date_from;     // Фильтр. Дата с
     public String date_to;       // Фильтр. Дато по
     public String addrId;       // Фильтр. Адрес

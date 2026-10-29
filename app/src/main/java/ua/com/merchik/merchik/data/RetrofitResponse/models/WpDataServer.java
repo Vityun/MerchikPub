@@ -48,6 +48,14 @@ public class WpDataServer {
     }
 
     public java.util.List<WpDataDB> getList() {
+        // Access hashes arrive outside the rows, including in targeted plan requests.
+        if (wp_data != null && hashElements != null && hashElements.getCodeDad2() != null) {
+            for (WpDataDB row : wp_data) {
+                if (row == null) continue;
+                String hash = hashElements.getCodeDad2().get(String.valueOf(row.getCode_dad2()));
+                if (hash != null && !hash.trim().isEmpty()) row.setCode_dad2_hash(hash);
+            }
+        }
         return wp_data;
     }
 

@@ -45,11 +45,13 @@ public final class WpWorkTimes {
         try {
             WorkTimeRules.Times times = times(wp);
             boolean changed = !times.matches(wp.getVisit_start_dt(), wp.getClient_start_dt(),
-                    wp.getVisit_end_dt(), wp.getClient_end_dt())
-                    || (wp.client_work_duration != null && wp.client_work_duration != times.duration())
-                    || (wp.client_work_duration == null && times.end > 0);
+                    wp.getVisit_end_dt(), wp.getClient_end_dt());
+            String before = changed ? values(wp) : null;
+            // Duration is derived locally in seconds. A server minute value is not a local edit.
+            if (wp.client_work_duration == null || wp.client_work_duration != times.duration()) {
+                wp.client_work_duration = times.duration();
+            }
             if (changed) {
-                String before = values(wp);
                 apply(wp, times);
                 markDirty(wp);
                 log(wp, source, before, "NORMALIZED");
@@ -110,9 +112,7 @@ public final class WpWorkTimes {
                 incoming.getVisit_start_dt() != incoming.getClient_start_dt(),
                 incoming.getVisit_end_dt() != incoming.getClient_end_dt());
         boolean repair = !chosen.matches(incoming.getVisit_start_dt(), incoming.getClient_start_dt(),
-                incoming.getVisit_end_dt(), incoming.getClient_end_dt())
-                || (incoming.client_work_duration != null && incoming.client_work_duration != chosen.duration())
-                || (incoming.client_work_duration == null && chosen.end > 0);
+                incoming.getVisit_end_dt(), incoming.getClient_end_dt());
         apply(incoming, chosen);
         incoming.startUpdate = local != null && local.startUpdate;
         if (local != null) {

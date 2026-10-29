@@ -45,6 +45,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     private String code_ddas;
     private long codedad;
     private long code_dad2;
+    private String code_dad2_hash;
     private String smeta;
     private String smeta_1c;
     private String doc_num;
@@ -462,6 +463,14 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
     public void setCode_dad2(long code_dad2) {
         this.code_dad2 = code_dad2;
+    }
+
+    public String getCode_dad2_hash() {
+        return code_dad2_hash;
+    }
+
+    public void setCode_dad2_hash(String code_dad2_hash) {
+        this.code_dad2_hash = code_dad2_hash;
     }
 
     public String getSmeta() {
@@ -1286,6 +1295,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         pause_duration = in.readInt();
         pause_dt_start = in.readLong();
         pause_dt_end = in.readLong();
+        code_dad2_hash = in.readString();
     }
 
     @Override
@@ -1412,6 +1422,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeInt(pause_duration);
         dest.writeLong(pause_dt_start);
         dest.writeLong(pause_dt_end);
+        dest.writeString(code_dad2_hash);
     }
 
     public static final Parcelable.Creator<WpDataDB> CREATOR = new Parcelable.Creator<WpDataDB>() {
@@ -1431,7 +1442,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Override
     public String getHidedFieldsOnUI() {
         return "ID, isp, isp_fact, tech_sup_active, addr_id, dt_start, client_id, dt_stop, action, action_txt, action_type, stajirovka_stage, " +
-                "one_time_work, theme_grp, code_dda, code_ddas, codedad, code_dad2, smeta_1c, doc_num, " +
+                "one_time_work, theme_grp, code_dda, code_ddas, codedad, code_dad2, code_dad2_hash, smeta_1c, doc_num, " +
                 "doc_num_grp, doc_type, doc_num_1c, doc_num_1c_id, signal_cnt, doc_num_otchet_id, user_id, user_id_previous, " +
                 "smeta_active, super_id, territorial_id, regional_id, nop_id, starsh_tt_id, contacter_id, fot_user_id, " +
                 "dot_user_id, visit_start_dt, visit_start_dt_receive, visit_start_geo_distance, visit_start_geo_accuracy, " +

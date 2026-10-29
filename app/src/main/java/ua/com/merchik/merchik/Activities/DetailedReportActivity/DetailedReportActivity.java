@@ -40,11 +40,14 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.Gravity;
+import android.view.Menu;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,6 +89,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
 import ua.com.merchik.merchik.ServerExchange.workmager.WpDataDateLogWorker;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
@@ -183,10 +187,20 @@ public class DetailedReportActivity extends toolbar_menus {
     //----------------------------------------------------------------------------------------------
 
     private DetailedReportViewModel detailedReportViewModel;
+    private boolean reportInitialized;
+    private RnoVisitDataExchange.Subscription visitPreparation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        // Restored fragments must not calculate controls before a pending preload finishes.
+        Bundle reportState = savedInstanceState;
+        try {
+            WpDataDB visit = WpDataRealm.getWpDataRowById(getIntent().getLongExtra("WpDataDB_ID", 0));
+            if (!RnoVisitDataExchange.isReady(visit)) reportState = null;
+        } catch (RuntimeException e) {
+            reportState = null;
+        }
+        super.onCreate(reportState);
 
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "onCreate");
@@ -209,6 +223,21 @@ public class DetailedReportActivity extends toolbar_menus {
             setActivityData();
 
             registrationPermission();
+
+            if (!RnoVisitDataExchange.isReady(wpDataDB)) {
+                showVisitPreparation(false);
+                return;
+            }
+            initializeReport();
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/onCreate", "Cannot open visit: " + e);
+            finish();
+        }
+    }
+
+    private void initializeReport() {
+        if (reportInitialized || isFinishing() || isDestroyed()) return;
+        try {
 
             SKUPlan = 0;
             SKUFact = 0;
@@ -339,14 +368,81 @@ public class DetailedReportActivity extends toolbar_menus {
             }
 
             checkVideo(new Integer[]{819});
+            reportInitialized = true;
+            invalidateOptionsMenu();
+            if (getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                ReportConductUi.resume(this, wpDataDB.getCode_dad2());
+            }
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "Exception e: " + e);
+            finish();
         }
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
+
+    private void showVisitPreparation(boolean refresh) {
+        if (visitPreparation != null) visitPreparation.cancel();
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setGravity(Gravity.CENTER);
+        int padding = (int) (24 * getResources().getDisplayMetrics().density);
+        content.setPadding(padding, padding, padding, padding);
+        ProgressBar progress = new ProgressBar(this);
+        content.addView(progress);
+        TextView message = new TextView(this);
+        message.setGravity(Gravity.CENTER);
+        message.setPadding(0, padding, 0, padding);
+        message.setText("Завантаження даних відвідування...");
+        content.addView(message);
+        Button retry = new Button(this);
+        retry.setText("Повторити");
+        retry.setVisibility(View.GONE);
+        retry.setOnClickListener(v -> showVisitPreparation(false));
+        content.addView(retry);
+        Button back = new Button(this);
+        back.setText("Назад");
+        back.setOnClickListener(v -> finish());
+        content.addView(back);
+        setContentView(content);
+        visitPreparation = RnoVisitDataExchange.prepare(wpDataDB.getCode_dad2(), refresh, error -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (error == null) {
+                setActivityData();
+                initializeReport();
+            } else {
+                progress.setVisibility(View.GONE);
+                message.setText(error);
+                retry.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (visitPreparation != null) visitPreparation.cancel();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // The preload screen does not contain toolbar_menus' DrawerLayout.
+        if (!reportInitialized) finish();
+        else super.onBackPressed();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return reportInitialized && super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return reportInitialized && super.onPrepareOptionsMenu(menu);
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (!reportInitialized) return;
         syncPauseWorkUi();
         getWindow().getDecorView().post(() -> {
             try {

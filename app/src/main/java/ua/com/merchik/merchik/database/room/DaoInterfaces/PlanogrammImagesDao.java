@@ -21,5 +21,11 @@ public interface PlanogrammImagesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammImagesSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammImagesSDB> data);
+
+    @Query("SELECT COUNT(*) FROM planogramm_img")
+    long count();
+
     // ----------------------------------------------------
 }

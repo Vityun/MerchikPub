@@ -11,6 +11,9 @@ import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsGroupsSDB;
 
 @Dao
 public interface AdditionalMaterialsGroupsDao {
+    @Query("SELECT COUNT(*) FROM additional_materials_groups")
+    long count();
+
     @Query("SELECT * FROM additional_materials_groups")
     List<AdditionalMaterialsGroupsSDB> getAll();
 

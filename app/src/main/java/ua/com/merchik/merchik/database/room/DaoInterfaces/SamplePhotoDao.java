@@ -12,6 +12,9 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 
 @Dao
 public interface SamplePhotoDao {
+    @Query("SELECT COUNT(*) FROM sample_photo")
+    long count();
+
     @Query("SELECT * FROM sample_photo")
     List<SamplePhotoSDB> getAll();
 
@@ -35,6 +38,9 @@ public interface SamplePhotoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<SamplePhotoSDB> data);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<SamplePhotoSDB> data);
 
     // ----------------------------------------------------
 

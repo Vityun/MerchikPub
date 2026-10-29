@@ -12,6 +12,10 @@ public class ChatGrpResponse {
     @Expose
     public boolean state;
 
+    @SerializedName("error")
+    @Expose
+    public String error;
+
     @SerializedName("list")
     @Expose
     public List<ChatGrpSDB> list = null;

@@ -25,4 +25,16 @@ public interface SiteObjectsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<SiteObjectsSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<SiteObjectsSDB> data);
+
+    @Query("DELETE FROM site_objects")
+    void deleteAll();
+
+    @Query("SELECT COUNT(*) FROM site_objects")
+    long count();
+
+    @Query("SELECT COUNT(*) FROM site_objects WHERE lang_id = :langId")
+    long countForLanguage(String langId);
+
 }

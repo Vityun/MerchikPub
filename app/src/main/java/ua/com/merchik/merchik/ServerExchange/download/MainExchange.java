@@ -9,6 +9,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
 import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
@@ -49,6 +50,9 @@ public class MainExchange {
 
                         } else
                             click.onSuccess(0);
+                        if (Boolean.TRUE.equals(response.body().getState()) && response.body().getList() != null) {
+                            RnoVisitDataExchange.refreshRequestedVisits();
+                        }
                     } else
                         click.onFailure("response error, headers: " + response.headers());
                 }

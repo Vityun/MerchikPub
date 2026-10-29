@@ -21,4 +21,7 @@ public interface ChatDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public Completable insertData(List<ChatSDB> data);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<ChatSDB> data);
 }

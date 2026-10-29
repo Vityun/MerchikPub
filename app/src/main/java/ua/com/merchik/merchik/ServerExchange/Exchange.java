@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 
-import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
@@ -47,6 +46,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.CronchikViewModel;
+import ua.com.merchik.merchik.Activities.MyApplication;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ChatExchange;
+import ua.com.merchik.merchik.data.synchronization.TableName;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.ReportConductManager;
@@ -62,6 +64,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReferenceDataExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
@@ -103,11 +106,9 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusItemResponse;
@@ -129,9 +130,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponseList;
@@ -181,7 +179,6 @@ public class Exchange {
 
     //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ExecutorService executor = Executors.newFixedThreadPool(16);
-    private static final AtomicBoolean START_EXCHANGE_RUNNING = new AtomicBoolean(false);
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final PhotoDownload server;
@@ -235,17 +232,41 @@ public class Exchange {
      * 26.02.2021
      * Начало Обмена. Внутри находятся все Обмены
      */
+    public boolean startManualExchange(Runnable onComplete) {
+        ExchangeRunTracker.Ticket dispatch = ExchangeWork.TRACKER.beginRun(() -> {
+            TablesLoadingUnloading.sync = false;
+            Globals.writeToMLOG("INFO", "Exchange/complete", "manual metadata exchange finished");
+            if (onComplete != null) onComplete.run();
+        });
+        if (dispatch == null) {
+            Globals.writeToMLOG("INFO", "Exchange/start", "manual exchange skipped: previous exchange is running");
+            return false;
+        }
+        try {
+            SiteObjectsExchange.invalidateStartupReuse();
+            exchangeTime = 0;
+            Globals.writeToMLOG("INFO", "Exchange/start", "manual metadata exchange started");
+            startExchangeInternal();
+            new TablesLoadingUnloading().downloadAllTables(context, viewModel);
+            return true;
+        } finally {
+            dispatch.close();
+        }
+    }
+
     public void startExchange() {
+        if (ExchangeWork.TRACKER.isRunning()) return;
         if (shouldGuardRegularExchange()) {
-            if (!START_EXCHANGE_RUNNING.compareAndSet(false, true)) {
-                Globals.writeToMLOG("INFO", "Exchange/startExchange", "Skip duplicate startExchange while previous start is running");
-                return;
-            }
+            ExchangeRunTracker.Ticket dispatch = ExchangeWork.TRACKER.beginRun(() -> {
+                TablesLoadingUnloading.sync = false;
+                Globals.writeToMLOG("INFO", "Exchange/complete", "regular metadata exchange finished");
+            });
+            if (dispatch == null) return;
 
             try {
                 startExchangeInternal();
             } finally {
-                START_EXCHANGE_RUNNING.set(false);
+                dispatch.close();
             }
             return;
         }
@@ -317,14 +338,7 @@ public class Exchange {
 //                            List<SamplePhotoSDB> listPhotosToDownload = (List<SamplePhotoSDB>) data;
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
 
-                                    try {
-                                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(samplePhotoExchange.synchronizationTimetableDB.getVpi_app(), 120));
-                                            RealmManager.setToSynchronizationTimetableDB(samplePhotoExchange.synchronizationTimetableDB);
-                                        }
-                                    } catch (Exception e) {
-                                        Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
-                                    }
+                                    // Metadata and its scoped VPI have already been committed together.
 
                                     try {
 //                                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
@@ -402,71 +416,9 @@ public class Exchange {
                             new LocationExchange().downloadLocationTable(new ExchangeInterface.ExchangeResponseInterface() {
                                 @Override
                                 public <T> void onSuccess(List<T> data) {
-                                    try {
-//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/LocationExchange/downloadLocationTable/onSuccess", "(List<T> data: " + data.size());
-                                        List<LocationList> newDataList = (List<LocationList>) data;
-                                        List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
-                                        int sizeLocal = allLogMPListDB != null ? allLogMPListDB.size() : 0;
-                                        Globals.writeToMLOG("INFO", "startExchange.LocationExchange.downloadLocationTable", "Local LogMPDB size: " + sizeLocal + ", server data size: " + data.size());
-                                        // Создаем множество для быстрого поиска всех серверных ID из allLogMPListDB
-                                        Set<Long> serverIdsInDB = new HashSet<>();
-                                        for (LogMPDB log : allLogMPListDB) {
-                                            serverIdsInDB.add(log.serverId);
-                                        }
-
-                                        List<LogMPDB> logList = new ArrayList<>();
-                                        int id = RealmManager.logMPGetLastId();
-                                        // Перебираем элементы newDataList и добавляем в newDataListToSave только те, которых нет в базе данных
-                                        for (LocationList location : newDataList) {
-                                            // Проверяем, есть ли текущий ID в списке серверных ID из базы данных
-                                            if (!serverIdsInDB.contains(location.id)) {
-                                                LogMPDB logMPDB = new LogMPDB();
-                                                logMPDB.id = ++id;
-                                                logMPDB.serverId = location.id;
-                                                logMPDB.provider = location.sourceId;
-                                                logMPDB.CoordX = location.lat;
-                                                logMPDB.CoordY = location.lon;
-                                                logMPDB.CoordAltitude = location.altitude;
-                                                logMPDB.CoordTime = location.dtDevice * 1000;
-                                                logMPDB.CoordSpeed = location.speed;
-                                                logMPDB.CoordAccuracy = location.accuracy;
-                                                logMPDB.mocking = location.locationIsFake != null && location.locationIsFake != 0;
-                                                logMPDB.vpi = System.currentTimeMillis() / 1000;
-
-                                                logList.add(logMPDB);
-                                            }
-                                        }
-
-
-//                        List<LogMPDB> logList = new ArrayList<>();
-//                        int id = RealmManager.logMPGetLastId();
-//                        for (LocationList item : newDataList) {
-//                            LogMPDB logMPDB = new LogMPDB();
-//                            logMPDB.id = ++id;
-//                            logMPDB.serverId = item.id;
-//                            logMPDB.provider = item.sourceId;
-//                            logMPDB.CoordX = item.lat;
-//                            logMPDB.CoordY = item.lon;
-//                            logMPDB.CoordAltitude = item.altitude;
-//                            logMPDB.CoordTime = item.dtDevice;
-//                            logMPDB.CoordSpeed = item.speed;
-//                            logMPDB.CoordAccuracy = item.accuracy;
-//                            logMPDB.mocking = item.locationIsFake != null && item.locationIsFake != 0;
-//                            logMPDB.vpi = System.currentTimeMillis() / 1000;
-//
-//                            logList.add(logMPDB);
-//                        }
-
-                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                                            List<LogMPDB> testList = realm.copyToRealmOrUpdate(logList);
-                                            Log.e("downloadLocationTable", "testList: " + testList);
-                                        });
-
-                                        Globals.writeToMLOG("INFO", "startExchange.downloadLocationTable.downloadLocationTable", "size data save: " + logList.size());
-                                    } catch (Exception e) {
-                                        Log.e("downloadLocationTable", "Exception e: " + e);
-                                        e.printStackTrace();
-                                    }
+                                    // LocationExchange committed LogMP and its download cursor before this callback.
+                                    Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable",
+                                            "Saved server batch: " + data.size());
                                 }
 
                                 @Override
@@ -534,6 +486,7 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/AddressExchange/onSuccess", "(List<T> data: " + data.size());
                                         SQL_DB.addressDao().insertData((List<AddressSDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -564,6 +517,7 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CustomerExchange/onSuccess", "(List<T> data: " + data.size());
                                         SQL_DB.customerDao().insertData((List<CustomerSDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -598,6 +552,7 @@ public class Exchange {
                                     try {
                                         SQL_DB.usersDao().insertData((List<UsersSDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -626,6 +581,7 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CityExchange/onSuccess", "(List<T> data: " + data.size());
                                         SQL_DB.cityDao().insertData((List<CitySDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -652,6 +608,7 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/OblastExchange/onSuccess", "(List<T> data: " + data.size());
                                         SQL_DB.oblastDao().insertData((List<OblastSDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -684,6 +641,7 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/EKLExchange/onSuccess", "(List<T> data: " + data.size());
                                         SQL_DB.eklDao().insertData((List<EKL_SDB>) data)
                                                 .subscribeOn(Schedulers.io())
+                                                .compose(ExchangeWork.track())
                                                 .subscribe(new DisposableCompletableObserver() {
                                                     @Override
                                                     public void onComplete() {
@@ -718,19 +676,7 @@ public class Exchange {
                                 public <T> void onSuccess(List<T> data) {
                                     Log.e("MerchikTest", "data: " + data);
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/StandartExchange/downloadStandartTable/onSuccess", "(List<T> data: " + data.size());
-                                    SQL_DB.standartDao().insertData((List<StandartSDB>) data)
-                                            .subscribeOn(Schedulers.io())
-                                            .subscribe(new DisposableCompletableObserver() {
-                                                @Override
-                                                public void onComplete() {
-                                                    Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onComplete", "Успешно сохранило Стандарты (" + data.size() + ")шт в БД");
-                                                }
-
-                                                @Override
-                                                public void onError(@NonNull Throwable e) {
-                                                    Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onError", "Ошибка при сохранении в БД: " + e);
-                                                }
-                                            });
+                                    // The exchange already committed the rows and download VPI together.
                                 }
 
                                 @Override
@@ -746,6 +692,7 @@ public class Exchange {
 //                        List<ContentSDB> save = (List<ContentSDB>) data;
                                     SQL_DB.contentDao().insertData((List<ContentSDB>) data)
                                             .subscribeOn(Schedulers.io())
+                                            .compose(ExchangeWork.track())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
@@ -1101,10 +1048,9 @@ public class Exchange {
                         }
 
                         try {
-                            downloadSiteHints("2");
                             downloadVideoLessons();
                         } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "startExchange/downloadSiteHints/downloadVideoLessons", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "startExchange/downloadVideoLessons", "Exception e: " + e);
                         }
 
                         try {
@@ -1134,6 +1080,7 @@ public class Exchange {
                                     SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
                                             .subscribeOn(Schedulers.io())
                                             .observeOn(AndroidSchedulers.mainThread())
+                                            .compose(ExchangeWork.track())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
@@ -1472,7 +1419,7 @@ public class Exchange {
 
     /**
      * 10.05.2021
-     * Обновление таблички Обьекты сайта. Запись идёт в SQL
+     * Обновление объектов сайта одним запросом для Room и Realm.
      */
     private void updateSiteObj() {
 //        List<SiteObjectsSDB> data = SQL_DB.siteObjectsDao().getAll();
@@ -1481,7 +1428,7 @@ public class Exchange {
         // Отобрадение прогресса
 //        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта");
 
-        new SiteObjectsExchange().downloadSiteObjects(new ExchangeInt() {
+        new SiteObjectsExchange().downloadForRegularExchange(new ExchangeInt() {
             @Override
             public void onSuccess(String msg) {
 
@@ -1538,8 +1485,7 @@ public class Exchange {
                 @Override
                 public void onSuccess(List<TranslatesSDB> data) {
 
-                    // Сохранение данных в БД
-                    SQL_DB.translatesDao().insertAll(data);
+                    // TranslationsExchange already saved Room, Realm and the language VPI.
 
                     // Скрытие текущего прогресса
 //                    if (progressDialog != null) {
@@ -1744,8 +1690,8 @@ public class Exchange {
         data.act = "list_image";
         data.nolimit = "1";
 //        data.date_from = Clock.today_7;
-        data.date_from = Clock.today_30; // 27.02.25 поменял на 30 дней, но загружать фото буду как и раньше за 7 дней
-        data.date_to = Clock.tomorrow7;
+        data.date_from = Clock.getDatePeriod(-30);
+        data.date_to = Clock.getDatePeriod(7);
 //        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
 
 
@@ -1780,8 +1726,8 @@ public class Exchange {
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
-        data.date_from = Clock.today_30;
-        data.date_to = Clock.tomorrow7;
+        data.date_from = Clock.getDatePeriod(-30);
+        data.date_to = Clock.getDatePeriod(7);
         data.photo_type = type;
         data.nolimit = "1";
 
@@ -2330,6 +2276,7 @@ public class Exchange {
      * (время, мнение, комменты)
      */
     public static void updateTAR(TasksAndReclamationsSDB uploadData) {
+        if (uploadData == null) return;
         try {
             StandartData standartData = new StandartData();
             standartData.mod = "reclamation";
@@ -2612,7 +2559,7 @@ public class Exchange {
 
     public void sendARMark() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            MAIN_HANDLER.post(this::sendARMark);
+            ExchangeWork.dispatch(MAIN_HANDLER::post, this::sendARMark);
             return;
         }
         if (isARMarkUploading) return;
@@ -2698,43 +2645,7 @@ public class Exchange {
      * Получение чатов и сообщений
      */
     public static void chatExchange() {
-        StandartData data = new StandartData();
-        data.mod = "chat";
-        data.act = "list_message";
-//        ##########################
-//        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-1));
-//        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1));
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Call<ChatResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_CHAT(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ChatResponse>() {
-            @Override
-            public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
-                Log.e("chatExchange", "response: " + response);
-                if (response.isSuccessful() && response.body().state && response.body().list != null && !response.body().list.isEmpty())
-                    SQL_DB.chatDao().insertData(response.body().list)
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(new DisposableCompletableObserver() {
-                                @Override
-                                public void onComplete() {
-                                    Log.e("chatExchange", "onComplete()");
-                                }
-
-                                @Override
-                                public void onError(@NonNull Throwable e) {
-                                    Log.e("chatExchange", "Throwable e: " + e);
-                                }
-                            });
-            }
-
-            @Override
-            public void onFailure(Call<ChatResponse> call, Throwable t) {
-                Log.e("chatExchange", "Throwable t: " + t);
-            }
-        });
+        ChatExchange.downloadForExchange(TableName.CHAT);
     }
 
     /**
@@ -2742,41 +2653,7 @@ public class Exchange {
      * Получение групп чатов
      */
     public static void chatGroupExchange() {
-        StandartData data = new StandartData();
-        data.mod = "chat";
-        data.act = "list";
-//        data.dt_change_from = Clock.today;
-//        data.dt_change_to = Clock.tomorrow;
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Call<ChatGrpResponse> call = RetrofitBuilder.getRetrofitInterface().CHAT_GRP_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ChatGrpResponse>() {
-            @Override
-            public void onResponse(Call<ChatGrpResponse> call, Response<ChatGrpResponse> response) {
-                Log.e("chatExchange", "response: " + response);
-                SQL_DB.chatGrpDao().insertData(response.body().list)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.e("chatExchange", "onComplete()");
-                            }
-
-                            @Override
-                            public void onError(@NonNull Throwable e) {
-                                Log.e("chatExchange", "Throwable e: " + e);
-                            }
-                        });
-            }
-
-            @Override
-            public void onFailure(Call<ChatGrpResponse> call, Throwable t) {
-                Log.e("chatExchange", "Throwable t: " + t);
-            }
-        });
+        ChatExchange.downloadForExchange(TableName.CHAT_GROUP);
     }
 
     /**
@@ -2817,63 +2694,23 @@ public class Exchange {
 //    private void
 
     public void planogram(ExchangeInterface.ExchangeResponseInterface exchange) {
-//        if (StackPhotoRealm.checkByType5()) {
-//            exchange.onFailure("Все данные уже загружены");
-//            return;
-//        }
-
-        StandartData data = new StandartData();
+        PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
         data.date_from = Clock.getDatePeriod(-180);
-        data.date_to = Clock.today;
+        data.date_to = Clock.getDatePeriod(0);
         data.photo_type = "5";
-        data.nolimit = "1";
         data.planogram_only = "1";
-
-
-        // ВПИ с таблички синхронизаций
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("planogram");
-        String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-        if (dt_change_from.equals("0")) {
-            data.dt_change_from = "0";
-        } else {
-            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app() - 120);  // минус 2 минуты для "синхрона". Это надо поменять.
-        }
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Log.e("planogram", "convertedObject: " + convertedObject);
-
-        Call<ImagesViewListImageResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PHOTOS(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ImagesViewListImageResponse>() {
-            @Override
-            public void onResponse(Call<ImagesViewListImageResponse> call, Response<ImagesViewListImageResponse> response) {
-                try {
-                    if (response.isSuccessful() && response.code() == 200) {
-                        if (response.body() != null && response.body().state) {
-                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-
-                            if (response.body().list != null && response.body().list.size() > 0) {
-                                exchange.onSuccess(response.body().list);
-                            }
-                        }
-                    } else {
-                        exchange.onFailure("Данных нет");
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "Exchange.planogram", "Exception e: " + e);
+        PhotoMetadataExchange.download(data, true, new Clicks.clickObjectAndStatus<PhotoMetadataExchange.Result>() {
+            @Override public void onSuccess(PhotoMetadataExchange.Result result) {
+                List<ImagesViewListImageList> rows = new ArrayList<>();
+                Gson gson = new Gson();
+                for (ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesViewList row : result.rows) {
+                    rows.add(gson.fromJson(gson.toJsonTree(row), ImagesViewListImageList.class));
                 }
-
+                exchange.onSuccess(rows);
             }
-
-            @Override
-            public void onFailure(Call<ImagesViewListImageResponse> call, Throwable t) {
-                Log.e("test", "Throwable t: " + t);
-            }
+            @Override public void onFailure(String error) { exchange.onFailure(error); }
         });
     }
 
@@ -2971,42 +2808,7 @@ public class Exchange {
      * Получения списка групп для доп материалов
      */
     public void getAdditionalMaterialsGroups() {
-        /*mod=additional_materials
-        act=group_list
-
-        фильтры
-
-        dt_change_from - впи с
-        dt_change_to - впи по*/
-
-        StandartData data = new StandartData();
-        data.mod = "additional_materials";
-        data.act = "group_list";
-//        data.dt_change_from = "";
-//        data.dt_change_to = "";
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Call<AdditionalMaterialsGroupsResponse> call = RetrofitBuilder.getRetrofitInterface().AdditionalMaterialsGroupsResponse_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<AdditionalMaterialsGroupsResponse>() {
-            @Override
-            public void onResponse(Call<AdditionalMaterialsGroupsResponse> call, Response<AdditionalMaterialsGroupsResponse> response) {
-                Log.e("test", "test" + response);
-
-                try {
-                    SQL_DB.additionalMaterialsGroupsDao().insertAll(response.body().list);
-                } catch (Exception e) {
-
-                }
-            }
-
-            @Override
-            public void onFailure(Call<AdditionalMaterialsGroupsResponse> call, Throwable t) {
-                Log.e("test", "test" + t);
-            }
-        });
+        ReferenceDataExchange.additionalMaterialGroups();
     }
 
     /**
@@ -3203,6 +3005,7 @@ public class Exchange {
                             SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
+                                    .compose(ExchangeWork.track())
                                     .subscribe(new DisposableCompletableObserver() {
                                         @Override
                                         public void onComplete() {
@@ -3266,6 +3069,7 @@ public class Exchange {
                     SQL_DB.votesDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
+                            .compose(ExchangeWork.track())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {
@@ -3345,47 +3149,7 @@ public class Exchange {
 
 
     public void downloadArticleTable() {
-        StandartData data = new StandartData();
-        data.mod = "data_list";
-        data.act = "tovar_vendor_code_list";
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Call<ArticleResponse> call = RetrofitBuilder.getRetrofitInterface().ARTICLE_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ArticleResponse>() {
-            @Override
-            public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
-                Log.e("test", "test" + response);
-                try {
-//                    Globals.writeToMLOG("INFO", "downloadArticleTable/onResponse", "response: " + response.body().list.size());
-//                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadArticleTable/onSuccess", " response: " + response.body().list.size());
-                    SQL_DB.articleDao().insertAllCompletable(response.body().list)
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(new DisposableCompletableObserver() {
-                                @Override
-                                public void onComplete() {
-                                    Globals.writeToMLOG("OK", "downloadArticleTable/onResponse/onComplete", "OK");
-                                }
-
-                                @Override
-                                public void onError(@NonNull Throwable e) {
-                                    Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse/onError", "Throwable e: " + e);
-                                }
-                            });
-
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArticleResponse> call, Throwable t) {
-                Log.e("test", "test" + t);
-                Globals.writeToMLOG("ERROR", "downloadArticleTable/onFailure", "Throwable t: " + t);
-            }
-        });
+        ReferenceDataExchange.articles();
     }
 
 
@@ -3582,6 +3346,7 @@ public class Exchange {
         RetrofitBuilder.getRetrofitInterface().getGoogleTime("https://www.google.com")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .compose(ExchangeWork.track())
                 .subscribe(response -> {
                     String dateHeader = response.headers().get("Date");
                     if (dateHeader != null) {

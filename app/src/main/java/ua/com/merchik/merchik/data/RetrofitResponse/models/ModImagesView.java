@@ -17,6 +17,12 @@ public class ModImagesView {
     @Expose
     private Integer totalPages;
 
+    @SerializedName("error")
+    @Expose
+    private String error;
+
+    public String getError() { return error; }
+
 
     public Boolean getState() {
         return state;

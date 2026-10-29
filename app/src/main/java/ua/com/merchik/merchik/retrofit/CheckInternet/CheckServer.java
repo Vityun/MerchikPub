@@ -22,7 +22,6 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class CheckServer {
@@ -31,7 +30,6 @@ public class CheckServer {
         DEFAULT, WITH_PHOTO
     }
 
-    private static BlockingProgressDialog blockingProgressDialog;
     public static void isServerConnected(Context context, ServerConnect serverConnect, Integer mode, Clicks.clickStatusMsg click) {
         try {
             Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/", "mode: " + mode);
@@ -47,22 +45,11 @@ public class CheckServer {
             }
 
 
-            if (mode != null){
-                blockingProgressDialog = new BlockingProgressDialog(context, "Перевіряю з'єднання із сервером", "Зачекайте будь-ласка, йде перевірка з'єднання із сервером");
-                blockingProgressDialog.show();
-                Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/", "blockingProgressDialog.show()");
-            }
-
-            retrofit2.Call<ServerConnection> call = RetrofitBuilder.getRetrofitInterface().PING_SERVER(mod, time, body);
+            retrofit2.Call<ServerConnection> call = RetrofitBuilder.getSilentRetrofitInterface().PING_SERVER(mod, time, body);
             call.enqueue(new Callback<ServerConnection>() {
                 @Override
                 public void onResponse(Call<ServerConnection> call, Response<ServerConnection> response) {
                     try {
-                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onResponse/", "blockingProgressDialog.dismiss()");
-                            blockingProgressDialog.dismiss();
-                        }
-
                         if (response.isSuccessful()) {
                             if (response.body() != null){
                                 if (response.body().getState()){
@@ -77,11 +64,6 @@ public class CheckServer {
                             click.onFailure("response.isSuccessful(): " + response.isSuccessful());
                         }
                     }catch (Exception e){
-                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onResponse/E", "blockingProgressDialog.dismiss()");
-                            blockingProgressDialog.dismiss();
-                        }
-
                         Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onResponse", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onResponse", "Exception e..: " + Arrays.toString(e.getStackTrace()));
 
@@ -92,10 +74,6 @@ public class CheckServer {
                 @Override
                 public void onFailure(Call<ServerConnection> call, Throwable t) {
                     try {
-                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/", "blockingProgressDialog.dismiss()");
-                            blockingProgressDialog.dismiss();
-                        }
                         click.onFailure("Throwable t: " + t);
                     }catch (Exception e){
 
@@ -109,10 +87,7 @@ public class CheckServer {
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e: " + e);
             Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e..: " + Arrays.toString(e.getStackTrace()));
-            if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/E", "blockingProgressDialog.dismiss()");
-                blockingProgressDialog.dismiss();
-            }
+            if (click != null) click.onFailure("Exception e: " + e);
         }
     }
 

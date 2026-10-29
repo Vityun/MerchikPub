@@ -216,7 +216,7 @@ public class Translate {
         new TranslationsExchange().downloadTranslations(new ExchangeInterface.Translates() {
             @Override
             public void onSuccess(List<TranslatesSDB> data) {
-                SQL_DB.translatesDao().insertAll(data);
+                // TranslationsExchange already saved Room, Realm and the language VPI.
 
 //                Globals.translatesList = SQL_DB.translatesDao().getAll();
             }

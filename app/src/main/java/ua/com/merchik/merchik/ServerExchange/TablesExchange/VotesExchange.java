@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.util.Log;
@@ -75,6 +77,7 @@ public class VotesExchange {
                                 item.dtUpload = System.currentTimeMillis() / 1000;
                             }
                             SQL_DB.votesDao().insertAllCompletable(votes).subscribeOn(Schedulers.io())
+                                    .compose(ExchangeWork.track())
                                     .subscribe(new DisposableCompletableObserver() {
                                         @Override
                                         public void onComplete() {

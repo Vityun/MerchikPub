@@ -9,6 +9,8 @@ public class SiteHints {
     @SerializedName("state")
     @Expose
     private Boolean state;
+    @SerializedName("error")
+    public String error;
     @SerializedName("list")
     @Expose
     private List<SiteHintsDB> list = null;

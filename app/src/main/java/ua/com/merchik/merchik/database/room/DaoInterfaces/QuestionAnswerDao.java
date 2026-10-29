@@ -14,6 +14,9 @@ import ua.com.merchik.merchik.data.QuestionAnswerDB;
 @Dao
 public abstract class QuestionAnswerDao {
 
+    @Query("SELECT COUNT(*) FROM question_answers")
+    public abstract long count();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertAll(List<QuestionAnswerDB> list);
 

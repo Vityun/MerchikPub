@@ -12,6 +12,9 @@ import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 
 @Dao
 public interface StandartDao {
+    @Query("SELECT COUNT(*) FROM standart")
+    long count();
+
     @Query("SELECT * FROM standart")
     List<StandartSDB> getAll();
 

@@ -5,6 +5,8 @@ import android.annotation.SuppressLint;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import ua.com.merchik.merchik.data.Database.Room.SynchronizationCursorSDB;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationCursorDao;
 
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
@@ -179,6 +181,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 SiteUrlSDB.class,
                 SiteAccountSDB.class,
                 SynchronizationTimeTable.class,
+                SynchronizationCursorSDB.class,
                 WPDataAdditional.class,      // Додатковий заробіток
                 InitStateEntity.class,
                 LocationDevices.class,
@@ -192,7 +195,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 DynamicPhotoSDB.class,
                 ResultsDynamicSDB.class
         },
-        version = 85
+        version = 86
 )
 
 
@@ -298,6 +301,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SiteAccountDao siteAccountDao();
 
     public abstract SynchronizationTimetableDao synchronizationTimetableDao();
+
+    public abstract SynchronizationCursorDao synchronizationCursorDao();
 
     public abstract WPDataAdditionalDao wpDataAdditionalDao();
 

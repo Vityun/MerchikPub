@@ -95,14 +95,17 @@ public class StackPhotoRealm {
     }
 
     public static boolean saveDvi(StackPhotoDB snapshot, int dvi) {
+        long now = System.currentTimeMillis() / 1000;
         boolean saved = updateExisting(snapshot, "editDvi", current -> {
             current.setDvi(dvi);
             current.setDviUpload(true);
+            current.setVpi(now);
             return true;
         });
         if (saved && !RealmObject.isManaged(snapshot)) {
             snapshot.setDvi(dvi);
             snapshot.setDviUpload(true);
+            snapshot.setVpi(now);
         }
         return saved;
     }

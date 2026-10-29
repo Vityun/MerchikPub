@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import com.google.gson.JsonObject;
 
 import java.util.List;
@@ -14,6 +16,7 @@ import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.Database.Room.ResultsDynamicSDB;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.synchronization.DownloadStatus;
+import ua.com.merchik.merchik.data.synchronization.ResultsDynamicSyncPolicy;
 import ua.com.merchik.merchik.data.synchronization.SynchronizationTimetableRepository;
 import ua.com.merchik.merchik.data.synchronization.TableName;
 import ua.com.merchik.merchik.database.room.AppDatabase;
@@ -37,6 +40,7 @@ public class ResultsDynamicExchange {
             Completable.fromAction(() -> downloadSnapshot(db, userId, sessionId))
                     .subscribeOn(Schedulers.io())
                     .doFinally(() -> RUNNING.set(false))
+                    .compose(ExchangeWork.track())
                     .subscribe(() -> { }, error -> log("ERROR", "snapshot kept: " + error));
         } catch (Exception error) {
             RUNNING.set(false);
@@ -47,8 +51,16 @@ public class ResultsDynamicExchange {
     private void downloadSnapshot(AppDatabase db, int userId, String sessionId) throws Exception {
         requireCurrentAccount(db, userId, sessionId);
         SynchronizationTimetableRepository.ensureDefaults();
+        SynchronizationTimeTable syncInfo = db.synchronizationTimetableDao()
+                .getByTableName(TableName.PLAN_RESULTS_DYNAMIC);
+        if (syncInfo == null) throw new IllegalStateException("Missing results_dynamic sync settings");
+        long requestStartedAt = TrustedTime.nowServerSecOrLocalSec();
+        if (!ResultsDynamicSyncPolicy.isDownloadDue(syncInfo.getLastDownloadTime(), requestStartedAt)) {
+            log("INFO", "skip: daily snapshot already loaded, lastDownload=" + syncInfo.getLastDownloadTime());
+            return;
+        }
         try {
-            log("INFO", "start: userId=" + userId + ", full snapshot, no VPI");
+            log("INFO", "start: userId=" + userId + ", full snapshot, no VPI, requestStartedAt=" + requestStartedAt);
             Response<JsonObject> response = RetrofitBuilder.getRetrofitInterface()
                     .TEST_JSON_UPLOAD(RetrofitBuilder.contentType, ResultsDynamicSnapshot.request())
                     .execute();
@@ -60,8 +72,8 @@ public class ResultsDynamicExchange {
             db.runInTransaction(() -> {
                 requireCurrentAccount(db, userId, sessionId);
                 db.resultsDynamicDao().replaceAll(rows);
-                // This is a local download timestamp, never a server change watermark.
-                saveStatus(db, DownloadStatus.SUCCESS, rows.size());
+                // Use request time so a response crossing 01:00 does not mark the new snapshot as loaded.
+                saveStatus(db, DownloadStatus.SUCCESS, rows.size(), requestStartedAt);
                 requireCurrentAccount(db, userId, sessionId);
             });
             log("INFO", "saved: userId=" + userId + ", rows=" + rows.size());
@@ -70,7 +82,7 @@ public class ResultsDynamicExchange {
                 try {
                     db.runInTransaction(() -> {
                         requireCurrentAccount(db, userId, sessionId);
-                        saveStatus(db, DownloadStatus.ERROR, 0);
+                        saveStatus(db, DownloadStatus.ERROR, 0, requestStartedAt);
                         requireCurrentAccount(db, userId, sessionId);
                     });
                 } catch (Exception statusError) {
@@ -81,14 +93,14 @@ public class ResultsDynamicExchange {
         }
     }
 
-    private void saveStatus(AppDatabase db, DownloadStatus status, int rows) {
+    private void saveStatus(AppDatabase db, DownloadStatus status, int rows, long requestStartedAt) {
         SynchronizationTimeTable current = db.synchronizationTimetableDao()
                 .getByTableName(TableName.PLAN_RESULTS_DYNAMIC);
         if (current == null) throw new IllegalStateException("Missing results_dynamic sync settings");
         boolean success = status == DownloadStatus.SUCCESS;
         db.synchronizationTimetableDao().insert(new SynchronizationTimeTable(
                 current.getId(), current.getTableName(), current.getSyncPeriodSeconds(),
-                success ? TrustedTime.nowServerSecOrLocalSec() : current.getLastDownloadTime(),
+                success ? requestStartedAt : current.getLastDownloadTime(),
                 current.getLastUploadTime(), success ? rows : current.getDownloadedItems(),
                 current.getUploadedItems(), current.getDescription(), current.isUserGenerated(),
                 status, current.getLastUploadStatus()));

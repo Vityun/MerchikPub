@@ -58,7 +58,8 @@ public class RoomManager {
                         MIGRATION_81_82,
                         MIGRATION_82_83,
                         MIGRATION_83_84,
-                        MIGRATION_84_85
+                        MIGRATION_84_85,
+                        MIGRATION_85_86
                 )
                 .build();
 
@@ -1106,6 +1107,15 @@ public class RoomManager {
                             "WHERE tableName = 'achievements'"
             );
             achievementsSchemaMigrated = true;
+        }
+    };
+
+    public static final Migration MIGRATION_85_86 = new Migration(85, 86) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `synchronization_cursor` ("
+                    + "`resource` TEXT NOT NULL, `scope` TEXT NOT NULL, `vpi` INTEGER NOT NULL, "
+                    + "`itemCount` INTEGER NOT NULL, PRIMARY KEY(`resource`, `scope`))");
         }
     };
 

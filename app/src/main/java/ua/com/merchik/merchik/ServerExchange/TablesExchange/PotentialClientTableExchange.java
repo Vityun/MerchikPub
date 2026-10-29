@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -44,6 +46,7 @@ public class PotentialClientTableExchange {
                                 SQL_DB.potentialClientDao().insertAll(response.body().list)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
+                                        .compose(ExchangeWork.track())
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
