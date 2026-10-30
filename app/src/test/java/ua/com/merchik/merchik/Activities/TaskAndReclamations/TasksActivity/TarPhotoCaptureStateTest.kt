@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity
 import com.google.gson.Gson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
@@ -128,8 +129,7 @@ class TarPhotoCaptureStateTest {
                 codeDad2 = 9000001L
                 codeDad2SrcDoc = sourceDad2
             }
-            val error = runCatching { TarPhotoFlow.sourceVisitDad2(task) }.exceptionOrNull()
-            assertTrue(error is IllegalArgumentException)
+            assertNull(TarPhotoFlow.sourceVisitDad2(task))
         }
     }
 

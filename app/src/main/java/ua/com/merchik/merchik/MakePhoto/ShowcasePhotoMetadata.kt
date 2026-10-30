@@ -14,8 +14,8 @@ data class ShowcasePhotoMetadata(
 ) {
     companion object {
         @JvmStatic
-        fun load(dad2: Long, photoType: String, showcase: ShowcaseSDB): ShowcasePhotoMetadata {
-            val link = SQL_DB.planogrammVizitShowcaseDao().getByCodeDad2(dad2)
+        fun load(dad2: Long?, photoType: String, showcase: ShowcaseSDB): ShowcasePhotoMetadata {
+            val link = dad2?.takeIf { it > 0 }?.let { SQL_DB.planogrammVizitShowcaseDao().getByCodeDad2(it) }
                 .orEmpty().firstOrNull { it != null && it.showcase_id == showcase.id }
             val plan = if (link == null) showcase.planogramId?.let { SQL_DB.planogrammDao().getById(it) } else null
             return resolve(photoType, showcase, link, plan)

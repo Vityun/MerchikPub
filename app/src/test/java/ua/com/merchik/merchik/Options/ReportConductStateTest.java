@@ -6,6 +6,75 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ReportConductStateTest {
+    @Test public void firstAcceptedCommandUsesConductMessage() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.complete(true, state.acceptedMessage());
+        assertEquals("Команда на Проведення звiту передана на сервер i буде виконана на протязi 1-2 хвилин. По результату ви отримаете сповiщення у Чат",
+                restored(state).message);
+    }
+
+    @Test public void repeatedCommandKeepsMessageChoiceAfterRestart() {
+        ReportConductState state = new ReportConductState();
+        state.repeatConduct = true;
+        state.approve();
+        ReportConductState loaded = restored(state);
+        loaded.complete(true, loaded.acceptedMessage());
+        assertEquals("Команда на ПереПроведення звiту передана на сервер i буде виконана на протязi 1-2 хвилин. По результату ви отримаете сповiщення у Чат",
+                restored(loaded).message);
+    }
+
+    @Test public void networkRetryDoesNotTurnFirstCommandIntoReconduct() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.retryAfter = 60_000;
+        state.message = "Network error";
+        ReportConductState loaded = restored(state);
+        assertFalse(loaded.repeatConduct);
+        assertTrue(loaded.acceptedMessage().startsWith("Команда на Проведення"));
+    }
+
+    @Test public void rejectedRepeatKeepsServerError() {
+        ReportConductState state = new ReportConductState();
+        state.repeatConduct = true;
+        state.approve();
+        state.complete(false, "Blocking option");
+        assertEquals("Blocking option", restored(state).message);
+        assertEquals(ReportConductState.Stage.REJECTED, state.stage);
+    }
+
+    @Test public void approvedReconductWaitsForRealServerAcceptance() {
+        ReportConductState state = new ReportConductState();
+        state.repeatConduct = true;
+        assertFalse(state.canSend(Long.MAX_VALUE));
+        state.approve();
+        ReportConductState loaded = restored(state);
+        assertEquals(ReportConductState.Stage.READY, loaded.stage);
+        assertTrue(loaded.canSend(0));
+        assertFalse(loaded.resultPending);
+        assertEquals("", loaded.message);
+
+        loaded.complete(true, loaded.acceptedMessage());
+        assertEquals(ReportConductState.Stage.ACCEPTED, loaded.stage);
+        assertTrue(loaded.resultPending);
+        assertTrue(loaded.message.startsWith("Команда на ПереПроведення"));
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void acceptedReportRequiresNewDecisionForAnotherCommand() {
+        ReportConductState accepted = new ReportConductState();
+        accepted.approve();
+        accepted.complete(true, accepted.acceptedMessage());
+        assertFalse(restored(accepted).canSend(Long.MAX_VALUE));
+
+        ReportConductState repeated = new ReportConductState();
+        repeated.repeatConduct = true;
+        assertNotEquals(accepted.revision, repeated.revision);
+        assertFalse(repeated.canSend(Long.MAX_VALUE));
+        repeated.approve();
+        assertTrue(restored(repeated).canSend(0));
+    }
+
     @Test public void unfinishedVisitWithEitherOperatorCanFinishWithoutConduct() {
         assertTrue(ReportConductState.canFinishWithoutConduct(0, 0, 123, 0));
         assertTrue(ReportConductState.canFinishWithoutConduct(0, 0, 0, 123));

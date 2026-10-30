@@ -17,6 +17,7 @@ public final class ReportConductState {
     public long retryAfter;
     public String message = "";
     public boolean resultPending;
+    public boolean repeatConduct;
     public long visitStart;
     public long visitEnd;
     public long clientStart;
@@ -112,5 +113,11 @@ public final class ReportConductState {
         stage = accepted ? Stage.ACCEPTED : Stage.REJECTED;
         this.message = message == null ? "" : message;
         resultPending = true;
+    }
+
+    public String acceptedMessage() {
+        return "Команда на " + (repeatConduct ? "ПереПроведення" : "Проведення")
+                + " звiту передана на сервер i буде виконана на протязi 1-2 хвилин. "
+                + "По результату ви отримаете сповiщення у Чат";
     }
 }

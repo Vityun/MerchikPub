@@ -12,6 +12,7 @@ import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.PhotoReferenceSelection
+import ua.com.merchik.merchik.MakePhoto.PhotoReferenceContext
 import ua.com.merchik.merchik.MakePhoto.PlanogramPhotoSelection
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -93,8 +94,8 @@ class PlanogrammSDBViewModel @Inject constructor(
         if (!isPhotoCapture) return
 
         try {
-            val visit = currentVisit()
-            val selection = PlanogramPhotoSelection.forVisit(visit)
+            val reference = currentReferenceContext()
+            val selection = PlanogramPhotoSelection.forContext(reference)
             val now = System.currentTimeMillis() / 1000
             val date = selection.date
             val networkId = selection.networkId?.toString().orEmpty()
@@ -104,12 +105,13 @@ class PlanogrammSDBViewModel @Inject constructor(
                 ?: if (networkId.isBlank()) "Не визначена" else "Мережа $networkId"
 
             filters = Filters(
-                subTitle = "Планограми поточного відвідування",
+                subTitle = if (PhotoReferenceContext.fromReferenceJson(dataJson) != null)
+                    "Планограми за адресою та клієнтом ЗІР" else "Планограми поточного відвідування",
                 items = listOf(
                     planogramSelectionFilter("Адреса", AddressSDB::class, "addr_id",
-                        visit.addr_id.toString(), visit.addr_txt.orEmpty()),
+                        reference.addressId.toString(), reference.addressName),
                     planogramSelectionFilter("Клієнт", CustomerSDB::class, "client_id",
-                        visit.client_id.orEmpty(), visit.client_txt.orEmpty()),
+                        reference.clientId, reference.clientName),
                     planogramSelectionFilter("Мережа", TradeMarkDB::class, "tp_id", networkId, networkName),
                     planogramSelectionFilter("Чинні на дату", PlanogrammSDB::class, "date", date,
                         Clock.getHumanTimeSecPattern(now, "dd.MM.yyyy"))
@@ -129,11 +131,11 @@ class PlanogrammSDBViewModel @Inject constructor(
                 updateFilters()
                 selectionContext
             } ?: return emptyList()
-            val visit = selection.visit
+            val reference = selection.context
             val photoType = captureData().text("photoType").toInt()
             // Keep the old selector's client/address/network and current-date restrictions.
             val plans = selection.getPlans()
-            val counts = StackPhotoRealm.getPhotosByDAD2(visit.code_dad2, photoType)
+            val counts = StackPhotoRealm.getPhotosByDAD2(reference.codeDad2, photoType)
                 .groupingBy { it.planogram_id?.toIntOrNull() }.eachCount()
             val rows = plans.map { it.toPlanogramItem(counts[it.id] ?: 0) }
                 .sortedBy { it.planogrammPhoto }
@@ -209,7 +211,7 @@ class PlanogrammSDBViewModel @Inject constructor(
         }
         val visit = if (isPhotoCapture) {
             try {
-                currentVisit()
+                if (PhotoReferenceContext.fromReferenceJson(dataJson) != null) null else currentVisit()
             } catch (e: Exception) {
                 Globals.writeToMLOG("ERROR", "PlanogrammSDBViewModel/preview", "dataJson=$dataJson, error=$e")
                 Toast.makeText(context, "Відвідування не знайдено. Відкрийте список повторно з опції.", Toast.LENGTH_LONG).show()
@@ -339,6 +341,9 @@ class PlanogrammSDBViewModel @Inject constructor(
     }
 
     private fun captureData(): JsonObject = JsonParser.parseString(dataJson).asJsonObject
+
+    private fun currentReferenceContext(): PhotoReferenceContext =
+        PhotoReferenceContext.fromReferenceJson(dataJson) ?: PhotoReferenceContext.fromVisit(currentVisit())
 
     private fun currentVisit(): WpDataDB {
         val dad2 = captureData().text("wpDataDBId").toLong()

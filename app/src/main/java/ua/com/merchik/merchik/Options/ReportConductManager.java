@@ -41,6 +41,10 @@ public final class ReportConductManager {
         return userId + ":" + dad2;
     }
 
+    private static String acceptedKey(int userId, long dad2) {
+        return "accepted:" + key(userId, dad2);
+    }
+
     public static ReportConductState get(long dad2) {
         return get(Globals.getCurrentUserId(), dad2);
     }
@@ -65,7 +69,13 @@ public final class ReportConductManager {
 
     private static void save(ReportConductState state) {
         // Persist before sending: process death must not discard an approved command.
-        if (!prefs().edit().putString(key(state.userId, state.dad2), GSON.toJson(state)).commit()) {
+        SharedPreferences.Editor editor = prefs().edit()
+                .putString(key(state.userId, state.dad2), GSON.toJson(state));
+        // Keep delivery history even when a later decision dialog is cancelled.
+        if (state.stage == ReportConductState.Stage.ACCEPTED || state.repeatConduct) {
+            editor.putBoolean(acceptedKey(state.userId, state.dad2), true);
+        }
+        if (!editor.commit()) {
             throw new IllegalStateException("Cannot persist report conduct state");
         }
     }
@@ -87,8 +97,11 @@ public final class ReportConductManager {
                 && previous.awaitingDecision() && previous.workEndRequested ? previous : new ReportConductState();
         state.userId = userId;
         state.dad2 = dad2;
+        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        state.repeatConduct = prefs().getBoolean(acceptedKey(userId, dad2), false)
+                || (previous != null && (previous.repeatConduct || previous.stage == ReportConductState.Stage.ACCEPTED))
+                || (wp != null && (wp.getSetStatus() == 1 || wp.getStatus() == 1));
         if (requestWorkEnd) {
-            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
             if (!WpWorkTimes.valid(wp)) throw new IllegalStateException("Invalid visit work-time pairs");
             if (wp == null || wp.getVisit_end_dt() != 0 || wp.getClient_end_dt() != 0) {
                 throw new IllegalStateException("Visit is missing or already finished");
@@ -265,12 +278,8 @@ public final class ReportConductManager {
                 if (IN_FLIGHT.contains(key)) continue;
                 WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(state.dad2);
                 if (wp == null) continue;
-                if (wp.getStatus() == 1) {
-                    state.complete(true, "Звіт уже проведено.");
-                    save(state);
-                    ReportConductUi.showResult(state.dad2);
-                    continue;
-                }
+                // An approved repeat must reach the server even if the report is already conducted.
+                if (wp.getStatus() == 1) state.repeatConduct = true;
                 if (!WpWorkTimes.valid(wp) || !state.matchesWorkTimes(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
                         wp.getClient_start_dt(), wp.getClient_end_dt())) {
                     state.stage = ReportConductState.Stage.WAITING_CHECK;
@@ -321,7 +330,7 @@ public final class ReportConductManager {
                 current.retryAfter = System.currentTimeMillis() + RETRY_MS;
                 current.message = message;
             } else {
-                current.complete(accepted, message);
+                current.complete(accepted, accepted ? current.acceptedMessage() : message);
             }
             save(current);
             log(retry || !accepted ? "ERROR" : "INFO", sent.dad2,

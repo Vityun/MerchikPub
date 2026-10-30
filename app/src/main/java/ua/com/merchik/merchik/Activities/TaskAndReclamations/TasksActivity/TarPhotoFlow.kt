@@ -12,6 +12,7 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.PhotoReferenceSelection
+import ua.com.merchik.merchik.MakePhoto.PhotoReferenceContext
 import ua.com.merchik.merchik.MakePhoto.PlanogramPhotoSelection
 import ua.com.merchik.merchik.MakePhoto.ShowcasePhotoMetadata
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils
@@ -65,7 +66,6 @@ class TarPhotoFlow(private val activity: TARActivity) {
             save(state)
             when {
                 usesShowcase(photoType) -> {
-                    requireVisit(task)
                     openSelector(state, task, PhotoReferenceSelection.SHOWCASE)
                 }
                 SamplePhotoSDBViewModel.supportsPhotoType(photoType) ||
@@ -118,8 +118,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
                     if (id == -999) {
                         state.withoutPlanogram()
                     } else {
-                        val visit = requireVisit(task)
-                        val plans = PlanogramPhotoSelection.forVisit(visit).getPlans()
+                        val plans = PlanogramPhotoSelection.forContext(referenceContext(task)).getPlans()
                         val plan = requireNotNull(plans.firstOrNull { it.id == id }) { "Planogram $id is unavailable" }
                         state.planogramId = plan.id.toString()
                         state.planogramImageId = plan.planogrammPhotoId?.toString().orEmpty()
@@ -139,7 +138,8 @@ class TarPhotoFlow(private val activity: TARActivity) {
         val context = "tar=${task.id}, type=${state?.photoType}, gallery=${state?.gallery}, stage=${state?.stage}, " +
             "codeDad2=${task.codeDad2}, codeDad2SrcDoc=${task.codeDad2SrcDoc}, addr=${task.addr}, client=${task.client}"
         Globals.writeToMLOG("INFO", "TarPhotoFlow/visit", "lookup: $context")
-        val visit = RealmManager.getWorkPlanRowByCodeDad2Detached(sourceVisitDad2(task))
+        val sourceDad2 = requireNotNull(sourceVisitDad2(task))
+        val visit = RealmManager.getWorkPlanRowByCodeDad2Detached(sourceDad2)
         Globals.writeToMLOG("INFO", "TarPhotoFlow/visit", "found=${visit != null}, $context, " +
             "visitAddr=${visit?.addr_id}, visitClient=${visit?.client_id}")
         return requireNotNull(visit) {
@@ -149,9 +149,14 @@ class TarPhotoFlow(private val activity: TARActivity) {
         }
     }
 
+    private fun referenceContext(task: TasksAndReclamationsSDB): PhotoReferenceContext =
+        if (sourceVisitDad2(task) != null) PhotoReferenceContext.fromVisit(requireVisit(task))
+        else PhotoReferenceContext.fromTaskWithoutVisit(task)
+
     private fun openSelector(state: TarPhotoCaptureState, task: TasksAndReclamationsSDB, kind: String) {
+        val reference = if (kind == PhotoReferenceSelection.SAMPLE) null else referenceContext(task)
         if (kind == PhotoReferenceSelection.PLANOGRAM &&
-            PlanogramPhotoSelection.forVisit(requireVisit(task)).getPlans().isEmpty()) {
+            PlanogramPhotoSelection.forContext(requireNotNull(reference)).getPlans().isEmpty()) {
             state.withoutPlanogram()
             openSource(state)
             return
@@ -170,13 +175,19 @@ class TarPhotoFlow(private val activity: TARActivity) {
             addProperty("photoType", state.photoType)
             addProperty("tradeMarkDBId", state.networkId)
             addProperty("clientName", task.clientNm)
-            if (kind != PhotoReferenceSelection.SAMPLE) addProperty("wpDataDBId", sourceVisitDad2(task).toString())
+            if (reference != null) {
+                val sourceDad2 = sourceVisitDad2(task)
+                if (sourceDad2 != null) addProperty("wpDataDBId", sourceDad2.toString())
+                else reference.addTo(this)
+            }
         }
+        Globals.writeToMLOG("INFO", "TarPhotoFlow/selector", "tar=${task.id}, type=${state.photoType}, " +
+            "kind=$kind, sourceDad2=${sourceVisitDad2(task)}, addr=${reference?.addressId ?: task.addr}, " +
+            "client=${reference?.clientId ?: task.client}, window=dialog")
         activity.startActivityForResult(Intent(activity, FeaturesActivity::class.java).apply {
             putExtra("viewModel", model.canonicalName)
             putExtra("contextUI", context.toString())
             putExtra("modeUI", ModeUI.ONE_SELECT.toString())
-            putExtra("typeWindow", "container")
             putExtra("dataJson", data.toString())
             putExtra("title", title)
             putExtra("subTitle", when (kind) {
@@ -226,10 +237,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
         internal fun usesShowcase(photoType: Int) = photoType == 0 || photoType == 45
 
         // codeDad2 belongs to the task/photo; only codeDad2SrcDoc identifies the source visit.
-        internal fun sourceVisitDad2(task: TasksAndReclamationsSDB): Long =
-            requireNotNull(task.codeDad2SrcDoc?.takeIf { it > 0 }) {
-                "Для цієї задачі не вказано пов'язане відвідування."
-            }
+        internal fun sourceVisitDad2(task: TasksAndReclamationsSDB): Long? = PhotoReferenceContext.sourceVisitDad2(task)
     }
 }
 
