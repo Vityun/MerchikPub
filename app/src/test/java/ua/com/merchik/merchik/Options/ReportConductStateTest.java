@@ -6,6 +6,52 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ReportConductStateTest {
+    @Test public void serverRejectionKeepsSubtitleAndOriginalMessageAfterRestart() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.completeFromServer(false, "Query failed: DB Check Failed");
+        ReportConductState loaded = restored(state);
+        assertEquals("Вiдповiдь вiд сервера", loaded.resultSubtitle());
+        assertEquals("Query failed: DB Check Failed", loaded.message);
+        assertEquals(ReportConductState.Stage.REJECTED, loaded.stage);
+        assertTrue(loaded.resultPending);
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void acceptedServerResponseHasNoErrorSubtitle() {
+        ReportConductState state = new ReportConductState();
+        state.completeFromServer(false, "Previous server error");
+        state.completeFromServer(true, state.acceptedMessage());
+        assertEquals("", restored(state).resultSubtitle());
+        assertFalse(state.serverError);
+    }
+
+    @Test public void localErrorHasNoServerSubtitle() {
+        ReportConductState state = new ReportConductState();
+        state.completeFromServer(false, "Previous server error");
+        state.complete(false, "Visit data changed");
+        assertEquals("", restored(state).resultSubtitle());
+        assertFalse(state.serverError);
+    }
+
+    @Test public void newAttemptClearsServerErrorSubtitle() {
+        ReportConductState state = new ReportConductState();
+        state.completeFromServer(false, "Previous server error");
+        state.approve();
+        state.message = "Network error";
+        assertEquals("", restored(state).resultSubtitle());
+        assertFalse(state.serverError);
+        assertFalse(state.resultPending);
+    }
+
+    @Test public void oldSavedResultDoesNotInventServerErrorSource() {
+        ReportConductState loaded = new Gson().fromJson(
+                "{\"stage\":\"REJECTED\",\"message\":\"Visit data changed\",\"resultPending\":true}",
+                ReportConductState.class);
+        assertEquals("", loaded.resultSubtitle());
+        assertFalse(loaded.serverError);
+    }
+
     @Test public void firstAcceptedCommandUsesConductMessage() {
         ReportConductState state = new ReportConductState();
         state.approve();

@@ -267,6 +267,7 @@ public final class ReportConductUi {
             Object token = new Object();
             MessageDialogBuilder dialog = new MessageDialogBuilder(activity)
                     .setTitle("Команда на проведення звіту")
+                    .setSubTitle(state.resultSubtitle())
                     .setStatus(state.stage == ReportConductState.Stage.ACCEPTED ? DialogStatus.NORMAL : DialogStatus.ERROR)
                     .setMessage(state.message)
                     .setOnConfirmAction(() -> Unit.INSTANCE);

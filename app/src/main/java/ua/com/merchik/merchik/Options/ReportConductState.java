@@ -17,6 +17,7 @@ public final class ReportConductState {
     public long retryAfter;
     public String message = "";
     public boolean resultPending;
+    public boolean serverError;
     public boolean repeatConduct;
     public long visitStart;
     public long visitEnd;
@@ -107,12 +108,23 @@ public final class ReportConductState {
         retryAfter = 0;
         message = "";
         resultPending = false;
+        serverError = false;
     }
 
     public void complete(boolean accepted, String message) {
         stage = accepted ? Stage.ACCEPTED : Stage.REJECTED;
         this.message = message == null ? "" : message;
         resultPending = true;
+        serverError = false;
+    }
+
+    public void completeFromServer(boolean accepted, String message) {
+        complete(accepted, message);
+        serverError = !accepted;
+    }
+
+    public String resultSubtitle() {
+        return stage == Stage.REJECTED && serverError ? "Вiдповiдь вiд сервера" : "";
     }
 
     public String acceptedMessage() {

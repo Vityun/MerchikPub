@@ -330,7 +330,7 @@ public final class ReportConductManager {
                 current.retryAfter = System.currentTimeMillis() + RETRY_MS;
                 current.message = message;
             } else {
-                current.complete(accepted, accepted ? current.acceptedMessage() : message);
+                current.completeFromServer(accepted, accepted ? current.acceptedMessage() : message);
             }
             save(current);
             log(retry || !accepted ? "ERROR" : "INFO", sent.dad2,

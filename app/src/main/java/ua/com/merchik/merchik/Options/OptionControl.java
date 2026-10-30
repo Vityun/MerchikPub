@@ -159,6 +159,10 @@ public class OptionControl<T> {
         }
     }
 
+    protected void dismissOptionMessage() {
+        if (dialog != null) dialog.dismiss();
+    }
+
     public void unlockCode() {
         dialog.setUnlockMode(() -> {
             WpDataDB wpDataDB1 = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionDB.getCodeDad2()));

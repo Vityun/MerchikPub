@@ -135,6 +135,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfS
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
+import ua.com.merchik.merchik.Options.Controls.OptionControlFaceCount;
 import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOverTimelinessOfReporting;
@@ -224,7 +225,7 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
+            158361, 159707, 575, 576, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
             84005, 84967, 164985, 165276, 174877, 175016, 165275, 165482, 166528, 157288, 141067};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
@@ -351,6 +352,11 @@ public class Options {
                 case 157352:
                     OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckDetailedReport.showOptionMassage("");
+                    break;
+
+                case 576:
+                    OptionControlFaceCount<?> optionControlFaceCount = new OptionControlFaceCount<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlFaceCount.showOptionMassage("");
                     break;
 
                 case 590:
@@ -2170,6 +2176,16 @@ public class Options {
                     optionControlCheckDetailedReport.showOptionMassage(block);
                 }
                 return optionControlCheckDetailedReport.isBlockOption2() ? 1 : 0;
+
+            case 576:
+                OptionControlFaceCount<?> optionControlFaceCount =
+                        new OptionControlFaceCount<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlFaceCount.isBlockOption()))
+                    optionControlFaceCount.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlFaceCount.signal && optionControlFaceCount.isBlockOption()) {
+                    optionControlFaceCount.showOptionMassage(block);
+                }
+                return optionControlFaceCount.isBlockOption2() ? 1 : 0;
 
             case 590:
             case 160209:
