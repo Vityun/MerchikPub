@@ -307,6 +307,27 @@ public class FaceCountPolicyTest {
         assertTrue(FaceCountPolicy.formatMessage(result, visit, network, row -> row.id).links.isEmpty());
     }
 
+    @Test public void correctingOnlyPromotionClearsTheHighFacesWarning() {
+        FaceCountPolicy.Network network = baseline("2", "10");
+        for (String presence : Arrays.asList("2", "1")) {
+            FaceCountPolicy.Visit visit = visit(product("159773", "5000", presence),
+                    product("2", "2", "0"), product("3", "1", "0"));
+            FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, true);
+            assertEquals("5003", FaceCountPolicy.text(visit.faces));
+            assertEquals("2".equals(presence), result.signal);
+            assertEquals("2".equals(presence) ? 1 : 0,
+                    FaceCountPolicy.formatMessage(result, visit, network, row -> row.id).links.size());
+        }
+    }
+
+    @Test public void correctedFacesNeedNoPromotionChange() {
+        FaceCountPolicy.Network network = baseline("2", "10");
+        FaceCountPolicy.Visit visit = visit(product("159773", "3", "2"),
+                product("2", "2", "0"), product("3", "1", "0"));
+        assertEquals(0, visit.promotions);
+        assertFalse(evaluate(visit, network, ACTIVE, true).signal);
+    }
+
     @Test public void productLabelHasCodeNameAndWeightWithoutNulls() {
         assertEquals("(159773) Сік 1.93л", FaceCountPolicy.productLabel("159773", " Сік ", " 1.93л "));
         assertEquals("(159773)", FaceCountPolicy.productLabel("159773", null, null));

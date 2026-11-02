@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAda
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionPriceCheck
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionRequisite
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceDrafts
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceField
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceValues
@@ -87,7 +88,6 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
-import ua.com.merchik.merchik.database.realm.tables.PromoRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm
@@ -2630,25 +2630,8 @@ class TovarDBViewModel @Inject constructor(
                 }
             }
 
-            when (tpl.getOptionControlName()) {
-                OptionControlName.AKCIYA_ID -> {
-                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()))
-                    dialog.setOperationSpinner2Data(setMapData(OptionControlName.AKCIYA))
-
-                    val promoDB = PromoRealm.getPromoDBById(previewRp.getAkciyaId())
-                    dialog.setOperationTextData(
-                        if (promoDB != null) promoDB.getNm() else previewRp.getAkciyaId()
-                    )
-
-                    val map = hashMapOf<Int?, String?>(
-                        2 to "Акция отсутствует",
-                        1 to "Есть акция"
-                    )
-                    val akciya = map[previewRp.getAkciya().toIntOrNull()]
-                    dialog.setOperationTextData2(akciya)
-                }
-
-                else -> Unit
+            if (tpl.getOptionControlName() == OptionControlName.AKCIYA_ID) {
+                PromotionRequisite.configureSelectors(dialog, previewRp)
             }
 
             if (tpl.getOptionControlName() == OptionControlName.ERROR_ID) {
@@ -3199,31 +3182,8 @@ class TovarDBViewModel @Inject constructor(
                 return map
             }
 
-            OptionControlName.AKCIYA_ID -> {
-                val promoDbList = RealmManager.getAllPromoDb()
-                var i = 0
-                while (i < promoDbList.size) {
-                    if (promoDbList.get(i)!!.getNm() != null && promoDbList.get(i)!!
-                            .getNm() != ""
-                    ) {
-                        map.put(promoDbList.get(i)!!.getID().toInt(), promoDbList.get(i)!!.getNm())
-                    }
-                    i++
-                }
-
-                map.put(0, "Оберіть тип акції")
-
-                return map
-            }
-
-            OptionControlName.AKCIYA -> {
-                map.put(2, "Акция отсутствует")
-                map.put(1, "Есть акция")
-
-                map.put(0, "Оберіть наявність акції")
-
-                return map
-            }
+            OptionControlName.AKCIYA_ID -> return PromotionRequisite.types()
+            OptionControlName.AKCIYA -> return PromotionRequisite.presence()
 
             else -> return null
         }
@@ -3429,23 +3389,7 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.AKCIYA_ID -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data)
                 Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2)
-                var missingPrice: String? = null
-                saved = ReportPrepareRealm.updateFields(snapshot, { table ->
-                    // Resolve once from the current row; mirror the same value to the UI snapshot.
-                    missingPrice = PriceSaveGuard.missingPricesForNoPromotion(
-                        data2, table.price, table.priceMin, table.priceMax
-                    )
-                    true
-                }, { table ->
-                    table.setAkciyaId(data.orEmpty())
-                    table.setAkciya(data2.orEmpty())
-                    missingPrice?.let { price ->
-                        table.setPriceMin(price)
-                        table.setPriceMax(price)
-                    }
-                    table.setUploadStatus(1)
-                    table.setDtChange(System.currentTimeMillis() / 1000)
-                })
+                saved = PromotionRequisite.save(snapshot, data, data2)
             }
 
             OptionControlName.NOTES -> {

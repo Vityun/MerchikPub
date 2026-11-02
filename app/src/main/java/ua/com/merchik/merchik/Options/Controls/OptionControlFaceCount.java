@@ -18,6 +18,7 @@ import java.util.List;
 import io.realm.RealmObject;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionRequisite;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -174,7 +175,7 @@ public class OptionControlFaceCount<T> extends OptionControl {
         link.setSpan(new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                showFaceEditor(textView.getContext(), productId);
+                showFaceEditor(textView, productId);
             }
 
             @Override
@@ -186,23 +187,36 @@ public class OptionControlFaceCount<T> extends OptionControl {
         return link;
     }
 
-    private void showFaceEditor(Context editorContext, String productId) {
-        ReportPrepareDB current = RealmManager.getTovarReportPrepare(String.valueOf(dad2), productId);
-        if (current == null) {
-            Toast.makeText(editorContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
-            return;
-        }
+    private DialogData productEditor(Context editorContext, String productId, ReportPrepareDB current, TovarOptions tpl) {
         TovarDB tovar = TovarRealm.getById(productId);
-        TovarOptions tpl = new TovarOptions(Globals.OptionControlName.FACE, "F", "Количество фейсов",
-                "face", "main", OPTION_CONTROL_FACE_COUNT_ID);
         DialogData editor = new DialogData(editorContext);
-        editor.setTitle("Количество фейсов");
+        editor.setTitle(tpl.getOptionLong());
         editor.setText(FaceCountPolicy.productLabel(productId,
                 tovar == null ? null : tovar.getNm(), tovar == null ? null : tovar.getWeight()));
         editor.setClose(editor::dismiss);
         editor.tovarOptions = tpl;
         editor.reportPrepareDB = current;
         if (tovar != null) editor.setImage(true, new TovarRequisites().getPhotoFromDB(tovar));
+        return editor;
+    }
+
+    private void showFaceEditor(View optionMessage, String productId) {
+        Context editorContext = optionMessage.getContext();
+        ReportPrepareDB current = RealmManager.getTovarReportPrepare(String.valueOf(dad2), productId);
+        if (current == null) {
+            Toast.makeText(editorContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        DialogData editor = productEditor(editorContext, productId, current,
+                new TovarOptions(Globals.OptionControlName.FACE, "F", "Количество фейсов",
+                        "face", "main", OPTION_CONTROL_FACE_COUNT_ID));
+        Runnable next = () -> {
+            if (optionMessage.isAttachedToWindow()) showPromotionEditor(optionMessage, productId);
+        };
+        editor.setCancel("Пропустить", () -> {
+            editor.setOnDismissAction(next);
+            editor.dismiss();
+        });
         editor.setOperation(DialogData.Operations.Number, current.getFace(), Collections.emptyMap(), () -> {
             String rawValue = editor.getOperationResult();
             if (rawValue == null || rawValue.trim().isEmpty()) {
@@ -229,12 +243,39 @@ public class OptionControlFaceCount<T> extends OptionControl {
                 return;
             }
             wpDataDB = visit;
-            executeOption();
-            dismissOptionMessage();
-            showOptionMassage(isBlockOption() ? messagePrefix : "");
+            // Number dismisses itself after a successful submission; only then show step two.
+            editor.setOnDismissAction(next);
             Toast.makeText(editorContext, "Внесено фейсов: " + value, Toast.LENGTH_SHORT).show();
         });
         editor.show();
+    }
+
+    private void showPromotionEditor(View optionMessage, String productId) {
+        Context editorContext = optionMessage.getContext();
+        ReportPrepareDB current = RealmManager.getTovarReportPrepare(String.valueOf(dad2), productId);
+        if (current == null) {
+            Toast.makeText(editorContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            refreshAfterProductEdit(optionMessage);
+            return;
+        }
+        DialogData editor = productEditor(editorContext, productId, current,
+                new TovarOptions(Globals.OptionControlName.AKCIYA_ID, "А", "Акция", "akciya_id", "main", 80977));
+        PromotionRequisite.configureSelectors(editor, current);
+        editor.setOperation(DialogData.Operations.DoubleSpinner, current.getAkciyaId(), Collections.emptyMap(), () -> {
+            if (!PromotionRequisite.save(current, editor.getOperationResult(), editor.getOperationResult2())) {
+                Toast.makeText(editorContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
+            }
+        });
+        editor.setCancel("Пропустить", editor::dismiss);
+        editor.setOnDismissAction(() -> refreshAfterProductEdit(optionMessage));
+        editor.show();
+    }
+
+    private void refreshAfterProductEdit(View optionMessage) {
+        if (!optionMessage.isAttachedToWindow()) return;
+        executeOption();
+        dismissOptionMessage();
+        showOptionMassage(isBlockOption() ? messagePrefix : "");
     }
 
     private void saveOptionResultInDB(OptionsDB calculated) {
