@@ -16,6 +16,11 @@ public final class SyncResponsePolicy {
         return rows;
     }
 
+    /** Call only after processing a successful download. An empty delta is not a new watermark. */
+    public static long downloadWatermark(long previous, long candidate, int receivedRows) {
+        return receivedRows > 0 ? candidate : previous;
+    }
+
     public static String shortError(String text) {
         if (text == null) return "null";
         String bounded = text.substring(0, Math.min(text.length(), 256))

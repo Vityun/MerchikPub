@@ -136,6 +136,8 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFaceCount;
+import ua.com.merchik.merchik.Options.Controls.OptionControlShelfLength;
+import ua.com.merchik.merchik.Options.Controls.ShelfLengthEntry;
 import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOverTimelinessOfReporting;
@@ -218,13 +220,13 @@ public class Options {
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382, 136100,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
             158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567,
-            164351, 164355, 165481, 141069
+            164351, 164355, 165481, 141069, ShelfLengthEntry.BUTTON_ID
     };
 
     // Провести отчет
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
-            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
+            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 1465, 135061,
             158361, 159707, 575, 576, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
             84005, 84967, 164985, 165276, 174877, 175016, 165275, 165482, 166528, 157288, 141067};
 
@@ -352,6 +354,11 @@ public class Options {
                 case 157352:
                     OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckDetailedReport.showOptionMassage("");
+                    break;
+
+                case 1465:
+                    new OptionControlShelfLength(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener)
+                            .showOptionMassage("");
                     break;
 
                 case 576:
@@ -2177,6 +2184,12 @@ public class Options {
                 }
                 return optionControlCheckDetailedReport.isBlockOption2() ? 1 : 0;
 
+            case 1465:
+                OptionControlShelfLength shelfLength = new OptionControlShelfLength(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode == NNKMode.MAKE || ((mode == NNKMode.CHECK || mode == NNKMode.BLOCK) && shelfLength.isBlockOption()))
+                    shelfLength.showOptionMassage(block);
+                return shelfLength.isBlockOption2() ? 1 : 0;
+
             case 576:
                 OptionControlFaceCount<?> optionControlFaceCount =
                         new OptionControlFaceCount<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -2545,6 +2558,12 @@ public class Options {
             case 137797:// Дет. Отчёт по Дад2
 //                option135742(context, dataDB, option, type, mode);
                 new OptionButtonAvailabilityDetailedReport(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            case ShelfLengthEntry.BUTTON_ID:
+                if (mode == NNKMode.MAKE && dataDB instanceof WpDataDB) {
+                    ShelfLengthEntry.open(context, (WpDataDB) dataDB, unlockCodeResultListener::onUnlockCodeSuccess);
+                }
                 break;
 
             case 132621:   // Оценка

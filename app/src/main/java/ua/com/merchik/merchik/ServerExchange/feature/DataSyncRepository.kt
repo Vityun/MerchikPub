@@ -38,7 +38,7 @@ class DataSyncRepository {
 
             val result = strategy.sync(info.lastDownloadTime)
             val updated = info.copy(
-                lastDownloadTime = if (result.success) {
+                lastDownloadTime = if (result.success && result.downloadedItems > 0) {
                     TrustedTime.syncWatermarkSec(info.lastDownloadTime, 120)
                 } else {
                     info.lastDownloadTime

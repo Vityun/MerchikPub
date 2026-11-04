@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,10 @@ public final class PhotoMetadataExchange {
                     body == null ? null : body.getList());
             List<ModImagesViewList> rows = PhotoMetadataPolicy.rows(body, request);
             context.requireCurrent();
+            if (rows.isEmpty()) {
+                trace.unchanged();
+                return new Result(rows, Collections.emptyList());
+            }
             List<StackPhotoDB> photos;
             try (Realm realm = Realm.getDefaultInstance()) {
                 photos = save(realm, rows, startedLocal, context::requireCurrent);
@@ -121,7 +126,7 @@ public final class PhotoMetadataExchange {
             long savedVpi = from;
             if (context.incremental) {
                 SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(
-                        PhotoMetadataPolicy.RESOURCE, context.scope, from, started, count);
+                        PhotoMetadataPolicy.RESOURCE, context.scope, from, started, count, rows.size());
                 // Realm first. A failure before Room commits leaves the old cursor and replays the delta.
                 context.db.runInTransaction(() -> {
                     context.requireCurrent();

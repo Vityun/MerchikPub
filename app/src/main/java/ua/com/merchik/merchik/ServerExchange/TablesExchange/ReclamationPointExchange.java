@@ -11,7 +11,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
+
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TasksAndReclamationsSDBResponce;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -62,14 +62,10 @@ public class ReclamationPointExchange {
                 @Override
                 public void onResponse(Call<TasksAndReclamationsSDBResponce> call, Response<TasksAndReclamationsSDBResponce> response) {
                     try {
-                        if (response.isSuccessful() && response.body() != null){
+                        if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().state)) {
                             if (response.body().list != null && response.body().list.size()>0){
-                                if (synchronizationTimetableDB != null) {
-                                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                                }
-
                                 exchange.onSuccess(response.body().list);
+                                RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().list, 120);
                             }else {
                                 exchange.onFailure("Dанных нет"); // данных нет
                             }

@@ -103,7 +103,7 @@ public class ReferenceSyncPolicyTest {
 
     @Test public void cursorUsesRequestStartNotResponseCompletion() {
         for (Table table : Table.values()) {
-            SynchronizationCursorSDB cursor = FilteredSyncPolicy.savedCursor(table.resource(), "7:all", 0, NOW, 3);
+            SynchronizationCursorSDB cursor = FilteredSyncPolicy.savedCursor(table.resource(), "7:all", 0, NOW, 3, 3);
             assertEquals(NOW - 120, cursor.vpi);
             assertEquals(NOW - 120, FilteredSyncPolicy.requestWatermark(cursor, NOW + 600, true));
             assertEquals(0, FilteredSyncPolicy.requestWatermark(cursor, NOW + 600, false));
@@ -111,7 +111,7 @@ public class ReferenceSyncPolicyTest {
     }
 
     @Test public void unknownTrustedTimeDoesNotAdvanceCursor() {
-        assertEquals(100, FilteredSyncPolicy.savedCursor("lesson/list", "7:all", 100, null, 1).vpi);
+        assertEquals(100, FilteredSyncPolicy.savedCursor("lesson/list", "7:all", 100, null, 1, 1).vpi);
     }
 
     @Test public void accountsHaveSeparateScopes() {

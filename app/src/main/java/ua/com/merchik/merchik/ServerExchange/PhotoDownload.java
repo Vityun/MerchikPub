@@ -779,7 +779,7 @@ public class PhotoDownload {
             // Сохранение Впемени последнего изменения таблички
             SynchronizationTimetableDB sync = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
 
-            if (sync != null) {
+            if (sync != null && !stackPhotoDBList.isEmpty()) {
                 sync.setVpi_app(TrustedTime.syncWatermarkSec(sync.getVpi_app(), 120));
                 RealmManager.setToSynchronizationTimetableDB(sync);
             }

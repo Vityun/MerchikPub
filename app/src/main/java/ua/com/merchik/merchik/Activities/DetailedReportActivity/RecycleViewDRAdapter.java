@@ -74,6 +74,7 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPauseWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
@@ -87,6 +88,8 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
+import ua.com.merchik.merchik.Options.Controls.ShelfLengthEntry;
+import ua.com.merchik.merchik.Options.Controls.OptionControlShelfLength;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
@@ -285,6 +288,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 138518   // Начало работы
                         || optionId == 138520   // Окончание работы
                         || optionId == 138773   // Местоположение
+                        || optionId == ShelfLengthEntry.BUTTON_ID
                         || optionId == 137797   // ДеталОтчёт план по товарам
                         || optionId == 138339   // Доп. Требования
                         || optionId == 141360   // Фото товара на складе
@@ -472,6 +476,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 try {
                     // Вчтавляем "счётчкик"
                     switch (optionId) {
+                        case ShelfLengthEntry.BUTTON_ID:
+                            textInteger.setText(CustomString.underlineString(OptionControlShelfLength.counterText(wp), optionsButtons));
+                            textInteger.setOnClickListener(v -> optionButton.performClick());
+                            break;
 
 //                        case 84007:
 //                            textInteger.setVisibility(View.VISIBLE);
@@ -489,7 +497,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             logMPList = LogMPRealm.getLogMPTime(startT * 1000, endT * 1000);
                             int loMPonPoint = 0;
                             for (LogMPDB log : logMPList) {
-                                if (log.distance != 0 && log.distance < Globals.distanceMin) {
+                                if (WifiPresencePolicy.onSite(log, wp.getAddr_id(), Globals.distanceMin)) {
                                     loMPonPoint++;
                                 }
                             }

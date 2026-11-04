@@ -34,7 +34,7 @@ public class LocationDownloadPolicyTest {
     }
 
     private SynchronizationCursorSDB cursor(long count) {
-        return FilteredSyncPolicy.savedCursor("location/list", "17:all", 0, NOW, count);
+        return FilteredSyncPolicy.savedCursor("location/list", "17:all", 0, NOW, count, 1);
     }
 
     @Test public void initialDownloadRequiresFullFetch() {

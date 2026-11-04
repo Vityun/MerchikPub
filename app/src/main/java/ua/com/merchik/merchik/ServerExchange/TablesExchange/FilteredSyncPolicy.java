@@ -2,9 +2,6 @@ package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
 import com.google.gson.JsonObject;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,17 +18,12 @@ import ua.com.merchik.merchik.ServerExchange.SyncResponsePolicy;
 public final class FilteredSyncPolicy {
     public static final String SHELF_SIZE = "data_list/shelf_size";
     public static final String TRANSLATIONS = "translation/translation_list";
-    private static final ZoneId KYIV = ZoneId.of("Europe/Kiev");
     private static final long OVERLAP_SECONDS = 120;
 
     private FilteredSyncPolicy() { }
 
-    public static LocalDate shelfDate(long nowSeconds) {
-        return Instant.ofEpochSecond(nowSeconds).atZone(KYIV).toLocalDate();
-    }
-
-    public static String shelfScope(LocalDate today) {
-        return today.minusDays(20) + "/" + today.plusDays(1);
+    public static String shelfScope(int userId) {
+        return accountScope(userId, "all");
     }
 
     public static String translationScope(int langId) {
@@ -43,12 +35,10 @@ public final class FilteredSyncPolicy {
         return Math.max(0, userId) + ":" + filterScope;
     }
 
-    public static JsonObject shelfRequest(LocalDate today, long vpi) {
+    public static JsonObject shelfRequest(long vpi) {
         JsonObject request = new JsonObject();
         request.addProperty("mod", "data_list");
         request.addProperty("act", "shelf_size");
-        request.addProperty("dt_from", today.minusDays(20).toString());
-        request.addProperty("dt_to", today.plusDays(1).toString());
         request.addProperty("dt_change_from", Long.toString(Math.max(0, vpi)));
         return request;
     }
@@ -69,7 +59,8 @@ public final class FilteredSyncPolicy {
     }
 
     public static SynchronizationCursorSDB savedCursor(String resource, String scope, long from,
-                                                       Long started, long count) {
+                                                       Long started, long count, int receivedRows) {
+        if (receivedRows <= 0) return null;
         SynchronizationCursorSDB result = new SynchronizationCursorSDB();
         result.resource = resource;
         result.scope = scope;

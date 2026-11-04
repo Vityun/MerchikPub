@@ -83,8 +83,14 @@ public class TranslationsExchange {
                 trace.response(body == null ? null : body.state, body == null ? null : body.error,
                         body == null ? null : body.list);
                 List<TranslatesSDB> rows = FilteredSyncPolicy.translationRows(body, context.langId);
-                List<SiteTranslationsList> realmRows = FilteredSyncPolicy.realmTranslations(rows);
                 context.requireCurrent();
+                SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(
+                        FilteredSyncPolicy.TRANSLATIONS, scope, from, started, 0, rows.size());
+                if (saved == null) {
+                    trace.unchanged();
+                    return rows;
+                }
+                List<SiteTranslationsList> realmRows = FilteredSyncPolicy.realmTranslations(rows);
                 realm.refresh();
                 if (from > 0 && !ready(db, realm, language, cursor)) {
                     throw new IllegalStateException("Translations changed during download; full retry required");
@@ -99,15 +105,14 @@ public class TranslationsExchange {
                     context.requireCurrent();
                     if (from == 0) db.translatesDao().deleteForLanguage(language);
                     db.translatesDao().insertAll(rows);
-                    db.synchronizationCursorDao().save(FilteredSyncPolicy.savedCursor(
-                            FilteredSyncPolicy.TRANSLATIONS, scope, from, started,
-                            db.translatesDao().countForLanguage(language)));
+                    saved.itemCount = db.translatesDao().countForLanguage(language);
+                    db.synchronizationCursorDao().save(saved);
                     context.requireCurrent();
                 });
                 log("INFO", "saved: langId=" + language + ", rows=" + rows.size()
                         + ", room=true, realm=true, vpi="
-                        + FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.TRANSLATIONS, scope, from, started, 0).vpi);
-                trace.saved(FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.TRANSLATIONS, scope, from, started, 0).vpi);
+                        + saved.vpi);
+                trace.saved(saved.vpi);
                 return rows;
             }
         } catch (Exception error) {

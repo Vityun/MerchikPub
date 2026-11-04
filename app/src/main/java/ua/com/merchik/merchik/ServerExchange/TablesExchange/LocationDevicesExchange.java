@@ -62,7 +62,8 @@ public final class LocationDevicesExchange {
             trace.response(response == null ? null : response.state, response == null ? null : response.error,
                     response == null ? null : response.list);
             List<LocationDevices> rows = LocationDevicesSyncPolicy.rows(response);
-            long watermark = LocationDevicesSyncPolicy.savedWatermark(from, started);
+            long watermark = SyncResponsePolicy.downloadWatermark(previous.getLastDownloadTime(),
+                    LocationDevicesSyncPolicy.savedWatermark(from, started), rows.size());
             // Data and cursor commit together. An account change or failed batch rolls both back.
             db.runInTransaction(() -> {
                 context.requireCurrent();

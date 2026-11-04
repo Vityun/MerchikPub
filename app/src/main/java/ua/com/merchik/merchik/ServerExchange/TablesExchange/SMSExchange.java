@@ -113,7 +113,7 @@ public class SMSExchange {
         data.nolimit = "1";
 
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("photo_showcase");
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("sms_log");
         data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 

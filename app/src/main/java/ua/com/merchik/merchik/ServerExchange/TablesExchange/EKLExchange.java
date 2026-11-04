@@ -15,7 +15,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -57,17 +56,13 @@ public class EKLExchange {
                 @Override
                 public void onResponse(Call<EKLResponse> call, Response<EKLResponse> response) {
                     try {
-                        if (response.body() != null){
+                        if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().state)) {
                             List<EKL_SDB> list = response.body().list != null ? response.body().list : Collections.emptyList();
                             Log.e("downloadEKLTable", "response: code=" + response.code() + ", listSize=" + list.size());
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): " + list.size());
                             Log.e("downloadEKLTable", "1");
-                            if (synchronizationTimetableDB != null) {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                            }
-                            Log.e("downloadEKLTable", "6");
                             exchange.onSuccess(list);
+                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, list, 120);
                             Log.e("downloadEKLTable", "7");
                         }else {
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

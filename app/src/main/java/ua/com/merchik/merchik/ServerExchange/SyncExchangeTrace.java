@@ -24,6 +24,7 @@ public final class SyncExchangeTrace {
     }
 
     public void saved(long vpi) { finish(vpi, null); }
+    public void unchanged() { finish(null, null); }
     public void failed(Throwable failure) { finish(null, failure); }
 
     private void finish(Long savedVpi, Throwable failure) {

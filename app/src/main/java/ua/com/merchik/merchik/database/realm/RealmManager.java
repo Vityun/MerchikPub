@@ -36,6 +36,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -652,6 +653,13 @@ public class RealmManager {
     }
 
     public static void setTovarAsync(List<TovarDB> list) {
+        setTovarAsync(list, null);
+    }
+
+    public static void setTovarAsync(List<TovarDB> list, Runnable afterCommit) {
+        if (list == null || list.isEmpty()) return;
+        int user = Globals.getCurrentUserId();
+        String session = Globals.getCurrentSessionId();
         Log.e("REALM_DB_UPDATE", "setTovar_S");
 
         try {
@@ -676,6 +684,14 @@ public class RealmManager {
 
                     // Закрываем Realm после завершения
                     realm.close();
+                    if (afterCommit != null && user == Globals.getCurrentUserId()
+                            && Objects.equals(session, Globals.getCurrentSessionId())) {
+                        try {
+                            afterCommit.run();
+                        } catch (RuntimeException error) {
+                            Globals.writeToMLOG("ERROR", "setTovarAsync", "Could not save download VPI: " + error);
+                        }
+                    }
                 }, error -> {
                     // Обработка ошибки
                     Log.e("REALM_DB_UPDATE", "setTovar_E: Ошибка при сохранении данных", error);
@@ -1734,6 +1750,12 @@ public class RealmManager {
 
     public static SynchronizationTimetableDB getSynchronizationTimetableRowByTable(String tableName) {
         return SynchronizationTimetableRepository.getByTableName(tableName);
+    }
+
+    public static void advanceDownloadVpi(SynchronizationTimetableDB table, List<?> received, long overlapSeconds) {
+        if (table == null || received == null || received.isEmpty()) return;
+        table.setVpi_app(TrustedTime.syncWatermarkSec(table.getVpi_app(), overlapSeconds));
+        setToSynchronizationTimetableDB(table);
     }
 
     public static void setToSynchronizationTimetableDB(SynchronizationTimetableDB synchronizationTimetableDB) {

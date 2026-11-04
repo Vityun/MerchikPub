@@ -2797,10 +2797,8 @@ id_exclude - иди товаров которые есть в приложени
 //                                            .anyMatch(wpDataDB -> Objects.equals(tovarDB.getClientId(), wpDataDB.getClient_id())));
 
 
-                            RealmManager.setTovarAsync(list);
-
-                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(realmResults);
+                            RealmManager.setTovarAsync(list, () ->
+                                    RealmManager.advanceDownloadVpi(realmResults, list, 120));
 
 //                            getTovarImg(list, "small");
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
@@ -2977,10 +2975,8 @@ id_exclude - иди товаров которые есть в приложени
 //                                            .anyMatch(wpDataDB -> Objects.equals(tovarDB.getClientId(), wpDataDB.getClient_id())));
 
 
-                            RealmManager.setTovarAsync(list);
-
-                            realmResults.setVpi_app(TrustedTime.syncWatermarkSec(realmResults.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(realmResults);
+                            RealmManager.setTovarAsync(list, () ->
+                                    RealmManager.advanceDownloadVpi(realmResults, list, 120));
 
 //                            getTovarImg(list, "small");
                             // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
@@ -3384,13 +3380,13 @@ id_exclude - иди товаров которые есть в приложени
                         }
                         Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + compactBodyLog(body));
                         if (!RealmManager.setPromo(body.getList())) return;
-                        if (sTable != null) {
+                        if (sTable != null && !body.getList().isEmpty()) {
                             sTable.setVpi_app(nextVpi);
                             RealmManager.setToSynchronizationTimetableDB(sTable);
                         }
                         readyAkciyTable = true;
                         Globals.writeToMLOG("INFO", "downloadAkciyTable",
-                                "Saved rows=" + body.getList().size() + ", VPI=" + vpi + " -> " + nextVpi);
+                                "Saved rows=" + body.getList().size() + ", VPI=" + vpi + " -> " + (sTable == null ? vpi : sTable.getVpi_app()));
                     } catch (Exception e) {
                         syncInternetError = true;
                         Globals.writeToMLOG("ERROR", "downloadAkciyTable/onResponse", "Save failed: " + e);
@@ -3826,6 +3822,8 @@ id_exclude - иди товаров которые есть в приложени
     }
 
 
+    private long lastCronAttemptSec;
+
     public void cronUpdateTables() {
         Log.e("cronUpdateTables", "ALL START");
 
@@ -3835,7 +3833,7 @@ id_exclude - иди товаров которые есть в приложени
 
         long l = 0;
         if (synchTableWp != null) {
-            l = synchTableWp.getVpi_app() + synchTableWp.getUpdate_frequency();
+            l = Math.max(lastCronAttemptSec, synchTableWp.getVpi_app()) + synchTableWp.getUpdate_frequency();
         }
 
         Log.e("cronUpdateTables", "l: " + l);
@@ -3845,7 +3843,8 @@ id_exclude - иди товаров которые есть в приложени
         Log.e("cronUpdateTables", "До синхронизации: " + sync);
 
 
-        if (synchTableWp == null || TrustedTime.isSyncDue(synchTableWp.getVpi_app(), synchTableWp.getUpdate_frequency())) {
+        if (synchTableWp == null || TrustedTime.isSyncDue(Math.max(lastCronAttemptSec, synchTableWp.getVpi_app()), synchTableWp.getUpdate_frequency())) {
+            lastCronAttemptSec = currentTime;
 //            downloadSiteHints("2");
             // Lessons belong to Exchange.startExchange, not to the WP cron as well.
             downloadOborotVed();
@@ -3870,19 +3869,6 @@ id_exclude - иди товаров которые есть в приложени
             }
 
 
-            // Сохранение последнего обмена
-            try {
-                if (synchTableWp != null) {
-                    synchTableWp.setVpi_app(TrustedTime.syncWatermarkSec(synchTableWp.getVpi_app(), 60));
-                    RealmManager.setToSynchronizationTimetableDB(synchTableWp);
-                    Log.d("updateRealm", "here");
-                } else {
-                    Log.d("updateRealm", "?");
-                }
-            } catch (Exception e) {
-                Log.d("updateRealm", "SAVE LAST UPDATE ERROR: " + e);
-                Log.e("cronUpdateTables", "SAVE LAST UPDATE ERROR: " + e);
-            }
 
         } else {
             Log.e("cronUpdateTables", "Ещё рано выгружать данные");
@@ -4668,10 +4654,7 @@ id_exclude - иди товаров которые есть в приложени
                                 return;
                             }
                             RoomManager.SQL_DB.initStateDao().markThemeLoaded();
-                            if (synchronizationTimetableDB != null) {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                            }
+                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().getList(), 120);
                         } else {
                             initialDownloadFailed("theme", "Invalid response: http=" + response.code());
                         }

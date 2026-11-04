@@ -1745,6 +1745,12 @@ public class DialogData {
 
     // --- R_E_T_U_R_N_E_D START ---
 
+    /** Reject this numeric submission without closing the editor or clearing what was typed. */
+    public void rejectNumberInput(String message) {
+        result = null;
+        editText.setError(message);
+    }
+
     public String getOperationResult() {
         return result;
     }

@@ -10,7 +10,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CustomerResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -60,12 +59,15 @@ public class  CustomerExchange <T>{
                     try {
                         if (response.body() != null){
                             CustomerResponse cus = (CustomerResponse) response.body();
+                            if (!response.isSuccessful() || !Boolean.TRUE.equals(cus.state) || cus.list == null) {
+                                exchange.onFailure("Invalid customer response");
+                                return;
+                            }
 
                             Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body() size: " + ((CustomerResponse) response.body()).list.size());
 
-                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                             exchange.onSuccess(cus.list);
+                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, cus.list, 120);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении Клиентов(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");

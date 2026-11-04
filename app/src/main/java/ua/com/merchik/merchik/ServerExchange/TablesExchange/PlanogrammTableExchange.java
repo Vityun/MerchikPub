@@ -345,7 +345,7 @@ public class PlanogrammTableExchange {
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
-                                                if (realmResult != null) {
+                                                if (realmResult != null && !planogrammVizitShowcaseResponse.list.isEmpty()) {
                                                     realmResult.setVpi_app(TrustedTime.syncWatermarkSec(realmResult.getVpi_app(), 120));
                                                     RealmManager.setToSynchronizationTimetableDB(realmResult);
                                                 }

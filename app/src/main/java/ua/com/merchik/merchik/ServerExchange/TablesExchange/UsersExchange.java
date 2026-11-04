@@ -8,7 +8,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.UsersResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -46,17 +45,16 @@ public class UsersExchange {
                 @Override
                 public void onResponse(Call<UsersResponse> call, Response<UsersResponse> response) {
                     try {
-                        if (response.body() != null){
+                        if (response.isSuccessful() && response.body() != null
+                                && Boolean.TRUE.equals(response.body().state) && response.body().list != null) {
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
 
+                            exchange.onSuccess(response.body().list);
                             try {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                                RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().list, 120);
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERR", "downloadUsersTable/call.enqueue/onResponse/setSyncTimetable", "Exception e: " + e);
                             }
-
-                            exchange.onSuccess(response.body().list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении Сотрудников(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");

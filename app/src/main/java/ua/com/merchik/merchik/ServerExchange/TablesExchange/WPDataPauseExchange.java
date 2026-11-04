@@ -99,8 +99,8 @@ public class WPDataPauseExchange {
 
         saveSyncInfo(
                 syncInfo,
-                downloadOk ? TrustedTime.syncWatermarkSec(syncInfo.getLastDownloadTime(), 0) : syncInfo.getLastDownloadTime(),
-                uploadOk ? TrustedTime.syncWatermarkSec(syncInfo.getLastUploadTime(), 0) : syncInfo.getLastUploadTime(),
+                downloadOk && downloadedItems > 0 ? TrustedTime.syncWatermarkSec(syncInfo.getLastDownloadTime(), 0) : syncInfo.getLastDownloadTime(),
+                uploadOk && uploadedItems > 0 ? TrustedTime.syncWatermarkSec(syncInfo.getLastUploadTime(), 0) : syncInfo.getLastUploadTime(),
                 downloadOk ? downloadedItems : syncInfo.getDownloadedItems(),
                 uploadOk ? uploadedItems : syncInfo.getUploadedItems(),
                 downloadOk ? DownloadStatus.SUCCESS : DownloadStatus.ERROR,

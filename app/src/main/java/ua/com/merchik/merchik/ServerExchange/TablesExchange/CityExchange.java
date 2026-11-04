@@ -8,7 +8,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CityResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -41,10 +40,10 @@ public class CityExchange {
                 @Override
                 public void onResponse(Call<CityResponse> call, Response<CityResponse> response) {
                     try {
-                        if (response.body() != null){
-                            synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                        if (response.isSuccessful() && response.body() != null
+                                && Boolean.TRUE.equals(response.body().state) && response.body().list != null) {
                             exchange.onSuccess(response.body().list);
+                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().list, 120);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadCityTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении Городов(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");

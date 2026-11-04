@@ -13,7 +13,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
+
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -65,14 +65,12 @@ public class AddressExchange {
                 @Override
                 public void onResponse(Call<AddressResponse> call, Response<AddressResponse> response) {
                     try {
-                        if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()){
+                        if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().state)
+                                && response.body().list != null && !response.body().list.isEmpty()) {
                             Log.e("downloadAddressTable", "response: code=" + response.code() + ", listSize=" + response.body().list.size());
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
-                            if (synchronizationTimetableDB != null) {
-                                synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                                RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                            }
                             exchange.onSuccess(response.body().list);
+                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().list, 120);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении Адресов(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");

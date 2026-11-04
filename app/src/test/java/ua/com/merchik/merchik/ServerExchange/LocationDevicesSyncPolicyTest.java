@@ -14,9 +14,11 @@ public class LocationDevicesSyncPolicyTest {
         result.list = Collections.emptyList();
         return result;
     }
-    @Test public void emptySuccessfulDeltaCanCommitItsCursor() {
-        assertTrue(LocationDevicesSyncPolicy.rows(response()).isEmpty());
-        assertEquals(880, LocationDevicesSyncPolicy.savedWatermark(100, 1000L));
+    @Test public void emptySuccessfulDeltaKeepsStoredCursor() {
+        long candidate = LocationDevicesSyncPolicy.savedWatermark(100, 1000L);
+        assertEquals(100, SyncResponsePolicy.downloadWatermark(100, candidate,
+                LocationDevicesSyncPolicy.rows(response()).size()));
+        assertEquals(880, SyncResponsePolicy.downloadWatermark(100, candidate, 1));
     }
     @Test(expected = IllegalStateException.class) public void falseStateIsNotAnEmptySuccess() {
         LocationDevicesResponse response = response(); response.state = false;

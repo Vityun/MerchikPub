@@ -9,7 +9,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -56,10 +55,14 @@ public class StandartExchange {
                 @Override
                 public void onResponse(Call<ContentResponse> call, Response<ContentResponse> response) {
                     Log.e("test", "response: " + response);
+                    if (!response.isSuccessful() || response.body() == null
+                            || !Boolean.TRUE.equals(response.body().state) || response.body().list == null) {
+                        exchange.onFailure("Invalid content_table response");
+                        return;
+                    }
                     exchange.onSuccess(response.body().list);
 
-                    synchronizationTimetableDB.setVpi_app(TrustedTime.syncWatermarkSec(synchronizationTimetableDB.getVpi_app(), 120));
-                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+                    RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().list, 120);
                 }
 
                 @Override

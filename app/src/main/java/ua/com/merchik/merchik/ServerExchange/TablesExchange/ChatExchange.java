@@ -104,7 +104,8 @@ public final class ChatExchange {
                 count = rows.size();
                 saveRows = () -> db.chatGrpDao().insertAll(rows);
             }
-            long watermark = ChatSyncPolicy.savedWatermark(from, started);
+            long watermark = SyncResponsePolicy.downloadWatermark(sync.getLastDownloadTime(),
+                    ChatSyncPolicy.savedWatermark(from, started), count);
             db.runInTransaction(() -> {
                 requireCurrentAccount(db, userId, session);
                 saveRows.run();

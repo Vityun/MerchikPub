@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik;
 
 import static io.realm.Realm.getApplicationContext;
-import static ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot.hasWifiPerms;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
@@ -30,7 +29,6 @@ import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -74,6 +72,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
+import ua.com.merchik.merchik.Utils.WifiScanAccess;
 import java.util.Map;
 import java.util.Set;
 
@@ -1493,6 +1493,8 @@ public class Globals {
                         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     Globals.writeToMLOG("ERROR", "fixMP/imHereGPS", "permission not granted");
+                    if (wpDataDB != null) logWifiMatch(wpDataDB.getAddr_id(), new WifiScanAccess(context),
+                            "location_permission_denied", null, null, null, null);
                     return null;
                 }
                 Criteria criteria = new Criteria();
@@ -1599,26 +1601,7 @@ public class Globals {
                         WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
                         if (res != null) {
                             log.id = RealmManager.logMPGetLastId() + 1;
-                            log.provider = 22;
-
-                            log.CoordAltitude = 0;
-                            log.CoordSpeed = 0;
-                            log.CoordAccuracy = 1;
-
-                            String wifiMatch = res.text;
-                            if (wifiMatch != null) {
-
-                                if (res.pct > 10.0) {
-                                    log.CoordX = coordAddrX;
-                                    log.CoordY = coordAddrY;
-                                } else {
-                                    log.CoordX = 0;
-                                    log.CoordY = 0;
-                                }
-                            }
-                            log.gp = POST_10(log);
-                            log.locationUniqueString = wifiMatch;
-                            RealmManager.setLogMpRow(log);
+                            saveWifiMatch(log, res, coordAddrX, coordAddrY);
 
                         }
                     }
@@ -1704,26 +1687,7 @@ public class Globals {
                         WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
                         if (res != null) {
                             logNET.id = RealmManager.logMPGetLastId() + 1;
-                            logNET.provider = 22;
-
-                            logNET.CoordAltitude = 0;
-                            logNET.CoordSpeed = 0;
-                            logNET.CoordAccuracy = 1;
-
-                            String wifiMatch = res.text;
-                            if (wifiMatch != null) {
-
-                                if (res.pct > 10.0) {
-                                    logNET.CoordX = coordAddrX;
-                                    logNET.CoordY = coordAddrY;
-                                } else {
-                                    logNET.CoordX = 0;
-                                    logNET.CoordY = 0;
-                                }
-                                logNET.gp = POST_10(logNET);
-                                logNET.locationUniqueString = wifiMatch;
-                                RealmManager.setLogMpRow(logNET);
-                            }
+                            saveWifiMatch(logNET, res, coordAddrX, coordAddrY);
                         }
                     }
                     locationUniqueStringGSM = locationUniqueStringNETThis;
@@ -1740,26 +1704,56 @@ public class Globals {
 
     private static final class WifiMatchResult {
         final String text;   // то, что пишем в locationUniqueString
-        final double pct;    // процент совпадения
+        final boolean confirmed;
 
-        WifiMatchResult(String text, double pct) {
+        WifiMatchResult(String text, boolean confirmed) {
             this.text = text;
-            this.pct = pct;
+            this.confirmed = confirmed;
         }
     }
 
+    private static void saveWifiMatch(LogMPDB log, WifiMatchResult result, float addrX, float addrY) {
+        log.provider = WifiPresencePolicy.PROVIDER;
+        log.CoordAltitude = 0;
+        log.CoordSpeed = 0;
+        log.CoordAccuracy = 1;
+        log.inPlace = result.confirmed && log.address > 0 && addrX != 0 && addrY != 0 ? 1 : 0;
+        log.CoordX = log.inPlace == 1 ? addrX : 0;
+        log.CoordY = log.inPlace == 1 ? addrY : 0;
+        log.distance = 0; // Do not inherit the GPS/network distance for the synthetic Wi-Fi row.
+        log.gp = POST_10(log);
+        log.locationUniqueString = result.text;
+        RealmManager.setLogMpRow(log);
+    }
+
+    private static void logWifiMatch(int addrId, WifiScanAccess access, String reason, Integer found,
+                                     Integer known, Integer matched, Double percent) {
+        writeToMLOG("INFO", "fixMP/wifiMatch", "addr_id=" + addrId + ", " + access.diagnostics()
+                + ", found=" + (found == null ? "n/a" : found) + ", known=" + (known == null ? "n/a" : known)
+                + ", matched=" + (matched == null ? "n/a" : matched)
+                + ", pct=" + (percent == null ? "n/a" : String.format(Locale.US, "%.2f", percent))
+                + ", result=" + reason);
+    }
 
     @Nullable
     private static WifiMatchResult buildWifiStatsMatch(Context context, int addrId) {
+        if (context == null) return null;
+        WifiScanAccess access = new WifiScanAccess(context);
+        Integer found = null, known = null, matched = null;
+        Double percent = null;
+        String reason = "wifi_unavailable";
         try {
-            if (context == null) return null;
+            if (!Boolean.TRUE.equals(access.enabled)) {
+                if (Boolean.FALSE.equals(access.enabled)) reason = "wifi_off";
+                return null;
+            }
 
-            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wifiManager == null || !wifiManager.isWifiEnabled()) return null;
+            if (!access.hasPermissions()) {
+                reason = "permission_denied";
+                return new WifiMatchResult("WiFi scan permission denied", false);
+            }
 
-            if (!hasWifiPerms(context)) return new WifiMatchResult( "WiFi is OFF", 0);
-
-            List<android.net.wifi.ScanResult> results = wifiManager.getScanResults();
+            List<android.net.wifi.ScanResult> results = access.manager.getScanResults();
             if (results == null) results = Collections.emptyList();
 
             HashSet<String> wifiSet = new HashSet<>();
@@ -1769,39 +1763,42 @@ public class Globals {
                 if (bssid == null || bssid.isEmpty()) continue;
                 wifiSet.add(bssid.toLowerCase(Locale.US));
             }
-            int wifiFound = wifiSet.size();
+            found = wifiSet.size();
 
             LocationDevicesDao dao = SQL_DB.locationDevicesDao();
             List<LocationDevices> db = dao.getByAddress(addrId);
-            if (db == null || db.isEmpty())
-                return new WifiMatchResult("No address in MAPS_WIFI_DB", 0);
-
             HashSet<String> dbSet = new HashSet<>();
             for (LocationDevices d : db) {
                 if (d == null || d.mac == null || d.mac.trim().isEmpty()) continue;
                 dbSet.add(d.mac.trim().toLowerCase(Locale.US));
             }
-            int dbCount = dbSet.size();
-
-            int matched = 0;
-            if (!wifiSet.isEmpty() && !dbSet.isEmpty()) {
-                for (String mac : wifiSet) {
-                    if (dbSet.contains(mac)) matched++;
-                }
+            known = dbSet.size();
+            matched = 0;
+            if (known == 0) {
+                reason = "no_reference";
+                return new WifiMatchResult("No address in MAPS_WIFI_DB", false);
             }
 
-            double pct = 0.0;
-            if (dbCount > 0) pct = (matched * 100.0) / dbCount;
+            for (String mac : wifiSet) {
+                if (dbSet.contains(mac)) matched++;
+            }
+
+            percent = (matched * 100.0) / known;
+            boolean confirmed = WifiPresencePolicy.confirmed(matched, known);
+            reason = confirmed ? "confirmed" : "not_confirmed";
 
             String text = String.format(Locale.US,
                     "maps_wifi: countFoundNow=%d | countMapWiFiDB=%d | match=%d | pct=%.1f",
-                    wifiFound, dbCount, matched, pct
+                    found, known, matched, percent
             );
 
-            return new WifiMatchResult(text, pct);
+            return new WifiMatchResult(text, confirmed);
 
         } catch (Exception e) {
-            return new WifiMatchResult( "Exception: " + e.getMessage(), 0);
+            reason = "error:" + e.getClass().getSimpleName();
+            return new WifiMatchResult("Exception: " + e.getMessage(), false);
+        } finally {
+            logWifiMatch(addrId, access, reason, found, known, matched, percent);
         }
     }
 

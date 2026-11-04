@@ -69,12 +69,11 @@ public class PhotoMetadataPolicyTest {
         assertEquals("41,42", filters(json("{\"id_list\":\"42,41,42\"}")).get("id_list").getAsString());
     }
     @Test(expected = IllegalArgumentException.class) public void emptyIdDoesNotBecomeUnfilteredDownload() { filters(json("{\"id_list\":\"\"}")); }
-    @Test public void successfulEmptyDeltaAdvancesAtStartTime() {
-        assertTrue(rows(response(), new JsonObject()).isEmpty());
-        SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(RESOURCE, "scope", 100, 1000L, 0);
-        assertEquals(880, saved.vpi);
+    @Test public void successfulEmptyDeltaLeavesPreviousCursorAlone() {
+        int received = rows(response(), new JsonObject()).size();
+        assertNull(FilteredSyncPolicy.savedCursor(RESOURCE, "scope", 100, 1000L, 50, received));
     }
-    @Test public void unknownClockKeepsCursor() { assertEquals(100, FilteredSyncPolicy.savedCursor(RESOURCE, "scope", 100, null, 0).vpi); }
+    @Test public void unknownClockKeepsCursor() { assertEquals(100, FilteredSyncPolicy.savedCursor(RESOURCE, "scope", 100, null, 0, 1).vpi); }
     @Test(expected = IllegalStateException.class) public void failedStateRejected() { ModImagesView r = response(); r.setState(false); rows(r, new JsonObject()); }
     @Test(expected = IllegalStateException.class) public void sqlErrorWithTrueStateAndEmptyListIsRejected() {
         ModImagesView response = gson.fromJson("{\"state\":true,\"list\":[],\"error\":\"SQLSTATE: real_comment_dt ambiguous\"}", ModImagesView.class);

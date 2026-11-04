@@ -4,7 +4,6 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
 
 import com.google.gson.JsonObject;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,13 +40,11 @@ public class ShelfSizeExchange {
     private void download(AppDatabase db, int userId, String session) throws Exception {
         requireCurrent(db, userId, session);
         Long started = TrustedTime.nowServerSecOrLocalSec();
-        LocalDate today = FilteredSyncPolicy.shelfDate(started != null
-                ? started : System.currentTimeMillis() / 1000L);
-        String scope = FilteredSyncPolicy.accountScope(userId, FilteredSyncPolicy.shelfScope(today));
+        String scope = FilteredSyncPolicy.shelfScope(userId);
         SynchronizationCursorSDB cursor = db.synchronizationCursorDao().get(FilteredSyncPolicy.SHELF_SIZE, scope);
         long from = FilteredSyncPolicy.requestWatermark(cursor, started,
                 cursor != null && cursor.itemCount == db.shelfSizeDao().count());
-        JsonObject request = FilteredSyncPolicy.shelfRequest(today, from);
+        JsonObject request = FilteredSyncPolicy.shelfRequest(from);
         Globals.writeToMLOG("INFO", "ShelfSizeExchange/start", request.toString());
         SyncExchangeTrace trace = new SyncExchangeTrace(FilteredSyncPolicy.SHELF_SIZE, from);
         try {
@@ -61,19 +58,23 @@ public class ShelfSizeExchange {
             trace.response(body == null ? null : body.state, body == null ? null : body.error,
                     body == null ? null : body.list);
             List<ShelfSizeSDB> rows = FilteredSyncPolicy.shelfRows(body);
+            SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(
+                    FilteredSyncPolicy.SHELF_SIZE, scope, from, started, 0, rows.size());
+            if (saved == null) {
+                trace.unchanged();
+                return;
+            }
             db.runInTransaction(() -> {
                 requireCurrent(db, userId, session);
                 db.shelfSizeDao().upsertAll(rows);
-                db.synchronizationCursorDao().save(FilteredSyncPolicy.savedCursor(
-                        FilteredSyncPolicy.SHELF_SIZE, scope, from, started, db.shelfSizeDao().count()));
-                // A new date range gets a full fetch, including rows created before the old VPI.
-                db.synchronizationCursorDao().deleteOtherScopes(FilteredSyncPolicy.SHELF_SIZE, scope);
+                saved.itemCount = db.shelfSizeDao().count();
+                db.synchronizationCursorDao().save(saved);
                 requireCurrent(db, userId, session);
             });
             Globals.writeToMLOG("INFO", "ShelfSizeExchange/saved", "scope=" + scope
                     + ", rows=" + rows.size() + ", vpi="
-                    + FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.SHELF_SIZE, scope, from, started, 0).vpi);
-            trace.saved(FilteredSyncPolicy.savedCursor(FilteredSyncPolicy.SHELF_SIZE, scope, from, started, 0).vpi);
+                    + saved.vpi);
+            trace.saved(saved.vpi);
         } catch (Exception error) {
             trace.failed(error);
             throw error;

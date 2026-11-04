@@ -18,6 +18,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.Options.Controls.ShelfLengthEntry;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -117,6 +118,7 @@ public class WorkPlan {
         RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
         List<OptionsDB> arraylist;
         arraylist = RealmManager.INSTANCE.copyFromRealm(options);
+        ShelfLengthEntry.removeUncontrolledCopies(arraylist);
         return arraylist;
     }
 

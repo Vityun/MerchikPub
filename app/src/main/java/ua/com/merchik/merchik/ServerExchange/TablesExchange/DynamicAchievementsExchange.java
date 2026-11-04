@@ -19,6 +19,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.ServerExchange.SyncResponsePolicy;
 import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB;
 import ua.com.merchik.merchik.data.Database.Room.DynamicPhotoSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.DynamicAchievementsResponse;
@@ -108,7 +109,7 @@ public class DynamicAchievementsExchange {
                 SQL_DB.dynamicAchievementsDao().insertAll(rows);
             }
 
-            saveDownloadSyncInfo(syncInfo, successfulWatermark(syncInfo, window.toSec), rows.size(), DownloadStatus.SUCCESS);
+            saveDownloadSyncInfo(syncInfo, successfulWatermark(syncInfo, window.toSec, rows.size()), rows.size(), DownloadStatus.SUCCESS);
             logInfo("images_achieve.dynamic", responseSummary(response, rows.size()));
             return "dynamic downloaded=" + rows.size();
         } catch (Exception e) {
@@ -140,7 +141,7 @@ public class DynamicAchievementsExchange {
                 SQL_DB.dynamicPhotoDao().insertAll(rows);
             }
 
-            saveDownloadSyncInfo(syncInfo, successfulWatermark(syncInfo, window.toSec), rows.size(), DownloadStatus.SUCCESS);
+            saveDownloadSyncInfo(syncInfo, successfulWatermark(syncInfo, window.toSec, rows.size()), rows.size(), DownloadStatus.SUCCESS);
             logInfo("images_achieve.dynamic_photo", responseSummary(response, rows.size()));
             boolean stackPhotoDownloadStarted = new DynamicPhotoStackPhotoExchange()
                     .downloadMissingFromDynamicPhotoTableAsync();
@@ -375,8 +376,9 @@ public class DynamicAchievementsExchange {
         return TrustedTime.nowServerSecOrLocalSec();
     }
 
-    private long successfulWatermark(SynchronizationTimeTable syncInfo, long requestToSec) {
-        return Math.max(syncInfo.getLastDownloadTime(), requestToSec);
+    private long successfulWatermark(SynchronizationTimeTable syncInfo, long requestToSec, int rows) {
+        long previous = syncInfo.getLastDownloadTime();
+        return SyncResponsePolicy.downloadWatermark(previous, Math.max(previous, requestToSec), rows);
     }
 
     private String messageOf(Throwable throwable) {

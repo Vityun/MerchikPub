@@ -15,6 +15,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -120,6 +121,8 @@ public class OptionControlMP<T> extends OptionControl {
 
             if (logMPList != null && logMPList.size() > 0) {
                 for (LogMPDB item : logMPList) {
+                    if (Integer.valueOf(WifiPresencePolicy.PROVIDER).equals(item.provider)
+                            && item.address != wpDataDB.getAddr_id()) continue;
                     double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);
                     item.distance = (int) distance;
                 }
@@ -170,26 +173,15 @@ public class OptionControlMP<T> extends OptionControl {
                         stringBuilder.append("Нема жодного запиту на визначення місцезнаходження. ").append("Перевірте чи увімкнений у Вас GPS ").append("Спробуйте підійти до вікна або вийти на вулицю. Через хвилину місцеположення буде визначене і можна продовжувати виконувати роботу.");
                         click.onFailure(stringBuilder.toString());
                     } else {
-//                        LogMPDB logMPDB = logMPList.get(0);
-//                        double distance = coordinatesDistanse(addressSDB.locationXd, addressSDB.locationYd, logMPDB.CoordX, logMPDB.CoordY);
-
-                        // Найти первый элемент с ненулевым значением distance
-//                        LogMPDB logMPDB = null;
-//                        for (LogMPDB log : logMPList) {
-//                            if (log.distance != 0) {
-//                                logMPDB = log;
-//
-//                                break;
-//                            }
-//                        }
                         LogMPDB minDistanceLog = null;
                         int validDistanceCount = 0;
                         for (LogMPDB log : logMPList) {
-                            if (log.distance != 0) {
+                            if (WifiPresencePolicy.usableDistance(log, wpDataDB.getAddr_id())) {
                                 if (log.distance < distanceMin) {
                                     validDistanceCount++;
                                 }
-                                if (minDistanceLog == null || log.distance < minDistanceLog.distance) {
+                                if (minDistanceLog == null || log.distance < minDistanceLog.distance
+                                        || (log.distance == minDistanceLog.distance && log.vpi > minDistanceLog.vpi)) {
                                     minDistanceLog = log;
                                 }
                                 if (latestVpiLog == null || log.vpi > latestVpiLog.vpi) {
@@ -199,7 +191,10 @@ public class OptionControlMP<T> extends OptionControl {
                         }
 
                         double distance = minDistanceLog != null ? minDistanceLog.distance : 0;
-                        if (distance < distanceMin) {
+                        if (minDistanceLog == null) {
+                            stringBuilder.append("Немає придатного визначення місцеположення для цієї торгової точки.");
+                            click.onFailure(stringBuilder.toString());
+                        } else if (validDistanceCount > 0) {
                             stringBuilder.append(String.format("Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ.", logMPList.size(), validDistanceCount))
                                     .append("\n");
                             stringBuilder.append("Ви визначені на торговій точці. Зауважень немає.");
@@ -208,10 +203,10 @@ public class OptionControlMP<T> extends OptionControl {
                                 stringBuilder.setLength(0);
                                 stringBuilder
                                         .append("Адрес ТТ: ")
-                                        .append(addressSDB.nm)
+                                        .append(addressSDB == null ? wpDataDB.getAddr_txt() : addressSDB.nm)
                                         .append("\n");
                                 stringBuilder.append("Поточне розташування присторою станом на ")
-                                        .append(Clock.getHumanTime2(latestVpiLog.vpi))
+                                        .append(Clock.getHumanTime2(minDistanceLog.vpi))
                                         .append(" визначено на вiдстанi ")
                                         .append((int) distance)
                                         .append(" метрiв вiд ТТ");
@@ -235,7 +230,7 @@ public class OptionControlMP<T> extends OptionControl {
                                 stringBuilder.setLength(0);
                                 stringBuilder
                                         .append("Адрес ТТ: ")
-                                        .append(addressSDB.nm)
+                                        .append(addressSDB == null ? wpDataDB.getAddr_txt() : addressSDB.nm)
                                         .append("\n");
                                 stringBuilder
                                         .append("За визначенням системи, ")

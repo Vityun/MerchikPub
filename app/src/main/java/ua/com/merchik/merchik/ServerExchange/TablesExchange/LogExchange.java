@@ -17,6 +17,7 @@ import io.realm.Realm;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.ServerExchange.SyncResponsePolicy;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.LogListResponse;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
@@ -95,7 +96,7 @@ public class LogExchange {
             int savedRows = body.list.size();
             writeLog("INFO", "response: state=true, savedRows=" + savedRows);
 
-            long nextVpi = requestStartedSec;
+            long nextVpi = SyncResponsePolicy.downloadWatermark(previousVpi, requestStartedSec, savedRows);
             saveSyncInfo(syncInfo, nextVpi, savedRows, DownloadStatus.SUCCESS);
             return "saved=" + savedRows + ", VPI=" + previousVpi + " -> " + nextVpi;
         } catch (Exception e) {

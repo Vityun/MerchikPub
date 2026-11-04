@@ -56,8 +56,11 @@ public class SyncResponsePolicyTest {
                 new IllegalStateException("invalid"));
         assertTrue(failed.contains("savedVpi=unchanged"));
         assertTrue(failed.contains("state=false"));
-        String saved = SyncExchangeTrace.format("chat/list", 100, 200L, true, null, 0, 20, null);
-        assertTrue(saved.contains("rows=0"));
+        String empty = SyncExchangeTrace.format("chat/list", 100, null, true, null, 0, 20, null);
+        assertTrue(empty.contains("rows=0"));
+        assertTrue(empty.contains("savedVpi=unchanged"));
+        assertFalse(empty.contains("failure="));
+        String saved = SyncExchangeTrace.format("chat/list", 100, 200L, true, null, 1, 20, null);
         assertTrue(saved.contains("savedVpi=200"));
         assertFalse(saved.contains("failure="));
     }

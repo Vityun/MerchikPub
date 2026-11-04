@@ -1780,7 +1780,8 @@ public class Exchange {
         call.enqueue(new Callback<VacancyResponse>() {
             @Override
             public void onResponse(Call<VacancyResponse> call, Response<VacancyResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                if (response.isSuccessful() && response.body() != null && response.body().state
+                        && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<VacancySDB> vacancySDBList = new ArrayList<>();
                     for (VacancyItemResponse item : response.body().list) {
                         vacancySDBList.add(new VacancySDB(item));
@@ -1812,7 +1813,8 @@ public class Exchange {
         call.enqueue(new Callback<BonusResponse>() {
             @Override
             public void onResponse(Call<BonusResponse> call, Response<BonusResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                if (response.isSuccessful() && response.body() != null && response.body().state
+                        && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<BonusSDB> bonusSDBList = new ArrayList<>();
                     for (BonusItemResponse item : response.body().list) {
                         bonusSDBList.add(new BonusSDB(item));
@@ -1844,7 +1846,8 @@ public class Exchange {
         call.enqueue(new Callback<SiteURLResponse>() {
             @Override
             public void onResponse(Call<SiteURLResponse> call, Response<SiteURLResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                if (response.isSuccessful() && response.body() != null && response.body().state
+                        && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<SiteUrlSDB> siteUrlSDBList = new ArrayList<>();
                     for (SiteURLItemResponse item : response.body().list) {
                         siteUrlSDBList.add(new SiteUrlSDB(item));
@@ -1875,7 +1878,8 @@ public class Exchange {
         call.enqueue(new Callback<SiteAccountResponse>() {
             @Override
             public void onResponse(Call<SiteAccountResponse> call, Response<SiteAccountResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                if (response.isSuccessful() && response.body() != null && response.body().state
+                        && response.body().list != null && !response.body().list.isEmpty()) {
                     ArrayList<SiteAccountSDB> siteAccountSDBList = new ArrayList<>();
                     for (SiteAccountItemResponse item : response.body().list) {
                         siteAccountSDBList.add(new SiteAccountSDB(item));
@@ -3049,7 +3053,7 @@ public class Exchange {
         data.act = "images_vote";
 
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("photo_showcase");
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("images_vote");
         data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
@@ -3066,6 +3070,8 @@ public class Exchange {
 //                    Globals.writeToMLOG("INFO", "downloadVoteTable/onResponse", "response: " + response.body().list.size());
 //                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVoteTable/onSuccess", " response: " + response.body().list.size());
 
+                    if (!response.isSuccessful() || response.body() == null || !response.body().state
+                            || response.body().list == null || response.body().list.isEmpty()) return;
                     SQL_DB.votesDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
@@ -3247,8 +3253,6 @@ public class Exchange {
             return;
         }
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("achievements");
-
         if (list != null && list.size() > 0) {
             List<AchievementsUpload> dataList = new ArrayList<>();
             for (AchievementsSDB item : list) {
@@ -3297,13 +3301,6 @@ public class Exchange {
                                             if (itemSDB.id.equals(item.elementId)) {
                                                 itemSDB.serverId = item.id;
                                                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
-                                                SynchronizationTimetableDB syncRow = synchronizationTimetableDB != null
-                                                        ? synchronizationTimetableDB
-                                                        : RealmManager.getSynchronizationTimetableRowByTable("achievements");
-                                                if (syncRow != null) {
-                                                    syncRow.setVpi_app(TrustedTime.syncWatermarkSec(syncRow.getVpi_app(), 120));
-                                                    RealmManager.setToSynchronizationTimetableDB(syncRow);
-                                                }
                                                 Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");
                                             }
                                         }

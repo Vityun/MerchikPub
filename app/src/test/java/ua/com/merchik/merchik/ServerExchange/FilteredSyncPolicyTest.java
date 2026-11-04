@@ -3,8 +3,7 @@ package ua.com.merchik.merchik.ServerExchange;
 import com.google.gson.JsonObject;
 import org.junit.Test;
 
-import java.time.Instant;
-import java.time.LocalDate;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -19,12 +18,12 @@ import ua.com.merchik.merchik.data.Translation.SiteTranslationsList;
 import static org.junit.Assert.*;
 
 public class FilteredSyncPolicyTest {
-    @Test public void shelfRequestKeepsDateRangeAndAddsUnixSeconds() {
-        JsonObject request = FilteredSyncPolicy.shelfRequest(LocalDate.of(2026, 10, 29), 1793263380L);
+    @Test public void shelfRequestUsesOnlyChangeTime() {
+        JsonObject request = FilteredSyncPolicy.shelfRequest(1793263380L);
         assertEquals("data_list", request.get("mod").getAsString());
         assertEquals("shelf_size", request.get("act").getAsString());
-        assertEquals("2026-10-09", request.get("dt_from").getAsString());
-        assertEquals("2026-10-30", request.get("dt_to").getAsString());
+        assertFalse(request.has("dt_from"));
+        assertFalse(request.has("dt_to"));
         assertEquals("1793263380", request.get("dt_change_from").getAsString());
         assertFalse(request.has("dt"));
     }
@@ -40,22 +39,30 @@ public class FilteredSyncPolicyTest {
 
     @Test public void firstRequestsContainZero() {
         assertEquals(0, FilteredSyncPolicy.translationRequest(2, 0).get("dt").getAsLong());
-        assertEquals(0, FilteredSyncPolicy.shelfRequest(LocalDate.of(2026, 10, 29), 0).get("dt_change_from").getAsLong());
+        assertEquals(0, FilteredSyncPolicy.shelfRequest(0).get("dt_change_from").getAsLong());
     }
 
     @Test public void negativeRequestTimesBecomeZero() {
         assertEquals(0, FilteredSyncPolicy.translationRequest(2, -10).get("dt").getAsLong());
     }
 
-    @Test public void dateRangeChangesAcrossDayAndMonthBoundaries() {
-        assertEquals("2026-10-09/2026-10-30", FilteredSyncPolicy.shelfScope(LocalDate.of(2026, 10, 29)));
-        assertEquals("2026-10-10/2026-10-31", FilteredSyncPolicy.shelfScope(LocalDate.of(2026, 10, 30)));
-        assertEquals("2026-09-11/2026-10-02", FilteredSyncPolicy.shelfScope(LocalDate.of(2026, 10, 1)));
+    @Test public void shelfScopeIsAccountOnlyAndNextDayReusesCursor() {
+        assertEquals("7:all", FilteredSyncPolicy.shelfScope(7));
+        assertNotEquals(FilteredSyncPolicy.shelfScope(7), FilteredSyncPolicy.shelfScope(8));
+        assertEquals(1000, FilteredSyncPolicy.requestWatermark(cursor(1000, 2), 1000L + 86400, true));
     }
 
-    @Test public void shelfDatesUseKyivCalendarIncludingDst() {
-        assertEquals(LocalDate.of(2026, 10, 25), FilteredSyncPolicy.shelfDate(Instant.parse("2026-10-24T21:30:00Z").getEpochSecond()));
-        assertEquals(LocalDate.of(2026, 10, 26), FilteredSyncPolicy.shelfDate(Instant.parse("2026-10-25T22:30:00Z").getEpochSecond()));
+    @Test public void emptyDownloadNeverCreatesCheckpointEvenWithPopulatedCache() {
+        assertNull(FilteredSyncPolicy.savedCursor("r", "s", 0, 2000L, 0, 0));
+        assertNull(FilteredSyncPolicy.savedCursor("r", "s", 1000, 2000L, 9, 0));
+    }
+
+    @Test public void overlapReplayCanAdvanceEvenWhenLocalRowCountDoesNotGrow() {
+        SynchronizationCursorSDB previous = cursor(1000, 9);
+        SynchronizationCursorSDB next = FilteredSyncPolicy.savedCursor(
+                "r", "s", previous.vpi, 2000L, previous.itemCount, 1);
+        assertEquals(previous.itemCount, next.itemCount);
+        assertEquals(1880L, next.vpi);
     }
 
     @Test public void differentLanguagesAndAccountsHaveDifferentScopes() {
@@ -81,7 +88,7 @@ public class FilteredSyncPolicyTest {
     }
 
     @Test public void successUsesStartTimeWithOverlap() {
-        SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor("resource", "scope", 1000, 2000L, 9);
+        SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor("resource", "scope", 1000, 2000L, 9, 1);
         assertEquals(1880, saved.vpi);
         assertEquals(9, saved.itemCount);
         assertEquals("resource", saved.resource);
@@ -89,8 +96,8 @@ public class FilteredSyncPolicyTest {
     }
 
     @Test public void unknownTrustedClockDoesNotAdvanceVpi() {
-        assertEquals(1000, FilteredSyncPolicy.savedCursor("r", "s", 1000, null, 0).vpi);
-        assertEquals(0, FilteredSyncPolicy.savedCursor("r", "s", 0, null, 0).vpi);
+        assertEquals(1000, FilteredSyncPolicy.savedCursor("r", "s", 1000, null, 0, 1).vpi);
+        assertEquals(0, FilteredSyncPolicy.savedCursor("r", "s", 0, null, 0, 1).vpi);
     }
 
     @Test public void translationsRequireBothStoresToMatchLastSavedCount() {
@@ -186,7 +193,7 @@ public class FilteredSyncPolicyTest {
     }
 
     private static SynchronizationCursorSDB cursor(long vpi, long count) {
-        return FilteredSyncPolicy.savedCursor("r", "s", vpi, null, count);
+        return FilteredSyncPolicy.savedCursor("r", "s", vpi, null, count, 1);
     }
 
     private static TranslatesSDB translation(String id) {

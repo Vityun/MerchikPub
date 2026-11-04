@@ -113,10 +113,14 @@ public final class WorkStartNetworkSnapshot {
         }
 
         // perms
-        if (!hasWifiPerms(context)) {
-            callback.onDone(new Result(0, 0, "У Вашего телефона выключен Wi-Fi и система не может использовать эту " +
-                    "технологию, для определения вашего местоположения в ТТ. " +
-                    "Включите Wi-Fi и повторите попытку."));
+        WifiScanAccess access = new WifiScanAccess(context);
+        if (!access.hasPermissions()) {
+            Globals.writeToMLOG("INFO", "WorkStartNetworkSnapshot/wifiAccess",
+                    "addr_id=" + wpDataDB.getAddr_id() + ", " + access.diagnostics()
+                            + ", found=n/a, known=n/a, matched=n/a, pct=n/a, result=permission_denied");
+            callback.onDone(new Result(0, 0, "Недостаточно разрешений для сканирования Wi-Fi. Проверьте разрешение на точное " +
+                    "местоположение" + (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? " и доступ к устройствам поблизости" : "")
+                    + " в настройках приложения."));
             return;
         }
 
@@ -545,18 +549,6 @@ public final class WorkStartNetworkSnapshot {
     }
 
     // ---------------- Permissions / Utils ----------------
-
-    public static boolean hasWifiPerms(Context ctx) {
-        boolean fine = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            boolean nearby = ContextCompat.checkSelfPermission(ctx, Manifest.permission.NEARBY_WIFI_DEVICES)
-                    == PackageManager.PERMISSION_GRANTED;
-            return fine && nearby;
-        }
-        return fine;
-    }
 
     private static boolean hasBtPerms(Context ctx) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

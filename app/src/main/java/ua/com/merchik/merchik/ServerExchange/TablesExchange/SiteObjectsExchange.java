@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.StartupDownloadReuse;
 import ua.com.merchik.merchik.ServerExchange.SyncExchangeTrace;
 import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.ServerExchange.SyncResponsePolicy;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults;
@@ -135,7 +136,8 @@ public class SiteObjectsExchange {
                     SiteObjectsLocalDefaults.ensureDurationObjects(transaction, context.langId);
                     context.requireCurrent();
                 });
-                long watermark = SiteObjectsSyncPolicy.savedWatermark(from, started);
+                long watermark = SyncResponsePolicy.downloadWatermark(sync.getLastDownloadTime(),
+                        SiteObjectsSyncPolicy.savedWatermark(from, started), rows.size());
                 db.runInTransaction(() -> {
                     context.requireCurrent();
                     if (from == 0) db.siteObjectsDao().deleteAll();

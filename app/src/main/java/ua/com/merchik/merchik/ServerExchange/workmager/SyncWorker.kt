@@ -34,7 +34,9 @@ class SyncWorker(
 
                 val result = syncWpData(syncInfo)
                 val updatedSyncInfo = syncInfo.copy(
-                    lastDownloadTime = System.currentTimeMillis() / 1000,
+                    lastDownloadTime = if (result.success && result.downloadedItems > 0) {
+                        System.currentTimeMillis() / 1000
+                    } else syncInfo.lastDownloadTime,
                     lastDownloadStatus = if (result.success) DownloadStatus.SUCCESS else DownloadStatus.ERROR,
                     downloadedItems = result.downloadedItems
                 )

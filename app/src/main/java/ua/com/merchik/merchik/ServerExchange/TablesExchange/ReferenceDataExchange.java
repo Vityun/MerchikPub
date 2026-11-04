@@ -232,6 +232,11 @@ public final class ReferenceDataExchange {
             trace = new SyncExchangeTrace(resource, from);
             List<T> rows = dataset.load(request, trace);
             context.requireCurrent();
+            SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(resource, scope, from, started, 0, rows.size());
+            if (saved == null) {
+                trace.unchanged();
+                return rows;
+            }
             // Room and Realm cannot share a transaction. Commit Realm first; on a Room failure
             // the old cursor remains, so the next exchange replays the same server changes.
             if (realm != null) {
@@ -241,7 +246,6 @@ public final class ReferenceDataExchange {
                     context.requireCurrent();
                 });
             }
-            SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(resource, scope, from, started, 0);
             db.runInTransaction(() -> {
                 context.requireCurrent();
                 dataset.saveRoom(db, rows);

@@ -247,7 +247,7 @@ public final class ReportPrepareSync {
                                 boolean merged = ReportPrepareRealm.mergeServerRows(body.getList());
                                 log("DOWNLOAD rows=" + body.getList().size() + ", fullyMerged=" + merged);
                                 // Do not advance past rows deferred because of local edits.
-                                if (advanceWatermark && merged) {
+                                if (advanceWatermark && merged && !body.getList().isEmpty()) {
                                     SynchronizationTimetableDB table = RealmManager
                                             .getSynchronizationTimetableRowByTable("report_prepare");
                                     if (table != null) {

@@ -91,23 +91,22 @@ public class LocationExchange {
 
     private static void persist(RequestContext context, List<LocationList> rows, String scope,
                                 long from, Long started) {
-        SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(TABLE.resource(), scope, from, started, 0);
+        SynchronizationCursorSDB saved = FilteredSyncPolicy.savedCursor(TABLE.resource(), scope, from, started, 0, rows.size());
+        if (saved == null) return;
         try (Realm realm = Realm.getDefaultInstance()) {
-            if (!rows.isEmpty()) {
-                realm.executeTransaction(transaction -> {
-                    context.requireCurrent();
-                    Set<Long> serverIds = new HashSet<>();
-                    for (LogMPDB row : transaction.where(LogMPDB.class).greaterThan("serverId", 0L).findAll()) {
-                        serverIds.add(row.serverId);
-                    }
-                    Number lastId = transaction.where(LogMPDB.class).max("id");
-                    List<LogMPDB> additions = LocationDownloadPolicy.missingRows(rows, serverIds,
-                            lastId == null ? 0 : lastId.intValue(), System.currentTimeMillis() / 1000L);
-                    // Do not replace existing records: their visit links and local coordinates take precedence.
-                    transaction.copyToRealm(additions);
-                    context.requireCurrent();
-                });
-            }
+            realm.executeTransaction(transaction -> {
+                context.requireCurrent();
+                Set<Long> serverIds = new HashSet<>();
+                for (LogMPDB row : transaction.where(LogMPDB.class).greaterThan("serverId", 0L).findAll()) {
+                    serverIds.add(row.serverId);
+                }
+                Number lastId = transaction.where(LogMPDB.class).max("id");
+                List<LogMPDB> additions = LocationDownloadPolicy.missingRows(rows, serverIds,
+                        lastId == null ? 0 : lastId.intValue(), System.currentTimeMillis() / 1000L);
+                // Do not replace existing records: their visit links and local coordinates take precedence.
+                transaction.copyToRealm(additions);
+                context.requireCurrent();
+            });
             saved.itemCount = serverRowCount(realm);
         }
         // Realm is committed first. If saving the cursor fails, the delta is replayed safely.
