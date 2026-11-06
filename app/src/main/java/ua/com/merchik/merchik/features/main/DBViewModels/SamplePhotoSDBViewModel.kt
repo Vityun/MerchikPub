@@ -67,7 +67,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private val EXAMPLE_IMG_ID = "photo_id"
     private val isProductCapture: Boolean
         get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT ||
-            (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 &&
+            ((contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 || contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277) &&
                 (dataJsonString("tovarId")?.toLongOrNull() ?: 0L) > 0L)
     private val isProductGallery: Boolean
         get() = contextUI == ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY
@@ -354,7 +354,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         try {
             val data = Gson().fromJson(dataJson, JsonObject::class.java)
             val visitId = data.get("wpDataDBId").asString.toLong()
-            val optionId = data.get("optionDBId").asString
+            val optionId = dataJsonString("optionDBId")
             val tovarId = data.get("tovarId").asString
             val photoType = resolvePhotoTypeId() ?: error("Photo type is missing")
             if (ProductPhotoCapture.takePhoto(activity, visitId, optionId, photoType, tovarId, sample)) {

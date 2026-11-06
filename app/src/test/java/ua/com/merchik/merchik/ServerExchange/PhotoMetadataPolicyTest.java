@@ -134,6 +134,70 @@ public class PhotoMetadataPolicyTest {
     }
     @Test public void hashCannotReassignDifferentServerId() { StackPhotoDB p = new StackPhotoDB(); merge(p, row(), true, 200); p.photoServerId = "43"; assertFalse(matchesHashResponse(p, row())); }
     @Test public void hashRejectsDifferentOwner() { StackPhotoDB p = new StackPhotoDB(); merge(p, row(), true, 200); p.user_id = 8; assertFalse(matchesHashResponse(p, row())); }
+    private StackPhotoDB captured(ModImagesViewList r) {
+        StackPhotoDB p = local();
+        p.photoServerId = null; p.photo_hash = r.imgHash; p.code_dad2 = Long.parseLong(r.codeDad2);
+        p.user_id = 7; p.addr_id = 9; p.client_id = "9382"; p.photo_type = Integer.valueOf(r.getPhotoTp());
+        p.showcase_id = r.showcase_id;
+        return p;
+    }
+    @Test public void allNoProductRepresentationsMatchOnBothExchanges() {
+        ModImagesViewList r = row(); r.setPhotoTp("14");
+        StackPhotoDB p = captured(r);
+        for (String local : Arrays.asList(null, "", "0")) {
+            for (String incoming : Arrays.asList(null, "", "0")) {
+                p.tovar_id = local; r.setTovarId(incoming);
+                assertTrue(matchesUnassignedLocal(p, r)); assertTrue(matchesHashResponse(p, r));
+            }
+        }
+        r.setTovarId("123"); assertFalse(matchesUnassignedLocal(p, r)); assertFalse(matchesHashResponse(p, r));
+        p.tovar_id = "123"; r.setTovarId("0"); assertFalse(matchesUnassignedLocal(p, r)); assertFalse(matchesHashResponse(p, r));
+        r.setTovarId(null); assertFalse(matchesUnassignedLocal(p, r)); assertTrue(matchesHashResponse(p, r));
+    }
+    @Test public void differentKnownTypesOrShowcasesNeverMatchEvenForPanoramaTypeZero() {
+        ModImagesViewList r = row(); r.setTovarId("0"); r.setPhotoTp("0");
+        StackPhotoDB p = captured(r);
+        assertTrue(matchesUnassignedLocal(p, r)); assertTrue(matchesHashResponse(p, r));
+        p.photo_type = 14;
+        assertEquals("type_mismatch", mismatch(p, r, false)); assertFalse(matchesHashResponse(p, r));
+        p.photo_type = null; p.showcase_id = "8";
+        assertEquals("showcase_mismatch", mismatch(p, r, false)); assertFalse(matchesHashResponse(p, r));
+        r.showcase_id = "0";
+        assertTrue(matchesUnassignedLocal(p, r)); assertTrue(matchesHashResponse(p, r));
+    }
+    @Test public void firstLinkKeepsLocalPhotoAndEditsWhenServerReportsZeroProduct() {
+        ModImagesViewList r = row(); r.setTovarId("0"); r.setPhotoTp("14");
+        StackPhotoDB p = captured(r); p.showcase_id = "12"; r.showcase_id = "0";
+        p.mark = "8"; p.markUpload = true; p.premiyaUpload = true;
+        assertSame(p, findLocalForRow(r, Collections.singletonList(p), Collections.singletonList(r)));
+        merge(p, r, false, 200);
+        assertEquals("42", p.photoServerId); assertEquals(17, p.getId()); assertNull(p.tovar_id);
+        assertEquals("/local/file.jpg", p.photo_num); assertEquals("12", p.showcase_id);
+        assertEquals("local text", p.comment); assertEquals(Integer.valueOf(0), p.dvi);
+        assertEquals("8", p.mark); assertTrue(p.markUpload); assertTrue(p.premiyaUpload);
+        assertFalse(matchesUnassignedLocal(p, r));
+    }
+    @Test public void doesNotPickFirstOfTwoCompatibleLocalCandidates() {
+        ModImagesViewList r = row(); r.setTovarId("0"); StackPhotoDB p = captured(r), q = captured(r); q.setId(18);
+        try {
+            findLocalForRow(r, Arrays.asList(p, q), Collections.singletonList(r)); fail();
+        } catch (IllegalStateException ex) {
+            assertTrue(ex.getMessage().contains("multiple_locals"));
+            assertTrue(ex.getMessage().contains("localId=17")); assertTrue(ex.getMessage().contains("localId=18"));
+        }
+    }
+    @Test public void serverIdsCompetingForOnePhotoCannotWinByOrder() {
+        ModImagesViewList r = row(), other = row(); r.setTovarId("0"); other.setTovarId(""); other.setID("43");
+        StackPhotoDB p = captured(r);
+        for (ModImagesViewList first : Arrays.asList(other, r)) {
+            try {
+                findLocalForRow(first, Collections.singletonList(p), Arrays.asList(r, other)); fail();
+            } catch (IllegalStateException ex) { assertTrue(ex.getMessage().contains("multiple_server_ids")); }
+        }
+        other.showcase_id = "99";
+        assertSame(p, findLocalForRow(r, Collections.singletonList(p), Arrays.asList(r, other)));
+        assertNull(findLocalForRow(other, Collections.singletonList(p), Arrays.asList(r, other)));
+    }
     @Test public void hashQueryHasZeroVpiAndNoOldCursorWithoutExecutingNetwork() {
         RetrofitInterface api = new Retrofit.Builder().baseUrl("https://example.invalid/")
                 .addConverterFactory(GsonConverterFactory.create()).build().create(RetrofitInterface.class);

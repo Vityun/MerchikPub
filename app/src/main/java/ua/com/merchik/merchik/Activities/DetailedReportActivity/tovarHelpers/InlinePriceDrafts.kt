@@ -15,14 +15,16 @@ data class InlinePriceValues(
     val priceMin: String,
     val product: String,
     val discountPercent: Int = 0,
-    val promotionName: String = ""
+    val promotionName: String = "",
+    val priceMax: String = priceMin
 ) {
-    fun discountCheck() = PromotionPriceCheck(price, priceMin, discountPercent, promotionName)
+    fun discountCheck() = PromotionPriceCheck(price, priceMax, discountPercent, promotionName)
+    val invalidBefore: String? get() = PriceSaveGuard.invalidBeforePrice(price, priceMin, priceMax)
 }
 
 data class InlinePriceDraft(val value: String, val prices: InlinePriceValues) {
     val invalidPrice: Boolean
-        get() = PriceSaveGuard.isPriceAboveBeforePromotion(prices.price, prices.priceMin)
+        get() = prices.invalidBefore != null
     val invalidDiscount: Boolean
         get() = !invalidPrice && prices.discountCheck().outsideRange()
 }
@@ -53,7 +55,7 @@ class InlinePriceDrafts(
     private fun draft(field: InlinePriceField, value: String): InlinePriceDraft {
         val entered = value.ifBlank { "0" }
         val current = readPrices(field)
-        val prices = if (field.beforePromotion) current.copy(priceMin = entered)
+        val prices = if (field.beforePromotion) current.copy(priceMin = entered, priceMax = entered)
         else current.copy(price = entered)
         return InlinePriceDraft(entered, prices)
     }

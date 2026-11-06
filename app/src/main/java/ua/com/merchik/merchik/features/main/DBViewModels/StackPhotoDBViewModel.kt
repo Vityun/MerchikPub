@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface.UploadPhotoReports
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload
 import ua.com.merchik.merchik.ViewHolders.Clicks
@@ -64,6 +65,9 @@ class StackPhotoDBViewModel @Inject constructor(
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     lateinit var wpDataDB: WpDataDB
+    private val promotionProductId: String?
+        get() = if (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277)
+            savedStateHandle[ProductPhotoCapture.EXTRA_PROMOTION_PRODUCT_ID] else null
     private val planogrammId = mutableStateOf(0)
 
     private val EXAMPLE_ID = "id_1c"
@@ -319,7 +323,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     "id",
                     mutableListOf(imagesTypeId.toString()),
                     mutableListOf(imagesTypeName),
-                    true
+                    promotionProductId == null
                 )
 
                 val filterItems = mutableListOf(
@@ -505,7 +509,9 @@ class StackPhotoDBViewModel @Inject constructor(
                         else -> 0
                     }
 
-                    val data = RealmManager.INSTANCE.copyFromRealm(
+                    val data = promotionProductId?.let { productId ->
+                        StackPhotoRealm.getReadyProductPhotos(codeDad2, typePhoto, productId)
+                    } ?: RealmManager.INSTANCE.copyFromRealm(
                         StackPhotoRealm.getPhotosByDAD2(
                             codeDad2,
                             typePhoto
@@ -931,6 +937,14 @@ class StackPhotoDBViewModel @Inject constructor(
     }
 
     private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
+        promotionProductId?.let { productId ->
+            val host = context?.let(Globals::unwrap) ?: return
+            if (::wpDataDB.isInitialized) {
+                ProductPhotoCapture.openPromotionSamples(host, wpDataDB, productId)
+                callback()
+            }
+            return
+        }
         when (contextUI) {
             ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT
                 -> {

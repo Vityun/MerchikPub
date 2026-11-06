@@ -36,6 +36,7 @@ public class OptionControl<T> {
 
     public Context context;
     private DialogData dialog;
+    private String optionMessagePrefix = "";
     public T document;
     public OptionsDB optionDB;
     public WpDataDB wpDataDB;
@@ -85,6 +86,7 @@ public class OptionControl<T> {
 
     public void showOptionMassage(String msg) {
         try {
+            optionMessagePrefix = msg;
             dialog = new DialogData(context);
             unlockCode();
             if (msgType != null && msgType.type != null) {
@@ -109,7 +111,8 @@ public class OptionControl<T> {
                         String optionTitle = "Опция: (" + optionDB.getOptionId() + ")\n" + optionDB.getOptionTxt();
 
 
-                        if (stringBuilderMsg.toString().length() > 1) {
+                        CharSequence heading = optionMessageHeading();
+                        if (stringBuilderMsg.toString().length() > 1 && heading.length() == 0) {
                             dialog.setTitle(optionTitle);
                             dialog.setText(OptionMessageLinks.style(context, msg + stringBuilderMsg));
                             if (block) {
@@ -125,16 +128,9 @@ public class OptionControl<T> {
                             if (block) {
                                 dialog.setDialogIco();
                             }
-                            SpannableStringBuilder text = new SpannableStringBuilder();
-                            text.append(msg).append(spannableStringBuilder);
-                            text = OptionMessageLinks.style(context, text);
-                            if (notCloseSpannableStringBuilderDialog) {
-                                dialog.setText(text, () -> {
-                                });
-                            } else {
-                                dialog.setText(text, dialog::dismiss);
-                            }
+                            setSpannableOptionText(heading, msg);
                             dialog.setClose(dialog::dismiss);
+                            if (!allowOutsideDismiss()) dialog.setDismissOnOutsideTouch(false);
 // Важно! Нужно разрешить клики по ссылкам (если DialogData использует TextView)
 //                            if (dialog.getTextView() != null) {
 //                                dialog.getTextView().setMovementMethod(LinkMovementMethod.getInstance());
@@ -158,6 +154,26 @@ public class OptionControl<T> {
             Globals.writeToMLOG("ERR", "OptionControl.showOptionMassage", "STACK: " + Arrays.toString(e.getStackTrace()));
         }
     }
+
+    private void setSpannableOptionText(CharSequence heading, String prefix) {
+        SpannableStringBuilder text = new SpannableStringBuilder("Всього знайдено зауважень щодо " )
+                .append(heading)
+                .append(prefix == null ? "" : prefix).append(spannableStringBuilder);
+        dialog.setText(OptionMessageLinks.style(context, text),
+                notCloseSpannableStringBuilderDialog ? () -> {} : dialog::dismiss);
+    }
+
+    protected void refreshOpenSpannableOptionMessage() {
+        if (dialog == null || !dialog.isDialogShow()) return;
+        unlockCode();
+        if (block) dialog.setDialogIco();
+        else dialog.setDialogNormalIco();
+        setSpannableOptionText(optionMessageHeading(), block ? optionMessagePrefix : "");
+        dialog.setDismissOnOutsideTouch(allowOutsideDismiss());
+    }
+
+    protected boolean allowOutsideDismiss() { return true; }
+    protected CharSequence optionMessageHeading() { return ""; }
 
     protected void dismissOptionMessage() {
         if (dialog != null) dialog.dismiss();

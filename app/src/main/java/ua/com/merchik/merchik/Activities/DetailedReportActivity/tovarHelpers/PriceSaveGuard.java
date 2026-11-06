@@ -68,13 +68,15 @@ public final class PriceSaveGuard {
         boolean saved = ReportPrepareRealm.updateFields(snapshot, current -> {
             String price = beforePromotion ? current.getPrice() : value;
             String priceMin = beforePromotion ? value : current.getPriceMin();
-            if (isPriceAboveBeforePromotion(price, priceMin)) {
+            String priceMax = beforePromotion ? value : current.getPriceMax();
+            String invalidBefore = invalidBeforePrice(price, priceMin, priceMax);
+            if (invalidBefore != null) {
                 invalidPrices[0] = price;
-                invalidPrices[1] = priceMin;
+                invalidPrices[1] = invalidBefore;
                 return false;
             }
             if (checkDiscount) {
-                PromotionPriceCheck check = getPromotionPriceCheck(current, price, priceMin);
+                PromotionPriceCheck check = getPromotionPriceCheck(current, price, priceMax);
                 if (check.outsideRange() && !check.matches(approval)) return false;
             }
             // Inline input saves prefixes; fill its missing prices only when editing finishes.
@@ -276,14 +278,16 @@ public final class PriceSaveGuard {
             String before = beforePromotion ? value : current.getPriceMin();
             TovarDB tovar = TovarRealm.getById(current.getTovarId());
             String product = productLabel(current.getTovarId(), tovar);
-            if (isPriceAboveBeforePromotion(price, before)) {
-                priceErrorDialog(activity, product, price, before)
+            String priceMax = beforePromotion ? value : current.getPriceMax();
+            String invalidBefore = invalidBeforePrice(price, before, priceMax);
+            if (invalidBefore != null) {
+                priceErrorDialog(activity, product, price, invalidBefore)
                         .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
                             refuse.run(); return Unit.INSTANCE;
                         }).show();
                 return;
             }
-            checks.put(id, getPromotionPriceCheck(current, price, before));
+            checks.put(id, getPromotionPriceCheck(current, price, priceMax));
             products.put(id, product);
         }
         // In a bulk editor, hard errors in any product take precedence over discount warnings.
@@ -326,6 +330,11 @@ public final class PriceSaveGuard {
                         + " грн) выше чем цена ДО начала акции (" + TextUtils.htmlEncode(PriceDisplay.format(priceMin))
                         + " грн).<br><br>Проверьте цены и введите корректные значения.")
                 .setOnConfirmAction("Закрыть", () -> Unit.INSTANCE);
+    }
+
+    public static String invalidBeforePrice(String price, String min, String max) {
+        if (isPriceAboveBeforePromotion(price, min)) return min;
+        return isPriceAboveBeforePromotion(price, max) ? max : null;
     }
 
     public static boolean isPriceAboveBeforePromotion(String price, String priceMin) {

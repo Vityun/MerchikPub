@@ -55,16 +55,16 @@ public class PromotionPriceCheckTest {
     }
 
     @Test public void acceptsPricesStrictlyInsideTolerance() {
-        for (String price : new String[]{"70.01", "80", "83", "89.99"}) {
+        for (String price : new String[]{"30", "70.01", "80", "83", "89.99", "90"}) {
             assertFalse(price, new PromotionPriceCheck(price, "100", 20).outsideRange());
         }
     }
 
-    @Test public void rejectsBothBoundariesAndOutsidePrices() {
-        for (String price : new String[]{"69.99", "70", "90", "90.01", "99.99"}) {
+    @Test public void rejectsOnlyOutsidePrices() {
+        for (String price : new String[]{"29.99", "90.01", "99.99"}) {
             assertTrue(price, new PromotionPriceCheck(price, "100", 20).outsideRange());
         }
-        assertTrue(new PromotionPriceCheck("80", "180", 20).outsideRange());
+        assertFalse(new PromotionPriceCheck("80", "180", 20).outsideRange());
     }
 
     @Test public void oldPriceOrderErrorTakesPriority() {
@@ -81,13 +81,15 @@ public class PromotionPriceCheckTest {
         }
     }
 
-    @Test public void usesDecimalArithmeticWithoutRoundingBounds() {
+    @Test public void usesTheSameAsymmetricBoundsAndRoundingAsReport175121() {
         assertFalse(new PromotionPriceCheck(" 83,00 ", "100,00", 20).outsideRange());
-        assertTrue(new PromotionPriceCheck("0.07", "0.10", 20).outsideRange());
+        assertFalse(new PromotionPriceCheck("0.07", "0.10", 20).outsideRange());
         assertFalse(new PromotionPriceCheck("0.08", "0.10", 20).outsideRange());
-        assertTrue(new PromotionPriceCheck("0.09", "0.10", 20).outsideRange());
-        assertTrue(new PromotionPriceCheck("70.004", "100", 20).outsideRange());
-        assertFalse(new PromotionPriceCheck("70.005", "100", 20).outsideRange());
+        assertFalse(new PromotionPriceCheck("0.09", "0.10", 20).outsideRange());
+        assertFalse(new PromotionPriceCheck("18", "37.90", 15).outsideRange());
+        assertTrue(new PromotionPriceCheck("17.99", "37.90", 15).outsideRange());
+        assertFalse(new PromotionPriceCheck("35.06", "37.90", 15).outsideRange());
+        assertTrue(new PromotionPriceCheck("35.07", "37.90", 15).outsideRange());
     }
 
     @Test public void approvalAppliesOnlyToThePricesAndPercentageShown() {

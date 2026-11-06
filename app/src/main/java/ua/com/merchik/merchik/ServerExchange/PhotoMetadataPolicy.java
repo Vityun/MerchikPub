@@ -101,6 +101,7 @@ public final class PhotoMetadataPolicy {
 
     public static void merge(StackPhotoDB current, ModImagesViewList row, boolean isNew, long startedLocalSec) {
         boolean editedDuringRequest = !isNew && current.getVpi() >= startedLocalSec;
+        boolean firstLink = !isNew && idOrZero(current.getPhotoServerId()).equals("0");
         current.setPhotoServerId(row.getID());
         if (hasValue(row.getPhotoUrl())) current.setPhotoServerURL(row.getPhotoUrl());
         if (isNew || current.object_id == null) current.object_id = 1;
@@ -116,8 +117,12 @@ public final class PhotoMetadataPolicy {
         }
         if (optionalLong(row.codeDad2) != null) current.code_dad2 = optionalLong(row.codeDad2);
         if (hasValue(row.imgHash)) current.photo_hash = row.imgHash;
-        if (row.getTovarId() != null) current.tovar_id = row.getTovarId();
-        if (row.showcase_id != null) current.showcase_id = row.showcase_id;
+        if (row.getTovarId() != null && (isNew || !idOrZero(current.tovar_id).equals(idOrZero(row.getTovarId())))) {
+            current.tovar_id = row.getTovarId();
+        }
+        if (row.showcase_id != null && !(firstLink && idOrZero(row.showcase_id).equals("0"))) {
+            current.showcase_id = row.showcase_id;
+        }
         if (row.codeIZA != null) current.setCode_iza(row.codeIZA);
         if (optionalInt(row.getMerchikId()) != null) current.setUser_id(optionalInt(row.getMerchikId()));
         if (optionalInt(row.getAddrId()) != null) current.setAddr_id(optionalInt(row.getAddrId()));
@@ -133,35 +138,84 @@ public final class PhotoMetadataPolicy {
         if (row.example_img_id != null) current.example_img_id = row.example_img_id;
         if (row.planogram_id != null) current.planogram_id = row.planogram_id;
         if (row.planogram_img_id != null) current.planogram_img_id = row.planogram_img_id;
-        if (!current.isCommentUpload() && !editedDuringRequest && row.getComments() != null) {
+        if (!current.isCommentUpload() && !editedDuringRequest && !(firstLink && current.getComment() != null)
+                && row.getComments() != null) {
             current.setComment(row.getComments());
         }
-        if (!current.isDviUpload() && !editedDuringRequest && optionalInt(row.getDvi()) != null) {
+        if (!current.isDviUpload() && !editedDuringRequest && !(firstLink && current.getDvi() != null)
+                && optionalInt(row.getDvi()) != null) {
             current.setDvi(optionalInt(row.getDvi()));
         }
         // Keep local file paths, editing timestamps, ratings and all upload flags intact.
     }
 
     public static boolean matchesUnassignedLocal(StackPhotoDB local, ModImagesViewList row) {
-        return (!hasValue(local.photoServerId) || "0".equals(local.photoServerId))
-                && hasValue(row.imgHash) && Objects.equals(local.photo_hash, row.imgHash)
-                && optionalLong(row.codeDad2) != null && local.code_dad2 == optionalLong(row.codeDad2)
-                && optionalInt(row.getMerchikId()) != null && Objects.equals(local.user_id, optionalInt(row.getMerchikId()))
-                && Objects.equals(local.tovar_id == null ? "" : local.tovar_id,
-                                  row.getTovarId() == null ? "" : row.getTovarId());
+        return mismatch(local, row, false) == null;
     }
 
     public static boolean matchesHashResponse(StackPhotoDB local, ModImagesViewList row) {
-        return (!hasValue(local.photoServerId) || "0".equals(local.photoServerId)
-                    || Objects.equals(local.photoServerId, row.getID()))
-                && hasValue(row.imgHash) && Objects.equals(local.photo_hash, row.imgHash)
-                && (optionalLong(row.codeDad2) == null || local.code_dad2 == optionalLong(row.codeDad2))
-                && (optionalInt(row.getMerchikId()) == null || Objects.equals(local.user_id, optionalInt(row.getMerchikId())))
-                && (optionalInt(row.getAddrId()) == null || Objects.equals(local.addr_id, optionalInt(row.getAddrId())))
-                && (row.getClientId() == null || Objects.equals(local.client_id, row.getClientId()))
-                && (row.getTovarId() == null || Objects.equals(
-                        hasValue(local.tovar_id) ? local.tovar_id : "0",
-                        hasValue(row.getTovarId()) ? row.getTovarId() : "0"));
+        return mismatch(local, row, true) == null;
+    }
+
+    static StackPhotoDB findLocalForRow(ModImagesViewList row, List<StackPhotoDB> candidates,
+                                        List<ModImagesViewList> sameHashRows) {
+        StackPhotoDB match = null;
+        for (StackPhotoDB candidate : candidates) {
+            if (!matchesUnassignedLocal(candidate, row)) continue;
+            if (match != null) throw new IllegalStateException("action=not_merged, reason=multiple_locals, "
+                    + describeMatch(row, candidates, false));
+            match = candidate;
+        }
+        if (match != null) {
+            for (ModImagesViewList other : sameHashRows) {
+                if (!row.getID().equals(other.getID()) && matchesUnassignedLocal(match, other)) {
+                    throw new IllegalStateException("action=not_merged, reason=multiple_server_ids, otherServerId="
+                            + other.getID() + ", " + describeMatch(row, candidates, false));
+                }
+            }
+        }
+        return match;
+    }
+
+    // A targeted hash response may omit context; the ordinary list must identify the visit and owner.
+    static String mismatch(StackPhotoDB local, ModImagesViewList row, boolean hashResponse) {
+        if (!hasValue(row.imgHash) || !Objects.equals(local.photo_hash, row.imgHash)) return "hash_mismatch";
+        if (!"0".equals(idOrZero(local.photoServerId))
+                && !(hashResponse && Objects.equals(local.photoServerId, row.getID()))) return "server_id_assigned";
+        Long visit = optionalLong(row.codeDad2);
+        if (visit == null ? !hashResponse : local.code_dad2 != visit) return "visit_mismatch";
+        Integer user = optionalInt(row.getMerchikId());
+        if (user == null ? !hashResponse : !Objects.equals(user, local.user_id)) return "user_mismatch";
+        if ((!hashResponse || row.getTovarId() != null)
+                && !idOrZero(local.tovar_id).equals(idOrZero(row.getTovarId()))) return "product_mismatch";
+        Integer type = optionalInt(row.getPhotoTp());
+        if (type != null && local.photo_type != null && !type.equals(local.photo_type)) return "type_mismatch";
+        String showcase = idOrZero(row.showcase_id);
+        String localShowcase = idOrZero(local.showcase_id);
+        if (!"0".equals(showcase) && !"0".equals(localShowcase) && !showcase.equals(localShowcase)) return "showcase_mismatch";
+        if (hashResponse && optionalInt(row.getAddrId()) != null
+                && !Objects.equals(local.addr_id, optionalInt(row.getAddrId()))) return "address_mismatch";
+        if (hashResponse && row.getClientId() != null && !Objects.equals(local.client_id, row.getClientId())) return "client_mismatch";
+        return null;
+    }
+
+    private static String idOrZero(String value) {
+        return hasValue(value) ? value.trim() : "0";
+    }
+
+    static String describeMatch(ModImagesViewList row, Iterable<StackPhotoDB> candidates, boolean hashResponse) {
+        StringBuilder out = new StringBuilder("serverId=").append(row.getID()).append(", hash=").append(row.imgHash)
+                .append(", dad2=").append(row.codeDad2).append(", type=").append(row.getPhotoTp())
+                .append(", serverTovar='").append(row.getTovarId()).append("', showcase=").append(row.showcase_id)
+                .append(", candidates=[");
+        for (StackPhotoDB local : candidates) {
+            if (!Objects.equals(row.imgHash, local.photo_hash)) continue;
+            String reason = mismatch(local, row, hashResponse);
+            out.append("{localId=").append(local.getId()).append(", localTovar='").append(local.tovar_id)
+                    .append("', type=").append(local.photo_type).append(", showcase=").append(local.showcase_id)
+                    .append(", reason=").append(reason == null ? "match" : reason).append("}");
+        }
+        return out.append(']').toString();
     }
 
     private static String serverId(String value) {

@@ -16,6 +16,15 @@ import static org.junit.Assert.assertTrue;
 
 public class PriceSaveGuardTest {
     @Test
+    public void inlineOrderChecksBothPricesButCorridorUsesMax() {
+        assertEquals("60", PriceSaveGuard.invalidBeforePrice("70", "60", "100"));
+        assertEquals("60", PriceSaveGuard.invalidBeforePrice("70", "100", "60"));
+        InlinePriceValues prices = new InlinePriceValues("26", "50", "Product", 20, "Promo", "100");
+        assertNull(prices.getInvalidBefore());
+        assertTrue(prices.discountCheck().outsideRange()); // 26 is valid for base 50, but not for 100.
+    }
+
+    @Test
     public void noPromotionFillsBothMissingPricesWithCurrentPrice() {
         assertEquals("95.90", PriceSaveGuard.missingPricesForNoPromotion("2", "95.90", "0", "0"));
         assertEquals("95.90", PriceSaveGuard.missingPricesForNoPromotion(" 2 ", "95.90", "0.00", "0,00"));

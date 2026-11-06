@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.ServerExchange;
 
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -68,7 +69,8 @@ public final class PhotoHashExchange {
                             if (PhotoMetadataPolicy.matchesHashResponse(snapshot, row)) matches.add(snapshot);
                         }
                         if (matches.size() != 1) {
-                            log("WARN", "hash requires unambiguous visit/product match: serverId=" + row.getID());
+                            log("WARN", "action=not_merged, reason=" + (matches.isEmpty() ? "no_matching_candidate" : "multiple_locals")
+                                    + ", " + PhotoMetadataPolicy.describeMatch(row, snapshots, true));
                             continue;
                         }
                         StackPhotoDB snapshot = matches.get(0);
@@ -77,7 +79,8 @@ public final class PhotoHashExchange {
                             if (PhotoMetadataPolicy.matchesHashResponse(snapshot, candidate)) serverMatches++;
                         }
                         if (serverMatches != 1) {
-                            log("WARN", "multiple server photos match localId=" + snapshot.getId());
+                            log("WARN", "action=not_merged, reason=multiple_server_ids, "
+                                    + PhotoMetadataPolicy.describeMatch(row, matches, true));
                             continue;
                         }
                         StackPhotoDB current = transaction.where(StackPhotoDB.class)
@@ -85,12 +88,23 @@ public final class PhotoHashExchange {
                         StackPhotoDB assigned = transaction.where(StackPhotoDB.class)
                                 .equalTo("photoServerId", row.getID()).findFirst();
                         if (assigned != null && assigned.getId() != snapshot.getId()) {
-                            log("WARN", "server ID already belongs to localId=" + assigned.getId());
+                            log("WARN", "action=not_merged, reason=server_id_owned, assignedLocalId=" + assigned.getId()
+                                    + ", " + PhotoMetadataPolicy.describeMatch(row, matches, true));
+                            continue;
+                        }
+                        if (current == null || !PhotoMetadataPolicy.matchesHashResponse(current, row)) {
+                            log("WARN", "action=not_merged, reason=local_changed, snapshotLocalId=" + snapshot.getId()
+                                    + ", " + PhotoMetadataPolicy.describeMatch(row,
+                                    current == null ? Collections.emptyList() : Collections.singletonList(current), true));
                             continue;
                         }
                         long uploaded = row.getDtUpload() == null || row.getDtUpload().isEmpty()
                                 ? System.currentTimeMillis() : Math.multiplyExact(Long.parseLong(row.getDtUpload()), 1000L);
                         if (StackPhotoSyncPolicy.receivedServerDetails(current, snapshot, row.getID(), row.getPhotoUrl(), uploaded)) {
+                            if (row.getTovarId() != null && !Objects.equals(current.tovar_id, row.getTovarId())) {
+                                log("INFO", "action=matched_local, reason=normalized_product, "
+                                        + PhotoMetadataPolicy.describeMatch(row, Collections.singletonList(current), true));
+                            }
                             resolved[0]++;
                             comments[0] |= current.isCommentUpload();
                         }

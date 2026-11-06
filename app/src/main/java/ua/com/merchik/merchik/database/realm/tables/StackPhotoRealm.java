@@ -14,6 +14,7 @@ import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -464,6 +465,20 @@ public class StackPhotoRealm {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
                 .findAll();
+    }
+
+    public static List<StackPhotoDB> getReadyProductPhotos(long dad2, int photoType, String productId) {
+        RealmResults<StackPhotoDB> rows = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", dad2)
+                .equalTo("photo_type", photoType)
+                .equalTo("tovar_id", productId)
+                .findAll();
+        List<StackPhotoDB> photos = new ArrayList<>();
+        for (StackPhotoDB row : rows) {
+            if (PhotoEvidencePolicy.isReadyPhoto(row.getPhotoServerId(), row.getPhoto_num()))
+                photos.add(INSTANCE.copyFromRealm(row));
+        }
+        return photos;
     }
 
     public static RealmResults<StackPhotoDB> getPhotosByAddrClientAndTypes(

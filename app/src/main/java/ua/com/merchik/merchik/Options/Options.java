@@ -4450,6 +4450,11 @@ public class Options {
      */
     // 1. Допустим Опции у нас уже отсортированы пришли так как надо
     public String getOptionString(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar, boolean promotion) {
+        return getOptionString(optionsDB, reportPrepareTovar, promotion, null);
+    }
+
+    public String getOptionString(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar, boolean promotion,
+                                  Globals.OptionControlName hiddenField) {
         String res = ""; // Итоговая строка всех ТПЛ-ов
         StringBuilder tplRequired = new StringBuilder(); // Обязательные ТПЛ-ы
         StringBuilder tplOptional = new StringBuilder(); // Опциональные ТПЛ-ы
@@ -4484,6 +4489,7 @@ public class Options {
 
         moveRegularPriceBeforePromotionPrice(temps);
         for (TovarOptions temp : temps) {
+            if (hiddenField != null && temp.getOptionControlName() == hiddenField) continue;
             Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
             if (temp.getOrderField().equals("dt_expire") && reportPrepareTovar.getDtExpire().equals("0000-00-00")) {
                 uploaded = Globals.Triple.NO_DATA;
@@ -4494,6 +4500,7 @@ public class Options {
         // После пробега по опциям данного документа (они являются обязательными), я должен
         // разобраться с опциональными. + разукрасить их в зависимости от того как они и чем заполнены
         for (TovarOptions option : listTovOpt) {
+            if (hiddenField != null && option.getOptionControlName() == hiddenField) continue;
             boolean flag = false;
             for (TovarOptions temp : temps) {
                 if (option.equals(temp)) {

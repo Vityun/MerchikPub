@@ -270,6 +270,10 @@ public class DialogData {
         return dialog.isShowing();
     }
 
+    public void setDismissOnOutsideTouch(boolean enabled) {
+        dialog.setCanceledOnTouchOutside(enabled);
+    }
+
     public interface DialogClickListener {
         void clicked();
     }

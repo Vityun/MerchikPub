@@ -27,6 +27,17 @@ public final class PhotoEvidencePolicy {
         return file != null && file.isFile() && file.canRead() && file.length() > 0;
     }
 
+    public static boolean isReadyPhoto(String serverId, String path) {
+        if (hasServerPhotoId(serverId)) return true;
+        if (path == null || path.trim().isEmpty()) return false;
+        try {
+            File file = new File(path);
+            return file.isFile() && file.length() > 0;
+        } catch (SecurityException ignored) {
+            return false;
+        }
+    }
+
     public static boolean hasPhoto(String serverId, String hash, BooleanSupplier hasHashEvidence) {
         // An uploaded photo need not remain in the device's local cache.
         return hasServerPhotoId(serverId) || (isUsableHash(hash) && hasHashEvidence.getAsBoolean());

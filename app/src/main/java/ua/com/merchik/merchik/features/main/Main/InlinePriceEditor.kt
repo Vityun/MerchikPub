@@ -58,7 +58,7 @@ private tailrec fun Context.priceEditorActivity(): Activity? = when (this) {
 
 @Composable
 internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, content: @Composable () -> Unit) {
-    if (viewModel !is TovarDBViewModel || viewModel.contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) {
+    if (viewModel !is TovarDBViewModel || !viewModel.isVisitProductEditor) {
         content()
         return
     }
@@ -89,7 +89,7 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
                         drafts.requestNotification()
                     }
                     val builder = if (error.draft.invalidPrice) {
-                        PriceSaveGuard.priceErrorDialog(activity, prices.product, prices.price, prices.priceMin)
+                        PriceSaveGuard.priceErrorDialog(activity, prices.product, prices.price, prices.invalidBefore)
                     } else if (error.draft.invalidDiscount) {
                         PriceSaveGuard.discountDialog(activity, prices.product, prices.discountCheck(),
                             { drafts.approveDiscount(error) }, { drafts.refuseDiscount(error) }, onDismiss)
@@ -189,7 +189,7 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
                 if (field.beforePromotion) {
                     "АКЦИОННАЯ цена (${PriceDisplay.format(draft.prices.price)} грн) не может быть выше чем цена ДО начала акции"
                 } else {
-                    "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${PriceDisplay.format(draft.prices.priceMin)} грн)"
+                    "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${PriceDisplay.format(draft.prices.invalidBefore)} грн)"
                 }
             } else if (draft?.invalidDiscount == true) {
                 "Проверьте цену ДО начала акции и текущую"

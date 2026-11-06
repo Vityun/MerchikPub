@@ -60,6 +60,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -160,6 +162,7 @@ import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
@@ -201,13 +204,17 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 
+private val LocalProductCodePhotoTitle = staticCompositionLocalOf { "Фото остатков товара" }
+
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
-    InlinePriceEditorHost(viewModel, context) {
-        MainUIContent(modifier, viewModel, context)
+    val photoTitle = if (viewModel.contextUI == ContextUI.TOVAR_FROM_OPTION_175121)
+        remember { TovarRequisites.promotionPhotoTitle() } else LocalProductCodePhotoTitle.current
+    CompositionLocalProvider(LocalProductCodePhotoTitle provides photoTitle) {
+        InlinePriceEditorHost(viewModel, context) { MainUIContent(modifier, viewModel, context) }
     }
 }
 
@@ -348,7 +355,9 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
 
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
-    var maxLinesSubTitle by remember { mutableStateOf(1) }
+    var maxLinesSubTitle by remember(viewModel.contextUI) {
+        mutableStateOf(if (viewModel.contextUI == ContextUI.TOVAR_FROM_OPTION_175121) 99 else 1)
+    }
 
     val listState = rememberLazyListState()
 
@@ -3899,13 +3908,9 @@ fun ProductCodeInlineEditor(
                 .fillMaxWidth()
                 .background(photoRowBackground)
         ) {
-            val photoTitle = if (photoCount > 0) {
-                "Фото остатков товара ($photoCount)"
-            } else {
-                "Фото остатков товара"
-            }
+            val photoTitle = LocalProductCodePhotoTitle.current
             PhotoEditorRow(
-                title = photoTitle,
+                title = if (photoCount > 0) "$photoTitle ($photoCount)" else photoTitle,
                 onTakePhoto = onTakePhoto
             )
         }

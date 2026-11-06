@@ -100,6 +100,15 @@ public class PhotoEvidencePolicyTest {
         assertFalse(PhotoEvidencePolicy.isReadableNonEmptyFile(temporary.newFile("camera.jpg")));
     }
 
+    @Test public void onlyCapturedOrServerConfirmedPhotosBelongInTheProductJournal() throws Exception {
+        File file = temporary.newFile("promo.jpg");
+        assertFalse(PhotoEvidencePolicy.isReadyPhoto("0", file.getPath()));
+        assertFalse(PhotoEvidencePolicy.isReadyPhoto(null, null));
+        assertTrue(PhotoEvidencePolicy.isReadyPhoto("59663980", null));
+        Files.write(file.toPath(), new byte[]{1});
+        assertTrue(PhotoEvidencePolicy.isReadyPhoto(null, file.getPath()));
+    }
+
     @Test public void nonEmptyFileStillRequiresImageDecodingByCaller() throws Exception {
         File file = temporary.newFile("photo.jpg");
         Files.write(file.toPath(), new byte[]{1, 2, 3});

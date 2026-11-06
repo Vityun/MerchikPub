@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.Database.Room.ImagesTypeListSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -32,6 +33,7 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -44,6 +46,17 @@ public class TovarRequisites {
     private TovarDB tovar;
     private ReportPrepareDB reportPrepareDB;
     private final int photoType;
+
+    public static String promotionPhotoTitle() {
+        ImagesTypeListSDB type = RoomManager.SQL_DB == null ? null
+                : RoomManager.SQL_DB.imagesTypeListDao().getById(StackPhotoDB.PHOTO_PROMOTION_TOV);
+        return promotionPhotoTitle(type);
+    }
+
+    static String promotionPhotoTitle(ImagesTypeListSDB type) {
+        String name = type == null || type.nm == null ? "" : type.nm.trim();
+        return name.isEmpty() ? "Фото Акцiйного товара з цiнником" : name;
+    }
 
     public TovarRequisites() {
         this.photoType = 4;
@@ -80,13 +93,17 @@ public class TovarRequisites {
 
         // 15.04.2026 сделал тип фото в заголовке корректным
         tovarOptions = new TovarOptions().createTovarOptionPhotoType();
-        String photoTypeTxt;
-        try {
-           photoTypeTxt = PhotoTypeRealm.getPhotoTypeById(photoType).getNm();
-        } catch (Exception e) {
-            photoTypeTxt = "";
+        if (photoType == StackPhotoDB.PHOTO_PROMOTION_TOV) {
+            String title = promotionPhotoTitle();
+            tovarOptions.setOptionLong(title);
+            res.setTitle(title);
+        } else {
+            try {
+                res.setTitle(PhotoTypeRealm.getPhotoTypeById(photoType).getNm());
+            } catch (Exception e) {
+                res.setTitle("");
+            }
         }
-        res.setTitle(photoTypeTxt);
 
 //        if (photoType != 4) {
 //            tovarOptions = new TovarOptions().createTovarOptionPhotoType();
@@ -125,7 +142,7 @@ public class TovarRequisites {
                         ProductPhotoCapture.open(activity, wpDataDB, optionsDB, photoType, selectedTovarId,
                                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158);
                     } else {
-                        new MakePhoto().pressedMakePhoto(activity, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
+                        new MakePhoto().pressedMakePhoto(activity, wpDataDB, optionsDB, String.valueOf(photoType), selectedTovarId, click);
                     }
                 },
                 "Вибрати з галереї",

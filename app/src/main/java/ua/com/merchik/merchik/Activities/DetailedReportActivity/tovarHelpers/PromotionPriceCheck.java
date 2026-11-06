@@ -27,13 +27,7 @@ public final class PromotionPriceCheck {
         BigDecimal before = positive(priceBefore);
         if (current == null || before == null || discountPercent <= 0 || discountPercent > 100
                 || PriceDisplay.cents(current).compareTo(PriceDisplay.cents(before)) >= 0) return false;
-        current = PriceDisplay.cents(current);
-        before = PriceDisplay.cents(before);
-        BigDecimal discount = before.multiply(BigDecimal.valueOf(discountPercent)).movePointLeft(2);
-        BigDecimal planned = before.subtract(discount);
-        BigDecimal tolerance = discount.divide(BigDecimal.valueOf(2));
-        return current.compareTo(planned.subtract(tolerance)) <= 0
-                || current.compareTo(planned.add(tolerance)) >= 0;
+        return new PromotionPriceRange(before, discountPercent).excludes(current);
     }
 
     private BigDecimal expectedDiscount() {

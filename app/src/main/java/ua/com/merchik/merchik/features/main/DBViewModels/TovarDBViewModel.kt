@@ -25,6 +25,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites
+import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
@@ -111,6 +112,7 @@ import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorMode
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorRowUi
 import ua.com.merchik.merchik.features.main.Main.ProductCodeEditorState
 import ua.com.merchik.merchik.features.main.Main.launchFeaturesActivity
+import ua.com.merchik.merchik.features.main.options.PriceIssueCorrection
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoDialogUiState
 import ua.com.merchik.merchik.features.main.componentsUI.TovarPhotoQuality
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
@@ -152,6 +154,13 @@ class TovarDBViewModel @Inject constructor(
     )
 
     private var productCodeSessionCache: ProductCodeSessionCache? = null
+    private val isPriceCorrection get() = contextUI == ContextUI.TOVAR_FROM_OPTION_175121
+    private val hiddenProductCodeField get() = if (isPriceCorrection) OptionControlName.UP else null
+    val isVisitProductEditor get() = isPriceCorrection || contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS
+    private val issueIds by lazy {
+        savedStateHandle.get<ArrayList<String>>(PriceIssueCorrection.PRODUCT_IDS).orEmpty().distinct()
+    }
+    private var openedCorrectionRows = false
 
     private var inlinePriceSession: Pair<String, InlinePriceDrafts>? = null
 
@@ -169,7 +178,10 @@ class TovarDBViewModel @Inject constructor(
 
     fun getInlinePriceDrafts(): InlinePriceDrafts {
         val dad2 = getCodeDad2String()
-        val key = "${Globals.getCurrentUserId()}_$dad2"
+        val draftScope = if (isPriceCorrection) {
+            "_175121_" + java.util.UUID.nameUUIDFromBytes(issueIds.sorted().joinToString(",").toByteArray())
+        } else ""
+        val key = "${Globals.getCurrentUserId()}_$dad2$draftScope"
         inlinePriceSession?.takeIf { it.first == key }?.let { return it.second }
         val preferences = getApplication<Application>().getSharedPreferences("inline_price_drafts", Context.MODE_PRIVATE)
         val restored = mutableMapOf<InlinePriceField, String>()
@@ -188,9 +200,9 @@ class TovarDBViewModel @Inject constructor(
             readPrices = { field ->
                 val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId)
                 val name = PriceSaveGuard.productLabel(field.tovarId, TovarRealm.getById(field.tovarId))
-                val promotion = PriceSaveGuard.getPromotionPriceCheck(rp, rp?.price, rp?.priceMin)
+                val promotion = PriceSaveGuard.getPromotionPriceCheck(rp, rp?.price, rp?.priceMax)
                 InlinePriceValues(rp?.price.orEmpty(), rp?.priceMin.orEmpty(), name,
-                    promotion.discountPercent, promotion.promotionName)
+                    promotion.discountPercent, promotion.promotionName, rp?.priceMax.orEmpty())
             },
             savePrice = { field, value -> saveInlinePrice(dad2, field, value) },
             saveConfirmedPrice = { field, value, prices -> saveInlinePrice(dad2, field, value, prices.discountCheck()) },
@@ -422,7 +434,7 @@ class TovarDBViewModel @Inject constructor(
     }
 
     override fun updateContent() {
-        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+        if (isVisitProductEditor) {
             clearProductCodeSessionCache()
             getOrCreateProductCodeSessionCache()
         }
@@ -514,7 +526,7 @@ class TovarDBViewModel @Inject constructor(
         context: Context
     ) {
         super.onClickProductCode(itemUI, fieldValue, action, context)
-        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+        if (isVisitProductEditor) {
             openProductCodeEditor(
                 itemUI = itemUI,
                 mode = ProductCodeEditorMode.REQUIRED
@@ -529,7 +541,7 @@ class TovarDBViewModel @Inject constructor(
         context: Context
     ) {
 
-        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+        if (isVisitProductEditor) {
             openProductCodeEditor(
                 itemUI = itemUI,
                 mode = ProductCodeEditorMode.ALL
@@ -537,15 +549,8 @@ class TovarDBViewModel @Inject constructor(
         }
     }
 
-    override fun getFieldsForCommentsImage(): List<String>? {
-        return when (contextUI) {
-            ContextUI.TOVAR_FROM_TOVAR_TABS -> ("nm" +
-//                    ", manufacturerId" +
-                    "").split(",").map { it.trim() }
-
-            else -> null
-        }
-    }
+    override fun getFieldsForCommentsImage(): List<String>? =
+        if (isVisitProductEditor) listOf("nm") else null
 
     override fun persistInlineRowValue(
         itemId: Long,
@@ -594,6 +599,7 @@ class TovarDBViewModel @Inject constructor(
     }
 
     override fun getDefaultGroupUserFields(): List<String> {
+        if (isPriceCorrection) return emptyList()
         return listOf(
             "group_id",        // 1-й уровень группировки
 //                "addr_txt",  // 2-й уровень (если включишь вторую группировку)
@@ -610,9 +616,7 @@ class TovarDBViewModel @Inject constructor(
     }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
-//        super.onClickItemImage(clickedDataItemUI, context)
-        Log.e("!!!!!!!!!", "++++")
-        if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+        if (isVisitProductEditor) {
             val tovar = clickedDataItemUI.rawAs<TovarDB>()
             if (tovar != null) {
                 openTovarPhotoDialog(tovar)
@@ -679,7 +683,13 @@ class TovarDBViewModel @Inject constructor(
                         rightValuesUI = listOf(dad2),
                         enabled = false
                     )
-                }
+                },
+                if (isPriceCorrection) ItemFilter(
+                    title = "Товари із зауваженнями", clazz = TovarDB::class,
+                    clazzViewModel = TovarDBViewModel::class, modeUI = ModeUI.MULTI_SELECT,
+                    titleContext = "Товари", subTitleContext = "", leftField = "ID", rightField = "ID",
+                    rightValuesRaw = issueIds, rightValuesUI = issueIds, enabled = false
+                ) else null
             )
         )
     }
@@ -755,13 +765,17 @@ class TovarDBViewModel @Inject constructor(
 
                 val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
                 val cache = getOrCreateProductCodeSessionCache()
-                val baseTovars = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
-                if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                if (isVisitProductEditor) {
                     cache.reportPrepareByTovarId.clear()
                     cache.reportPrepareByTovarId.putAll(readVisitReportPrepare(cache.codeDad2))
                     cache.rowsByItemAndMode.clear()
                 }
-                val tovarList = mergeBaseAndManualTovars(baseTovars)
+                val tovarList = if (isPriceCorrection) {
+                    // RP can arrive before its catalog card. Edit the existing visit row by ID in that case.
+                    issueIds.filter { cache.reportPrepareByTovarId[it] != null }.map { id ->
+                        TovarRealm.getById(id) ?: TovarDB().apply { setiD(id); nm = "($id)" }
+                    }
+                } else mergeBaseAndManualTovars(RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2))
                 val manuallyAddedIds = getManuallyAddedIds()
                 val additionalRequirementsDBList = AdditionalRequirementsRealm.getData3(
                     wpDataDB,
@@ -810,7 +824,7 @@ class TovarDBViewModel @Inject constructor(
                     .map { item ->
                         when (contextUI) {
 
-                            ContextUI.TOVAR_FROM_TOVAR_TABS -> {
+                            ContextUI.TOVAR_FROM_OPTION_175121, ContextUI.TOVAR_FROM_TOVAR_TABS -> {
                                 val tovar = item.rawObj.firstOrNull { it is TovarDB } as? TovarDB
                                     ?: return@map item
 
@@ -825,7 +839,7 @@ class TovarDBViewModel @Inject constructor(
                                     Options().getOptionString(
                                         optionsList,
                                         reportPrepare,
-                                        deletePromoOption
+                                        deletePromoOption, hiddenProductCodeField
                                     )
 
 
@@ -854,7 +868,7 @@ class TovarDBViewModel @Inject constructor(
                         if (contextUI != ContextUI.TOVAR_FROM_ACHIEVEMENT) {
                             val tovar = itemUI.rawAs<TovarDB>() ?: return@map itemUI
 
-                            val rp = if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                            val rp = if (isVisitProductEditor) {
                                 cache.reportPrepareByTovarId[tovar.getiD()]
                             } else {
                                 ReportPrepareRealm.getReportPrepareByTov(codeDad2.toString(), tovar.getiD())
@@ -911,7 +925,12 @@ class TovarDBViewModel @Inject constructor(
                             else -> it
                         }
                     }
-                if (contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS) {
+                if (isVisitProductEditor) {
+                    if (isPriceCorrection && !openedCorrectionRows && items.isNotEmpty()) {
+                        openedCorrectionRows = true
+                        setProductCodeEditor(ProductCodeEditorState(expanded = true,
+                            sourceItemId = items.first().stableId, mode = ProductCodeEditorMode.REQUIRED))
+                    }
                     refreshExpandedProductCodeRows(items, replaceAll = true)
                     cache.reportPrepareSnapshot = cache.reportPrepareByTovarId
                         .mapNotNull { (id, row) -> row?.let { id to TovarReportPrepareSnapshot.from(it) } }
@@ -1179,7 +1198,7 @@ class TovarDBViewModel @Inject constructor(
             val optionString = Options().getOptionString(
                 optionsList,
                 reportPrepare,
-                false
+                false, hiddenProductCodeField
             )
             hasChangedProductCode = optionString.hasChangedProductCode()
 
@@ -1565,12 +1584,16 @@ class TovarDBViewModel @Inject constructor(
         finalDeletePromoOption: Boolean,
         tovarOptions: List<TovarOptions>
     ): List<TovarOptions> {
-        val required = Options().getRequiredOptionsTPL(optionsList2, finalDeletePromoOption)
+        val required = Options().getRequiredOptionsTPL(optionsList2.orEmpty(), finalDeletePromoOption)
         val supportedIds = getAllSupportedInlineOptions(tovarOptions)
             .mapNotNull { it.getOptionControlName() }
             .toSet()
 
-        return required.filter { it.getOptionControlName() in supportedIds }
+        val correctionFields = if (isPriceCorrection) tovarOptions.filter {
+            it.getOptionControlName() in setOf(OptionControlName.PRICE, OptionControlName.PRICE_BEFORE_PROMOTION, OptionControlName.AKCIYA_ID)
+        } else emptyList()
+        return (required + correctionFields).filter { it.getOptionControlName() in supportedIds }
+            .distinctBy { it.getOptionControlName() }
     }
 
 //    private fun buildServiceEntries(): List<ContextMenuEntry> {
@@ -1595,7 +1618,7 @@ class TovarDBViewModel @Inject constructor(
         val hasSelectedInClickedCard = selectedCount > 0
 
         return when (contextUI) {
-            ContextUI.TOVAR_FROM_TOVAR_TABS -> listOf(
+            ContextUI.TOVAR_FROM_OPTION_175121, ContextUI.TOVAR_FROM_TOVAR_TABS -> listOf(
                 ContextMenuEntry.Action(
                     id = "tovar_price",
                     actionId = ContextMenuActionIds.TOVAR_PRICE,
@@ -2062,6 +2085,10 @@ class TovarDBViewModel @Inject constructor(
                 .toLong()
 
             val wpDataDB = RealmManager.getWorkPlanRowByCodeDad2(codeDad2) ?: return
+            if (isPriceCorrection) {
+                ProductPhotoCapture.openPromotionPhotos(Globals.unwrap(context), wpDataDB, tovar.getiD())
+                return
+            }
             val reportPrepare = RealmManager.getTovarReportPrepare(
                 codeDad2.toString(),
                 tovar.getiD()
@@ -2082,7 +2109,7 @@ class TovarDBViewModel @Inject constructor(
                 context,
                 DialogStatus.ERROR,
                 "Увага",
-                "Не вдалося відкрити діалог фото залишків.\n\nПомилка: $e"
+                "Не вдалося відкрити діалог фото товару.\n\nПомилка: $e"
             )
         }
     }
@@ -3516,6 +3543,7 @@ class TovarDBViewModel @Inject constructor(
 
         val rows = templates
             .filter { it.getOptionControlName() != OptionControlName.AKCIYA }
+            .filterNot { isPriceCorrection && it.getOptionControlName() == hiddenProductCodeField }
             .map { tpl ->
                 val kind = when (tpl.getOptionControlName()) {
                     OptionControlName.PRICE, OptionControlName.PRICE_BEFORE_PROMOTION -> InlineEditorKind.DECIMAL_NUMBER

@@ -540,7 +540,8 @@ enum class ContextUI {
     OPTIONS_IN_CONTAINER,
     CHATS_IN_CONTAINER,
     SAMPLE_PHOTO_FOR_PRODUCT_GALLERY,
-    STACK_PHOTO_FROM_OPTION_164351     // Фото прикасової зони (45)
+    STACK_PHOTO_FROM_OPTION_164351,     // Фото прикасової зони (45)
+    TOVAR_FROM_OPTION_175121
 }
 
 

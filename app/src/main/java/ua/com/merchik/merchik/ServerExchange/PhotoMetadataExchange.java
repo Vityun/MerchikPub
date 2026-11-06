@@ -148,7 +148,14 @@ public final class PhotoMetadataExchange {
     public static List<StackPhotoDB> save(Realm realm, List<ModImagesViewList> incoming,
                                          long startedLocalSec, Runnable requireCurrent) {
         List<ModImagesViewList> rows = PhotoMetadataPolicy.uniqueRows(incoming);
+        Map<String, List<ModImagesViewList>> byHash = new HashMap<>();
+        for (ModImagesViewList row : rows) {
+            if (row.imgHash != null && !row.imgHash.trim().isEmpty()) {
+                byHash.computeIfAbsent(row.imgHash, ignored -> new ArrayList<>()).add(row);
+            }
+        }
         List<StackPhotoDB> saved = new ArrayList<>();
+        SaveTrace trace = new SaveTrace();
         boolean[] commentPending = {false};
         realm.executeTransaction(transaction -> {
             requireCurrent.run();
@@ -156,17 +163,30 @@ public final class PhotoMetadataExchange {
             for (ModImagesViewList row : rows) {
                 StackPhotoDB current = transaction.where(StackPhotoDB.class)
                         .equalTo("photoServerId", row.getID()).findFirst();
-                if (current == null && row.imgHash != null && !row.imgHash.trim().isEmpty()) {
-                    List<StackPhotoDB> candidates = new ArrayList<>();
-                    for (StackPhotoDB candidate : transaction.where(StackPhotoDB.class)
-                            .equalTo("photo_hash", row.imgHash).findAll()) {
-                        if (PhotoMetadataPolicy.matchesUnassignedLocal(candidate, row)) candidates.add(candidate);
+                if (current != null) {
+                    trace.byId++;
+                } else if (byHash.containsKey(row.imgHash)) {
+                    List<StackPhotoDB> candidates = transaction.where(StackPhotoDB.class)
+                            .equalTo("photo_hash", row.imgHash).findAll();
+                    current = PhotoMetadataPolicy.findLocalForRow(row, candidates, byHash.get(row.imgHash));
+                    if (current != null) {
+                        trace.linked++;
+                        if (!Objects.equals(current.tovar_id, row.getTovarId())) {
+                            trace.detail("action=matched_local, reason=normalized_product", row, candidates);
+                        }
+                    } else if (!candidates.isEmpty()) {
+                        trace.detail("action=created, reason=no_matching_candidate", row, candidates);
                     }
-                    if (candidates.size() == 1) current = candidates.get(0);
-                    if (candidates.size() > 1) throw new IllegalStateException("Ambiguous local photo hash for " + row.getID());
+                } else {
+                    if (++trace.createdWithoutHash == 1) {
+                        trace.detail("action=created, reason=missing_server_hash", row, Collections.emptyList());
+                    }
                 }
                 boolean isNew = current == null;
-                if (isNew) current = transaction.createObject(StackPhotoDB.class, Math.toIntExact(nextId++));
+                if (isNew) {
+                    trace.created++;
+                    current = transaction.createObject(StackPhotoDB.class, Math.toIntExact(nextId++));
+                }
                 PhotoMetadataPolicy.merge(current, row, isNew, startedLocalSec);
                 if (current.getTime_event() == null && row.getDt() > 0) {
                     current.setTime_event(Clock.getHumanTime3(row.getDt()));
@@ -176,9 +196,21 @@ public final class PhotoMetadataExchange {
             }
             requireCurrent.run();
         });
+        log("INFO", "matchedServerId=" + trace.byId + ", matchedLocal=" + trace.linked + ", created=" + trace.created
+                + ", createdWithoutHash=" + trace.createdWithoutHash + ", diagnosticCases=" + trace.detailCount + trace.details);
         List<StackPhotoDB> copies = realm.copyFromRealm(saved);
         if (commentPending[0]) PhotoCommentSync.changed();
         return copies;
+    }
+
+    private static final class SaveTrace {
+        int byId, linked, created, createdWithoutHash, detailCount;
+        final StringBuilder details = new StringBuilder();
+
+        void detail(String action, ModImagesViewList row, List<StackPhotoDB> candidates) {
+            if (++detailCount <= 10) details.append("\n").append(action).append(", ")
+                    .append(PhotoMetadataPolicy.describeMatch(row, candidates, false));
+        }
     }
 
     private static void log(String level, String text) {
