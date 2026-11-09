@@ -744,7 +744,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             editor.setImage(true, getPhotoFromDB(tovar));
             editor.setAdditionalText(setPhotoInfo(TPL, tovar, "", ""));
         } else {
-            editor.setTitle(TPL.getOptionLong());
+            editor.setTitle(TovarRequisites.optionTitleForVisit(TPL, visit));
             editor.setText("(" + productId + ")");
         }
         editor.tovarOptions = TPL;
@@ -789,7 +789,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         try {
             String weightString = String.format("%s, %s", tovar.getWeight(), tovar.getBarcode()); // составление строк веса и штрихкода для того что б выводить в одно поле
 
-            String title = tpl.getOptionLong();
+            String title = TovarRequisites.optionTitleForVisit(tpl, String.valueOf(dad2));
 
             if (DetailedReportActivity.rpThemeId == 1178) {
                 if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {

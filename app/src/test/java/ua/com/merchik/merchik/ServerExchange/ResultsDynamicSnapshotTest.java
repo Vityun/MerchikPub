@@ -23,7 +23,7 @@ public class ResultsDynamicSnapshotTest {
         assertEquals("results_dynamic", request.get("act").getAsString());
     }
 
-    @Test public void parsesActualResponseWithoutAddressFields() {
+    @Test public void parsesActualResponseWithAddressFieldsAsInts() {
         ResultsDynamicSDB row = ResultsDynamicSnapshot.parse(response(row())).get(0);
         assertEquals("44718897", row.id);
         assertEquals("03693", row.isp);
@@ -33,10 +33,50 @@ public class ResultsDynamicSnapshotTest {
         assertEquals("121", row.avgNumDone);
         assertEquals("603", row.totalFace);
         JsonObject saved = new Gson().toJsonTree(row).getAsJsonObject();
-        assertEquals(16, saved.entrySet().size());
-        assertFalse(saved.has("tp_id"));
-        assertFalse(saved.has("tt_id"));
-        assertFalse(saved.has("kol_kass"));
+        assertEquals(19, saved.entrySet().size());
+        assertEquals(351, row.tpId);
+        assertEquals(32, row.ttId);
+        assertEquals(22, row.kolKass);
+        for (String field : new String[]{"tp_id", "tt_id", "kol_kass"}) {
+            assertTrue(saved.getAsJsonPrimitive(field).isNumber());
+        }
+    }
+
+    @Test public void addressFieldsAcceptJsonIntsAndZero() {
+        JsonObject row = row();
+        row.addProperty("tp_id", 351);
+        row.addProperty("tt_id", 0);
+        row.addProperty("kol_kass", Integer.MAX_VALUE);
+        ResultsDynamicSDB parsed = ResultsDynamicSnapshot.parse(response(row)).get(0);
+        assertEquals(351, parsed.tpId);
+        assertEquals(0, parsed.ttId);
+        assertEquals(Integer.MAX_VALUE, parsed.kolKass);
+    }
+
+    @Test public void rejectsInvalidAddressFieldsBeforeReplacingSnapshot() {
+        for (String field : new String[]{"tp_id", "tt_id", "kol_kass"}) {
+            JsonObject missing = row();
+            missing.remove(field);
+            reject(response(missing));
+            for (String value : new String[]{"null", "true", "{}", "[]", "-1", "1.5", "2147483648", "\"\"", "\"abc\""}) {
+                JsonObject invalid = row();
+                invalid.addProperty("ID", "44897481");
+                invalid.addProperty("addr_id", "31093");
+                invalid.add(field, JsonParser.parseString(value));
+                reject(response(row(), invalid));
+            }
+        }
+    }
+
+    @Test public void newSnapshotUpdatesAddressFieldsToo() {
+        JsonObject updated = row();
+        updated.addProperty("tp_id", "320");
+        updated.addProperty("tt_id", "34");
+        updated.addProperty("kol_kass", "7");
+        ResultsDynamicSDB fresh = ResultsDynamicSnapshot.parse(response(updated)).get(0);
+        assertEquals(320, fresh.tpId);
+        assertEquals(34, fresh.ttId);
+        assertEquals(7, fresh.kolKass);
     }
 
     @Test public void preservesFractionalAndLargeValuesWithoutDoubleRounding() {

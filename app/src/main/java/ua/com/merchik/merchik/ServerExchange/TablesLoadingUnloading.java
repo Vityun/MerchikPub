@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.ServerExchange;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
-import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
@@ -268,23 +267,7 @@ public class TablesLoadingUnloading {
 //            downloadWPDataRx().subscribe();
 
                     downloadOptions();
-                    Log.e("uploadRP", "start");
-                    ReportPrepareSync.upload(true, null, new ExchangeInterface.ExchangeResponseInterface() {
-                        @Override
-                        public <T> void onSuccess(List<T> data) {
-                            downloadReportPrepare(0);
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            Log.d("uploadRP", "error: " + error);
-                            downloadReportPrepare(0);
-                        }
-                    });
-                    List<WpDataDB> wpDataDBList = RealmManager.getAllWorkPlanSafe();
-                    if (!wpDataDBList.isEmpty()) {
-                        downloadTovarTable(null, wpDataDBList);
-                    }
+                    // RP/products follow the committed plan, not the previous (possibly empty) one.
 
                     globals.writeToMLOG("_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
                 } catch (Exception e) {
@@ -442,6 +425,14 @@ public class TablesLoadingUnloading {
     public void downloadWPData() {
         if (isdownloadWPData) return;
         isdownloadWPData = true;
+        final int downloadUser = Globals.getCurrentUserId();
+        final String downloadSession = Globals.getCurrentSessionId();
+        Runnable refreshVisitData = () -> {
+            if (downloadUser == Globals.getCurrentUserId()
+                    && Objects.equals(downloadSession, Globals.getCurrentSessionId())) {
+                VisitReportDataSync.sync("plan/list finished; use saved plan", true);
+            }
+        };
 
         String mod = "plan";
         String act = "list";
@@ -469,10 +460,16 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
                     try {
+                        if (downloadUser != Globals.getCurrentUserId()
+                                || !Objects.equals(downloadSession, Globals.getCurrentSessionId())) return;
                         if (!response.isSuccessful() || response.body() == null
                                 || !Boolean.TRUE.equals(response.body().getState())
                                 || response.body().getList() == null) {
-                            initialDownloadFailed("wp_data", "Invalid response: http=" + response.code());
+                            WpDataServer body = response.body();
+                            initialDownloadFailed("wp_data", "Invalid response: http=" + response.code()
+                                    + ", state=" + (body == null ? null : body.getState())
+                                    + ", rows=" + (body == null || body.getList() == null ? "null" : body.getList().size())
+                                    + ", error=" + (body == null ? "empty body" : body.getError()));
                             readyWPData = false;
                             return;
                         }
@@ -553,7 +550,6 @@ public class TablesLoadingUnloading {
 //                                Toast.makeText(context, "Added " + wpDataDBList.size() + " works", Toast.LENGTH_LONG).show();
                                 Log.e("downloadWPData", "Added " + wpDataDBList.size() + " works");
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                                downloadTovarTable(null, wpDataDBList);
                                 if (sTable != null) {
                                     sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
                                     RealmManager.setToSynchronizationTimetableDB(sTable);
@@ -578,33 +574,38 @@ public class TablesLoadingUnloading {
                                 "Exception while processing wp_data response: " + e
                         );
                         isdownloadWPData = false;
-                        readyWPData = true;
+                        readyWPData = false;
                     } finally {
                         isdownloadWPData = false;
+                        refreshVisitData.run();
                     }
                     isdownloadWPData = false;
                 }
 
                 @Override
                 public void onFailure(Call<WpDataServer> call, Throwable t) {
-                    initialDownloadFailed("wp_data", "failure=" + t.getClass().getSimpleName());
-//                    if (pg != null)
-//                        if (pg.isShowing())
-//                            pg.dismiss();
-                    Globals.writeToMLOG(
-                            "ERROR",
-                            "TablesLoadingUnloading/downloadWPData/onFailure",
-                            "Throwable while loading wp_data: " + t
-                    );
-                    readyWPData = false;
-                    syncInternetError = true;
-                    isdownloadWPData = false;
+                    try {
+                        if (downloadUser != Globals.getCurrentUserId()
+                                || !Objects.equals(downloadSession, Globals.getCurrentSessionId())) return;
+                        initialDownloadFailed("wp_data", "failure=" + t.getClass().getSimpleName());
+                        Globals.writeToMLOG(
+                                "ERROR",
+                                "TablesLoadingUnloading/downloadWPData/onFailure",
+                                "Throwable while loading wp_data: " + t
+                        );
+                        readyWPData = false;
+                        syncInternetError = true;
+                    } finally {
+                        isdownloadWPData = false;
+                        refreshVisitData.run();
+                    }
                 }
             });
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPData", "Exception: " + e.getMessage());
-            readyWPData = true;
+            readyWPData = false;
             isdownloadWPData = false;
+            refreshVisitData.run();
         }
 
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
@@ -791,7 +792,7 @@ public class TablesLoadingUnloading {
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
                                 RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                                downloadTovarTable(null, wpDataDBList);
+                                VisitReportDataSync.sync("plan/location saved", false);
 //                                RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                    if (sTable != null) {
 //                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
@@ -2099,79 +2100,10 @@ public class TablesLoadingUnloading {
      * <p>
      * //     * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
      *
-     * @param mode -- Режим работы. Если 0 - всё затераем, 1 - "умная" загрузка(обновление)
+     * @param mode retained for legacy callers; both modes merge without deleting local edits.
      */
     public void downloadReportPrepare(int mode) {
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.START");
-
-        String date_from = timeYesterday7;
-        String date_to = timeTomorrow;
-
-        // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
-        long lastUpdate = 0;
-        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-//        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-//        if (realmResults != null) lastUpdate = realmResults.getVpo_export();
-
-        // 22.08.23. Получаю с Плана Работ список Адресов так что б они не повторялись.
-        List<Integer> addressIds = getWpDataAddresses();
-
-        Log.e("downloadReportPrepare", "addressIds size: " + addressIds.size());
-        Log.e("downloadReportPrepare", "addressIds: " + addressIds);
-
-        // 22.08.23. Перепиал запрос на получение RP
-        StandartData data = new StandartData();
-        data.mod = "report_prepare";
-        data.act = "list_data";
-        data.date_from = date_from;
-        data.date_to = date_to;
-//        if (lastUpdate != 0) data.vpo = lastUpdate;
-        if (addressIds != null && addressIds.size() > 0)
-            data.addr_id = addressIds;
-
-        data.dt_change_from = String.valueOf(realmResults != null ? realmResults.getVpi_app() : 0);
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        ReportPrepareSync.download(convertedObject, true, new Callback<ReportPrepareServer>() {
-            @Override
-            public void onResponse(@NonNull Call<ReportPrepareServer> call, @NonNull Response<ReportPrepareServer> response) {
-                Log.e("TAG_TEST", "RESPONSE_4");
-                Log.e("downloadReportPrepare", "downloadReportPrepare.response: " + response);
-
-                Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.isSuccessful(): " + response.isSuccessful());
-
-                if (response.isSuccessful() && response.body() != null && response.body().getState()
-                        && response.body().getList() != null && !response.body().getList().isEmpty()) {
-
-                    Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
-
-                    if (response.body().getList() != null) {
-//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
-                        Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-                    } else {
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
-                    }
-                }
-                readyReportPrepare = true;
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ReportPrepareServer> call, @NonNull Throwable t) {
-//                if (pg != null)
-//                    if (pg.isShowing())
-//                        pg.dismiss();
-                readyReportPrepare = false;
-                syncInternetError = true;
-                Log.e("TAG_TEST", "FAILURE_4 E: " + t);
-                Globals.writeToMLOG("ERR", "downloadReportPrepare/onFailure", "Throwable t: " + t);
-            }
-        });
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.END");
-
+        VisitReportDataSync.sync("legacy report_prepare", true);
     }
 
 

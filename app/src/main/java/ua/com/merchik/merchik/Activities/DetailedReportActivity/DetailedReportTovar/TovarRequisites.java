@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
@@ -20,6 +21,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Utils.PhotoPickerUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
@@ -56,6 +58,30 @@ public class TovarRequisites {
     static String promotionPhotoTitle(ImagesTypeListSDB type) {
         String name = type == null || type.nm == null ? "" : type.nm.trim();
         return name.isEmpty() ? "Фото Акцiйного товара з цiнником" : name;
+    }
+
+    public static String optionTitleForVisit(TovarOptions option, String codeDad2) {
+        if (option.getOptionControlName() != Globals.OptionControlName.PRICE
+                || codeDad2 == null || codeDad2.trim().isEmpty()) {
+            return option.getOptionLong();
+        }
+        List<OptionsDB> visitOptions = RealmManager.getTovarOptionInReportPrepare(codeDad2, null);
+        return optionTitle(option, new Options().getRequiredOptionsTPL(visitOptions, false));
+    }
+
+    static String optionTitle(TovarOptions option, List<TovarOptions> requiredOptions) {
+        if (option.getOptionControlName() != Globals.OptionControlName.PRICE
+                || requiredOptions == null) {
+            return option.getOptionLong();
+        }
+        boolean priceRequired = false;
+        boolean beforePromotionRequired = false;
+        for (TovarOptions required : requiredOptions) {
+            if (required == null) continue;
+            if (required.getOptionControlName() == Globals.OptionControlName.PRICE) priceRequired = true;
+            if (required.getOptionControlName() == Globals.OptionControlName.PRICE_BEFORE_PROMOTION) beforePromotionRequired = true;
+        }
+        return priceRequired && beforePromotionRequired ? "ПОТОЧНА цена товара" : option.getOptionLong();
     }
 
     public TovarRequisites() {
@@ -225,7 +251,7 @@ public class TovarRequisites {
         try {
             String weightString = String.format("%s, %s", tovar.getWeight(), tovar.getBarcode()); // составление строк веса и штрихкода для того что б выводить в одно поле
 
-            String title = tpl.getOptionLong();
+            String title = optionTitleForVisit(tpl, reportPrepareDB == null ? null : reportPrepareDB.getCodeDad2());
 
             if (DetailedReportActivity.rpThemeId == 1178) {
                 if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {

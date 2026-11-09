@@ -17,9 +17,11 @@ public final class StartupPolicy {
 
     public static boolean areRequiredTablesReady(boolean wpLoaded, boolean siteLoaded,
                                                   boolean optionsLoaded, boolean themeLoaded,
-                                                  boolean siteAvailable, boolean themeAvailable) {
+                                                  boolean siteAvailable, boolean themeAvailable,
+                                                  boolean reportPrepareLoaded, boolean productsLoaded) {
         // Saved flags cannot replace missing dictionaries or locally seeded SiteObjects rows.
-        return wpLoaded && siteLoaded && optionsLoaded && themeLoaded && siteAvailable && themeAvailable;
+        return wpLoaded && siteLoaded && optionsLoaded && themeLoaded && siteAvailable && themeAvailable
+                && reportPrepareLoaded && productsLoaded;
     }
 
     public static boolean isTemporaryHttpFailure(int code) {

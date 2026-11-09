@@ -195,7 +195,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.WPDataPauseDao;
                 DynamicPhotoSDB.class,
                 ResultsDynamicSDB.class
         },
-        version = 86
+        version = 87
 )
 
 

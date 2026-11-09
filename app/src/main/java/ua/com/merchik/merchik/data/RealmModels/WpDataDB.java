@@ -1493,7 +1493,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return WPDataBDOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable

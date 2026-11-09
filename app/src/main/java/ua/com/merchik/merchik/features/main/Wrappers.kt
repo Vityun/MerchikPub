@@ -364,10 +364,13 @@ object DynamicAchievementSDBOverride {
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
-        "achieve_photo_count" -> MerchModifier(fontWeight = FontWeight.SemiBold,
+        "achieve_photo_count" -> MerchModifier(
+            fontWeight = FontWeight.SemiBold,
             textColor = Color.Blue,
             textDecoration = TextDecoration.Underline,
-            padding = Padding(end = 10.dp))
+            padding = Padding(end = 10.dp)
+        )
+
         else -> MerchModifier(textColor = Color.Gray, padding = Padding(end = 10.dp))
     }
 
@@ -1262,7 +1265,10 @@ object WPDataBDOverride {
             val meters = value.toString().toDoubleOrNull()
             when {
                 meters == null || !meters.isFinite() || meters < 0.0 -> "-"
-                meters < 1000.0 -> "${BigDecimal.valueOf(meters).setScale(0, RoundingMode.HALF_UP)} м"
+                meters < 1000.0 -> "${
+                    BigDecimal.valueOf(meters).setScale(0, RoundingMode.HALF_UP)
+                } м"
+
                 else -> {
                     val kilometers = BigDecimal.valueOf(meters)
                         .divide(BigDecimal.valueOf(1000), 2, RoundingMode.HALF_UP)
@@ -1422,6 +1428,21 @@ object WPDataBDOverride {
 
         else -> null
     }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val themeId = jsonObject.optInt("theme_id", 0)
+                if (themeId != 998)
+                    Color(android.graphics.Color.parseColor("#FAF7BB"))
+                else
+                    null
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
+    }
+
 }
 
 object ErrorDBOverride {

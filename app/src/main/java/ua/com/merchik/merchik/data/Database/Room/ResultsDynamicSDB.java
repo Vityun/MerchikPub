@@ -37,6 +37,21 @@ public class ResultsDynamicSDB {
     @ColumnInfo(name = "addr_id")
     public String addrId = "";
 
+    @SerializedName("tp_id")
+    @Expose
+    @ColumnInfo(name = "tp_id", defaultValue = "0")
+    public int tpId;
+
+    @SerializedName("tt_id")
+    @Expose
+    @ColumnInfo(name = "tt_id", defaultValue = "0")
+    public int ttId;
+
+    @SerializedName("kol_kass")
+    @Expose
+    @ColumnInfo(name = "kol_kass", defaultValue = "0")
+    public int kolKass;
+
     @NonNull
     @SerializedName("yearmonth")
     @Expose

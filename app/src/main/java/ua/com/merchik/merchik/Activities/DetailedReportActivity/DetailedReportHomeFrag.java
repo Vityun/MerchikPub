@@ -6,8 +6,6 @@ import static ua.com.merchik.merchik.Options.Options.ConductMode.SALARY_CUT;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,7 +18,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -89,8 +86,6 @@ public class DetailedReportHomeFrag extends Fragment {
 
     LinearLayout option_signal_layout2;
     private RecyclerView recycler;
-
-    private ImageView merchikImg;
 
     private ComposeView composeView;
     private ComposeView composeMap;
@@ -190,8 +185,6 @@ public class DetailedReportHomeFrag extends Fragment {
 
         try {
 
-            merchikImg = v.findViewById(R.id.merchik);
-
             fabYouTube = v.findViewById(R.id.fab);
             badgeTextView = v.findViewById(R.id.badge_text_view_tar);
 
@@ -217,11 +210,6 @@ public class DetailedReportHomeFrag extends Fragment {
 
                     WorkPlan workPlan = new WorkPlan();
                     LinearLayout ll = workPlan.getOptionLinearLayout(requireContext(), workPlan.getWpOpchetId(wpDataDB));
-                    Drawable drawable = merchikImg.getBackground();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        drawable.setTint(requireContext().getResources().getColor(R.color.colotSelectedTab2));
-                    }
-
                     textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
                     textDRAddrV.setText(wpDataDB.getAddr_txt());
                     textDRCustV.setText(wpDataDB.getClient_txt());

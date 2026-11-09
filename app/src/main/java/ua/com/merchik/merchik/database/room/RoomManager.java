@@ -59,7 +59,8 @@ public class RoomManager {
                         MIGRATION_82_83,
                         MIGRATION_83_84,
                         MIGRATION_84_85,
-                        MIGRATION_85_86
+                        MIGRATION_85_86,
+                        MIGRATION_86_87
                 )
                 .build();
 
@@ -1107,6 +1108,18 @@ public class RoomManager {
                             "WHERE tableName = 'achievements'"
             );
             achievementsSchemaMigrated = true;
+        }
+    };
+
+    public static final Migration MIGRATION_86_87 = new Migration(86, 87) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE plan_results_dynamic ADD COLUMN tp_id INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE plan_results_dynamic ADD COLUMN tt_id INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE plan_results_dynamic ADD COLUMN kol_kass INTEGER NOT NULL DEFAULT 0");
+            // Reload the snapshot with the new fields even if today's download already completed.
+            database.execSQL("UPDATE synchronization_timetable SET lastDownloadTime = 0, lastDownloadStatus = 2 "
+                    + "WHERE tableName = 'plan_results_dynamic'");
         }
     };
 

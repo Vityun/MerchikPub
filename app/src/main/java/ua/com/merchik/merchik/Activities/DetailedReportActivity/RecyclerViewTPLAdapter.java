@@ -204,7 +204,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             boolean price = item.getOptionControlName() == Globals.OptionControlName.PRICE
                     || item.getOptionControlName() == PRICE_BEFORE_PROMOTION;
             rawPriceValue = getDataFromReportPrepare(item, dataRp);
-            textView.setText(item.getOptionLong() + ": ");
+            textView.setText(TovarRequisites.optionTitleForVisit(item, dataRp.getCodeDad2()) + ": ");
             editText.setText(price && !editText.hasFocus() ? PriceDisplay.format(rawPriceValue) : rawPriceValue);
 
             valueWatcher = new TextWatcher() {

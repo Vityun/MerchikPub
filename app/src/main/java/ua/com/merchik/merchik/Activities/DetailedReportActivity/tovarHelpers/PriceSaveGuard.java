@@ -15,6 +15,8 @@ import java.util.LinkedHashMap;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ImagesTypeList;
+import ua.com.merchik.merchik.data.Database.Room.ImagesTypeListSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
@@ -26,6 +28,7 @@ import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
@@ -232,6 +235,7 @@ public final class PriceSaveGuard {
         boolean[] answered = {false};
         String promotion = check.promotionName.isEmpty() ? "текущей акции"
                 : "акции «" + TextUtils.htmlEncode(check.promotionName) + "»";
+        ImagesTypeListSDB item = RoomManager.SQL_DB.imagesTypeListDao().getById(28);
         return new MessageDialogBuilder(activity)
                 .setTitle("Товари")
                 .setSubTitle(product)
@@ -241,7 +245,8 @@ public final class PriceSaveGuard {
                         + " грн. При этом скидка по " + promotion + " составляет " + check.discountPercent
                         + "%. Предполагаемая сумма скидки должна быть: " + check.expectedDiscountText()
                         + " грн, а у вас она составляет " + check.actualDiscountText() + " грн" +
-                        ". Возможно вы указали цену не правильно? Перепроверьте это." +
+                        ". Возможно вы указали цену не правильно? Перепроверьте это. " +
+                        "В случае если цены указаны правильно сделайте " + item.nm +
                         "<br><br>ОТКАЗАТЬСЯ от сохранения цены?")
                 .setOnConfirmAction("Да", () -> { answered[0] = true; refuse.run(); return Unit.INSTANCE; })
                 .setOnCancelAction("Нет", () -> { answered[0] = true; save.run(); return Unit.INSTANCE; })

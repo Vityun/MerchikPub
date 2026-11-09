@@ -56,7 +56,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 import ua.com.merchik.merchik.features.main.componentsUI.AutoResizeText
-import ua.com.merchik.merchik.features.maps.presentation.main.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import java.util.regex.Pattern
 
 enum class DialogCloseReason {

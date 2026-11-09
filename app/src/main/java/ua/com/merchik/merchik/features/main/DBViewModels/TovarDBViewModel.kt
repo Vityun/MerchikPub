@@ -1611,6 +1611,18 @@ class TovarDBViewModel @Inject constructor(
 //        }
 //    }
 
+    private fun currentPriceTitle(): String {
+        val requiredOptions = Options().getRequiredOptionsTPL(
+            getOrCreateProductCodeSessionCache().optionsList2.orEmpty(), false
+        )
+        val bothPricesRequired = requiredOptions.any {
+            it.getOptionControlName() == OptionControlName.PRICE
+        } && requiredOptions.any {
+            it.getOptionControlName() == OptionControlName.PRICE_BEFORE_PROMOTION
+        }
+        return if (bothPricesRequired) "ПОТОЧНА цена товара" else "Цена товара"
+    }
+
     private fun buildServiceEntries(payload: ContextMenuPayload): List<ContextMenuEntry> {
         val items = payload.selectedItems
         val selectedItems = items.filter { it.selected }
@@ -1622,7 +1634,7 @@ class TovarDBViewModel @Inject constructor(
                 ContextMenuEntry.Action(
                     id = "tovar_price",
                     actionId = ContextMenuActionIds.TOVAR_PRICE,
-                    title = "Цена товара",
+                    title = currentPriceTitle(),
                     leading = MenuLeading.BadgeText("Ц")
                 ),
                 ContextMenuEntry.Action(
@@ -3140,7 +3152,11 @@ class TovarDBViewModel @Inject constructor(
             ) // составление строк веса и штрихкода для того что б выводить в одно поле
             Log.e("КОСТЫЛИ", "tpl.getOptionLong(): " + tpl.getOptionLong())
 
-            var title = tpl.getOptionLong()
+            var title = if (tpl.getOptionControlName() == OptionControlName.PRICE) {
+                currentPriceTitle()
+            } else {
+                tpl.getOptionLong()
+            }
 
             if (DetailedReportActivity.rpThemeId == 1178) {
                 if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {
@@ -3590,6 +3606,7 @@ class TovarDBViewModel @Inject constructor(
 
                 val rowTitle = when (tpl.getOptionControlName()) {
                     OptionControlName.ERROR_ID -> resolveErrorTitle(tpl, rp)
+                    OptionControlName.PRICE -> currentPriceTitle()
                     else -> tpl.getOptionLong().orEmpty()
                 }
 

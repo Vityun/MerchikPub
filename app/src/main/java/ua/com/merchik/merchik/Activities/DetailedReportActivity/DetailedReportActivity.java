@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -107,6 +106,7 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -114,11 +114,13 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.dialogs.features.DialogDismissListener;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -189,6 +191,7 @@ public class DetailedReportActivity extends toolbar_menus {
     private DetailedReportViewModel detailedReportViewModel;
     private boolean reportInitialized;
     private RnoVisitDataExchange.Subscription visitPreparation;
+    private MessageDialogBuilder marketingResearchDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -373,6 +376,7 @@ public class DetailedReportActivity extends toolbar_menus {
             if (getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
                 ReportConductUi.resume(this, wpDataDB.getCode_dad2());
             }
+            showMarketingResearchQuestion();
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "Exception e: " + e);
             finish();
@@ -419,6 +423,12 @@ public class DetailedReportActivity extends toolbar_menus {
     @Override
     protected void onDestroy() {
         if (visitPreparation != null) visitPreparation.cancel();
+        if (marketingResearchDialog != null) {
+            // Recreating the activity must not turn an unanswered question into a dismissal.
+            marketingResearchDialog.setOnDismissListener((DialogDismissListener) null);
+            marketingResearchDialog.dismiss();
+            marketingResearchDialog = null;
+        }
         super.onDestroy();
     }
 
@@ -449,10 +459,66 @@ public class DetailedReportActivity extends toolbar_menus {
                 if (wpDataDB != null) {
                     ReportConductUi.resume(this, wpDataDB.getCode_dad2());
                 }
+                showMarketingResearchQuestion();
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "ReportConduct/onResume", e.toString());
             }
         });
+    }
+
+    private void showMarketingResearchQuestion() {
+        if (!reportInitialized || wpDataDB == null || isFinishing() || isDestroyed()
+                || !getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+                || marketingResearchDialog != null || wpDataDB.getCode_dad2() <= 0
+                || !MarketingResearchSurvey.supportsTheme(wpDataDB.getTheme_id())) return;
+
+        MarketingResearchSurvey survey = detailedReportViewModel.getMarketingResearchSurvey(wpDataDB.getCode_dad2());
+        MarketingResearchSurvey.Question question = survey.nextQuestion();
+        if (question == MarketingResearchSurvey.Question.NONE) return;
+
+        ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(MarketingResearchSurvey.THEME_ID));
+        String themeName = theme != null && !TextUtils.isEmpty(theme.getNm())
+                ? theme.getNm() : "Маркетингові дослідження";
+        boolean warning = question == MarketingResearchSurvey.Question.WARNING;
+        String message = warning
+                ? "Это неправильный ответ! По этому посещению НЕЛЬЗЯ выполнять выкладку товара !!"
+                : question == MarketingResearchSurvey.Question.REQUIRED
+                ? "Тема данного визита: " + themeName + "!\n\n"
+                    + "По этому посещению надо выполнять ВЫКЛАДКУ товара?"
+                : "Вы будете выкладывать товар во время этого посещения?";
+
+        MessageDialogBuilder dialog = new MessageDialogBuilder(this)
+                .setTitle("Важная информация")
+                .setSubTitle(themeName)
+                .setStatus(warning ? DialogStatus.ERROR : DialogStatus.NORMAL)
+                .setMessage(message);
+        if (warning) {
+            dialog.setOnConfirmAction("OK", () -> {
+                survey.acknowledgeWarning();
+                return Unit.INSTANCE;
+            });
+        } else {
+            dialog.setOnConfirmAction("Да", () -> {
+                    survey.answer(question, true);
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction("Нет", () -> {
+                    survey.answer(question, false);
+                    return Unit.INSTANCE;
+                });
+        }
+        marketingResearchDialog = dialog;
+        dialog.setOnDismissListener((DialogDismissListener) () -> {
+            if (marketingResearchDialog != dialog) return;
+            marketingResearchDialog = null;
+            if (survey.nextQuestion() == question) {
+                survey.dismiss();
+            } else {
+                // Show the next question only after the previous dialog has closed.
+                getWindow().getDecorView().post(this::showMarketingResearchQuestion);
+            }
+        });
+        dialog.show();
     }
 
     public void startPauseWorkUi(WpDataDB sourceWpData) {
@@ -841,32 +907,6 @@ public class DetailedReportActivity extends toolbar_menus {
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
             adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), wpDataDB);
             viewPager.setAdapter(adapter);
-
-            int activeColor = ContextCompat.getColor(this, R.color.main_form);
-            int transparentColor = Color.TRANSPARENT;
-
-            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
-                        tab.view.setBackgroundColor(activeColor);
-                    }
-                }
-
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
-                        tab.view.setBackgroundColor(transparentColor);
-                    }
-                }
-
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    if (tab.getPosition() == 2 || (tab.getPosition() == 1 && DetailedReportOptionsFrag.USE_COMPOSE_OPTIONS)) {
-                        tab.view.setBackgroundColor(activeColor);
-                    }
-                }
-            });
 
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override

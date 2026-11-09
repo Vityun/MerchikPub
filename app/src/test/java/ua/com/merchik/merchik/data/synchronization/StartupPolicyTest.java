@@ -40,29 +40,35 @@ public class StartupPolicyTest {
     }
 
     @Test public void planAloneNeverMakesInitialDataReady() {
-        assertFalse(StartupPolicy.areRequiredTablesReady(true, false, false, false, false, false));
-        assertFalse(StartupPolicy.areRequiredTablesReady(true, false, true, true, false, true));
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, false, false, false, false, false, true, true));
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, false, true, true, false, true, true, true));
     }
 
     @Test public void staleFlagsCannotReplaceMissingServerSiteObjects() {
-        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, false, true));
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, false, true, true, true));
     }
 
     @Test public void missingRoomThemesAlsoPreventReadiness() {
-        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, false));
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, false, true, true));
     }
 
     @Test public void everyRequiredFlagAndDictionaryMustBeReady() {
-        for (int mask = 0; mask < 64; mask++) {
-            assertEquals("state=" + mask, mask == 63, StartupPolicy.areRequiredTablesReady(
+        for (int mask = 0; mask < 256; mask++) {
+            assertEquals("state=" + mask, mask == 255, StartupPolicy.areRequiredTablesReady(
                     (mask & 1) != 0, (mask & 2) != 0, (mask & 4) != 0,
-                    (mask & 8) != 0, (mask & 16) != 0, (mask & 32) != 0));
+                    (mask & 8) != 0, (mask & 16) != 0, (mask & 32) != 0,
+                    (mask & 64) != 0, (mask & 128) != 0));
         }
     }
 
     @Test public void successfulEmptyPlanCanStillBeReadyWithDownloadedDictionaries() {
         // wpLoaded/optionsLoaded are set by a successful exchange, even for an empty list.
-        assertTrue(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, true));
+        assertTrue(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, true, true, true));
+    }
+
+    @Test public void reportPrepareAndProductsAreBothRequired() {
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, true, false, true));
+        assertFalse(StartupPolicy.areRequiredTablesReady(true, true, true, true, true, true, true, false));
     }
 
     @Test public void temporaryHttpFailuresAllowOfflineFallback() {

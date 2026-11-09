@@ -1832,7 +1832,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 String weightString = String.format("%s, %s", tovar.getWeight(), tovar.getBarcode()); // составление строк веса и штрихкода для того что б выводить в одно поле
                 Log.e("КОСТЫЛИ", "tpl.getOptionLong(): " + tpl.getOptionLong());
 
-                String title = tpl.getOptionLong();
+                String title = TovarRequisites.optionTitleForVisit(tpl, String.valueOf(codeDad2));
 
                 if (DetailedReportActivity.rpThemeId == 1178) {
                     if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {

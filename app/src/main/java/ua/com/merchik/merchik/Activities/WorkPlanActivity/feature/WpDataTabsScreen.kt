@@ -18,9 +18,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -42,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -56,6 +60,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.tabs.WpDataCon
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.BuildConfig
+import ua.com.merchik.merchik.ServerExchange.VisitReportDataSync
 import ua.com.merchik.merchik.data.synchronization.StartupPolicy
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults
@@ -188,6 +193,7 @@ fun WpDataTabsScreen() {
                 break
             }
 
+            if (!currentlyOffline) VisitReportDataSync.retryInitial()
             delay(1000)
         }
     }
@@ -282,7 +288,7 @@ fun WpDataTabsScreen() {
 
         TabRow(
             selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(38.dp),
             containerColor = tabBarBackground,
             indicator = {},
             divider = {}
@@ -292,64 +298,67 @@ fun WpDataTabsScreen() {
                     selected = selectedTabIndex == index,
                     onClick = { selectTab(index) },
                     modifier = Modifier
+                        .height(38.dp)
                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                         .background(if (selectedTabIndex == index) selectedColor else Color.Transparent),
-                    text = {
-                        Box(
-                            contentAlignment = Alignment.TopEnd,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = title,
-                                color = if (selectedTabIndex == index) textSelectedColor else textUnselectedColor,
+                    content = {
+                        ProvideTextStyle(MaterialTheme.typography.titleSmall.copy(textAlign = TextAlign.Center)) {
+                            Box(
+                                contentAlignment = Alignment.TopEnd,
                                 modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .clickable { selectTab(index) }
-                            )
-
-                            val count = badgeCounts.getOrNull(index)
-                            if (count != null && count > 0) {
-                                Box(
+                                    .fillMaxSize()
+                                    .padding(horizontal = 24.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = title,
+                                    color = if (selectedTabIndex == index) textSelectedColor else textUnselectedColor,
                                     modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .offset(x = 14.dp, y = (-9).dp)
-                                ) {
-                                    CounterBadge(
-                                        count = count,
-                                        background = if (index == 0) green else Color.Red,
-                                        borderAndTextColor = if (index == 0) Color.Black else Color.White,
-                                        modifier = Modifier.clickable {
-                                            if (index != 0) {
+                                        .align(Alignment.Center)
+                                        .clickable { selectTab(index) }
+                                )
+
+                                val count = badgeCounts.getOrNull(index)
+                                if (count != null && count > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = 14.dp)
+                                    ) {
+                                        CounterBadge(
+                                            count = count,
+                                            background = if (index == 0) green else Color.Red,
+                                            borderAndTextColor = if (index == 0) Color.Black else Color.White,
+                                            modifier = Modifier.clickable {
+                                                if (index != 0) {
+                                                    selectTab(index)
+                                                    return@clickable
+                                                }
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Фільтри до плану робіт застосовані. Відібрано ${count ?: 0} візитів",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+
+                                                val targetHash =
+                                                    if (index == 0) ScrollDataHolder.instance()
+                                                        .getAll() else null
+
+                                                if (targetHash == null) {
+                                                    selectTab(index)
+                                                    return@clickable
+                                                }
+
                                                 selectTab(index)
-                                                return@clickable
+
+                                                if (selectedTabIndex == index && viewModel.uiState.value.items.isNotEmpty()) {
+                                                    applyPlanBadgeFilter(targetHash)
+                                                } else {
+                                                    pendingFilterIds.value = targetHash
+                                                }
                                             }
-
-                                            Toast.makeText(
-                                                context,
-                                                "Фільтри до плану робіт застосовані. Відібрано ${count ?: 0} візитів",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-
-                                            val targetHash =
-                                                if (index == 0) ScrollDataHolder.instance()
-                                                    .getAll() else null
-
-                                            if (targetHash == null) {
-                                                selectTab(index)
-                                                return@clickable
-                                            }
-
-                                            selectTab(index)
-
-                                            if (selectedTabIndex == index && viewModel.uiState.value.items.isNotEmpty()) {
-                                                applyPlanBadgeFilter(targetHash)
-                                            } else {
-                                                pendingFilterIds.value = targetHash
-                                            }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -539,7 +548,8 @@ fun isDataReadyCompat(): Boolean {
     )
     return StartupPolicy.areRequiredTablesReady(
         state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
-        siteAvailable, themeAvailable
+        siteAvailable, themeAvailable,
+        VisitReportDataSync.reportReady(), VisitReportDataSync.productsReady()
     )
 }
 
@@ -550,7 +560,8 @@ fun checkRealmReady(): Boolean {
     val hasOption = RealmManager.INSTANCE.hasData<OptionsDB>()
     val hasThema = RoomManager.SQL_DB.themeDao().getCount() > 0
 
-    return hasWp && hasStObj && hasOption && hasThema
+    return hasWp && hasStObj && hasOption && hasThema &&
+            VisitReportDataSync.reportReady() && VisitReportDataSync.productsReady()
 }
 
 fun checkRealmReadyII(): Boolean {
@@ -560,7 +571,8 @@ fun checkRealmReadyII(): Boolean {
     return state != null && StartupPolicy.areRequiredTablesReady(
         state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
         SiteObjectsLocalDefaults.hasDownloadedObjects(),
-        RoomManager.SQL_DB.themeDao().getCount() > 0
+        RoomManager.SQL_DB.themeDao().getCount() > 0,
+        VisitReportDataSync.reportReady(), VisitReportDataSync.productsReady()
     )
 }
 
@@ -574,6 +586,7 @@ private fun logStartupReadiness(reason: String) {
                     "site=${RealmManager.INSTANCE.where(SiteObjectsDB::class.java).count()}, " +
                     "siteDownloaded=${SiteObjectsLocalDefaults.hasDownloadedObjects()}, " +
                     "options=${RealmManager.INSTANCE.where(OptionsDB::class.java).count()}, " +
+                    "rpReady=${VisitReportDataSync.reportReady()}, productsReady=${VisitReportDataSync.productsReady()}, " +
                     "themeRoom=${RoomManager.SQL_DB.themeDao().getCount()}, " +
                     "themeRealm=${RealmManager.INSTANCE.where(ThemeDB::class.java).count()}"
         )

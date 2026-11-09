@@ -13,12 +13,12 @@ import ua.com.merchik.merchik.data.Database.Room.ResultsDynamicSDB;
 
 @Dao
 public interface ResultsDynamicDao {
-    String WITH_ADDRESS_QUERY = "SELECT r.*, a.tp_id AS tpId, a.tt_id AS ttId, a.kol_kass AS kolKass "
-            + "FROM plan_results_dynamic r LEFT JOIN address a ON a.id = r.addr_id "
+    String WITH_ADDRESS_QUERY = "SELECT r.*, r.tp_id AS tpId, r.tt_id AS ttId, r.kol_kass AS kolKass "
+            + "FROM plan_results_dynamic r "
             + "WHERE r.yearmonth = :yearmonth ORDER BY r.client_id, r.addr_id";
-    String FACE_COUNT_QUERY = "SELECT r.* FROM plan_results_dynamic r JOIN address a ON a.id = r.addr_id "
+    String FACE_COUNT_QUERY = "SELECT r.* FROM plan_results_dynamic r "
             + "WHERE r.yearmonth BETWEEN :monthFrom AND :monthTo "
-            + "AND r.client_id = :clientId AND a.tp_id = :networkId "
+            + "AND r.client_id = :clientId AND r.tp_id = :networkId "
             + "ORDER BY r.yearmonth, r.addr_id";
 
     @Query("SELECT * FROM plan_results_dynamic ORDER BY yearmonth, client_id, addr_id")

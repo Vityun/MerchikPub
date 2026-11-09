@@ -56,6 +56,9 @@ public final class ResultsDynamicSnapshot {
                 clean.addProperty(field, value.getAsString());
             }
             ResultsDynamicSDB row = gson.fromJson(clean, ResultsDynamicSDB.class);
+            row.tpId = nonnegativeInt(source, "tp_id", rows.size());
+            row.ttId = nonnegativeInt(source, "tt_id", rows.size());
+            row.kolKass = nonnegativeInt(source, "kol_kass", rows.size());
             row.id = positiveId(row.id, "ID");
             row.clientId = positiveId(row.clientId, "client_id");
             row.addrId = positiveId(row.addrId, "addr_id");
@@ -72,6 +75,19 @@ public final class ResultsDynamicSnapshot {
             rows.add(row);
         }
         return rows;
+    }
+
+    private static int nonnegativeInt(JsonObject source, String field, int rowIndex) {
+        JsonElement value = source.get(field);
+        try {
+            if (value != null && value.isJsonPrimitive() && !value.getAsJsonPrimitive().isBoolean()
+                    && value.getAsString().matches("[0-9]+")) {
+                return Integer.parseInt(value.getAsString());
+            }
+        } catch (NumberFormatException ignored) {
+            // Reject overflow before replacing the stored snapshot.
+        }
+        throw new IllegalArgumentException("results_dynamic: invalid " + field + " in row " + rowIndex);
     }
 
     private static String positiveId(String value, String field) {

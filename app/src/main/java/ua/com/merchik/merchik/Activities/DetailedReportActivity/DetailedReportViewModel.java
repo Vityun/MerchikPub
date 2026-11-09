@@ -4,12 +4,20 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 
 public class DetailedReportViewModel extends ViewModel {
     private final MutableLiveData<WpDataDB> wpDataDB = new MutableLiveData<>();
+    private final Map<Long, MarketingResearchSurvey> marketingResearchSurveys = new HashMap<>();
+
+    public MarketingResearchSurvey getMarketingResearchSurvey(long dad2) {
+        return marketingResearchSurveys.computeIfAbsent(dad2, ignored -> new MarketingResearchSurvey());
+    }
 
     public void setWpDataDB(WpDataDB data) {
         wpDataDB.setValue(data);

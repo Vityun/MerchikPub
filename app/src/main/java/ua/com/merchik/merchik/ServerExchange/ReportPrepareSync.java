@@ -217,6 +217,12 @@ public final class ReportPrepareSync {
     public static void download(JsonObject request, boolean advanceWatermark,
                                 Callback<ReportPrepareServer> callback, Runnable requireCurrent,
                                 Consumer<List<ReportPrepareDB>> beforeSave) {
+        download(request, advanceWatermark, callback, requireCurrent, beforeSave, merged -> { });
+    }
+
+    public static void download(JsonObject request, boolean advanceWatermark,
+                                Callback<ReportPrepareServer> callback, Runnable requireCurrent,
+                                Consumer<List<ReportPrepareDB>> beforeSave, Consumer<Boolean> afterMerge) {
         int user = Globals.getCurrentUserId();
         JsonObject snapshot = request.deepCopy();
         onMain(() -> enqueue(done -> {
@@ -245,6 +251,7 @@ public final class ReportPrepareSync {
                                     && body.getList() != null) {
                                 beforeSave.accept(body.getList());
                                 boolean merged = ReportPrepareRealm.mergeServerRows(body.getList());
+                                afterMerge.accept(merged);
                                 log("DOWNLOAD rows=" + body.getList().size() + ", fullyMerged=" + merged);
                                 // Do not advance past rows deferred because of local edits.
                                 if (advanceWatermark && merged && !body.getList().isEmpty()) {
