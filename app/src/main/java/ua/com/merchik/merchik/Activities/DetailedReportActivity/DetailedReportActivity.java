@@ -488,15 +488,14 @@ public class DetailedReportActivity extends toolbar_menus {
                 : "Вы будете выкладывать товар во время этого посещения?";
 
         MessageDialogBuilder dialog = new MessageDialogBuilder(this)
+                .setCancelable(false)
+                .setShowCloseButton(false)
                 .setTitle("Важная информация")
                 .setSubTitle(themeName)
                 .setStatus(warning ? DialogStatus.ERROR : DialogStatus.NORMAL)
                 .setMessage(message);
         if (warning) {
-            dialog.setOnConfirmAction("OK", () -> {
-                survey.acknowledgeWarning();
-                return Unit.INSTANCE;
-            });
+            dialog.setOnConfirmAction("OK", () -> Unit.INSTANCE);
         } else {
             dialog.setOnConfirmAction("Да", () -> {
                     survey.answer(question, true);
@@ -511,12 +510,9 @@ public class DetailedReportActivity extends toolbar_menus {
         dialog.setOnDismissListener((DialogDismissListener) () -> {
             if (marketingResearchDialog != dialog) return;
             marketingResearchDialog = null;
-            if (survey.nextQuestion() == question) {
-                survey.dismiss();
-            } else {
-                // Show the next question only after the previous dialog has closed.
-                getWindow().getDecorView().post(this::showMarketingResearchQuestion);
-            }
+            if (warning) survey.acknowledgeWarning();
+            // Continue (or restart after the warning) only once this dialog has closed.
+            getWindow().getDecorView().post(this::showMarketingResearchQuestion);
         });
         dialog.show();
     }

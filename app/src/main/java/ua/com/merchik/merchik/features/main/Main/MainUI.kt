@@ -61,6 +61,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -145,6 +146,7 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
+import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -159,6 +161,7 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.IMAGE_DISPLAY_MODE_SETTINGS_KEY
 import ua.com.merchik.merchik.dataLayer.model.ImageDisplayMode
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
@@ -182,6 +185,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialog
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalDialogButton
 import ua.com.merchik.merchik.features.main.componentsUI.CustomAditionalWorkForm
@@ -205,6 +209,8 @@ import kotlin.math.roundToInt
 
 
 private val LocalProductCodePhotoTitle = staticCompositionLocalOf { "Фото остатков товара" }
+private val LocalProductCodePhotoCounts = compositionLocalOf<Map<String, Int>> { emptyMap() }
+private val LocalProductCodePhotoVisible = compositionLocalOf { true }
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalFoundationApi::class)
@@ -213,7 +219,24 @@ private val LocalProductCodePhotoTitle = staticCompositionLocalOf { "Фото о
 fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val photoTitle = if (viewModel.contextUI == ContextUI.TOVAR_FROM_OPTION_175121)
         remember { TovarRequisites.promotionPhotoTitle() } else LocalProductCodePhotoTitle.current
-    CompositionLocalProvider(LocalProductCodePhotoTitle provides photoTitle) {
+    val photoCounts = if (viewModel is TovarDBViewModel && viewModel.isVisitProductEditor) {
+        val counts by viewModel.productPhotoCounts.collectAsState()
+        val owner = LocalLifecycleOwner.current
+        DisposableEffect(viewModel, owner, viewModel.dataJson, viewModel.contextUI) {
+            // Covers both the visit tab and the product correction window, including nested photo screens.
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshProductPhotoCounts()
+            }
+            owner.lifecycle.addObserver(observer)
+            onDispose { owner.lifecycle.removeObserver(observer) }
+        }
+        counts
+    } else emptyMap()
+    CompositionLocalProvider(
+        LocalProductCodePhotoTitle provides photoTitle,
+        LocalProductCodePhotoCounts provides photoCounts,
+        LocalProductCodePhotoVisible provides (viewModel !is TovarDBViewModel || viewModel.showProductCodePhoto)
+    ) {
         InlinePriceEditorHost(viewModel, context) { MainUIContent(modifier, viewModel, context) }
     }
 }
@@ -356,7 +379,7 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
     var maxLinesSubTitle by remember(viewModel.contextUI) {
-        mutableStateOf(if (viewModel.contextUI == ContextUI.TOVAR_FROM_OPTION_175121) 99 else 1)
+        mutableStateOf(if (viewModel is TovarDBViewModel && viewModel.isOptionCorrection) 99 else 1)
     }
 
     val listState = rememberLazyListState()
@@ -3260,7 +3283,8 @@ fun ItemUI(
                             value
                         )
                     },
-                    onTakePhoto = { onProductCodeTakePhoto?.invoke(item) }
+                    onTakePhoto = { onProductCodeTakePhoto?.invoke(item) },
+                    photoCount = LocalProductCodePhotoCounts.current[item.rawAs<TovarDB>()?.getiD()] ?: 0
                 )
             }
         }
@@ -3895,24 +3919,26 @@ fun ProductCodeInlineEditor(
             }
         }
 
-        val photoRowIndex = rows.size
-        val photoRowBackground =
-            if (photoRowIndex % 2 == 0) Color.Transparent else oddRowColor
+        if (LocalProductCodePhotoVisible.current) {
+            val photoRowIndex = rows.size
+            val photoRowBackground =
+                if (photoRowIndex % 2 == 0) Color.Transparent else oddRowColor
 
-        if (rows.isNotEmpty()) {
-            HorizontalDivider(color = Color(0xFFEAEAEA))
-        }
+            if (rows.isNotEmpty()) {
+                HorizontalDivider(color = Color(0xFFEAEAEA))
+            }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(photoRowBackground)
-        ) {
-            val photoTitle = LocalProductCodePhotoTitle.current
-            PhotoEditorRow(
-                title = if (photoCount > 0) "$photoTitle ($photoCount)" else photoTitle,
-                onTakePhoto = onTakePhoto
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(photoRowBackground)
+            ) {
+                val photoTitle = LocalProductCodePhotoTitle.current
+                PhotoEditorRow(
+                    title = if (photoCount > 0) "$photoTitle ($photoCount)" else photoTitle,
+                    onTakePhoto = onTakePhoto
+                )
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import android.view.View;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -29,13 +30,14 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
+import ua.com.merchik.merchik.features.main.options.ProductIssueCorrection;
 
 public final class OptionControlShelfLength extends OptionControl {
     private final long dad2;
-    private String messagePrefix;
 
     public OptionControlShelfLength(Context context, Object document, OptionsDB option, OptionMassageType type,
                                     Options.NNKMode mode, UnlockCodeResultListener listener) {
@@ -50,12 +52,6 @@ public final class OptionControlShelfLength extends OptionControl {
         this.dad2 = wpDataDB.getCode_dad2();
         notCloseSpannableStringBuilderDialog = true;
         executeOption();
-    }
-
-    @Override
-    public void showOptionMassage(String msg) {
-        messagePrefix = msg;
-        super.showOptionMassage(msg);
     }
 
     // 2.0. Свернуть по товару; обычные товары не являются строками замера.
@@ -142,12 +138,11 @@ public final class OptionControlShelfLength extends OptionControl {
             details.append(issue);
             details.setSpan(new ClickableSpan() {
                 @Override public void onClick(View view) {
-                    ShelfLengthEntry.edit(view.getContext(), wpDataDB, entry.getKey(), true, () -> {
-                        if (!view.isAttachedToWindow()) return;
-                        executeOption();
-                        dismissOptionMessage();
-                        showOptionMassage(isBlockOption() ? messagePrefix : "");
-                    });
+                    ProductIssueCorrection.open(view, dad2, wpDataDB.getClient_id(),
+                            Collections.singletonList(entry.getKey()), issue, () -> {
+                                executeOption();
+                                refreshOpenSpannableOptionMessage();
+                            }, ContextUI.TOVAR_FROM_OPTION_1465);
                 }
             }, start, start + label.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }

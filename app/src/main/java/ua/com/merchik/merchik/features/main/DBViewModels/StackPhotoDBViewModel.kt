@@ -65,9 +65,14 @@ class StackPhotoDBViewModel @Inject constructor(
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     lateinit var wpDataDB: WpDataDB
-    private val promotionProductId: String?
-        get() = if (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277)
-            savedStateHandle[ProductPhotoCapture.EXTRA_PROMOTION_PRODUCT_ID] else null
+    private val photoProductId: String?
+        get() = when (contextUI) {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 ->
+                savedStateHandle[ProductPhotoCapture.EXTRA_PROMOTION_PRODUCT_ID]
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 ->
+                savedStateHandle[ProductPhotoCapture.EXTRA_REMAINING_GOODS_PRODUCT_ID]
+            else -> null
+        }
     private val planogrammId = mutableStateOf(0)
 
     private val EXAMPLE_ID = "id_1c"
@@ -323,7 +328,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     "id",
                     mutableListOf(imagesTypeId.toString()),
                     mutableListOf(imagesTypeName),
-                    promotionProductId == null
+                    photoProductId == null
                 )
 
                 val filterItems = mutableListOf(
@@ -509,7 +514,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         else -> 0
                     }
 
-                    val data = promotionProductId?.let { productId ->
+                    val data = photoProductId?.let { productId ->
                         StackPhotoRealm.getReadyProductPhotos(codeDad2, typePhoto, productId)
                     } ?: RealmManager.INSTANCE.copyFromRealm(
                         StackPhotoRealm.getPhotosByDAD2(
@@ -937,10 +942,14 @@ class StackPhotoDBViewModel @Inject constructor(
     }
 
     private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
-        promotionProductId?.let { productId ->
+        photoProductId?.let { productId ->
             val host = context?.let(Globals::unwrap) ?: return
             if (::wpDataDB.isInitialized) {
-                ProductPhotoCapture.openPromotionSamples(host, wpDataDB, productId)
+                if (contextUI == ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158) {
+                    ProductPhotoCapture.openRemainingGoodsSamples(host, wpDataDB, productId)
+                } else {
+                    ProductPhotoCapture.openPromotionSamples(host, wpDataDB, productId)
+                }
                 callback()
             }
             return

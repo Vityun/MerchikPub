@@ -43,7 +43,7 @@ public class MarketingResearchSurveyTest {
         assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
     }
 
-    @Test public void twoYesAnswersShowWarningUntilAcknowledged() {
+    @Test public void twoYesAnswersShowWarningThenRestartWithEmptyAnswers() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
         survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
         survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
@@ -52,9 +52,9 @@ public class MarketingResearchSurveyTest {
         assertEquals(Boolean.TRUE, survey.getWillMerchandise());
         assertEquals(MarketingResearchSurvey.Question.WARNING, survey.nextQuestion());
         survey.acknowledgeWarning();
-        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
-        assertEquals(Boolean.TRUE, survey.getMerchandisingRequired());
-        assertEquals(Boolean.TRUE, survey.getWillMerchandise());
+        assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());
+        assertNull(survey.getMerchandisingRequired());
+        assertNull(survey.getWillMerchandise());
     }
 
     @Test public void prematureAcknowledgementDoesNotSuppressWarning() {
@@ -66,17 +66,20 @@ public class MarketingResearchSurveyTest {
         assertEquals(MarketingResearchSurvey.Question.WARNING, survey.nextQuestion());
     }
 
-    @Test public void dismissingWarningFinishesWithoutChangingAnswers() {
+    @Test public void warningRestartsEveryTimeBothAnswersAreYes() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
-        survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
-        survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
-        survey.dismiss();
-        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
-        assertEquals(Boolean.TRUE, survey.getMerchandisingRequired());
-        assertEquals(Boolean.TRUE, survey.getWillMerchandise());
+        for (int i = 0; i < 3; i++) {
+            survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
+            survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
+            assertEquals(MarketingResearchSurvey.Question.WARNING, survey.nextQuestion());
+            survey.acknowledgeWarning();
+            assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());
+            assertNull(survey.getMerchandisingRequired());
+            assertNull(survey.getWillMerchandise());
+        }
     }
 
-    @Test public void viewModelRetainsPendingWarningAndDoesNotRepeatAfterOk() {
+    @Test public void viewModelRetainsPendingWarningAndRestartAfterOk() {
         DetailedReportViewModel model = new DetailedReportViewModel();
         long dad2 = 1041126039410061655L;
         model.getMarketingResearchSurvey(dad2).answer(MarketingResearchSurvey.Question.REQUIRED, true);
@@ -84,25 +87,25 @@ public class MarketingResearchSurveyTest {
         assertEquals(MarketingResearchSurvey.Question.WARNING,
                 model.getMarketingResearchSurvey(dad2).nextQuestion());
         model.getMarketingResearchSurvey(dad2).acknowledgeWarning();
-        assertEquals(MarketingResearchSurvey.Question.NONE,
+        assertEquals(MarketingResearchSurvey.Question.REQUIRED,
                 model.getMarketingResearchSurvey(dad2).nextQuestion());
     }
 
-    @Test public void dismissingFirstQuestionDoesNotMeanNo() {
+    @Test public void firstQuestionRemainsPendingWithoutAnswer() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
-        survey.dismiss();
         assertNull(survey.getMerchandisingRequired());
         assertNull(survey.getWillMerchandise());
-        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
+        assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());
+        assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());
     }
 
-    @Test public void dismissingSecondQuestionRetainsOnlyFirstAnswer() {
+    @Test public void secondQuestionRemainsPendingWithoutAnswer() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
         survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
-        survey.dismiss();
         assertEquals(Boolean.TRUE, survey.getMerchandisingRequired());
         assertNull(survey.getWillMerchandise());
-        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
+        assertEquals(MarketingResearchSurvey.Question.INTENTION, survey.nextQuestion());
+        assertEquals(MarketingResearchSurvey.Question.INTENTION, survey.nextQuestion());
     }
 
     @Test public void staleOrOutOfOrderCallbacksCannotChangeAnswers() {
@@ -119,11 +122,41 @@ public class MarketingResearchSurveyTest {
         assertEquals(Boolean.FALSE, survey.getWillMerchandise());
     }
 
-    @Test public void dismissalIgnoresLateAnswer() {
+    @Test public void restartedSurveyIgnoresOldSecondQuestionAndRepeatedAcknowledgement() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
-        survey.dismiss();
         survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
+        survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
+        survey.acknowledgeWarning();
+        survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
+        survey.acknowledgeWarning();
+        assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());
         assertNull(survey.getMerchandisingRequired());
+        assertNull(survey.getWillMerchandise());
+    }
+
+    @Test public void firstNoAfterRestartFinishesTheSurvey() {
+        MarketingResearchSurvey survey = restartedSurvey();
+        survey.answer(MarketingResearchSurvey.Question.REQUIRED, false);
+        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
+        assertEquals(Boolean.FALSE, survey.getMerchandisingRequired());
+        assertNull(survey.getWillMerchandise());
+    }
+
+    @Test public void secondNoAfterRestartFinishesWithoutAnotherWarning() {
+        MarketingResearchSurvey survey = restartedSurvey();
+        survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
+        survey.answer(MarketingResearchSurvey.Question.INTENTION, false);
+        assertEquals(MarketingResearchSurvey.Question.NONE, survey.nextQuestion());
+        assertEquals(Boolean.TRUE, survey.getMerchandisingRequired());
+        assertEquals(Boolean.FALSE, survey.getWillMerchandise());
+    }
+
+    private static MarketingResearchSurvey restartedSurvey() {
+        MarketingResearchSurvey survey = new MarketingResearchSurvey();
+        survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
+        survey.answer(MarketingResearchSurvey.Question.INTENTION, true);
+        survey.acknowledgeWarning();
+        return survey;
     }
 
     @Test public void separateSurveysDoNotShareAnswers() {

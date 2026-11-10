@@ -5,8 +5,10 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -479,6 +481,23 @@ public class StackPhotoRealm {
                 photos.add(INSTANCE.copyFromRealm(row));
         }
         return photos;
+    }
+
+    public static Map<String, Integer> getReadyProductPhotoCounts(long dad2, int photoType) {
+        return countReadyProductPhotos(getPhotosByDAD2(dad2, photoType));
+    }
+
+    static Map<String, Integer> countReadyProductPhotos(Iterable<StackPhotoDB> rows) {
+        Map<String, Integer> counts = new HashMap<>();
+        for (StackPhotoDB row : rows) {
+            String productId = row.getTovar_id();
+            if (productId == null || productId.trim().isEmpty() || "0".equals(productId)) continue;
+            if (PhotoEvidencePolicy.isReadyPhoto(row.getPhotoServerId(), row.getPhoto_num())) {
+                Integer count = counts.get(productId);
+                counts.put(productId, count == null ? 1 : count + 1);
+            }
+        }
+        return counts;
     }
 
     public static RealmResults<StackPhotoDB> getPhotosByAddrClientAndTypes(

@@ -1433,7 +1433,7 @@ object WPDataBDOverride {
         val color =
             try {
                 val themeId = jsonObject.optInt("theme_id", 0)
-                if (themeId != 998)
+                if (themeId == 1182)
                     Color(android.graphics.Color.parseColor("#FAF7BB"))
                 else
                     null

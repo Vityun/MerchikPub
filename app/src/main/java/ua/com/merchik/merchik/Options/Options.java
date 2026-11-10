@@ -4455,6 +4455,19 @@ public class Options {
 
     public String getOptionString(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar, boolean promotion,
                                   Globals.OptionControlName hiddenField) {
+        return getOptionStringExcludingFields(optionsDB, reportPrepareTovar, promotion,
+                hiddenField == null ? Collections.emptySet() : Collections.singleton(hiddenField));
+    }
+
+    public String getOptionStringExcludingFields(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar,
+                                                 boolean promotion, Set<Globals.OptionControlName> hiddenFields) {
+        return getOptionStringExcludingFields(optionsDB, reportPrepareTovar, promotion, hiddenFields,
+                Collections.emptyList());
+    }
+
+    public String getOptionStringExcludingFields(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar,
+                                                 boolean promotion, Set<Globals.OptionControlName> hiddenFields,
+                                                 List<Globals.OptionControlName> requiredFields) {
         String res = ""; // Итоговая строка всех ТПЛ-ов
         StringBuilder tplRequired = new StringBuilder(); // Обязательные ТПЛ-ы
         StringBuilder tplOptional = new StringBuilder(); // Опциональные ТПЛ-ы
@@ -4464,6 +4477,15 @@ public class Options {
 
         // Создаём временный список Опций ТПЛ-ов
         List<TovarOptions> temps = new ArrayList<>();
+
+        // Correction windows can require fields together, independently of separate document options.
+        for (Globals.OptionControlName field : requiredFields) {
+            for (TovarOptions option : listTovOpt) {
+                if (option.getOptionControlName() == field && !containsName(temps, option.getOrderField())) {
+                    temps.add(option);
+                }
+            }
+        }
 
         // Пробегаемся по всем опциям данного документа
         for (OptionsDB option : optionsDB) {
@@ -4489,7 +4511,7 @@ public class Options {
 
         moveRegularPriceBeforePromotionPrice(temps);
         for (TovarOptions temp : temps) {
-            if (hiddenField != null && temp.getOptionControlName() == hiddenField) continue;
+            if (hiddenFields.contains(temp.getOptionControlName())) continue;
             Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
             if (temp.getOrderField().equals("dt_expire") && reportPrepareTovar.getDtExpire().equals("0000-00-00")) {
                 uploaded = Globals.Triple.NO_DATA;
@@ -4500,7 +4522,7 @@ public class Options {
         // После пробега по опциям данного документа (они являются обязательными), я должен
         // разобраться с опциональными. + разукрасить их в зависимости от того как они и чем заполнены
         for (TovarOptions option : listTovOpt) {
-            if (hiddenField != null && option.getOptionControlName() == hiddenField) continue;
+            if (hiddenFields.contains(option.getOptionControlName())) continue;
             boolean flag = false;
             for (TovarOptions temp : temps) {
                 if (option.equals(temp)) {

@@ -34,7 +34,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.Pri
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ImagesTypeList;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
-import ua.com.merchik.merchik.features.main.options.PriceIssueCorrection;
+import ua.com.merchik.merchik.features.main.options.ProductIssueCorrection;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -710,7 +710,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
     }
 
     private void openIssueProducts(View view, List<String> ids, String subtitle) {
-        PriceIssueCorrection.open(view, dad2, wpDataDB.getClient_id(), ids, subtitle, () -> {
+        ProductIssueCorrection.open(view, dad2, wpDataDB.getClient_id(), ids, subtitle, () -> {
             try {
                 executeOption();
                 refreshOpenSpannableOptionMessage();

@@ -34,6 +34,7 @@ class MessageDialogBuilder(private val context: Activity) {
 
     private var onDismissListener: (() -> Unit)? = null
     private var cancelable: Boolean = true
+    private var showCloseButton: Boolean = true
     private var exitConfirmMessage: String =
         "Приложение будет закрыто. Завершить работу?"
 
@@ -102,6 +103,10 @@ class MessageDialogBuilder(private val context: Activity) {
 
     fun setCancelable(cancelable: Boolean) = apply {
         this.cancelable = cancelable
+    }
+
+    fun setShowCloseButton(show: Boolean) = apply {
+        this.showCloseButton = show
     }
 
     fun setExitConfirmMessage(message: String) = apply {
@@ -192,6 +197,7 @@ class MessageDialogBuilder(private val context: Activity) {
                             },
                             dismissOnBackPress = cancelable,
                             dismissOnClickOutside = cancelable,
+                            showCloseButton = showCloseButton,
                             onTextLinkClick = if (onTextLinkClick == null) null else {
                                 {
                                     onTextLinkClick?.invoke()

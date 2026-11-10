@@ -117,7 +117,8 @@ fun MessageDialog(
     singleChoice: MessageDialogSingleChoice? = null,
     fontSizeOffsetSp: Float = 0f,
     numberInput: MessageDialogNumberInput? = null,
-    onDialogClosed: ((DialogCloseReason) -> Unit)? = null
+    onDialogClosed: ((DialogCloseReason) -> Unit)? = null,
+    showCloseButton: Boolean = true
 ) {
     Log.e("additionalEarningsDialogData", "MessageDialog ++")
     val scrollState = rememberScrollState()
@@ -213,25 +214,27 @@ fun MessageDialog(
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ImageButton(
-                    id = R.drawable.ic_letter_x,
-                    shape = CircleShape,
-                    colorImage = ColorFilter.tint(Color.Gray),
-                    sizeButton = 40.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(end = 0.dp),
-                    onClick = {
-                        onCloseClick?.invoke()
-                        closeDialog(DialogCloseReason.CLOSE_BUTTON)
-                    }
-                )
+            if (showCloseButton) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ImageButton(
+                        id = R.drawable.ic_letter_x,
+                        shape = CircleShape,
+                        colorImage = ColorFilter.tint(Color.Gray),
+                        sizeButton = 40.dp,
+                        sizeImage = 25.dp,
+                        modifier = Modifier.padding(end = 0.dp),
+                        onClick = {
+                            onCloseClick?.invoke()
+                            closeDialog(DialogCloseReason.CLOSE_BUTTON)
+                        }
+                    )
+                }
             }
 
             Box(

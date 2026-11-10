@@ -35,6 +35,24 @@ import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 
 object ProductPhotoCapture {
     const val EXTRA_PROMOTION_PRODUCT_ID = "promotion_photo_product_id"
+    const val EXTRA_REMAINING_GOODS_PRODUCT_ID = "remaining_goods_photo_product_id"
+
+    fun openRemainingGoodsPhotos(activity: Activity, wp: WpDataDB, tovarId: String) {
+        val photos = StackPhotoRealm.getReadyProductPhotos(wp.code_dad2, StackPhotoDB.PHOTO_TOV_LEFT, tovarId)
+        if (photos.isEmpty()) {
+            openRemainingGoodsSamples(activity, wp, tovarId)
+            return
+        }
+        openPhotoList(activity, wp, tovarId, StackPhotoDB.PHOTO_TOV_LEFT,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158, EXTRA_REMAINING_GOODS_PRODUCT_ID)
+    }
+
+    fun openRemainingGoodsSamples(activity: Activity, wp: WpDataDB, tovarId: String) {
+        val networkId = RoomManager.SQL_DB.addressDao().getById(wp.addr_id)?.tpId ?: 0
+        val option = OptionsRealm.getOption(wp.code_dad2.toString(), "135158")
+        openSampleList(activity, wp.id, StackPhotoDB.PHOTO_TOV_LEFT, tovarId, networkId,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158, option?.getID())
+    }
 
     fun openPromotionPhotos(activity: Activity, wp: WpDataDB, tovarId: String) {
         val photos = StackPhotoRealm.getReadyProductPhotos(wp.code_dad2, StackPhotoDB.PHOTO_PROMOTION_TOV, tovarId)
@@ -42,14 +60,26 @@ object ProductPhotoCapture {
             openPromotionSamples(activity, wp, tovarId)
             return
         }
+        openPhotoList(activity, wp, tovarId, StackPhotoDB.PHOTO_PROMOTION_TOV,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277, EXTRA_PROMOTION_PRODUCT_ID)
+    }
+
+    private fun openPhotoList(
+        activity: Activity,
+        wp: WpDataDB,
+        tovarId: String,
+        photoType: Int,
+        contextUI: ContextUI,
+        productIdExtra: String
+    ) {
         val intent = Intent(activity, FeaturesActivity::class.java).apply {
             putExtra("viewModel", StackPhotoDBViewModel::class.java.name)
-            putExtra("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277.name)
+            putExtra("contextUI", contextUI.name)
             putExtra("dataJson", wp.code_dad2.toString())
-            putExtra(EXTRA_PROMOTION_PRODUCT_ID, tovarId)
+            putExtra(productIdExtra, tovarId)
             putExtra(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name)
             putExtra("title", "Перелік фото звітів")
-            putExtra("subTitle", TovarRequisites.promotionPhotoTitle())
+            putExtra("subTitle", photoTypeName(photoType))
         }
         activity.startActivityForResult(intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST)
     }
@@ -150,8 +180,6 @@ object ProductPhotoCapture {
         contextUI: ContextUI,
         optionId: String? = null
     ) {
-        val photoTypeName = if (photoType == StackPhotoDB.PHOTO_PROMOTION_TOV) TovarRequisites.promotionPhotoTitle()
-            else PhotoTypeRealm.getPhotoTypeById(photoType)?.nm ?: "Тип фото $photoType"
         val data = JsonObject().apply {
             addProperty("wpDataDBId", visitId.toString())
             optionId?.let { addProperty("optionDBId", it) }
@@ -165,10 +193,14 @@ object ProductPhotoCapture {
             putExtra("modeUI", ModeUI.ONE_SELECT.toString())
             putExtra("dataJson", data.toString())
             putExtra("title", activity.getString(R.string.title_samplephotosdb))
-            putExtra("subTitle", photoTypeName)
+            putExtra("subTitle", photoTypeName(photoType))
         }
         activity.startActivityForResult(intent, DetailedReportActivity.NEED_UPDATE_UI_REQUEST)
     }
+
+    private fun photoTypeName(photoType: Int): String =
+        if (photoType == StackPhotoDB.PHOTO_PROMOTION_TOV) TovarRequisites.promotionPhotoTitle()
+        else PhotoTypeRealm.getPhotoTypeById(photoType)?.nm ?: "Тип фото $photoType"
 
     fun getSamples(photoType: Int, tradeMarkId: Int): List<SamplePhotoSDB> =
         RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType, tradeMarkId)
@@ -185,9 +217,10 @@ object ProductPhotoCapture {
         return try {
             val visit = WpDataRealm.getWpDataRowById(visitId)
                 ?: error("Visit not found: $visitId")
-            // A price correction can request a promo photo even without a separate 157277 button.
+            // Product actions remain available without a separate photo option in the visit.
             val option = optionId?.let { OptionsRealm.getOptionById(it) ?: error("Option not found: $it") }
-            require(option != null || photoType == StackPhotoDB.PHOTO_PROMOTION_TOV) { "Option ID is missing" }
+            require(option != null || photoType == StackPhotoDB.PHOTO_PROMOTION_TOV ||
+                photoType == StackPhotoDB.PHOTO_TOV_LEFT) { "Option ID is missing" }
             require(tovarId.isNotBlank() && tovarId != "0") { "Product ID is missing" }
             require(sample == null || sample.photoTp == photoType) { "Sample photo type does not match" }
 

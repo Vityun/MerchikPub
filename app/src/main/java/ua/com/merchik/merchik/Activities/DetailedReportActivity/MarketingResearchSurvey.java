@@ -8,19 +8,16 @@ public final class MarketingResearchSurvey {
 
     private Boolean merchandisingRequired;
     private Boolean willMerchandise;
-    private boolean warningAcknowledged;
-    private boolean dismissed;
 
     public static boolean supportsTheme(int themeId) {
         return themeId == THEME_ID;
     }
 
     public Question nextQuestion() {
-        if (dismissed) return Question.NONE;
         if (merchandisingRequired == null) return Question.REQUIRED;
         if (merchandisingRequired && willMerchandise == null) return Question.INTENTION;
-        if (Boolean.TRUE.equals(merchandisingRequired) && Boolean.TRUE.equals(willMerchandise)
-                && !warningAcknowledged) return Question.WARNING;
+        if (Boolean.TRUE.equals(merchandisingRequired) && Boolean.TRUE.equals(willMerchandise))
+            return Question.WARNING;
         return Question.NONE;
     }
 
@@ -31,11 +28,9 @@ public final class MarketingResearchSurvey {
     }
 
     public void acknowledgeWarning() {
-        if (nextQuestion() == Question.WARNING) warningAcknowledged = true;
-    }
-
-    public void dismiss() {
-        dismissed = true;
+        if (nextQuestion() != Question.WARNING) return;
+        merchandisingRequired = null;
+        willMerchandise = null;
     }
 
     public Boolean getMerchandisingRequired() {
