@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.features.main.options.ProductIssueCorrection;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -46,12 +47,14 @@ import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -185,6 +188,11 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 .append("\n\n");
         SpannableStringBuilder prePromotionIssues = new SpannableStringBuilder();
         Map<String, PromoDB> promosByType = new HashMap<>();
+        Map<String, String> tradeMarkNames = new HashMap<>();
+        Map<String, Integer> promotionPhotoCounts = isMinMaxOption
+                ? StackPhotoRealm.getReadyProductPhotoCounts(dad2, 28) : Collections.emptyMap();
+        String corridorTemplate = isMinMaxOption ? Translate.translationText(
+                PrePromotionPriceMessage.TRANSLATION_ID, PrePromotionPriceMessage.DEFAULT_TEMPLATE) : "";
 
         // 5.0
         List<String> osvTovarIds = Arrays.asList(tovIds);
@@ -194,6 +202,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         int missingPriceCount = 0;
         int invalidPriceCount = 0;
         int missingPromotionPresenceCount = 0;
+        int photoExceptionCount = 0;
         List<String> missingPriceTovarIds = new ArrayList<>();
         int noFaceCount = 0;
         int missingTovarCount = 0;
@@ -230,9 +239,6 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 appendItemDiagnostic(itemDiagnostics, itemDiagnostics.length(), itemTovarId,
                         "skip=PRODUCT_NOT_FOUND, face=" + safe(item.getFace()) + ", isOsv=" + isOSV);
             } else {
-                String msg = tov == null ? "(" + itemTovarId + ")"
-                        : String.format("(%s) %s (%s)", itemTovarId, tov.getNm(), tov.getWeight());
-
                 // Если товар на витрине (face > 0) — нас он интересует
                 if (!hasPositiveFace(item)) {
                     noFaceCount++;
@@ -257,6 +263,16 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     continue;
                 }
 
+                String msg = tov == null ? "(" + itemTovarId + ")"
+                        : String.format("(%s) %s (%s)", itemTovarId, tov.getNm(), tov.getWeight());
+                if (tov != null) {
+                    String tradeMarkName = tradeMarkNames.computeIfAbsent(safe(tov.getManufacturerId()), id -> {
+                        TradeMarkDB tradeMark = RealmManager.getNmById(id);
+                        return tradeMark == null ? "" : safe(tradeMark.getNm()).trim();
+                    });
+                    if (!tradeMarkName.isEmpty()) msg += ", " + tradeMarkName;
+                }
+
                 totalOSV++;
                 String priceCheck = "price=" + safe(item.getPrice())
                         + ", priceMin=" + safe(item.getPriceMin())
@@ -267,9 +283,12 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                     PromoDB promo = promotion == PrePromotionPricePolicy.PromotionCheck.NOT_APPLICABLE ? null
                             : promosByType.computeIfAbsent(item.getAkciyaId().trim(), PromoRealm::getPromoDBById);
                     int discount = promo == null ? 0 : promo.getDiscountPercent();
+                    int readyPhotoCount = promotionPhotoCounts.getOrDefault(itemTovarId, 0);
                     PrePromotionPricePolicy.Evaluation evaluation = PrePromotionPricePolicy.evaluate(
-                            item.getPrice(), item.getPriceMin(), item.getPriceMax(), promotion, discount);
+                            item.getPrice(), item.getPriceMin(), item.getPriceMax(), promotion, discount,
+                            readyPhotoCount > 0);
                     PrePromotionPricePolicy.Issue issue = evaluation.issue;
+                    if (evaluation.photoExceptionApplied) photoExceptionCount++;
                     item.find = issue.currentPriceFound() ? 1 : 0;
                     foundWithPrice += item.find;
                     Globals.writeToMLOG("INFO", "AvailabilityOfPrices/175121/item", priceCheckTrace
@@ -278,6 +297,8 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                             + ", face=" + safe(item.getFace()) + ", " + priceCheck
                             + ", akciyaId=" + safe(item.getAkciyaId()) + ", akciya=" + safe(item.getAkciya())
                             + ", promotionCheck=" + promotion + ", discountPercent=" + discount
+                            + ", photoType=28, readyProductPhotos=" + readyPhotoCount
+                            + ", photoExceptionApplied=" + evaluation.photoExceptionApplied
                             + ", " + evaluation.corridorDiagnostic() + ", found=" + item.find + ", result=" + issue);
                     if (issue != PrePromotionPricePolicy.Issue.NONE) {
                         err++;
@@ -290,7 +311,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                         } else {
                             invalidPriceCount++;
                         }
-                        appendPrePromotionIssue(prePromotionIssues, issue, msg, item, promo);
+                        appendPrePromotionIssue(prePromotionIssues, evaluation, msg, item, promo, corridorTemplate);
                     }
                     continue;
                 }
@@ -324,6 +345,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                             + ", pricesMissing=" + missingPriceCount
                             + ", pricesInvalid=" + invalidPriceCount
                             + ", missingPromotionPresence=" + missingPromotionPresenceCount
+                            + ", photoExceptions=" + photoExceptionCount
                             + ", skippedPreview=" + itemDiagnostics);
         }
 
@@ -646,8 +668,9 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         return value != null ? value : "";
     }
 
-    private void appendPrePromotionIssue(SpannableStringBuilder out, PrePromotionPricePolicy.Issue issue,
-                                         String product, ReportPrepareDB row, PromoDB promo) {
+    private void appendPrePromotionIssue(SpannableStringBuilder out, PrePromotionPricePolicy.Evaluation evaluation,
+                                         String product, ReportPrepareDB row, PromoDB promo, String corridorTemplate) {
+        PrePromotionPricePolicy.Issue issue = evaluation.issue;
         StringBuilder detail = new StringBuilder();
         String current = PriceDisplay.format(row.getPrice());
         switch (issue) {
@@ -670,23 +693,14 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
                 detail.append("Ви не зазначили НАЯВНІСТЬ або ВІДСУТНІСТЬ акції: (").append(promotionName).append(").");
                 break;
             case EQUAL_TO_MAX:
+                detail.append("Ви вказали АКЦІЙНУ ціну ").append(current)
+                        .append(" грн, що ДОРІВНЮЄ ціні ДО ПОЧАТКУ АКЦІЇ: ")
+                        .append(PriceDisplay.format(row.getPriceMax()))
+                        .append(" грн. Або правильно зазначте цін, або вкажіть, що Акція відсутня.");
+                break;
             case OUTSIDE_CORRIDOR_DELTA:
-                detail.append("Ви вказали АКЦІЙНУ ціну ").append(current).append(" грн");
-                if (issue == PrePromotionPricePolicy.Issue.EQUAL_TO_MAX) {
-                    detail.append(", що ДОРІВНЮЄ ціні ДО ПОЧАТКУ АКЦІЇ: ").append(PriceDisplay.format(row.getPriceMax()))
-                            .append(" грн.)");
-                } else {
-                    int discount = promo.getDiscountPercent();
-                    detail.append(", що СУТТЄВО відрізняється від ПЛАНОВАНОЇ ціни акції: ")
-                            .append(PrePromotionPricePolicy.plannedPriceText(row.getPriceMax(), discount))
-                            .append("грн. (знижка ")
-                            .append(String.valueOf(discount)).append("% вiд ціни до початку акції: ")
-                            .append(PriceDisplay.format(row.getPriceMax()))
-                            .append(" грн.)");
-                }
-                detail.append(". Перевірте ПОТОЧНУ ціну, ціну ДО ПОЧАТКУ акції або вкажіть, що акція ВIДСЮТНЯ. ")
-                        .append("Чи зробiть ")
-                        .append(TovarRequisites.promotionPhotoTitle());
+                detail.append(PrePromotionPriceMessage.corridor(corridorTemplate, row.getPrice(),
+                        promo.getDiscountPercent(), evaluation));
                 break;
         }
         String description = detail.toString();

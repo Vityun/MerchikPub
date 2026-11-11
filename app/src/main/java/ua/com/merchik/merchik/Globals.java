@@ -73,6 +73,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
+import ua.com.merchik.merchik.Utils.LocationFixPolicy;
 import ua.com.merchik.merchik.Utils.WifiScanAccess;
 import java.util.Map;
 import java.util.Set;
@@ -1485,245 +1486,184 @@ public class Globals {
     public static long delayGPSTime = 0;
     private static final long retryTime = 1200000; // 20 мин
 
+    public static final class LocationCapture {
+        public LogMPDB coordinates;
+        public LogMPDB wifi;
+        public String coordinateResult = "no_fresh_location";
+        public String wifiResult = "not_requested";
+    }
+
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
+        LocationCapture capture = captureLocation(wpDataDB, context);
+        if (capture.coordinates != null) return capture.coordinates;
+        return capture.wifi != null && capture.wifi.inPlace == 1 ? capture.wifi : null;
+    }
+
+    public static String locationRejection(Location location, long now) {
+        if (location == null) return "missing_location";
+        return LocationFixPolicy.rejection(location.getLatitude(), location.getLongitude(),
+                location.getTime(), now, location.isFromMockProvider());
+    }
+
+    public static Location usableLocation(long now) {
+        int provider = LocationFixPolicy.preferredProvider(
+                locationRejection(imHereGPS, now), locationRejection(imHereNET, now));
+        return provider == 1 ? imHereGPS : provider == 2 ? imHereNET : null;
+    }
+
+    private static Location refreshLocationCandidate(String provider, Location current, long now) {
+        if (locationManager == null) return current;
         try {
-            try {
-//ывапреонлгдш
-                if (Build.VERSION.SDK_INT >= 23 && context != null &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    Globals.writeToMLOG("ERROR", "fixMP/imHereGPS", "permission not granted");
-                    if (wpDataDB != null) logWifiMatch(wpDataDB.getAddr_id(), new WifiScanAccess(context),
-                            "location_permission_denied", null, null, null, null);
-                    return null;
-                }
-                Criteria criteria = new Criteria();
-                String bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true));
-
-                if (imHereGPS == null || imHereNET == null) {
-                    // Запрашивает доступы если API больше 23
-
-                    locationManager.requestLocationUpdates(bestProvider,
-                            4000L, 0, locationListener);
-                    imHereGPS = locationManager.getLastKnownLocation(bestProvider);
-                }
-//                else
-//                    locationManager.requestLocationUpdates(bestProvider, 4000L, 1, locationListener);
-
-                if (context != null) {
-                    String problem = "Якщо ви виправили зауваження, а система все рівно не працює, зверніться за допомогою до свого керівника, або до оператора служби підтримки merchik \"+380674491265\"";
-                    if (!enabledGPS) {
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("");
-                        dialogData.setText("У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.\n\n" + problem);
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.setImgBtnCall(context);
-                        dialogData.show();
-//                        Toast.makeText(context, "У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
-                    } else {
-                        if (imHereGPS != null && imHereGPS.getLatitude() == 0) {
-                            DialogData dialogData = new DialogData(context);
-                            dialogData.setTitle("");
-                            dialogData.setText("Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.\n\n" + problem);
-                            dialogData.setClose(dialogData::dismiss);
-                            dialogData.setImgBtnCall(context);
-                            dialogData.show();
-//                            Toast.makeText(context, "Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
-                        }
-
-                        if (imHereGPS != null && imHereGPS.isFromMockProvider()) {
-                            DialogData dialogData = new DialogData(context);
-                            dialogData.setTitle("");
-                            dialogData.setText("На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.\n\n" + problem);
-                            dialogData.setClose(dialogData::dismiss);
-                            dialogData.setImgBtnCall(context);
-                            dialogData.show();
-//                            Toast.makeText(context, "На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-
-
-                String locationUniqueStringGPSThis = "1" + (imHereGPS != null ? imHereGPS.getLatitude() : 0) + (imHereGPS != null ? imHereGPS.getLongitude() : 0) + (imHereGPS != null ? imHereGPS.getTime() : 0);
-                Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis equals: " + !locationUniqueStringGPS.equals(locationUniqueStringGPSThis)
-                        + ", delayGPSTime: " + delayGPSTime + " isTime: " + (delayGPSTime + retryTime < System.currentTimeMillis()));
-                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis) || delayGPSTime + retryTime < System.currentTimeMillis()) {
-                    int id = RealmManager.logMPGetLastId() + 1;
-                    Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
-                    LogMPDB log = new LogMPDB();
-                    log.id = id;
-                    log.provider = 1;
-                    log.CoordX = imHereGPS.getLatitude();
-                    log.CoordY = imHereGPS.getLongitude();
-                    log.CoordAltitude = imHereGPS.getAltitude();
-                    log.CoordTime = imHereGPS.getTime();
-                    log.CoordSpeed = imHereGPS.getSpeed();
-                    log.CoordAccuracy = imHereGPS.getAccuracy();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        log.mocking = imHereGPS.isMock();
-                    } else {
-                        log.mocking = imHereGPS.isFromMockProvider();
-                    }
-                    float coordAddrX = 0, coordAddrY = 0;
-
-                    if (wpDataDB != null) {
-                        log.codeDad2 = wpDataDB.getCode_dad2();
-                        log.address = wpDataDB.getAddr_id();
-
-                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                        if (addressSDB != null) {
-                            coordAddrX = addressSDB.locationXd;
-                            coordAddrY = addressSDB.locationYd;
-                        } else {
-                            try {
-                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
-                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
-                            } catch (Exception e) {
-                            }
-                        }
-                        double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
-                        log.distance = (int) distance;
-                    }
-                    log.vpi = System.currentTimeMillis() / 1000;
-
-                    log.gp = POST_10(log);
-                    log.locationUniqueString = locationUniqueStringGPSThis;
-                    delayGPSTime = System.currentTimeMillis();
-
-                    RealmManager.setLogMpRow(log);
-                    Globals.writeToMLOG("INFO", "fixMP", "isMock: " + log.mocking +
-                            ", GPS_time: " + log.CoordTime
-                            + ", systemTime: " + System.currentTimeMillis());
-
-                    String mock;
-                    RealmManager.setLogMpRow(log);
-                    if (wpDataDB != null && context != null) {
-                        WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
-                        if (res != null) {
-                            log.id = RealmManager.logMPGetLastId() + 1;
-                            saveWifiMatch(log, res, coordAddrX, coordAddrY);
-
-                        }
-                    }
-
-                    if (isMockGPS)
-                        mock = "ФИКТИВНОЕ МП ВКЛЮЧЕННО!";
-                    else
-                        mock = "";
-
-                    if (!chiter_time.isEmpty())
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1,
-                                log.vpi,
-                                "Время устройства: " + Clock.getHumanTime2(log.vpi) + ", Время сервера: " + Clock.getHumanTime2(log.vpi + chiter_time_unix) + ", Расхождение с сервером: " + chiter_time + ". Координаты " + mock + " источник: GPS," + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " TimeGPS: " + CoordTime,
-                                1347,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                Globals.session,
-                                null,
-                                null,
-                                null)));
-
-                    locationUniqueStringGPS = locationUniqueStringGPSThis;
-                    return log;
-                } else {
-                    Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis: " + locationUniqueStringGPSThis + " locationUniqueStringGPS: " + locationUniqueStringGPS);
-
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
+            Location cached = locationManager.getLastKnownLocation(provider);
+            now = System.currentTimeMillis();
+            if (locationRejection(cached, now) == null
+                    && (locationRejection(current, now) != null || cached.getTime() > current.getTime())) {
+                current = cached;
             }
-
-
-            try {
-                String locationUniqueStringNETThis = "" + imHereNET.getLatitude() + imHereNET.getLongitude() + imHereNET.getTime();
-                if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)) {
-                    int idNET = RealmManager.logMPGetLastId() + 1;
-                    Globals.writeToMLOG("INFO", "fixMP", "create new logMP idNET: " + idNET);
-                    LogMPDB logNET = new LogMPDB();
-                    logNET.id = idNET;
-                    logNET.provider = 2;
-                    logNET.CoordX = imHereNET.getLatitude();
-                    logNET.CoordY = imHereNET.getLongitude();
-                    logNET.CoordAltitude = imHereNET.getAltitude();
-                    logNET.CoordTime = imHereNET.getTime();
-                    logNET.CoordSpeed = imHereNET.getSpeed();
-                    logNET.CoordAccuracy = imHereNET.getAccuracy();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        logNET.mocking = imHereNET.isMock();
-                    } else {
-                        logNET.mocking = imHereNET.isFromMockProvider();
-                    }
-                    float coordAddrX = 0, coordAddrY = 0;
-
-                    if (wpDataDB != null) {
-                        logNET.codeDad2 = wpDataDB.getCode_dad2();
-                        logNET.address = wpDataDB.getAddr_id();
-
-                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                        if (addressSDB != null) {
-                            coordAddrX = addressSDB.locationXd;
-                            coordAddrY = addressSDB.locationYd;
-                        } else {
-                            try {
-                                if (wpDataDB != null) {
-                                    coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
-                                    coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
-                                }
-                            } catch (Exception e) {
-                            }
-                        }
-                        double distance = coordinatesDistanse(coordAddrX, coordAddrY, logNET.CoordX, logNET.CoordY);
-                        logNET.distance = (int) distance;
-                    }
-                    logNET.vpi = System.currentTimeMillis() / 1000;
-                    logNET.locationUniqueString = locationUniqueStringNETThis;
-                    logNET.gp = POST_10(logNET);
-
-                    RealmManager.setLogMpRow(logNET);
-                    if (wpDataDB != null && context != null) {
-                        WifiMatchResult res = buildWifiStatsMatch(context, wpDataDB.getAddr_id());
-                        if (res != null) {
-                            logNET.id = RealmManager.logMPGetLastId() + 1;
-                            saveWifiMatch(logNET, res, coordAddrX, coordAddrY);
-                        }
-                    }
-                    locationUniqueStringGSM = locationUniqueStringNETThis;
-                    return logNET;
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "fixMP/imHereNET is null?", "Exception e: " + e);
+            if (locationRejection(current, now) != null && locationManager.isProviderEnabled(provider)) {
+                locationManager.requestLocationUpdates(provider, 4000L, 0, locationListener);
             }
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
+            writeToMLOG("WARNING", "fixMP/provider", provider + ": " + e);
         }
-        return null;
+        return current;
+    }
+
+    private static double[] visitCoordinates(WpDataDB wp) {
+        if (wp == null) return new double[]{0, 0};
+        AddressSDB address = SQL_DB.addressDao().getById(wp.getAddr_id());
+        if (address != null && LocationFixPolicy.validCoordinates(address.locationXd, address.locationYd)) {
+            return new double[]{address.locationXd, address.locationYd};
+        }
+        try {
+            return new double[]{Double.parseDouble(wp.getAddr_location_xd()),
+                    Double.parseDouble(wp.getAddr_location_yd())};
+        } catch (Exception ignored) {
+            return new double[]{0, 0};
+        }
+    }
+
+    public static LocationCapture captureLocation(WpDataDB wp, Context context) {
+        LocationCapture result = new LocationCapture();
+        long now = System.currentTimeMillis();
+        if (context != null
+                && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            result.coordinateResult = "permission_denied";
+            result.wifiResult = "permission_denied";
+            if (wp != null) logWifiMatch(wp.getAddr_id(), new WifiScanAccess(context),
+                    "location_permission_denied", null, null, null, null);
+            return result;
+        }
+
+        double[] shop;
+        try {
+            shop = visitCoordinates(wp);
+        } catch (Exception e) {
+            shop = new double[]{0, 0};
+            writeToMLOG("ERROR", "fixMP/address", e.toString());
+        }
+        imHereGPS = refreshLocationCandidate(android.location.LocationManager.GPS_PROVIDER, imHereGPS, now);
+        imHereNET = refreshLocationCandidate(android.location.LocationManager.NETWORK_PROVIDER, imHereNET, now);
+        now = System.currentTimeMillis();
+        Location[] candidates = {imHereGPS, imHereNET};
+        boolean force = delayGPSTime == 0;
+        for (int i = 0; i < candidates.length; i++) {
+            Location point = candidates[i];
+            int provider = i + 1;
+            String rejection = locationRejection(point, now);
+            writeToMLOG("INFO", "fixMP/candidate", "addr_id=" + (wp == null ? 0 : wp.getAddr_id())
+                    + ", provider=" + provider + ", measuredAt=" + (point == null ? 0 : point.getTime())
+                    + ", now=" + now + ", result=" + (rejection == null ? "valid" : rejection));
+            if (rejection != null) continue;
+            String key = provider + ":" + point.getLatitude() + ":" + point.getLongitude() + ":" + point.getTime();
+            String previous = provider == 1 ? locationUniqueStringGPS : locationUniqueStringGSM;
+            if (!force && key.equals(previous) && (provider != 1 || delayGPSTime + retryTime >= now)) {
+                result.coordinateResult = "already_recorded";
+                continue;
+            }
+            try {
+                LogMPDB row = new LogMPDB();
+                row.id = RealmManager.logMPGetLastId() + 1;
+                row.provider = provider;
+                row.CoordX = point.getLatitude();
+                row.CoordY = point.getLongitude();
+                row.CoordAltitude = point.getAltitude();
+                row.CoordTime = point.getTime();
+                row.CoordSpeed = point.getSpeed();
+                row.CoordAccuracy = point.getAccuracy();
+                row.mocking = point.isFromMockProvider();
+                row.vpi = now / 1000;
+                row.locationUniqueString = key;
+                if (wp != null) {
+                    row.codeDad2 = wp.getCode_dad2();
+                    row.address = wp.getAddr_id();
+                }
+                row.distance = LocationFixPolicy.validCoordinates(shop[0], shop[1])
+                        ? (int) coordinatesDistanse(shop[0], shop[1], row.CoordX, row.CoordY) : -1;
+                row.gp = POST_10(row);
+                RealmManager.INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(row));
+                if (provider == 1) locationUniqueStringGPS = key;
+                else locationUniqueStringGSM = key;
+                delayGPSTime = now;
+                result.coordinates = row;
+                result.coordinateResult = "saved";
+                writeToMLOG("INFO", "fixMP/saved", "id=" + row.id + ", addr_id=" + row.address
+                        + ", provider=" + provider + ", measuredAt=" + row.CoordTime
+                        + ", recordedAt=" + now + ", distance=" + row.distance);
+                if (!chiter_time.isEmpty()) {
+                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(
+                            RealmManager.getLastIdLogDB() + 1, row.vpi,
+                            "Время устройства: " + Clock.getHumanTime2(row.vpi)
+                                    + ", Время сервера: " + Clock.getHumanTime2(row.vpi + chiter_time_unix)
+                                    + ", Расхождение с сервером: " + chiter_time
+                                    + ". Координаты источник: " + (provider == 1 ? "GPS" : "NET")
+                                    + ", X: " + row.CoordX + ", Y: " + row.CoordY + ", время: " + row.CoordTime,
+                            1347, null, null, null, null, null, Globals.session, null, null, null)));
+                }
+                break;
+            } catch (Exception e) {
+                result.coordinateResult = result.coordinates == null ? "save_failed" : "saved";
+                writeToMLOG("ERROR", "fixMP/save", "provider=" + provider + ": " + e);
+                if (result.coordinates != null) break;
+            }
+        }
+
+        // Wi-Fi evidence is independent of GPS availability and its timestamp.
+        if (wp != null && context != null) {
+            try {
+                WifiMatchResult match = buildWifiStatsMatch(context, wp.getAddr_id());
+                result.wifiResult = match.reason;
+                if (match.observed) {
+                    LogMPDB wifi = WifiPresencePolicy.newObservation(RealmManager.logMPGetLastId() + 1,
+                            wp.getCode_dad2(), wp.getAddr_id(), shop[0], shop[1], match.confirmed,
+                            match.text, System.currentTimeMillis());
+                    wifi.gp = POST_10(wifi);
+                    RealmManager.INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(wifi));
+                    result.wifi = wifi;
+                    writeToMLOG("INFO", "fixMP/wifiSaved", "id=" + wifi.id + ", addr_id=" + wifi.address
+                            + ", observedAt=" + wifi.CoordTime + ", inPlace=" + wifi.inPlace);
+                }
+            } catch (Exception e) {
+                result.wifiResult = "save_failed";
+                writeToMLOG("ERROR", "fixMP/wifiSave", e.toString());
+            }
+        }
+        return result;
     }
 
     private static final class WifiMatchResult {
-        final String text;   // то, что пишем в locationUniqueString
+        final String text;
         final boolean confirmed;
+        final boolean observed;
+        final String reason;
 
-        WifiMatchResult(String text, boolean confirmed) {
+        WifiMatchResult(String text, boolean confirmed, boolean observed, String reason) {
             this.text = text;
             this.confirmed = confirmed;
+            this.observed = observed;
+            this.reason = reason;
         }
-    }
-
-    private static void saveWifiMatch(LogMPDB log, WifiMatchResult result, float addrX, float addrY) {
-        log.provider = WifiPresencePolicy.PROVIDER;
-        log.CoordAltitude = 0;
-        log.CoordSpeed = 0;
-        log.CoordAccuracy = 1;
-        log.inPlace = result.confirmed && log.address > 0 && addrX != 0 && addrY != 0 ? 1 : 0;
-        log.CoordX = log.inPlace == 1 ? addrX : 0;
-        log.CoordY = log.inPlace == 1 ? addrY : 0;
-        log.distance = 0; // Do not inherit the GPS/network distance for the synthetic Wi-Fi row.
-        log.gp = POST_10(log);
-        log.locationUniqueString = result.text;
-        RealmManager.setLogMpRow(log);
     }
 
     private static void logWifiMatch(int addrId, WifiScanAccess access, String reason, Integer found,
@@ -1735,9 +1675,7 @@ public class Globals {
                 + ", result=" + reason);
     }
 
-    @Nullable
     private static WifiMatchResult buildWifiStatsMatch(Context context, int addrId) {
-        if (context == null) return null;
         WifiScanAccess access = new WifiScanAccess(context);
         Integer found = null, known = null, matched = null;
         Double percent = null;
@@ -1745,20 +1683,21 @@ public class Globals {
         try {
             if (!Boolean.TRUE.equals(access.enabled)) {
                 if (Boolean.FALSE.equals(access.enabled)) reason = "wifi_off";
-                return null;
+                return new WifiMatchResult("Wi-Fi unavailable", false, false, reason);
             }
 
             if (!access.hasPermissions()) {
                 reason = "permission_denied";
-                return new WifiMatchResult("WiFi scan permission denied", false);
+                return new WifiMatchResult("WiFi scan permission denied", false, false, reason);
             }
 
             List<android.net.wifi.ScanResult> results = access.manager.getScanResults();
             if (results == null) results = Collections.emptyList();
 
             HashSet<String> wifiSet = new HashSet<>();
+            long scanNow = android.os.SystemClock.elapsedRealtime();
             for (android.net.wifi.ScanResult r : results) {
-                if (r == null) continue;
+                if (r == null || !LocationFixPolicy.freshWifiScan(r.timestamp, scanNow)) continue;
                 String bssid = r.BSSID;
                 if (bssid == null || bssid.isEmpty()) continue;
                 wifiSet.add(bssid.toLowerCase(Locale.US));
@@ -1774,9 +1713,13 @@ public class Globals {
             }
             known = dbSet.size();
             matched = 0;
+            if (found == 0) {
+                reason = "no_fresh_scan";
+                return new WifiMatchResult("No recent Wi-Fi scan results", false, false, reason);
+            }
             if (known == 0) {
                 reason = "no_reference";
-                return new WifiMatchResult("No address in MAPS_WIFI_DB", false);
+                return new WifiMatchResult("No address in MAPS_WIFI_DB", false, true, reason);
             }
 
             for (String mac : wifiSet) {
@@ -1792,11 +1735,11 @@ public class Globals {
                     found, known, matched, percent
             );
 
-            return new WifiMatchResult(text, confirmed);
+            return new WifiMatchResult(text, confirmed, true, reason);
 
         } catch (Exception e) {
             reason = "error:" + e.getClass().getSimpleName();
-            return new WifiMatchResult("Exception: " + e.getMessage(), false);
+            return new WifiMatchResult("Exception: " + e.getMessage(), false, false, reason);
         } finally {
             logWifiMatch(addrId, access, reason, found, known, matched, percent);
         }

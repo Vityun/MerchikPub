@@ -450,7 +450,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     try {
                         dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
                     } catch (Exception e) {
-
+                        Globals.writeToMLOG("ERROR", "PhotoLogAdapter/setTask", "photoId=" + photoLogDat.getId() + ", error=" + e);
                     }
 
                     switch (photoLogMode) {

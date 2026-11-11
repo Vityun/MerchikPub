@@ -82,4 +82,44 @@ public class WifiPresencePolicyTest {
         assertTrue(WifiPresencePolicy.confirmed(1, 9));
         assertTrue(WifiPresencePolicy.confirmed(3, 3));
     }
+
+    @Test public void observationHasItsOwnTimeAndNoGpsOrUploadState() {
+        long now = 1794393502703L;
+        LogMPDB gps = wifi();
+        gps.id = 1411;
+        gps.CoordTime = 1836273819000L;
+        gps.mocking = true;
+        gps.serverId = 123L;
+        gps.upload = 1;
+        LogMPDB row = WifiPresencePolicy.newObservation(1412, 1101126028847061639L,
+                STORE, gps.CoordX, gps.CoordY, true, "evidence", now);
+        assertEquals(now, row.CoordTime);
+        assertEquals(now / 1000, row.vpi);
+        assertEquals(1412, row.id);
+        assertEquals(1101126028847061639L, row.codeDad2);
+        assertEquals(Integer.valueOf(WifiPresencePolicy.PROVIDER), row.provider);
+        assertEquals(0, row.serverId);
+        assertEquals(0, row.upload);
+        assertFalse(row.mocking);
+        assertTrue(WifiPresencePolicy.onSite(row, STORE, 500));
+        assertEquals(1836273819000L, gps.CoordTime);
+        assertNull(LocationFixPolicy.rejection(row.CoordX, row.CoordY, row.CoordTime, now, row.mocking));
+    }
+
+    @Test public void failedMatchNeverCreatesPresenceEvidence() {
+        LogMPDB row = WifiPresencePolicy.newObservation(1, 2L, STORE, 51.54, 31.26,
+                false, "no match", 1794393502703L);
+        assertEquals(0, row.inPlace);
+        assertEquals(0, row.CoordX, 0);
+        assertEquals(0, row.CoordY, 0);
+        assertFalse(WifiPresencePolicy.onSite(row, STORE, 500));
+    }
+
+    @Test public void matchingNetworksRequireStoreAndValidStoreCoordinates() {
+        for (double[] coordinates : new double[][]{{0, 31}, {51, 0}, {91, 31}, {51, Double.NaN}}) {
+            assertEquals(0, WifiPresencePolicy.newObservation(1, 2, STORE,
+                    coordinates[0], coordinates[1], true, "evidence", 1000).inPlace);
+        }
+        assertEquals(0, WifiPresencePolicy.newObservation(1, 2, 0, 51, 31, true, "evidence", 1000).inPlace);
+    }
 }

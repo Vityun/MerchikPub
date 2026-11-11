@@ -89,6 +89,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
+import ua.com.merchik.merchik.ServerExchange.VisitReportDataSync;
 import ua.com.merchik.merchik.ServerExchange.workmager.WpDataDateLogWorker;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
@@ -199,7 +200,8 @@ public class DetailedReportActivity extends toolbar_menus {
         Bundle reportState = savedInstanceState;
         try {
             WpDataDB visit = WpDataRealm.getWpDataRowById(getIntent().getLongExtra("WpDataDB_ID", 0));
-            if (!RnoVisitDataExchange.isReady(visit)) reportState = null;
+            if (!RnoVisitDataExchange.isReady(visit)
+                    || (visit != null && VisitReportDataSync.hasMissingProducts(visit.getCode_dad2()))) reportState = null;
         } catch (RuntimeException e) {
             reportState = null;
         }
@@ -227,7 +229,8 @@ public class DetailedReportActivity extends toolbar_menus {
 
             registrationPermission();
 
-            if (!RnoVisitDataExchange.isReady(wpDataDB)) {
+            if (!RnoVisitDataExchange.isReady(wpDataDB)
+                    || VisitReportDataSync.hasMissingProducts(wpDataDB.getCode_dad2())) {
                 showVisitPreparation(false);
                 return;
             }
@@ -407,6 +410,15 @@ public class DetailedReportActivity extends toolbar_menus {
         back.setOnClickListener(v -> finish());
         content.addView(back);
         setContentView(content);
+        if (!RnoVisitDataExchange.requiresPreparation(wpDataDB)) {
+            VisitReportDataSync.repairForVisit(wpDataDB.getCode_dad2(), () -> {
+                if (isFinishing() || isDestroyed()) return;
+                // Opening a visit grants one extra attempt, not another automatic retry cycle.
+                setActivityData();
+                initializeReport();
+            });
+            return;
+        }
         visitPreparation = RnoVisitDataExchange.prepare(wpDataDB.getCode_dad2(), refresh, error -> {
             if (isFinishing() || isDestroyed()) return;
             if (error == null) {
@@ -471,6 +483,11 @@ public class DetailedReportActivity extends toolbar_menus {
                 || !getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
                 || marketingResearchDialog != null || wpDataDB.getCode_dad2() <= 0
                 || !MarketingResearchSurvey.supportsTheme(wpDataDB.getTheme_id())) return;
+
+        // The activity keeps a detached copy; work may have started since it was loaded.
+        WpDataDB currentVisit = RealmManager.getWorkPlanRowByCodeDad2(wpDataDB.getCode_dad2());
+        if (currentVisit == null || !MarketingResearchSurvey.shouldShow(currentVisit.getTheme_id(),
+                currentVisit.getClient_start_dt(), currentVisit.getVisit_start_dt())) return;
 
         MarketingResearchSurvey survey = detailedReportViewModel.getMarketingResearchSurvey(wpDataDB.getCode_dad2());
         MarketingResearchSurvey.Question question = survey.nextQuestion();

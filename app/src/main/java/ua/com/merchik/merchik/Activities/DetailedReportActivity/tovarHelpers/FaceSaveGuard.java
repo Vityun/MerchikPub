@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods.EXCEPTION_BEFORE_DATE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -37,11 +39,20 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 
 public final class FaceSaveGuard {
 
+    public static final String INPUT_LIMIT_MESSAGE = "Кількість фейсів не може перевищувати "
+            + FaceValue.MAX_INPUT + ". Вкажіть значення від 0 до " + FaceValue.MAX_INPUT + ".";
+
     private static final String CHECK_FACE_OPTION_ID = "159707";
     private static final int CHECK_FACE_OPTION_ID_INT = 159707;
 
     private FaceSaveGuard() {
         // no instance
+    }
+
+    public static boolean checkInputLimit(Context context, String value) {
+        if (!FaceValue.exceedsInputLimit(value)) return true;
+        showSimpleErrorDialog(context, "Зміни не збережені", INPUT_LIMIT_MESSAGE);
+        return false;
     }
 
     public static FaceSaveCheckResult canSaveFace(
@@ -51,6 +62,8 @@ public final class FaceSaveGuard {
             String newFaceRaw
     ) {
         try {
+            if (!checkInputLimit(context, newFaceRaw)) return FaceSaveCheckResult.error();
+
             if (wpDataDB == null) {
                 showSimpleErrorDialog(
                         context,
@@ -72,26 +85,16 @@ public final class FaceSaveGuard {
             }
 
             long realWorkEndDateTime = getWorkEndDateTime(wpDataDB);
+            int newFace = ua.com.merchik.merchik.Utils.CountValue.nonNegative(newFaceRaw);
 
-            if (realWorkEndDateTime <= 0L) {
+            if (realWorkEndDateTime <= 0L || newFace != 0) {
                 return FaceSaveCheckResult.success();
             }
 
-            Integer newFace = parseFace(newFaceRaw);
-
-            if (newFace == null) {
+            if (!FaceValue.resetsToZero(rp.getFace(), newFaceRaw)) {
                 return FaceSaveCheckResult.success();
             }
-
-            if (newFace != 0) {
-                return FaceSaveCheckResult.success();
-            }
-
-            Integer oldFace = parseFace(rp.getFace());
-
-            if (oldFace == null || oldFace <= 0) {
-                return FaceSaveCheckResult.success();
-            }
+            int oldFace = FaceValue.rounded(rp.getFace());
 
             // 2026-09-16: allow face reset for a source-visit TAR with theme need_report=1 or tp=2.
             long codeDad2 = wpDataDB.getCode_dad2();
@@ -207,25 +210,6 @@ public final class FaceSaveGuard {
         );
     }
 
-
-    private static Integer parseFace(String face) {
-        try {
-            if (face == null) {
-                return null;
-            }
-
-            String value = face.trim();
-
-            if (value.isEmpty()) {
-                return null;
-            }
-
-            return Integer.parseInt(value);
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private static long getWorkEndDateTime(WpDataDB wpDataDB) {
         long clientEndDateTime = wpDataDB.getClient_end_dt();

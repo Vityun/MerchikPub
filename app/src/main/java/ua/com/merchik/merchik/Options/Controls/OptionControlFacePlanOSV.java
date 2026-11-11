@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
@@ -86,7 +88,7 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
 //
 //            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
-            if (Integer.parseInt(item.getFace()) > 0) {
+            if (FaceValue.rounded(item.getFace()) > 0) {
                 resultSKUList.add(item);
             }
 
@@ -97,7 +99,7 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
                 }
             }
 
-            if (osv && Integer.parseInt(item.getFace()) < item.facesPlan){
+            if (osv && item.facesPlan != null && FaceValue.rounded(item.getFace()) < item.facesPlan){
                 resultErrorList.add(item);   //Тзн.Наруш=1;
                 optionResultStr.append("Для товара(").append(item.getTovarId()).append(") з ОСУ (Особовою Увагою) вы не виконали ПЛАН по ФЕЙСАМ. (план=")
                         .append(item.facesPlan.toString()).append("шт. факт=").append(item.getFace()).append("шт.)").append("\n");

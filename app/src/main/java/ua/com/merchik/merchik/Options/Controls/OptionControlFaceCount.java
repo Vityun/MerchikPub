@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -225,14 +227,14 @@ public class OptionControlFaceCount<T> extends OptionControl {
             }
             String value;
             try {
-                value = FaceCountPolicy.faceInput(rawValue);
+                value = FaceValue.input(FaceCountPolicy.faceInput(rawValue));
             } catch (IllegalArgumentException e) {
                 Toast.makeText(editorContext, "Укажите корректное количество фейсов: число не меньше 0.", Toast.LENGTH_LONG).show();
                 return;
             }
             ReportPrepareDB latest = RealmManager.getTovarReportPrepare(String.valueOf(dad2), productId);
             WpDataDB visit = WpDataRealm.getWpDataRowByDad2Id(dad2);
-            if (FaceSaveGuard.canSaveFace(editorContext, visit, latest, value).isError()) return;
+            if (FaceSaveGuard.canSaveFace(editorContext, visit, latest, rawValue).isError()) return;
             boolean saved = ReportPrepareRealm.updateFields(latest, row -> {
                 row.setFace(value);
                 row.setUploadStatus(1);

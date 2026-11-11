@@ -56,12 +56,14 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
+import ua.com.merchik.merchik.Utils.FaceValue;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.Utils.Test.ClickableMovementMethod;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
@@ -124,6 +126,11 @@ public class DialogData {
     }
 
     private void submitNumberOperation(DialogClickListener listener) {
+        if (tovarOptions != null && tovarOptions.getOptionControlName() == Globals.OptionControlName.FACE
+                && FaceValue.exceedsInputLimit(result)) {
+            rejectNumberInput(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
+            return;
+        }
         if (priceInput) result = PriceDisplay.editorResult(result, originalPriceInput);
         runPriceOperation(result, () -> {
             listener.clicked();

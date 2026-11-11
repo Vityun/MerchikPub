@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.ServerExchange.workmager
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -10,7 +9,7 @@ import androidx.work.workDataOf
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import io.realm.Realm
-import io.realm.Sort
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Semaphore
@@ -63,7 +62,15 @@ class DownloadImagesWorker(
 
             setProgress(workDataOf("status" to "end"))
             delay(1000)
-            Result.success() // Успешное завершение задачи
+            if (successfulDownloads == photoList.size && successfulThumbnails == thumbnailsToDownload.size) {
+                Result.success()
+            } else if (runAttemptCount < 3) {
+                Result.retry()
+            } else {
+                Result.failure()
+            }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e("DownloadImagesWorker", "Error in doWork", e)
             Result.failure() // Ошибка
@@ -156,7 +163,6 @@ class DownloadImagesWorker(
                 if (response.isSuccessful && response.body() != null) {
                     // Сохраняем фото и информацию в базу данных
                     savePhotoToDatabase(photo, response.body()!!)
-                    true // Успешная загрузка
                 } else {
                     // Логируем ошибку, но продолжаем загрузку следующих изображений
                     Log.e("DownloadImagesWorker", "Failed to download photo: ${photo.photoUrl}")
@@ -176,62 +182,55 @@ class DownloadImagesWorker(
         }
     }
 
-    private suspend fun savePhotoToDatabase(photo: TovarImgList, responseBody: ResponseBody) {
+    private suspend fun savePhotoToDatabase(photo: TovarImgList, responseBody: ResponseBody): Boolean {
         return withContext(Dispatchers.IO) {
             val realm = Realm.getDefaultInstance()
             try {
                 // Декодируем Bitmap из ResponseBody
-                val bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
+                val bitmap = responseBody.use { BitmapFactory.decodeStream(it.byteStream()) }
+                    ?: return@withContext false
 
-                // Сохраняем изображение на устройство
-                val path = Globals.saveImage1(bitmap, "TOVAR_${photo.tovarId}_SID${photo.id}")
+                try {
+                    val path = Globals.saveImage1(bitmap, "TOVAR_${photo.tovarId}_SID${photo.id}")
+                    require(!path.isNullOrBlank() && java.io.File(path).length() > 0) {
+                        "Image file was not saved"
+                    }
 
-//                val newId = realm.where(StackPhotoDB::class.java)
-//                    .max("id")?.toInt()?.plus(1) ?: 1
-
-                // Сохраняем информацию о фото в базу данных
-                realm.executeTransaction { bgRealm ->
-                    try {
-                        // Генерация нового ID
-//                        val newId = PrimaryKeyGenerator.nextId(bgRealm, StackPhotoDB::class.java)
-//                        val lastId = bgRealm.where(StackPhotoDB::class.java)
-//                            .sort("id", Sort.DESCENDING)
-//                            .findFirst()
-//                            ?.id ?: 0
+                    realm.executeTransaction { bgRealm ->
                         val newId = generateLocalIntId()
-
-                        // Создание объекта StackPhotoDB
                         val stackPhotoDB = StackPhotoDB().apply {
                             id = newId
                             photoServerId = photo.id
-                            object_id = photo.tovarId.toInt()
-                            addr_id = photo.addrId.toInt()
-                            approve = photo.approve.toInt()
-                            dvi = photo.dvi?.toInt() ?: 0
+                            object_id = photo.tovarId.trim().toBigDecimal().intValueExact()
+                            addr_id = photo.addrId.trim().toBigDecimal().intValueExact()
+                            approve = photo.approve.trim().toBigDecimal().intValueExact()
+                            dvi = photo.dvi?.trim()?.toBigDecimal()?.intValueExact() ?: 0
                             code_iza = photo.codeIZA
                             vpi = 0
-                            create_time = photo.dt.toLong() * 1000
+                            create_time = Math.multiplyExact(photo.dt.trim().toBigDecimal().longValueExact(), 1000L)
                             upload_to_server = 0
                             get_on_server = 0
                             photo_num = path
                             photo_hash = photo.hash
-                            photo_type = photo.photoTp.toInt()
+                            photo_type = photo.photoTp.trim().toBigDecimal().intValueExact()
                             comment = "small"
                             upload_time = 0
                             upload_status = 0
                             status = false
                         }
 
-                        // Сохранение в Realm
                         bgRealm.copyToRealmOrUpdate(stackPhotoDB)
                         Log.d("DownloadImagesWorker", "Photo saved: ID=$newId, Path=$path")
-                    } catch (e: Exception) {
-                        Log.e("DownloadImagesWorker", "Error saving photo to database", e)
                     }
+                    true
+                } finally {
+                    bitmap.recycle()
                 }
-                bitmap.recycle() // Освобождаем память
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("DownloadImagesWorker", "Error decoding or saving photo", e)
+                false
             } finally {
                 realm.close() // Закрываем Realm
             }
@@ -295,7 +294,6 @@ class DownloadImagesWorker(
 
                 if (response.isSuccessful && response.body() != null) {
                     saveThumbnailToDatabase(stackPhoto, response.body()!!)
-                    true
                 } else {
                     false
                 }
@@ -312,38 +310,33 @@ class DownloadImagesWorker(
     private suspend fun saveThumbnailToDatabase(
         stackPhoto: StackPhotoDB,
         responseBody: ResponseBody
-    ) {
-        withContext(Dispatchers.IO) {
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
             val realm = Realm.getDefaultInstance()
-//            var bitmap: Bitmap? = null
             try {
-//                bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
-
-//                val path =
-//                    Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
-
-                val path = Globals.savePhotoToPhoneMemoryStream(
-                    "/Manager",
-                    stackPhoto.photoServerId.toString(),
-                    responseBody.byteStream()
-                )
-
+                val path = responseBody.use {
+                    Globals.savePhotoToPhoneMemoryStream(
+                        "/Manager",
+                        stackPhoto.photoServerId.toString(),
+                        it.byteStream()
+                    )
+                }
+                require(!path.isNullOrBlank() && java.io.File(path).length() > 0) {
+                    "Thumbnail file was not saved"
+                }
 
                 realm.executeTransaction { r ->
-                    stackPhoto.apply {
-                        photo_num = path
-                    }
-                    r.insertOrUpdate(stackPhoto)
-//                    val dbPhoto = r.where(StackPhotoDB::class.java)
-//                        .equalTo("photoServerId", photoId)
-//                        .findFirst()
-//                        ?: return@executeTransaction
-//
-//                    dbPhoto.photo_num = path
-//                    Log.d("DownloadImagesWorker", "Updated thumbnail: ${dbPhoto.id}")
+                    val current = r.where(StackPhotoDB::class.java)
+                        .equalTo("id", stackPhoto.id)
+                        .findFirst() ?: error("Thumbnail row no longer exists: ${stackPhoto.id}")
+                    current.photo_num = path
                 }
+                true
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("DownloadImagesWorker", "Error saving thumbnail", e)
+                false
             } finally {
                 realm.close()
             }

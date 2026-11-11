@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
@@ -434,7 +436,7 @@ public class ShowTovarRequisites {
             dialogList.get(0).reportPrepareDB = report;
             int face = 0;
             if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
-                face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+                face = FaceValue.rounded(dialogList.get(0).reportPrepareDB.face);
             if (clickType &&
                     dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
                     (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
@@ -504,7 +506,7 @@ public class ShowTovarRequisites {
             dialogList.get(0).reportPrepareDB = report;
             int face = 0;
             if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
-                face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+                face = FaceValue.rounded(dialogList.get(0).reportPrepareDB.face);
 
             if (clickType &&
                     dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
@@ -795,6 +797,15 @@ public class ShowTovarRequisites {
         }
 
         ReportPrepareDB snapshot = rp;
+        final int quantity;
+        try {
+            quantity = (tpl.getOptionControlName() == Globals.OptionControlName.AMOUNT
+                    || tpl.getOptionControlName() == UP)
+                    ? ua.com.merchik.merchik.Utils.CountValue.nonNegative(data) : 0;
+        } catch (NumberFormatException e) {
+            Toast.makeText(context, "Вкажіть невід'ємну кількість у межах 0–2147483647", Toast.LENGTH_LONG).show();
+            return false;
+        }
         boolean saved;
         switch (tpl.getOptionControlName()) {
             case PRICE:
@@ -820,7 +831,7 @@ public class ShowTovarRequisites {
                     return false;
                 }
                 saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                    table.setFace(data);
+                    table.setFace(FaceValue.input(data));
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
                 });
@@ -838,7 +849,7 @@ public class ShowTovarRequisites {
             case AMOUNT:
                 Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data);
                 saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                    table.setAmount(Integer.parseInt(data));
+                    table.setAmount(quantity);
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
                 });
@@ -856,7 +867,7 @@ public class ShowTovarRequisites {
             case UP:
                 Log.e("SAVE_TO_REPORT_OPT", "UP: " + data);
                 saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                    table.setUp(data);
+                    table.setUp(Integer.toString(quantity));
                     table.setUploadStatus(1);
                     table.setDtChange(System.currentTimeMillis() / 1000);
                 });

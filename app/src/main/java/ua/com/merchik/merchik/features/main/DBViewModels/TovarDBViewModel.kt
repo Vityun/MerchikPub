@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import ua.com.merchik.merchik.Utils.FaceValue
+
 import MessageDialogData
 import android.app.Activity
 import android.app.Application
@@ -1659,7 +1661,7 @@ class TovarDBViewModel @Inject constructor(
         } && requiredOptions.any {
             it.getOptionControlName() == OptionControlName.PRICE_BEFORE_PROMOTION
         }
-        return if (bothPricesRequired) "ПОТОЧНА цена товара" else "Цена товара"
+        return if (bothPricesRequired) "поточна АКЦIЙНА цiна товара" else "Цiна товара"
     }
 
     private fun buildServiceEntries(payload: ContextMenuPayload): List<ContextMenuEntry> {
@@ -1679,7 +1681,7 @@ class TovarDBViewModel @Inject constructor(
                 ContextMenuEntry.Action(
                     id = "tovar_price_before_promotion",
                     actionId = ContextMenuActionIds.TOVAR_PRICE_BEFORE_PROMOTION,
-                    title = "Цена товара ДО НАЧАЛА АКЦИИ (См. ЗАЧЁРКНУТУЮ цену на АКЦИОННОМ ценнике)",
+                    title = "Ціна товару ДО ПОЧАТКУ АКЦІЇ (Див. ЗАКРЕСЛЕНУ ціну на АКЦІЙНОМУ ціннику)",
                     leading = MenuLeading.BadgeText("@")
                 ),
                 ContextMenuEntry.Action(
@@ -3372,6 +3374,14 @@ class TovarDBViewModel @Inject constructor(
             return false
         }
         val snapshot = rp ?: current
+        val quantity = try {
+            if (optionName == OptionControlName.AMOUNT || optionName == OptionControlName.UP) {
+                ua.com.merchik.merchik.Utils.CountValue.nonNegative(data)
+            } else 0
+        } catch (e: NumberFormatException) {
+            Toast.makeText(context, "Вкажіть невід'ємну кількість у межах 0–2147483647", Toast.LENGTH_LONG).show()
+            return false
+        }
         val saved: Boolean
         when (tpl.getOptionControlName()) {
             OptionControlName.PRICE -> {
@@ -3393,7 +3403,7 @@ class TovarDBViewModel @Inject constructor(
                     return false
                 }
                 saved = ReportPrepareRealm.updateFields(snapshot) { table ->
-                    table.setFace(data)
+                    table.setFace(FaceValue.input(data))
                     table.uploadStatus = 1
                     table.setDtChange(System.currentTimeMillis() / 1000)
                 }
@@ -3411,7 +3421,7 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.AMOUNT -> {
                 Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data)
                 saved = ReportPrepareRealm.updateFields(snapshot) { table ->
-                    table.setAmount(data!!.toInt())
+                    table.setAmount(quantity)
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
                 }
@@ -3434,7 +3444,7 @@ class TovarDBViewModel @Inject constructor(
                 Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds)
                 Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent)
                 saved = ReportPrepareRealm.updateFields(snapshot) { table ->
-                    table.setUp(data)
+                    table.setUp(quantity.toString())
                     table.setUploadStatus(1)
                     table.setDtChange(System.currentTimeMillis() / 1000)
                 }
@@ -3542,7 +3552,7 @@ class TovarDBViewModel @Inject constructor(
             OptionControlName.PRICE_BEFORE_PROMOTION -> table.getPriceMin()
                 ?.takeIf { it.isNotBlank() }
                 ?: table.getPriceMax()
-            OptionControlName.FACE -> table.getFace()
+            OptionControlName.FACE -> FaceValue.display(table.getFace())
             OptionControlName.EXPIRE_LEFT -> table.getExpireLeft()
             OptionControlName.AMOUNT -> table.getAmount().toString()
             OptionControlName.OBOROTVED_NUM -> table.getOborotvedNum()

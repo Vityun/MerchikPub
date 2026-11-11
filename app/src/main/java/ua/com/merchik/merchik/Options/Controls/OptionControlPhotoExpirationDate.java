@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_EXPIRATION_DATE;
 
 import android.app.Activity;
@@ -347,7 +349,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         }
 
         result.dtExpire = parseExpireDate(item.getDtExpire());
-        result.face = parseIntSafe(item.face);
+        result.face = FaceValue.rounded(item.face);
         result.hasOsvFilter = spisTovOSV != null && !spisTovOSV.isEmpty();
         result.inOsv = !result.hasOsvFilter || spisTovOSV.contains(item.getTovarId());
 
@@ -406,7 +408,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         if (item == null) return 0;
 
         int score = 0;
-        if (parseIntSafe(item.face) > 0) score += 1000;
+        if (FaceValue.rounded(item.face) > 0) score += 1000;
         if (!isEmpty(item.dtExpire) && !"0000-00-00".equals(item.dtExpire)) score += 100;
         if (parseIntSafe(item.oborotvedNum) > 0) score += 10;
         if (item.amount > 0) score += 5;

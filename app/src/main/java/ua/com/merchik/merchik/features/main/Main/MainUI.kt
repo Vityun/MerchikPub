@@ -3804,7 +3804,8 @@ fun ProductCodeInlineEditor(
                                 value = row.value,
                                 onMinus = { onMinus(row.rowId) },
                                 onPlus = { onPlus(row.rowId) },
-                                onValueChange = { onValueChange(row.rowId, it) }
+                                onValueChange = { onValueChange(row.rowId, it) },
+                                roundFace = row.option.getOptionControlName() == Globals.OptionControlName.FACE
                             )
                         }
 

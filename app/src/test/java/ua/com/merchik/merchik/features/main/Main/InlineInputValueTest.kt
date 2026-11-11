@@ -5,6 +5,20 @@ import org.junit.Test
 
 class InlineInputValueTest {
     @Test
+    fun roundedFaceAcknowledgementKeepsDecimalDraft() {
+        assertEquals("17.", refreshedInlineInputValue("0", "17.", "17", numeric = true, roundFace = true))
+        assertEquals("17.9", refreshedInlineInputValue("17", "17.9", "18", numeric = true, roundFace = true))
+        assertEquals("17,9", refreshedInlineInputValue("17", "17,9", "18", numeric = true, roundFace = true))
+    }
+
+    @Test
+    fun roundedFaceDraftAcceptsStepperAndDatabaseChanges() {
+        assertEquals("19", refreshedInlineInputValue("18", "17.9", "19", numeric = true, roundFace = true))
+        assertEquals("17", refreshedInlineInputValue("18", "17,9", "17", numeric = true, roundFace = true))
+        assertEquals("17.", refreshedInlineInputValue("17", "17.", "19", numeric = true, roundFace = true))
+    }
+
+    @Test
     fun pricesDisplayCentsWithoutPaddingTheValueBeingEdited() {
         val idle = InlineNumberInputState()
         assertEquals("10.00", idle.displayedValue("10", formatAsPrice = true))

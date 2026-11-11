@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -145,7 +147,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
 
                 int fase;
                 if (item.face != null && !item.face.equals("")) {
-                    fase = Integer.parseInt(item.face);
+                    fase = FaceValue.rounded(item.face);
                 } else {
                     fase = 0;
                 }

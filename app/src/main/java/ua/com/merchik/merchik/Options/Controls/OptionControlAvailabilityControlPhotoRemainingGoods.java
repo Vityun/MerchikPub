@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -212,7 +214,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                         continue;
                     }
 
-                    int face = parseIntSafe(item.face);
+                    int face = FaceValue.rounded(item.face);
                     if (face == 0 && !photoIndex.hasPhotoForTovar(tovarId)) {
                         TovarDB tovar = TovarRealm.getById(tovarId);
                         if (tovar != null) {
@@ -347,7 +349,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
         if (item == null) return 0;
 
         int score = 0;
-        if (parseIntSafe(item.face) > 0) score += 1000;
+        if (FaceValue.rounded(item.face) > 0) score += 1000;
         if (parseIntSafe(item.oborotvedNum) > 0) score += 100;
         if (item.amount > 0) score += 50;
         if (parseIntSafe(item.up) > 0) score += 10;

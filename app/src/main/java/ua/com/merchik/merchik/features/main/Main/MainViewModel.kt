@@ -43,6 +43,8 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Utils.FaceValue
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Globals.APP_OFFSET_DISTANCE_METERS
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
@@ -840,24 +842,23 @@ abstract class MainViewModel(
 
     fun increaseProductCodeValue(itemId: Long, rowId: String) {
         val row = findEditorRow(itemId, rowId) ?: return
-        val current = row.value.toIntOrNull() ?: 0
+        val next = runCatching { ua.com.merchik.merchik.Utils.CountValue.step(row.value, 1) }.getOrNull() ?: return
         saveInlineRowValue(
             itemId = itemId,
             rowId = rowId,
-            newValue = (current + 1).toString(),
+            newValue = next,
             newValue2 = row.value2
         )
     }
 
     fun decreaseProductCodeValue(itemId: Long, rowId: String) {
         val row = findEditorRow(itemId, rowId) ?: return
-        val current = row.value.toIntOrNull() ?: 0
-        val next = (current - 1).coerceAtLeast(0)
+        val next = runCatching { ua.com.merchik.merchik.Utils.CountValue.step(row.value, -1) }.getOrNull() ?: return
 
         saveInlineRowValue(
             itemId = itemId,
             rowId = rowId,
-            newValue = next.toString(),
+            newValue = next,
             newValue2 = row.value2
         )
     }
@@ -879,9 +880,13 @@ abstract class MainViewModel(
 //    }
     fun updateProductCodeValue(itemId: Long, rowId: String, newValue: String) {
         val row = findEditorRow(itemId, rowId) ?: return
+        if (row.option.getOptionControlName() == Globals.OptionControlName.FACE
+            && !FaceSaveGuard.checkInputLimit(context, newValue)) return
 
         val prepared = when (row.kind) {
-            InlineEditorKind.NUMBER -> newValue.filter { it.isDigit() }
+            InlineEditorKind.NUMBER -> runCatching {
+                ua.com.merchik.merchik.Utils.CountValue.input(newValue)
+            }.getOrNull() ?: return
             InlineEditorKind.DECIMAL_NUMBER -> normalizeDecimalNumberInput(newValue)
             else -> newValue
         }

@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
+import ua.com.merchik.merchik.Utils.LocationFixPolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -48,7 +49,7 @@ public class OptionControlMP<T> extends OptionControl {
     private String period = "";
 
     public boolean signal = true;
-    private LogMPDB latestVpiLog;
+    private LogMPDB latestMeasurementLog;
 
     public OptionControlMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
@@ -120,6 +121,8 @@ public class OptionControlMP<T> extends OptionControl {
                     " | endTime: " + endTime + " | logMPList.size: " + logMPList.size());
 
             if (logMPList != null && logMPList.size() > 0) {
+                long now = System.currentTimeMillis();
+                logMPList.removeIf(row -> !LocationFixPolicy.usableHistory(row, now));
                 for (LogMPDB item : logMPList) {
                     if (Integer.valueOf(WifiPresencePolicy.PROVIDER).equals(item.provider)
                             && item.address != wpDataDB.getAddr_id()) continue;
@@ -167,7 +170,9 @@ public class OptionControlMP<T> extends OptionControl {
 
             boolean okMP = false;
             title.append("Місцеположення");
-            if (enabledGPS) {
+            boolean alternativeAvailable = logMPList != null && logMPList.stream().anyMatch(row ->
+                    LocationFixPolicy.canCheckHistoryWithoutGps(row, wpDataDB.getAddr_id()));
+            if (enabledGPS || alternativeAvailable) {
                 if (coordAddrX != 0 && coordAddrY != 0) {
                     if (logMPList == null || logMPList.size() == 0) {
                         stringBuilder.append("Нема жодного запиту на визначення місцезнаходження. ").append("Перевірте чи увімкнений у Вас GPS ").append("Спробуйте підійти до вікна або вийти на вулицю. Через хвилину місцеположення буде визначене і можна продовжувати виконувати роботу.");
@@ -181,11 +186,11 @@ public class OptionControlMP<T> extends OptionControl {
                                     validDistanceCount++;
                                 }
                                 if (minDistanceLog == null || log.distance < minDistanceLog.distance
-                                        || (log.distance == minDistanceLog.distance && log.vpi > minDistanceLog.vpi)) {
+                                        || (log.distance == minDistanceLog.distance && log.CoordTime > minDistanceLog.CoordTime)) {
                                     minDistanceLog = log;
                                 }
-                                if (latestVpiLog == null || log.vpi > latestVpiLog.vpi) {
-                                    latestVpiLog = log;
+                                if (latestMeasurementLog == null || log.CoordTime > latestMeasurementLog.CoordTime) {
+                                    latestMeasurementLog = log;
                                 }
                             }
                         }
@@ -200,14 +205,9 @@ public class OptionControlMP<T> extends OptionControl {
                             stringBuilder.append("Ви визначені на торговій точці. Зауважень немає.");
                             okMP = true;
                             if (nnkMode == Options.NNKMode.MAKE) {
-                                stringBuilder.setLength(0);
-                                stringBuilder
-                                        .append("Адрес ТТ: ")
-                                        .append(addressSDB == null ? wpDataDB.getAddr_txt() : addressSDB.nm)
-                                        .append("\n");
-                                stringBuilder.append("Поточне розташування присторою станом на ")
-                                        .append(Clock.getHumanTime2(minDistanceLog.vpi))
-                                        .append(" визначено на вiдстанi ")
+                                stringBuilder.append("\nНайближчий замір за перевірений період: ")
+                                        .append(Clock.getHumanTime2(minDistanceLog.CoordTime / 1000))
+                                        .append(", відстань ")
                                         .append((int) distance)
                                         .append(" метрiв вiд ТТ");
                             }
@@ -220,23 +220,17 @@ public class OptionControlMP<T> extends OptionControl {
                                 distanceType = " км ";
                             }
 
-                            if (nnkMode == Options.NNKMode.MAKE && latestVpiLog != null
-                                    && latestVpiLog.distance > distanceMin) {
-                                distance = latestVpiLog.distance;
+                            if (nnkMode == Options.NNKMode.MAKE && latestMeasurementLog != null
+                                    && latestMeasurementLog.distance > distanceMin) {
+                                distance = latestMeasurementLog.distance;
                                 if (distance > 1000) {
                                     distance = distance / 1000;
                                     distanceType = " км ";
                                 }
-                                stringBuilder.setLength(0);
                                 stringBuilder
-                                        .append("Адрес ТТ: ")
-                                        .append(addressSDB == null ? wpDataDB.getAddr_txt() : addressSDB.nm)
-                                        .append("\n");
-                                stringBuilder
-                                        .append("За визначенням системи, ")
-                                        .append("станом на ")
-                                        .append(Clock.getHumanTime2(latestVpiLog.vpi))
-                                        .append(" поточне розташування присторою знаходится на вiдстанi ")
+                                        .append("Останній придатний замір в історії: ")
+                                        .append(Clock.getHumanTime2(latestMeasurementLog.CoordTime / 1000))
+                                        .append(", відстань ")
                                         .append((int) distance).append("").append(distanceType)
                                         .append(" вiд ТТ. ")
                                         .append("<font color=red>Местоположение в ТТ не пiдтвержено<font>");

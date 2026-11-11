@@ -13,6 +13,10 @@ public final class MarketingResearchSurvey {
         return themeId == THEME_ID;
     }
 
+    public static boolean shouldShow(int themeId, long clientStartDt, long visitStartDt) {
+        return supportsTheme(themeId) && clientStartDt <= 0 && visitStartDt <= 0;
+    }
+
     public Question nextQuestion() {
         if (merchandisingRequired == null) return Question.REQUIRED;
         if (merchandisingRequired && willMerchandise == null) return Question.INTENTION;

@@ -111,18 +111,18 @@ public class CustomString {
         try {
             if (wp != null && wp.size() > 0) {
                 // Запланированные работы
-                int wpSum = wp.sum("cash_ispolnitel").intValue();
+                String wpSum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wp.sum("cash_ispolnitel").toString());
 
                 // Выполненные работы
                 RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
                 int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
-                int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
+                String wpStatus1Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wpStatus.sum("cash_ispolnitel").toString());
                 int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
 
                 // Не Віполненные
                 RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
                 int wpStatus0Size = wpStatus0.size();
-                int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
+                String wpStatus0Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wpStatus0.sum("cash_ispolnitel").toString());
                 int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
 
                 if (mode.equals(TitleMode.FULL)) {
@@ -168,11 +168,8 @@ public class CustomString {
         try {
             if (wp != null && !wp.isEmpty()) {
 
-                // Общая сумма запланированного (int у вас, оставил как есть)
-                int wpSum = 0;
-                for (WpDataDB item : wp) {
-                    wpSum += (int) item.getCash_ispolnitel();
-                }
+                String wpSum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(
+                        String.valueOf(wp.stream().mapToDouble(WpDataDB::getCash_ispolnitel).sum()));
 
                 // Выполненные (status = 1)
                 List<WpDataDB> wpStatus1 = wp.stream()
@@ -180,9 +177,8 @@ public class CustomString {
                         .collect(Collectors.toList()); // <-- вместо .toList()
 
                 int wpStatus1Size = wpStatus1.size();
-                int wpStatus1Sum = wpStatus1.stream()
-                        .mapToInt(item -> (int) item.getCash_ispolnitel())
-                        .sum();
+                String wpStatus1Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(
+                        String.valueOf(wpStatus1.stream().mapToDouble(WpDataDB::getCash_ispolnitel).sum()));
 
                 // Невыполненные (status = 0)
                 List<WpDataDB> wpStatus0 = wp.stream()
@@ -190,9 +186,8 @@ public class CustomString {
                         .collect(Collectors.toList()); // <-- вместо .toList()
 
                 int wpStatus0Size = wpStatus0.size();
-                int wpStatus0Sum = wpStatus0.stream()
-                        .mapToInt(item -> (int) item.getCash_ispolnitel())
-                        .sum();
+                String wpStatus0Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(
+                        String.valueOf(wpStatus0.stream().mapToDouble(WpDataDB::getCash_ispolnitel).sum()));
 
                 // Проценты безопасно (если вдруг пусто)
                 int total = wp.size();

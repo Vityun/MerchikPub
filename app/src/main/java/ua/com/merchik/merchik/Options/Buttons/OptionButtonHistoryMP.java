@@ -20,13 +20,14 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.WorkStartNetworkSnapshot;
+import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
-import ua.com.merchik.merchik.dialogs.features.InfoDialogBuilder;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.trecker;
@@ -41,14 +42,6 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
     private int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
     private long startTime;
     private long endTime;
-
-    private LogMPDB currentLogMP;
-
-    private String workStatusSub = "";
-    private String workStatusMessage = "";
-
-    private String id = "";
-    private String time = "";
 
     private Function0<Unit> updateContent;
 
@@ -100,190 +93,159 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
     @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
     private void executeOption() {
-
-//        WorkStartNetworkSnapshot.captureAndLog(
-//                context,
-//                wpDataDB,
-//                1383,
-//                trecker::coordinatesDistanse,
-//                result -> {
-//                    String msg;
-//                    if (result.isOk()) {
-//                        msg = "Определено " + result.wifiAdded + " Мак-адресов WiFi и\n" +
-//                                result.btAdded + " Мак-адресов Bluetooth\n" +
-//                                "Они будут переданы на сервер для формирования Карты Мак-адресов данной ТТ";
-//                        Globals.writeToMLOG("INFO","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
-//                        new MessageDialogBuilder(Globals.unwrap(context))
-//                                .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-//                                .setStatus(DialogStatus.ALERT)
-//                                .setSubTitle(String.format("Запис за допомогою WiFi додано до бази даних з поточними координатами %s", time))
-//                                .setMessage(msg)
-//                                .setOnConfirmAction(() -> null)
-//                                .show();
-////                                                    new InfoDialogBuilder(context)
-////                                                            .setTitle("Детальна інформація")
-////                                                            .setMessage(msg)
-////                                                            .show();
-//                    } else {
-//                        msg = result.error;
-//                        Globals.writeToMLOG("ERROR","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
-//                        new MessageDialogBuilder(Globals.unwrap(context))
-//                                .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-//                                .setStatus(DialogStatus.ALERT)
-//                                .setSubTitle("Запис до бази даних з поточними координатами за допомогою WiFi НЕ ДОДАНО")
-//                                .setMessage(msg)
-//                                .setOnConfirmAction(() -> null)
-//                                .show();
-//                    }
-//
-//                    // если вызывается не с UI-потока, оберни в runOnUiThread
-//                }
-//        );
-
-        if (wpDataDB.getClient_end_dt() > 0) {
-            workStatusSub = "Роботи з поточного відвідування закінчені у " + Clock.getHumanTime2(wpDataDB.getClient_end_dt() * 1000);
-            workStatusMessage = "Запис до бази даних з поточними координатами не додано";
-        }
-        Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "init");
-
         new MessageDialogBuilder(Globals.unwrap(context))
                 .setTitle(Translate.translationText(8576, "Історія місцерозташування"))
                 .setSubTitle(Translate.translationText(8577, "Історія місцерозташування виконавця під час відвідування знаходиться в лічильнику на кнопці-"))
                 .setMessage(Translate.translationText(8578, "Визначити та додати поточне розташування пристрою до бази даних?"))
                 .setStatus(DialogStatus.NORMAL)
                 .setOnConfirmAction(() -> {
-                    trecker.SetUpLocationListener(context);
-
-                    Globals.delayGPSTime = 0;
-                    LogMPDB logMPDB = Globals.fixMP(wpDataDB, context);
-                    if (logMPDB != null) {
-                        id = String.valueOf(logMPDB.id);
-                        time = Clock.getHumanTime2(logMPDB.vpi);
-                    } else {
-                        id = String.valueOf(LogMPRealm.getLogMPCount() + 1);
-                        time = Clock.getHumanTime2(System.currentTimeMillis() / 1000);
-                    }
-                    Globals.writeToMLOG("INFO", "OptionButtonHistoryMP/getDocumentVar", "clicked, logMPDB " + logMPDB);
-                    OptionControlMP optionControlMP = new OptionControlMP(context, wpDataDB, optionDB, msgType, Options.NNKMode.MAKE, unlockCodeResultListener);
-                    optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
-                        @Override
-                        public void onSuccess(String data) {
-                            if (workStatusMessage.isEmpty() && workStatusSub.isEmpty()) {
-                                int tema_id = 1383;
-                                    WorkStartNetworkSnapshot.captureAndLog(
-                                            context,
-                                            wpDataDB,
-                                            tema_id,
-                                            trecker::coordinatesDistanse,
-                                            result -> {
-                                                String msg;
-                                                if (result.isOk()) {
-                                                    msg = "Определено " + result.wifiAdded + " Мак-адресов WiFi и\n" +
-                                                            result.btAdded + " Мак-адресов Bluetooth\n" +
-                                                            "Они будут переданы на сервер для формирования Карты Мак-адресов данной ТТ";
-                                                    Globals.writeToMLOG("INFO","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.isOk: " + msg);
-                                                    new MessageDialogBuilder(Globals.unwrap(context))
-                                                            .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                                            .setStatus(DialogStatus.ALERT)
-                                                            .setSubTitle(String.format("Запис за допомогою WiFi додано до бази даних з поточними координатами %s", time))
-                                                            .setMessage(msg)
-                                                            .setOnConfirmAction(() -> null)
-                                                            .show();
-//                                                    new InfoDialogBuilder(context)
-//                                                            .setTitle("Детальна інформація")
-//                                                            .setMessage(msg)
-//                                                            .show();
-                                                } else {
-                                                    msg = result.error;
-                                                    Globals.writeToMLOG("ERROR","OptionButtonHistoryMP.WorkStartNetworkSnapshot.captureAndLog","result.error: " + msg);
-                                                    new MessageDialogBuilder(Globals.unwrap(context))
-                                                            .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                                            .setStatus(DialogStatus.ALERT)
-                                                            .setSubTitle("Запис до бази даних з поточними координатами за допомогою WiFi НЕ ДОДАНО")
-                                                            .setMessage(msg)
-                                                            .setOnConfirmAction(() -> null)
-                                                            .show();
-                                                }
-
-                                                // если вызывается не с UI-потока, оберни в runOnUiThread
-                                            }
-                                    );
-                                new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                        .setSubTitle(String.format("Запис %s додано до бази даних з поточними координатами %s", id, time))
-                                        .setMessage(data)
-                                        .setStatus(DialogStatus.NORMAL)
-                                        .setOnConfirmAction(() -> {
-                                            if (updateContent != null)
-                                                updateContent.invoke();
-                                            return Unit.INSTANCE;
-                                        })
-                                        .show();
-                            } else
-                                new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                        .setSubTitle(workStatusSub)
-                                        .setMessage(workStatusMessage)
-                                        .setStatus(DialogStatus.ALERT)
-                                        .setOnConfirmAction(() -> {
-                                            if (updateContent != null)
-                                                updateContent.invoke();
-                                            return Unit.INSTANCE;
-                                        })
-                                        .show();
-
-                        }
-
-                        @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
-                        @Override
-                        public void onFailure(String error) {
-                            if (workStatusMessage.isEmpty() && workStatusSub.isEmpty())
-                                new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                        .setSubTitle("Запис до бази даних з поточними координатами НЕ ДОДАНО")
-                                        .setMessage(error)
-                                        .setStatus(DialogStatus.ERROR)
-                                        .setOnConfirmAction(() -> {
-                                            if (updateContent != null)
-                                                updateContent.invoke();
-                                            return Unit.INSTANCE;
-                                        })
-                                        .show();
-                            else
-                                new MessageDialogBuilder(Globals.unwrap(context))
-                                        .setTitle(Translate.translationText(8576, "Визначення місцерозташування"))
-                                        .setSubTitle(workStatusSub)
-                                        .setMessage(workStatusMessage)
-                                        .setStatus(DialogStatus.NORMAL)
-                                        .setOnConfirmAction(() -> {
-                                            if (updateContent != null)
-                                                updateContent.invoke();
-                                            return Unit.INSTANCE;
-                                        })
-                                        .show();
-
-                        }
-                    });
-
+                    afterDialog(this::captureNewMeasurement);
                     return Unit.INSTANCE;
                 })
                 .setOnCancelAction(() -> Unit.INSTANCE)
                 .show();
-//        try {
-//            Globals.fixMP(wpDataDB, context);
-//            DialogData dialog = new DialogData(context);
-//            dialog.setTitle("Історія місцеположення");
-//            dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
-//            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-//            dialog.setClose(dialog::dismiss);
-//            dialog.setOk("Запит МП", ()->{
-//                Globals.fixMP(wpDataDB, null);
-//                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
-//            });
-//            dialog.show();
-//        }catch (Exception e){
-//            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
-//        }
+    }
+
+    private void afterDialog(Runnable action) {
+        // MessageDialogBuilder dismisses the current dialog after its confirm callback.
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            android.app.Activity activity = Globals.unwrap(context);
+            if (activity != null && !activity.isFinishing() && !activity.isDestroyed()) action.run();
+        });
+    }
+
+    private void refreshContent() {
+        if (updateContent != null) updateContent.invoke();
+    }
+
+    private void captureNewMeasurement() {
+        WpDataDB fresh = RealmManager.getWorkPlanRowByCodeDad2(wpDataDB.getCode_dad2());
+        if (fresh != null) wpDataDB = fresh;
+        long endedAt = Math.max(wpDataDB.getClient_end_dt(), wpDataDB.getVisit_end_dt());
+        if (endedAt > 0) {
+            new MessageDialogBuilder(Globals.unwrap(context))
+                    .setTitle("Визначення місцерозташування")
+                    .setSubTitle("Новий замір не виконувався")
+                    .setMessage("Роботу завершено " + Clock.getHumanTime2(endedAt)
+                            + ". Можна переглянути результат перевірки МП за історією.")
+                    .setStatus(DialogStatus.ALERT)
+                    .setOnConfirmAction(() -> {
+                        afterDialog(() -> showHistory(false));
+                        return Unit.INSTANCE;
+                    }).show();
+            return;
+        }
+
+        trecker.SetUpLocationListener(context);
+        Globals.delayGPSTime = 0;
+        Globals.LocationCapture capture = Globals.captureLocation(wpDataDB, context);
+        OptionControlMP control = new OptionControlMP(context, wpDataDB, optionDB, msgType,
+                Options.NNKMode.MAKE, unlockCodeResultListener);
+        // Recalculate even when the user closes the measurement dialog without continuing.
+        control.showMassage(false, new Clicks.clickStatusMsg() {
+            @Override public void onSuccess(String data) { }
+            @Override public void onFailure(String error) { }
+        });
+        refreshContent();
+
+        StringBuilder message = new StringBuilder();
+        LogMPDB point = capture.coordinates;
+        if (point != null) {
+            message.append("Збережено запис №").append(point.id)
+                    .append(". Джерело: ").append(Integer.valueOf(1).equals(point.provider) ? "GPS" : "NET")
+                    .append(".\nЧас заміру: ").append(Clock.getHumanTime2(point.CoordTime / 1000))
+                    .append(".\n");
+            if (point.distance >= 0) message.append("Відстань до ТТ: ").append(point.distance).append(" м.\n");
+            else message.append("Відстань не визначено: немає координат магазину.\n");
+        } else {
+            message.append("Новий запис GPS/NET не додано. ");
+            if ("already_recorded".equals(capture.coordinateResult)) {
+                message.append("Доступний замір вже збережений.");
+            } else if ("permission_denied".equals(capture.coordinateResult)) {
+                message.append("Немає дозволу на визначення місцеположення.");
+            } else if ("save_failed".equals(capture.coordinateResult)) {
+                message.append("Помилка збереження координат. Повторіть спробу.");
+            } else {
+                message.append("Немає придатного заміру за останні 10 хвилин. "
+                        + "Координати без часу, з майбутнім часом або фіктивні не приймаються. "
+                        + "Перевірте геолокацію та повторіть спробу.");
+            }
+            message.append("\n");
+        }
+        boolean wifiConfirmed = capture.wifi != null && capture.wifi.inPlace == 1;
+        if (wifiConfirmed) {
+            message.append("\nWi-Fi: місцеположення підтверджено саме для цієї ТТ. Запис №")
+                    .append(capture.wifi.id).append(", час перевірки: ")
+                    .append(Clock.getHumanTime2(capture.wifi.CoordTime / 1000)).append(".");
+        } else {
+            message.append("\nWi-Fi: ").append(wifiResultText(capture.wifiResult));
+        }
+        message.append("\n\nРезультат перевірки МП за історією буде показано окремо.");
+        boolean onSiteNow = wifiConfirmed || (point != null
+                && WifiPresencePolicy.onSite(point, wpDataDB.getAddr_id(), control.distanceMin));
+        new MessageDialogBuilder(Globals.unwrap(context))
+                .setTitle("Визначення місцерозташування")
+                .setSubTitle("Новий замір")
+                .setMessage(message.toString())
+                .setStatus(onSiteNow ? DialogStatus.NORMAL : DialogStatus.ALERT)
+                .setOnConfirmAction(() -> {
+                    afterDialog(() -> showHistory(true));
+                    return Unit.INSTANCE;
+                }).show();
+    }
+
+    private String wifiResultText(String reason) {
+        switch (reason) {
+            case "wifi_off": return "вимкнений. Увімкніть Wi-Fi та повторіть визначення МП.";
+            case "permission_denied": return "немає дозволів для перевірки мереж.";
+            case "no_fresh_scan": return "немає свіжих результатів сканування мереж.";
+            case "no_reference": return "немає еталонних мереж для цієї ТТ.";
+            case "not_confirmed": return "недостатньо збігів з мережами цієї ТТ.";
+            case "confirmed": return "мережі збіглися, але координати магазину не визначені.";
+            case "save_failed": return "помилка збереження результату перевірки.";
+            default: return "не вдалося підтвердити місцеположення за мережами.";
+        }
+    }
+
+    private void showHistory(boolean collectNetworks) {
+        OptionControlMP control = new OptionControlMP(context, wpDataDB, optionDB, msgType,
+                Options.NNKMode.MAKE, unlockCodeResultListener);
+        control.showMassage(false, new Clicks.clickStatusMsg() {
+            @Override public void onSuccess(String data) { showHistoryMessage(data, true, collectNetworks); }
+            @Override public void onFailure(String error) { showHistoryMessage(error, false, collectNetworks); }
+        });
+        refreshContent();
+    }
+
+    private void showHistoryMessage(String message, boolean confirmed, boolean collectNetworks) {
+        new MessageDialogBuilder(Globals.unwrap(context))
+                .setTitle("Визначення місцерозташування")
+                .setSubTitle("Перевірка МП за історією")
+                .setMessage(message)
+                .setStatus(confirmed ? DialogStatus.NORMAL : DialogStatus.ERROR)
+                .setOnConfirmAction(() -> {
+                    if (collectNetworks) afterDialog(this::collectStoreNetworks);
+                    return Unit.INSTANCE;
+                }).show();
+    }
+
+    @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN})
+    private void collectStoreNetworks() {
+        WorkStartNetworkSnapshot.captureAndLog(context, wpDataDB, 1383, trecker::coordinatesDistanse, result -> {
+            Globals.writeToMLOG(result.isOk() ? "INFO" : "WARNING", "OptionButtonHistoryMP/networkCollection",
+                    "dad2=" + wpDataDB.getCode_dad2() + ", wifiAdded=" + result.wifiAdded
+                            + ", btAdded=" + result.btAdded + ", error=" + result.error);
+            afterDialog(() -> new MessageDialogBuilder(Globals.unwrap(context))
+                    .setTitle("Збір мереж для карти магазину")
+                    .setSubTitle("Wi-Fi / Bluetooth")
+                    .setMessage((result.isOk()
+                            ? "До черги передачі на сервер додано нових мереж: Wi-Fi " + result.wifiAdded
+                                    + ", Bluetooth " + result.btAdded + "."
+                            : result.error) + "\n\nЦей збір не змінює результат контролю МП за історією.")
+                    .setStatus(result.isOk() ? DialogStatus.NORMAL : DialogStatus.ALERT)
+                    .setOnConfirmAction(() -> Unit.INSTANCE)
+                    .show());
+        });
     }
 
     /**

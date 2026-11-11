@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -111,7 +113,7 @@ public class OptionControlInventory<T> extends OptionControl {
                 item.difference = Integer.parseInt(item.oborotvedNum) - item.amount;
 
                 //сравниваем реквизиты Фейс и (ОборотВед
-                if (Integer.parseInt(item.face) > 0 && item.amount == 0) {
+                if (FaceValue.rounded(item.face) > 0 && item.amount == 0) {
                     item.error = 1;
                     item.errorNote = "Товар є в НАЯВНОСТІ на вітрині (Фейс>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина)";
 

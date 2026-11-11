@@ -12,6 +12,32 @@ public class MarketingResearchSurveyTest {
         assertFalse(MarketingResearchSurvey.supportsTheme(1132));
     }
 
+    @Test public void unstartedMarketingVisitShowsSurvey() {
+        assertTrue(MarketingResearchSurvey.shouldShow(1182, 0, 0));
+        assertFalse(MarketingResearchSurvey.shouldShow(998, 0, 0));
+    }
+
+    @Test public void startedVisitDoesNotShowSurvey() {
+        assertFalse(MarketingResearchSurvey.shouldShow(1182, 1794300000L, 1794300000L));
+    }
+
+    @Test public void clientStartAloneSuppressesSurvey() {
+        assertFalse(MarketingResearchSurvey.shouldShow(1182, 1794300000L, 0));
+    }
+
+    @Test public void visitStartAloneSuppressesSurvey() {
+        assertFalse(MarketingResearchSurvey.shouldShow(1182, 0, 1794300000L));
+    }
+
+    @Test public void workStartingBetweenQuestionsSuppressesContinuationWithoutChangingAnswers() {
+        MarketingResearchSurvey survey = new MarketingResearchSurvey();
+        assertTrue(MarketingResearchSurvey.shouldShow(1182, 0, 0));
+        survey.answer(MarketingResearchSurvey.Question.REQUIRED, true);
+        assertFalse(MarketingResearchSurvey.shouldShow(1182, 1794300000L, 1794300000L));
+        assertEquals(Boolean.TRUE, survey.getMerchandisingRequired());
+        assertNull(survey.getWillMerchandise());
+    }
+
     @Test public void startsWithFirstQuestionAndNoInventedAnswers() {
         MarketingResearchSurvey survey = new MarketingResearchSurvey();
         assertEquals(MarketingResearchSurvey.Question.REQUIRED, survey.nextQuestion());

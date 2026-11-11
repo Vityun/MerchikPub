@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.RealmModels;
 import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ import ua.com.merchik.merchik.features.main.AddressSDBOverride;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.retrofit.RoundedCountAdapterFactory;
 
 public class ReportPrepareDB extends RealmObject implements DataObjectUI {
 
@@ -60,12 +62,15 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
     public String priceMax;
     @SerializedName("face")
     @Expose
+    @JsonAdapter(value = RoundedCountAdapterFactory.class, nullSafe = false)
     public String face;
     @SerializedName("amount")
     @Expose
+    @JsonAdapter(value = RoundedCountAdapterFactory.class, nullSafe = false)
     public int amount; // кол-во на витрине
     @SerializedName("up")
     @Expose
+    @JsonAdapter(value = RoundedCountAdapterFactory.class, nullSafe = false)
     public String up;
     @SerializedName("dt_expire")
     @Expose
@@ -142,6 +147,7 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
 
     @SerializedName("faces_plan")
     @Expose
+    @JsonAdapter(value = RoundedCountAdapterFactory.class, nullSafe = false)
     public Integer facesPlan;
 
     @SerializedName("akciya_plan_id")

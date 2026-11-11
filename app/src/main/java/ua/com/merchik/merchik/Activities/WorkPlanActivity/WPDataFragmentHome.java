@@ -233,18 +233,18 @@ public class WPDataFragmentHome extends Fragment {
         try {
             if (wp != null && wp.size() > 0) {
                 // Запланированные работы
-                int wpSum = wp.sum("cash_ispolnitel").intValue();
+                String wpSum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wp.sum("cash_ispolnitel").toString());
 
                 // Выполненные работы
                 RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
                 int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
-                int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
+                String wpStatus1Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wpStatus.sum("cash_ispolnitel").toString());
                 int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
 
                 // Не Віполненные
                 RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
                 int wpStatus0Size = wpStatus0.size();
-                int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
+                String wpStatus0Sum = ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(wpStatus0.sum("cash_ispolnitel").toString());
                 int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
 
                 if (mode.equals(TitleMode.FULL)) {

@@ -705,7 +705,16 @@ public class DialogFullPhoto {
     }
 
     public void setTask(int user, int addr, String cust, long dad2, StackPhotoDB photoDB) {
+        setTask(Integer.valueOf(user), Integer.valueOf(addr), cust, dad2, photoDB);
+    }
+
+    public void setTask(Integer user, Integer addr, String cust, long dad2, StackPhotoDB photoDB) {
         task.setOnClickListener(v -> {
+            if (user == null || user <= 0 || addr == null || addr <= 0) {
+                Globals.writeToMLOG("WARNING", "DialogFullPhoto/setTask", "Missing photo context: user=" + user + ", addr=" + addr + ", dad2=" + dad2);
+                Toast.makeText(context, "Для цієї світлини не визначено виконавця або адресу. Відкрийте її з відповідного відвідування.", Toast.LENGTH_LONG).show();
+                return;
+            }
             DialogCreateTAR dialog = new DialogCreateTAR(context);
             dialog.setClose(dialog::dismiss);
             dialog.setData(user, addr, cust, dad2, photoDB);

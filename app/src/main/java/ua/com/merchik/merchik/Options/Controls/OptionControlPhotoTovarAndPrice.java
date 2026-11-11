@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -134,7 +136,7 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
             }
 
             //6.2.
-            int face = parseIntSafe(item.face);
+            int face = FaceValue.rounded(item.face);
             if (face <= 0) { //товара на вітрині нема ... перевіряти нема чого
                 continue;
             }
@@ -358,7 +360,7 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
             return false;
         }
 
-        int face = parseIntSafe(item.face);
+        int face = FaceValue.rounded(item.face);
         if (face <= 0) {
             return false;
         }
@@ -372,8 +374,8 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
     }
 
     private static boolean shouldUseReportPrepare(ReportPrepareDB candidate, ReportPrepareDB current) {
-        int candidateFace = parseIntSafe(candidate.face);
-        int currentFace = parseIntSafe(current.face);
+        int candidateFace = FaceValue.rounded(candidate.face);
+        int currentFace = FaceValue.rounded(current.face);
         if (candidateFace != currentFace) {
             return candidateFace > currentFace;
         }

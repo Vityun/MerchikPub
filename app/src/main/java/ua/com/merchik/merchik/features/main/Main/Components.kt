@@ -102,6 +102,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.Utils.FaceValue
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ViewHolders.AkciyaSelectionDataHolder
 import ua.com.merchik.merchik.ViewHolders.ErrorSelectionDataHolder
@@ -775,11 +777,11 @@ private fun StepperButton(
 }
 
 @Composable
-private fun rememberInlineInputValue(value: String, numeric: Boolean = false): MutableState<String> {
+private fun rememberInlineInputValue(value: String, numeric: Boolean = false, roundFace: Boolean = false): MutableState<String> {
     val localValue = remember { mutableStateOf(value) }
     var previousValue by remember { mutableStateOf(value) }
     LaunchedEffect(value) {
-        localValue.value = refreshedInlineInputValue(previousValue, localValue.value, value, numeric)
+        localValue.value = refreshedInlineInputValue(previousValue, localValue.value, value, numeric, roundFace)
         previousValue = value
     }
     return localValue
@@ -788,32 +790,41 @@ private fun rememberInlineInputValue(value: String, numeric: Boolean = false): M
 @Composable
 fun NumberInput(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    roundFace: Boolean = false
 ) {
+    val context = LocalContext.current
     var inputState by remember { mutableStateOf(InlineNumberInputState()) }
-    var localValue by rememberInlineInputValue(value, numeric = true)
+    var localValue by rememberInlineInputValue(value, numeric = true, roundFace = true)
 
     BasicTextField(
         value = inputState.displayedValue(localValue),
         onValueChange = { input ->
-            val digitsOnly = input.filter { it.isDigit() }
-            inputState = inputState.onInput(digitsOnly)
-            localValue = digitsOnly.ifBlank { "0" }
-            onValueChange(localValue)
+            if (roundFace && !FaceSaveGuard.checkInputLimit(context, input)) return@BasicTextField
+            val prepared = runCatching { ua.com.merchik.merchik.Utils.CountValue.draft(input) }
+                .getOrNull() ?: return@BasicTextField
+            inputState = inputState.onInput(prepared)
+            localValue = prepared.ifBlank { "0" }
+            onValueChange(ua.com.merchik.merchik.Utils.CountValue.input(localValue))
         },
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(
             textAlign = TextAlign.Center
         ),
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
+            keyboardType = if (roundFace) KeyboardType.Decimal else KeyboardType.Number,
             imeAction = ImeAction.Done
         ),
+        keyboardActions = KeyboardActions(onDone = {
+            localValue = FaceValue.display(localValue)
+            defaultKeyboardAction(ImeAction.Done)
+        }),
         modifier = Modifier
             .width(74.dp)
             .height(38.dp)
             .padding(horizontal = 8.dp)
             .onFocusChanged { focusState ->
+                if (!focusState.isFocused) localValue = FaceValue.display(localValue)
                 inputState = inputState.onFocusChanged(focusState.isFocused, localValue)
             },
         decorationBox = { innerTextField ->
@@ -1017,7 +1028,8 @@ fun NumberEditorRow(
     value: String,
     onMinus: () -> Unit,
     onPlus: () -> Unit,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    roundFace: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -1035,7 +1047,8 @@ fun NumberEditorRow(
 
         NumberInput(
             value = value,
-            onValueChange = onValueChange
+            onValueChange = onValueChange,
+            roundFace = roundFace
         )
         StepperButton(text = "+", onClick = onPlus)
     }

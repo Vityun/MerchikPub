@@ -170,6 +170,7 @@ fun WpDataTabsScreen() {
 
     LaunchedEffect(Unit) {
         logStartupReadiness("start: offline=$offline")
+        if (!offline) VisitReportDataSync.retryInitial()
         while (!dataIsReady) {
             val currentlyOffline = isOfflineNow()
             if (offline != currentlyOffline) {
@@ -549,7 +550,7 @@ fun isDataReadyCompat(): Boolean {
     return StartupPolicy.areRequiredTablesReady(
         state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
         siteAvailable, themeAvailable,
-        VisitReportDataSync.reportReady(), VisitReportDataSync.productsReady()
+        VisitReportDataSync.reportReady(), VisitReportDataSync.productsDownloaded()
     )
 }
 
@@ -561,7 +562,7 @@ fun checkRealmReady(): Boolean {
     val hasThema = RoomManager.SQL_DB.themeDao().getCount() > 0
 
     return hasWp && hasStObj && hasOption && hasThema &&
-            VisitReportDataSync.reportReady() && VisitReportDataSync.productsReady()
+            VisitReportDataSync.reportReady() && VisitReportDataSync.productsDownloaded()
 }
 
 fun checkRealmReadyII(): Boolean {
@@ -572,7 +573,7 @@ fun checkRealmReadyII(): Boolean {
         state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
         SiteObjectsLocalDefaults.hasDownloadedObjects(),
         RoomManager.SQL_DB.themeDao().getCount() > 0,
-        VisitReportDataSync.reportReady(), VisitReportDataSync.productsReady()
+        VisitReportDataSync.reportReady(), VisitReportDataSync.productsDownloaded()
     )
 }
 
@@ -586,7 +587,8 @@ private fun logStartupReadiness(reason: String) {
                     "site=${RealmManager.INSTANCE.where(SiteObjectsDB::class.java).count()}, " +
                     "siteDownloaded=${SiteObjectsLocalDefaults.hasDownloadedObjects()}, " +
                     "options=${RealmManager.INSTANCE.where(OptionsDB::class.java).count()}, " +
-                    "rpReady=${VisitReportDataSync.reportReady()}, productsReady=${VisitReportDataSync.productsReady()}, " +
+                    "rpReady=${VisitReportDataSync.reportReady()}, productsDownloaded=${VisitReportDataSync.productsDownloaded()}, " +
+                    "productsReady=${VisitReportDataSync.productsReady()}, " +
                     "themeRoom=${RoomManager.SQL_DB.themeDao().getCount()}, " +
                     "themeRealm=${RealmManager.INSTANCE.where(ThemeDB::class.java).count()}"
         )

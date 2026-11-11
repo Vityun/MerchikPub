@@ -100,53 +100,52 @@ public final class WorkStartNetworkSnapshot {
         double shopLat = parseDoubleSafe(wpDataDB.getAddr_location_xd());
         double shopLng = parseDoubleSafe(wpDataDB.getAddr_location_yd());
 
-        if (Double.isNaN(shopLat) || Double.isNaN(shopLng)) {
+        if (!LocationFixPolicy.validCoordinates(shopLat, shopLng)) {
             callback.onDone(new Result(0, 0, "Запись не выполнена: координаты магазина не указаны"));
-            return;
-        }
-
-        // mocking (как у тебя)
-        boolean isMocking = (trecker.isMockGPS || trecker.isMockNET);
-        if (isMocking) {
-            callback.onDone(new Result(0, 0, "Запись не выполнена: включено фиктивное местоположение"));
             return;
         }
 
         // perms
         WifiScanAccess access = new WifiScanAccess(context);
+        String wifiNotice = "";
+        if (!Boolean.TRUE.equals(access.enabled)) {
+            Globals.writeToMLOG("INFO", "WorkStartNetworkSnapshot/wifiAccess",
+                    "addr_id=" + wpDataDB.getAddr_id() + ", " + access.diagnostics()
+                            + ", found=n/a, known=n/a, matched=n/a, pct=n/a, result=wifi_off_or_unavailable");
+            wifiNotice = Boolean.FALSE.equals(access.enabled)
+                    ? "Wi-Fi вимкнений. Увімкніть Wi-Fi для збору мереж магазину. "
+                    : "Wi-Fi недоступний. ";
+        }
         if (!access.hasPermissions()) {
             Globals.writeToMLOG("INFO", "WorkStartNetworkSnapshot/wifiAccess",
                     "addr_id=" + wpDataDB.getAddr_id() + ", " + access.diagnostics()
                             + ", found=n/a, known=n/a, matched=n/a, pct=n/a, result=permission_denied");
-            callback.onDone(new Result(0, 0, "Недостаточно разрешений для сканирования Wi-Fi. Проверьте разрешение на точное " +
+            callback.onDone(new Result(0, 0, wifiNotice + "Недостаточно разрешений для сканирования Wi-Fi. Проверьте разрешение на точное " +
                     "местоположение" + (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? " и доступ к устройствам поблизости" : "")
                     + " в настройках приложения."));
             return;
         }
 
-        // 1) текущие координаты
-        double curLat = Globals.CoordX;
-        double curLng = Globals.CoordY;
+        long now = System.currentTimeMillis();
+        Location current = Globals.usableLocation(now);
+        double snapX = current == null ? 0 : current.getLatitude();
+        double snapY = current == null ? 0 : current.getLongitude();
+        long snapTime = current == null ? 0 : current.getTime();
 
-        float distNow = distanceFn.distanceMeters(curLat, curLng, shopLat, shopLng);
-
-        // 2) если текущие не "на месте" — пробуем MP
-        double snapX = curLat;
-        double snapY = curLng;
-        long snapTime = System.currentTimeMillis(); // время “клика/слепка”
-
-        if (distNow > 350f) {
-            long endSec = System.currentTimeMillis() / 1000L;
+        // An old/future global GPS point must not authorize learning the store's networks.
+        if (current == null || distanceFn.distanceMeters(snapX, snapY, shopLat, shopLng) > 350f) {
+            long endSec = now / 1000L;
             long startSec = endSec - 10 * 60L;
 
-            LogMPDB nearest = getNearestMpPointSorted(shopLat, shopLng, startSec, endSec);
+            LogMPDB nearest = getNearestMpPointSorted(shopLat, shopLng, startSec, endSec, wpDataDB.getAddr_id());
             if (nearest == null) {
-                callback.onDone(new Result(0, 0, "Запись не выполнена: нет координат за последние 10 минут"));
+                callback.onDone(new Result(0, 0, wifiNotice + "Збір мереж не виконано: немає придатних координат за останні 10 хвилин. "
+                        + "Це окрема перевірка для карти мереж, а не результат контролю МП за історією."));
                 return;
             }
 
             if (nearest.distance > 200) {
-                callback.onDone(new Result(0, 0, "Запись не выполнена: вы дальше 100м от магазина, расстояние: " + nearest.distance));
+                callback.onDone(new Result(0, 0, wifiNotice + "Збір мереж не виконано: найближчий замір далі 200 м від магазину, відстань: " + nearest.distance));
                 return;
             }
 
@@ -184,6 +183,7 @@ public final class WorkStartNetworkSnapshot {
 
         private boolean wifiDone = false;
         private boolean btDone = false;
+        private boolean finished = false;
 
         private BroadcastReceiver wifiReceiver;
         private BluetoothLeScanner bleScanner;
@@ -390,7 +390,8 @@ public final class WorkStartNetworkSnapshot {
 
         // ---- FINISH ----
         private void tryFinish() {
-            if (!wifiDone || !btDone) return;
+            if (!wifiDone || !btDone || finished) return;
+            finished = true;
 
             // Пишем ТОЛЬКО WiFi/Bluetooth строки
             int wifiAdded = 0;
@@ -416,8 +417,9 @@ public final class WorkStartNetworkSnapshot {
                             "технологию, для определения вашего местоположения в ТТ. " +
                             "Включите Bluetooth ы повторите попытку.";
                 } else {
-                    error = "Не найдено ни одного устройства Wi-Fi/Bluetooth. " +
-                            "Попробуйте подойти ближе к кассе или другой кассе и повторить попытку.";
+                    error = "Нових мереж Wi-Fi/Bluetooth для карти магазину не знайдено. " +
+                            "Мережі можуть бути вже відомі магазину або зараз недоступні. " +
+                            "Це не змінює результат перевірки МП за історією.";
                 }
             }
             callback.onDone(new Result(wifiAdded, btAdded, error));
@@ -449,8 +451,9 @@ public final class WorkStartNetworkSnapshot {
 
         // unique by BSSID внутри одного скана
         HashMap<String, android.net.wifi.ScanResult> uniq = new HashMap<>();
+        long scanNow = android.os.SystemClock.elapsedRealtime();
         for (android.net.wifi.ScanResult r : results) {
-            if (r == null) continue;
+            if (r == null || !LocationFixPolicy.freshWifiScan(r.timestamp, scanNow)) continue;
             if (r.BSSID == null || r.BSSID.isEmpty()) continue;
 
             android.net.wifi.ScanResult prev = uniq.get(r.BSSID);
@@ -574,11 +577,15 @@ public final class WorkStartNetworkSnapshot {
 
     private static LogMPDB getNearestMpPointSorted(
             double coordAddrX, double coordAddrY,
-            long startTimeSec, long endTimeSec
+            long startTimeSec, long endTimeSec, int addrId
     ) {
         List<LogMPDB> logMPList = LogMPRealm.getLogMPTime(startTimeSec * 1000, endTimeSec * 1000);
 
         if (logMPList != null && logMPList.size() > 0) {
+            logMPList.removeIf(row -> !LocationFixPolicy.usableHistory(row, endTimeSec * 1000)
+                    || (Integer.valueOf(WifiPresencePolicy.PROVIDER).equals(row.provider)
+                        && !WifiPresencePolicy.usableDistance(row, addrId)));
+            if (logMPList.isEmpty()) return null;
             for (LogMPDB item : logMPList) {
                 // как у тебя: считаем distance и пишем в item.distance
                 double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static java.lang.System.out;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
@@ -1522,7 +1524,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 dialogList.get(0).reportPrepareDB = report;
                 int face = 0;
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
-                    face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+                    face = FaceValue.rounded(dialogList.get(0).reportPrepareDB.face);
 
                 if (clickType &&
                         dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
@@ -1956,6 +1958,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
 
             ReportPrepareDB snapshot = rp;
+            final int quantity;
+            try {
+                quantity = (tpl.getOptionControlName() == Globals.OptionControlName.AMOUNT
+                        || tpl.getOptionControlName() == UP)
+                        ? ua.com.merchik.merchik.Utils.CountValue.nonNegative(data) : 0;
+            } catch (NumberFormatException e) {
+                Toast.makeText(mContext, "Вкажіть невід'ємну кількість у межах 0–2147483647", Toast.LENGTH_LONG).show();
+                return false;
+            }
             boolean saved;
             switch (tpl.getOptionControlName()) {
                 case PRICE:
@@ -1981,7 +1992,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         return false;
                     }
                     saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                        table.setFace(data);
+                        table.setFace(FaceValue.input(data));
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
                     });
@@ -1999,7 +2010,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 case AMOUNT:
                     Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data);
                     saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                        table.setAmount(Integer.parseInt(data));
+                        table.setAmount(quantity);
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
                     });
@@ -2022,7 +2033,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds);
                     Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent);
                     saved = ReportPrepareRealm.updateFields(snapshot, table -> {
-                        table.setUp(data);
+                        table.setUp(Integer.toString(quantity));
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
                     });

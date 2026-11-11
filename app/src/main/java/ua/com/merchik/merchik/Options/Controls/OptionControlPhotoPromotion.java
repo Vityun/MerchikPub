@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 
 import android.app.Activity;
@@ -212,7 +214,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             //6.2
             if (optionId.equals("172101")) {
                 //тут ми просто відмічаємо товари у котрих є ОСВ (Акція) та вони присутні на вітрині. Це нам потрібно у подальшому для того, щоб вивести у сповіщенні кількість товарів, котрі контролер повинен побачити на Панорамній Фото Вітрини для опції 172101
-                if (OSV == 1 && Integer.parseInt(item.face) >= 1) {
+                if (OSV == 1 && FaceValue.rounded(item.face) >= 1) {
                     kolAkciaTovarNaVitrine = kolAkciaTovarNaVitrine + 1;
                 }
                 continue;

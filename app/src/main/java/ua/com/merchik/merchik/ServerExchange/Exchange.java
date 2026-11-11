@@ -3242,7 +3242,15 @@ public class Exchange {
     public void uploadAchievemnts() {
         if (isAchievementsUploading) return;
         isAchievementsUploading = true;
+        try {
+            prepareAndUploadAchievements();
+        } catch (Exception e) {
+            isAchievementsUploading = false;
+            Globals.writeToMLOG("ERROR", "uploadAchievemnts/prepare", "Upload remains pending: " + e);
+        }
+    }
 
+    private void prepareAndUploadAchievements() {
         StandartData data = new StandartData();
         data.mod = "images_achieve";
         data.act = "add_row";
@@ -3255,7 +3263,13 @@ public class Exchange {
 
         if (list != null && list.size() > 0) {
             List<AchievementsUpload> dataList = new ArrayList<>();
+            List<AchievementsSDB> sentRows = new ArrayList<>();
             for (AchievementsSDB item : list) {
+                if (item == null || item.id == null || item.dt_ut == null || item.addrId == null
+                        || item.themeId == null || item.codeDad2 == null || item.dvi == null) {
+                    Globals.writeToMLOG("ERROR", "uploadAchievemnts/prepare", "Missing required fields; kept pending, id=" + (item == null ? null : item.id));
+                    continue;
+                }
                 AchievementsUpload uploadData = new AchievementsUpload();
                 uploadData.element_id = item.id;
                 uploadData.dt = item.dt_ut;
@@ -3275,8 +3289,13 @@ public class Exchange {
                 uploadData.showcase_id = item.showcaseId;
                 uploadData.showcase_nm = item.showcaseNm;
                 dataList.add(uploadData);
+                sentRows.add(item);
             }
 
+            if (dataList.isEmpty()) {
+                isAchievementsUploading = false;
+                return;
+            }
             data.data = dataList;
 
             Gson gson = new Gson();
@@ -3297,7 +3316,7 @@ public class Exchange {
                             if (response.body() != null) {
                                 if (response.body().list != null && !response.body().list.isEmpty()) {
                                     for (AchievementsUploadResponseList item : response.body().list) {
-                                        for (AchievementsSDB itemSDB : list) {
+                                        for (AchievementsSDB itemSDB : sentRows) {
                                             if (itemSDB.id.equals(item.elementId)) {
                                                 itemSDB.serverId = item.id;
                                                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));

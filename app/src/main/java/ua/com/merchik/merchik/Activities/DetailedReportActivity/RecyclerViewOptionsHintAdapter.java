@@ -16,6 +16,8 @@ import java.util.Collections;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
+import ua.com.merchik.merchik.Utils.FaceValue;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -55,8 +57,16 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
                 boolean saved;
                 switch (dataType){
                     case ("face") :
+                        if (!FaceSaveGuard.checkInputLimit(mContext, recentItem.getValue())) return;
+                        String face;
+                        try {
+                            face = FaceValue.input(recentItem.getValue());
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(mContext, "Вкажіть коректну кількість фейсів.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
                         saved = ReportPrepareRealm.updateFields(reportPrepareTovar, current -> {
-                            current.setFace(recentItem.getValue());
+                            current.setFace(face);
                             current.setUploadStatus(1);
                             current.setDtChange(currentTime);
                         });

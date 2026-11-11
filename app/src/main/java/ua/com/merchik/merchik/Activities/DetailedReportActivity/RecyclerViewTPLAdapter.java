@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard;
+
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE_BEFORE_PROMOTION;
@@ -203,6 +206,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             editText.setOnFocusChangeListener(null);
             boolean price = item.getOptionControlName() == Globals.OptionControlName.PRICE
                     || item.getOptionControlName() == PRICE_BEFORE_PROMOTION;
+            boolean face = item.getOptionControlName() == Globals.OptionControlName.FACE;
             rawPriceValue = getDataFromReportPrepare(item, dataRp);
             textView.setText(TovarRequisites.optionTitleForVisit(item, dataRp.getCodeDad2()) + ": ");
             editText.setText(price && !editText.hasFocus() ? PriceDisplay.format(rawPriceValue) : rawPriceValue);
@@ -221,14 +225,37 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 @Override
                 public void afterTextChanged(Editable editable) {
                     if (updatingDisplay) return;
+                    if (face && FaceValue.exceedsInputLimit(editable.toString())) {
+                        updatingDisplay = true;
+                        try {
+                            editText.setText(rawPriceValue);
+                            editText.setSelection(editText.length());
+                        } finally {
+                            updatingDisplay = false;
+                        }
+                        editText.setError(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
+                        return;
+                    }
                     rawPriceValue = editable.toString();
-                    click.getData(item, editable.toString(), null);
+                    String savedValue = rawPriceValue;
+                    if (face) {
+                        try {
+                            rawPriceValue = FaceValue.draft(rawPriceValue);
+                            savedValue = FaceValue.input(rawPriceValue);
+                        } catch (NumberFormatException e) {
+                            editText.setError("Укажите корректное количество фейсов");
+                            return;
+                        }
+                        editText.setError(null);
+                    }
+                    click.getData(item, savedValue, null);
                     if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
                             item.getOptionControlName().equals(Globals.OptionControlName.UP) && !editText.getText().toString().equals("")) {
 
                         int text;
                         try {
-                            text = Integer.parseInt(editText.getText().toString());
+                            text = face ? FaceValue.rounded(rawPriceValue)
+                                    : Integer.parseInt(editText.getText().toString());
                         } catch (Exception e) {
                             text = 0;
                         }
@@ -246,11 +273,12 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 }
             };
             editText.addTextChangedListener(valueWatcher);
-            if (price) {
+            if (price || face) {
                 editText.setOnFocusChangeListener((view, hasFocus) -> {
                     updatingDisplay = true;
                     try {
-                        editText.setText(hasFocus ? rawPriceValue : PriceDisplay.format(rawPriceValue));
+                        editText.setText(hasFocus ? rawPriceValue :
+                                (face ? FaceValue.display(rawPriceValue) : PriceDisplay.format(rawPriceValue)));
                         if (hasFocus) editText.selectAll();
                     } finally {
                         updatingDisplay = false;
@@ -265,13 +293,24 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                 subtraction.setVisibility(View.VISIBLE);
 
-                if (editText.getText().toString().equals("") || Integer.parseInt(editText.getText().toString()) > 0) {
-                    subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
-                    subtraction.setClickable(true);
+                try {
+                    int current = face ? FaceValue.rounded(editText.getText().toString())
+                            : (editText.length() == 0 ? 0 : Integer.parseInt(editText.getText().toString()));
+                    subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(
+                            subtraction.getContext().getResources().getColor(current > 0 ? R.color.active : R.color.inActive),
+                            PorterDuff.Mode.SRC));
+                    subtraction.setClickable(current > 0);
+                } catch (NumberFormatException e) {
+                    editText.setError("Укажите корректное число");
+                    subtraction.setClickable(false);
                 }
 
                 subtraction.setOnClickListener(view -> {
                     try {
+                        if (face) {
+                            editText.setText(FaceValue.step(editText.getText().toString(), -1));
+                            return;
+                        }
                         int data = Integer.parseInt(editText.getText().toString());
                         data--;
                         editText.setText(String.valueOf(data));
@@ -281,6 +320,10 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 });
                 additions.setOnClickListener(view -> {
                     try {
+                        if (face) {
+                            editText.setText(FaceValue.step(editText.getText().toString(), 1));
+                            return;
+                        }
                         if (!editText.getText().toString().equals("")) {
                             int data = Integer.parseInt(editText.getText().toString());
                             data++;
@@ -303,7 +346,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             try {
                 switch (tpl.getOptionControlName()) {
                     case FACE:
-                        return reportPrepare.getFace();
+                        return FaceValue.display(reportPrepare.getFace());
 
                     case PRICE:
                         return reportPrepare.getPrice();

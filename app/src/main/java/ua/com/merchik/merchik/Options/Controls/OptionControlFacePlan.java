@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 
@@ -26,7 +28,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private long dad2;
 
-    private int facePlanCount = 0;
+    private long facePlanCount = 0;
 
     public OptionControlFacePlan(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
@@ -55,8 +57,9 @@ public class OptionControlFacePlan<T> extends OptionControl {
         int minPercentage, maxPercentage;
         int planSKU = 0;
 
-        minPercentage = (optionDB.getAmountMin() != null && Integer.parseInt(optionDB.getAmountMin()) > 0) ? Integer.parseInt(optionDB.getAmountMin()) : 50;
-        maxPercentage = Integer.parseInt(optionDB.getAmountMax());
+        minPercentage = ua.com.merchik.merchik.Utils.CountValue.nonNegative(optionDB.getAmountMin());
+        if (minPercentage == 0) minPercentage = 50;
+        maxPercentage = ua.com.merchik.merchik.Utils.CountValue.nonNegative(optionDB.getAmountMax());
 
 
         //2.0. получим данные о товарах в отчете (если она еще не рассчитана)
@@ -71,20 +74,21 @@ public class OptionControlFacePlan<T> extends OptionControl {
         //4.0. проверим, по каким из товаров с ОСВ отсутствуют на витрине?
         //5.0. заполним ее данными ОСВ
         for (ReportPrepareDB item : detailedReportRPList) {
-            facePlanCount += item.facesPlan;
+            int plannedFaces = item.facesPlan == null ? 0 : item.facesPlan;
+            facePlanCount += plannedFaces;
 
             //КолСКЮ-заполняется еще на этапе формирования ТзнТов (КолСКЮ=1 если колФейс>0)
-            if (Integer.parseInt(item.getFace()) > 0) {
+            if (FaceValue.rounded(item.getFace()) > 0) {
                 resultSKUList.add(item);
             }
 //
 //            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
-            if (item.facesPlan > 0){
+            if (plannedFaces > 0){
                 planSKU++;
             }
 
-            if (Integer.parseInt(item.getFace()) < item.facesPlan){
+            if (FaceValue.rounded(item.getFace()) < plannedFaces){
                 resultErrorList.add(item);   //Тзн.Наруш=1;
                 optionResultStr.append("не виконан ПЛАН по ФЕЙСАМ. (план=").append(item.facesPlan).append("шт. факт=").append(item.getFace()).append("шт.)");
             }
@@ -93,7 +97,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
         //6.0. готовим сообщение и сигнал
         try {
 //            percentageCompletedPlan = 100*(resultSKUList.size()-resultErrorList.size())/resultSKUList.size();
-            percentageCompletedPlan = 100*(planSKU-resultErrorList.size())/planSKU;
+            percentageCompletedPlan = planSKU == 0 ? 0 : (int) (100L * (planSKU-resultErrorList.size()) / planSKU);
         }catch (Exception e){
             percentageCompletedPlan = 0;
         }

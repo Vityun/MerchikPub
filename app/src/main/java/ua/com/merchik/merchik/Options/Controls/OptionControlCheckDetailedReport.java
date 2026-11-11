@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -254,7 +256,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     private int calculateSKU(String face) {
         int res = 0;
         if (face != null && !face.equals("")) {
-            int faceX = Integer.parseInt(face);
+            int faceX = FaceValue.rounded(face);
             if (faceX > 0) {
                 res = 1;
             }

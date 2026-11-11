@@ -1214,12 +1214,12 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         fot_user_id = in.readInt();
         dot_user_id = in.readInt();
         visit_start_dt = in.readLong();
-        visit_start_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        visit_start_dt_receive = readNullableLong(in);
         visit_start_geo_distance = in.readInt();
         visit_start_geo_accuracy = in.readInt();
         visit_start_geo_id = in.readInt();
         visit_end_dt = in.readLong();
-        visit_end_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        visit_end_dt_receive = readNullableLong(in);
         visit_end_geo_distance = in.readInt();
         visit_end_geo_accuracy = in.readInt();
         visit_end_geo_id = in.readInt();
@@ -1230,13 +1230,13 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         visit_report_starsh = in.readInt();
         visit_report_starsh_quality = in.readInt();
         client_start_dt = in.readLong();
-        client_start_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        client_start_dt_receive = readNullableLong(in);
         client_start_geo_distance = in.readInt();
         client_start_geo_accuracy = in.readInt();
         client_start_geo_id = in.readInt();
         client_start_anybody = in.readInt();
         client_end_dt = in.readLong();
-        client_end_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        client_end_dt_receive = readNullableLong(in);
         client_end_geo_distance = in.readInt();
         client_end_geo_accuracy = in.readInt();
         client_end_geo_id = in.readInt();
@@ -1253,7 +1253,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         cash_sum_30 = in.readDouble();
         cash_sum_addr_30 = in.readDouble();
         cash_ispolnitel = in.readDouble();
-        visit_per_week = in.readInt();
+        visit_per_week = in.readDouble();
         sku = in.readInt();
         duration = in.readLong();
         mon = in.readInt();
@@ -1423,6 +1423,11 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeLong(pause_dt_start);
         dest.writeLong(pause_dt_end);
         dest.writeString(code_dad2_hash);
+    }
+
+    private static Long readNullableLong(Parcel source) {
+        long value = source.readLong();
+        return value == -1L ? null : value;
     }
 
     public static final Parcelable.Creator<WpDataDB> CREATOR = new Parcelable.Creator<WpDataDB>() {

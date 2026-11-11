@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+import ua.com.merchik.merchik.Utils.CountValue;
+
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -118,14 +121,11 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
 
         // 1.0. Определим переменные
         int numberSKUForFactSUM = 0;
-        int numberSKUMiddle = 0;
-        int numberMin = (optionDB.getAmountMin() != null && !optionDB.getAmountMax().isEmpty()) ? Integer.parseInt(optionDB.getAmountMin()) : 0; //23.02.2025 Петров Додав показник Мінімальна кількість, котру має сенс перевіряти. Для різних клієнтів вона може суттєво відрізнятись (На приклад дорогий алкоголь 2 шт треба вже шувати, у Туалетний папір, можна і 20-ть не шукати) Встановлює менеджер. Якщо цей показник дорівнює нулю, то порівнюєм з скереднім залишком/10
-        int numberMax = (optionDB.getAmountMax() != null && !optionDB.getAmountMax().isEmpty() && Integer.parseInt(optionDB.getAmountMax()) > 0)
-                ? Integer.parseInt(optionDB.getAmountMax())
-                : 20; //не более 20% нарушений.
+        double numberSKUMiddle;
+        int numberMin = CountValue.nonNegative(optionDB.getAmountMin());
 
         int signalInt = 0;         // Сигнал заблокированно или нет
-        long days20ago = (System.currentTimeMillis() - (20L * 24 * 60 * 60)) / 1000; // 20 дней назад в секундах
+        long days20ago = StockBalancePolicy.cutoffSeconds(System.currentTimeMillis());
 
 
         // 2.0. Получим данные о товарах в отчете
@@ -141,42 +141,42 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
 
         // 3.0. Сформируем итоговую таблицу
         for (ReportPrepareDB item : reportPrepare) {
-            item.numberSKUForAccounting = Integer.parseInt(item.oborotvedNum) > 0 ? 1 : 0;
-            item.numberSKUForFact = Integer.parseInt(item.face) > 0 ? 1 : 0;
-            item.difference = Integer.parseInt(item.oborotvedNum) - item.amount;
+            int stock = CountValue.rounded(item.oborotvedNum);
+            item.numberSKUForAccounting = stock > 0 ? 1 : 0;
+            item.numberSKUForFact = FaceValue.rounded(item.face) > 0 ? 1 : 0;
+            item.difference = Math.subtractExact(stock, item.amount);
+            item.errorExist = 0;
+            item.errorNote = "";
         }
 
         //4.0. сформируем результирующую таблицу
         //4.1. сперва отметим те позиции у которых ЕСТЬ не нулевой остаток для того, чтобы подсчитать СРЕДНИЙ тованый запас. Это нужно, чтобы не наказывать за товар, которого ОТНОСИТЕЛЬНО МАЛО на складе
 //        numberSKUForAccountingSUM = reportPrepare.stream().map(table -> table.numberSKUForAccounting).reduce(0, Integer::sum);
         numberSKUForFactSUM = reportPrepare.stream().map(table -> table.numberSKUForFact).reduce(0, Integer::sum);
-        if (numberSKUForFactSUM != 0)
-            numberSKUMiddle = reportPrepare.stream().map(table -> table.amount).reduce(0, Integer::sum)
-                    / numberSKUForFactSUM;
+        numberSKUMiddle = StockBalancePolicy.average(
+                reportPrepare.stream().mapToLong(table -> table.amount).sum(), numberSKUForFactSUM);
 
 
         //4.2. теперь, имея средний товарный запас, можно сравнить наличие этого товара на витрине (показатель Фейс) с товарным запасом
         for (ReportPrepareDB item : reportPrepare) {
             //сравниваем реквизиты Фейс и ОборотВед
-            if (item.numberSKUForAccounting > 0 && Objects.equals(item.face, "0")) {
+            int stock = CountValue.rounded(item.oborotvedNum);
+            if (stock > 0 && item.numberSKUForFact == 0) {
                 item.errorExist = 1;
-                item.errorNote = "Товар (" + item.tovarId + ") ВІДСУТЕН на вітрині (Фейс=0), але ЧИСЛИТЬСЯ на складі (ОборотВед=" + item.numberSKUForAccounting + ")";
+                item.errorNote = "Товар (" + item.tovarId + ") ВІДСУТЕН на вітрині (Фейс=0), але ЧИСЛИТЬСЯ на складі (ОборотВед=" + stock + ")";
             }
             //если товарный запас ДАННОГО товара в десять раз меньше СРЕДНЕГО то нарушения НЕТ ... это может быть просто бой/бомбаж/пересортица
-            if (item.errorExist == 1 && numberMin > 0 && item.numberSKUForAccounting < numberMin) {
+            if (item.errorExist == 1 && StockBalancePolicy.belowMinimum(stock, numberMin, numberSKUMiddle)) {
                 item.errorExist = 0;
-                item.errorNote = item.errorNote + ", при цьому залишок по обліку усього " + item.numberSKUForAccounting +
-                        " шт, (що менше " + numberMin + "). Робимо виключення.";
-            } else if (item.errorExist == 1 && numberMin == 0 && item.numberSKUForAccounting < (numberSKUMiddle / 10)) {
-                item.errorExist = 0;
-                item.errorNote = item.errorNote + ", при цьому залишок по обліку усього " + item.numberSKUForAccounting +
-                        " шт, (що менше 1/10 середнього " + (numberSKUMiddle / 10) + " шт). Робимо виключення.";
+                item.errorNote = item.errorNote + ", при цьому залишок по обліку усього " + stock +
+                        " шт, (що менше " + (numberMin > 0 ? String.valueOf(numberMin) : "1/10 середнього " + (numberSKUMiddle / 10.0)) + "). Робимо виключення.";
             }
             //якщо дані про залишки товару отримані більше 20-и діб тому, ми не вважаємо це за помилку.
             else if (item.errorExist == 1 && item.dtChange < days20ago) {
                 item.errorExist = 0;
                 item.errorNote = item.errorNote + ", при цьому дані про залишок по обліку отримані більш ніж 20-ть діб тому. Робимо виключення.";
-            } else if (item.errorExist == 1 && item.errorId != null && !item.errorId.equals("0")) {
+            } else if (item.errorExist == 1 && item.errorId != null && !item.errorId.trim().isEmpty()
+                    && new java.math.BigDecimal(item.errorId.trim()).signum() > 0) {
                 item.errorExist = 0;
                 item.errorNote = item.errorNote + ", при цьому зазначена 'помилка'" +
 //                        " \"+НайтиЭлементСпр(\"Ошибки\",\"Код\",ТзнСКЮ.ОшибкаТовара)+\"" +
@@ -216,7 +216,7 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
 
         //6.0 Виключення
         if (signalInt == 1) {
-            if (documentUser.reportDate05 == null || documentUser.reportDate05.before(wpDataDB.getDt())) {
+            if (documentUser != null && (documentUser.reportDate05 == null || documentUser.reportDate05.before(wpDataDB.getDt()))) {
                 signalInt = 0;
                 spannableStringBuilder.append(", але виконавець ще не провів свого 5-го звіту. Робимо виключення.");
             }

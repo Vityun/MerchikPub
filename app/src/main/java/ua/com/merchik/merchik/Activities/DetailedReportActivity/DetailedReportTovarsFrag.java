@@ -321,6 +321,9 @@ public class DetailedReportTovarsFrag extends Fragment {
 
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
+            // The activity already tried the missing IDs. Do not replace that with a full download.
+            if (tasksAndReclamationsSDB == null
+                    && !ReportPrepareRealm.getReportPrepareByDad2_LIST(codeDad2).isEmpty()) return;
 
 
 //            new MessageDialogBuilder(requireActivity())

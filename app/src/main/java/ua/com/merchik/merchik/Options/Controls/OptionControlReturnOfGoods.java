@@ -137,14 +137,14 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 //                if ((optionDB.getOptionControlId().equals("135591") || optionDB.getOptionId().equals("135591"))
                         && (item.dtExpire != null && !item.dtExpire.equals("")
                         && !item.dtExpire.equals("0000-00-00"))
-                        && item.expireLeft != null && item.expireLeft.equals("0")
+                        && ua.com.merchik.merchik.Utils.CountValue.rounded(item.expireLeft) == 0
                         && test <= datRes) {
                     errCnt++;
                     item.error = 1;
                     item.errorNote = "Для наявного товара, якщо ДОСГ менше " + Clock.getHumanTimeSecPattern(datRes, "yyyy-MM-dd") + " (" + colMax + " діб) ви зобов'язані зазначити або кількість товару, що підлягає поверненню, або обрати 'помилку' = товар поверненню НЕ підлягає.";
                     result.add(item);
                 } else if ((optionDB.getOptionControlId().equals("135591") || optionDB.getOptionId().equals("135591"))
-                        && (item.expireLeft != null && item.expireLeft.equals("0")) /*&&
+                        && ua.com.merchik.merchik.Utils.CountValue.rounded(item.expireLeft) == 0 /*&&
                         (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))*/) {
                     errCnt++;
                     item.error = 1;
@@ -161,7 +161,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 }
 
                 if (osv &&
-                        (item.expireLeft != null && item.expireLeft.equals("0")) &&
+                        ua.com.merchik.merchik.Utils.CountValue.rounded(item.expireLeft) == 0 &&
                         (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))) {
                     errCnt++;
                     item.error = 1;

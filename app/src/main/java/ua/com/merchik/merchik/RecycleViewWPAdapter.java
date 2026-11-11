@@ -330,7 +330,10 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 //            String t_price = String.format("%s/+%s/%s", 0.00, 0, wpDataDB.getCash_ispolnitel());
 
             // План/Снижение/Расчёт Факт
-            String t_price = String.format("%s/-%s/%s", (int) wpDataDB.getCash_ispolnitel(), (int) wpDataDB.cash_penalty, (int) wpDataDB.cash_fact);
+            String t_price = String.format("%s/-%s/%s",
+                    ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(String.valueOf(wpDataDB.getCash_ispolnitel())),
+                    ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(String.valueOf(wpDataDB.cash_penalty)),
+                    ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay.format(String.valueOf(wpDataDB.cash_fact)));
 
             SpannableString string = new SpannableString(t_price);
             string.setSpan(new UnderlineSpan(), 0, string.length(), 0);

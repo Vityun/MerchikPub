@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -131,9 +133,14 @@ public final class ShelfLengthEntry {
         });
         editor.setOperation(DialogData.Operations.Number, face ? current.getFace() : String.valueOf(current.getAmount()),
                 Collections.emptyMap(), () -> {
+                    if (face && FaceValue.exceedsInputLimit(editor.getOperationResult())) {
+                        editor.rejectNumberInput(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
+                        return;
+                    }
                     int value;
                     try {
-                        value = new BigDecimal(FaceCountPolicy.faceInput(editor.getOperationResult())).intValueExact();
+                        String input = FaceCountPolicy.faceInput(editor.getOperationResult());
+                        value = face ? FaceValue.rounded(input) : new BigDecimal(input).intValueExact();
                     } catch (IllegalArgumentException | ArithmeticException e) {
                         editor.rejectNumberInput("Укажите целое число не меньше 0.");
                         return;

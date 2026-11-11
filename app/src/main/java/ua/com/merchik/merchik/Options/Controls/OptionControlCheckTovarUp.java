@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_CART_WITH_GOODS;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_SHOWCASE_BEFORE_START_WORK;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -147,31 +149,25 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
 
         // 5 проверим кол-во поднятого товара
-        int sumUp = 0;
-
-        try {
-            sumUp = reportPrepare.stream()
-                    .map(table -> {
-                        String up = table.getUp();
-                        if (up == null || up.trim().isEmpty()) return 0;
-                        try {
-                            return Integer.parseInt(up.trim());
-                        } catch (NumberFormatException e) {
-                            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp",
-                                    "Некорректный up: [" + up + "]");
-                            return 0;
-                        }
-                    })
-                    .reduce(0, Integer::sum);
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "Exception e: " + e);
+        long sumUp = 0;
+        boolean invalidUp = false;
+        for (ReportPrepareDB table : reportPrepare) {
+            try {
+                sumUp += ua.com.merchik.merchik.Utils.CountValue.nonNegative(table.getUp());
+            } catch (NumberFormatException e) {
+                invalidUp = true;
+                tznNotes.append("Некоректна кількість піднятого товару (").append(table.getTovarId()).append("). Перевірте дані.\n");
+                Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "tovar=" + table.getTovarId() + ", up=" + table.getUp());
+            }
         }
+        Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
 
         if (sumUp == 0 && optionDB.getBlockPns().equals("1")) {
             for (ReportPrepareDB itemRP : reportPrepare) {
-                int face = Integer.parseInt(itemRP.getFace());
-                int errorId = Integer.parseInt(itemRP.getErrorId());
+                int face = FaceValue.rounded(itemRP.getFace());
+                String errorRaw = itemRP.getErrorId();
+                int errorId = errorRaw == null || errorRaw.trim().isEmpty() ? 0
+                        : new java.math.BigDecimal(errorRaw.trim()).intValueExact();
 
                 if (face == 0) continue;
                 itemRP.numberOfTovar = 1;
@@ -270,6 +266,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeFailure();
         }
 
+        if (invalidUp) signal = true;
         stringBuilderMsg.append("\n\n").append(tznNotes);
 
 

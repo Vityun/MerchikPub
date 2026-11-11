@@ -18,10 +18,11 @@ public final class StartupPolicy {
     public static boolean areRequiredTablesReady(boolean wpLoaded, boolean siteLoaded,
                                                   boolean optionsLoaded, boolean themeLoaded,
                                                   boolean siteAvailable, boolean themeAvailable,
-                                                  boolean reportPrepareLoaded, boolean productsLoaded) {
+                                                  boolean reportPrepareLoaded, boolean productsDownloaded) {
         // Saved flags cannot replace missing dictionaries or locally seeded SiteObjects rows.
+        // Product batch completion, not completeness of every RP reference, unlocks the plan.
         return wpLoaded && siteLoaded && optionsLoaded && themeLoaded && siteAvailable && themeAvailable
-                && reportPrepareLoaded && productsLoaded;
+                && reportPrepareLoaded && productsDownloaded;
     }
 
     public static boolean isTemporaryHttpFailure(int code) {

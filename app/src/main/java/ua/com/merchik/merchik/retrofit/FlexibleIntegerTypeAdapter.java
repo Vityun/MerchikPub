@@ -9,15 +9,12 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 import ua.com.merchik.merchik.Globals;
 
 public class FlexibleIntegerTypeAdapter extends TypeAdapter<Integer> {
 
     private static final String TAG = "FlexibleIntegerAdapter";
-    private static final BigInteger LONG_MIN = BigInteger.valueOf(Long.MIN_VALUE);
-    private static final BigInteger LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
     private final Integer fallbackValue;
 
@@ -56,11 +53,10 @@ public class FlexibleIntegerTypeAdapter extends TypeAdapter<Integer> {
         }
 
         in.skipValue();
-        logBadValue("unexpected json token: " + token);
-        return fallbackValue;
+        throw invalidValue("unexpected json token: " + token);
     }
 
-    private Integer parseString(String rawValue) {
+    private Integer parseString(String rawValue) throws IOException {
         if (rawValue == null) {
             return fallbackValue;
         }
@@ -71,56 +67,22 @@ public class FlexibleIntegerTypeAdapter extends TypeAdapter<Integer> {
         }
 
         try {
-            return safeLongToInt(Long.parseLong(value));
-        } catch (NumberFormatException ignored) {
-            // Continue with decimal numbers.
-        }
-
-        try {
-            return safeLongToInt(safeBigIntegerToLong(new BigDecimal(value).toBigIntegerExact(), value));
+            // Accept integral decimal notation, never round identifiers or statuses.
+            return new BigDecimal(value).intValueExact();
         } catch (ArithmeticException | NumberFormatException ignored) {
-            // Some responses contain non-numeric placeholders in numeric fields.
+            throw invalidValue(value);
         }
+    }
 
+    private static IOException invalidValue(String value) {
         logBadValue(value);
-        return fallbackValue;
-    }
-
-    private Long safeBigIntegerToLong(BigInteger value, String rawValue) {
-        if (value.compareTo(LONG_MIN) < 0 || value.compareTo(LONG_MAX) > 0) {
-            logBadValue(rawValue);
-            return null;
-        }
-
-        return value.longValue();
-    }
-
-    private Integer safeLongToInt(Long value) {
-        if (value == null) {
-            return fallbackValue;
-        }
-
-        return safeLongToInt(value.longValue());
-    }
-
-    private Integer safeLongToInt(long value) {
-        if (value > Integer.MAX_VALUE) {
-            logBadValue(String.valueOf(value));
-            return fallbackValue;
-        }
-
-        if (value < Integer.MIN_VALUE) {
-            logBadValue(String.valueOf(value));
-            return fallbackValue;
-        }
-
-        return (int) value;
+        return new IOException("Invalid Integer value: " + value);
     }
 
     private static void logBadValue(String value) {
         String message = "Cannot parse Integer value: " + value;
-        Log.e(TAG, message);
         try {
+            Log.e(TAG, message);
             Globals.writeToMLOG("ERROR", TAG, message);
         } catch (Exception ignored) {
         }

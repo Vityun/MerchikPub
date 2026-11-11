@@ -37,4 +37,23 @@ public final class WifiPresencePolicy {
     public static boolean onSite(LogMPDB row, int addrId, int radius) {
         return usableDistance(row, addrId) && row.distance < radius;
     }
+
+    public static LogMPDB newObservation(int localId, long dad2, int addrId,
+                                         double lat, double lon, boolean confirmed,
+                                         String evidence, long observedAtMillis) {
+        LogMPDB row = new LogMPDB();
+        row.id = localId;
+        row.codeDad2 = dad2;
+        row.address = addrId;
+        row.provider = PROVIDER;
+        row.CoordTime = observedAtMillis;
+        row.vpi = observedAtMillis / 1000;
+        row.CoordAccuracy = 1;
+        row.inPlace = confirmed && addrId > 0 && LocationFixPolicy.validCoordinates(lat, lon) ? 1 : 0;
+        row.CoordX = row.inPlace == 1 ? lat : 0;
+        row.CoordY = row.inPlace == 1 ? lon : 0;
+        row.distance = 0;
+        row.locationUniqueString = evidence;
+        return row;
+    }
 }

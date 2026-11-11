@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -152,6 +154,10 @@ public class ReportPrepareRealm {
             }
             Number lastId = realm.where(ReportPrepareDB.class).max("iD");
             ReportPrepareDB candidate = RealmObject.isManaged(defaults) ? realm.copyFromRealm(defaults) : defaults;
+            if (candidate.getErrorId() == null || candidate.getErrorId().trim().isEmpty()) candidate.setErrorId("0");
+            if (candidate.getOborotvedNum() == null || candidate.getOborotvedNum().trim().isEmpty()) candidate.setOborotvedNum("0");
+            if (candidate.getExpireLeft() == null || candidate.getExpireLeft().trim().isEmpty()) candidate.setExpireLeft("0");
+            if (candidate.facesPlan == null) candidate.facesPlan = 0;
             candidate.setID(lastId == null ? 1L : Math.addExact(lastId.longValue(), 1L));
             result[0] = realm.copyFromRealm(realm.copyToRealm(candidate));
         });
@@ -288,7 +294,7 @@ public class ReportPrepareRealm {
         for (ReportPrepareDB item : reportPrepareDBList) {
             tovarIdsList.add(item.tovarId); // Собираем для JOIN-а идентификаторы Товаров
 
-            item.colSKU = Integer.parseInt(item.face) > 0 ? 1 : 0;  // Расчитываем заодно и СКЮ
+            item.colSKU = FaceValue.rounded(item.face) > 0 ? 1 : 0;  // Расчитываем заодно и СКЮ
         }
 
         String[] tovIds = tovarIdsList.toArray(new String[0]);  // Получаю идентификаторы Товаров для запроса
@@ -301,7 +307,7 @@ public class ReportPrepareRealm {
                 int id2 = Integer.parseInt(tovItem.getiD());
                 if (id1 == id2) {
                     item.tovarDB = tovItem;
-                    item.shelfSpaceLength = (tovItem.width * Integer.parseInt(item.face) / 1000);
+                    item.shelfSpaceLength = (tovItem.width * FaceValue.rounded(item.face) / 1000);
                     tovarGrpIdsList.add(Integer.valueOf(tovItem.getGroupId()));
                     break;
                 }

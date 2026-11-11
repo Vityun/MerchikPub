@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.features.main.Main
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceDisplay
+import ua.com.merchik.merchik.Utils.FaceValue
 
 internal data class InlineNumberInputState(
     val focused: Boolean = false,
@@ -27,8 +28,15 @@ internal fun refreshedInlineInputValue(
     previous: String,
     local: String,
     current: String,
-    numeric: Boolean = false
+    numeric: Boolean = false,
+    roundFace: Boolean = false
 ): String {
+    if (roundFace) {
+        val roundedLocal = runCatching { FaceValue.input(local) }.getOrNull()
+        // Preserve the decimal draft on save acknowledgement, but accept stepper updates.
+        if (roundedLocal == current) return local
+        if (!local.endsWith('.') && !local.endsWith(',') && roundedLocal == previous) return current
+    }
     // A partial decimal or a comment rejected by validation is still the user's draft.
     val completeNumber = local.isNotBlank() && !local.endsWith('.') && !local.endsWith(',')
     val acknowledgedNumber = if (numeric && completeNumber) {

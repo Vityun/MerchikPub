@@ -375,9 +375,9 @@ public class DetailedReportButtons {
         // Запись в План работ
         int distance;
         if (Globals.measure.equals("м")) {
-            distance = (int) Globals.distanceAB;
+            distance = ua.com.merchik.merchik.Utils.DistanceValue.metres(Globals.distanceAB, false);
         } else if (Globals.measure.equals("км")) {
-            distance = (int) Globals.distanceAB * 1000;
+            distance = ua.com.merchik.merchik.Utils.DistanceValue.metres(Globals.distanceAB, true);
         } else {
             distance = 0;
         }

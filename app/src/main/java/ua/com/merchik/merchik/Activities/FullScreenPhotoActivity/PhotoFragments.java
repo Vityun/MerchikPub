@@ -145,6 +145,14 @@ public class PhotoFragments {
             dialog.setClose(dialog::dismiss);
             dialog.show();
 
+            Long serverPhotoId = null;
+            if (stackPhotoDB.photoServerId != null && !stackPhotoDB.photoServerId.trim().isEmpty()) {
+                try {
+                    serverPhotoId = Long.parseLong(stackPhotoDB.photoServerId.trim());
+                } catch (NumberFormatException e) {
+                    Globals.writeToMLOG("ERROR", "PhotoFragments", "Invalid photoServerId=" + stackPhotoDB.photoServerId);
+                }
+            }
             RealmManager.setRowToLog(Collections.singletonList(
                     new LogDB(
                             RealmManager.getLastIdLogDB() + 1,
@@ -153,7 +161,7 @@ public class PhotoFragments {
                             1258,
                             stackPhotoDB.client_id,
                             stackPhotoDB.addr_id,
-                            Long.getLong(stackPhotoDB.photoServerId),
+                            serverPhotoId,
                             null,
                             null,
                             Globals.session,

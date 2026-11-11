@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.FaceValue;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -155,7 +157,7 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
             optionResultTable.grp = item.getKey().nm;
 
 
-            optionResultTable.face = item.getValue().stream().map(table -> Integer.parseInt(table.face)).reduce(0, Integer::sum);
+            optionResultTable.face = item.getValue().stream().map(table -> FaceValue.rounded(table.face)).reduce(0, Integer::sum);
             optionResultTable.colSKU = item.getValue().stream().map(table -> table.colSKU).reduce(0, Integer::sum);
             optionResultTable.sizePPF = item.getValue().stream().map(table -> table.shelfSpaceLength).reduce(0d, Double::sum);
 
