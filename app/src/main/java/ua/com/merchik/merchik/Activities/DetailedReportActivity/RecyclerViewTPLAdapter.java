@@ -750,6 +750,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 dialog.setClose(dialog::dismiss);
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+                dialog.setAdditionalBarcodeCopy(tov.getBarcode());
                 String groupPos = null;
                 if (TPL.getOptionId().contains(135591)) {
                     groupPos = "22";

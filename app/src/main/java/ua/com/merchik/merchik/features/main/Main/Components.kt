@@ -108,6 +108,7 @@ import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ViewHolders.AkciyaSelectionDataHolder
 import ua.com.merchik.merchik.ViewHolders.ErrorSelectionDataHolder
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.ClickTextAction
@@ -122,6 +123,7 @@ import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.AkciyaPresence
 import ua.com.merchik.merchik.features.main.DBViewModels.ErrorDBViewModel
+import ua.com.merchik.merchik.features.main.componentsUI.CopyableBarcodeText
 import ua.com.merchik.merchik.features.main.componentsUI.ValidationTooltip
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -144,6 +146,11 @@ fun ItemFieldValue(
     onClickProductCode: ((DataItemUI, FieldValue, ClickTextAction) -> Unit)? = null,
     onLongClickProductCode: ((DataItemUI, FieldValue, ClickTextAction) -> Unit)? = null
 ) {
+    val productBarcode = if (fieldValue.key.equals("barcode", ignoreCase = true)) {
+        (item.rawObj.firstOrNull { it is TovarDB } as? TovarDB)
+            ?.barcode?.takeIf { it.isNotBlank() }
+    } else null
+
     Row(Modifier.fillMaxWidth()) {
         if (visibilityField == View.VISIBLE) {
             ItemTextField(
@@ -152,16 +159,28 @@ fun ItemFieldValue(
             )
         }
 
-        ItemTextField(
-            textField = fieldValue.value,
-            modifier = Modifier.weight(2f),
-            onClick = { action ->
-                onClickProductCode?.invoke(item, fieldValue, action)
-            },
-            onLongClick = { action ->
-                onLongClickProductCode?.invoke(item, fieldValue, action)
-            }
-        )
+        if (productBarcode != null) {
+            CopyableBarcodeText(
+                barcode = productBarcode,
+                modifier = Modifier.weight(2f),
+                textAlign = TextAlign.Start,
+                style = LocalTextStyle.current.copy(
+                    fontWeight = fieldValue.value.modifierValue?.fontWeight,
+                    fontStyle = fieldValue.value.modifierValue?.fontStyle ?: FontStyle.Normal
+                )
+            )
+        } else {
+            ItemTextField(
+                textField = fieldValue.value,
+                modifier = Modifier.weight(2f),
+                onClick = { action ->
+                    onClickProductCode?.invoke(item, fieldValue, action)
+                },
+                onLongClick = { action ->
+                    onLongClickProductCode?.invoke(item, fieldValue, action)
+                }
+            )
+        }
     }
 }
 

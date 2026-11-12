@@ -147,6 +147,7 @@ public class TovarRequisites {
         if (tovar != null) {
             res.setImage(true, getPhotoFromDB(tovar));
             res.setAdditionalText(setPhotoInfo(reportPrepareDB, tovarOptions, tovar, "", ""));
+            res.setAdditionalBarcodeCopy(tovar.getBarcode());
 
             // Сделано для того что б можно было контролировать какая опция сейчас открыта
             res.tovarOptions = tovarOptions;

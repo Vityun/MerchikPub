@@ -227,6 +227,7 @@ public class ShowTovarRequisites {
             dialog.setVideoLesson(context, true, 803, null, null);
             dialog.setImage(true, tovarRequisites.getPhotoFromDB(list));
             dialog.setAdditionalText(tovarRequisites.setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
+            dialog.setAdditionalBarcodeCopy(list.getBarcode());
 
             // Сделано для того что б можно было контролировать какая опция сейчас открыта
             dialog.tovarOptions = tpl;

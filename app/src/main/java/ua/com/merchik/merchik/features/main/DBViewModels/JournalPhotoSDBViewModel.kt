@@ -226,7 +226,7 @@ class JournalPhotoSDBViewModel @Inject constructor(
                 "premiyaUpload, specialCol, comment, commentUpload, upload_time, upload_to_server, vpi, " +
                 "dt, photoServerURL, showcase_id, time_event, tovar_id, photo_typeTxt, code_iza, " +
                 "example_id, example_img_id, planogram_id, planogram_img_id, gp, premiya, photoServerId," +
-                "img_src_id, statusShowcase, showcaseId, showcaseName, mainOption").split(",")
+                "img_src_id, statusShowcase, showcaseId, showcaseName, mainOption, photo_user_id").split(",")
     }
 
     override fun getDefaultSortUserFields(): List<String>? {

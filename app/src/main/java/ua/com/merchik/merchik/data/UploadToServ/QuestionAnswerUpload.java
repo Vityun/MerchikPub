@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
 
@@ -79,9 +80,6 @@ public class QuestionAnswerUpload {
     public static QuestionAnswerUpload fromDb(QuestionAnswerDB item) {
         QuestionAnswerUpload data = new QuestionAnswerUpload();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-
         data.question = item.getQuestion();
         data.answer = item.getAnswer();
         data.dt = item.getDt();
@@ -94,14 +92,20 @@ public class QuestionAnswerUpload {
         data.objectStr = item.getObjectStr();
         data.adrId = item.getAdrId();
         data.kliId = item.getKliId();
-//        data.objectDate = item.getObjectDate();
-        data.objectDate = item.getObjectDate() > 0
-                ? sdf.format(new Date(item.getObjectDate()))
-                : "";
+        data.objectDate = formatObjectDate(item.getObjectDate());
         data.elementId = String.valueOf(item.getId());
         data.optionId = item.getOptionId();
         data.mnenieId = item.getMnenieId();
 
         return data;
+    }
+
+    static String formatObjectDate(Long timestamp) {
+        if (timestamp == null || timestamp <= 0) return "";
+        // Local answers store Unix seconds; tolerate older millisecond values too.
+        long millis = timestamp > 100_000_000_000L ? timestamp : timestamp * 1000L;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("Europe/Kiev"));
+        return sdf.format(new Date(millis));
     }
 }

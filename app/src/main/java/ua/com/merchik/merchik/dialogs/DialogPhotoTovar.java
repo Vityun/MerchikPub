@@ -34,6 +34,7 @@ public class DialogPhotoTovar {
 
     private TextView barcode, barcodeError, textInfo;
     private ImageView photo, photoBarcode;
+    private String productBarcode;
 
     private ImageButton close, help, videoHelp, call;
 
@@ -110,11 +111,14 @@ public class DialogPhotoTovar {
     public void setTextInfo(StringBuilder stringBuilder) {
         if (stringBuilder != null) {
             textInfo.setText(stringBuilder);
+            BarcodeCopyLink.apply(textInfo, productBarcode);
             textInfo.setVisibility(View.VISIBLE);
         }
     }
 
     public void setPhotoBarcode(String barcode) {
+        productBarcode = barcode;
+        BarcodeCopyLink.apply(textInfo, barcode);
 
         int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.70);
         int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.10);
@@ -142,6 +146,7 @@ public class DialogPhotoTovar {
             barcodeError.setVisibility(View.VISIBLE);
             Spanned spanned = Html.fromHtml("<font color=red>Штрихкод " + barcode + " распознать не удалось</font>");
             barcodeError.setText(spanned);
+            BarcodeCopyLink.apply(barcodeError, barcode);
         } finally {
 //            this.barcode.setText(barcode);
             this.barcode.setVisibility(View.GONE);

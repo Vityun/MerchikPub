@@ -563,6 +563,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
         dialog.setData(endbId, endbAddr, endbGrp, endbNum, endbStart, endbEnd, endbAuthor, endbCust, endbMark, endbText);
 
+        if (tovarDB != null) dialog.setBarcodeCopy(tovarDB.getBarcode());
+
         dialog.setClose(dialog::dismiss);
         dialog.setLesson(context, true, 1234);
         dialog.setVideoLesson(context, true, 1235, () -> {

@@ -33,6 +33,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
+import ua.com.merchik.merchik.ServerExchange.PhotoUploadGate;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
@@ -67,6 +69,70 @@ public class PhotoReports {
     private final Handler uploadHandler = new Handler(Looper.getMainLooper());
     private StackPhotoDB uploadingPhoto;
     private int failedPhotos;
+    private PhotoUploadGate.Lease batchLease;
+    private Call<JsonObject> activeCall;
+    private boolean background;
+    private boolean cancelled;
+    private int uploadUserId;
+    private BackgroundCompletion backgroundCompletion;
+
+    public interface BackgroundCompletion {
+        void finished(boolean retry);
+    }
+
+    public void uploadInBackground(BackgroundCompletion completion) {
+        background = true;
+        backgroundCompletion = completion;
+        uploadPhotoReports(UploadType.AUTO);
+    }
+
+    public void cancelBackgroundUpload() {
+        if (!background) return;
+        cancelled = true;
+        if (activeCall != null) {
+            // Release the photo lease only after Retrofit delivers the terminal callback.
+            activeCall.cancel();
+        } else if (uploadingPhoto == null) {
+            finishBatch();
+        }
+    }
+
+    private boolean canShowUi() {
+        return !background && mContext instanceof Activity
+                && !((Activity) mContext).isFinishing() && !((Activity) mContext).isDestroyed();
+    }
+
+    private boolean sameUploadSession() {
+        return uploadUserId == Globals.getCurrentUserId() && realm == RealmManager.INSTANCE
+                && !realm.isClosed();
+    }
+
+    private void startSending(UploadType type) {
+        batchLease = PhotoUploadGate.INSTANCE.tryBatch();
+        if (batchLease == null) {
+            Globals.writeToMLOG("INFO", "PhotoReports/busy", "background=" + background);
+            if (type == UploadType.MULTIPLE && canShowUi()) {
+                Toast.makeText(mContext, "Выгрузка уже выполняется. Дождитесь окончания.", Toast.LENGTH_LONG).show();
+            }
+            finishBatch();
+            return;
+        }
+        send(type);
+    }
+
+    private void finishBatch() {
+        Globals.writeToMLOG("INFO", "PhotoReports/finish", "background=" + background
+                + ", userId=" + uploadUserId + ", failed=" + failedPhotos + ", cancelled=" + cancelled);
+        permission = true;
+        realmResults.clear();
+        if (batchLease != null) {
+            batchLease.close();
+            batchLease = null;
+        }
+        BackgroundCompletion completion = backgroundCompletion;
+        backgroundCompletion = null;
+        if (completion != null) completion.finished(failedPhotos > 0 || cancelled);
+    }
 
     public enum UploadType {
         SINGLE,
@@ -95,11 +161,23 @@ public class PhotoReports {
             }
             return;
         }
+        uploadUserId = Globals.getCurrentUserId();
+        try {
+            prepareAndUpload(type);
+        } catch (Exception error) {
+            failedPhotos++;
+            Globals.writeToMLOG("ERROR", "PhotoReports/start", Log.getStackTraceString(error));
+            finishBatch();
+        }
+    }
+
+    private void prepareAndUpload(UploadType type) {
         realmResults.clear();
         failedPhotos = 0;
         getDataToUpload();  // Подготовка данных к выгрузке
 
-        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
+        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type
+                + ", background=" + background + ", userId=" + uploadUserId);
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. size to unload: " + realmResults.size() + " /permission: " + permission);
 
         if (!realmResults.isEmpty()) {
@@ -120,7 +198,7 @@ public class PhotoReports {
                             if (confirmed[0]) return;
                             confirmed[0] = true;
                             dialog.dismiss();
-                            send(type);
+                            startSending(type);
                         });
                         dialog.setClose(dialog::dismiss);
                         dialog.setOnDismissAction(() -> {
@@ -143,13 +221,14 @@ public class PhotoReports {
                     if (permission) {
                         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start AUTO upload permission false. Начинается Автовыгрузка фотографий");
                         permission = false;
-                        send(type);
+                        startSending(type);
                     } else {
                         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start AUTO upload permission false. Уже начата Автовыгрузка, нужно подождать пока она завершится, прежде чем собирать новые данные");
                     }
                     break;
             }
         } else {
+            finishBatch();
             switch (type) {
                 case MULTIPLE:
                     new MessageDialogBuilder((Activity) mContext)
@@ -173,11 +252,36 @@ public class PhotoReports {
      * выгрузка и сохранение результатов
      */
     private void send(UploadType type) {
+        try {
+            sendNext(type);
+        } catch (Exception error) {
+            failedPhotos++;
+            Globals.writeToMLOG("ERROR", "PhotoReports/send", Log.getStackTraceString(error));
+            finishBatch();
+        }
+    }
+
+    private void sendNext(UploadType type) {
         if (permission || uploadingPhoto != null) return;
+        if (cancelled || !sameUploadSession()) {
+            finishBatch();
+            return;
+        }
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "Start SEND. size to unload: " + realmResults.size());
         Log.e("StartPhotoUpload", "++++++++++");
         if (!realmResults.isEmpty()) {
-            StackPhotoDB current = realmResults.get(0);
+            StackPhotoDB queued = realmResults.get(0);
+            StackPhotoDB stored = StackPhotoRealm.getById(queued.getId());
+            if (!StackPhotoSyncPolicy.samePhoto(stored, queued) || stored.getUpload_to_server() != 0
+                    || stored.getGet_on_server() != 0) {
+                Globals.writeToMLOG("INFO", "PhotoReports/skip", "id=" + queued.getId()
+                        + ", reason=already_uploaded_or_changed");
+                realmResults.remove(0);
+                uploadHandler.post(() -> send(type));
+                return;
+            }
+            StackPhotoDB current = stored;
+            realmResults.set(0, current);
             uploadingPhoto = current;
             ExchangeInterface.UploadPhotoReports callback = new ExchangeInterface.UploadPhotoReports() {
                 @Override
@@ -191,7 +295,7 @@ public class PhotoReports {
                 }
             };
             try {
-                buildCall(current, callback);
+                buildCall(current, type, callback);
             } catch (Exception error) {
                 Globals.writeToMLOG("ERROR", "PhotoReports/prepare",
                         photoDiagnostic(current) + ", error=" + Log.getStackTraceString(error));
@@ -199,7 +303,7 @@ public class PhotoReports {
                 completePhoto(current, type, false, "Ошибка подготовки фото: " + error, false);
             }
         } else {
-            permission = true;
+            finishBatch();
             switch (type) {
                 case MULTIPLE:
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/Send", "MULTIPLE/ выгрузка окончена");
@@ -229,11 +333,14 @@ public class PhotoReports {
                                String message, boolean checkInvalidFile) {
         if (uploadingPhoto != photo) return;
         try {
+            if (cancelled || !sameUploadSession()) return;
             if (success) {
                 if (!StackPhotoRealm.markUploadSucceeded(photo)) {
                     throw new IllegalStateException("Не удалось сохранить результат выгрузки фото");
                 }
-                Toast.makeText(mContext, "Фото номер: " + photo.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
+                if (!background) {
+                    Toast.makeText(mContext, "Фото номер: " + photo.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
+                }
             } else {
                 failedPhotos++;
                 StackPhotoRealm.markUploadFailed(photo, message);
@@ -248,6 +355,7 @@ public class PhotoReports {
         } finally {
             realmResults.remove(photo);
             uploadingPhoto = null;
+            activeCall = null;
             // Post instead of recursing: a batch of invalid records must not grow the stack.
             uploadHandler.post(() -> send(type));
         }
@@ -311,6 +419,8 @@ public class PhotoReports {
         List<StackPhotoDB> res = realm.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
         String pendingPhotoNum = MakePhoto.getPendingPhotoNum(mContext);
         for (StackPhotoDB photo : res) {
+            if (background && photo != null
+                    && !String.valueOf(uploadUserId).equals(photo.getPhoto_user_id())) continue;
             if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
                 String filePath = photo.getPhoto_num();
                 if (filePath == null || filePath.trim().isEmpty()) {
@@ -347,7 +457,7 @@ public class PhotoReports {
      *
      * @return
      */
-    private void buildCall(StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
+    private void buildCall(StackPhotoDB photoDB, UploadType type, ExchangeInterface.UploadPhotoReports callback) {
         int photoId = photoDB.getId();
         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/", "START UPLOAD. Photo upload id: " + photoId);
 
@@ -604,9 +714,14 @@ public class PhotoReports {
 
 
 //        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + new Gson().toJson(call.request().body()));
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
+        activeCall = call;
+        PhotoUploadCall.enqueue(call, photoDB.getId(), photoDB.getPhoto_num(), new retrofit2.Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (cancelled || !sameUploadSession()) {
+                    callback.onFailure(photoDB, "Upload stopped or user changed");
+                    return;
+                }
                 Log.e("M_UPLOAD_GALLERY", "HERE IN onResponse");
                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");
 
@@ -634,7 +749,7 @@ public class PhotoReports {
                                     }
                                     if ("photo_already_exist".equals(data.errorType)) {
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-                                        if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
+                                        if (canShowUi() && photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
                                             new MessageDialogBuilder((Activity) mContext)
                                                     .setStatus(DialogStatus.ALERT)
                                                     .setTitle("Сервер не прийняв фото")
@@ -644,7 +759,7 @@ public class PhotoReports {
                                         callback.onSuccess(photoDB, data.error);
                                     } else if ("missing_geo_coord".equals(data.errorType)) {
                                         Globals.fixMP(null, null);
-                                        new MessageDialogBuilder((Activity) mContext)
+                                        if (canShowUi()) new MessageDialogBuilder((Activity) mContext)
                                                 .setStatus(DialogStatus.ALERT)
                                                 .setTitle("Сервер не прийняв фото")
                                                 .setMessage(data.error)
@@ -677,7 +792,7 @@ public class PhotoReports {
                                         } else {
                                             if ("photo_already_exist".equals(data.errorType)) {
                                                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-                                                if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
+                                                if (canShowUi() && photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
                                                     new MessageDialogBuilder((Activity) mContext)
                                                             .setStatus(DialogStatus.ALERT)
                                                             .setTitle("Сервер не прийняв фото")
@@ -717,6 +832,14 @@ public class PhotoReports {
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                if (t instanceof PhotoUploadCall.BusyException) {
+                    Globals.writeToMLOG("INFO", "PhotoReports/skip", "id=" + photoDB.getId() + ", reason=in_flight");
+                    realmResults.remove(photoDB);
+                    uploadingPhoto = null;
+                    activeCall = null;
+                    uploadHandler.post(() -> send(type));
+                    return;
+                }
                 Log.e("M_UPLOAD_GALLERY", "HERE IN onFailure: " + t);
                 Globals.writeToMLOG("FAILURE", "PhotoReports/buildCall/CALL/onFailure", "t.toString(): " + t.toString());
                 callback.onFailure(photoDB, t.toString());

@@ -806,6 +806,14 @@ public class DialogData {
                 .into(photo);
     }
 
+    public void setAdditionalBarcodeCopy(String barcode) {
+        BarcodeCopyLink.apply(additionalTextValue3, barcode);
+    }
+
+    public void setBarcodeCopy(String barcode) {
+        BarcodeCopyLink.apply(text, barcode);
+    }
+
     public void setAdditionalText(PhotoDescriptionText data) {
         additionalText1 = dialog.findViewById(R.id.additionalText1);
         additionalText2 = dialog.findViewById(R.id.additionalText2);

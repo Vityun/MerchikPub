@@ -106,6 +106,7 @@ import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
@@ -2098,7 +2099,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             try {
                 Log.e("TAG_REALM_LOG", "ПОПЫТКА ВЫГРУЗИТЬ ФОТО с ID: " + photoDB.getId());
 
-                call.enqueue(new retrofit2.Callback<JsonObject>() {
+                PhotoUploadCall.enqueue(call, photoDB.getId(), photoDB.getPhoto_num(), new retrofit2.Callback<JsonObject>() {
                     @Override
                     public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                         globals.writeToMLOG("TOOLBAR.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");

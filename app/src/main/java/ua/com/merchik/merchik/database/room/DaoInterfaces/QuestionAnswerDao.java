@@ -68,6 +68,9 @@ public abstract class QuestionAnswerDao {
     @Query("SELECT * FROM question_answers WHERE ID > :minId ORDER BY ID ASC")
     public abstract List<QuestionAnswerDB> getAllForUploadTest(long minId);
 
+    @Query("SELECT * FROM question_answers WHERE ID > :minId AND user_id = :userId ORDER BY ID ASC")
+    public abstract List<QuestionAnswerDB> getPendingForUpload(long minId, long userId);
+
 
     @Query(
             "SELECT dt " +

@@ -1182,6 +1182,7 @@ class TovarDBViewModel @Inject constructor(
             val dialog = DialogData(context)
             dialog.setTitle("Остатки товара в ТТ")
             dialog.setText(stringBuilder)
+            dialog.setBarcodeCopy(tovar.barcode)
             dialog.show()
 
         } catch (e: Exception) {
@@ -2693,6 +2694,7 @@ class TovarDBViewModel @Inject constructor(
                     finalBalanceDate1 = finalBalanceDate1
                 )
             )
+            dialog.setAdditionalBarcodeCopy(previewTovar.barcode)
 
             dialog.tovarOptions = tpl
             dialog.reportPrepareDB = previewRp

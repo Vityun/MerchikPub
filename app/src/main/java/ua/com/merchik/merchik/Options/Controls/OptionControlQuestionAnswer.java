@@ -17,6 +17,8 @@ import java.util.Objects;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.ServerExchange.QuestionAnswerAckPolicy;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
@@ -25,6 +27,7 @@ import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 
 // Контроль наличия жалоб на условия работ
 public class OptionControlQuestionAnswer<T> extends OptionControl {
@@ -56,6 +59,37 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
     private String periodText = "";
 
     public boolean signal = false;
+    private boolean acknowledgementCheck;
+    private Exception calculationError;
+    private long uploadedThrough;
+    private String decisionReason = "no_complaints";
+    private List<QuestionAnswerDB> releasingAnswers = Collections.emptyList();
+
+    private OptionControlQuestionAnswer(WpDataDB wp, OptionsDB option) {
+        document = wp;
+        optionDB = option;
+        nnkMode = Options.NNKMode.CHECK;
+        acknowledgementCheck = true;
+        getDocumentVar();
+        executeOption();
+    }
+
+    /** Reuses the control calculation without dialogs or writes to option state. */
+    public static List<Long> pendingAcknowledgements(WpDataDB wp) {
+        for (OptionsDB option : OptionsRealm.getOptionsByDAD2(String.valueOf(wp.getCode_dad2()))) {
+            if (!"1".equals(option.getBlockPns())
+                    || (!"151121".equals(option.getOptionId())
+                    && !"151121".equals(option.getOptionControlId()))) continue;
+            OptionControlQuestionAnswer<?> check = new OptionControlQuestionAnswer<>(wp, option);
+            if (check.calculationError != null) {
+                throw new IllegalStateException("Cannot check complaint acknowledgement", check.calculationError);
+            }
+            List<Long> pending = QuestionAnswerAckPolicy.pendingReleasingIds(check.releasingAnswers,
+                    check.uploadedThrough);
+            if (!pending.isEmpty()) return pending;
+        }
+        return Collections.emptyList();
+    }
 
     public OptionControlQuestionAnswer(
             Context context,
@@ -97,10 +131,19 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                         + formatDateSec(dateToSec);
 
                 this.user = SQL_DB.usersDao().getById(userId);
-                this.controlledUserText = user.fio;
+                this.controlledUserText = user != null ? user.fio : wpDataDB.getUser_txt();
+                this.uploadedThrough = QuestionExchange.uploadedThrough();
+                log("input", "mode=" + nnkMode + ", ackCheck=" + acknowledgementCheck
+                        + ", rowId=" + optionDB.getID() + ", blockPns=" + optionDB.getBlockPns()
+                        + ", userId=" + userId + ", userFound=" + (user != null)
+                        + ", reportDate20=" + (user != null ? user.reportDate20 : null)
+                        + ", theme=" + theme + ", documentDate=" + documentDateSec
+                        + ", from=" + dateFromSec + ", to=" + dateToSec
+                        + ", uploadedThrough=" + uploadedThrough);
 
             }
         } catch (Exception e) {
+            calculationError = e;
             Globals.writeToMLOG(
                     "ERROR",
                     "OptionControlQuestionAnswer/getDocumentVar",
@@ -111,6 +154,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
 
     private void executeOption() {
         try {
+            if (calculationError != null) throw calculationError;
             if (wpDataDB == null) {
                 stringBuilderMsg.append("Документ для проверки наличия жалоб не найден.");
                 signal = false;
@@ -123,6 +167,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
              * 2.0. Получим данные о наличии поданных замечаний/жалоб
              */
             List<QuestionAnswerDB> complaints = getComplaints();
+            logAnswers("complaints", complaints);
 
             /*
              * 3.0. Сформируем сообщение и базовый сигнал
@@ -140,6 +185,8 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                 signal = true;
 
             } else {
+                releasingAnswers = complaints;
+                decisionReason = "complaints";
 
                 stringBuilderMsg
                         .append(periodText)
@@ -165,6 +212,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
              * значит до 20-го отчета подача замечаний не обязательна.
              */
             if (signal && isExecutorReportDocument() && isBeforeTwentiethReport()) {
+                decisionReason = "before_twentieth_report";
                 stringBuilderMsg
                         .append(" Але, до 20-го звіту це не обов'язково.");
 
@@ -177,6 +225,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
              * то получение жалоб не контролируем.
              */
             if (signal && theme == THEME_DISMISSED_SALARY_REVIEW && isControlledUserDismissed()) {
+                decisionReason = "dismissed_salary_review";
                 stringBuilderMsg
                         .append(" Но, проверяемый уволен. Поэтому получение замечаний (жалоб) НЕ контролируем!");
 
@@ -225,6 +274,11 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                 }
             }
 
+            log("result", "ackCheck=" + acknowledgementCheck + ", reason=" + decisionReason
+                    + ", signal=" + signal + ", releasingIds=" + answerIds(releasingAnswers)
+                    + ", pendingIds=" + QuestionAnswerAckPolicy.pendingReleasingIds(releasingAnswers, uploadedThrough));
+            if (acknowledgementCheck) return;
+
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
@@ -242,6 +296,9 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
             checkUnlockCode(optionDB);
 
         } catch (Exception e) {
+            calculationError = e;
+            signal = true;
+            setIsBlockOption(true);
             Globals.writeToMLOG(
                     "ERROR",
                     "OptionControlQuestionAnswer/executeOption",
@@ -273,7 +330,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                     "Exception e: " + e
             );
 
-            return new ArrayList<>();
+            throw new IllegalStateException("Cannot read complaints", e);
         }
     }
 
@@ -293,7 +350,7 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                     "Exception e: " + e
             );
 
-            return new ArrayList<>();
+            throw new IllegalStateException("Cannot read no-complaints answers", e);
         }
     }
 
@@ -384,11 +441,14 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
 
             List<QuestionAnswerDB> secondPartAnswers =
                     getNoComplaintsAnswers(secondPartFromSec, secondPartToSec);
+            logAnswers("no_complaints_first_half", firstPartAnswers);
+            logAnswers("no_complaints_second_half", secondPartAnswers);
 
             int firstCount = firstPartAnswers != null ? firstPartAnswers.size() : 0;
             int secondCount = secondPartAnswers != null ? secondPartAnswers.size() : 0;
 
             if (firstCount > 0 && secondCount > 0) {
+                decisionReason = "no_complaints_both_halves";
                 stringBuilderMsg
                         .append(" Увага! Вам потрібно подавати зауваження ОКРІМ \"зауважень нема\".");
                 return;
@@ -415,9 +475,13 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
                         .append(", зроблено виключення.");
 
                 signal = false;
+                decisionReason = "no_complaints_temporary_window";
+                releasingAnswers = secondPartAnswers;
+                log("exception", "until=" + exceptionDateSec);
             }
 
         } catch (Exception e) {
+            calculationError = e;
             Globals.writeToMLOG(
                     "ERROR",
                     "OptionControlQuestionAnswer/applyNoComplaintsTemporaryWindowException",
@@ -584,6 +648,27 @@ public class OptionControlQuestionAnswer<T> extends OptionControl {
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
+    }
+
+    private void log(String stage, String message) {
+        Globals.writeToMLOG("INFO", "OptionControlQuestionAnswer/" + stage,
+                "dad2=" + (wpDataDB != null ? wpDataDB.getCode_dad2() : 0) + ", " + message);
+    }
+
+    private List<Long> answerIds(List<QuestionAnswerDB> answers) {
+        List<Long> ids = new ArrayList<>();
+        for (QuestionAnswerDB answer : answers) ids.add(answer.getId());
+        return ids;
+    }
+
+    private void logAnswers(String kind, List<QuestionAnswerDB> answers) {
+        log(kind, "count=" + answers.size());
+        for (QuestionAnswerDB answer : answers) {
+            log("answer", "kind=" + kind + ", id=" + answer.getId() + ", userId=" + answer.getUserId()
+                    + ", dt=" + answer.getDt() + ", theme=" + answer.getIdQuest()
+                    + ", themeComment=" + answer.getIdQuestCom() + ", objectId=" + answer.getObjectId()
+                    + ", confirmed=" + QuestionAnswerAckPolicy.isConfirmed(answer.getId(), uploadedThrough));
+        }
     }
 
 }

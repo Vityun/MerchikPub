@@ -105,6 +105,7 @@ import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
+import ua.com.merchik.merchik.dialogs.BarcodeCopyLink;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
@@ -717,6 +718,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         DialogData dialog = new DialogData(mContext);
                         dialog.setTitle("Остатки товара в ТТ");
                         dialog.setText(stringBuilder);
+                        dialog.setBarcodeCopy(list.getBarcode());
                         dialog.show();
                     });
 
@@ -735,6 +737,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 dName.setText(list.getNm());
                 dWeight.setText(weightString);
+                BarcodeCopyLink.apply(dWeight, list.getBarcode());
                 closeDialog.setOnClickListener(v -> dialog.cancel());
 
                 if (reportPrepareTovar != null) {
@@ -1316,6 +1319,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 dialog.setVideoLesson(mContext, true, 803, null, null);
                 dialog.setImage(true, getPhotoFromDB(list));
                 dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
+                dialog.setAdditionalBarcodeCopy(list.getBarcode());
 
                 // Сделано для того что б можно было контролировать какая опция сейчас открыта
                 dialog.tovarOptions = tpl;

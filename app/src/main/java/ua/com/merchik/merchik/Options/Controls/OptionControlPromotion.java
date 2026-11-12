@@ -265,6 +265,7 @@ public class OptionControlPromotion<T> extends OptionControl {
 
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+                dialog.setAdditionalBarcodeCopy(tov.getBarcode());
 
                 dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
                 dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));

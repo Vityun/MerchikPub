@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
@@ -263,7 +264,7 @@ public class PhotoLog {
 
         try {
 
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
+            PhotoUploadCall.enqueue(call, photoDB.getId(), photoDB.getPhoto_num(), new retrofit2.Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");

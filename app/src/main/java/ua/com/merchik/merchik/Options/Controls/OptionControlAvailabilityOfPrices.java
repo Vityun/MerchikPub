@@ -757,6 +757,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
         if (tovar != null) {
             editor.setImage(true, getPhotoFromDB(tovar));
             editor.setAdditionalText(setPhotoInfo(TPL, tovar, "", ""));
+            editor.setAdditionalBarcodeCopy(tovar.getBarcode());
         } else {
             editor.setTitle(TovarRequisites.optionTitleForVisit(TPL, visit));
             editor.setText("(" + productId + ")");

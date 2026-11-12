@@ -18,6 +18,8 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
+import ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -296,6 +298,13 @@ public final class ReportConductManager {
                 if (PhotoCommentSync.hasPendingVisit(state.dad2)) {
                     log("INFO", state.dad2, "WAIT photo comments ACK; document_complete kept queued");
                     PhotoCommentSync.flush();
+                    continue;
+                }
+                List<Long> pendingAnswers = OptionControlQuestionAnswer.pendingAcknowledgements(wp);
+                if (!pendingAnswers.isEmpty()) {
+                    log("INFO", state.dad2, "WAIT 151121 complaint ACK: ids=" + pendingAnswers
+                            + "; document_complete kept queued");
+                    new QuestionExchange().uploadQuestionAnswers();
                     continue;
                 }
                 state.retryAfter = System.currentTimeMillis() + RETRY_MS;

@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
+import ua.com.merchik.merchik.dialogs.BarcodeCopyLink;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
@@ -265,6 +266,10 @@ public class DialogARMark {
         txtCustomer.setText(customer);
         txtMark.setText(mark);
         txtText.setText(text);
+    }
+
+    public void setBarcodeCopy(String barcode) {
+        BarcodeCopyLink.apply(txtText, barcode);
     }
 
     public void setRatingBarAR(

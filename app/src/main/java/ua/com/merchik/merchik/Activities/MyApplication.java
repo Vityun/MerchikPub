@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
+import ua.com.merchik.merchik.ServerExchange.workmager.PhotoUploadWorker;
 import ua.com.merchik.merchik.Utils.LogCleaner;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.RoomManager;
@@ -89,6 +90,7 @@ public class MyApplication extends Application {
 
         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(this);
         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTaskSecond(this);
+        PhotoUploadWorker.schedule(this);
 
 //        WorkManagerHelper.INSTANCE.scheduleWpDataSync(this);
 

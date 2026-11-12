@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.DialodTAR.TarPhotoSourceDialog
 import ua.com.merchik.merchik.dialogs.SamplePhotoPreview
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
@@ -48,10 +49,21 @@ object ProductPhotoCapture {
     }
 
     fun openRemainingGoodsSamples(activity: Activity, wp: WpDataDB, tovarId: String) {
+        val visitId = wp.id
         val networkId = RoomManager.SQL_DB.addressDao().getById(wp.addr_id)?.tpId ?: 0
-        val option = OptionsRealm.getOption(wp.code_dad2.toString(), "135158")
-        openSampleList(activity, wp.id, StackPhotoDB.PHOTO_TOV_LEFT, tovarId, networkId,
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158, option?.getID())
+        val optionId = OptionsRealm.getOption(wp.code_dad2.toString(), "135158")?.getID()
+        TarPhotoSourceDialog.show(
+            activity,
+            onCamera = {
+                openSampleList(activity, visitId, StackPhotoDB.PHOTO_TOV_LEFT, tovarId, networkId,
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158, optionId)
+            },
+            onGallery = {
+                openSampleList(activity, visitId, StackPhotoDB.PHOTO_TOV_LEFT, tovarId, networkId,
+                    ContextUI.SAMPLE_PHOTO_FOR_PRODUCT_GALLERY, optionId)
+            },
+            onDismiss = {}
+        )
     }
 
     fun openPromotionPhotos(activity: Activity, wp: WpDataDB, tovarId: String) {

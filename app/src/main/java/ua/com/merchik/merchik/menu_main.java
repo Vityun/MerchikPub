@@ -81,6 +81,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
@@ -2332,7 +2333,7 @@ public class menu_main extends AppCompatActivity {
                         null,
                         null)));
 
-                call.enqueue(new retrofit2.Callback<JsonObject>() {
+                PhotoUploadCall.enqueue(call, photoDB.getId(), photoDB.getPhoto_num(), new retrofit2.Callback<JsonObject>() {
                     @Override
                     public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
 

@@ -21,10 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -41,6 +43,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -396,26 +399,33 @@ private fun createBarcodeBitmapOrNull(
 
 @Composable
 fun CopyableBarcodeText(
-    barcode: String
+    barcode: String,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 8.dp, vertical = 4.dp),
+    textAlign: TextAlign = TextAlign.Center,
+    style: TextStyle = LocalTextStyle.current
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
 
     Text(
         text = barcode,
+        style = style,
         color = Color(0xFF1565C0),
         textDecoration = TextDecoration.Underline,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
+        textAlign = textAlign,
+        modifier = modifier
+            .wrapContentWidth(
+                if (textAlign == TextAlign.Start) Alignment.Start else Alignment.CenterHorizontally
+            )
+            .clickable(enabled = barcode.isNotBlank()) {
                 copyBarcodeToClipboard(
                     context = context,
                     clipboard = clipboard,
                     barcode = barcode
                 )
             }
-            .padding(horizontal = 8.dp, vertical = 4.dp)
     )
 }
 
@@ -430,7 +440,7 @@ private fun copyBarcodeToClipboard(
 
     Toast.makeText(
         context,
-        "Штрихкод скопійовано: $barcode",
+        "Штрихкод скопійовано",
         Toast.LENGTH_SHORT
     ).show()
 }

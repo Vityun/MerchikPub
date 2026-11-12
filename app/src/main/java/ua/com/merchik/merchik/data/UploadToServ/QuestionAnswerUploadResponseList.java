@@ -6,6 +6,12 @@ import com.google.gson.annotations.SerializedName;
 
 public class QuestionAnswerUploadResponseList {
 
+    @SerializedName("state")
+    public Boolean state;
+
+    @SerializedName("error")
+    public String error;
+
     @SerializedName("id")
     @Expose
     public String id;
