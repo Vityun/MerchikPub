@@ -37,6 +37,7 @@ import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.TrustedTime;
+import ua.com.merchik.merchik.data.VisitReassignmentStore;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -225,6 +226,7 @@ public class RealmManager {
                         + ", localDataSize=" + localData.size()
         );
 
+        Map<Long, Long> reassignedLocalIds = new HashMap<>();
         for (WpDataDB serverItem : serverData) {
             if (serverItem == null) {
                 Globals.writeToMLOG(
@@ -261,6 +263,7 @@ public class RealmManager {
 
             if (reassignedDecision.shouldDelete) {
                 dad2ToDelete.add(codeDad2);
+                reassignedLocalIds.put(codeDad2, localItem == null ? 0L : localItem.getId());
                 continue;
             }
             // Проверяем, есть ли такая запись в локальной базе
@@ -312,6 +315,15 @@ public class RealmManager {
         });
 
         deleteRoomWorkPlanDataByDad2(dad2ToDelete);
+        VisitReassignmentStore reassigned = VisitReassignmentStore.get();
+        for (Long dad2 : dad2ToDelete) {
+            reassigned.record(currentUserId, dad2, reassignedLocalIds.getOrDefault(dad2, 0L));
+        }
+        for (WpDataDB visit : dataToUpdate) {
+            if (isWorkAssignedToUser(visit, currentUserId)) {
+                reassigned.clear(currentUserId, visit.getCode_dad2());
+            }
+        }
     }
 
     private static ReassignedWorkDecision evaluateReassignedWork(WpDataDB serverItem, WpDataDB localItem, int currentUserId) {

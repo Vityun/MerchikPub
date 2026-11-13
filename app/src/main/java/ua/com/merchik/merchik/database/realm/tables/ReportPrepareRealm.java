@@ -20,10 +20,12 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareUploadPolicy;
+import ua.com.merchik.merchik.ServerExchange.VisitReportRefreshPolicy;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class ReportPrepareRealm {
@@ -129,6 +131,33 @@ public class ReportPrepareRealm {
 
     private static void logIdentityConflict(String message) {
         Globals.writeToMLOG("WARNING", "ReportPrepareDuplicate", message);
+    }
+
+    /** Only the serialized, full refresh before work starts may replace a server RP identity. */
+    public static boolean reconcileUnstartedVisit(long dad2, List<ReportPrepareDB> data) {
+        if (data == null || data.isEmpty()) return false;
+        List<String> diagnostics = new ArrayList<>();
+        INSTANCE.executeTransaction(realm -> {
+            WpDataDB visit = realm.where(WpDataDB.class).equalTo("code_dad2", dad2).findFirst();
+            if (visit == null || !VisitReportRefreshPolicy.notStarted(visit.getClient_start_dt(),
+                    visit.getVisit_start_dt(), visit.getClient_end_dt(), visit.getVisit_end_dt()))
+                throw new IllegalStateException("Visit missing or already started, dad2=" + dad2);
+            List<ReportPrepareVisitMerge.Change> changes = ReportPrepareVisitMerge.plan(dad2,
+                    realm.where(ReportPrepareDB.class).findAll(), data);
+            for (ReportPrepareVisitMerge.Change change : changes) {
+                ReportPrepareDB accepted = change.apply();
+                for (Long id : change.obsoleteIds)
+                    realm.where(ReportPrepareDB.class).equalTo("iD", id).findAll().deleteAllFromRealm();
+                realm.copyToRealmOrUpdate(accepted);
+                if (!change.obsoleteIds.isEmpty() || change.pending != null)
+                    diagnostics.add("dad2=" + dad2 + ", tovar=" + accepted.getTovarId()
+                            + ", oldIds=" + change.obsoleteIds + ", serverId=" + accepted.getID()
+                            + ", pendingPreserved=" + (change.pending != null));
+            }
+        });
+        for (String diagnostic : diagnostics)
+            Globals.writeToMLOG("INFO", "VisitReportRefresh/reconcile", diagnostic);
+        return true;
     }
 
     public static ReportPrepareDB getOrCreateLocal(ReportPrepareDB defaults) {

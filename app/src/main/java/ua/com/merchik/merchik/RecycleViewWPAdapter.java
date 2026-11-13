@@ -554,6 +554,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 Intent intent = new Intent(mContext, DetailedReportActivity.class);
 
                 intent.putExtra("WpDataDB_ID", wp.getId());
+                intent.putExtra("WpDataDB_DAD2", wp.getCode_dad2());
 
 //                intent.putExtra("dataFromWP", D);
 //                intent.putExtra("rowWP", wp);

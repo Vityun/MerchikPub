@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Globals;
@@ -28,6 +29,7 @@ public class TARSecondFrag extends Fragment {
 
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
+    private TabLayoutMediator tabMediator;
 
     public TasksAndReclamationsSDB data;
     private FragmentManager fragmentManager;
@@ -35,6 +37,12 @@ public class TARSecondFrag extends Fragment {
 
     public static int TaRID = 0;
     private static final String ARG_TAR_ID = "tar_id";
+    private static final int[] TAB_TITLES = {
+            R.string.title_tab_tar_0,
+            R.string.title_tab_tar_1,
+            R.string.title_tab_tar_3,
+            R.string.title_tab_tar_2
+    };
 
     public TARSecondFrag() {
     }
@@ -85,25 +93,6 @@ public class TARSecondFrag extends Fragment {
 
         tabLayout = v.findViewById(R.id.tabLayout);
         viewPager = v.findViewById(R.id.viewPagerChild);
-
-        data = resolveTarData();
-        if (data != null) {
-            bindHeader(v, data);
-            setTab(v.getContext());
-        } else if (viewModel != null) {
-            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), tar -> {
-                if (tar != null && data == null) {
-                    data = tar;
-                    bindHeader(v, data);
-                    setTab(v.getContext());
-                }
-            });
-        }
-
-        if (fragmentManager != null) {
-            Log.e("TARSecondFrag_T", "fragmentManager.getFragments(): " + fragmentManager.getFragments());
-        }
-
         return v;
     }
 
@@ -131,13 +120,39 @@ public class TARSecondFrag extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Tab1Fragment.secFrag = this;
+
+        data = resolveTarData();
+        if (data != null) {
+            bindHeader(view, data);
+            setTab(view.getContext());
+        } else if (viewModel != null) {
+            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), tar -> {
+                if (tar != null && data == null) {
+                    data = tar;
+                    bindHeader(view, data);
+                    setTab(view.getContext());
+                }
+            });
+        }
+
+        if (fragmentManager != null) {
+            Log.e("TARSecondFrag_T", "fragmentManager.getFragments(): " + fragmentManager.getFragments());
+        }
     }
 
     // Pika сброс этого экземпляра класса в переменной внутри класса Tab1Fragment
     @Override
     public void onDestroyView() {
+        if (tabMediator != null) {
+            tabMediator.detach();
+            tabMediator = null;
+        }
+        if (viewPager != null) viewPager.setAdapter(null);
+        adapter = null;
+        tabLayout = null;
+        viewPager = null;
+        if (Tab1Fragment.secFrag == this) Tab1Fragment.secFrag = null;
         super.onDestroyView();
-        Tab1Fragment.secFrag = null;
     }
 
     TARTab adapter;
@@ -146,32 +161,12 @@ public class TARSecondFrag extends Fragment {
             return;
         }
 
-        tabLayout.getTabAt(0).setText(getString(R.string.title_tab_tar_0));
-        tabLayout.getTabAt(1).setText(getString(R.string.title_tab_tar_1));
-        tabLayout.getTabAt(3).setText(getString(R.string.title_tab_tar_2));
-        tabLayout.getTabAt(2).setText(getString(R.string.title_tab_tar_3));
-
-
         FragmentManager manager = fragmentManager != null ? fragmentManager : getChildFragmentManager();
-        adapter = new TARTab(context, manager, getLifecycle(), tabLayout.getTabCount(), data);
+        adapter = new TARTab(context, manager, getViewLifecycleOwner().getLifecycle(), TAB_TITLES.length, data);
         viewPager.setAdapter(adapter);
-//        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
+        tabMediator = new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> tab.setText(TAB_TITLES[position]));
+        tabMediator.attach();
     }
 
     public void setPhoto(Integer id){
@@ -190,8 +185,7 @@ public class TARSecondFrag extends Fragment {
 
     // Pika выполнение клика на комменте чтоб перейти в комментарии
     public void clickOn3(){
-        tabLayout.selectTab(tabLayout.getTabAt(3));
-        tabLayout.performClick();
+        if (viewPager != null && adapter != null) viewPager.setCurrentItem(3);
     }
 
     private TasksAndReclamationsSDB resolveTarData() {

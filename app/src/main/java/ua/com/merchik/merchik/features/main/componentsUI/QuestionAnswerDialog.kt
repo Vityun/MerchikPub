@@ -90,6 +90,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.WPDataPauseSDB
 import ua.com.merchik.merchik.data.QuestionAnswerDB
+import ua.com.merchik.merchik.data.QuestionAnswerPaymentAmount
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -1721,6 +1722,7 @@ private suspend fun saveQuestionAnswerToDb(
 ) {
 //    withContext(Dispatchers.IO) {
     val nowSeconds = System.currentTimeMillis() / 1000L
+    val roundedDesiredCash = QuestionAnswerPaymentAmount.roundToWhole(desiredCash)
 
     val answerText = buildQuestionAnswerSavedText(
         template = statementTemplate,
@@ -1730,7 +1732,7 @@ private suspend fun saveQuestionAnswerToDb(
         cashFact = wantReceiveFact,
         cashPenaltyFact = avgCashPenaltyFact,
         visitsPerWeekFact = visitsPerWeekFact,
-        desiredCash = desiredCash,
+        desiredCash = roundedDesiredCash,
         desiredVisitsPerWeek = desiredVisitsPerWeek,
         comment = comment,
         currentVisit = currentVisit
@@ -1741,7 +1743,7 @@ private suspend fun saveQuestionAnswerToDb(
         append("; avgUpOnShowcaseFact=").append(avgUpOnShowcaseFact)
         append("; wantReceiveFact=").append(wantReceiveFact)
         append("; visitsPerWeekFact=").append(visitsPerWeekFact)
-        append("; desiredCash=").append(desiredCash.ifBlank { "0" })
+        append("; desiredCash=").append(roundedDesiredCash.ifBlank { "0" })
         append("; desiredVisitsPerWeek=").append(desiredVisitsPerWeek.ifBlank { "0" })
         append("; totalUpOnShowcase=").append(totalUpOnShowcase)
         append("; reportPrepareCount=").append(reportPrepareCount)
@@ -1753,7 +1755,7 @@ private suspend fun saveQuestionAnswerToDb(
         userId = Globals.userId.toLong()
 
         question = themeTitle
-        answer = desiredCash
+        answer = roundedDesiredCash
         dt = nowSeconds
 
         avgAnswer = desiredVisitsPerWeek

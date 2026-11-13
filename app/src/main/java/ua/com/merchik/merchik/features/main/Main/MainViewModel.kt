@@ -489,11 +489,12 @@ abstract class MainViewModel(
         // default no-op
     }
 
-    protected fun openDetailedReport(wpDataId: Long) {
+    protected fun openDetailedReport(wpDataId: Long, codeDad2: Long = 0L) {
 //        emitEvent(MainEvent.NavigateToDetailedReport(wpDataId))
         context?.let {
             val intent = Intent(context, DetailedReportActivity::class.java)
             intent.putExtra("WpDataDB_ID", wpDataId)
+            intent.putExtra("WpDataDB_DAD2", codeDad2)
             it.startActivity(intent)
         }
     }
@@ -1006,6 +1007,18 @@ abstract class MainViewModel(
         }
     }
 
+    protected open fun isItemAvailable(item: DataItemUI): Boolean = true
+
+    protected fun refreshItemAvailability() {
+        _uiState.update { state ->
+            state.copy(
+                itemsHeader = state.itemsHeader.filter(::isItemAvailable),
+                items = state.items.filter(::isItemAvailable),
+                itemsFooter = state.itemsFooter.filter(::isItemAvailable)
+            )
+        }
+    }
+
     private fun findItemByStableId(stableId: Long): DataItemUI? {
         return getAllCurrentItems().firstOrNull { it.stableId == stableId }
     }
@@ -1095,11 +1108,11 @@ abstract class MainViewModel(
         var filterLog: String? = null
 
         val (combined, shiftedGroups) = withContext(Dispatchers.Default) {
-            val header = uiState.itemsHeader
-            val footer = uiState.itemsFooter
+            val header = uiState.itemsHeader.filter(::isItemAvailable)
+            val footer = uiState.itemsFooter.filter(::isItemAvailable)
 
             val restoredSourceItems = restoreSelected(
-                items = uiState.items, selectedIds = selectedIdsSnapshot
+                items = uiState.items.filter(::isItemAvailable), selectedIds = selectedIdsSnapshot
             )
 
             var filterError: String? = null
@@ -1502,6 +1515,8 @@ abstract class MainViewModel(
                     filteredSelectedItems.map { it.withGroupingOnTop(cardTopKeys) }
                 }
 
+                // A deletion can arrive while getItems() is loading an older snapshot.
+                val availableItems = finalItems.filter(::isItemAvailable)
                 if (finalItems.isEmpty()) {
                     _showEmptyDataDialog.value = true
                 }
@@ -1510,9 +1525,9 @@ abstract class MainViewModel(
                     subTitle = subTitle,
                     subTitleLong = subTitleLong,
                     idResImage = idResImage,
-                    items = finalItems,
-                    itemsHeader = itemsHeader,
-                    itemsFooter = itemsFooter,
+                    items = availableItems,
+                    itemsHeader = itemsHeader.filter(::isItemAvailable),
+                    itemsFooter = itemsFooter.filter(::isItemAvailable),
                     settingsItems = settingsItems,
                     settingsItemsForCard = settingsForCardsItems,
                     imageDisplayMode = imageDisplayMode,

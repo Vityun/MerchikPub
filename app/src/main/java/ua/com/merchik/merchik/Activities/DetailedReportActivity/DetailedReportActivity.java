@@ -72,11 +72,14 @@ import java.util.Collections;
 import java.util.List;
 
 import dagger.hilt.android.AndroidEntryPoint;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
 import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
+import ua.com.merchik.merchik.Activities.MyApplication;
+import ua.com.merchik.merchik.data.VisitReassignmentStore;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.ScrollDataHolder;
 import ua.com.merchik.merchik.Clock;
@@ -90,6 +93,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
 import ua.com.merchik.merchik.ServerExchange.VisitReportDataSync;
+import ua.com.merchik.merchik.ServerExchange.VisitReportRefresh;
 import ua.com.merchik.merchik.ServerExchange.workmager.WpDataDateLogWorker;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
@@ -193,19 +197,30 @@ public class DetailedReportActivity extends toolbar_menus {
     private boolean reportInitialized;
     private RnoVisitDataExchange.Subscription visitPreparation;
     private MessageDialogBuilder marketingResearchDialog;
+    private int visitUserId;
+    private boolean visitUnavailable;
+    private final android.content.SharedPreferences.OnSharedPreferenceChangeListener reassignmentListener =
+            (preferences, key) -> {
+                if (VisitReassignmentStore.isVisitChange(key, visitUserId)) {
+                    checkVisitReassignment(MyApplication.getCurrentActivity() == this && getLifecycle().getCurrentState()
+                            .isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED));
+                }
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Restored fragments must not calculate controls before a pending preload finishes.
         Bundle reportState = savedInstanceState;
         try {
-            WpDataDB visit = WpDataRealm.getWpDataRowById(getIntent().getLongExtra("WpDataDB_ID", 0));
-            if (!RnoVisitDataExchange.isReady(visit)
+            WpDataDB visit = getVisitToOpen();
+            if (visit == null || !RnoVisitDataExchange.isReady(visit)
                     || (visit != null && VisitReportDataSync.hasMissingProducts(visit.getCode_dad2()))) reportState = null;
         } catch (RuntimeException e) {
             reportState = null;
         }
         super.onCreate(reportState);
+        visitUserId = Globals.getCurrentUserId();
+        VisitReassignmentStore.get().addListener(reassignmentListener);
 
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "onCreate");
@@ -225,24 +240,28 @@ public class DetailedReportActivity extends toolbar_menus {
 
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
 
-            setActivityData();
+            if (!setActivityData()) return;
 
             registrationPermission();
 
             if (!RnoVisitDataExchange.isReady(wpDataDB)
+                    || VisitReportRefresh.isDue(wpDataDB)
                     || VisitReportDataSync.hasMissingProducts(wpDataDB.getCode_dad2())) {
                 showVisitPreparation(false);
                 return;
             }
             initializeReport();
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "DetailedReportActivity/onCreate", "Cannot open visit: " + e);
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/onCreate", "Cannot open visit: " + e
+                    + ", id=" + getIntent().getLongExtra("WpDataDB_ID", 0)
+                    + ", dad2=" + getIntent().getLongExtra("WpDataDB_DAD2", 0));
+            Toast.makeText(this, "Не вдалося відкрити відвідування. Оновіть план робіт і повторіть спробу.", Toast.LENGTH_LONG).show();
             finish();
         }
     }
 
     private void initializeReport() {
-        if (reportInitialized || isFinishing() || isDestroyed()) return;
+        if (reportInitialized || visitUnavailable || isFinishing() || isDestroyed()) return;
         try {
 
             SKUPlan = 0;
@@ -387,6 +406,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
     private void showVisitPreparation(boolean refresh) {
+        if (visitUnavailable || isFinishing() || isDestroyed()) return;
         if (visitPreparation != null) visitPreparation.cancel();
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -410,11 +430,19 @@ public class DetailedReportActivity extends toolbar_menus {
         back.setOnClickListener(v -> finish());
         content.addView(back);
         setContentView(content);
+        VisitReportRefresh.refreshForVisit(wpDataDB.getCode_dad2(), () -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (!setActivityData()) return;
+            prepareVisitData(refresh, progress, message, retry);
+        });
+    }
+
+    private void prepareVisitData(boolean refresh, ProgressBar progress, TextView message, Button retry) {
         if (!RnoVisitDataExchange.requiresPreparation(wpDataDB)) {
             VisitReportDataSync.repairForVisit(wpDataDB.getCode_dad2(), () -> {
                 if (isFinishing() || isDestroyed()) return;
                 // Opening a visit grants one extra attempt, not another automatic retry cycle.
-                setActivityData();
+                if (!setActivityData()) return;
                 initializeReport();
             });
             return;
@@ -422,7 +450,7 @@ public class DetailedReportActivity extends toolbar_menus {
         visitPreparation = RnoVisitDataExchange.prepare(wpDataDB.getCode_dad2(), refresh, error -> {
             if (isFinishing() || isDestroyed()) return;
             if (error == null) {
-                setActivityData();
+                if (!setActivityData()) return;
                 initializeReport();
             } else {
                 progress.setVisibility(View.GONE);
@@ -434,6 +462,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     @Override
     protected void onDestroy() {
+        VisitReassignmentStore.get().removeListener(reassignmentListener);
         if (visitPreparation != null) visitPreparation.cancel();
         if (marketingResearchDialog != null) {
             // Recreating the activity must not turn an unanswered question into a dismissal.
@@ -464,9 +493,11 @@ public class DetailedReportActivity extends toolbar_menus {
     @Override
     protected void onResume() {
         super.onResume();
+        if (checkVisitReassignment(true) || visitUnavailable) return;
         if (!reportInitialized) return;
         syncPauseWorkUi();
         getWindow().getDecorView().post(() -> {
+            if (visitUnavailable || isFinishing() || isDestroyed()) return;
             try {
                 if (wpDataDB != null) {
                     ReportConductUi.resume(this, wpDataDB.getCode_dad2());
@@ -743,10 +774,33 @@ public class DetailedReportActivity extends toolbar_menus {
         wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
     }*/
 
-    private void setActivityData() {
+    private WpDataDB getVisitToOpen() {
+        Intent intent = getIntent();
+        return VisitOpenResolver.resolve(intent.getLongExtra("WpDataDB_ID", 0),
+                intent.getLongExtra("WpDataDB_DAD2", 0),
+                WpDataRealm::getWpDataRowById, WpDataRealm::getWpDataRowByDad2Id);
+    }
+
+    private boolean setActivityData() {
+        if (visitUnavailable || isFinishing() || isDestroyed()) return false;
         Intent i = getIntent();
         long id = i.getLongExtra("WpDataDB_ID", 0);
-        wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(id));
+        long dad2 = i.getLongExtra("WpDataDB_DAD2", 0);
+        WpDataDB visit = getVisitToOpen();
+        if (visit == null) {
+            if (checkVisitReassignment(true)) return false;
+            Globals.writeToMLOG("WARNING", "DetailedReportActivity/visitNotFound",
+                    "id=" + id + ", dad2=" + dad2 + ", userId=" + Globals.userId);
+            Toast.makeText(this, "Відвідування відсутнє в локальному плані робіт. Оновіть план і повторіть спробу.", Toast.LENGTH_LONG).show();
+            finish();
+            return false;
+        }
+        wpDataDB = RealmObject.isManaged(visit) ? RealmManager.INSTANCE.copyFromRealm(visit) : visit;
+        Globals.writeToMLOG("INFO", "DetailedReportActivity/visitResolved",
+                "requestedId=" + id + ", requestedDad2=" + dad2
+                        + ", resolvedId=" + wpDataDB.getId() + ", dad2=" + wpDataDB.getCode_dad2());
+        i.putExtra("WpDataDB_ID", wpDataDB.getId());
+        i.putExtra("WpDataDB_DAD2", wpDataDB.getCode_dad2());
         WpDataDateLogWorker.onVisitOpened(this, wpDataDB);
 
 //        ScrollDataHolder.Companion.instance().removeByCodeDad2(wpDataDB.getCode_dad2());
@@ -759,8 +813,29 @@ public class DetailedReportActivity extends toolbar_menus {
 
         detailedReportViewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
         detailedReportViewModel.setWpDataDB(wpDataDB);
+        return true;
+    }
 
+    private boolean checkVisitReassignment(boolean notify) {
+        if (visitUnavailable || isFinishing() || isDestroyed()) return visitUnavailable;
+        if (visitUserId != Globals.getCurrentUserId()) return false;
+        long id = getIntent().getLongExtra("WpDataDB_ID", 0);
+        long dad2 = getIntent().getLongExtra("WpDataDB_DAD2", 0);
+        if (!VisitReassignmentStore.get().wasReassigned(visitUserId, id, dad2)
+                || getVisitToOpen() != null) return false;
 
+        visitUnavailable = true;
+        reportInitialized = false;
+        if (visitPreparation != null) visitPreparation.cancel();
+        if (marketingResearchDialog != null) {
+            marketingResearchDialog.setOnDismissListener((DialogDismissListener) null);
+            marketingResearchDialog.dismiss();
+            marketingResearchDialog = null;
+        }
+        Globals.writeToMLOG("INFO", "DetailedReportActivity/reassigned",
+                "userId=" + visitUserId + ", id=" + id + ", dad2=" + dad2 + ", notify=" + notify);
+        VisitReassignmentUi.close(this, visitUserId, notify);
+        return true;
     }
 
     // Основное сообщение

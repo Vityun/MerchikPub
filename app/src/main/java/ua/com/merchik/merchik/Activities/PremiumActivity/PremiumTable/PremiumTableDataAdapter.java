@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -18,6 +19,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -37,6 +41,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
+import ua.com.merchik.merchik.Utils.text.MvsLinkedTextFormatter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -51,6 +56,8 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpWorkTimes;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 // Pika
@@ -62,6 +69,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
     private List<Detailed> data;
     private PremiumTableHeaderAdapter.PremiumListener listener;
+    private PremiumBasisLoading basisLoading;
 
     public PremiumTableDataAdapter(List<Detailed> data) {
         this.data = data;
@@ -84,12 +92,61 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         return data.size();
     }
 
+    private final class PremiumBasisLoading implements LifecycleEventObserver {
+        private final Activity activity;
+        private final Lifecycle lifecycle;
+        private final Call<PremiumResponse> call;
+        private final ProgressViewModel progress = new ProgressViewModel(1);
+        private final LoadingDialogWithPercent dialog;
+        private boolean finished;
+
+        PremiumBasisLoading(Activity activity, Call<PremiumResponse> call) {
+            this.activity = activity;
+            this.lifecycle = ((LifecycleOwner) activity).getLifecycle();
+            this.call = call;
+            dialog = new LoadingDialogWithPercent(activity, progress);
+            dialog.setOnDismissListener(this::cancel);
+        }
+
+        void show(String document) {
+            lifecycle.addObserver(this);
+            progress.reset("Завантаження підстави: " + document);
+            dialog.show();
+            progress.onNextEvent("Завантаження підстави: " + document, 10000L);
+        }
+
+        boolean isActive() {
+            return !finished && !call.isCanceled() && !activity.isFinishing() && !activity.isDestroyed();
+        }
+
+        boolean finish() {
+            boolean deliverResult = isActive();
+            if (finished) return false;
+            finished = true;
+            lifecycle.removeObserver(this);
+            progress.reset("");
+            dialog.dismiss();
+            if (basisLoading == this) basisLoading = null;
+            return deliverResult;
+        }
+
+        void cancel() {
+            call.cancel();
+            finish();
+        }
+
+        @Override
+        public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+            if (event == Lifecycle.Event.ON_DESTROY) cancel();
+        }
+    }
+
     public class PremiumTableHeaderViewHolder extends RecyclerView.ViewHolder {
 
         private ConstraintLayout layout;
         private TextView name;
         private TextView column1, column5, column2, column3, column4;
-        private String dataDownload200, dataDownloadError, dataDownloadWait;
+        private String dataDownloadError, dataDownloadWait;
 
         public PremiumTableHeaderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -102,7 +159,6 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             column3 = itemView.findViewById(R.id.col3);
             column4 = itemView.findViewById(R.id.col4);
 
-            dataDownload200 = itemView.getContext().getString(R.string.data_download_200);
             dataDownloadError = itemView.getContext().getString(R.string.data_download_error);
             dataDownloadWait = itemView.getContext().getString(R.string.data_download_wait);
         }
@@ -141,35 +197,36 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             column4.setText("");
 
             name.setOnClickListener(view -> {
-                openDoc(wpDataDB, detailed.codeDad2, Clock.getDatePremiumDownloadFormat(detailed.docDat), true);
+                Globals.writeToMLOG("INFO", "PremiumVisit/open", premiumContext(detailed));
+                if (detailed.codeDad2 == null || detailed.codeDad2 <= 0) {
+                    Globals.writeToMLOG("WARNING", "PremiumVisit/noVisit", premiumContext(detailed));
+                    Toast.makeText(view.getContext(), "Документ не містить посилання на відвідування. Показуємо підставу нарахування.", Toast.LENGTH_LONG).show();
+                    showPremiumBasis(detailed);
+                    return;
+                }
+                openDoc(findDocument(detailed.codeDad2), detailed.codeDad2,
+                        Clock.getDatePremiumDownloadFormat(detailed.docDat), true);
             });
 
-            layout.setOnClickListener(v -> {
-                Toast.makeText(v.getContext(), "Завантажуються данні...", Toast.LENGTH_SHORT).show();
-                getPremiumTextList(detailed, data -> {
-                    DialogData dialogData = new DialogData(v.getContext());
-                    dialogData.setTitle(data.getTitlle());
+            layout.setOnClickListener(v -> showPremiumBasis(detailed));
+        }
 
-                    // Pika
-                    // так было...
-//                    dialogData.setText(data);
+        private void showPremiumBasis(Detailed detailed) {
+            getPremiumTextList(detailed, data -> {
+                DialogData dialogData = new DialogData(itemView.getContext());
+                dialogData.setTitle(data.getTitlle());
 
-                    // так стало...
-                    // теперь строка с основанием data прогоняется через PrepareLinkedTextForMVS и если там есть структура
-                    // которую надр превратить в кликабельную ссылку для открытия в МВС, то это выполеяктся и возвращается строка в которой
-                    // эта структура заменена на текст HTML
-                    String newData=Globals.PrepareLinkedTextForMVS(data.getText());
-                    dialogData.setTextScroll();
-                    dialogData.setText(Html.fromHtml(newData));
-                    dialogData.setClose(dialogData::dismiss);
-                    dialogData.show();
-
-                });
+                String newData = Globals.PrepareLinkedTextForMVS(data.getText(), premiumContext(detailed)
+                        + ", responseTitle=" + MvsLinkedTextFormatter.logValue(data.getTitlle()));
+                dialogData.setTextScroll();
+                dialogData.setText(Html.fromHtml(newData));
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.show();
             });
         }
 
-        private WpDataDB findDocument(long codeDad2) {
-            if (codeDad2 != 0) {
+        private WpDataDB findDocument(Long codeDad2) {
+            if (codeDad2 != null && codeDad2 > 0) {
                 WpDataDB realmWp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
                 //                    return RealmManager.INSTANCE.copyFromRealm(realmWp);
                 return realmWp;
@@ -263,6 +320,10 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
          * отображать пользователю загруженный документ.
          */
         public void downloadDoc(Long codeDad2, String datePremiumDownloadFormat) {
+            if (codeDad2 == null || codeDad2 <= 0) {
+                visitDownloadFailed("target", codeDad2, "Документ не містить посилання на відвідування.");
+                return;
+            }
 
             wpDownload(codeDad2, datePremiumDownloadFormat, new Clicks.clickVoid() {
                 @Override
@@ -287,25 +348,40 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             BlockingProgressDialog progressDialogWpData = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Плану робіт",
                     dataDownloadWait);
-            WPDataExchange wpDataExchange = new WPDataExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            Globals.writeToMLOG("INFO", "PremiumVisit/plan", "dad2=" + codeDad2 + ", date=" + datePremiumDownloadFormat);
+            WPDataExchange wpDataExchange = new WPDataExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, String.valueOf(codeDad2));
             wpDataExchange.downloadWPData(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
                 public <T> void onSuccess(List<T> data) {
-                    if (data != null && data.size() > 0) {
-                        RealmManager.updateWorkPlanFromServer((List<WpDataDB>) data);
-                        Toast.makeText(itemView.getContext(), dataDownload200 + " План робіт", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(itemView.getContext(), dataDownloadError + " План робіт", Toast.LENGTH_LONG).show();
+                    boolean found = false;
+                    try {
+                        List<WpDataDB> visits = new ArrayList<>();
+                        if (data != null) {
+                            for (WpDataDB visit : (List<WpDataDB>) data) {
+                                if (visit != null && codeDad2.equals(visit.getCode_dad2())) visits.add(visit);
+                            }
+                        }
+                        if (!visits.isEmpty()) {
+                            RealmManager.updateWorkPlanFromServer(visits);
+                            found = findDocument(codeDad2) != null;
+                        }
+                    } catch (RuntimeException error) {
+                        visitDownloadFailed("plan/save", codeDad2, error.toString());
+                        return;
+                    } finally {
+                        progressDialogWpData.dismiss();
                     }
-                    progressDialogWpData.dismiss();
+                    if (!found) {
+                        visitDownloadFailed("plan", codeDad2, "Відвідування не знайдено у відповіді сервера або воно більше не доступне.");
+                        return;
+                    }
                     click.click();
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    Toast.makeText(itemView.getContext(), dataDownloadError + " План робіт " + error, Toast.LENGTH_LONG).show();
                     progressDialogWpData.dismiss();
-                    click.click();
+                    visitDownloadFailed("plan", codeDad2, error);
                 }
             });
         }
@@ -315,25 +391,36 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             BlockingProgressDialog progressDialogOption = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Опцій",
                     dataDownloadWait);
-            OptionsExchange optionsExchange = new OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            Globals.writeToMLOG("INFO", "PremiumVisit/options", "dad2=" + codeDad2);
+            OptionsExchange optionsExchange = new OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, String.valueOf(codeDad2));
             optionsExchange.downloadOptions(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
                 public <T> void onSuccess(List<T> data) {
-                    if (data != null && data.size() > 0) {
-                        RealmManager.saveDownloadedOptions((List<OptionsDB>) data);
-                        Toast.makeText(itemView.getContext(), dataDownload200 + " Опції", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(itemView.getContext(), dataDownloadError + " Опції", Toast.LENGTH_LONG).show();
+                    try {
+                        List<OptionsDB> options = new ArrayList<>();
+                        if (data != null) {
+                            for (OptionsDB option : (List<OptionsDB>) data) {
+                                if (option != null && String.valueOf(codeDad2).equals(option.getCodeDad2())) options.add(option);
+                            }
+                        }
+                        if (options.isEmpty()) {
+                            visitDownloadFailed("options", codeDad2, "Сервер не повернув опції відвідування.");
+                            return;
+                        }
+                        RealmManager.saveDownloadedOptions(options);
+                    } catch (RuntimeException error) {
+                        visitDownloadFailed("options/save", codeDad2, error.toString());
+                        return;
+                    } finally {
+                        progressDialogOption.dismiss();
                     }
-                    progressDialogOption.dismiss();
                     click.click();
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    Toast.makeText(itemView.getContext(), dataDownloadError + " Опції " + error, Toast.LENGTH_LONG).show();
                     progressDialogOption.dismiss();
-                    click.click();
+                    visitDownloadFailed("options", codeDad2, error);
                 }
             });
         }
@@ -343,34 +430,35 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             BlockingProgressDialog progressDialogReportPrepare = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Деталізованого звіту",
                     dataDownloadWait);
-            ReportPrepareExchange reportPrepareExchange = new ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            Globals.writeToMLOG("INFO", "PremiumVisit/report", "dad2=" + codeDad2);
+            ReportPrepareExchange reportPrepareExchange = new ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, String.valueOf(codeDad2));
             reportPrepareExchange.downloadReportPrepare(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
                 public <T> void onSuccess(List<T> data) {
-                    if (data != null && data.size() > 0) {
-                        Toast.makeText(itemView.getContext(), dataDownload200 + " деталізований звіт", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(itemView.getContext(), dataDownloadError + " деталізований звіт", Toast.LENGTH_LONG).show();
-                    }
                     progressDialogReportPrepare.dismiss();
                     click.click();
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    Toast.makeText(itemView.getContext(), dataDownloadError + " деталізований звіт " + error, Toast.LENGTH_LONG).show();
                     progressDialogReportPrepare.dismiss();
-                    click.click();
+                    visitDownloadFailed("report", codeDad2, error);
                 }
             });
         }
 
+        private void visitDownloadFailed(String stage, Long dad2, String error) {
+            Globals.writeToMLOG("WARNING", "PremiumVisit/" + stage,
+                    "dad2=" + dad2 + ", error=" + MvsLinkedTextFormatter.logValue(error));
+            Toast.makeText(itemView.getContext(), dataDownloadError + " " + error, Toast.LENGTH_LONG).show();
+        }
 
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {
             try {
                 Intent intent = new Intent(itemView.getContext(), DetailedReportActivity.class);
                 intent.putExtra("WpDataDB_ID", wp.getId());
+                intent.putExtra("WpDataDB_DAD2", wp.getCode_dad2());
                 itemView.getContext().startActivity(intent);
             } catch (Exception e) {
                 Toast.makeText(itemView.getContext(), "Помилка: " + e, Toast.LENGTH_SHORT).show();
@@ -414,6 +502,11 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         }
 
         private void getPremiumTextList(Detailed detailed, Clicks.clickObject<MessageData> clickText) {
+            if (basisLoading != null) return;
+            Activity activity = Globals.unwrap(itemView.getContext());
+            if (!(activity instanceof LifecycleOwner) || activity.isFinishing() || activity.isDestroyed()) return;
+
+            String context = premiumContext(detailed);
             StandartData data = new StandartData();
             data.mod = "premium";
             data.act = "get_salary_basis";
@@ -424,60 +517,58 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//            retrofit2.Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//            test.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    Log.e("test", "response: " + response);
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//
-//                }
-//            });
-
-// {"act":"get_salary_basis","doc_type_id":5301,"mod":"premium","smeta":"АНач-142540"}
-
+            Globals.writeToMLOG("INFO", "PremiumBasis/request", context);
             retrofit2.Call<PremiumResponse> call = RetrofitBuilder.getRetrofitInterface().Premium_get_salary_basis_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<PremiumResponse>() {
-                @Override
-                public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null && response.body().state) {
-
-                            // Pika
-                            // так было...
-//                            clickText.click(response.body().basis);
-
-                            // так стало...
-                            // (получаю текст основания премии для вывода в TextView из поля result_list, которое в салю очередь представлено массивом
-                            // JSON в котором один элемент и свои поля и нас интересует поле osnovanie)
-                            String res = "";
-                            String title = "";
-                            for (PremiumResponse.Result item : response.body().result_list) {
-                                if (title.isEmpty()) {
-                                    title += item.docNom + " от " + item.docDat;
-                                }
-                                res += item.sumNZPSotrDoc + " грн. " + item.osnovanie.replaceAll("<", "(").replaceAll(">", ")") + "<br><br>";
-                            }
-//                            String res=response.body().result_list.get(0).osnovanie;
-
-                            clickText.click(new MessageData(title, res));
-                        } else {
-                            clickText.click(new MessageData("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника."));
+            PremiumBasisLoading loading = new PremiumBasisLoading(activity, call);
+            basisLoading = loading;
+            try {
+                loading.show(detailed.docNom);
+                call.enqueue(new Callback<PremiumResponse>() {
+                    @Override
+                    public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
+                        if (!loading.isActive()) {
+                            loading.finish();
+                            return;
                         }
-                    } else {
-                        clickText.click(new MessageData("Проблема із зв'язком. Спробуйте пізніше."));
+                        MessageData message;
+                        try {
+                            PremiumResponse body = response.body();
+                            Globals.writeToMLOG("INFO", "PremiumBasis/response", context
+                                    + ", http=" + response.code() + ", state=" + (body == null ? null : body.state)
+                                    + ", rows=" + (body == null || body.result_list == null ? "null" : body.result_list.size()));
+                            if (response.isSuccessful()) {
+                                PremiumBasisFormatter.Result formatted = PremiumBasisFormatter.format(body, detailed.docNom,
+                                        issue -> Globals.writeToMLOG("WARNING", "PremiumBasis/invalidResponse", context + ", " + issue));
+                                message = new MessageData(formatted.title, formatted.text);
+                            } else {
+                                Globals.writeToMLOG("WARNING", "PremiumBasis/httpError", context + ", http=" + response.code());
+                                message = new MessageData(detailed.docNom, "Проблема із зв'язком. Спробуйте пізніше.");
+                            }
+                        } catch (RuntimeException error) {
+                            Globals.writeToMLOG("ERROR", "PremiumBasis/formatFailure", context + ", error=" + error.getClass().getSimpleName());
+                            message = new MessageData(detailed.docNom, "Отримати дані не вийшло. Зверніться до керівника за допомогою.");
+                        }
+                        if (loading.finish()) clickText.click(message);
                     }
-                }
 
-                @Override
-                public void onFailure(Call<PremiumResponse> call, Throwable t) {
-                    Globals.writeToMLOG("ERROR", "getPremiumText", "Throwable t: " + t);
-                    clickText.click(new MessageData("Отримати дані не вийшло. Зверніться до керівника за допомогою."));
-                }
-            });
+                    @Override
+                    public void onFailure(Call<PremiumResponse> call, Throwable t) {
+                        if (!loading.finish()) return;
+                        Globals.writeToMLOG("ERROR", "PremiumBasis/failure", context + ", error=" + t.getClass().getSimpleName());
+                        clickText.click(new MessageData(detailed.docNom, "Отримати дані не вийшло. Зверніться до керівника за допомогою."));
+                    }
+                });
+            } catch (RuntimeException error) {
+                boolean deliverResult = loading.finish();
+                call.cancel();
+                Globals.writeToMLOG("ERROR", "PremiumBasis/startFailure", context + ", error=" + error.getClass().getSimpleName());
+                if (deliverResult) clickText.click(new MessageData(detailed.docNom, "Отримати дані не вийшло. Зверніться до керівника за допомогою."));
+            }
+        }
+
+        private String premiumContext(Detailed detailed) {
+            return "mod=premium, act=get_salary_basis, document=" + MvsLinkedTextFormatter.logValue(detailed.docNom)
+                    + ", doc_type_id=" + detailed.docDef + ", dad2=" + detailed.codeDad2;
         }
 
     }

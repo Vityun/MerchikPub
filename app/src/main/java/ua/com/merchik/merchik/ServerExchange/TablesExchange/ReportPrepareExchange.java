@@ -28,26 +28,16 @@ public class ReportPrepareExchange {
     }
 
     public void downloadReportPrepare(ExchangeInterface.ExchangeResponseInterface exchange) {
-        StandartData data = new StandartData();
-        data.mod = "report_prepare";
-        data.act = "list_data";
-        data.date_from = date_from;
-        data.date_to = date_to;
-        data.code_dad2 = code_dad2;
-
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
-        data.dt_change_from = String.valueOf(synchronizationTimetableDB == null ? 0 : synchronizationTimetableDB.getVpi_app());  // 27.10.2026 поменял с dt_change_to на dt_change_from
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        JsonObject convertedObject = createRequest(date_from, date_to, code_dad2,
+                synchronizationTimetableDB == null ? 0 : synchronizationTimetableDB.getVpi_app());
 
         ReportPrepareSync.download(convertedObject, false, new retrofit2.Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(retrofit2.Call<ReportPrepareServer> call, retrofit2.Response<ReportPrepareServer> response) {
                 Log.e("downloadReportPrepare", "response: " + response.body());
-                if (response.isSuccessful() && response.body() != null && response.body().getState() &&
-                        response.body().getList() != null && !response.body().getList().isEmpty()) {
+                if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().getState()) &&
+                        response.body().getList() != null) {
                     exchange.onSuccess(response.body().getList());
                 } else exchange.onFailure("Throwable: Список пуст");
 
@@ -60,5 +50,17 @@ public class ReportPrepareExchange {
                 exchange.onFailure("Throwable t: " + t);
             }
         });
+    }
+
+    static JsonObject createRequest(String dateFrom, String dateTo, String dad2, long storedVpi) {
+        StandartData data = new StandartData();
+        data.mod = "report_prepare";
+        data.act = "list_data";
+        data.date_from = dateFrom;
+        data.date_to = dateTo;
+        data.code_dad2 = dad2;
+        // A missing visit needs its full report, not only changes since the global cursor.
+        data.dt_change_from = dad2 != null && !dad2.trim().isEmpty() ? "0" : String.valueOf(storedVpi);
+        return new Gson().toJsonTree(data).getAsJsonObject();
     }
 }

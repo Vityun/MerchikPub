@@ -77,6 +77,9 @@ import ua.com.merchik.merchik.Utils.LocationFixPolicy;
 import ua.com.merchik.merchik.Utils.WifiScanAccess;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+
+import ua.com.merchik.merchik.Utils.text.MvsLinkedTextFormatter;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.MyApplication;
@@ -2142,132 +2145,32 @@ public class Globals {
         return res;
     }
 
-    // Pika
-    // Преобразовывает текст в котором есть ссылки на страницы МВС в текст с ссылками, которые при нажатии на них
-    // будут открывать страницы МВС без обязательной авторизации пользователя
-    // в строке есть ссылки представленные в виде такой структуры: {строка ИД типа объекта|строка самого ИД объекта|строка отображения обънета|ИД площадки}
+    // MVS markers: {type|id|label} or {type|id|label|platform}.
     public static String PrepareLinkedTextForMVS(String str) {
+        return PrepareLinkedTextForMVS(str, "");
+    }
 
-        String linkTp, linkID, linkZg, linkPl, linkBlock, linkText, s, hash, res;
-        int pos1, pos2, startpos;
-
-        // делаю что-то только если нашел в строке начало такой структуры
-        if (str.contains("{")) {
-            // подготовка строки хеша для формирования результирующей ссылки
-            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-            hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-            hash = getSha1Hex(hash);
-
-            res = ""; // результирующая строка в которой структура заменена на ссылку на МВС
-            startpos = 0; // двигаться буду вперед по строке - и это текущая позиция в строке откуда начинать поиск
-            pos1 = str.indexOf("{", startpos); // ищу начала блока, который надо превратить в ссылку
-            pos2 = 0; // позиция конца блока, который надо превратить в ссылку
-            // выполняю это для всех таких блоков в строке
-            while (pos1 >= 0) {
-                pos2 = str.indexOf("}", pos1); // ищу конец блока, который надо превратить в ссылку
-                if (pos2 > (pos1 + 1)) {
-                    // вырезаю блок, который надо превратить в ссылку
-                    linkBlock = str.substring(pos1 + 1, pos2);
-                    // расщепляю его на составные части
-                    String[] el = linkBlock.split("\\|");
-                    linkTp = el[0].trim(); // текстовый тип ссылки
-                    linkTp = linkTp.toLowerCase(); // на всякий случай делаю его иаленькими буквами
-                    linkID = el[1].trim(); // ИД ссылки
-                    linkZg = el[2].trim(); // отображаемый текст (заголовок) ссылки
-                    linkPl = el[3].trim(); // платформа
-
-                    linkPl = "4"; // пока все делаю для МВС
-
-                    // если текст который нужно вставить вместо блока не получится, тогда в результат пойдет то же что и было до этого
-                    linkText = linkBlock;
-
-                    // обрабатываю блок только если найден идентификатор типа ссылки и идентификатор ссылки
-                    if (linkTp != "" && linkID != "") {
-                        // перебираю варианты типа ссылки
-                        s = "";
-                        switch (linkTp) {
-                            case ("фото"):
-                                s = "mobile.php?mod=images_view&act=image_rotate&id=" + linkID;
-                                break;
-                            case ("фото_шахматка_фильтр"):
-                                s = "mobile.php?mod=photo&act=grid_table&" + linkID;
-                                break;
-                            case ("достижение"):
-                                s = "mobile.php?mod=images_achieve&act=view&id=" + linkID;
-                                break;
-                            case ("рекламация"):
-                                s = "mobile.php?mod=reclamation&act=view&id=" + linkID;
-                                break;
-                            case ("рекламация_1с"):
-                                s = "mobile.php?mod=reclamation&act=reclamation_by_num&doc_num=" + linkID;
-                                break;
-                            case ("задача"):
-                                s = "mobile.php?mod=reclamation&act=view&id=" + linkID;
-                                break;
-                            case ("задача_1с"):
-                                s = "mobile.php?mod=reclamation&act=reclamation_by_num&doc_num=" + linkID;
-                                break;
-                            case ("аудио_отчёт"):
-                                s = "mobile.php?mod=audio&act=audio_rotate&id=" + linkID;
-                                break;
-                            case ("детализированный_отчёт"):
-                                s = "mobile.php?mod=report_prepare&act=report_by_num&doc_num=" + linkID;
-                                break;
-                            case ("посещение_фильтр"):
-                                s = "mobile.php?mod=report_prepare&act=prepare_tovar&ppa_only=1&" + linkID;
-                                break;
-                            case ("товары"):
-                                s = "mobile.php?mod=report_prepare&act=prepare_tovar&ppa_only=1&" + linkID;
-                                break;
-                            case ("документ"):
-                                s = "mobile.php?mod=plan&act=open_document_item&code_dad2=" + linkID;
-                                break;
-                            case ("контенты"):
-                                s = "mobile.php?mod=standart&act=view&code_dad2=" + linkID;
-                                break;
-                        }
-                        // если текст ссылки сформирован, то делаю в нем модификации необходимыъ для того чтоб она работала
-                        if (s != "") {
-                            linkText = s.replace("&", "**");
-                            linkText = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, linkText);
-                            linkText = "<a href=" + linkText + ">" + linkZg + "</a>";
-                        }
-                    }
-
-                    // добавляю в результат текст до начала найденного блока, а вместо блока, который надо превратить в ссылку - саму сформированную ссылку
-                    res = res + str.substring(startpos, pos1) + linkText;
-
-                    // проверяю где сейчас нахожусь в строке
-                    if (pos2 < (str.length() - 1)) {
-                        // перемещаю указатель движения по строке на позицию следующую за блоком, который надо превратить в ссылку
-                        startpos = pos2 + 1;
-                        // ищу следующее начало блока, который надо превратить в ссылку
-                        pos1 = str.indexOf("{", startpos);
-                    } else {
-                        // дошел до конца строки - дальше ничего не надо делать
-                        startpos = -1;
-                        pos1 = -1;
-                    }
-
+    public static String PrepareLinkedTextForMVS(String str, String documentContext) {
+        Consumer<String> diagnostic = issue -> writeToMLOG("WARNING", "PrepareLinkedTextForMVS",
+                documentContext + ", " + issue);
+        String urlPrefix = null;
+        if (str != null && str.contains("{")) {
+            try {
+                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                if (appUser == null || appUser.getPassword() == null) {
+                    diagnostic.accept("auth_user_missing");
                 } else {
-                    // если конца блока, который надо превратить в ссылку не найден, то прерываю поиск
-                    // и устанавливаю текущее положение в строке на начало последнего найденного начала блока
-                    // потом в конце к результату просто добавится весь остаток строки начиная от этой позиции
-                    startpos = pos1;
-                    pos1 = -1;
+                    String hash = getSha1Hex(String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(),
+                            "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3"));
+                    urlPrefix = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/", userId, hash);
                 }
+            } catch (RuntimeException error) {
+                diagnostic.accept("auth_lookup_error=" + error.getClass().getSimpleName());
             }
-            // добавляю в результирующую строку остаток строки после обработанного блока, который надо превратить в ссылку
-            // ну или если такого блока нет, то просто получится та же самая строка что била изначально
-            if (startpos >= 0) {
-                res = res + str.substring(startpos);
-            }
-        } else {
-            // если не нашел в строке структуры, которую надо превратить в ссылку, то возвращаю обратно эту строку
-            res = str;
         }
-
-        return res;
+        final String prefix = urlPrefix;
+        return MvsLinkedTextFormatter.format(str,
+                path -> prefix == null ? null : prefix + path.replace("&", "**"), diagnostic);
     }
 
     /**

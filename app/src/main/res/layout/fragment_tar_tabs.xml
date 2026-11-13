@@ -38,36 +38,14 @@
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
-        style="@style/TabStyle"
+        style="@style/DetailedReportTabStyle"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="38dp"
         android:background="@color/colorUnselectedTab"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tar_header">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Закладка 1" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Закладка 2" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Закладка 3" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Закладка 4" />
-
-    </com.google.android.material.tabs.TabLayout>
+        app:layout_constraintTop_toBottomOf="@id/tar_header" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPagerChild"

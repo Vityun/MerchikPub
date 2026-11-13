@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.content.SharedPreferences
+import ua.com.merchik.merchik.data.VisitReassignmentStore
+
 import android.app.Application
 import android.content.Context
 import android.location.Location
@@ -97,6 +100,31 @@ class WpDataDBViewModel @Inject constructor(
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
+
+    private val reassignmentStore = VisitReassignmentStore.get()
+    private val reassignmentListener = SharedPreferences.OnSharedPreferenceChangeListener { preferences, key ->
+        if (VisitReassignmentStore.isVisitChange(key, Globals.getCurrentUserId())) {
+            if (preferences.contains(key)) {
+                refreshItemAvailability()
+            } else {
+                updateContent()
+            }
+        }
+    }
+
+    override fun isItemAvailable(item: DataItemUI): Boolean {
+        val visit = item.rawObj.firstOrNull { it is WpDataDB } as? WpDataDB ?: return true
+        return !reassignmentStore.wasReassigned(Globals.getCurrentUserId(), visit.id, visit.code_dad2)
+    }
+
+    init {
+        reassignmentStore.addListener(reassignmentListener)
+    }
+
+    override fun onCleared() {
+        reassignmentStore.removeListener(reassignmentListener)
+        super.onCleared()
+    }
 
     private companion object {
         const val PAUSE_WORK_FILTER_FIELD = "pause_work_state"
@@ -1281,12 +1309,12 @@ class WpDataDBViewModel @Inject constructor(
         when (event.actionId) {
             ContextMenuActionIds.EDIT -> {
                 val wp = event.payload.firstItem.rawAs<WpDataDB>() ?: return
-                openDetailedReport(wp.id)
+                openDetailedReport(wp.id, wp.code_dad2)
             }
 
             ContextMenuActionIds.OPEN_ORDER -> {
                 val wp = event.payload.firstItem.rawAs<WpDataDB>() ?: return
-                openDetailedReport(wp.id)
+                openDetailedReport(wp.id, wp.code_dad2)
             }
 
             ContextMenuActionIds.OPEN_UFMD_SELECTOR -> {
@@ -1379,7 +1407,7 @@ class WpDataDBViewModel @Inject constructor(
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         super.onClickItem(itemUI, context)
         val wp = itemUI.rawAs<WpDataDB>() ?: return
-        openDetailedReport(wp.id)
+        openDetailedReport(wp.id, wp.code_dad2)
     }
 
     override fun onLongClickItem(itemUI: DataItemUI, context: Context) {

@@ -45,7 +45,7 @@ public class WPDataExchange {
                         + ", success=" + response.isSuccessful()
                         + ", state=" + (response.body() != null ? response.body().getState() : null)
                         + ", listSize=" + (response.body() != null && response.body().getList() != null ? response.body().getList().size() : 0));
-                if (response.isSuccessful() && response.body() != null && response.body().getState()
+                if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().getState())
                         && response.body().getList() != null && !response.body().getList().isEmpty())
                     exchange.onSuccess(response.body().getList());
                 else

@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineStart;
 import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.GlobalScope;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.VisitReassignmentUi;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
@@ -60,6 +61,7 @@ public class MyApplication extends Application {
             @Override
             public void onActivityResumed(Activity activity) {
                 currentActivity = new WeakReference<>(activity);
+                VisitReassignmentUi.onActivityResumed(activity);
             }
 
             @Override

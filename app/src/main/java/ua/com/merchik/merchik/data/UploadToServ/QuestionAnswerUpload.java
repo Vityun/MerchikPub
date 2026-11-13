@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
+import ua.com.merchik.merchik.data.QuestionAnswerPaymentAmount;
 
 public class QuestionAnswerUpload {
 
@@ -81,7 +82,7 @@ public class QuestionAnswerUpload {
         QuestionAnswerUpload data = new QuestionAnswerUpload();
 
         data.question = item.getQuestion();
-        data.answer = item.getAnswer();
+        data.answer = QuestionAnswerPaymentAmount.forUpload(item.getIdQuest(), item.getAnswer());
         data.dt = item.getDt();
         data.avgAnswer = item.getAvgAnswer();
         data.typeUser = item.getTypeUser();

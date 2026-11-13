@@ -37,7 +37,7 @@ public class QuestionAnswerUploadTest {
         }
     }
 
-    @Test public void uploadKeepsAmountAndOtherFieldsUnchanged() {
+    @Test public void uploadKeepsOtherQuestionAnswersAndFieldsUnchanged() {
         QuestionAnswerDB row = new QuestionAnswerDB();
         row.setId(1793625964568L);
         row.setAnswer("70.00");
@@ -53,6 +53,25 @@ public class QuestionAnswerUploadTest {
         assertEquals("1793625964568", upload.elementId);
         assertEquals("2026-11-03", upload.objectDate);
         assertTrue(new Gson().toJson(upload).contains("\"answer\":\"70.00\""));
+    }
+
+    @Test public void pendingPaymentAnswerIsRoundedWithoutChangingOtherFieldsOrDbRow() {
+        QuestionAnswerDB row = new QuestionAnswerDB();
+        row.setIdQuest(610);
+        row.setIdQuestCom(610);
+        row.setAnswer("70.50");
+        row.setAvgAnswer("1.5");
+        row.setComment("Original user comment: 70.50");
+        row.setObjectDate(seconds("2026-11-03"));
+
+        QuestionAnswerUpload upload = QuestionAnswerUpload.fromDb(row);
+
+        assertEquals("71", upload.answer);
+        assertEquals("1.5", upload.avgAnswer);
+        assertEquals(row.getComment(), upload.comment);
+        assertEquals("2026-11-03", upload.objectDate);
+        assertEquals("70.50", row.getAnswer());
+        assertTrue(new Gson().toJson(upload).contains("\"answer\":\"71\""));
     }
 
     private static long seconds(String date) {

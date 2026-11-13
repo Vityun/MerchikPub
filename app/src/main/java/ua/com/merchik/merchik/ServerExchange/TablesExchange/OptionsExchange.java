@@ -11,10 +11,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.OptionsServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
 public class OptionsExchange {
 
     private String date_from = "";
@@ -31,19 +27,8 @@ public class OptionsExchange {
     }
 
     public void downloadOptions(ExchangeInterface.ExchangeResponseInterface exchange) {
-        Log.e("EX_downloadOptions", "downloadOptions: " + "START");
-        StandartData data = new StandartData();
-        Set<Long> uniqueDad2 = new HashSet<>();
-        uniqueDad2.add(Long.valueOf(code_dad2));
-        data.mod = "plan";
-        data.act = "options_list";
-        data.date_from = date_from;
-        data.date_to = date_to;
-        data.code_dad2 = code_dad2;
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("EX_downloadOptions", "downloadOptions: START, dad2=" + code_dad2);
+        JsonObject convertedObject = createRequest(date_from, date_to, code_dad2);
         RnoVisitDataExchange.authorizeTargetedRequest(convertedObject);
 
         retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
@@ -55,7 +40,7 @@ public class OptionsExchange {
                         + ", state=" + (response.body() != null ? response.body().getState() : null)
                         + ", listSize=" + (response.body() != null && response.body().getList() != null ? response.body().getList().size() : 0));
                 if (response.isSuccessful() && response.body() != null
-                        && response.body().getState() && response.body().getList() != null
+                        && Boolean.TRUE.equals(response.body().getState()) && response.body().getList() != null
                         && !response.body().getList().isEmpty())
                     exchange.onSuccess(response.body().getList());
                 else {
@@ -74,5 +59,16 @@ public class OptionsExchange {
                 exchange.onFailure("Throwable t: " + t);
             }
         });
+    }
+
+    static JsonObject createRequest(String dateFrom, String dateTo, String dad2) {
+        StandartData data = new StandartData();
+        data.mod = "plan";
+        data.act = "options_list";
+        data.date_from = dateFrom;
+        data.date_to = dateTo;
+        data.code_dad2 = dad2;
+        // A legacy date-only request has no numeric dad2 to parse.
+        return new Gson().toJsonTree(data).getAsJsonObject();
     }
 }
