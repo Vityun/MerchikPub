@@ -37,6 +37,11 @@ internal class ProductCodeDisplayPolicy(
     fun amountTitle(optionText: String?): String {
         val title = optionText?.trim()?.takeIf { it.isNotEmpty() }
             ?: "Длина полочного пространства"
-        return "$title (метрiв)"
+        return "$title (м)"
+    }
+
+    fun faceTitle(optionText: String?): String {
+        val title = optionText.orEmpty()
+        return if (measurementOnly) "$title (всіх)" else title
     }
 }

@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +16,8 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import static org.junit.Assert.*;
 
 public class ShelfLengthEntryTest {
+    private static final long CHECKED_AT = Instant.parse("2026-11-16T12:00:00Z").toEpochMilli();
+
     private static ReportPrepareDB reportRow(String id, String face, int metres) {
         ReportPrepareDB row = new ReportPrepareDB();
         row.setTovarId(id);
@@ -35,13 +38,13 @@ public class ShelfLengthEntryTest {
         assertEquals(1, products.size());
         ShelfLengthPolicy.Measurement m = products.get("175194");
         assertNull(m.groupId);
-        assertTrue(m.issue(m.groupLabel(null), null).contains("Не визначено на одном метре полки стоит 1.0 фейсов"));
+        assertTrue(m.issue(m.groupLabel(null), null, CHECKED_AT).contains("Не визначено на одном метре полки стоит 1.0 фейсов"));
         assertEquals("1/1", ShelfLengthPolicy.progress(products.values()));
     }
 
     @Test public void visit03243434MissingMeasurementsAreNotZeroPlannedGroups() {
         ShelfLengthPolicy.Measurement m = check(reportRow("175194", "0", 0), null, "1465").get("175194");
-        assertTrue(m.issue(m.groupLabel(null), null).contains("Не визначено не указаны ни КОЛИЧЕСТВО"));
+        assertTrue(m.issue(m.groupLabel(null), null, CHECKED_AT).contains("Не визначено не указаны ни КОЛИЧЕСТВО"));
         assertEquals("0/1", ShelfLengthPolicy.progress(Collections.singletonList(m)));
     }
 

@@ -18,13 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -51,17 +48,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.bumptech.glide.Glide
-import com.bumptech.glide.integration.compose.CrossFade
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.integration.compose.placeholder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.signature.ObjectKey
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.ortiz.touchview.TouchImageView
 import ua.com.merchik.merchik.R
 import java.io.File
 
@@ -82,8 +75,20 @@ data class TovarPhotoDialogUiState(
     val article: String,
     val isLoadingFull: Boolean,
     val imageVersion: Long = System.currentTimeMillis(),
-    val loadToken: Long = System.nanoTime()
+    val loadToken: Long = System.nanoTime(),
+    val tradeMark: String = "",
+    val name: String = ""
 )
+
+internal fun buildTovarPhotoDetails(state: TovarPhotoDialogUiState, barcodeRendered: Boolean): String {
+    return if (barcodeRendered) {
+        "Штрихкод: ${state.barcode}\nАртикул: ${state.article}"
+    } else {
+        val tradeMark = state.tradeMark.trim().ifBlank { "Не вказано" }
+        val name = state.name.trim().ifBlank { "Не вказано" }
+        "$tradeMark\n$name"
+    }
+}
 
 
 @Composable
@@ -91,6 +96,9 @@ fun TovarPhotoDialog(
     state: TovarPhotoDialogUiState,
     onDismiss: () -> Unit
 ) {
+    val barcodeBitmap = remember(state.barcode) {
+        createBarcodeBitmapOrNull(state.barcode)
+    }
     Dialog(
         onDismissRequest = {},
         properties = DialogProperties(
@@ -140,25 +148,19 @@ fun TovarPhotoDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BarcodeImageBlock(
-                        barcode = state.barcode
+                        barcode = state.barcode,
+                        barcodeBitmap = barcodeBitmap
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    CopyableBarcodeText(
-                        barcode = state.barcode
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                    if (barcodeBitmap != null) {
+                        CopyableBarcodeText(barcode = state.barcode)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
 
                     Text(
-                        text = buildString {
-                            append("Штрихкод: ")
-                            append(state.barcode)
-                            append("\n")
-                            append("Артикул: ")
-                            append(state.article)
-                        },
+                        text = buildTovarPhotoDetails(state, barcodeBitmap != null),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -212,7 +214,6 @@ fun TovarPhotoDialog(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun GlideTovarImage(
     imagePath: String?,
@@ -243,31 +244,32 @@ fun GlideTovarImage(
             imageVersion = imageVersion
         )
     }
+    val context = LocalContext.current
+    val requests = remember(context) { Glide.with(context) }
 
     key(signatureKey) {
-        GlideImage(
-            model = model,
-            contentDescription = "Фото товару",
+        AndroidView(
             modifier = modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.White),
-            contentScale = ContentScale.Fit,
-
-            // Важно:
-            // loading НЕ ставим, иначе при каждом обновлении будет мигать merchik_m.
-            loading = null,
-
-            // merchik_m показываем только если реальная картинка не загрузилась.
-            failure = placeholder(R.mipmap.merchik_m),
-
-            transition = CrossFade
-        ) { requestBuilder ->
-            requestBuilder
-                .signature(ObjectKey(signatureKey))
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .override(1200, 1200)
-        }
+            factory = { viewContext ->
+                TouchImageView(viewContext).apply {
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    maxZoom = 5f
+                    contentDescription = "Фото товару"
+                    requests.load(model)
+                        .signature(ObjectKey(signatureKey))
+                        .skipMemoryCache(true)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .override(1200, 1200)
+                        .dontTransform()
+                        .dontAnimate()
+                        .error(R.mipmap.merchik_m)
+                        .into(this)
+                }
+            },
+            onRelease = { view -> requests.clear(view) }
+        )
     }
 }
 
@@ -325,14 +327,11 @@ private fun buildGlideSignatureKey(
 
 @Composable
 fun BarcodeImageBlock(
-    barcode: String
+    barcode: String,
+    barcodeBitmap: Bitmap?
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
-
-    val barcodeBitmap = remember(barcode) {
-        createBarcodeBitmapOrNull(barcode)
-    }
 
     if (barcodeBitmap != null) {
         Image(

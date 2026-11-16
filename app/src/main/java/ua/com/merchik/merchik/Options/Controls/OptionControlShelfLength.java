@@ -8,8 +8,15 @@ import android.text.Spanned;
 import android.text.style.ClickableSpan;
 import android.view.View;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +44,9 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
 import ua.com.merchik.merchik.features.main.options.ProductIssueCorrection;
 
 public final class OptionControlShelfLength extends OptionControl {
+    private static final Gson HISTORY_LOG_GSON = new GsonBuilder().serializeNulls().create();
+    private static final DateTimeFormatter HISTORY_DATE = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            .withZone(ZoneId.of("Europe/Kiev"));
     private final long dad2;
 
     public OptionControlShelfLength(Context context, Object document, OptionsDB option, OptionMassageType type,
@@ -91,7 +101,16 @@ public final class OptionControlShelfLength extends OptionControl {
         return ShelfLengthPolicy.progress(measurements(visit, rows).values());
     }
 
+    static String historyDetails(long dad2, int network, ShelfSizeDao.HistoryMeasurement row) {
+        JsonObject details = HISTORY_LOG_GSON.toJsonTree(row).getAsJsonObject();
+        details.addProperty("dad2", dad2);
+        details.addProperty("network", network);
+        details.addProperty("dateKyiv", HISTORY_DATE.format(Instant.ofEpochSecond(row.dt)));
+        return details.toString();
+    }
+
     private void executeOption() {
+        long checkedAt = System.currentTimeMillis();
         String client = wpDataDB.getClient_id();
         boolean hasClient = client != null && !client.isEmpty() && !"0".equals(client);
         List<ReportPrepareDB> rows = ReportPrepareRealm.getReportPrepareByDad2_LIST(dad2);
@@ -111,9 +130,10 @@ public final class OptionControlShelfLength extends OptionControl {
             List<Integer> groupIds = new ArrayList<>(groups);
             for (TovarGroupSDB group : SQL_DB.tovarGroupDao().getAllByIds(groupIds)) names.put(group.id, group.nm);
             if (network > 0 && end > 0) {
-                for (ShelfSizeDao.WidthCount row : SQL_DB.shelfSizeDao().getHistoryForShelfLength(network, groupIds,
+                for (ShelfSizeDao.HistoryMeasurement row : SQL_DB.shelfSizeDao().getHistoryForShelfLength(network, groupIds,
                         end, wpDataDB.getUser_id(), ShelfLengthPolicy.ROBOT_ID)) {
-                    history.computeIfAbsent(row.groupId, ignored -> new ShelfLengthPolicy.History()).add(row.width, row.measurements);
+                    history.computeIfAbsent(row.groupId, ignored -> new ShelfLengthPolicy.History()).add(row.width, 1);
+                    Globals.writeToMLOG("INFO", "OptionControlShelfLength/history", historyDetails(dad2, network, row));
                 }
             }
         }
@@ -124,7 +144,7 @@ public final class OptionControlShelfLength extends OptionControl {
             ShelfLengthPolicy.Measurement m = entry.getValue();
             String label = m.groupLabel(names.get(m.groupId));
             ShelfLengthPolicy.History h = history.get(m.groupId);
-            String issue = m.issue(label, h);
+            String issue = m.issue(label, h, checkedAt);
             Globals.writeToMLOG("INFO", "OptionControlShelfLength/item", "dad2=" + dad2 + ", product=" + entry.getKey()
                     + ", group=" + (m.groupId == null ? ShelfLengthPolicy.UNKNOWN_GROUP : m.groupId) + ", faces=" + m.faces + ", metres=" + m.metres
                     + ", historyCount=" + (h == null ? 0 : h.count)
@@ -170,6 +190,8 @@ public final class OptionControlShelfLength extends OptionControl {
         }
         Globals.writeToMLOG("INFO", "OptionControlShelfLength/result", "dad2=" + dad2 + ", network=" + network
                 + ", endExclusive=" + end + ", executor=" + wpDataDB.getUser_id() + ", reportRows=" + rows.size()
+                + ", historyComparisonEnabled=" + ShelfLengthPolicy.historyComparisonEnabled(checkedAt)
+                + ", historyComparisonFrom=" + ShelfLengthPolicy.HISTORY_COMPARISON_FROM
                 + ", measurements=" + products.size() + ", issues=" + issues + ", signal=" + signal + ", blocked=" + isBlockOption());
     }
 

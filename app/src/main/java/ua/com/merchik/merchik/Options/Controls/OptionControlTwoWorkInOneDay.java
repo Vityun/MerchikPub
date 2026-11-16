@@ -125,6 +125,7 @@ public class OptionControlTwoWorkInOneDay<T> extends OptionControl {
         RealmResults<WpDataDB> wp = WpDataRealm.getWpData().where()
                 .equalTo("user_id", userId)
                 .equalTo("code_iza", wpDataDB.getCode_iza())
+                .equalTo("theme_id", TEMA_998)
                 .greaterThanOrEqualTo("visit_start_dt", dayStartSec)
                 .lessThanOrEqualTo("visit_start_dt", dayEndSec)
                 .notEqualTo("code_dad2", codeDad2)      // <-- исключаем текущий визит (аналог КодДАД в 1С)
@@ -185,6 +186,7 @@ public class OptionControlTwoWorkInOneDay<T> extends OptionControl {
 
         setIsBlockOption(signal);    // Установка блокирует ли опция работу приложения или нет
         checkUnlockCode(optionDB);
+        Globals.writeToMLOG("INFO", "OptionControlEndAnotherWork/spannableStringBuilder", "spannableStringBuilder: " + spannableStringBuilder);
 
         Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
         Log.d("test", "massageToUser: " + massageToUser);

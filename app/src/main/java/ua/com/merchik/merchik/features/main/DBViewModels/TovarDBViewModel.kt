@@ -2327,6 +2327,8 @@ class TovarDBViewModel @Inject constructor(
         val photoId: String?,
         val barcode: String,
         val article: String,
+        val tradeMark: String,
+        val name: String,
         val detachedTovar: TovarDB
     )
 
@@ -2349,6 +2351,8 @@ class TovarDBViewModel @Inject constructor(
                 imageQuality = localPhoto?.quality ?: TovarPhotoQuality.NONE,
                 barcode = request.barcode,
                 article = request.article,
+                tradeMark = request.tradeMark,
+                name = request.name,
                 isLoadingFull = true,
                 imageVersion = System.currentTimeMillis(),
                 loadToken = loadToken
@@ -2377,6 +2381,10 @@ class TovarDBViewModel @Inject constructor(
             photoId = tovar.photoId,
             barcode = tovar.getBarcode().orEmpty(),
             article = getArticle(tovar, 0).orEmpty(),
+            tradeMark = TradeMarkRealm.getTradeMarkRowById(tovar.manufacturerId)?.nm
+                ?.takeIf { it.isNotBlank() }
+                ?: tovar.manufacturer?.nm.orEmpty(),
+            name = tovar.nm.orEmpty(),
             detachedTovar = detached
         )
     }
@@ -3653,6 +3661,7 @@ class TovarDBViewModel @Inject constructor(
 
                 val rowTitle = when (tpl.getOptionControlName()) {
                     OptionControlName.AMOUNT -> amountTitle ?: tpl.getOptionLong().orEmpty()
+                    OptionControlName.FACE -> cache.displayPolicy.faceTitle(tpl.getOptionLong())
                     OptionControlName.ERROR_ID -> resolveErrorTitle(tpl, rp)
                     OptionControlName.PRICE -> currentPriceTitle()
                     else -> tpl.getOptionLong().orEmpty()

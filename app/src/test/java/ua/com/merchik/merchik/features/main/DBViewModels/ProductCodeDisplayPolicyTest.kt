@@ -69,8 +69,8 @@ class ProductCodeDisplayPolicyTest {
 
     @Test fun shelfLengthCorrectionUsesTheSameDocumentTitleAndFallback() {
         val policy = ProductCodeDisplayPolicy(998, false, shelfLengthCorrection = true)
-        assertEquals("Контроль довжини полиць (метрiв)", policy.amountTitle("Контроль довжини полиць"))
-        assertEquals("Длина полочного пространства (метрiв)", policy.amountTitle(null))
+        assertEquals("Контроль довжини полиць (м)", policy.amountTitle("Контроль довжини полиць"))
+        assertEquals("Длина полочного пространства (м)", policy.amountTitle(null))
     }
 
     @Test fun collapsedCodeHidesEveryOtherField() {
@@ -118,25 +118,51 @@ class ProductCodeDisplayPolicyTest {
     }
 
     @Test fun amountUsesDocumentOptionTitleWithMeters() {
-        assertEquals("Замер полки (метрiв)",
+        assertEquals("Замер полки (м)",
             ProductCodeDisplayPolicy(1182, false).amountTitle("  Замер полки  "))
     }
 
     @Test fun missingOrBlankTitleFallsBackToShelfLength() {
         val policy = ProductCodeDisplayPolicy(1182, false)
         for (title in listOf(null, "", "   ")) {
-            assertEquals("Длина полочного пространства (метрiв)", policy.amountTitle(title))
+            assertEquals("Длина полочного пространства (м)", policy.amountTitle(title))
+        }
+    }
+
+    @Test fun measurementsAppendAllFacesToTheOriginalTitle() {
+        for (themeId in listOf(0, 977, 998, 1182)) {
+            val policy = ProductCodeDisplayPolicy(themeId, false, shelfLengthCorrection = true)
+            assertEquals("Фейси (всіх)", policy.faceTitle("Фейси"))
+        }
+        for (priceCorrection in listOf(false, true)) {
+            val policy = ProductCodeDisplayPolicy(1182, priceCorrection)
+            assertEquals("Количество фейсов (всіх)", policy.faceTitle("Количество фейсов"))
+        }
+    }
+
+    @Test fun otherContextsKeepTheOriginalFacesTitle() {
+        for (themeId in listOf(0, 977, 998)) {
+            for (priceCorrection in listOf(false, true)) {
+                val policy = ProductCodeDisplayPolicy(themeId, priceCorrection)
+                for (title in listOf(null, "", "Фейси", "Количество фейсов")) {
+                    assertEquals(title.orEmpty(), policy.faceTitle(title))
+                }
+            }
         }
     }
 
     @Test fun templatesKeepTheirOriginalFieldsAndTitles() {
         val amount = allOptions.first { it.getOptionControlName() == OptionControlName.AMOUNT }
+        val face = allOptions.first { it.getOptionControlName() == OptionControlName.FACE }
         val policy = ProductCodeDisplayPolicy(1182, false)
         val options = policy.editorOptions(emptyList(), allOptions, false)
         policy.amountTitle("Замер полки")
+        policy.faceTitle(face.getOptionLong())
         assertSame(amount, options.first())
         assertEquals("AMOUNT", amount.getOptionLong())
         assertEquals("AMOUNT", amount.getOrderField())
+        assertSame(face, options.last())
+        assertEquals("FACE", face.getOptionLong())
     }
 
     private fun fields(options: List<TovarOptions>) = options.map { it.getOptionControlName() }

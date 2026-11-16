@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Options.Controls;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
 
@@ -13,6 +14,7 @@ final class ShelfLengthPolicy {
     static final String UNKNOWN_GROUP = "Не визначено";
     static final int ROBOT_ID = 38791;
     private static final ZoneId KYIV = ZoneId.of("Europe/Kiev");
+    static final LocalDate HISTORY_COMPARISON_FROM = LocalDate.of(2026, 12, 1);
     private static final BigDecimal THREE = BigDecimal.valueOf(3);
 
     private ShelfLengthPolicy() {}
@@ -26,6 +28,11 @@ final class ShelfLengthPolicy {
     static long endExclusive(long documentMillis) {
         return Instant.ofEpochMilli(documentMillis).atZone(KYIV).toLocalDate()
                 .plusDays(1).atStartOfDay(KYIV).toEpochSecond();
+    }
+
+    static boolean historyComparisonEnabled(long nowMillis) {
+        // The temporary exemption expires by current Kyiv date, not the visit date.
+        return !Instant.ofEpochMilli(nowMillis).atZone(KYIV).toLocalDate().isBefore(HISTORY_COMPARISON_FROM);
     }
 
     static final class History {
@@ -72,7 +79,7 @@ final class ShelfLengthPolicy {
         }
 
         // 4.1. One issue per measurement, in the same order as in 1C.
-        String issue(String group, History history) {
+        String issue(String group, History history, long nowMillis) {
             if (faces.signum() == 0 && metres.signum() == 0)
                 return "У группы:\n" + group + " не указаны ни КОЛИЧЕСТВО Фейсов (ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ группы) ни суммарной ДЛИНЫ всех полок ЭТОЙ товарной группы.";
             if (faces.signum() == 0)
@@ -83,7 +90,7 @@ final class ShelfLengthPolicy {
             if (density.compareTo(BigDecimal.valueOf(5)) < 0 || density.compareTo(BigDecimal.valueOf(50)) > 0)
                 return "Согласно ваших данных у группы:\n" + group + " на одном метре полки стоит " + density.toPlainString()
                         + " фейсов. Это похоже на ошибку. Укажите ПРАВИЛЬНО число фейсов ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ группы.";
-            if (history != null && history.outsideRange(metres))
+            if (historyComparisonEnabled(nowMillis) && history != null && history.outsideRange(metres))
                 return group + ": Длина ПП " + metres.toPlainString() + " м. указанная Вами, значительно отличается от среднего для данной сети. Это похоже на обман. Укажите ПРАВИЛЬНО длину ВСЕХ полок ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ товарной группы.";
             return "";
         }
