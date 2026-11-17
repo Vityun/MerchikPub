@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
 import ua.com.merchik.merchik.ServerExchange.ExchangeWork;
+import ua.com.merchik.merchik.ServerExchange.ReportConductRecovery;
 
 import com.google.gson.JsonObject;
 
@@ -92,7 +93,10 @@ public final class ChatExchange {
                     }
                 }
                 count = rows.size();
-                saveRows = () -> db.chatDao().insertAll(rows);
+                saveRows = () -> {
+                    db.chatDao().insertAll(rows);
+                    ReportConductRecovery.stage(userId, db, session, rows);
+                };
             } else {
                 ChatGrpResponse body = execute(RetrofitBuilder.getRetrofitInterface()
                         .CHAT_GRP_DOWNLOAD(RetrofitBuilder.contentType, request));
@@ -121,6 +125,7 @@ public final class ChatExchange {
             Globals.writeToMLOG("INFO", "ChatExchange/saved", "table=" + table.getCode()
                     + ", rows=" + count + ", vpi=" + watermark + ", requestStartedSec=" + started);
             trace.saved(watermark);
+            if (table == TableName.CHAT) ReportConductRecovery.wake();
         } catch (Exception error) {
             trace.failed(error);
             throw error;

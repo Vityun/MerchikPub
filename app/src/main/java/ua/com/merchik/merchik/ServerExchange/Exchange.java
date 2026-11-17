@@ -2190,6 +2190,8 @@ public class Exchange {
 
             Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
             List<TARCommentsDB> finalList = list;
+            if (!VisitUploadSync.acquireTaskComments()) return;
+            try {
             call.enqueue(new Callback<TARCommentsServerData>() {
                 @Override
                 public void onResponse(Call<TARCommentsServerData> call, Response<TARCommentsServerData> response) {
@@ -2198,7 +2200,7 @@ public class Exchange {
                         List<TARCommentsDB> deleteFromDb = new ArrayList<>();
 
                         TARCommentsServerData res = response.body();
-                        if (res != null) {
+                        if (response.isSuccessful() && res != null) {
                             Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "response.body(): " + new Gson().toJson(res));
                             if (res.getState() != null && res.getState()) {
                                 if (res.getList() != null && res.getList().size() > 0) {
@@ -2238,6 +2240,20 @@ public class Exchange {
                                     }
 
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
+                                        for (int n = 0; n < deleteFromDb.size(); n++) {
+                                            TARCommentsDB sent = deleteFromDb.get(n);
+                                            TARCommentsDB current = realm.where(TARCommentsDB.class)
+                                                    .equalTo("id", sent.getID()).findFirst();
+                                            if (current != null && !new Gson().toJsonTree(realm.copyFromRealm(current))
+                                                    .equals(new Gson().toJsonTree(sent))) {
+                                                TARCommentsDB newer = realm.copyFromRealm(current);
+                                                newer.setID(saveToDb.get(n).getID());
+                                                newer.commentId = saveToDb.get(n).commentId;
+                                                newer.startUpdate = true;
+                                                newer.dtUpdate = System.currentTimeMillis() / 1000;
+                                                saveToDb.set(n, newer);
+                                            }
+                                        }
                                         Log.e("uploadTARComments", "ids: " + ids);
                                         RealmResults<TARCommentsDB> dell = realm.where(TARCommentsDB.class)
                                                 .in("id", ids)
@@ -2256,6 +2272,8 @@ public class Exchange {
                     } catch (Exception e) {
                         Log.e("uploadTARComments", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "uploadTARComments/onResponse", "Exception e: " + e);
+                    } finally {
+                        VisitUploadSync.releaseTaskComments();
                     }
 
                     Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "End uploadTARComments");
@@ -2263,11 +2281,16 @@ public class Exchange {
 
                 @Override
                 public void onFailure(Call<TARCommentsServerData> call, Throwable t) {
+                    VisitUploadSync.releaseTaskComments();
                     Log.e("uploadTARComments", "t:" + t);
                     Globals.writeToMLOG("ERROR", "uploadTARComments/onFailure", "Throwable t: " + t);
                     Globals.writeToMLOG("INFO", "uploadTARComments/onFailure", "End uploadTARComments");
                 }
             });
+            } catch (RuntimeException error) {
+                VisitUploadSync.releaseTaskComments();
+                throw error;
+            }
 
 
         }

@@ -90,8 +90,14 @@ final class ShelfLengthPolicy {
             if (density.compareTo(BigDecimal.valueOf(5)) < 0 || density.compareTo(BigDecimal.valueOf(50)) > 0)
                 return "Согласно ваших данных у группы:\n" + group + " на одном метре полки стоит " + density.toPlainString()
                         + " фейсов. Это похоже на ошибку. Укажите ПРАВИЛЬНО число фейсов ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ группы.";
-            if (historyComparisonEnabled(nowMillis) && history != null && history.outsideRange(metres))
-                return group + ": Длина ПП " + metres.toPlainString() + " м. указанная Вами, значительно отличается от среднего для данной сети. Это похоже на обман. Укажите ПРАВИЛЬНО длину ВСЕХ полок ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ товарной группы.";
+            if (historyComparisonEnabled(nowMillis) && history != null && history.outsideRange(metres)) {
+                String average = history.total.divide(BigDecimal.valueOf(history.count), 3, RoundingMode.HALF_UP)
+                        .stripTrailingZeros().toPlainString();
+                return group + ": Длина ПП " + metres.toPlainString()
+                        + "м. указанная Вами, значительно отличается от среднего для данной сети " + average
+                        + "м. Это похоже на ошибку. Укажите ПРАВИЛЬНО длину ВСЕХ полок ВСЕХ товаров ВСЕХ поставщиков ЭТОЙ товарной группы."
+                        + " Если Вы все таки уверены в своих данных, введите их, получив код разблокировки!";
+            }
             return "";
         }
     }

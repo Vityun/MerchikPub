@@ -141,6 +141,7 @@ object ContextMenuActionIds {
     const val TOVAR_AKCIYA_ID = "tovar_akciya_id"
     const val TOVAR_AKCIYA = "tovar_akciya"
     const val TOVAR_NOTES = "tovar_notes"
+    const val TOVAR_CLEAR_DATA = "tovar_clear_data"
 
     const val ADDITIONAL_CONTENT_DELETE_EXTRA = "additional_content_delete_extra"
     const val ADDITIONAL_CONTENT_ADD_PPA = "additional_content_add_ppa"

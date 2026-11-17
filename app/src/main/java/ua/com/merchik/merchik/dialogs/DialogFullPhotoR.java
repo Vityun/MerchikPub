@@ -15,6 +15,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.ortiz.touchview.TouchImageView;
 
 import java.io.File;
@@ -36,6 +38,26 @@ public class DialogFullPhotoR {
     // ------------------------
     private TouchImageView photo;
     private ImageButton camera;
+    private boolean cameraPulseEnabled;
+    private YoYo.YoYoString cameraPulse;
+    private final Runnable cameraPulseTask = new Runnable() {
+        @Override
+        public void run() {
+            if (!cameraPulseEnabled || !isShowing() || !camera.isAttachedToWindow()
+                    || camera.getVisibility() != View.VISIBLE) {
+                stopCameraPulse();
+                return;
+            }
+            if (camera.getWindowVisibility() == View.VISIBLE) {
+                if (cameraPulse != null) cameraPulse.stop();
+                cameraPulse = YoYo.with(Techniques.Pulse)
+                        .duration(500)
+                        .repeat(1)
+                        .playOn(camera);
+            }
+            camera.postDelayed(this, 10_000L);
+        }
+    };
 
     // Pika
     private Button comment1;
@@ -68,6 +90,16 @@ public class DialogFullPhotoR {
         photo = dialog.findViewById(R.id.photo);
 //        photo.setAdjustViewBounds(true);
         camera = dialog.findViewById(R.id.camera);
+        camera.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) { }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                stopCameraPulse();
+            }
+        });
+        dialog.setOnDismissListener(ignored -> stopCameraPulse());
 
         // Pika
         comment1 = dialog.findViewById(R.id.buttonComment);
@@ -84,6 +116,7 @@ public class DialogFullPhotoR {
     public void show() {
         if (dialog != null)
             dialog.show();
+        startCameraPulse();
         // Pika
         if (commentOn) {
             showComment(true);
@@ -105,6 +138,7 @@ public class DialogFullPhotoR {
     }
 
     public void dismiss() {
+        stopCameraPulse();
         if (dialog != null) dialog.dismiss();
     }
 
@@ -132,7 +166,30 @@ public class DialogFullPhotoR {
     // ---------------------------------------------------------------------------------------------
 
     public void hideCamera() {
+        stopCameraPulse();
         camera.setVisibility(View.GONE);
+    }
+
+    public void setCameraPulseEnabled(boolean enabled) {
+        cameraPulseEnabled = enabled;
+        startCameraPulse();
+    }
+
+    private void startCameraPulse() {
+        stopCameraPulse();
+        if (cameraPulseEnabled && isShowing() && camera.getVisibility() == View.VISIBLE) {
+            camera.post(cameraPulseTask);
+        }
+    }
+
+    private void stopCameraPulse() {
+        camera.removeCallbacks(cameraPulseTask);
+        if (cameraPulse != null) {
+            cameraPulse.stop();
+            cameraPulse = null;
+            camera.setScaleX(1f);
+            camera.setScaleY(1f);
+        }
     }
 
     public void setCamera(Clicks.clickVoid clickVoid){
@@ -142,6 +199,7 @@ public class DialogFullPhotoR {
     }
 
     public void setGallery(Clicks.clickVoid clickVoid) {
+        setCameraPulseEnabled(false);
         camera.setImageResource(R.drawable.ic_menu_gallery);
         camera.setContentDescription("Вибрати з галереї");
         camera.setOnClickListener(view -> clickVoid.click());

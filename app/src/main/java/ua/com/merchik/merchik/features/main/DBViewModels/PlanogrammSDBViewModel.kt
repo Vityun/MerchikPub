@@ -75,7 +75,7 @@ class PlanogrammSDBViewModel @Inject constructor(
     override fun getDefaultHideUserFields(): List<String> = listOf(
         "column_name", "group_header", "isp_id", "isp_txt", "client_id", "client_txt",
         "img_id", "photo", "photo_id", "photo_big", "dt_start", "dt_end",
-        "author_id", "authorTxt", "dtUpdate"
+        "author_id", "authorTxt", "dtUpdate", "tovar_grp"
     )
 
     override fun getHideSortUserFields(): List<String> = listOf("comments", "planogrammPhoto")
@@ -95,7 +95,7 @@ class PlanogrammSDBViewModel @Inject constructor(
 
         try {
             val reference = currentReferenceContext()
-            val selection = PlanogramPhotoSelection.forContext(reference)
+            val selection = PlanogramPhotoSelection.forContext(reference, captureData().text("showcaseId"))
             val now = System.currentTimeMillis() / 1000
             val date = selection.date
             val networkId = selection.networkId?.toString().orEmpty()

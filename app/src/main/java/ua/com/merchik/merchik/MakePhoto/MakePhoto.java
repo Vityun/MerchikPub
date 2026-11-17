@@ -1396,7 +1396,7 @@ public class MakePhoto {
                                     boolean chooseCustomerGroup) {
         WpDataDB visit = RealmManager.getWorkPlanRowByCodeDad2Detached(wp.dad2);
         if (visit == null) throw new IllegalStateException("Visit " + wp.dad2 + " not found");
-        if (PlanogramPhotoSelection.forVisit(visit).getPlans().isEmpty()) {
+        if (PlanogramPhotoSelection.forVisit(visit, MakePhoto.showcase_id).getPlans().isEmpty()) {
             MakePhoto.planogram_id = "0";
             MakePhoto.planogram_img_id = "0";
             makePhotoForPlanogramm(activity, visit, optionsDB, chooseCustomerGroup);

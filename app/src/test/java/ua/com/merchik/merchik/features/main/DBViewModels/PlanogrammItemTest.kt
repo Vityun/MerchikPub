@@ -16,8 +16,8 @@ class PlanogrammItemTest {
     fun imageCaptionAndPhotoCountAreNotShown() {
         val plan = PlanogrammSDB().apply { id = 47; planogrammPhoto = 3 }
 
-        assertEquals("", plan.commentsForImage)
-        val hidden = plan.hidedFieldsOnUI.split(",").map { it.trim() }
+        assertEquals("", plan.getCommentsForImage())
+        val hidden = plan.getHidedFieldsOnUI().split(",").map { it.trim() }
         assertTrue("comments" in hidden)
         assertTrue("planogrammPhoto" in hidden)
         assertFalse("nm" in hidden)

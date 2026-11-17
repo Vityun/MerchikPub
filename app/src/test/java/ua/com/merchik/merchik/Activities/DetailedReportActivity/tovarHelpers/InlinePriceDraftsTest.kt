@@ -5,6 +5,52 @@ import org.junit.Test
 
 class InlinePriceDraftsTest {
     @Test
+    fun clearingProductsDiscardsOnlyTheirDraftsAndDeferredWarnings() {
+        val other = before.copy(itemId = 2, tovarId = "20")
+        val fixture = Fixture().apply { stored = mapOf(before to "1", other to "2") }
+        val controller = fixture.controller()
+        val oldError = controller.nextError()!!
+        controller.markShown(oldError)
+
+        controller.discardProducts(setOf("10"))
+        assertEquals(setOf(other), controller.drafts.value.keys)
+        assertEquals(mapOf(other to "2"), fixture.stored)
+        controller.approveDiscount(oldError)
+        controller.finish(before)
+        controller.finishAll()
+        assertEquals(other, controller.nextError()!!.field)
+        assertEquals(0, fixture.writes)
+        assertTrue(fixture.completed.isEmpty())
+    }
+
+    @Test
+    fun clearingProductsCancelsCompletionOfAlreadySavedPrices() {
+        val fixture = Fixture()
+        val controller = fixture.controller(autoFill = true)
+        controller.change(current, "1234")
+        assertEquals(1, fixture.writes)
+        controller.discardProducts(setOf("10"))
+        controller.finishAll()
+        assertEquals(1, fixture.writes)
+        assertTrue(fixture.completed.isEmpty())
+        assertTrue(fixture.stored.isEmpty())
+        assertNull(controller.nextError())
+    }
+
+    @Test
+    fun clearingProductsRemovesStaleFocusRequest() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("80", "100", "Product", 20) }
+        val controller = fixture.controller()
+        controller.change(before, "300")
+        controller.finish(before)
+        controller.refuseDiscount(controller.nextError()!!)
+        assertEquals(before, controller.focusRequest.value)
+        controller.discardProducts(setOf("10"))
+        assertNull(controller.focusRequest.value)
+        assertTrue(fixture.stored.isEmpty())
+    }
+
+    @Test
     fun equalPricesSaveWithoutWarningAndWithoutChangingStorageFormat() {
         val fixture = Fixture().apply { prices = InlinePriceValues("80", "95.90", "Product", 20) }
         val controller = fixture.controller()

@@ -92,6 +92,9 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations WHERE id = :id")
     TasksAndReclamationsSDB getById(int id);
 
+    @Query("DELETE FROM tasks_and_reclamations WHERE id = :id")
+    void deleteByIdSync(int id);
+
     @Query("SELECT * FROM tasks_and_reclamations WHERE id_1c = :number AND tp = :tp LIMIT 1")
     TasksAndReclamationsSDB getByDocumentNumber(String number, int tp);
 

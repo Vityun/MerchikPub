@@ -273,9 +273,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             Log.e("OptionControlPercentageOfThePrize","signal: " + signal);
             if (optionDB != null) {
                 if (signal) {
-                    double penalty = 0.00;
+                    String penalty = "0.00";
                     if (wpDataDB != null) {
-                        penalty = calculatePenalty(wpDataDB, 2);
+                        penalty = PremiumPercentagePolicy.penalty(wpDataDB.getCash_zakaz(), percent);
                     } else {
                         Globals.writeToMLOG(
                                 "ERROR",
@@ -284,7 +284,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
                         );
                     }
                     optionDB.setIsSignal("1");
-                    optionDB.setSumPenalty(String.valueOf(penalty));
+                    optionDB.setSumPenalty(penalty);
                 } else {
                     optionDB.setIsSignal("2");
                     optionDB.setSumPenalty("0.00");

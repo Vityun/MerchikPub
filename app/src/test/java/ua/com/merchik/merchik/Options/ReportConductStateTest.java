@@ -6,6 +6,68 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ReportConductStateTest {
+    @Test public void chatFailureStopsLostResponseRetryAndInvalidatesLateCallback() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.approvedAtSeconds = 100;
+        state.retryAfter = 5000;
+        String sentRevision = state.revision;
+        assertTrue(state.rejectFromChat(110));
+        ReportConductState loaded = restored(state);
+        assertNotEquals(sentRevision, loaded.revision);
+        assertFalse(loaded.canSend(Long.MAX_VALUE));
+        assertEquals(ReportConductState.Stage.REJECTED, loaded.stage);
+        assertFalse(loaded.resultPending);
+        assertFalse(loaded.rejectFromChat(110));
+    }
+
+    @Test public void chatFailureAfterAcceptedCommandDoesNotAuthorizeReconduct() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.approvedAtSeconds = 100;
+        state.completeFromServer(true, state.acceptedMessage());
+        assertTrue(state.rejectFromChat(100));
+        assertFalse(restored(state).canSend(Long.MAX_VALUE));
+        assertFalse(state.resultPending);
+    }
+
+    @Test public void delayedOldNotificationDoesNotCancelNewManualAttempt() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.approvedAtSeconds = 120;
+        String revision = state.revision;
+        assertFalse(restored(state).rejectFromChat(110));
+        assertFalse(state.rejectFromChat(110));
+        assertEquals(revision, state.revision);
+        assertTrue(state.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void legacyQueuedCommandAlsoStopsOnChatFailure() {
+        ReportConductState state = new Gson().fromJson("{\"stage\":\"READY\"}", ReportConductState.class);
+        assertEquals(0, state.approvedAtSeconds);
+        assertTrue(state.rejectFromChat(110));
+        assertFalse(state.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void chatFailureDoesNotCommitWorkEndOrAuthorizeAnUndecidedReport() {
+        ReportConductState state = unfinished(null);
+        assertFalse(state.rejectFromChat(110));
+        assertTrue(state.workEndRequested);
+        assertEquals(0, state.visitEnd);
+        assertFalse(state.canSend(Long.MAX_VALUE));
+    }
+
+    @Test public void explicitManualDecisionIsStillPossibleAfterRecovery() {
+        ReportConductState state = new ReportConductState();
+        state.approve();
+        state.approvedAtSeconds = 100;
+        state.rejectFromChat(110);
+        state.approve();
+        state.approvedAtSeconds = 120;
+        assertTrue(state.canSend(Long.MAX_VALUE));
+        assertFalse(state.rejectFromChat(110));
+    }
+
     @Test public void serverRejectionKeepsSubtitleAndOriginalMessageAfterRestart() {
         ReportConductState state = new ReportConductState();
         state.approve();

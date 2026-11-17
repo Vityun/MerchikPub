@@ -122,5 +122,16 @@ class PhotoReferenceContextTest {
         assertEquals(15545, selection.context.addressId)
         assertEquals(12, selection.networkId)
         assertEquals("2026-10-30", selection.date)
+        assertNull(selection.productGroupId)
+    }
+
+    @Test
+    fun planogramProductGroupDoesNotReplaceNetworkFilter() {
+        val context = PhotoReferenceContext.fromTaskWithoutVisit(task())
+        val selection = PlanogramPhotoSelection(context, 351, "2026-11-17", 35)
+        assertEquals(351, selection.networkId)
+        assertEquals(35, selection.productGroupId)
+        assertEquals("05327", selection.context.clientId)
+        assertEquals(15545, selection.context.addressId)
     }
 }

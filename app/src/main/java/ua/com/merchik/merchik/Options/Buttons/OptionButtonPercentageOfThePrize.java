@@ -8,12 +8,12 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import ua.com.merchik.merchik.Options.Controls.PremiumPercentagePolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
     public static int OPTION_BUTTON_PercentageOfThePrize_ID = 135412;
@@ -41,11 +41,8 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            WpDataDB wp = (WpDataDB) document;
-            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(wp.getCode_dad2());
-            if (this.wpDataDB == null) {
-                this.wpDataDB = wp;
-            }
+            // Use the same visit snapshot as the control that saves the result.
+            this.wpDataDB = (WpDataDB) document;
         }
     }
 
@@ -67,7 +64,7 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток.: </b>")).append(String.valueOf(maxPer)).append("%\n");
                 spannableStringBuilder.append(Html.fromHtml(bonus >= 0 ? "<b>Бонус: </b>" : "<b>Зниження: </b>"))
                         .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
-                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.").append("\n\n");
+                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.").append("\n\n");
 
                 spannableStringBuilder.append(Html.fromHtml("<b>Пояснення:</b>")).append("\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Період (діб)</b>")).append(" - період, за який розраховуються показники\n");
@@ -81,7 +78,7 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                         .append("% рекламацій (при максимально допустимому показнику ").append(String.valueOf(maxPer)).append("%)").append(" тому ваші преміальні ")
                         .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
                         .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
-                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.");
+                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.");
 
 
                 spannableStringBuilder.append("");
@@ -99,9 +96,7 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
     }
 
     private CharSequence counter2Text() {
-        CharSequence res = "";
-        res = "~" + String.format("%.2f", calculatePenalty(wpDataDB));
-        res = Html.fromHtml("" + res + "");
-        return res;
+        return "~" + String.format("%.2f", PremiumPercentagePolicy.amount(
+                wpDataDB != null ? wpDataDB.getCash_zakaz() : 0, bonus));
     }
 }

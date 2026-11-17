@@ -36,6 +36,22 @@ public class ReportPrepareRealm {
         return row == null ? null : INSTANCE.copyFromRealm(row);
     }
 
+    public static ReportPrepareClearPolicy.Result clearVisitProducts(long dad2, Set<String> tovarIds) {
+        ReportPrepareClearPolicy.Result[] result = new ReportPrepareClearPolicy.Result[1];
+        INSTANCE.executeTransaction(realm -> {
+            WpDataDB visit = realm.where(WpDataDB.class).equalTo("code_dad2", dad2).findFirst();
+            RealmResults<ReportPrepareDB> rows = realm.where(ReportPrepareDB.class)
+                    .equalTo("codeDad2", String.valueOf(dad2)).findAll();
+            result[0] = ReportPrepareClearPolicy.clear(dad2, visit, rows, tovarIds,
+                    System.currentTimeMillis() / 1000);
+        });
+        for (Long id : result[0].rowIds) ReportPrepareSync.localEdit(id);
+        Globals.writeToMLOG("INFO", "ReportPrepare/clearVisitProducts",
+                "dad2=" + dad2 + ", status=" + result[0].status + ", selected=" + tovarIds.size()
+                        + ", clearedRows=" + result[0].rowIds);
+        return result[0];
+    }
+
     // Setter-only callbacks edit the current row, then mirror those fields to the detached UI snapshot.
     public static boolean updateFields(ReportPrepareDB snapshot, Consumer<ReportPrepareDB> update) {
         return updateFields(snapshot, current -> true, update);

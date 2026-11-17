@@ -68,6 +68,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.Options.Controls.PremiumPercentagePolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Controls.ShelfLengthEntry;
 import ua.com.merchik.merchik.Options.Controls.OptionControlShelfLength;
@@ -282,12 +283,15 @@ public final class OptionsRowFactory<T> {
             ) {
                 row.backgroundRes = R.drawable.bg_temp;
                 textInteger2.visibility = View.VISIBLE;
-                if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
+                if (optionId == 135412) {
+                    textInteger2.monetary = true;
+                    textInteger2.text = counter2Text(optionId, optionsButtons);
+                } else if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
                     if (optionId == 132666 || optionId == 132812)
                         textInteger2.visibility = View.INVISIBLE;
                     else {
                         textInteger2.monetary = true;
-                        textInteger2.text = counter2Text(optionId);
+                        textInteger2.text = counter2Text(optionId, optionsButtons);
                     }
                 } else {
                     if (optionId == 133382) {
@@ -1301,14 +1305,17 @@ public final class OptionsRowFactory<T> {
         return false;
     }
 
-    private CharSequence counter2Text(int optionId) {
+    private CharSequence counter2Text(int optionId, OptionsDB option) {
         CharSequence res = "";
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
-            if (optionId == 135412)
-                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE * 2);
-            else
-                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
+            if (optionId == 135412) {
+                String color = PremiumPercentagePolicy.counterColor(option.getAmountMax());
+                String text = PremiumPercentagePolicy.counterText(
+                        wpDataDB.getCash_zakaz(), option.getAmountMax(), Locale.getDefault());
+                return Html.fromHtml("<font color=" + color + ">" + text + " грн</font>");
+            }
+            res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
             res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
         return res;

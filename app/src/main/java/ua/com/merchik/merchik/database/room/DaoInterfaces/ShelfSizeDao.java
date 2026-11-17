@@ -51,18 +51,22 @@ public interface ShelfSizeDao {
 
     // A zero-network row is a fallback for the same measurement, not another vote in the mean.
     // The physical ID and network variant are not part of the measurement's identity.
-    @Query("SELECT h.*, a.nm AS addressName, c.nm AS clientName, u.fio AS authorName FROM (" +
+    // An explicit server network must not depend on the local address directory's coverage.
+    String SHELF_LENGTH_HISTORY_QUERY = "SELECT h.*, a.nm AS addressName, c.nm AS clientName, u.fio AS authorName FROM (" +
             "SELECT GROUP_CONCAT(s.id) AS sourceIds, GROUP_CONCAT(DISTINCT s.gruadr_id) AS sourceNetworkIds, " +
             "s.grp_id AS groupId, s.addr_id AS addrId, s.client_id AS clientId, s.author_id AS authorId, " +
             "s.width, s.planzn AS planValue, s.dt, s.dt_day AS dtDay, s.dt_change AS dtChange " +
-            "FROM shelf_size s JOIN address a ON a.id = s.addr_id " +
-            "WHERE a.tp_id = :networkId AND s.gruadr_id IN (:networkId, 0) AND s.grp_id IN (:groupIds) " +
+            "FROM shelf_size s LEFT JOIN address a ON a.id = s.addr_id " +
+            "WHERE (s.gruadr_id = :networkId OR (s.gruadr_id = 0 AND a.tp_id = :networkId)) " +
+            "AND s.grp_id IN (:groupIds) " +
             "AND s.dt > 0 AND s.dt < :endExclusive " +
             "AND (s.author_id IS NULL OR s.author_id NOT IN (:executorId, :robotId)) " +
             "GROUP BY s.grp_id, s.addr_id, s.client_id, s.width, s.planzn, s.author_id, s.dt, s.dt_day, s.dt_change" +
             ") h LEFT JOIN address a ON a.id = h.addrId " +
             "LEFT JOIN client c ON c.id = h.clientId LEFT JOIN sotr u ON u.id = h.authorId " +
-            "ORDER BY h.groupId, h.dt, h.sourceIds")
+            "ORDER BY h.groupId, h.dt, h.sourceIds";
+
+    @Query(SHELF_LENGTH_HISTORY_QUERY)
     List<HistoryMeasurement> getHistoryForShelfLength(int networkId, List<Integer> groupIds, long endExclusive,
                                                     int executorId, int robotId);
 }

@@ -94,6 +94,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareClearPolicy
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm
@@ -486,6 +487,10 @@ class TovarDBViewModel @Inject constructor(
     }
 
     fun refreshReportPrepareOnTabResume() {
+        refreshReportPrepare(emptySet())
+    }
+
+    private fun refreshReportPrepare(forceTovarIds: Set<String>) {
         if (contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) return
         val cache = productCodeSessionCache ?: return
         // A full load is already pending; it will read the latest data itself.
@@ -502,7 +507,7 @@ class TovarDBViewModel @Inject constructor(
                 return
             }
 
-            val changedIds = changedReportPrepareTovarIds(previous, snapshot)
+            val changedIds = changedReportPrepareTovarIds(previous, snapshot) + forceTovarIds
             val affectedItems = getAllCurrentItems().filter {
                 it.rawAs<TovarDB>()?.getiD() in changedIds
             }
@@ -530,6 +535,7 @@ class TovarDBViewModel @Inject constructor(
                 "dad2=${cache.codeDad2}, changed=${changedIds.size}, cards=${updatedItems.size}")
         } catch (e: Exception) {
             Globals.writeToMLOG("ERROR", "TovarDBViewModel.refreshReportPrepare", "dad2=${cache.codeDad2}: $e")
+            if (forceTovarIds.isNotEmpty()) updateContent()
         }
     }
 
@@ -1744,6 +1750,13 @@ class TovarDBViewModel @Inject constructor(
                     actionId = ContextMenuActionIds.TOVAR_NOTES,
                     title = "Примечание к товару",
                     leading = MenuLeading.BadgeText("П")
+                ),
+                ContextMenuEntry.Action(
+                    id = "tovar_clear_data",
+                    actionId = ContextMenuActionIds.TOVAR_CLEAR_DATA,
+                    title = "Очистити дані",
+                    leading = MenuLeading.DrawableIcon(R.drawable.ic_delete),
+                    visible = contextUI == ContextUI.TOVAR_FROM_TOVAR_TABS
                 )
             )
 
@@ -1798,6 +1811,7 @@ class TovarDBViewModel @Inject constructor(
             ContextMenuActionIds.OPEN_SMS_PLAN -> openSmsPlanDirectory()
             ContextMenuActionIds.LIST_SETTINGS -> openSortingDialog()
             ContextMenuActionIds.CLOSE -> hideContextMenu()
+            ContextMenuActionIds.TOVAR_CLEAR_DATA -> clearSelectedTovarData(event.payload)
 
             ContextMenuActionIds.ADDITIONAL_ADD -> {
                 val selectedItems = event.payload.selectedItems.filter { it.selected }
@@ -2248,6 +2262,50 @@ class TovarDBViewModel @Inject constructor(
         if (unselectedIds.isNotEmpty()) {
             updateItemsSelect(ids = unselectedIds, checked = true)
         }
+    }
+
+    private fun clearSelectedTovarData(payload: ContextMenuPayload) {
+        hideContextMenu()
+        if (contextUI != ContextUI.TOVAR_FROM_TOVAR_TABS) return
+        val selectedItems = payload.selectedItems.filter { it.selected }
+        val targetItems = selectedItems.ifEmpty { payload.selectedItems }
+        val tovarIds = extractTovars(targetItems).mapNotNull { it.getiD() }.toSet()
+        if (tovarIds.isEmpty()) return
+
+        val result = try {
+            ReportPrepareRealm.clearVisitProducts(getCodeDad2String().toLong(), tovarIds)
+        } catch (e: Exception) {
+            Globals.writeToMLOG("ERROR", "TovarDBViewModel.clearSelectedTovarData",
+                "dad2=${getCodeDad2String()}: $e")
+            showClearTovarDataError("Не вдалося очистити дані товарів. Спробуйте ще раз.")
+            return
+        }
+        when (result.status) {
+            ReportPrepareClearPolicy.Status.VISIT_FINISHED -> {
+                showClearTovarDataError("Відвідування вже завершено. Очистити дані товарів неможливо.")
+                return
+            }
+            ReportPrepareClearPolicy.Status.VISIT_NOT_FOUND -> {
+                showClearTovarDataError("Відвідування більше недоступне. Очистити дані товарів неможливо.")
+                return
+            }
+            else -> Unit
+        }
+        getInlinePriceDrafts().discardProducts(result.tovarIds)
+        if (productCodeSessionCache?.reportPrepareSnapshot == null) updateContent()
+        else refreshReportPrepare(result.tovarIds)
+        Toast.makeText(context,
+            if (result.tovarIds.isEmpty()) "Немає даних для очищення."
+            else "Очищено товарів: ${result.tovarIds.size}", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showClearTovarDataError(message: String) {
+        emitEvent(MainEvent.ShowMessageDialog(MessageDialogData(
+            title = "Товари",
+            subTitle = "Очистити дані",
+            message = message,
+            status = DialogStatus.ALERT
+        )))
     }
 
     private fun handleTovarDialogAction(event: ContextMenuActionEvent) {

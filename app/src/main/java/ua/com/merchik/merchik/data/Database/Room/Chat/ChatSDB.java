@@ -11,9 +11,12 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.Collections;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.ReportConductRecovery;
+import ua.com.merchik.merchik.database.room.AppDatabase;
 import ua.com.merchik.merchik.data.WebSocketData.WSChat;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -67,11 +70,23 @@ public class ChatSDB {
             chatSDB.dtRead = chat.dtRead;
             chatSDB.msg = chat.msg;
 
-            SQL_DB.chatDao().insertData(Collections.singletonList(chatSDB))
+            int user = Globals.getCurrentUserId();
+            AppDatabase db = SQL_DB;
+            String session = Globals.getCurrentSessionId();
+            Completable.fromAction(() -> {
+                        ReportConductRecovery.requireAccount(user, db, session);
+                        db.runInTransaction(() -> {
+                            ReportConductRecovery.requireAccount(user, db, session);
+                            db.chatDao().insertAll(Collections.singletonList(chatSDB));
+                            ReportConductRecovery.stage(user, db, session, Collections.singletonList(chatSDB));
+                            ReportConductRecovery.requireAccount(user, db, session);
+                        });
+                    })
                     .subscribeOn(Schedulers.io())
                     .subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {
+                            ReportConductRecovery.wake();
                             Log.e("chatExchange", "onComplete()");
                             Globals.writeToMLOG("INFO", "saveChatFromWebSocket/startWebSocket/click/chat_message/onComplete", "OK");
                         }

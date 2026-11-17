@@ -16,10 +16,9 @@ import java.util.Set;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
-import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.QuestionExchange;
-import ua.com.merchik.merchik.Options.Controls.OptionControlQuestionAnswer;
+import ua.com.merchik.merchik.ServerExchange.VisitUploadSync;
+import ua.com.merchik.merchik.ServerExchange.ReportConductRecovery;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -154,7 +153,10 @@ public final class ReportConductManager {
         state.clientEnd = wp.getClient_end_dt();
         state.workDataUploaded = !wp.startUpdate;
         state.approve();
+        state.approvedAtSeconds = TrustedTime.nowServerSecOrLocalSec();
+        state.visitUploadRequired = true;
         save(state);
+        requestVisitUpload(dad2);
         log("INFO", dad2, "READY: command saved");
     }
 
@@ -214,7 +216,10 @@ public final class ReportConductManager {
         }
         OvertimeOfferManager.workEndSaved(state.dad2);
         state.workEndSaved();
+        if (state.stage == ReportConductState.Stage.READY) state.approvedAtSeconds = TrustedTime.nowServerSecOrLocalSec();
+        state.visitUploadRequired = true;
         save(state);
+        requestVisitUpload(state.dad2);
         log("INFO", state.dad2, "WORK_END_SAVED: end=" + state.visitEnd);
         if (state.stage == ReportConductState.Stage.FINISHED_WITHOUT_CONDUCT) {
             log("INFO", state.dad2, "FINISHED_WITHOUT_CONDUCT: no command authorized");
@@ -222,6 +227,15 @@ public final class ReportConductManager {
         if (state.stage == ReportConductState.Stage.READY) log("INFO", state.dad2, "READY: command saved");
         ReportConductUi.workEndSaved(state.dad2);
         return true;
+    }
+
+    private static void requestVisitUpload(long dad2) {
+        try {
+            VisitUploadSync.request(dad2);
+        } catch (Exception error) {
+            // The durable visitUploadRequired intent will retry; work end is already committed.
+            log("ERROR", dad2, "Upload preparation kept pending: " + error.getClass().getSimpleName());
+        }
     }
 
     public static void workDataUploaded(int userId, List<StartEndData> snapshot) {
@@ -259,6 +273,17 @@ public final class ReportConductManager {
         }
     }
 
+    public static void onChatConductFailure(long dad2, long messageTime) {
+        ReportConductState state = get(dad2);
+        if (state == null) return;
+        boolean rejected = state.rejectFromChat(messageTime);
+        // Retry persistence even when a previous failed commit changed the in-memory preferences.
+        save(state);
+        if (rejected) {
+            log("INFO", dad2, "Chat conduct failure: old command retry stopped; upload only");
+        }
+    }
+
     public static void flushPending() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             MAIN.post(ReportConductManager::flushPending);
@@ -266,20 +291,23 @@ public final class ReportConductManager {
         }
         int userId = Globals.getCurrentUserId();
         if (userId <= 0) return;
+        ReportConductRecovery.resume();
+        VisitUploadSync.resume();
         for (Map.Entry<String, ?> entry : new ArrayList<>(prefs().getAll().entrySet())) {
             if (!entry.getKey().startsWith(userId + ":") || !(entry.getValue() instanceof String)) continue;
             try {
                 ReportConductState state = GSON.fromJson((String) entry.getValue(), ReportConductState.class);
                 if (state == null || state.userId != userId) continue;
                 if (state.stage == ReportConductState.Stage.FINALIZING_WORK_END) {
-                    if (commitWorkEnd(state)) MAIN.post(Options::syncConductWorkData);
-                    else ReportConductUi.showResult(state.dad2);
+                    if (!commitWorkEnd(state)) ReportConductUi.showResult(state.dad2);
                 }
+                if (state.visitUploadRequired) VisitUploadSync.ensureRequested(state.dad2);
                 if (!state.canSend(System.currentTimeMillis())) continue;
                 String key = key(userId, state.dad2);
                 if (IN_FLIGHT.contains(key)) continue;
                 WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(state.dad2);
                 if (wp == null) continue;
+                if (ReportConductRecovery.blocksConduct(wp)) continue;
                 // An approved repeat must reach the server even if the report is already conducted.
                 if (wp.getStatus() == 1) state.repeatConduct = true;
                 if (!WpWorkTimes.valid(wp) || !state.matchesWorkTimes(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
@@ -289,22 +317,8 @@ public final class ReportConductManager {
                     log("INFO", state.dad2, "work times changed; recheck required");
                     continue;
                 }
-                // A successful repeat can report no changed fields: times may already be on the server.
-                if (!state.workDataUploaded && wp.startUpdate) continue;
-                if (ReportPrepareSync.hasPendingVisit(state.dad2)) {
-                    ReportPrepareSync.flushVisit(state.dad2);
-                    continue;
-                }
-                if (PhotoCommentSync.hasPendingVisit(state.dad2)) {
-                    log("INFO", state.dad2, "WAIT photo comments ACK; document_complete kept queued");
-                    PhotoCommentSync.flush();
-                    continue;
-                }
-                List<Long> pendingAnswers = OptionControlQuestionAnswer.pendingAcknowledgements(wp);
-                if (!pendingAnswers.isEmpty()) {
-                    log("INFO", state.dad2, "WAIT 151121 complaint ACK: ids=" + pendingAnswers
-                            + "; document_complete kept queued");
-                    new QuestionExchange().uploadQuestionAnswers();
+                if (!VisitUploadSync.ready(state.dad2)) {
+                    VisitUploadSync.ensureRequested(state.dad2);
                     continue;
                 }
                 state.retryAfter = System.currentTimeMillis() + RETRY_MS;

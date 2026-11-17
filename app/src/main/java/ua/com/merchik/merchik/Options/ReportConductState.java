@@ -24,10 +24,12 @@ public final class ReportConductState {
     public long clientStart;
     public long clientEnd;
     public boolean workDataUploaded;
+    public boolean visitUploadRequired;
     public boolean workEndRequested;
     public Long requestedWorkEnd;
     public boolean conductAfterWorkEnd;
     public boolean finishWithoutConduct;
+    public long approvedAtSeconds;
 
     public static boolean canFinishWithoutConduct(long visitEnd, long clientEnd, int fotUserId, int dotUserId) {
         return visitEnd == 0 && clientEnd == 0 && (fotUserId > 0 || dotUserId > 0);
@@ -109,6 +111,18 @@ public final class ReportConductState {
         message = "";
         resultPending = false;
         serverError = false;
+        approvedAtSeconds = System.currentTimeMillis() / 1000;
+    }
+
+    public boolean rejectFromChat(long messageTime) {
+        if ((stage != Stage.READY && stage != Stage.ACCEPTED) || messageTime <= 0
+                || (approvedAtSeconds > 0 && messageTime < approvedAtSeconds)) return false;
+        // Ignore a late HTTP callback for the failed command as well as its retry timer.
+        revision = UUID.randomUUID().toString();
+        completeFromServer(false, "Провести звіт не вдалося. Дані буде повторно вивантажено без команди проведення.");
+        resultPending = false;
+        retryAfter = 0;
+        return true;
     }
 
     public void complete(boolean accepted, String message) {

@@ -113,6 +113,17 @@ class InlinePriceDrafts(
         (edited + _drafts.value.keys).toList().forEach(::finish)
     }
 
+    fun discardProducts(tovarIds: Set<String>) {
+        if (tovarIds.isEmpty()) return
+        _drafts.value = _drafts.value.filterKeys { it.tovarId !in tovarIds }
+        pending.removeAll { it.tovarId in tovarIds }
+        edited.removeAll { it.tovarId in tovarIds }
+        finished.removeAll { it.tovarId in tovarIds }
+        reported.keys.removeAll { it.tovarId in tovarIds }
+        if (_focusRequest.value?.tovarId in tovarIds) _focusRequest.value = null
+        persistDrafts()
+    }
+
     private fun notifyFinished(field: InlinePriceField) {
         if (field in finished && field !in _drafts.value && edited.remove(field)) {
             finished.remove(field)

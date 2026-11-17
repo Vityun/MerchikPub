@@ -75,6 +75,7 @@ public class PhotoReports {
     private boolean cancelled;
     private int uploadUserId;
     private BackgroundCompletion backgroundCompletion;
+    private java.util.Set<Integer> visitPhotoIds;
 
     public interface BackgroundCompletion {
         void finished(boolean retry);
@@ -84,6 +85,11 @@ public class PhotoReports {
         background = true;
         backgroundCompletion = completion;
         uploadPhotoReports(UploadType.AUTO);
+    }
+
+    public void uploadVisit(java.util.Set<Integer> photoIds, BackgroundCompletion completion) {
+        visitPhotoIds = new java.util.HashSet<>(photoIds);
+        uploadInBackground(completion);
     }
 
     public void cancelBackgroundUpload() {
@@ -419,9 +425,10 @@ public class PhotoReports {
         List<StackPhotoDB> res = realm.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
         String pendingPhotoNum = MakePhoto.getPendingPhotoNum(mContext);
         for (StackPhotoDB photo : res) {
+            if (visitPhotoIds != null && (photo == null || !visitPhotoIds.contains(photo.getId()))) continue;
             if (background && photo != null
                     && !String.valueOf(uploadUserId).equals(photo.getPhoto_user_id())) continue;
-            if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
+            if (photo != null && !realmResults.contains(photo) && (visitPhotoIds != null || realmResults.size() < 20)) {
                 String filePath = photo.getPhoto_num();
                 if (filePath == null || filePath.trim().isEmpty()) {
                     Globals.writeToMLOG("ERROR", "PhotoReports/getDataToUpload", photoDiagnostic(photo)

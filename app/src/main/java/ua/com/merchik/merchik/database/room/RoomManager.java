@@ -60,7 +60,7 @@ public class RoomManager {
                         MIGRATION_83_84,
                         MIGRATION_84_85,
                         MIGRATION_85_86,
-                        MIGRATION_86_87
+                        MIGRATION_86_87, MIGRATION_87_88
                 )
                 .build();
 
@@ -1108,6 +1108,13 @@ public class RoomManager {
                             "WHERE tableName = 'achievements'"
             );
             achievementsSchemaMigrated = true;
+        }
+    };
+
+    public static final Migration MIGRATION_87_88 = new Migration(87, 88) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE planogramm ADD COLUMN tovar_grp INTEGER");
         }
     };
 

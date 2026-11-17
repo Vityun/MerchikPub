@@ -142,6 +142,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
 import ua.com.merchik.merchik.Options.Controls.OptionControlOverTimelinessOfReporting;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
+import ua.com.merchik.merchik.Options.Controls.PremiumPercentagePolicy;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoExpirationDate;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
@@ -1504,8 +1505,10 @@ public class Options {
                     if (item.getIsSignal().equals("1")) {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
-                                msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
-                        if (item.getOptionControlId().equals("84006"))
+                                msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp, item) + "грн.)</font>")).append("\n");
+                        if (item.getOptionControlId().equals("135061"))
+                            optionSumRes += PremiumPercentagePolicy.amount(wp.getCash_zakaz(), item.getAmountMax()).doubleValue();
+                        else if (item.getOptionControlId().equals("84006"))
                             optionSumRes += wp.getCash_zakaz() * 0.16;
                         else
                             optionSumRes += wp.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE;
@@ -1610,9 +1613,9 @@ public class Options {
                             });
                             ReportConductManager.awaitingConfirmation(wp.getCode_dad2());
                             if (previewWorkEnd) {
-                                dialog.setOkNotClose("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
+                                dialog.setOkNotClose("Провести звiт зі зниженням", () -> submitConduct(context, wp));
                             } else {
-                                dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp, true));
+                                dialog.setOk("Провести звiт зі зниженням", () -> submitConduct(context, wp));
                             }
                         }
                         // wp may contain a preview end; visibility must use persisted work times.
@@ -1647,7 +1650,6 @@ public class Options {
                             if (previewWorkEnd) {
                                 // No penalties: keep the existing photo-warning behavior after saving the work end.
                                 ReportConductManager.finishWorkEnd(wp.getCode_dad2(), false);
-                                syncConductWorkData();
                             }
                             MessageDialogBuilder photoDialog = new MessageDialogBuilder(unwrap(context))
                                     .setTitle("Дані не вивантажені на сервер")
@@ -1660,13 +1662,13 @@ public class Options {
                                             "Якщо зв’язок нестабільний, знайдіть місце з кращим прийомом сигналу та повторіть спробу.")
                                     .setOnCancelAction(() -> Unit.INSTANCE)
                                     .setOnConfirmAction("Синхронізація", () -> {
-                                        submitConduct(context, wp, true);
+                                        submitConduct(context, wp);
                                         return Unit.INSTANCE;
                                     });
                             ReportConductManager.awaitingConfirmation(wp.getCode_dad2());
                             ReportConductUi.show(context, wp.getCode_dad2(), photoDialog);
                         } else {
-                            submitConduct(context, wp, false);
+                            submitConduct(context, wp);
                         }
                     }
                     break;
@@ -1764,7 +1766,6 @@ public class Options {
                 ReportConductManager.finishWorkEndWithoutConduct(dad2, requestedEnd);
                 ReportConductUi.closeApprovedDialog(context);
                 Toast.makeText(context, "Роботу завершено без проведення звіту.", Toast.LENGTH_LONG).show();
-                syncConductWorkData();
             } catch (Exception e) {
                 ReportConductManager.log("ERROR", dad2, "finish without conduct: " + e);
                 if (ReportConductUi.canShow(context)) {
@@ -1776,47 +1777,20 @@ public class Options {
         else showEndWorkDialog(context, current.getVisit_start_dt(), saveEnd);
     }
 
-    private void submitConduct(Context context, WpDataDB wp, boolean uploadPhotos) {
+    private void submitConduct(Context context, WpDataDB wp) {
         try {
             if (!ReportConductUi.canSubmit(context, wp.getCode_dad2())) return;
             // Consent is saved before any network operation, including uploads.
             ReportConductManager.approve(wp.getCode_dad2());
             ReportConductUi.closeApprovedDialog(context);
-            Toast.makeText(context, "Команду проведення збережено. Вона буде передана під час обміну з сервером.",
+            Toast.makeText(context, "Вивантажуємо зміни відвідування. Команду проведення буде передано після підтвердження всіх даних сервером.",
                     Toast.LENGTH_LONG).show();
-            try {
-                if (uploadPhotos)
-                    new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                ReportPrepareSync.flushVisit(wp.getCode_dad2());
-            } catch (Exception e) {
-                ReportConductManager.log("ERROR", wp.getCode_dad2(), "upload before conduct: " + e);
-            }
-            syncConductWorkData();
             ReportConductManager.flushPending();
-            new Exchange().startExchange();
         } catch (Exception e) {
             ReportConductManager.log("ERROR", wp.getCode_dad2(), "submit: " + e);
             if (ReportConductUi.canShow(context)) {
                 Toast.makeText(context, "Не вдалося підготувати проведення. Повторіть спробу.", Toast.LENGTH_LONG).show();
             }
-        }
-    }
-
-    static void syncConductWorkData() {
-        try {
-            new Exchange().sendWpDataToServer(new Click() {
-                @Override
-                public <T> void onSuccess(T data) {
-                    ReportConductManager.flushPending();
-                }
-
-                @Override
-                public void onFailure(String error) {
-                    ReportConductManager.flushPending();
-                }
-            });
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "ReportConduct/syncWorkData", e.toString());
         }
     }
 
@@ -1841,9 +1815,12 @@ public class Options {
         return res;
     }
 
-    private CharSequence counter2Text(WpDataDB wpDataDB) {
+    private CharSequence counter2Text(WpDataDB wpDataDB, OptionsDB option) {
         CharSequence res = "";
-        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
+        if ("135061".equals(option.getOptionControlId()))
+            res = "~" + String.format("%.2f", PremiumPercentagePolicy.amount(wpDataDB.getCash_zakaz(), option.getAmountMax()));
+        else
+            res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
         res = Html.fromHtml("<font color=red>" + res + "</font>");
         return res;
     }

@@ -39,23 +39,17 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PlanogrammTableExchange {
 
-    public void planogramDownload(Clicks.clickObjectAndStatus click) {
-
-        Set<Integer> uniquePlanogrammId = new HashSet<>();
-
-        List<PlanogrammSDB> planogrammList = SQL_DB.planogrammDao().getAll();
-        if (!planogrammList.isEmpty())
-            for (PlanogrammSDB p : planogrammList) {
-                uniquePlanogrammId.add(p.id);
-            }
-
+    static StandartData planogramRequest() {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "list";
         data.nolimit = "1";
-        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
+        // Existing IDs must also receive changed metadata, including tovar_grp.
+        return data;
+    }
 
-
+    public void planogramDownload(Clicks.clickObjectAndStatus click) {
+        StandartData data = planogramRequest();
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -91,10 +85,10 @@ public class PlanogrammTableExchange {
                                 if (response.body().list != null && response.body().list.size() > 0) {
 
                                     for (PlanogrammSDB item : response.body().list) {
-                                        if (item.dtStart.getTime() < 0) {
+                                        if (item.dtStart != null && item.dtStart.getTime() < 0) {
                                             item.dtStart = null;
                                         }
-                                        if (item.dtEnd.getTime() < 0) {
+                                        if (item.dtEnd != null && item.dtEnd.getTime() < 0) {
                                             item.dtEnd = null;
                                         }
                                     }

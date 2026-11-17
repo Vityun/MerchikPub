@@ -118,7 +118,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
                     if (id == -999) {
                         state.withoutPlanogram()
                     } else {
-                        val plans = PlanogramPhotoSelection.forContext(referenceContext(task)).getPlans()
+                        val plans = PlanogramPhotoSelection.forContext(referenceContext(task), state.showcaseId).getPlans()
                         val plan = requireNotNull(plans.firstOrNull { it.id == id }) { "Planogram $id is unavailable" }
                         state.planogramId = plan.id.toString()
                         state.planogramImageId = plan.planogrammPhotoId?.toString().orEmpty()
@@ -156,7 +156,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
     private fun openSelector(state: TarPhotoCaptureState, task: TasksAndReclamationsSDB, kind: String) {
         val reference = if (kind == PhotoReferenceSelection.SAMPLE) null else referenceContext(task)
         if (kind == PhotoReferenceSelection.PLANOGRAM &&
-            PlanogramPhotoSelection.forContext(requireNotNull(reference)).getPlans().isEmpty()) {
+            PlanogramPhotoSelection.forContext(requireNotNull(reference), state.showcaseId).getPlans().isEmpty()) {
             state.withoutPlanogram()
             openSource(state)
             return
@@ -173,6 +173,7 @@ class TarPhotoFlow(private val activity: TARActivity) {
             addProperty(PhotoReferenceSelection.TOKEN, state.token)
             addProperty("galleryAction", state.gallery)
             addProperty("photoType", state.photoType)
+            addProperty("showcaseId", state.showcaseId)
             addProperty("tradeMarkDBId", state.networkId)
             addProperty("clientName", task.clientNm)
             if (reference != null) {

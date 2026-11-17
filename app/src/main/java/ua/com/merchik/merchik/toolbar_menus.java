@@ -1456,6 +1456,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
                             lightStatus();                                  // Обновление статуса Светофоров
                             setupBadge(realmResults.size()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                            // Explicit work-end/conduct requests retry independently of automatic exchange.
+                            ua.com.merchik.merchik.Options.ReportConductManager.flushPending();
 
                             globals.testMSG(toolbar_menus.this);
 

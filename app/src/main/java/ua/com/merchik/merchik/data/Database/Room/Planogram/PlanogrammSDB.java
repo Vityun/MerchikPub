@@ -49,6 +49,10 @@ public class PlanogrammSDB implements DataObjectUI {
     @SerializedName("client_txt")
     public String clientTxt;
 
+    @ColumnInfo(name = "tovar_grp")
+    @SerializedName("tovar_grp")
+    public Integer tovarGrp;
+
     @ColumnInfo(name = "img_id")
     @SerializedName("img_id")
     public Integer imgId;

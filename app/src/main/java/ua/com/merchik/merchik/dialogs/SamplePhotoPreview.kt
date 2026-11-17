@@ -56,6 +56,7 @@ object SamplePhotoPreview {
             dialog.setGallery { onCamera { dialog.dismiss() } }
         } else {
             dialog.setCamera { onCamera { dialog.dismiss() } }
+            dialog.setCameraPulseEnabled(true)
         }
         dialog.setClose { dialog.dismiss() }
         dialog.show()

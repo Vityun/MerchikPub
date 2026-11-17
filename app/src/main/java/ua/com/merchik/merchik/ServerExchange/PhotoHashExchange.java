@@ -34,11 +34,30 @@ public final class PhotoHashExchange {
                 .subscribe(count -> log("INFO", "resolved=" + count), error -> log("ERROR", error.toString()));
     }
 
+    public static void refreshVisit(Set<Integer> photoIds, Runnable success, Runnable failure) {
+        Context context = new Context();
+        synchronized (RUNNING) {
+            if (!RUNNING.add(context)) { failure.run(); return; }
+        }
+        Set<Integer> scope = new HashSet<>(photoIds);
+        Single.fromCallable(() -> refreshSync(context, scope)).subscribeOn(Schedulers.io())
+                .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+                .doFinally(() -> { synchronized (RUNNING) { RUNNING.remove(context); } })
+                .subscribe(count -> success.run(), error -> failure.run());
+    }
+
     private static int refreshSync(Context context) throws Exception {
+        return refreshSync(context, null);
+    }
+
+    private static int refreshSync(Context context, Set<Integer> scope) throws Exception {
         context.check();
         List<StackPhotoDB> snapshots;
         try (Realm realm = Realm.getDefaultInstance()) {
-            snapshots = realm.copyFromRealm(realm.where(StackPhotoDB.class).equalTo("get_on_server", 0)
+            io.realm.RealmQuery<StackPhotoDB> query = realm.where(StackPhotoDB.class);
+            if (scope == null) query.equalTo("get_on_server", 0);
+            else query.in("id", scope.toArray(new Integer[0]));
+            snapshots = realm.copyFromRealm(query
                     .isNotNull("photo_hash").isNotNull("time_event")
                     .isNotNull("client_id").isNotNull("addr_id").findAll());
         }
