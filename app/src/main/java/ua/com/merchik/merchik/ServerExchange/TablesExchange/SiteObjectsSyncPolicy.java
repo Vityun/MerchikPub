@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import ua.com.merchik.merchik.ServerExchange.VisitDataResponsePolicy;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteObjectsResponse;
@@ -40,25 +41,26 @@ public final class SiteObjectsSyncPolicy {
     }
 
     public static List<SiteObjectsSDB> rows(SiteObjectsResponse response, int langId, boolean full) {
-        if (response == null || !Boolean.TRUE.equals(response.state)
-                || (response.error != null && !response.error.trim().isEmpty())
-                || response.objectSQLList == null) {
+        if (response == null) {
             throw new IllegalStateException("Invalid site_objects response");
         }
-        if (full && response.objectSQLList.isEmpty()) {
+        // HTTP status is checked by SiteObjectsExchange before reaching this policy.
+        List<SiteObjectsSDB> rows = VisitDataResponsePolicy.requireList(200,
+                response.state, response.error, response.objectSQLList);
+        if (full && rows.isEmpty()) {
             throw new IllegalStateException("Empty initial site_objects dictionary");
         }
         Set<Integer> ids = new HashSet<>();
-        for (SiteObjectsSDB row : response.objectSQLList) {
+        for (SiteObjectsSDB row : rows) {
             if (row == null || row.id <= 0 || !ids.add(row.id)) {
                 throw new IllegalStateException("Invalid/duplicate site_objects ID");
             }
         }
-        for (SiteObjectsSDB row : response.objectSQLList) {
+        for (SiteObjectsSDB row : rows) {
             // Both tables hold one language; mark it even when the server omits lang_id.
             row.langId = Integer.toString(langId);
         }
-        return response.objectSQLList;
+        return rows;
     }
 
     public static List<SiteObjectsDB> realmRows(List<SiteObjectsSDB> rows) {

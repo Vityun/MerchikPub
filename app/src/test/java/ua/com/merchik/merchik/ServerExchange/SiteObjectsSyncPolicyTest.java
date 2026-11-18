@@ -76,6 +76,24 @@ public class SiteObjectsSyncPolicyTest {
         assertTrue(SiteObjectsSyncPolicy.rows(response(), 2, false).isEmpty());
     }
 
+    @Test public void legacyEmptyDeltaIsAcceptedWithoutChangingWatermark() {
+        SiteObjectsResponse response = legacyEmptyResponse();
+        List<SiteObjectsSDB> rows = SiteObjectsSyncPolicy.rows(response, 2, false);
+        assertTrue(rows.isEmpty());
+        assertEquals(1000, SyncResponsePolicy.downloadWatermark(1000, 2000, rows.size()));
+        assertNull(response.objectSQLList);
+    }
+
+    @Test(expected = IllegalStateException.class) public void legacyEmptyInitialDictionaryIsNotReady() {
+        SiteObjectsSyncPolicy.rows(legacyEmptyResponse(), 2, true);
+    }
+
+    @Test(expected = IllegalStateException.class) public void contradictoryEmptyErrorWithObjectsIsRejected() {
+        SiteObjectsResponse response = legacyEmptyResponse();
+        response.objectSQLList = Collections.singletonList(row(7));
+        SiteObjectsSyncPolicy.rows(response, 2, false);
+    }
+
     @Test(expected = IllegalStateException.class) public void emptyFullResponseCannotClearDictionaries() {
         SiteObjectsSyncPolicy.rows(response(), 2, true);
     }
@@ -182,6 +200,13 @@ public class SiteObjectsSyncPolicyTest {
         SiteObjectsSDB row = new SiteObjectsSDB();
         row.id = id;
         return row;
+    }
+
+    private static SiteObjectsResponse legacyEmptyResponse() {
+        SiteObjectsResponse response = new SiteObjectsResponse();
+        response.state = false;
+        response.error = "\u0421\u043f\u0438\u0441\u043e\u043a \u043f\u0443\u0441\u0442";
+        return response;
     }
 
     private static SiteObjectsResponse response(SiteObjectsSDB... rows) {

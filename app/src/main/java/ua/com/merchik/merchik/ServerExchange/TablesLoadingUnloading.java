@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
@@ -85,6 +86,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataPauseExchange;
 import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.InitStateEntity;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.WPDataAdditional;
@@ -97,11 +99,13 @@ import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
@@ -140,6 +144,7 @@ import ua.com.merchik.merchik.data.UploadToServ.UploadResponse;
 import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalMapper;
 import ua.com.merchik.merchik.data.UploadToServ.WPDataAdditionalServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
+import ua.com.merchik.merchik.data.synchronization.StartupPolicy;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -225,6 +230,50 @@ public class TablesLoadingUnloading {
     private static void logInitialDataFailure(String table, String reason) {
         Globals.writeToMLOG("WARN", "StartupExchange/" + table,
                 reason + "; initialization flags not reset");
+    }
+
+    private static final StartupPolicy.RetryGate INITIAL_RETRY = new StartupPolicy.RetryGate();
+
+    private static List<Object> initialDownloadScope() {
+        return Arrays.asList(Globals.getCurrentUserId(), Globals.getCurrentSessionId(),
+                Globals.langId, RoomManager.SQL_DB, RealmManager.INSTANCE);
+    }
+
+    /** Called on the main thread while startup is waiting; does not start a full exchange. */
+    public static void retryInitialData() {
+        try {
+            int user = Globals.getCurrentUserId();
+            if (user <= 0) return;
+            if (INITIAL_RETRY.tryStart(initialDownloadScope(), SystemClock.elapsedRealtime())) {
+                boolean siteAvailable = SiteObjectsLocalDefaults.hasDownloadedObjects();
+                boolean themeAvailable = RoomManager.SQL_DB.themeDao().getCount() > 0;
+                InitStateEntity state = RoomManager.SQL_DB.initStateDao().mergeLocalReadiness(
+                        RealmManager.INSTANCE.where(WpDataDB.class).count() > 0, siteAvailable,
+                        RealmManager.INSTANCE.where(OptionsDB.class).count() > 0, themeAvailable);
+                Set<StartupPolicy.InitialTable> missing = StartupPolicy.missingTables(
+                        user != 172906 && user != 19653, state.getWpLoaded(), state.getOptionsLoaded(),
+                        siteAvailable, themeAvailable);
+                if (!missing.isEmpty()) {
+                    Globals.writeToMLOG("INFO", "StartupExchange/retry", "Missing required tables: " + missing);
+                    TablesLoadingUnloading tables = new TablesLoadingUnloading();
+                    for (StartupPolicy.InitialTable table : missing) {
+                        try {
+                            switch (table) {
+                                case PLAN: tables.downloadWPData(); break;
+                                case OPTIONS: tables.downloadOptions(); break;
+                                case SITE_OBJECTS: downloadSiteHints(String.valueOf(Globals.langId), true); break;
+                                case THEMES: tables.downloadTheme(); break;
+                            }
+                        } catch (RuntimeException e) {
+                            logInitialDataFailure(table.name(), "Retry failed: " + e.getClass().getSimpleName());
+                        }
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            logInitialDataFailure("retry", "Readiness check failed: " + e.getClass().getSimpleName());
+        }
+        VisitReportDataSync.retryInitial();
     }
 
     public void downloadAllTables(Context context) {
@@ -358,20 +407,8 @@ public class TablesLoadingUnloading {
                 tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
                     @Override
                     public <T> void onSuccess(List<T> data) {
-                        SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
-                                .subscribeOn(Schedulers.io())
-                                .compose(ExchangeWork.track())
-                                .subscribe(new DisposableCompletableObserver() {
-                                    @Override
-                                    public void onComplete() {
-                                        Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
-                                    }
-
-                                    @Override
-                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
-                                    }
-                                });
+                        Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete",
+                                "Задачи и рекламации сохранены: " + data.size());
                     }
 
                     @Override
@@ -462,14 +499,14 @@ public class TablesLoadingUnloading {
                     try {
                         if (downloadUser != Globals.getCurrentUserId()
                                 || !Objects.equals(downloadSession, Globals.getCurrentSessionId())) return;
-                        if (!response.isSuccessful() || response.body() == null
-                                || !Boolean.TRUE.equals(response.body().getState())
-                                || response.body().getList() == null) {
-                            WpDataServer body = response.body();
-                            initialDownloadFailed("wp_data", "Invalid response: http=" + response.code()
-                                    + ", state=" + (body == null ? null : body.getState())
-                                    + ", rows=" + (body == null || body.getList() == null ? "null" : body.getList().size())
-                                    + ", error=" + (body == null ? "empty body" : body.getError()));
+                        WpDataServer body = response.body();
+                        List<WpDataDB> wpDataDBList;
+                        try {
+                            if (body == null) throw new IllegalStateException("Empty body: HTTP " + response.code());
+                            wpDataDBList = VisitDataResponsePolicy.requireList(response.code(),
+                                    body.getState(), body.getError(), body.getList());
+                        } catch (IllegalStateException e) {
+                            initialDownloadFailed("wp_data", e.getMessage());
                             readyWPData = false;
                             return;
                         }
@@ -477,9 +514,7 @@ public class TablesLoadingUnloading {
 
                             Set<Long> knownDad2BeforeDownload = getKnownWorkPlanDad2Snapshot();
                             downloadWPDataWithCords();
-                            if (response.body().getState() && response.body().getList() != null
-                                    && !response.body().getList().isEmpty()) {
-                                List<WpDataDB> wpDataDBList = response.body().getList();
+                            if (!wpDataDBList.isEmpty()) {
                                 Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
@@ -560,6 +595,8 @@ public class TablesLoadingUnloading {
                                 Log.e("downloadWPData", "No works added");
 
                                 RoomManager.SQL_DB.initStateDao().markWpLoaded();
+                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/empty",
+                                        "Confirmed empty; plan ready, nearby works requested, local data and VPI unchanged");
                                 isdownloadWPData = false;
                             }
 
@@ -2011,87 +2048,55 @@ public class TablesLoadingUnloading {
     public void downloadOptions() {
         if (isDownloadOptions) return;
         isDownloadOptions = true;
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
-        globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.ENTER\n");
+        final List<Object> downloadScope = initialDownloadScope();
+        try {
+            Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
+            StandartData data = new StandartData();
+            data.mod = "plan";
+            data.act = "options_list";
+            data.date_from = timeYesterday7;
+            data.date_to = timeTomorrow;
+            JsonObject request = new Gson().toJsonTree(data).getAsJsonObject();
 
-//        StandartData standartData = new StandartData();
-//        standartData.mod = "report_prepare";
-//        standartData.act = "list_data";
-
-        StandartData standartData = new StandartData();
-        standartData.mod = "plan";
-        standartData.act = "options_list";
-        standartData.date_from = timeYesterday7;
-        standartData.date_to = timeTomorrow;
-
-//        String mod = "plan";
-//        String act = "options_list";
-//        String date_from = Clock.getDatePeriod(-14);
-
-//        #### TODO dt_change_from
-//        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("options_list"));
-//        standartData.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
-        Gson gson = new Gson();
-        String json = gson.toJson(standartData);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface()
-                .GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
-//                .OPTIONS_CALL(mod, act, date_from, date_to);
-        call.enqueue(new Callback<OptionsServer>() {
-            @Override
-            public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
-                try {
-                    globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
-                    if (!response.isSuccessful() || response.body() == null
-                            || !Boolean.TRUE.equals(response.body().getState())
-                            || response.body().getList() == null) {
-                        initialDownloadFailed("options", "Invalid response: http=" + response.code());
-                        return;
-                    }
-                    if (response.isSuccessful() && response.body() != null) {
-
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
-                        globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
-
-                        if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                            globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
-                            RealmManager.setOptions(response.body().getList());
-
-
-//                            RealmManager.setOptions2(response.body().getList());
-//                            RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
-//                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                            });
-                        }
-
+            Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface()
+                    .GET_OPTIONS(RetrofitBuilder.contentType, request);
+            call.enqueue(new Callback<OptionsServer>() {
+                @Override
+                public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
+                    try {
+                        if (!downloadScope.equals(initialDownloadScope())) return;
+                        readyOptions = false;
+                        OptionsServer body = response.body();
+                        if (body == null) throw new IllegalStateException("Empty body: HTTP " + response.code());
+                        List<OptionsDB> rows = VisitDataResponsePolicy.requireList(response.code(),
+                                body.getState(), body.getError(), body.getList());
+                        if (!rows.isEmpty()) RealmManager.setOptions(rows);
                         RoomManager.SQL_DB.initStateDao().markOptionsLoaded();
+                        readyOptions = true;
+                        Globals.writeToMLOG("INFO", "StartupExchange/options", "Saved rows=" + rows.size());
+                        if (rows.isEmpty()) Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadOptions/empty",
+                                "Confirmed empty; options ready, local data and VPI unchanged");
+                    } catch (Exception e) {
+                        initialDownloadFailed("options", e.toString());
+                    } finally {
+                        isDownloadOptions = false;
                     }
-                } catch (Exception e) {
-                    logInitialDataFailure("options", "Save failed: " + e.getClass().getSimpleName());
-                } finally {
-                    readyOptions = true;
-                    isDownloadOptions = false;
                 }
-            }
 
-            @Override
-            public void onFailure(Call<OptionsServer> call, Throwable t) {
-                initialDownloadFailed("options", "failure=" + t.getClass().getSimpleName());
-                globals.writeToMLOG("_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
-//                if (pg != null)
-//                    if (pg.isShowing())
-//                        pg.dismiss();
-                isDownloadOptions = false;
-                readyOptions = false;
-                syncInternetError = true;
-                Log.e("TAG_TEST", "FAILURE_3 E: " + t);
-            }
-        });
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.END");
-
+                @Override
+                public void onFailure(Call<OptionsServer> call, Throwable t) {
+                    isDownloadOptions = false;
+                    if (!downloadScope.equals(initialDownloadScope())) return;
+                    readyOptions = false;
+                    syncInternetError = true;
+                    initialDownloadFailed("options", "failure=" + t.getClass().getSimpleName());
+                }
+            });
+        } catch (RuntimeException e) {
+            isDownloadOptions = false;
+            readyOptions = false;
+            initialDownloadFailed("options", "Request failed: " + e.getClass().getSimpleName());
+        }
     }
 
 
@@ -4541,7 +4546,12 @@ id_exclude - иди товаров которые есть в приложени
      * 25.03.2021
      * Скачивание Таблички Тем
      */
+    private static boolean isDownloadTheme = false;
+
     private void downloadTheme() {
+        if (isDownloadTheme) return;
+        isDownloadTheme = true;
+        final List<Object> downloadScope = initialDownloadScope();
         try {
             StandartData data = new StandartData();
             data.mod = "data_list";
@@ -4575,35 +4585,38 @@ id_exclude - иди товаров которые есть в приложени
                 @Override
                 public void onResponse(Call<ThemeTableRespose> call, Response<ThemeTableRespose> response) {
                     try {
-                        if (response.isSuccessful() && response.body() != null
-                                && Boolean.TRUE.equals(response.body().getState()) && response.body().getList() != null) {
-                            if (!response.body().getList().isEmpty()) {
-                                ThemeRealm.setThemeDBTable(response.body().getList());
-                            }
-                            // Empty incremental responses are valid only with an existing dictionary.
-                            if (RoomManager.SQL_DB.themeDao().getCount() == 0) {
-                                initialDownloadFailed("theme", "Empty initial dictionary");
-                                return;
-                            }
-                            RoomManager.SQL_DB.initStateDao().markThemeLoaded();
-                            RealmManager.advanceDownloadVpi(synchronizationTimetableDB, response.body().getList(), 120);
-                        } else {
-                            initialDownloadFailed("theme", "Invalid response: http=" + response.code());
+                        if (!downloadScope.equals(initialDownloadScope())) return;
+                        ThemeTableRespose body = response.body();
+                        if (body == null) throw new IllegalStateException("Empty body: HTTP " + response.code());
+                        List<ThemeDB> rows = VisitDataResponsePolicy.requireDictionary(response.code(),
+                                body.getState(), body.getError(), body.getList(), RoomManager.SQL_DB.themeDao().getCount());
+                        if (!rows.isEmpty()) ThemeRealm.setThemeDBTable(rows);
+                        if (RoomManager.SQL_DB.themeDao().getCount() == 0) {
+                            throw new IllegalStateException("No themes saved");
                         }
+                        RoomManager.SQL_DB.initStateDao().markThemeLoaded();
+                        RealmManager.advanceDownloadVpi(synchronizationTimetableDB, rows, 120);
+                        if (rows.isEmpty()) Globals.writeToMLOG("INFO", "StartupExchange/theme",
+                                "Confirmed empty delta; existing dictionary retained, VPI unchanged");
                     } catch (Exception e) {
-                        logInitialDataFailure("theme", "Save failed: " + e.getClass().getSimpleName());
+                        initialDownloadFailed("theme", e.toString());
                         Globals.writeToMLOG("ERR", "downloadTheme/onResponse", "Exception e: " + e);
+                    } finally {
+                        isDownloadTheme = false;
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ThemeTableRespose> call, Throwable t) {
+                    isDownloadTheme = false;
+                    if (!downloadScope.equals(initialDownloadScope())) return;
                     initialDownloadFailed("theme", "failure=" + t.getClass().getSimpleName());
                     Globals.writeToMLOG("ERR", "downloadTheme/onFailure", "onFailure e: " + t.getMessage());
                 }
             });
         } catch (Exception e) {
-            logInitialDataFailure("theme", "Request failed: " + e.getClass().getSimpleName());
+            isDownloadTheme = false;
+            initialDownloadFailed("theme", "Request failed: " + e.getClass().getSimpleName());
         }
     }
 

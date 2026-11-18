@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import ua.com.merchik.merchik.Utils.FaceValue;
+import ua.com.merchik.merchik.Utils.TrustedTime;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -116,6 +117,9 @@ public class OptionControlFaceCount<T> extends OptionControl {
         FaceCountPolicy.Result result = FaceCountPolicy.evaluate(visit, network, maximum,
                 date, "1".equals(optionDB.getBlockPns()));
         FaceCountPolicy.Message formatted = FaceCountPolicy.formatMessage(result, visit, network, this::productText);
+        boolean calculatedSignal = result.signal;
+        long checkedAt = TrustedTime.nowServerSecOrLocalSec() * 1000L;
+        formatted = FaceCountPolicy.applyTemporaryException(result, formatted, checkedAt);
         signal = result.signal;
         OptionsDB calculated = RealmObject.isManaged(optionDB)
                 ? RealmManager.INSTANCE.copyFromRealm(optionDB) : optionDB;
@@ -162,6 +166,8 @@ public class OptionControlFaceCount<T> extends OptionControl {
                 + ", maxProduct=" + (maximum == null ? "" : maximum.id)
                 + ", maxFaces=" + (maximum == null ? "" : maximum.faces)
                 + ", maxPromotion=" + (maximum != null && maximum.promotion)
+                + ", checkedAt=" + checkedAt + ", calculatedSignal=" + calculatedSignal
+                + ", temporaryException=" + (calculatedSignal && !signal)
                 + ", signal=" + signal + ", unlocked=" + unlocked + ", blocked=" + isBlockOption()
                 + ", storedSignal=" + optionDB.getIsSignal() + ", message=" + message);
     }

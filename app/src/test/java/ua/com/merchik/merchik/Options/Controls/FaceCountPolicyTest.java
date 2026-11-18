@@ -352,6 +352,90 @@ public class FaceCountPolicyTest {
         }
     }
 
+    @Test public void temporaryExceptionClearsEverySignalBranchAfterEvaluation() {
+        FaceCountPolicy.Network network = baseline("2", "10");
+        for (FaceCountPolicy.Visit visit : Arrays.asList(uniform("0.5"), uniform("5"), uniform("11"),
+                visit(product("1", "30", "0"), product("2", "3", "1"), product("3", "3", "0")))) {
+            FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, true);
+            assertTrue(result.signal);
+            String originalReason = result.message;
+            BigDecimal originalFaces = visit.faces;
+            boolean originalBlock = result.blockPns;
+            FaceCountPolicy.Message original = FaceCountPolicy.formatMessage(result, visit, network, row -> row.id);
+            FaceCountPolicy.Message message = FaceCountPolicy.applyTemporaryException(result, original,
+                    Instant.parse("2026-11-18T12:00:00Z").toEpochMilli());
+            assertFalse(result.signal);
+            assertEquals(originalBlock, result.blockPns);
+            assertEquals(originalReason, result.message);
+            assertEquals(originalFaces, visit.faces);
+            assertTrue(message.text.startsWith(original.text + "\n\n"));
+            assertTrue(message.text.contains("До 01.12.2026 для опції 576"));
+            assertTrue(message.text.contains("Сигнал знято"));
+            assertTrue(message.text.contains("зниження не застосовується"));
+            assertEquals("", FaceCountPolicy.conductMessage(result.signal, result.blockPns, false));
+            assertEquals("", FaceCountPolicy.conductMessage(result.signal, result.blockPns, true));
+        }
+    }
+
+    @Test public void temporaryExceptionKeepsProductLinksAtTheirOriginalOffsets() {
+        FaceCountPolicy.Visit visit = uniform("11");
+        FaceCountPolicy.Network network = baseline("2", "10");
+        FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, true);
+        FaceCountPolicy.Message original = FaceCountPolicy.formatMessage(result, visit, network,
+                row -> "(" + row.id + ") Product");
+        FaceCountPolicy.Message message = FaceCountPolicy.applyTemporaryException(result, original,
+                Instant.parse("2026-11-30T21:59:59.999Z").toEpochMilli());
+        assertFalse(result.signal);
+        assertEquals(3, message.links.size());
+        assertSame(original.links, message.links);
+        for (FaceCountPolicy.ProductLink link : message.links) {
+            assertEquals("(" + link.productId + ") Product", message.text.substring(link.start, link.end));
+        }
+    }
+
+    @Test public void temporaryExceptionDoesNotAddMessageWithoutSignal() {
+        for (FaceCountPolicy.Visit visit : Arrays.asList(uniform("2"), FaceCountPolicy.visit(Collections.emptyList()))) {
+            FaceCountPolicy.Network network = baseline("2", "10");
+            FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, true);
+            assertFalse(result.signal);
+            FaceCountPolicy.Message original = FaceCountPolicy.formatMessage(result, visit, network, row -> row.id);
+            assertSame(original, FaceCountPolicy.applyTemporaryException(result, original,
+                    Instant.parse("2026-11-18T12:00:00Z").toEpochMilli()));
+        }
+    }
+
+    @Test public void temporaryExceptionExpiresAtDecemberFirstKyivMidnightEvenForOldVisit() {
+        for (String now : Arrays.asList("2026-11-30T22:00:00Z", "2026-12-01T12:00:00Z", "2027-01-01T00:00:00Z")) {
+            FaceCountPolicy.Visit visit = uniform("11");
+            FaceCountPolicy.Network network = baseline("2", "10");
+            FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, false);
+            FaceCountPolicy.Message original = FaceCountPolicy.formatMessage(result, visit, network, row -> row.id);
+            assertSame(original, FaceCountPolicy.applyTemporaryException(result, original, Instant.parse(now).toEpochMilli()));
+            assertTrue(result.signal);
+            assertTrue(result.blockPns);
+            assertEquals(" Документ проведеним не буде!", FaceCountPolicy.conductMessage(result.signal, result.blockPns, false));
+        }
+    }
+
+    @Test public void temporaryExceptionUsesCurrentDateEvenForFutureVisit() {
+        FaceCountPolicy.Visit visit = uniform("11");
+        FaceCountPolicy.Network network = baseline("2", "10");
+        FaceCountPolicy.Result result = evaluate(visit, network, LocalDate.of(2026, 12, 5), true);
+        FaceCountPolicy.Message message = FaceCountPolicy.formatMessage(result, visit, network, row -> row.id);
+        FaceCountPolicy.applyTemporaryException(result, message, Instant.parse("2026-11-18T12:00:00Z").toEpochMilli());
+        assertFalse(result.signal);
+    }
+
+    @Test public void repeatedExceptionApplicationDoesNotDuplicateExplanation() {
+        FaceCountPolicy.Visit visit = uniform("11");
+        FaceCountPolicy.Network network = baseline("2", "10");
+        FaceCountPolicy.Result result = evaluate(visit, network, ACTIVE, true);
+        long now = Instant.parse("2026-11-18T12:00:00Z").toEpochMilli();
+        FaceCountPolicy.Message message = FaceCountPolicy.applyTemporaryException(result,
+                FaceCountPolicy.formatMessage(result, visit, network, row -> row.id), now);
+        assertSame(message, FaceCountPolicy.applyTemporaryException(result, message, now));
+    }
+
     private static FaceCountPolicy.Product product(String id, String faces, String akciya) {
         return new FaceCountPolicy.Product(id, faces, akciya);
     }

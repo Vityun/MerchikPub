@@ -250,15 +250,18 @@ public final class VisitReportDataSync {
                         try {
                             requireCurrent.run();
                             TovarTableResponse body = response.body();
-                            if (!response.isSuccessful() || body == null || !Boolean.TRUE.equals(body.getState()) || body.getList() == null)
+                            if (body == null)
                                 throw new IllegalStateException("Products response invalid: HTTP " + response.code()
-                                        + ", error=" + (body == null ? "empty body" : body.getError()));
-                            for (TovarDB row : body.getList()) {
+                                        + ", empty body");
+                            List<TovarDB> rows = VisitDataResponsePolicy.requireList(response.code(),
+                                    body.getState(), body.getError(), body.getList());
+                            for (TovarDB row : rows) {
                                 if (row == null || row.getiD() == null || row.getiD().trim().isEmpty())
                                     throw new IllegalStateException("Invalid product row");
                             }
-                            if (!body.getList().isEmpty()) realm.executeTransaction(r -> r.insertOrUpdate(body.getList()));
-                            saved.accept(body.getList().size());
+                            if (!rows.isEmpty()) realm.executeTransaction(r -> r.insertOrUpdate(rows));
+                            else log("empty", "tovar_list confirmed empty; local data and VPI unchanged");
+                            saved.accept(rows.size());
                         } catch (RuntimeException e) { failed.accept(e); }
                     }
                     @Override public void onFailure(Call<TovarTableResponse> call, Throwable error) { failed.accept(error); }
@@ -363,16 +366,18 @@ public final class VisitReportDataSync {
                         try {
                             requireCurrent();
                             ReportPrepareServer body = response.body();
-                            if (!response.isSuccessful() || body == null || !Boolean.TRUE.equals(body.getState())
-                                    || body.getList() == null)
+                            if (body == null)
                                 throw new IllegalStateException("RP response invalid: HTTP " + response.code()
-                                        + ", error=" + (body == null ? "empty body" : body.getError()));
+                                        + ", empty body");
+                            List<ReportPrepareDB> rows = VisitDataResponsePolicy.requireList(response.code(),
+                                    body.getState(), body.getError(), body.getList());
                             // Deferred rows already exist locally. They do not block offline readiness,
                             // but must be downloaded again after their local edits are acknowledged.
                             saveReceipt(RP, reports().size());
-                            if (fullyMerged[0]) advance("report_prepare", started, body.getList().size());
+                            if (fullyMerged[0]) advance("report_prepare", started, rows.size());
                             TablesLoadingUnloading.readyReportPrepare = true;
-                            log("saved", "report_prepare rows=" + body.getList().size()
+                            if (rows.isEmpty()) log("empty", "report_prepare confirmed empty; readiness saved, local data and VPI unchanged");
+                            log("saved", "report_prepare rows=" + rows.size()
                                     + ", fullyMerged=" + fullyMerged[0] + ", vpi=" + vpi("report_prepare"));
                             products();
                         } catch (RuntimeException e) { reportFailed(e); }

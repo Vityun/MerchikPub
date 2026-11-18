@@ -11,12 +11,19 @@ public class ThemeTableRespose {
     @SerializedName("state")
     @Expose
     private Boolean state;
+    @SerializedName("error")
+    @Expose
+    private String error;
     @SerializedName("list")
     @Expose
     private List<ThemeDB> list = null;
 
     public Boolean getState() {
         return state;
+    }
+
+    public String getError() {
+        return error;
     }
 
     public void setState(Boolean state) {

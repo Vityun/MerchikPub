@@ -286,7 +286,7 @@ public class DetailedReportHomeFrag extends Fragment {
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='red'><u>" + totalPenaltyString + "</u></font>" + " грн."), this::openOptionsUFMD));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<font color='" + CustomString.errorColorHtml(requireContext()) + "'><u>" + totalPenaltyString + "</u></font>" + " грн."), this::openOptionsUFMD));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
                 CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
@@ -361,7 +361,7 @@ public class DetailedReportHomeFrag extends Fragment {
             value = themeDB.getNm();
             Log.d("ADD_OPINION_FROM_DETAIL", "themeId: " + value);
         } else {
-            value = Html.fromHtml("<font color=red>" + themeDB.getNm() + "</font>");
+            value = Html.fromHtml("<font color='" + CustomString.errorColorHtml(requireContext()) + "'>" + themeDB.getNm() + "</font>");
         }
 
         return new KeyValueData(key, value, null);
@@ -375,7 +375,7 @@ public class DetailedReportHomeFrag extends Fragment {
         if (wpDataDB.getStatus() == 1) {
             value = Html.fromHtml("<font color=green>Проведено</font>");
         } else {
-            value = Html.fromHtml("<font color=red>Не проведено</font>");
+            value = Html.fromHtml("<font color='" + CustomString.errorColorHtml(requireContext()) + "'>Не проведено</font>");
         }
 
         return new KeyValueData(key, value, null);

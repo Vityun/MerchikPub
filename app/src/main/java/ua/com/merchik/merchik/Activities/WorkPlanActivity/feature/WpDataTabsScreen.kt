@@ -61,6 +61,7 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.BuildConfig
 import ua.com.merchik.merchik.ServerExchange.VisitReportDataSync
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.data.synchronization.StartupPolicy
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsLocalDefaults
@@ -170,7 +171,7 @@ fun WpDataTabsScreen() {
 
     LaunchedEffect(Unit) {
         logStartupReadiness("start: offline=$offline")
-        if (!offline) VisitReportDataSync.retryInitial()
+        if (!offline) TablesLoadingUnloading.retryInitialData()
         while (!dataIsReady) {
             val currentlyOffline = isOfflineNow()
             if (offline != currentlyOffline) {
@@ -194,7 +195,7 @@ fun WpDataTabsScreen() {
                 break
             }
 
-            if (!currentlyOffline) VisitReportDataSync.retryInitial()
+            if (!currentlyOffline) TablesLoadingUnloading.retryInitialData()
             delay(1000)
         }
     }
@@ -556,25 +557,11 @@ fun isDataReadyCompat(): Boolean {
 
 
 fun checkRealmReady(): Boolean {
-    val hasWp = RealmManager.INSTANCE.hasData<WpDataDB>()
-    val hasStObj = SiteObjectsLocalDefaults.hasDownloadedObjects()
-    val hasOption = RealmManager.INSTANCE.hasData<OptionsDB>()
-    val hasThema = RoomManager.SQL_DB.themeDao().getCount() > 0
-
-    return hasWp && hasStObj && hasOption && hasThema &&
-            VisitReportDataSync.reportReady() && VisitReportDataSync.productsDownloaded()
+    return isDataReadyCompat()
 }
 
 fun checkRealmReadyII(): Boolean {
-    val initDao = RoomManager.SQL_DB.initStateDao()
-    val state = initDao.getState()
-
-    return state != null && StartupPolicy.areRequiredTablesReady(
-        state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
-        SiteObjectsLocalDefaults.hasDownloadedObjects(),
-        RoomManager.SQL_DB.themeDao().getCount() > 0,
-        VisitReportDataSync.reportReady(), VisitReportDataSync.productsDownloaded()
-    )
+    return isDataReadyCompat()
 }
 
 private fun logStartupReadiness(reason: String) {

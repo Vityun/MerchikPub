@@ -14,6 +14,16 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 // Задачи и рекламации
 @Dao
 public interface TarDao {
+    String PREMIUM_RECLAMATIONS_QUERY = "SELECT * FROM tasks_and_reclamations "
+            + "WHERE tp = :tarType AND vinovnik = :usertId AND dt_real_post > 0 "
+            + "AND dt_real_post >= :dtFrom AND dt_real_post < :dtToExclusive";
+
+    @Query("SELECT COUNT(*) FROM tasks_and_reclamations")
+    long count();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertSync(List<TasksAndReclamationsSDB> data);
+
     @Query("SELECT * FROM tasks_and_reclamations")
     List<TasksAndReclamationsSDB> getAll();
 
@@ -129,8 +139,8 @@ public interface TarDao {
 //    @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tarType AND addr = :addressId AND client = :clientId AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId) AND state = :state AND dt BETWEEN :dtFrom AND :dtTo")
     List<TasksAndReclamationsSDB> getTARForOptionControl150822(Integer tarType, int addressId, String clientId, int userId, int state, Long dtFrom, Long dtTo);
 
-    @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tarType  AND vinovnik = :usertId AND dt BETWEEN :dtFrom AND :dtTo")
-    List<TasksAndReclamationsSDB> getTARForOptionControl135061(Integer tarType, Long dtFrom, Long dtTo, Integer usertId);
+    @Query(PREMIUM_RECLAMATIONS_QUERY)
+    List<TasksAndReclamationsSDB> getTARForOptionControl135061(Integer tarType, Long dtFrom, Long dtToExclusive, Integer usertId);
 
     @Query("SELECT * FROM tasks_and_reclamations WHERE client = :clientId")
     List<TasksAndReclamationsSDB> getByClientIdFilter(String clientId);

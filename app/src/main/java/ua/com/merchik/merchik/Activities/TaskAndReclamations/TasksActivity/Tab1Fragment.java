@@ -44,6 +44,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -310,7 +311,7 @@ public class Tab1Fragment extends Fragment {
 //            if (data.state == 1 || data.state == 3) {
 //                money = "0";
 //            } else {
-            money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+            money = "<font color='" + CustomString.errorColorHtml(requireContext()) + "'> -" + data.sumPenalty + " (виновнику)</font>";
 //            }
 
             CharSequence penalty = Html.fromHtml(title + money + "<br>");
@@ -327,7 +328,7 @@ public class Tab1Fragment extends Fragment {
                 } else {
                     String titlePr = "<b>Сумма штрафа: </b>";
                     double result = Double.parseDouble(data.sumPenalty)/2;
-                    String moneyPr = "<font color='red'> -" + String.format(Locale.US,"%.2f", result) + " (замене)</font>";
+                    String moneyPr = "<font color='" + CustomString.errorColorHtml(requireContext()) + "'> -" + String.format(Locale.US,"%.2f", result) + " (замене)</font>";
 
                     CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
                     stringData.append(premiya);

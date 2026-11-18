@@ -49,6 +49,7 @@ import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
@@ -499,7 +500,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             DialogData dialogData = new DialogData(getContext());
             dialogData.setTitle("Увага");
-            dialogData.setText(Html.fromHtml("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>"));
+            dialogData.setText(Html.fromHtml("<font color='" + CustomString.errorColorHtml(requireContext()) + "'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>"));
             dialogData.setDialogIco();
             dialogData.setOk("Так", () -> {
             });

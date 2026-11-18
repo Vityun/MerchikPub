@@ -34,6 +34,7 @@ import java.util.Set;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -468,7 +469,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         }
         valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-        valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
+        valBonus = Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>" + valBonus + " грн" + "</font>");
 
 
         // 4.1
@@ -520,12 +521,12 @@ public class OptionControlEKL<T> extends OptionControl {
             optionMsg
                     .append("\n\n")
                     .append("Останній раз ви отримували ЕКЛ - ")
-                    .append(documentUser != null && documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
+                    .append(documentUser != null && documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>" + "немає даних" + "</font>"))
                     .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
                     .append(DAYS + " днів, тому ваші преміальні ")
                     .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
                     .append(bonus == -32 ? "подвiйну суму, що становитиме " : "")
-                    .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
+                    .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>" + valBonus + "</font>")).append(".")
                     .append("\n")
                     .append((ekl_date != -1 && ekl_date > countDay) ? "" : "Якщо ви отримаєте ЕКЛ по будь-яким клієнту, то відсоток поточних відрахувань буде зменшено вдвічі.")
                     .append("");
@@ -699,7 +700,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     shtraf = 0.16f;
             }
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-            res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+            res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>" + res + "грн" + "</font>");
         }
 
         return res;

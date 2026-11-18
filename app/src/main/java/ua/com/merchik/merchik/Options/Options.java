@@ -32,7 +32,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -163,6 +162,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTwoWorkInOneDay;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ReportPrepareSync;
 import ua.com.merchik.merchik.VersionApp;
@@ -1505,7 +1505,7 @@ public class Options {
                     if (item.getIsSignal().equals("1")) {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
-                                msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp, item) + "грн.)</font>")).append("\n");
+                                msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>(" + counter2Text(context, wp, item) + "грн.)</font>")).append("\n");
                         if (item.getOptionControlId().equals("135061"))
                             optionSumRes += PremiumPercentagePolicy.amount(wp.getCash_zakaz(), item.getAmountMax()).doubleValue();
                         else if (item.getOptionControlId().equals("84006"))
@@ -1559,7 +1559,7 @@ public class Options {
                             int start = message.indexOf(redText);
                             int end = start + redText.length();
                             spannable.setSpan(
-                                    new ForegroundColorSpan(Color.RED),
+                                    new ForegroundColorSpan(context.getResources().getColor(R.color.red_error)),
                                     start,
                                     end,
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -1576,7 +1576,7 @@ public class Options {
                             int start = message.indexOf(redText);
                             int end = start + redText.length();
                             spannable.setSpan(
-                                    new ForegroundColorSpan(Color.RED),
+                                    new ForegroundColorSpan(context.getResources().getColor(R.color.red_error)),
                                     start,
                                     end,
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -1593,7 +1593,7 @@ public class Options {
                             Log.e("optionNotConduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
                             Log.e("optionNotConduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
                             StringBuffer msg = new StringBuffer();
-                            resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(блок)</font>")).append("\n");
+                            resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>(блок)</font>")).append("\n");
                             Log.e("optionNotConduct", "------------------------------END----------------------------------");
                         }
                         resStr.append(optionsSum);
@@ -1601,7 +1601,7 @@ public class Options {
                         resStr.append("\n\nУсуньте зазначені помилки та повторіть спробу проведення.");
                         if (!penalty.equals("0,00"))
                             resStr.append("\n\nВи можете отримати ще: ")
-                                    .append(Html.fromHtml("<font color=red>~" + penalty + "грн</font>")).append(", якщо виконаєте опції вище.");
+                                    .append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>~" + penalty + "грн</font>")).append(", якщо виконаєте опції вище.");
 
                         dialog.setText(OptionMessageLinks.style(context, resStr), () -> {
                         });
@@ -1815,13 +1815,13 @@ public class Options {
         return res;
     }
 
-    private CharSequence counter2Text(WpDataDB wpDataDB, OptionsDB option) {
+    private CharSequence counter2Text(Context context, WpDataDB wpDataDB, OptionsDB option) {
         CharSequence res = "";
         if ("135061".equals(option.getOptionControlId()))
             res = "~" + String.format("%.2f", PremiumPercentagePolicy.amount(wpDataDB.getCash_zakaz(), option.getAmountMax()));
         else
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
-        res = Html.fromHtml("<font color=red>" + res + "</font>");
+        res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>" + res + "</font>");
         return res;
     }
 

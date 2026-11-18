@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -497,7 +498,7 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
                     } else if (stackPhotoDB.create_time != 0 && stackPhotoDB.upload_to_server != 0) {
                         ds.setColor(Color.YELLOW);
                     } else {
-                        ds.setColor(Color.RED);
+                        ds.setColor(context.getResources().getColor(R.color.red_error));
                     }
                 } else {
                     ds.setColor(Color.BLUE);

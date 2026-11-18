@@ -263,7 +263,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
                 if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
                     Log.e("bindRPA", "RED");
-                    textTitle.setText("" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>")); // Должно гореть красным
+                    textTitle.setText(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + buttText + "</font>")); // Должно гореть красным
                 } else {
                     Log.e("bindRPA", "NORM");
                     textTitle.setText("" + buttText);
@@ -370,7 +370,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (salary == 0)
                                 salary = 15700;
 
-                            SpannableString text = CustomString.underlineString("+" + salary / 10 + ".0 грн.", optionsButtons);
+                            SpannableString text = CustomString.underlineString(mContext, "+" + salary / 10 + ".0 грн.", optionsButtons);
                             text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                             textInteger2.setText(text);
@@ -393,7 +393,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, (long) optionId);
                         Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
 
-                        SpannableString text = CustomString.underlineString("+" + bonus.getSecond() + " грн.", optionsButtons);
+                        SpannableString text = CustomString.underlineString(mContext, "+" + bonus.getSecond() + " грн.", optionsButtons);
                         text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger2.setText(text);
                         textInteger2.setOnClickListener(new View.OnClickListener() {
@@ -481,7 +481,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     // Вчтавляем "счётчкик"
                     switch (optionId) {
                         case ShelfLengthEntry.BUTTON_ID:
-                            textInteger.setText(CustomString.underlineString(OptionControlShelfLength.counterText(wp), optionsButtons));
+                            textInteger.setText(CustomString.underlineString(mContext, OptionControlShelfLength.counterText(wp), optionsButtons));
                             textInteger.setOnClickListener(v -> optionButton.performClick());
                             break;
 
@@ -506,7 +506,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 }
                             }
 
-                            textInteger.setText(CustomString.underlineString(logMPList.size() + "/" + loMPonPoint, optionsButtons));
+                            textInteger.setText(CustomString.underlineString(mContext, logMPList.size() + "/" + loMPonPoint, optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -527,7 +527,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 achievementSum = achievementsSDBList.size();
                             }
 
-                            textInteger.setText(CustomString.coloredString("" + achievementSum, optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + achievementSum, optionsButtons));
                             break;
 
                         // Start Work
@@ -539,7 +539,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }*/
                             startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
 //                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                             break;
                         case (138520):
@@ -550,7 +550,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }*/
                             endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons));
 //                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                             break;
 
@@ -790,7 +790,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
 //                            SpannableString spannableString160567 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36));
-                            SpannableString spannableString160567 = CustomString.coloredString(optionControlPhotoShowcase.getCounter(), optionsButtons);
+                            SpannableString spannableString160567 = CustomString.coloredString(mContext, optionControlPhotoShowcase.getCounter(), optionsButtons);
                             spannableString160567.setSpan(new UnderlineSpan(), 0, spannableString160567.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                             textInteger.setText(spannableString160567);
@@ -1164,7 +1164,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case 137797:    // Остатки
                             String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
-                            textInteger.setText(CustomString.coloredString("" + msg, optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + msg, optionsButtons));
 //                            textInteger.setText(msg);
                             break;
 
@@ -1189,7 +1189,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
                             }
-                            textInteger.setText(CustomString.coloredString("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size(), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size(), optionsButtons));
                             break;
 
                         case 138340:    // Доп Требования
@@ -1197,7 +1197,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "1", "0").size());
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "0").size());
-                            textInteger.setText(CustomString.coloredString("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size(), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size(), optionsButtons));
                             break;
 
                         case 135328:    // Рекламация
@@ -1205,7 +1205,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText(CustomString.coloredString("" + optionControlReclamationAnswer.problemReclamationCount(), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + optionControlReclamationAnswer.problemReclamationCount(), optionsButtons));
                             break;
 
                         case 135327:    // Задачи
@@ -1213,7 +1213,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText(CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons));
+                            textInteger.setText(CustomString.coloredString(mContext, "" + optionControlTask.problemTaskCount(), optionsButtons));
 
                             break;
 
@@ -1228,7 +1228,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText(CustomString.underlineString(optionControlAddOpinion.currentOpinionStatus(), optionsButtons));
+                            textInteger.setText(CustomString.underlineString(mContext, optionControlAddOpinion.currentOpinionStatus(), optionsButtons));
 
                             if (dataDB instanceof WpDataDB wpDataDB) {
                                 int wpDataUserOpinionID = wpDataDB.getUser_opinion_id() != null ? Integer.parseInt(wpDataDB.getUser_opinion_id()) : 0;
@@ -1262,7 +1262,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText(CustomString.underlineString(optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons));
+                            textInteger.setText(CustomString.underlineString(mContext, optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -1473,13 +1473,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             if (optionId == 135412) {
-                String color = PremiumPercentagePolicy.counterColor(option.getAmountMax());
+                String color = PremiumPercentagePolicy.counterColor(option.getAmountMax(), CustomString.errorColorHtml(mContext));
                 String text = PremiumPercentagePolicy.counterText(
                         wpDataDB.getCash_zakaz(), option.getAmountMax(), Locale.getDefault());
                 return Html.fromHtml("<font color=" + color + ">" + text + " грн</font>");
             }
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
-            res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
+            res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + res + " грн" + "</font>");
         }
         return res;
     }
@@ -1498,7 +1498,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         shtraf = 0.154f;
                 }
                 res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-                res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+                res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + res + "грн" + "</font>");
             }
         }
         return res;

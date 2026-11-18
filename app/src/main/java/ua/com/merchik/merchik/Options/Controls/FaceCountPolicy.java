@@ -23,6 +23,7 @@ public final class FaceCountPolicy {
     private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("yyMM");
     private static final LocalDate MAX_PRODUCT_CHECK_FROM = LocalDate.of(2026, 10, 30);
     private static final LocalDate BLOCK_AFTER = LocalDate.of(2026, 11, 1);
+    private static final LocalDate SIGNAL_EXCEPTION_UNTIL = LocalDate.of(2026, 12, 1);
 
     private FaceCountPolicy() { }
 
@@ -206,6 +207,15 @@ public final class FaceCountPolicy {
 
     public static String productLabel(String id, String name, String weight) {
         return ("(" + id + ") " + trim(name) + " " + trim(weight)).trim();
+    }
+
+    public static Message applyTemporaryException(Result result, Message formatted, long nowMillis) {
+        if (!result.signal || !visitDate(nowMillis).isBefore(SIGNAL_EXCEPTION_UNTIL)) return formatted;
+        // Keep the completed checks, product links and block configuration for the next calculation.
+        result.signal = false;
+        return new Message(formatted.text + "\n\nДо 01.12.2026 для опції 576 діє тимчасове виключення."
+                + " Сигнал знято; за цією опцією проведення не блокується та зниження не застосовується.",
+                formatted.links);
     }
 
     public static String faceInput(String value) {

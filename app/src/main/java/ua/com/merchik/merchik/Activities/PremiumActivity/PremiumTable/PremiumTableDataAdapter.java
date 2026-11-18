@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange;
@@ -184,8 +185,8 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             }
 
 
-            CharSequence prihodChar = (int) detailed.prihod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.prihod + "</font>") : "" + (int) detailed.prihod;
-            CharSequence rashodChar = (int) detailed.rashod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.rashod + "</font>") : "" + (int) detailed.rashod;
+            CharSequence prihodChar = (int) detailed.prihod < 0 ? Html.fromHtml("<font color='" + CustomString.errorColorHtml(itemView.getContext()) + "'>" + (int) detailed.prihod + "</font>") : "" + (int) detailed.prihod;
+            CharSequence rashodChar = (int) detailed.rashod < 0 ? Html.fromHtml("<font color='" + CustomString.errorColorHtml(itemView.getContext()) + "'>" + (int) detailed.rashod + "</font>") : "" + (int) detailed.rashod;
 
             name.setText(detailed.docNom + " (" + Clock.getDatePremium(detailed.docDat) + ")");
             column1.setText("");

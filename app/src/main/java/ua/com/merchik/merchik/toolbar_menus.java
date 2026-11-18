@@ -1563,19 +1563,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
                                         @Override
                                         public <T> void onSuccess(List<T> data) {
-                                            SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
-                                                    .subscribeOn(Schedulers.io())
-                                                    .subscribe(new DisposableCompletableObserver() {
-                                                        @Override
-                                                        public void onComplete() {
-                                                            Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
-                                                        }
-
-                                                        @Override
-                                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                                            Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
-                                                        }
-                                                    });
+                                            Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete",
+                                                    "Задачи и рекламации сохранены: " + data.size());
                                         }
 
                                         @Override

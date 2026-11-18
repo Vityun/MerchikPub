@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Utils;
 
 import static ua.com.merchik.merchik.Globals.userId;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
 import android.text.Html;
@@ -16,11 +17,13 @@ import android.text.style.UnderlineSpan;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -41,6 +45,11 @@ public class CustomString {
 
     public enum TitleMode {SHORT, FULL, MIX, RNO, SHORT_RNO}
 
+    public static String errorColorHtml(Context context) {
+        return String.format(Locale.ROOT, "#%06X",
+                ContextCompat.getColor(context, R.color.red_error) & 0xFFFFFF);
+    }
+
 
     public static SpannableString underlineString(String text) {
         SpannableString spannableSt = new SpannableString(text);
@@ -48,11 +57,11 @@ public class CustomString {
         return spannableSt;
     }
 
-    public static SpannableString underlineString(String text, OptionsDB option) {
+    public static SpannableString underlineString(Context context, String text, OptionsDB option) {
         String isSignal = option.getIsSignal();
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0", "2" -> new ForegroundColorSpan(Color.GREEN);
-            case "1" -> new ForegroundColorSpan(Color.RED);
+            case "1" -> new ForegroundColorSpan(ContextCompat.getColor(context, R.color.red_error));
             case OptionUnlockPolicy.SIGNAL_UNLOCKED -> new ForegroundColorSpan(Color.YELLOW);
             default -> new ForegroundColorSpan(Color.DKGRAY);
         };
@@ -63,11 +72,11 @@ public class CustomString {
     }
 
 
-    public static SpannableString coloredString(String text, OptionsDB option) {
+    public static SpannableString coloredString(Context context, String text, OptionsDB option) {
         String isSignal = option.getIsSignal();
         ForegroundColorSpan foregroundSpan = switch (isSignal) {
             case "0", "2" -> new ForegroundColorSpan(Color.GREEN);
-            case "1" -> new ForegroundColorSpan(Color.RED);
+            case "1" -> new ForegroundColorSpan(ContextCompat.getColor(context, R.color.red_error));
             case OptionUnlockPolicy.SIGNAL_UNLOCKED -> new ForegroundColorSpan(Color.YELLOW);
             default -> new ForegroundColorSpan(Color.DKGRAY);
         };

@@ -24,6 +24,7 @@ import java.util.Locale;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -106,7 +107,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 if (additionalRequirementsMarkDB != null) {
                     score = additionalRequirementsMarkDB.getScore();
                 } else {
-                    score = Html.fromHtml("<font color='#EF5350'>0</font>");
+                    score = Html.fromHtml("<font color='" + CustomString.errorColorHtml(context) + "'>0</font>");
                     signal.setColorFilter(context.getResources().getColor(R.color.red_error));
                 }
 

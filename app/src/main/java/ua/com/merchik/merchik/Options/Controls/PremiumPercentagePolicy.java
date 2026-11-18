@@ -7,6 +7,7 @@ import java.util.Locale;
 import ua.com.merchik.merchik.Globals;
 
 public final class PremiumPercentagePolicy {
+    static final int PERCENT_STEP = 5;
     private static final BigDecimal ZERO = new BigDecimal("0.00");
 
     private PremiumPercentagePolicy() { }
@@ -15,12 +16,28 @@ public final class PremiumPercentagePolicy {
         if (Double.isNaN(cashZakaz) || Double.isInfinite(cashZakaz) || cashZakaz <= 0) {
             return ZERO;
         }
-        // The existing rate is the amount for a 10% adjustment, not for every percentage.
         return BigDecimal.valueOf(cashZakaz)
-                .multiply(BigDecimal.valueOf(Globals.OPTION_CONTROL_PENALTY_RATE))
-                .multiply(BigDecimal.valueOf(percent).abs())
-                .movePointLeft(1)
+                .multiply(adjustmentRate(percent))
                 .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    static BigDecimal multiplier(int percent) {
+        return BigDecimal.valueOf(percent).abs().divide(BigDecimal.valueOf(PERCENT_STEP));
+    }
+
+    public static BigDecimal adjustmentRate(int percent) {
+        // The shared rate already accounts for the performer's share, for one 5% step.
+        return BigDecimal.valueOf(Globals.OPTION_CONTROL_PENALTY_RATE).multiply(multiplier(percent));
+    }
+
+    public static BigDecimal effectivePercent(int percent) {
+        return adjustmentRate(percent).movePointRight(2)
+                .multiply(BigDecimal.valueOf(Integer.signum(percent)))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public static String detailPercentText(int percent, Locale locale) {
+        return String.format(locale, "%.2f%%", effectivePercent(percent));
     }
 
     public static BigDecimal amount(double cashZakaz, String storedPercent) {
@@ -37,9 +54,9 @@ public final class PremiumPercentagePolicy {
         return "~" + sign + String.format(locale, "%.2f", amount(cashZakaz, percent));
     }
 
-    public static String counterColor(String storedPercent) {
+    public static String counterColor(String storedPercent, String negativeColor) {
         int percent = readPercent(storedPercent);
-        return percent > 0 ? "green" : percent < 0 ? "red" : "gray";
+        return percent > 0 ? "green" : percent < 0 ? negativeColor : "gray";
     }
 
     private static int readPercent(String storedPercent) {

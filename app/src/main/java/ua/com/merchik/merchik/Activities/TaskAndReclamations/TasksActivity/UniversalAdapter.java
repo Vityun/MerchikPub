@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -247,23 +248,23 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 try {
 
                     if (dataItem.tp == 1) {
-                        line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
+                        line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + dataItem.sumPenalty + "</font>"));
                         line5.append("/");
                         if (dataItem.state == 0) {
-                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPremiya + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + dataItem.sumPremiya + "</font>"));
                         } else {
-                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + 0 + "</font>"));
                         }
                     } else {
 
                         if (dataItem.state == 0) {
-                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + dataItem.sumPenalty + "</font>"));
                             line5.append("/");
-                            line5.append(Html.fromHtml("<font color='red'>-" + dataItem.sumPenalty + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>-" + dataItem.sumPenalty + "</font>"));
                         } else if (dataItem.state == 1) {
-                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + dataItem.sumPenalty + "</font>"));
                             line5.append("/");
-                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
+                            line5.append(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + 0 + "</font>"));
                         }
 //                        if (dataItem.state == 1) {
 //                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));

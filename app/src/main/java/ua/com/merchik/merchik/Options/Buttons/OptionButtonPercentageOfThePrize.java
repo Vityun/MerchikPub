@@ -8,7 +8,10 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import java.util.Locale;
+
 import ua.com.merchik.merchik.Options.Controls.PremiumPercentagePolicy;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -55,6 +58,8 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append("\n\n");
 
                 CharSequence valBonus = counter2Text();
+                String effectivePercent = PremiumPercentagePolicy.detailPercentText(bonus, Locale.getDefault());
+                String adjustmentColor = PremiumPercentagePolicy.counterColor(String.valueOf(bonus), CustomString.errorColorHtml(context));
                 double reclamPercent = reclamPer != null ? reclamPer : 0.00;
 
                 spannableStringBuilder.append(Html.fromHtml("<b>Період: </b>")).append(date).append("\n");
@@ -62,9 +67,19 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append(Html.fromHtml("<b>Отримано. рек.: </b>")).append(String.valueOf(reclam)).append(" шт.\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек.: </b>")).append(String.format("%.2f", reclamPercent)).append("%\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток.: </b>")).append(String.valueOf(maxPer)).append("%\n");
-                spannableStringBuilder.append(Html.fromHtml(bonus >= 0 ? "<b>Бонус: </b>" : "<b>Зниження: </b>"))
-                        .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
-                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.").append("\n\n");
+                spannableStringBuilder.append(Html.fromHtml(bonus > 0 ? "<b>Бонус: </b>" : bonus < 0 ? "<b>Зниження: </b>" : "<b>Без змін: </b>"))
+                        .append(Html.fromHtml("<font color=" + adjustmentColor + ">" + effectivePercent + "</font>"))
+                        .append(", ").append(Html.fromHtml("<font color=" + adjustmentColor + ">" + valBonus + "</font>"))
+                        .append(" грн.").append("\n\n");
+
+                double cashZakaz = wpDataDB != null ? wpDataDB.getCash_zakaz() : 0;
+                if (cashZakaz > 0 && !Double.isInfinite(cashZakaz) && !Double.isNaN(cashZakaz)) {
+                    spannableStringBuilder.append("Розрахунок суми: ")
+                            .append(String.format("%.2f", cashZakaz)).append(" грн × ")
+                            .append(String.format("%.5f", PremiumPercentagePolicy.adjustmentRate(bonus)))
+                            .append(" = ").append(String.format("%.2f", PremiumPercentagePolicy.amount(cashZakaz, bonus)))
+                            .append(" грн.\nВідсоток враховує частку виконавця; для відображення його округлено.\n\n");
+                }
 
                 spannableStringBuilder.append(Html.fromHtml("<b>Пояснення:</b>")).append("\n");
                 spannableStringBuilder.append(Html.fromHtml("<b>Період (діб)</b>")).append(" - період, за який розраховуються показники\n");
@@ -75,10 +90,15 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток. (%)</b>")).append(" - макс. допустимий відсоток рекламацій ").append(String.valueOf(maxPer)).append(" %\n\n");
 
                 spannableStringBuilder.append("Ви отримали ").append(String.format("%.2f", reclamPercent))
-                        .append("% рекламацій (при максимально допустимому показнику ").append(String.valueOf(maxPer)).append("%)").append(" тому ваші преміальні ")
-                        .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
-                        .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
-                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(" грн.");
+                        .append("% рекламацій (при максимально допустимому показнику ").append(String.valueOf(maxPer)).append("%)").append(" тому ваші преміальні ");
+                if (bonus == 0) {
+                    spannableStringBuilder.append("залишаються без змін.");
+                } else {
+                    spannableStringBuilder.append(bonus > 0 ? "збільшено" : "зменшено").append(" на ")
+                            .append(Html.fromHtml("<font color=" + adjustmentColor + ">" + effectivePercent + "</font>"))
+                            .append(", ").append(Html.fromHtml("<font color=" + adjustmentColor + ">" + valBonus + "</font>"))
+                            .append(" грн.");
+                }
 
 
                 spannableStringBuilder.append("");

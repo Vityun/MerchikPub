@@ -15,6 +15,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
 import ua.com.merchik.merchik.Utils.LocationFixPolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -233,7 +234,7 @@ public class OptionControlMP<T> extends OptionControl {
                                         .append(", відстань ")
                                         .append((int) distance).append("").append(distanceType)
                                         .append(" вiд ТТ. ")
-                                        .append("<font color=red>Местоположение в ТТ не пiдтвержено<font>");
+                                        .append("<font color='" + CustomString.errorColorHtml(context) + "'>Местоположение в ТТ не пiдтвержено<font>");
                             } else {
                                 stringBuilder.append(String.format("Местоположение вашего устройства определено %s раз. Из них %s раз система определила вас на ТТ.", logMPList.size(), validDistanceCount))
                                         .append("\n");

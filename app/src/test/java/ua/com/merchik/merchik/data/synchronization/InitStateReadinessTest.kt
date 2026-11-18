@@ -30,6 +30,28 @@ class InitStateReadinessTest {
         assertTrue(state.wpLoaded && state.siteLoaded && state.optionsLoaded && state.themeLoaded)
     }
 
+    @Test fun confirmedEmptyPlanAndOptionsRemainReadyAfterPolling() {
+        val dao = MemoryDao()
+        dao.markWpLoaded()
+        dao.markOptionsLoaded()
+        val state = dao.mergeLocalReadiness(false, true, false, true)
+        assertTrue(state.wpLoaded && state.optionsLoaded)
+        assertTrue(StartupPolicy.areRequiredTablesReady(
+            state.wpLoaded, state.siteLoaded, state.optionsLoaded, state.themeLoaded,
+            true, true, true, true
+        ))
+    }
+
+    @Test fun missingOptionsAreRetriedUntilAnEmptyOrNonemptySuccessIsAcknowledged() {
+        val dao = MemoryDao(InitStateEntity(wpLoaded = true, siteLoaded = true, themeLoaded = true))
+        val before = dao.mergeLocalReadiness(false, true, false, true)
+        assertTrue(StartupPolicy.missingTables(true, before.wpLoaded, before.optionsLoaded, true, true)
+            .contains(StartupPolicy.InitialTable.OPTIONS))
+        dao.markOptionsLoaded()
+        val after = dao.mergeLocalReadiness(false, true, false, true)
+        assertTrue(StartupPolicy.missingTables(true, after.wpLoaded, after.optionsLoaded, true, true).isEmpty())
+    }
+
     @Test fun doesNotInventMissingData() {
         val dao = MemoryDao()
         val state = dao.mergeLocalReadiness(true, false, true, false)

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
 
 public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTableHeaderSubAdapter.PremiumTableHeaderViewHolder> {
@@ -76,8 +77,8 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
 
             textHeaderLayout.setBackgroundColor(itemView.getContext().getResources().getColor(R.color.inActive));
 
-            CharSequence prihod = (int) detailedSubHeader.header.sumComing < 0 ? Html.fromHtml("<font color=red>" + (int) detailedSubHeader.header.sumComing + "</font>") : "" + (int) detailedSubHeader.header.sumComing;
-            CharSequence rashod = (int) detailedSubHeader.header.sumConsumption < 0 ? Html.fromHtml("<font color=red>" + (int) detailedSubHeader.header.sumConsumption + "</font>") : "" + (int) detailedSubHeader.header.sumConsumption;
+            CharSequence prihod = (int) detailedSubHeader.header.sumComing < 0 ? Html.fromHtml("<font color='" + CustomString.errorColorHtml(itemView.getContext()) + "'>" + (int) detailedSubHeader.header.sumComing + "</font>") : "" + (int) detailedSubHeader.header.sumComing;
+            CharSequence rashod = (int) detailedSubHeader.header.sumConsumption < 0 ? Html.fromHtml("<font color='" + CustomString.errorColorHtml(itemView.getContext()) + "'>" + (int) detailedSubHeader.header.sumConsumption + "</font>") : "" + (int) detailedSubHeader.header.sumConsumption;
 
             name.setText(detailedSubHeader.header.date);
             column1.setText("" + ((int) detailedSubHeader.header.sumInitialBalance == 0 ? "" : (int) detailedSubHeader.header.sumInitialBalance));

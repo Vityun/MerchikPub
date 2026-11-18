@@ -2,6 +2,9 @@ package ua.com.merchik.merchik.data.synchronization;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.EnumSet;
+
 import static org.junit.Assert.*;
 
 public class StartupPolicyTest {
@@ -81,5 +84,58 @@ public class StartupPolicyTest {
         for (int code : new int[]{200, 400, 401, 403, 404}) {
             assertFalse("HTTP " + code, StartupPolicy.isTemporaryHttpFailure(code));
         }
+    }
+
+    @Test public void retrySelectsOnlyMissingRequiredTables() {
+        for (int mask = 0; mask < 16; mask++) {
+            EnumSet<StartupPolicy.InitialTable> missing = StartupPolicy.missingTables(true,
+                    (mask & 1) != 0, (mask & 2) != 0, (mask & 4) != 0, (mask & 8) != 0);
+            assertEquals((mask & 1) == 0, missing.contains(StartupPolicy.InitialTable.PLAN));
+            assertEquals((mask & 2) == 0, missing.contains(StartupPolicy.InitialTable.OPTIONS));
+            assertEquals((mask & 4) == 0, missing.contains(StartupPolicy.InitialTable.SITE_OBJECTS));
+            assertEquals((mask & 8) == 0, missing.contains(StartupPolicy.InitialTable.THEMES));
+        }
+    }
+
+    @Test public void completedEmptyPlanAndOptionsAreNotRetriedAsMissingData() {
+        assertTrue(StartupPolicy.missingTables(true, true, true, true, true).isEmpty());
+    }
+
+    @Test public void specialAccountsStillRetryDictionariesButNotVisitLists() {
+        assertEquals(EnumSet.of(StartupPolicy.InitialTable.SITE_OBJECTS, StartupPolicy.InitialTable.THEMES),
+                StartupPolicy.missingTables(false, false, false, false, false));
+        assertTrue(StartupPolicy.missingTables(false, false, false, true, true).isEmpty());
+    }
+
+    @Test public void optionsAreRetriedEvenWhenAllOtherTablesAreReady() {
+        assertEquals(EnumSet.of(StartupPolicy.InitialTable.OPTIONS),
+                StartupPolicy.missingTables(true, true, false, true, true));
+    }
+
+    @Test public void startupPollingDoesNotRequestTheSameTablesEverySecond() {
+        StartupPolicy.RetryGate gate = new StartupPolicy.RetryGate();
+        assertTrue(gate.tryStart("account", 0));
+        for (int second = 1; second < 30; second++) assertFalse(gate.tryStart("account", second * 1000));
+        assertTrue(gate.tryStart("account", 30000));
+        assertFalse(gate.tryStart("account", 30001));
+        assertTrue(gate.tryStart("account", 60000));
+    }
+
+    @Test public void accountSessionLanguageAndDatabaseChangesResetRetryDelay() {
+        for (int index = 0; index < 5; index++) {
+            StartupPolicy.RetryGate gate = new StartupPolicy.RetryGate();
+            Object[] scope = {260523, "session", 2, new Object(), new Object()};
+            assertTrue(gate.tryStart(Arrays.asList(scope), 100));
+            assertFalse(gate.tryStart(Arrays.asList(scope.clone()), 101));
+            Object[] changed = scope.clone();
+            changed[index] = new Object();
+            assertTrue(gate.tryStart(Arrays.asList(changed), 102));
+        }
+    }
+
+    @Test public void elapsedClockResetDoesNotSuppressRetriesForever() {
+        StartupPolicy.RetryGate gate = new StartupPolicy.RetryGate();
+        assertTrue(gate.tryStart("account", 60000));
+        assertTrue(gate.tryStart("account", 10));
     }
 }

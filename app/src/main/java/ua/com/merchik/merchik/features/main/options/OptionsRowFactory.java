@@ -196,7 +196,7 @@ public final class OptionsRowFactory<T> {
             buttText = buttText == null ? "" : buttText.replace("&quot;", "").replace("\"", "");
 
             if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
-                textTitle.text = "" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>");
+                textTitle.text = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + buttText + "</font>");
             } else {
                 textTitle.text = "" + buttText;
             }
@@ -300,7 +300,7 @@ public final class OptionsRowFactory<T> {
                         if (salary == 0)
                             salary = 15700;
 
-                        SpannableString text = CustomString.underlineString("+" + salary / 10 + ".0 грн.", optionsButtons);
+                        SpannableString text = CustomString.underlineString(mContext, "+" + salary / 10 + ".0 грн.", optionsButtons);
                         text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger2.monetary = true;
@@ -325,7 +325,7 @@ public final class OptionsRowFactory<T> {
                     List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, (long) optionId);
                     Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
 
-                    SpannableString text = CustomString.underlineString("+" + bonus.getSecond() + " грн.", optionsButtons);
+                    SpannableString text = CustomString.underlineString(mContext, "+" + bonus.getSecond() + " грн.", optionsButtons);
                     text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     textInteger2.monetary = true;
                     textInteger2.text = text;
@@ -403,7 +403,7 @@ public final class OptionsRowFactory<T> {
                 switch (optionId) {
 
                     case ShelfLengthEntry.BUTTON_ID:
-                        textInteger.text = CustomString.underlineString(OptionControlShelfLength.counterText(wp), optionsButtons);
+                        textInteger.text = CustomString.underlineString(mContext, OptionControlShelfLength.counterText(wp), optionsButtons);
                         textInteger.onClick = (v, origin) -> row.onClick.onClick(v);
                         break;
 
@@ -423,7 +423,7 @@ public final class OptionsRowFactory<T> {
                             }
                         }
 
-                        textInteger.text = CustomString.underlineString(logMPList.size() + "/" + loMPonPoint, optionsButtons);
+                        textInteger.text = CustomString.underlineString(mContext, logMPList.size() + "/" + loMPonPoint, optionsButtons);
                         textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
@@ -445,21 +445,21 @@ public final class OptionsRowFactory<T> {
                             achievementSum = achievementsSDBList.size();
                         }
 
-                        textInteger.text = CustomString.coloredString("" + achievementSum, optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + achievementSum, optionsButtons);
                         break;
 
                     case (138518):
                         long startTime;
 
                         startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-                        textInteger.text = CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons);
 
                         break;
                     case (138520):
                         long endTime;
 
                         endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                        textInteger.text = CustomString.coloredString("" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons);
 
                         break;
 
@@ -688,7 +688,7 @@ public final class OptionsRowFactory<T> {
                         type.type = OptionMassageType.Type.STRING;
                         OptionControlPhotoShowcase<?> optionControlPhotoShowcase = new OptionControlPhotoShowcase<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
-                        SpannableString spannableString160567 = CustomString.coloredString(optionControlPhotoShowcase.getCounter(), optionsButtons);
+                        SpannableString spannableString160567 = CustomString.coloredString(mContext, optionControlPhotoShowcase.getCounter(), optionsButtons);
                         spannableString160567.setSpan(new UnderlineSpan(), 0, spannableString160567.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         textInteger.text = spannableString160567;
@@ -1052,7 +1052,7 @@ public final class OptionsRowFactory<T> {
 
                     case 137797: // Остатки
                         String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
-                        textInteger.text = CustomString.coloredString("" + msg, optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + msg, optionsButtons);
 
                         break;
 
@@ -1078,12 +1078,12 @@ public final class OptionsRowFactory<T> {
                         if (addressSDB != null) {
                             ttCategory = addressSDB.ttId;
                         }
-                        textInteger.text = CustomString.coloredString("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size(), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size(), optionsButtons);
                         break;
 
                     case 138340: // Доп Требования
 
-                        textInteger.text = CustomString.coloredString("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size(), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size(), optionsButtons);
                         break;
 
                     case 135328: // Рекламация
@@ -1091,7 +1091,7 @@ public final class OptionsRowFactory<T> {
                         type.type = OptionMassageType.Type.STRING;
                         OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.text = CustomString.coloredString("" + optionControlReclamationAnswer.problemReclamationCount(), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + optionControlReclamationAnswer.problemReclamationCount(), optionsButtons);
                         break;
 
                     case 135327: // Задачи
@@ -1099,7 +1099,7 @@ public final class OptionsRowFactory<T> {
                         type.type = OptionMassageType.Type.STRING;
                         OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.text = CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons);
+                        textInteger.text = CustomString.coloredString(mContext, "" + optionControlTask.problemTaskCount(), optionsButtons);
 
                         break;
 
@@ -1114,7 +1114,7 @@ public final class OptionsRowFactory<T> {
                         type.type = OptionMassageType.Type.STRING;
                         OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.text = CustomString.underlineString(optionControlAddOpinion.currentOpinionStatus(), optionsButtons);
+                        textInteger.text = CustomString.underlineString(mContext, optionControlAddOpinion.currentOpinionStatus(), optionsButtons);
 
                         if (dataDB instanceof WpDataDB wpDataDB) {
                             int wpDataUserOpinionID = wpDataDB.getUser_opinion_id() != null ? Integer.parseInt(wpDataDB.getUser_opinion_id()) : 0;
@@ -1147,7 +1147,7 @@ public final class OptionsRowFactory<T> {
                         type.type = OptionMassageType.Type.STRING;
                         OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(mContext, dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.text = CustomString.underlineString(optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons);
+                        textInteger.text = CustomString.underlineString(mContext, optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons);
                         textInteger.onClick = (v, origin) -> {
                             Intent intent = new Intent(mContext, FeaturesActivity.class);
                             FeaturesActivity.setAnchoredOrigin(intent, origin);
@@ -1310,13 +1310,13 @@ public final class OptionsRowFactory<T> {
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             if (optionId == 135412) {
-                String color = PremiumPercentagePolicy.counterColor(option.getAmountMax());
+                String color = PremiumPercentagePolicy.counterColor(option.getAmountMax(), CustomString.errorColorHtml(mContext));
                 String text = PremiumPercentagePolicy.counterText(
                         wpDataDB.getCash_zakaz(), option.getAmountMax(), Locale.getDefault());
                 return Html.fromHtml("<font color=" + color + ">" + text + " грн</font>");
             }
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * Globals.OPTION_CONTROL_PENALTY_RATE);
-            res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
+            res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + res + " грн" + "</font>");
         }
         return res;
     }
@@ -1335,7 +1335,7 @@ public final class OptionsRowFactory<T> {
                         shtraf = 0.154f;
                 }
                 res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-                res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+                res = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + res + "грн" + "</font>");
             }
         }
         return res;
