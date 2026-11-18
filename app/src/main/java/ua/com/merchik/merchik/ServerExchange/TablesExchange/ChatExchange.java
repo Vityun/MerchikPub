@@ -94,7 +94,7 @@ public final class ChatExchange {
                 }
                 count = rows.size();
                 saveRows = () -> {
-                    db.chatDao().insertAll(rows);
+                    db.chatDao().insertDownloaded(rows);
                     ReportConductRecovery.stage(userId, db, session, rows);
                 };
             } else {

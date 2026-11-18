@@ -87,6 +87,9 @@ public class ReferencesActivity extends toolbar_menus {
             setData();
             setModuleData();
         }
+        if (referencesEnum == Globals.ReferencesEnum.CHAT) {
+            getSupportFragmentManager().addOnBackStackChangedListener(chatBackStackListener);
+        }
     }
 
     private void setComposeChats() {
@@ -98,7 +101,6 @@ public class ReferencesActivity extends toolbar_menus {
         setChatTitle();
         ComposeView composeView = findViewById(R.id.references_chat_compose_container);
         ComposeFunctions.setContentChatsData(composeView, chatViewModel);
-        getSupportFragmentManager().addOnBackStackChangedListener(chatBackStackListener);
         updateChatVisibility();
     }
 
@@ -122,6 +124,7 @@ public class ReferencesActivity extends toolbar_menus {
                 || findViewById(R.id.references_chat_host).getVisibility() == View.VISIBLE) return;
         findViewById(R.id.references_chat_host).setVisibility(View.VISIBLE);
         findViewById(R.id.references_chat_compose_container).setVisibility(View.GONE);
+        findViewById(R.id.include).setVisibility(View.VISIBLE);
         manager.beginTransaction()
                 .replace(R.id.references_chat_host, ChatFrag.newInstance(chatId), CHAT_FRAGMENT_TAG)
                 .addToBackStack(CHAT_FRAGMENT_TAG)
@@ -129,8 +132,14 @@ public class ReferencesActivity extends toolbar_menus {
     }
 
     private void updateChatVisibility() {
-        if (chatViewModel == null) return;
+        if (chatViewModel == null) {
+            if (referencesEnum == Globals.ReferencesEnum.CHAT
+                    && getSupportFragmentManager().getBackStackEntryCount() == 0) setChatData();
+            return;
+        }
         boolean conversationOpen = getSupportFragmentManager().findFragmentById(R.id.references_chat_host) != null;
+        // The app toolbar and its live unread badge belong to both chat screens.
+        findViewById(R.id.include).setVisibility(View.VISIBLE);
         findViewById(R.id.references_chat_host).setVisibility(conversationOpen ? View.VISIBLE : View.GONE);
         findViewById(R.id.references_chat_compose_container).setVisibility(conversationOpen ? View.GONE : View.VISIBLE);
     }

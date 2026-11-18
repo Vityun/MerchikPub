@@ -72,11 +72,7 @@ public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultV
                         layout.setOnClickListener(view -> {
                             FragmentManager manager = activity.getSupportFragmentManager();
                             FragmentTransaction transaction = manager.beginTransaction();
-                            transaction.replace(R.id.layout_references, new ChatFrag(chatGrpItem, result, () -> {
-                                chatGrpItem.kolRead++;
-                                chatGrpItem.kolUnread--;
-                                notifyDataSetChanged();
-                            }), "CHAT_MASSAGES");
+                            transaction.replace(R.id.layout_references, ChatFrag.newInstance(chatGrpItem.chatId), "CHAT_MASSAGES");
                             transaction.addToBackStack(null);
                             transaction.commit();
                         });

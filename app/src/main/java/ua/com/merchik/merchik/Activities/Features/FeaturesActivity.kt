@@ -102,6 +102,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.WpDataPauseSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 import ua.com.merchik.merchik.features.main.Main.AnchoredAnimatedContent
 import ua.com.merchik.merchik.features.main.options.SamplePhotoCaptureResult
+import ua.com.merchik.merchik.features.main.options.SamplePhotoCaptureCompletion
 import ua.com.merchik.merchik.features.main.options.OptionPhotoCorrection
 import ua.com.merchik.merchik.toolbar_menus
 
@@ -322,9 +323,13 @@ class FeaturesActivity : AppCompatActivity() {
                 )
             }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
+            // Saving clears pending capture state; keep the row ID, not the mutable photo type.
+            val savedPhotoId = runCatching {
+                MakePhoto.getPendingPhotoNum(this)?.let { StackPhotoRealm.getByPhotoNum(it)?.id }
+            }.getOrNull()
             val saved = DetailedReportActivity.savePhoto(Globals(), this)
             if (saved && intent.getStringExtra("viewModel") == SamplePhotoSDBViewModel::class.java.canonicalName) {
-                reportSamplePhotoCapture()
+                reportSamplePhotoCapture(savedPhotoId)
             }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
             MakePhoto.getPendingPhotoNum(this)?.takeIf { it.isNotBlank() }?.let {
@@ -359,7 +364,8 @@ class FeaturesActivity : AppCompatActivity() {
         if (anchoredTransition) overridePendingTransition(0, 0)
     }
 
-    private fun reportSamplePhotoCapture() {
+    private fun reportSamplePhotoCapture(savedPhotoId: Int?) {
+        var closeCapture = false
         try {
             val source = Gson().fromJson(intent.getStringExtra("dataJson"), JsonObject::class.java)
             val visitId = source?.get("wpDataDBId")?.asString?.toLongOrNull()
@@ -367,10 +373,14 @@ class FeaturesActivity : AppCompatActivity() {
             if (visitId != null && !optionRowId.isNullOrBlank()) {
                 SamplePhotoCaptureResult.publish(visitId, optionRowId)
             }
+            closeCapture = SamplePhotoCaptureCompletion.shouldClose(
+                intent.getStringExtra("contextUI"), source, savedPhotoId
+            )
         } catch (error: Exception) {
             Globals.writeToMLOG("ERROR", "FeaturesActivity/samplePhotoResult", "error=$error")
         }
         setResult(RESULT_OK, Intent().putExtra("photo_saved", true))
+        if (closeCapture) finish()
     }
 
     private fun completeAnimatedFinish() {

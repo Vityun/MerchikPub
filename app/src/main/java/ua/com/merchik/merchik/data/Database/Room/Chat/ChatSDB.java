@@ -77,7 +77,7 @@ public class ChatSDB {
                         ReportConductRecovery.requireAccount(user, db, session);
                         db.runInTransaction(() -> {
                             ReportConductRecovery.requireAccount(user, db, session);
-                            db.chatDao().insertAll(Collections.singletonList(chatSDB));
+                            db.chatDao().insertDownloaded(Collections.singletonList(chatSDB));
                             ReportConductRecovery.stage(user, db, session, Collections.singletonList(chatSDB));
                             ReportConductRecovery.requireAccount(user, db, session);
                         });

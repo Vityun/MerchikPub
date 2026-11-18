@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.dialogs;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
+import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,7 +16,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.BaseViewAnimator;
 import com.daimajia.androidanimations.library.YoYo;
 import com.ortiz.touchview.TouchImageView;
 
@@ -29,6 +30,9 @@ import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 public class DialogFullPhotoR {
+
+    private static final float CAMERA_PULSE_PEAK_SCALE = 1.18f;
+    private static final long CAMERA_PULSE_INTERVAL_MS = 5_000L;
 
     private Dialog dialog;
     private Context context;
@@ -50,12 +54,21 @@ public class DialogFullPhotoR {
             }
             if (camera.getWindowVisibility() == View.VISIBLE) {
                 if (cameraPulse != null) cameraPulse.stop();
-                cameraPulse = YoYo.with(Techniques.Pulse)
+                cameraPulse = YoYo.with(new BaseViewAnimator() {
+                            @Override
+                            protected void prepare(View target) {
+                                getAnimatorAgent().playTogether(
+                                        ObjectAnimator.ofFloat(target, View.SCALE_X,
+                                                1f, CAMERA_PULSE_PEAK_SCALE, 1f),
+                                        ObjectAnimator.ofFloat(target, View.SCALE_Y,
+                                                1f, CAMERA_PULSE_PEAK_SCALE, 1f));
+                            }
+                        })
                         .duration(500)
                         .repeat(1)
                         .playOn(camera);
             }
-            camera.postDelayed(this, 10_000L);
+            camera.postDelayed(this, CAMERA_PULSE_INTERVAL_MS);
         }
     };
 
