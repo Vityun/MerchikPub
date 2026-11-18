@@ -17,7 +17,24 @@ public class LocationUtils {
     // Проверка, включен ли GPS
     public static boolean isGPSEnabled(Context context) {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return isProviderEnabled(locationManager, LocationManager.GPS_PROVIDER);
+    }
+
+    public static boolean hasProvider(LocationManager locationManager, String provider) {
+        if (locationManager == null) return false;
+        try {
+            return locationManager.getAllProviders().contains(provider);
+        } catch (IllegalArgumentException | SecurityException e) {
+            return false;
+        }
+    }
+
+    public static boolean isProviderEnabled(LocationManager locationManager, String provider) {
+        try {
+            return hasProvider(locationManager, provider) && locationManager.isProviderEnabled(provider);
+        } catch (IllegalArgumentException | SecurityException e) {
+            return false;
+        }
     }
 
     // Проверка всего: и разрешения, и GPS

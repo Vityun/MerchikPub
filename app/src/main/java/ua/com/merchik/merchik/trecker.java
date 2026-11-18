@@ -17,6 +17,7 @@ import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
+import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
@@ -42,7 +43,13 @@ public class trecker implements LocationListener {
     public static LocationManager locationManager;
 
     public static void SetUpLocationListener(Context context) {
-
+        switchedOff = true;
+        enabledGPS = false;
+        enabledNET = false;
+        imHereGPS = null;
+        imHereNET = null;
+        isMockGPS = false;
+        isMockNET = false;
         try {
             Log.e("GPS_LISTENER", "HERE");
 
@@ -54,7 +61,11 @@ public class trecker implements LocationListener {
             }
 
             if (locationManager != null && locationListener != null) {
-                locationManager.removeUpdates(locationListener);
+                try {
+                    locationManager.removeUpdates(locationListener);
+                } catch (IllegalArgumentException | SecurityException e) {
+                    Globals.writeToMLOG("WARNING", "trecker/removeUpdates", e.toString());
+                }
             }
 
             // Создание гео-менеджера
@@ -62,47 +73,44 @@ public class trecker implements LocationListener {
                     context.getSystemService(LOCATION_SERVICE);
             locationListener = new trecker();
 
-            // Обновление гео-данных
-            if (locationManager != null) {
-//            if (locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER))
-
-
-//            if (locationManager.getAllProviders().contains(LocationManager.GPS_PROVIDER))
-                /*
-                06.05.2025 изменил частоту обновления с 0 секунд и 0 метров на 5 сек или 10 метров
-                 */
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        4000L, 0, locationListener);
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        4000L, 0, locationListener); // 4 сек или 0 метров
-//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                        0, 0, locationListener);
-
-                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "locationManager: " + locationManager);
-
-                // Запись местоположения для дальнейшего использования
-                imHereNET = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereNET: " + imHereNET);
-
-                imHereGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereGPS: " + imHereGPS);
-
-
-                // Включены ли службы местоопределения
-                enabledGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "enabledGPS: " + enabledGPS);
-
-                enabledNET = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "enabledNET: " + enabledNET);
-
-                isMockSettingsON();
+            if (locationManager == null) {
+                Globals.writeToMLOG("WARNING", "trecker/SetUpLocationListener/", "Location service unavailable");
+                return;
             }
 
-            switchedOff = false;
+            // A missing or failing provider must not prevent the other one from starting.
+            boolean networkStarted = startProvider(LocationManager.NETWORK_PROVIDER);
+            boolean gpsStarted = startProvider(LocationManager.GPS_PROVIDER);
+            switchedOff = !networkStarted && !gpsStarted;
+            isMockSettingsON();
 
         } catch (Exception e) {
-            // todo запись в лог
+            Globals.writeToMLOG("WARNING", "trecker/SetUpLocationListener/", e.toString());
+        }
+    }
+
+    private static boolean startProvider(String provider) {
+        try {
+            if (!LocationUtils.hasProvider(locationManager, provider)) {
+                Globals.writeToMLOG("INFO", "trecker/startProvider", provider + ": unavailable");
+                return false;
+            }
+            locationManager.requestLocationUpdates(provider, 4000L, 0, locationListener);
+            Location lastLocation = locationManager.getLastKnownLocation(provider);
+            boolean enabled = LocationUtils.isProviderEnabled(locationManager, provider);
+            if (LocationManager.GPS_PROVIDER.equals(provider)) {
+                imHereGPS = lastLocation;
+                enabledGPS = enabled;
+            } else if (LocationManager.NETWORK_PROVIDER.equals(provider)) {
+                imHereNET = lastLocation;
+                enabledNET = enabled;
+            }
+            Globals.writeToMLOG("INFO", "trecker/startProvider", provider + ": enabled=" + enabled
+                    + ", lastLocation=" + lastLocation);
+            return true;
+        } catch (IllegalArgumentException | SecurityException e) {
+            Globals.writeToMLOG("WARNING", "trecker/startProvider", provider + ": " + e);
+            return false;
         }
     }
 
