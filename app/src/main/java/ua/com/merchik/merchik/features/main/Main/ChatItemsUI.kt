@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel
 import ua.com.merchik.merchik.features.main.chat.ChatDateFormatter
 import ua.com.merchik.merchik.features.main.componentsUI.CounterBadge
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
+import ua.com.merchik.merchik.features.main.componentsUI.SectionToolbarTitle
 import java.time.LocalDate
 
 @Composable
@@ -125,20 +126,7 @@ fun ChatItemsUI(
 @Composable
 fun ChatToolbarTitle(viewModel: ChatSDBViewModel) {
     val unreadCount by viewModel.unreadCount.collectAsState()
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 45.dp).padding(horizontal = 32.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.Top) {
-            Text(stringResource(R.string.chat_toolbar_title), Modifier.padding(top = 8.dp),
-                fontSize = 18.sp, color = Color.Black)
-            if (unreadCount > 0) {
-                CounterBadge(unreadCount, Modifier.padding(start = 3.dp), maxCount = null,
-                    background = Color.LightGray,
-                    borderAndTextColor = Color.DarkGray)
-            }
-        }
-    }
+    SectionToolbarTitle(stringResource(R.string.chat_toolbar_title), unreadCount)
 }
 
 @Composable
@@ -154,6 +142,8 @@ private fun ChatItemUI(
     val chat = item.rawObj.filterIsInstance<ChatListItem>().firstOrNull() ?: return
     val visibleKeys = settings.filter { it.isEnabled }.map { it.key }.toSet()
     val showLabels = "column_name" in visibleKeys
+    val showUnread = chat.kolUnread > 0 && "kolUnread" in visibleKeys
+    val titleTopPadding = if (showUnread) dimensionResource(R.dimen.counter_badge_text_raise) else 0.dp
     val shape = RoundedCornerShape(8.dp)
     Column(
         Modifier.padding(horizontal = 8.dp, vertical = 6.dp).fillMaxWidth()
@@ -170,13 +160,13 @@ private fun ChatItemUI(
 //                contentDescription = stringResource(if (chat.kolUnread > 0) R.string.chat_unread else R.string.chat_read),
 //                modifier = Modifier.size(28.dp))
             if ("nm" in visibleKeys) {
-                Text(chat.nm, Modifier.weight(1f), fontSize = (16 + fontOffset).sp,
+                Text(chat.nm, Modifier.weight(1f).padding(top = titleTopPadding), fontSize = (16 + fontOffset).sp,
                     fontWeight = if (chat.kolUnread > 0) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
             } else {
                 Spacer(Modifier.weight(1f))
             }
-            if (chat.kolUnread > 0 && "kolUnread" in visibleKeys) {
+            if (showUnread) {
                 CounterBadge(chat.kolUnread, Modifier.align(Alignment.Top), maxCount = null,
                     background = colorResource(R.color.selected_item),
                     borderAndTextColor = Color.DarkGray)

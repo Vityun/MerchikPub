@@ -122,13 +122,14 @@ public final class VisitUploadSync {
         if (batch == null || !batch.complete) return false;
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
         if (wp == null) return false;
-        if (batch.merge(VisitUploadRows.collect(wp, batch)) || !photosReady(VisitUploadRows.photos(wp))) {
+        List<StackPhotoDB> photos = VisitUploadRows.photos(wp);
+        if (batch.merge(VisitUploadRows.collect(wp, batch)) || !VisitPhotoUploadPolicy.allReady(batch, photos)) {
             batch.complete = false;
             save(batch);
             MAIN.post(WAKE);
             return false;
         }
-        return batch.allAcknowledged();
+        return batch.allAcknowledged(VisitPhotoUploadPolicy.pendingServerIds(batch, photos));
     }
 
     public static void resume() {
@@ -154,18 +155,6 @@ public final class VisitUploadSync {
             }
         }
         if (pending) MAIN.postDelayed(WAKE, RETRY_MS);
-    }
-
-    private static boolean photosReady(List<StackPhotoDB> photos) {
-        for (StackPhotoDB photo : photos) {
-            if (!positive(photo.getPhotoServerId())) return false;
-        }
-        return true;
-    }
-
-    private static boolean positive(String id) {
-        try { return id != null && Long.parseLong(id) > 0; }
-        catch (NumberFormatException e) { return false; }
     }
 
     private static void applyAcknowledgements(VisitUploadBatch batch) {
@@ -207,35 +196,28 @@ public final class VisitUploadSync {
                 save(batch);
                 List<StackPhotoDB> photos = VisitUploadRows.photos(wp);
                 Set<Integer> files = new HashSet<>();
-                Set<Integer> unresolved = new HashSet<>();
                 for (StackPhotoDB photo : photos) {
-                    if (!positive(photo.getPhotoServerId()) && photo.getUpload_to_server() == 0 && photo.getGet_on_server() == 0) files.add(photo.getId());
-                    if (!positive(photo.getPhotoServerId())) unresolved.add(photo.getId());
+                    if (!VisitPhotoUploadPolicy.ready(batch, photo)) files.add(photo.getId());
                 }
                 if (!files.isEmpty()) {
                     log("SEND photos=" + files.size());
-                    new PhotoReports(MyApplication.getAppContext()).uploadVisit(files, retry -> guarded(() -> {
+                    new PhotoReports(MyApplication.getAppContext()).uploadVisit(files, (photo, response) -> guarded(() -> {
+                        boolean received = VisitPhotoUploadPolicy.record(batch, photo, response.isSuccessful(), response.body());
+                        if (received) save(batch);
+                        log("PHOTO_HTTP id=" + photo.getId() + ", http=" + response.code()
+                                + ", conductReceipt=" + received + "; normal photo state unchanged");
+                    }), retry -> guarded(() -> {
                         if (!current()) { end(); return; }
                         WpDataDB latest = WpDataRealm.getWpDataRowByDad2Id(batch.dad2);
                         if (latest == null) { fail("visit_missing"); return; }
                         for (StackPhotoDB photo : VisitUploadRows.photos(latest)) {
-                            if (!positive(photo.getPhotoServerId()) && photo.getUpload_to_server() == 0 && photo.getGet_on_server() == 0) {
-                                deferPhotos("photo_file_not_confirmed id=" + photo.getId());
+                            if (!VisitPhotoUploadPolicy.ready(batch, photo)) {
+                                deferPhotos("photo_http_not_confirmed id=" + photo.getId());
                                 return;
                             }
                         }
                         MAIN.post(this::start);
                     }));
-                    return;
-                }
-                if (!unresolved.isEmpty()) {
-                    PhotoHashExchange.refreshVisit(unresolved, () -> guarded(() -> {
-                        if (!current()) { end(); return; }
-                        WpDataDB latest = WpDataRealm.getWpDataRowByDad2Id(batch.dad2);
-                        if (latest == null || !photosReady(VisitUploadRows.photos(latest))) {
-                            deferPhotos("photo_server_ids_not_confirmed");
-                        } else MAIN.post(this::start);
-                    }), () -> deferPhotos("photo_hash_retry"));
                     return;
                 }
                 sendNext();
@@ -252,10 +234,12 @@ public final class VisitUploadSync {
                 batch.merge(VisitUploadRows.collect(wp, batch));
                 VisitUploadRows.resolvePhotoReferences(batch);
                 save(batch);
-                if (!photosBlocked && !photosReady(VisitUploadRows.photos(wp))) { MAIN.post(this::start); return; }
-                List<VisitUploadBatch.Row> sent = new ArrayList<>(batch.next(deferred));
+                List<StackPhotoDB> photos = VisitUploadRows.photos(wp);
+                Set<String> pendingPhotoIds = VisitPhotoUploadPolicy.pendingServerIds(batch, photos);
+                if (!photosBlocked && !VisitPhotoUploadPolicy.allReady(batch, photos)) { MAIN.post(this::start); return; }
+                List<VisitUploadBatch.Row> sent = new ArrayList<>(batch.next(deferred, pendingPhotoIds));
                 if (sent.isEmpty()) {
-                    if (!batch.allAcknowledged() || !photosReady(VisitUploadRows.photos(wp))) {
+                    if (!batch.allAcknowledged(pendingPhotoIds) || !VisitPhotoUploadPolicy.allReady(batch, photos)) {
                         fail("unconfirmed_queues=" + deferred + ", photos=" + photosBlocked);
                         return;
                     }
@@ -263,7 +247,8 @@ public final class VisitUploadSync {
                     batch.complete = true;
                     batch.retryAfter = 0;
                     save(batch);
-                    log("ALL_ACK: upload complete; conduct requires a separate authorized command");
+                    log("CONDUCT_READY: required data confirmed, photos awaiting server ID=" + pendingPhotoIds.size()
+                            + "; photo metadata stays in normal queues; conduct requires a separate authorized command");
                     end();
                     MAIN.post(ReportConductManager::flushPending);
                     return;

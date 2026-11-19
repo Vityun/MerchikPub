@@ -196,6 +196,7 @@ public class DetailedReportActivity extends toolbar_menus {
     private DetailedReportViewModel detailedReportViewModel;
     private boolean reportInitialized;
     private RnoVisitDataExchange.Subscription visitPreparation;
+    private VisitReportRefresh.Subscription visitRefresh;
     private MessageDialogBuilder marketingResearchDialog;
     private int visitUserId;
     private boolean visitUnavailable;
@@ -245,7 +246,6 @@ public class DetailedReportActivity extends toolbar_menus {
             registrationPermission();
 
             if (!RnoVisitDataExchange.isReady(wpDataDB)
-                    || VisitReportRefresh.isDue(wpDataDB)
                     || VisitReportDataSync.hasMissingProducts(wpDataDB.getCode_dad2())) {
                 showVisitPreparation(false);
                 return;
@@ -399,11 +399,41 @@ public class DetailedReportActivity extends toolbar_menus {
                 ReportConductUi.resume(this, wpDataDB.getCode_dad2());
             }
             showMarketingResearchQuestion();
+            refreshVisitInBackground();
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "Exception e: " + e);
             finish();
         }
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
+
+    private void refreshVisitInBackground() {
+        long dad2 = wpDataDB.getCode_dad2();
+        String session = Globals.getCurrentSessionId();
+        visitRefresh = VisitReportRefresh.refreshForVisit(dad2, () -> {
+            if (!canApplyVisitRefresh(dad2, session)) return;
+            boolean missingProducts = VisitReportDataSync.hasMissingProducts(dad2);
+            Runnable updated = () -> {
+                if (!canApplyVisitRefresh(dad2, session)) return;
+                detailedReportViewModel.reportDataUpdated(missingProducts);
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/backgroundRefresh",
+                        "dad2=" + dad2 + ", productRepair=" + missingProducts);
+            };
+            // New RP rows can reference product cards not yet present locally.
+            if (!missingProducts) updated.run();
+            else if (RnoVisitDataExchange.requiresPreparation(wpDataDB)) {
+                visitPreparation = RnoVisitDataExchange.prepare(dad2, false, error -> updated.run());
+            } else {
+                VisitReportDataSync.repairForVisit(dad2, updated);
+            }
+        });
+    }
+
+    private boolean canApplyVisitRefresh(long dad2, String session) {
+        return reportInitialized && !visitUnavailable && !isFinishing() && !isDestroyed()
+                && visitUserId == Globals.getCurrentUserId()
+                && java.util.Objects.equals(session, Globals.getCurrentSessionId())
+                && wpDataDB != null && wpDataDB.getCode_dad2() == dad2;
+    }
 
     private void showVisitPreparation(boolean refresh) {
         if (visitUnavailable || isFinishing() || isDestroyed()) return;
@@ -430,11 +460,7 @@ public class DetailedReportActivity extends toolbar_menus {
         back.setOnClickListener(v -> finish());
         content.addView(back);
         setContentView(content);
-        VisitReportRefresh.refreshForVisit(wpDataDB.getCode_dad2(), () -> {
-            if (isFinishing() || isDestroyed()) return;
-            if (!setActivityData()) return;
-            prepareVisitData(refresh, progress, message, retry);
-        });
+        prepareVisitData(refresh, progress, message, retry);
     }
 
     private void prepareVisitData(boolean refresh, ProgressBar progress, TextView message, Button retry) {
@@ -464,6 +490,7 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onDestroy() {
         VisitReassignmentStore.get().removeListener(reassignmentListener);
         if (visitPreparation != null) visitPreparation.cancel();
+        if (visitRefresh != null) visitRefresh.cancel();
         if (marketingResearchDialog != null) {
             // Recreating the activity must not turn an unanswered question into a dismissal.
             marketingResearchDialog.setOnDismissListener((DialogDismissListener) null);

@@ -1513,7 +1513,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             Log.e("dialogShowRule", "clickType: " + clickType);
             if (dialogList.isEmpty()) return;
             ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
-            report = report == null ? null : ReportPrepareRealm.getByIdCopy(report.getID());
+            report = ReportPrepareRealm.getCurrentCopy(report);
             if (report == null) {
                 Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
                 return;
@@ -1950,7 +1950,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 rp = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
                 if (rp == null) rp = createNewRPRow(tovarDB);
             }
-            ReportPrepareDB current = rp == null ? null : ReportPrepareRealm.getByIdCopy(rp.getID());
+            ReportPrepareDB current = ReportPrepareRealm.getCurrentCopy(rp);
             if (current == null) {
                 Toast.makeText(mContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
                 return false;

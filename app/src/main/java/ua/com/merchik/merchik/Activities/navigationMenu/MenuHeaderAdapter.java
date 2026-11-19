@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.Activities.navigationMenu;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
@@ -27,9 +25,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import ua.com.merchik.merchik.Clock;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -37,9 +33,13 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.MenuHeaderViewHolder> {
 
     private static final int CHATS_MENU_ID = 160;
+    private static final int TASKS_MENU_ID = 143;
+    private static final int RECLAMATIONS_MENU_ID = 144;
     private List<MenuHeader> data;
     private MenuListener listener;
     private long unreadChatCount;
+    private long activeTaskCount;
+    private long activeReclamationCount;
 
     public MenuHeaderAdapter(List<MenuHeader> data, MenuListener listener) {
         this.data = data;
@@ -49,16 +49,32 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
     public void setUnreadChatCount(long count) {
         if (unreadChatCount == count) return;
         unreadChatCount = count;
+        notifyMenuCounterChanged(CHATS_MENU_ID);
+    }
+
+    public void setActiveTarCount(int type, long count) {
+        if (type == 1) {
+            if (activeTaskCount == count) return;
+            activeTaskCount = count;
+            notifyMenuCounterChanged(TASKS_MENU_ID);
+        } else if (type == 0) {
+            if (activeReclamationCount == count) return;
+            activeReclamationCount = count;
+            notifyMenuCounterChanged(RECLAMATIONS_MENU_ID);
+        }
+    }
+
+    private void notifyMenuCounterChanged(int menuId) {
         for (int i = 0; i < data.size(); i++) {
             MenuHeader header = data.get(i);
-            boolean containsChats = header.menuItemFromWebDB.getID() == CHATS_MENU_ID;
+            boolean containsItem = header.menuItemFromWebDB.getID() == menuId;
             for (MenuItemFromWebDB item : header.items) {
-                if (item.getID() == CHATS_MENU_ID) {
-                    containsChats = true;
+                if (item.getID() == menuId) {
+                    containsItem = true;
                     break;
                 }
             }
-            if (containsChats) notifyItemChanged(i);
+            if (containsItem) notifyItemChanged(i);
         }
     }
 
@@ -328,24 +344,12 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
 
                 return res;
 
-            case 143:   // Задачи
-                try {
-                    long time = Clock.getDateLong(-30).getTime() / 1000;
-                    List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = SQL_DB.tarDao().getAllByTp(Globals.userId, 1, time);
-                    res.add(tasksAndReclamationsSDBS.size());
-                } catch (Exception e) {
-                    Log.e("ERROR", "Exeption: " + e.getMessage());
-                }
+            case TASKS_MENU_ID:
+                res.add(activeTaskCount);
                 return res;
 
-            case 144:   // Рекламации
-                try {
-                    long time = Clock.getDateLong(-30).getTime() / 1000;
-                    List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = SQL_DB.tarDao().getAllByTp(Globals.userId, 0, time);
-                    res.add(tasksAndReclamationsSDBS.size());
-                } catch (Exception e) {
-                    Log.e("ERROR", "Exeption: " + e.getMessage());
-                }
+            case RECLAMATIONS_MENU_ID:
+                res.add(activeReclamationCount);
                 return res;
 
             default:

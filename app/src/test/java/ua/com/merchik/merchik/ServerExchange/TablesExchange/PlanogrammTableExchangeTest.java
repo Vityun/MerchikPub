@@ -16,8 +16,9 @@ public class PlanogrammTableExchangeTest {
             .registerTypeAdapter(Integer.class, new FlexibleIntegerTypeAdapter(null))
             .create();
 
-    @Test public void requestIncludesPreviouslyDownloadedPlanograms() {
-        JsonObject request = gson.toJsonTree(PlanogrammTableExchange.planogramRequest()).getAsJsonObject();
+    @Test public void dailyRequestIncludesPreviouslyDownloadedPlanograms() {
+        CatalogSyncPolicy.Table table = CatalogSyncPolicy.Table.PLANOGRAMS;
+        JsonObject request = CatalogSyncPolicy.request(table, table.baseRequest(), java.util.Arrays.asList(1104L), true);
         assertEquals("planogram", request.get("mod").getAsString());
         assertEquals("list", request.get("act").getAsString());
         assertEquals("1", request.get("nolimit").getAsString());

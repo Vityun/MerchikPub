@@ -320,6 +320,8 @@ abstract class MainViewModel(
     val repository: MainRepository,
     val nameUIRepository: NameUIRepository,
     protected val savedStateHandle: SavedStateHandle,
+    initialStartDate: LocalDate? = null,
+    initialEndDate: LocalDate? = null,
 ) : AndroidViewModel(application) {
 
     private val disposables = CompositeDisposable()
@@ -624,12 +626,12 @@ abstract class MainViewModel(
         get() = _uiState.asStateFlow()
 
 
-    private val _rangeDataStart = MutableStateFlow<LocalDate?>(LocalDate.now())
+    private val _rangeDataStart = MutableStateFlow(initialStartDate)
     val rangeDataStart: StateFlow<LocalDate?>
         get() = _rangeDataStart.asStateFlow()
 
 
-    private val _rangeDataEnd = MutableStateFlow<LocalDate?>(LocalDate.now().plusDays(4))
+    private val _rangeDataEnd = MutableStateFlow(initialEndDate)
     val rangeDataEnd: StateFlow<LocalDate?>
         get() = _rangeDataEnd.asStateFlow()
 
@@ -714,7 +716,7 @@ abstract class MainViewModel(
         requestScrollToVisit(stableId)
     }
 
-    fun setStartDate(date: LocalDate) {
+    fun setStartDate(date: LocalDate?) {
         _rangeDataStart.value = date
 
         // обнови filters, если используешь копию
@@ -727,7 +729,7 @@ abstract class MainViewModel(
         }
     }
 
-    fun setEndDate(date: LocalDate) {
+    fun setEndDate(date: LocalDate?) {
         _rangeDataEnd.value = date
 
         val current = _uiState.value.filters

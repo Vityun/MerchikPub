@@ -57,74 +57,58 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/menuNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/background_num_border"
         android:textColor="@color/white"
-        android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/arrowIcon"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        tools:visibility="visible" />
+        app:layout_constraintTop_toTopOf="@id/menuText"
+        tools:visibility="visible"
+        app:counterBadgeColor="#818181"
+        android:translationY="@dimen/counter_badge_raised_offset" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/menuNumber2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="2dp"
         android:layout_marginRight="2dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/background_num_border"
         android:textColor="@color/white"
-        android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/menuNumber"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@id/menuText"
+        app:counterBadgeColor="#818181"
+        android:translationY="@dimen/counter_badge_raised_offset" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/menuNumber3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="2dp"
         android:layout_marginRight="2dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/background_num_border"
         android:textColor="@color/white"
-        android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/menuNumber2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@id/menuText"
+        app:counterBadgeColor="#818181"
+        android:translationY="@dimen/counter_badge_raised_offset" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/menuNumber4"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="2dp"
         android:layout_marginRight="2dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/background_num_border"
         android:textColor="@color/white"
-        android:textStyle="bold"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/menuNumber3"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@id/menuText"
+        app:counterBadgeColor="#818181"
+        android:translationY="@dimen/counter_badge_raised_offset" />
 
     <ImageView
         android:id="@+id/arrowIcon"

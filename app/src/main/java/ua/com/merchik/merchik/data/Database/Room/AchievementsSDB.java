@@ -274,7 +274,7 @@ public class AchievementsSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return AchievementsSDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable

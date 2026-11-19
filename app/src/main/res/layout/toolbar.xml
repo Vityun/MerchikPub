@@ -36,10 +36,13 @@
     <TextView
         android:id="@+id/activity_title"
         android:layout_width="wrap_content"
-        android:layout_height="45dp"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/section_header_height"
         android:gravity="center"
         android:paddingLeft="32dp"
         android:paddingRight="32dp"
+        android:paddingTop="@dimen/section_header_vertical_padding"
+        android:paddingBottom="@dimen/section_header_vertical_padding"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/my_toolbar" />

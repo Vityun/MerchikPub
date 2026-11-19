@@ -23,6 +23,9 @@ public interface PlanogrammDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammSDB> data);
+
     // ----------------------------------------------------
 
     @Query("SELECT * FROM planogramm WHERE client_id = :clientId")

@@ -18,6 +18,9 @@ public interface PlanogrammTypeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammTypeSDB> planograms);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammTypeSDB> planograms);
+
     @Query("SELECT * FROM planogramm_type")
     List<PlanogrammTypeSDB> getAllPlanogramsm();
 

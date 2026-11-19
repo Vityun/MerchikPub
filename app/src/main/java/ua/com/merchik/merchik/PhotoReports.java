@@ -76,9 +76,14 @@ public class PhotoReports {
     private int uploadUserId;
     private BackgroundCompletion backgroundCompletion;
     private java.util.Set<Integer> visitPhotoIds;
+    private VisitPhotoResponse visitPhotoResponse;
 
     public interface BackgroundCompletion {
         void finished(boolean retry);
+    }
+
+    public interface VisitPhotoResponse {
+        void received(StackPhotoDB photo, Response<JsonObject> response);
     }
 
     public void uploadInBackground(BackgroundCompletion completion) {
@@ -88,7 +93,13 @@ public class PhotoReports {
     }
 
     public void uploadVisit(java.util.Set<Integer> photoIds, BackgroundCompletion completion) {
+        uploadVisit(photoIds, null, completion);
+    }
+
+    public void uploadVisit(java.util.Set<Integer> photoIds, VisitPhotoResponse response,
+                            BackgroundCompletion completion) {
         visitPhotoIds = new java.util.HashSet<>(photoIds);
+        visitPhotoResponse = response;
         uploadInBackground(completion);
     }
 
@@ -137,6 +148,7 @@ public class PhotoReports {
         }
         BackgroundCompletion completion = backgroundCompletion;
         backgroundCompletion = null;
+        visitPhotoResponse = null;
         if (completion != null) completion.finished(failedPhotos > 0 || cancelled);
     }
 
@@ -728,6 +740,13 @@ public class PhotoReports {
                 if (cancelled || !sameUploadSession()) {
                     callback.onFailure(photoDB, "Upload stopped or user changed");
                     return;
+                }
+                // Conduct records the HTTP receipt separately; normal photo ACK/error handling stays below.
+                if (visitPhotoResponse != null) {
+                    try { visitPhotoResponse.received(photoDB, response); }
+                    catch (Exception error) {
+                        Globals.writeToMLOG("ERROR", "PhotoReports/visitReceipt", error.getClass().getSimpleName());
+                    }
                 }
                 Log.e("M_UPLOAD_GALLERY", "HERE IN onResponse");
                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");

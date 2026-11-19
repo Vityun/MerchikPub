@@ -427,10 +427,14 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
 
             if (requestCode == NEED_UPDATE_UI_REQUEST) {
+                TarPhotoDataHolder holder = TarPhotoDataHolder.Companion.instance();
+                Integer selectedPhotoId = holder.getPhotoToId();
+                holder.init();
+                if (resultCode != RESULT_OK || selectedPhotoId == null) return;
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
                 try {
-                    fragmentHome.secondFrag.setPhoto(TarPhotoDataHolder.Companion.instance().getPhotoToId());
+                    fragmentHome.secondFrag.setPhoto(selectedPhotoId);
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult NEED_UPDATE_UI_REQUEST", "Exception e: " + e);
                 }

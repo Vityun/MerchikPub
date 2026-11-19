@@ -12,7 +12,7 @@ import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammAddressSDB;
 
 @Dao
 public interface PlanogrammAddressDao {
-    @Query("SELECT * FROM planogramm")
+    @Query("SELECT * FROM planogramm_address")
     List<PlanogrammAddressSDB> getAll();
 
     @Query("SELECT * FROM planogramm WHERE ID = :id")

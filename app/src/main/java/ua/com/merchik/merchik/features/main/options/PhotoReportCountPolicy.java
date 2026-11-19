@@ -4,6 +4,19 @@ package ua.com.merchik.merchik.features.main.options;
 public final class PhotoReportCountPolicy {
     private PhotoReportCountPolicy() { }
 
+    public static boolean isWarehouseOption(String optionId, String controlId) {
+        return "141360".equals(optionId) || "141361".equals(optionId)
+                || "141361".equals(controlId);
+    }
+
+    public static boolean isEmptyWarehouseSample(String sampleId) {
+        return "78".equals(sampleId) || "94".equals(sampleId);
+    }
+
+    public static int warehouseMinimum(int regularMinimum, long emptyWarehousePhotoCount) {
+        return emptyWarehousePhotoCount > 0 ? 2 : regularMinimum;
+    }
+
     public static int defaultMinimum(String optionId, String controlId) {
         if ("151139".equals(optionId) || "164351".equals(optionId)
                 || "164351".equals(controlId) || "169108".equals(optionId)) return 1;

@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +21,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.Fragment;
@@ -36,7 +36,6 @@ import java.util.Locale;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag;
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
@@ -46,7 +45,6 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
@@ -65,7 +63,6 @@ import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
-import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Tab1Fragment extends Fragment {
@@ -125,20 +122,6 @@ public class Tab1Fragment extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_item_first, container, false);
 
-        if (data == null)
-            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), data -> {
-                if (data != null) {
-                    this.data = data;
-                    initView(v);
-                    setData();
-                }
-            });
-        else {
-            initView(v);
-            setData();
-            downloadOptionIfNeeded();
-        }
-
         if (TARActivity.TARType == 1) {
             toolbar_menus.textLesson = 1183;
 //            toolbar_menus.videoLesson = 3528;   // 4208
@@ -156,6 +139,24 @@ public class Tab1Fragment extends Fragment {
         }); // ГЛАВНАЯ
 
         return v;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (data == null) {
+            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), loaded -> {
+                if (loaded != null) {
+                    data = loaded;
+                    initView(view);
+                    setData();
+                }
+            });
+        } else {
+            initView(view);
+            setData();
+            downloadOptionIfNeeded();
+        }
     }
 
     private void downloadOptionIfNeeded() {
@@ -206,9 +207,10 @@ public class Tab1Fragment extends Fragment {
     private void initView(View v) {
         View mapContainer = v.findViewById(R.id.tar_visit_map_container);
         ComposeView composeMap = v.findViewById(R.id.tar_visit_map);
-        if (data.codeDad2SrcDoc != null && data.codeDad2SrcDoc > 0) {
+        if ((data.codeDad2SrcDoc != null && data.codeDad2SrcDoc > 0) || (data.addr != null && data.addr > 0)) {
             mapContainer.setVisibility(View.VISIBLE);
-            TARVisitMapHostKt.attachTARVisitMap(composeMap, data.codeDad2SrcDoc);
+            TARVisitMapHostKt.attachTARVisitMap(composeMap,
+                    data.codeDad2SrcDoc == null ? 0L : data.codeDad2SrcDoc, data.addr == null ? 0 : data.addr);
         } else {
             mapContainer.setVisibility(View.GONE);
         }
@@ -458,65 +460,19 @@ public class Tab1Fragment extends Fragment {
             goToTab3.setVisibility(View.GONE);
         }
 
-        Uri photo1 = getPhotoPath(String.valueOf(data.photo));
-        Uri photo2 = getPhotoPath(String.valueOf(data.photo2));
+        StackPhotoDB firstPhoto = findPhoto(data.photo, data.photoHash);
+        StackPhotoDB secondPhoto = findPhoto(data.photo2, null);
+        boolean hasPreview = bindPhoto(imageView, firstPhoto);
+        bindPhoto(imageView2, secondPhoto);
+        ((View) imageView2.getParent()).setVisibility(data.photo2 != null && data.photo2 > 0 ? View.VISIBLE : View.GONE);
+        imageView.setOnClickListener(v -> openTaskPhoto(data.photo, data.photoHash));
+        imageView2.setOnClickListener(v -> openTaskPhoto(data.photo2, null));
 
-        Log.e("downloadAndSetFullPhoto", "photo1: " + photo1);
-        Log.e("downloadAndSetFullPhoto", "photo2: " + photo2);
-
-
-//        imageView.setImageURI(photo1);
-        if (photo1 != null) {
-            File file = new File(photo1.toString());
-            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-            if (b != null) {
-                imageView.setImageBitmap(b);
-                setFragmentsOnPhoto();
-                try {
-                    List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
-                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
-                    if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0) {
-                        DialogFullPhotoR dialog = new DialogFullPhotoR(requireActivity());
-                        dialog.setPhoto(stackPhotoDB);
-
-                        // Pika
-                        dialog.setComment(stackPhotoDB.getComment());
-
-                        dialog.setClose(dialog::dismiss);
-                        dialog.show();
-                    }
-                } catch (Exception e) {
-
-                }
-            }
+        if (firstPhoto != null && data.photo != null && data.photo > 0
+                && !SQL_DB.fragmentDao().getAllByPhotoId(data.photo).isEmpty()) {
+            if (hasPreview) setFragmentsOnPhoto();
+            openTaskPhoto(data.photo, data.photoHash);
         }
-
-
-//        imageView2.setImageURI(photo2);
-        if (photo2 != null) {
-            File file2 = new File(photo2.toString());
-            Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
-            if (b2 != null) {
-                imageView2.setImageBitmap(b2);
-            }
-        }
-
-
-        imageView.setOnClickListener(v -> {
-            if (data.photo != null && data.photo != 0) {
-                downloadAndSetFullPhoto(String.valueOf(data.photo));
-            }
-        });
-
-        imageView2.setOnClickListener(v -> {
-            try {
-                if (data.photo2 != null && data.photo2 != 0) {
-                    downloadAndSetFullPhoto(String.valueOf(data.photo2));
-                }
-            } catch (Exception e) {
-                Toast.makeText(imageView.getContext(), "НЕ УДАЛОСЬ СКАЧАТЬ ФОТО! \n\nОбратитесь к Вашему руководителю. \n\nОшибка: " + e, Toast.LENGTH_LONG).show();
-            }
-        });
 
 
         if (data.voteScore != null) {
@@ -654,91 +610,49 @@ public class Tab1Fragment extends Fragment {
     }
 
 
-    /**
-     * 22.03.2021 (ты явно не тут должна быть) TODO
-     *
-     * @return
-     */
-    private Uri getPhotoPath(String photo) {
-        Log.e("getPhotoPath", "photo: " + photo);
-        try {
-            if (photo != null && !photo.equals("") && !photo.equals("0")) {
-                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
+    private DialogFullPhotoR photoDialog;
 
-                if (stackPhotoDB == null) {
-                    stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
-                }
-
-                Log.e("getPhotoPath", "stackPhotoDB: " + stackPhotoDB.getPhotoServerId());
-                Log.e("getPhotoPath", "stackPhotoDB: " + stackPhotoDB.getPhotoServerURL());
-
-                return Uri.parse(stackPhotoDB.getPhoto_num());
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            return null;
+    private StackPhotoDB findPhoto(Integer id, String hash) {
+        StackPhotoDB row = hash != null && !hash.isEmpty() ? StackPhotoRealm.getByHash(hash) : null;
+        if (row == null && id != null && id > 0) {
+            row = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(id));
+            if (row == null) row = StackPhotoRealm.getById(id);
         }
+        return row;
     }
 
+    private boolean bindPhoto(ImageView target, StackPhotoDB row) {
+        target.setImageResource(R.mipmap.merchik_m);
+        if (row == null || row.getPhoto_num() == null || row.getPhoto_num().isEmpty()) return false;
+        String path = Uri.parse(row.getPhoto_num()).getPath();
+        if (path == null) return false;
+        File file = new File(path);
+        if (!file.isFile()) return false;
+        Bitmap bitmap = decodeSampledBitmapFromResource(file, 200, 200);
+        if (bitmap != null) target.setImageBitmap(bitmap);
+        return bitmap != null;
+    }
 
-    /**
-     * 23.03.21
-     * Скачивание и установка полноразмерной фотографии при нажатии на фото.
-     */
-    private StackPhotoDB stackPhotoDB;  // Фото ЗіР.
+    private void openTaskPhoto(Integer id, String hash) {
+        StackPhotoDB row = findPhoto(id, hash);
+        if (row == null && (id == null || id <= 0)) return;
+        if (!isAdded()) return;
+        if (photoDialog != null) photoDialog.dismiss();
+        photoDialog = new DialogFullPhotoR(requireActivity());
+        DialogFullPhotoR opened = photoDialog;
+        opened.hideCamera();
+        opened.setClose(opened::dismiss);
+        opened.show();
+        opened.setPhotoWithDownload(row, id != null && id > 0 ? String.valueOf(id) : null);
+    }
 
-    private void downloadAndSetFullPhoto(String photo) {
-        stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
-        if (stackPhotoDB == null) {
-            stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
-            if (stackPhotoDB != null && stackPhotoDB.photo_size.equals("Full")) {
-                DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(requireActivity());
-                dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
-                dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
-                dialogPhotoTovar.show();
-            } else {
-                DialogData dialogData = new DialogData(getContext());
-                dialogData.setTitle("Фото ЗіР");
-                dialogData.setText("Зараз буде завантажено фото ЗіР в гарній якості, якщо завантаження не вдасться - фото можна відкрити так як є натиснувши 'Відкрити'.");
-                dialogData.setClose(dialogData::dismiss);
-                dialogData.setOk("Відкрити", () -> {
-                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(requireActivity());
-                    dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
-                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
-                    dialogPhotoTovar.show();
-                });
-                dialogData.show();
-            }
-            return;
+    @Override
+    public void onDestroyView() {
+        if (photoDialog != null) {
+            photoDialog.dismiss();
+            photoDialog = null;
         }
-
-        if (stackPhotoDB != null) {
-            Log.e("downloadAndSetFullPhoto", "convertedObject: " + stackPhotoDB);
-            StackPhotoDB finalStackPhotoDB = stackPhotoDB;
-            new PhotoDownload().downloadPhoto(true, stackPhotoDB, "/TaR", new PhotoDownload.downloadPhotoInterface() {
-                @Override
-                public void onSuccess(StackPhotoDB data) {
-                    DialogFullPhotoR dialog = new DialogFullPhotoR(requireActivity());
-                    dialog.setPhoto(finalStackPhotoDB);
-
-                    // Pika
-                    dialog.setComment(data.getComment());
-
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
-                }
-
-                @Override
-                public void onFailure(String s) {
-
-                }
-            });
-        } else {
-            Toast.makeText(requireActivity(), "Фото не обнаружено", Toast.LENGTH_SHORT).show();
-        }
-
-
+        super.onDestroyView();
     }
 
 }

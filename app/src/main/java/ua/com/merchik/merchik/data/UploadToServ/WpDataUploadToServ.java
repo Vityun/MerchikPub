@@ -13,12 +13,10 @@ public class WpDataUploadToServ {
     private String client_start_dt; //
     private String client_end_dt;   //
 
-    private String status_set;   //
-
     public WpDataUploadToServ() {
     }
 
-    public WpDataUploadToServ(String element_id, String code_dad2, String user_id, String client_id, String isp, String visit_start_dt, String visit_end_dt, String client_start_dt, String client_end_dt, String status_set) {
+    public WpDataUploadToServ(String element_id, String code_dad2, String user_id, String client_id, String isp, String visit_start_dt, String visit_end_dt, String client_start_dt, String client_end_dt) {
         this.element_id = element_id;
         this.code_dad2 = code_dad2;
         this.user_id = user_id;
@@ -28,7 +26,6 @@ public class WpDataUploadToServ {
         this.visit_end_dt = visit_end_dt;
         this.client_start_dt = client_start_dt;
         this.client_end_dt = client_end_dt;
-        this.status_set = status_set;
     }
 
     public String getElement_id() {

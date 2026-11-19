@@ -260,20 +260,20 @@ public final class PriceSaveGuard {
     /** Legacy editors resume their existing save/next-editor callbacks only after confirmation. */
     public static void confirmPriceSave(Activity activity, List<ReportPrepareDB> rows, String value,
                                         boolean beforePromotion, Runnable save, Runnable refuse) {
-        List<Long> ids = new ArrayList<>();
-        for (ReportPrepareDB row : rows) if (row != null) ids.add(row.getID());
-        confirmPriceSave(activity, ids, value, beforePromotion, new HashMap<>(), save, refuse);
+        List<ReportPrepareDB> snapshots = new ArrayList<>();
+        for (ReportPrepareDB row : rows) if (row != null) snapshots.add(row);
+        confirmPriceSave(activity, snapshots, value, beforePromotion, new HashMap<>(), save, refuse);
     }
 
-    private static void confirmPriceSave(Activity activity, List<Long> ids, String value,
+    private static void confirmPriceSave(Activity activity, List<ReportPrepareDB> snapshots, String value,
                                          boolean beforePromotion, Map<Long, PromotionPriceCheck> approvals,
                                          Runnable save, Runnable refuse) {
         if (activity.isFinishing() || activity.isDestroyed()) return;
         // Re-read all rows after each answer; a background exchange must not invalidate an approval silently.
         Map<Long, PromotionPriceCheck> checks = new LinkedHashMap<>();
         Map<Long, String> products = new HashMap<>();
-        for (Long id : ids) {
-            ReportPrepareDB current = ReportPrepareRealm.getByIdCopy(id);
+        for (ReportPrepareDB snapshot : snapshots) {
+            ReportPrepareDB current = ReportPrepareRealm.getCurrentCopy(snapshot);
             if (current == null) {
                 Toast.makeText(activity, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
                 refuse.run();
@@ -292,6 +292,7 @@ public final class PriceSaveGuard {
                         }).show();
                 return;
             }
+            Long id = current.getID();
             checks.put(id, getPromotionPriceCheck(current, price, priceMax));
             products.put(id, product);
         }
@@ -302,7 +303,7 @@ public final class PriceSaveGuard {
             if (check.outsideRange() && !check.matches(approvals.get(id))) {
                 discountDialog(activity, products.get(id), check, () -> {
                     approvals.put(id, check);
-                    confirmPriceSave(activity, ids, value, beforePromotion, approvals, save, refuse);
+                    confirmPriceSave(activity, snapshots, value, beforePromotion, approvals, save, refuse);
                 }, refuse).show();
                 return;
             }

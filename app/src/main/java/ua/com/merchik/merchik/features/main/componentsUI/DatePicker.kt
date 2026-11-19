@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dialogs.features.calendar.MerchikDatePickerDialog
@@ -29,7 +30,6 @@ fun DatePicker(
     date: LocalDate?,
     dateChange: (LocalDate) -> Unit
 ) {
-    var selectedDate by remember { mutableStateOf(date ?: LocalDate.now()) }
     val dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy")
     var showDateDialog by remember { mutableStateOf(false) }
 
@@ -48,17 +48,16 @@ fun DatePicker(
                 .then(if (enabled) Modifier.clickable { showDateDialog = true } else Modifier)
         ) {
             Text(
-                text = selectedDate.format(dateFormat),
+                text = date?.format(dateFormat) ?: stringResource(R.string.ui_date_unbounded),
                 modifier = Modifier.padding(7.dp)
             )
         }
 
         MerchikDatePickerDialog(
             visible = showDateDialog,
-            initialDate = selectedDate,
+            initialDate = date ?: LocalDate.now(),
             title = title,
             onDateSelected = { newDate ->
-                selectedDate = newDate
                 dateChange(newDate)
             },
             onDismiss = { showDateDialog = false }

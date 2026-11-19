@@ -88,6 +88,21 @@ public class ReportPrepareVisitMergeTest {
         assertEquals(1, change.server.getUploadStatus());
     }
 
+    @Test public void editsMadeWhileBackgroundRequestIsInFlightSurviveRekey() {
+        ReportPrepareDB local = row(10, "1", false);
+        ReportPrepareDB response = row(12, "1", false);
+        response.setPrice("0");
+        // The executor edits the cached visit before the response is applied.
+        local.setPrice("73.50");
+        local.setNotes("entered while refreshing");
+        local.setUploadStatus(1);
+        ReportPrepareDB accepted = change(local, response).apply();
+        assertEquals(Long.valueOf(12), accepted.getID());
+        assertEquals("73.50", accepted.getPrice());
+        assertEquals("entered while refreshing", accepted.getNotes());
+        assertEquals(1, accepted.getUploadStatus());
+    }
+
     @Test public void newProductIsInserted() {
         List<ReportPrepareVisitMerge.Change> changes = ReportPrepareVisitMerge.plan(VISIT,
                 Collections.emptyList(), Collections.singletonList(row(10, "1", false)));

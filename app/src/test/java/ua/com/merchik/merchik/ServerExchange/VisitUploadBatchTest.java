@@ -10,6 +10,26 @@ import static org.junit.Assert.*;
 import static ua.com.merchik.merchik.ServerExchange.VisitUploadBatch.Kind.*;
 
 public class VisitUploadBatchTest {
+    @Test public void everyVisitQueueMustBeAcknowledgedBeforeCompletion() {
+        for (VisitUploadBatch.Kind pendingKind : VisitUploadBatch.Kind.values()) {
+            VisitUploadBatch batch = new VisitUploadBatch();
+            for (VisitUploadBatch.Kind kind : VisitUploadBatch.Kind.values()) {
+                VisitUploadBatch.Row item = row(kind, "1");
+                batch.merge(Collections.singletonList(item));
+                if (kind != pendingKind) {
+                    batch.acknowledge(item, json("{state:true}"));
+                    item.applied = true;
+                }
+            }
+            assertFalse("Unconfirmed " + pendingKind, batch.allAcknowledged());
+            VisitUploadBatch.Row last = batch.next().get(0);
+            batch.acknowledge(last, json("{state:true}"));
+            assertFalse("Unapplied " + pendingKind, batch.allAcknowledged());
+            last.applied = true;
+            assertTrue(batch.allAcknowledged());
+        }
+    }
+
     @Test public void failureNotificationRequeuesOnlyConfirmedUpdates() {
         for (VisitUploadBatch.Kind kind : Arrays.asList(WP, RP, PHOTO_COMMENT, PHOTO_DVI, PHOTO_SCORE,
                 VOTE, AR, TAR, EKL, PAUSE, PLANOGRAM)) {

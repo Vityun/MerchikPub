@@ -6,9 +6,11 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -34,6 +36,46 @@ public class ReportPrepareRealm {
         if (id == null) return null;
         ReportPrepareDB row = INSTANCE.where(ReportPrepareDB.class).equalTo("iD", id).findFirst();
         return row == null ? null : INSTANCE.copyFromRealm(row);
+    }
+
+    public static ReportPrepareDB getCurrentCopy(ReportPrepareDB snapshot) {
+        ReportPrepareDB row = findCurrent(INSTANCE, snapshot);
+        return row == null ? null : INSTANCE.copyFromRealm(row);
+    }
+
+    private static ReportPrepareDB findCurrent(Realm realm, ReportPrepareDB snapshot) {
+        if (snapshot == null || !RealmObject.isValid(snapshot) || snapshot.getID() == null) return null;
+        ReportPrepareDB byId = realm.where(ReportPrepareDB.class).equalTo("iD", snapshot.getID()).findFirst();
+        if (byId != null || !hasEditIdentity(snapshot))
+            return resolveEditRow(snapshot, byId, Collections.emptyList());
+        // A background refresh can replace the ID while an editor is still open.
+        return resolveEditRow(snapshot, null, realm.where(ReportPrepareDB.class)
+                .equalTo("codeDad2", snapshot.getCodeDad2()).equalTo("tovarId", snapshot.getTovarId()).findAll());
+    }
+
+    private static boolean hasEditIdentity(ReportPrepareDB snapshot) {
+        return snapshot.getCodeDad2() != null && !snapshot.getCodeDad2().trim().isEmpty()
+                && !"0".equals(snapshot.getCodeDad2()) && snapshot.getTovarId() != null
+                && !snapshot.getTovarId().trim().isEmpty() && !"0".equals(snapshot.getTovarId());
+    }
+
+    static ReportPrepareDB resolveEditRow(ReportPrepareDB snapshot, ReportPrepareDB byId,
+                                          List<ReportPrepareDB> candidates) {
+        if (byId != null) {
+            if (snapshot.getCodeDad2() != null && !Objects.equals(snapshot.getCodeDad2(), byId.getCodeDad2())) return null;
+            if (snapshot.getTovarId() != null && !Objects.equals(snapshot.getTovarId(), byId.getTovarId())) return null;
+            return byId;
+        }
+        if (!hasEditIdentity(snapshot)) return null;
+        ReportPrepareDB match = null;
+        for (ReportPrepareDB row : candidates) {
+            if (Objects.equals(snapshot.getCodeDad2(), row.getCodeDad2())
+                    && Objects.equals(snapshot.getTovarId(), row.getTovarId())) {
+                if (match != null) return null;
+                match = row;
+            }
+        }
+        return match;
     }
 
     public static ReportPrepareClearPolicy.Result clearVisitProducts(long dad2, Set<String> tovarIds) {
@@ -79,16 +121,17 @@ public class ReportPrepareRealm {
     static boolean updateFields(Realm realm, ReportPrepareDB snapshot, Predicate<ReportPrepareDB> canUpdate,
                                 Consumer<ReportPrepareDB> update) {
         if (snapshot == null || !RealmObject.isValid(snapshot) || snapshot.getID() == null) return false;
-        Long id = snapshot.getID();
+        Long[] savedId = {snapshot.getID()};
         boolean[] saved = {false};
         realm.executeTransaction(transactionRealm -> {
-            ReportPrepareDB current = transactionRealm.where(ReportPrepareDB.class)
-                    .equalTo("iD", id).findFirst();
+            ReportPrepareDB current = findCurrent(transactionRealm, snapshot);
             if (current == null || !canUpdate.test(current)) return;
             update.accept(current);
+            savedId[0] = current.getID();
             saved[0] = true;
         });
         if (saved[0] && !RealmObject.isManaged(snapshot)) {
+            snapshot.setID(savedId[0]);
             update.accept(snapshot);
         }
         return saved[0];

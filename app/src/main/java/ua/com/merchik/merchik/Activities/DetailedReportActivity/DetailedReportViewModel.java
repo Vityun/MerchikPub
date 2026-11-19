@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 public class DetailedReportViewModel extends ViewModel {
     private final MutableLiveData<WpDataDB> wpDataDB = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> reportDataUpdated = new MutableLiveData<>();
     private final Map<Long, MarketingResearchSurvey> marketingResearchSurveys = new HashMap<>();
 
     public MarketingResearchSurvey getMarketingResearchSurvey(long dad2) {
@@ -25,6 +26,14 @@ public class DetailedReportViewModel extends ViewModel {
 
     public LiveData<WpDataDB> getWpDataDB() {
         return wpDataDB;
+    }
+
+    public LiveData<Boolean> getReportDataUpdated() {
+        return reportDataUpdated;
+    }
+
+    public void reportDataUpdated(boolean productsRepaired) {
+        reportDataUpdated.setValue(productsRepaired);
     }
 
 

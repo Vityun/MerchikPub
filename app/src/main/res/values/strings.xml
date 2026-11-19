@@ -1,4 +1,6 @@
 <resources>
+    <string name="ui_date_unbounded">Не обмежено</string>
+    <string name="tar_add_comment">Додати коментар</string>
     <string name="app_name" translatable="false">merchik</string>
     <string name="ver" translatable="false">111800</string>
     <string name="debug_status" translatable="false">1</string>
@@ -341,6 +343,11 @@
     <string name="native_text_photo_not_found">Світлина %1$s відсутня на цьому пристрої</string>
     <string name="native_text_task_not_found">Завдання або рекламація %1$s відсутні на цьому пристрої</string>
     <string name="native_text_action_error">Не вдалося виконати дію за посиланням</string>
+    <string name="photo_original_loading">Завантаження оригіналу...</string>
+    <string name="photo_original_error">Не вдалося завантажити оригінал.</string>
+    <string name="photo_original_retry">Повторити</string>
+    <string name="tar_photo_primary">Фото завдання або рекламації</string>
+    <string name="tar_photo_secondary">Додаткове фото</string>
 </resources>
 
     <!--

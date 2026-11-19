@@ -76,44 +76,44 @@ public class TasksAndReclamationsRealm {
             if (tp == 0){
                 switch (status){
                     case 0:
-                        return "Активные";
+                        return "Активні";
 
                     case 1:
-                        return "Исправленые";
+                        return "Виправлені";
 
                     case 2:
-                        return "Отменённые";
+                        return "Скасовані";
 
                     case 3:
-                        return "Истек срок исполнения";
+                        return "Строк виконання минув";
 
                     default:
-                        return "Не известный статус";
+                        return "Невідомий статус";
                 }
             }
 
             if (tp == 1){   // ЗАДАЧА
                 switch (status){
                     case 0:
-                        return "Активные";
+                        return "Активні";
 
                     case 1:
-                        return "Выполненные";
+                        return "Виконані";
 
                     case 2:
-                        return "Не выполненные";
+                        return "Не виконані";
 
                     case 3:
-                        return "Отмененные";
+                        return "Скасовані";
 
                     default:
-                        return "Не известный статус";
+                        return "Невідомий статус";
                 }
             }
         }catch (Exception e){
-            return "Не удалось определить. Возникла Ошибка. Обратитесь к Вашему администратору.";
+            return "Не вдалося визначити. Виникла помилка. Зверніться до Вашого адміністратора.";
         }
-        return "Не удалось определить";
+        return "Не вдалося визначити";
     }
 
     public static List<TaRStatus> getTaRStatus(int type){
@@ -121,19 +121,19 @@ public class TasksAndReclamationsRealm {
         if (type == 0){
             TaRStatus tars0 = new TaRStatus();
             tars0.id = 0;
-            tars0.nm = "Активные";
+            tars0.nm = getStatusTxt(type, tars0.id);
 
             TaRStatus tars1 = new TaRStatus();
             tars1.id = 1;
-            tars1.nm = "Исправленые";
+            tars1.nm = getStatusTxt(type, tars1.id);
 
             TaRStatus tars2 = new TaRStatus();
             tars2.id = 2;
-            tars2.nm = "Отменённые";
+            tars2.nm = getStatusTxt(type, tars2.id);
 
             TaRStatus tars3 = new TaRStatus();
             tars3.id = 3;
-            tars3.nm = "Истек срок исполнения";
+            tars3.nm = getStatusTxt(type, tars3.id);
 
             resultTask.add(tars0);
             resultTask.add(tars1);
@@ -142,19 +142,19 @@ public class TasksAndReclamationsRealm {
         }else if (type == 1){
             TaRStatus tars0 = new TaRStatus();
             tars0.id = 0;
-            tars0.nm = "Активные";
+            tars0.nm = getStatusTxt(type, tars0.id);
 
             TaRStatus tars1 = new TaRStatus();
             tars1.id = 1;
-            tars1.nm = "Выполненные";
+            tars1.nm = getStatusTxt(type, tars1.id);
 
             TaRStatus tars2 = new TaRStatus();
             tars2.id = 2;
-            tars2.nm = "Не выполненные";
+            tars2.nm = getStatusTxt(type, tars2.id);
 
             TaRStatus tars3 = new TaRStatus();
             tars3.id = 3;
-            tars3.nm = "Отменённые";
+            tars3.nm = getStatusTxt(type, tars3.id);
 
             resultTask.add(tars0);
             resultTask.add(tars1);

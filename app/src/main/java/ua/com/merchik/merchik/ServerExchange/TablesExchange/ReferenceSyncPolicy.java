@@ -10,11 +10,8 @@ import ua.com.merchik.merchik.ServerExchange.SyncResponsePolicy;
 
 public final class ReferenceSyncPolicy {
     public enum Table {
-        PLANOGRAM_IMAGES("planogram", "img_list", true),
         STANDART("standart", "list", false),
-        PLANOGRAM_ADDRESSES("planogram", "addr_list", true),
         ARTICLES("data_list", "tovar_vendor_code_list", false),
-        PLANOGRAM_GROUPS("planogram", "group_list", true),
         LESSONS("lesson", "list", false),
         QUESTIONS("quest_data", "list", false),
         LOCATIONS("location", "list", false),

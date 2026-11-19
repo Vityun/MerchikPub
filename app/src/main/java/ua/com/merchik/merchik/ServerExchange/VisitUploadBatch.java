@@ -51,11 +51,15 @@ public final class VisitUploadBatch {
     public long retryAfter;
     public boolean complete;
     public Map<String, Row> rows = new LinkedHashMap<>();
+    // Conduct-only HTTP receipts. Never replace StackPhotoDB's normal upload state.
+    public Map<String, String> photoHttpReceipts = new LinkedHashMap<>();
     public java.util.Set<Integer> recoveryMessages = new java.util.HashSet<>();
 
     public boolean retryAfterConductFailure(int messageId) {
         if (messageId <= 0) throw new IllegalArgumentException("Missing failure message ID");
         if (!recoveryMessages.add(messageId)) return false;
+        // A new conduct failure requests a fresh attempt, not reuse of a rejected photo's HTTP receipt.
+        if (photoHttpReceipts != null) photoHttpReceipts.clear();
         for (Row row : rows.values()) {
             // Replay updates only. Replaying acknowledged creates would duplicate server records.
             switch (row.kind) {
@@ -100,16 +104,26 @@ public final class VisitUploadBatch {
     }
 
     public boolean allAcknowledged() {
+        return allAcknowledged(java.util.Collections.emptySet());
+    }
+
+    public boolean allAcknowledged(java.util.Set<String> photosWithoutServerId) {
         for (Row row : rows.values()) {
+            if (waitsForPhotoId(row, photosWithoutServerId)) continue;
             if (row.acknowledgement == null || !row.applied) return false;
         }
         return true;
     }
 
     public List<Row> next(java.util.Set<Kind> deferred) {
+        return next(deferred, java.util.Collections.emptySet());
+    }
+
+    public List<Row> next(java.util.Set<Kind> deferred, java.util.Set<String> photosWithoutServerId) {
         List<Row> result = new ArrayList<>();
         for (Row row : rows.values()) {
             if (row.acknowledgement != null || deferred.contains(row.kind)) continue;
+            if (waitsForPhotoId(row, photosWithoutServerId)) continue;
             if (!result.isEmpty() && result.get(0).kind != row.kind) continue;
             if (!result.isEmpty() && row.kind == Kind.AR
                     && !string(result.get(0).data, "tp_id").equals(string(row.data, "tp_id"))) continue;
@@ -119,6 +133,11 @@ public final class VisitUploadBatch {
                     || row.kind == Kind.TAR_COMMENT || row.kind == Kind.PAUSE || result.size() == 100) break;
         }
         return result;
+    }
+
+    private static boolean waitsForPhotoId(Row row, java.util.Set<String> photosWithoutServerId) {
+        return (row.kind == Kind.PHOTO_COMMENT || row.kind == Kind.PHOTO_DVI || row.kind == Kind.PHOTO_SCORE)
+                && !positiveId(row.data.get("id")) && photosWithoutServerId.contains(row.id);
     }
 
     public boolean acknowledge(Row sent, JsonObject acknowledgement) {
@@ -160,7 +179,15 @@ public final class VisitUploadBatch {
         request.addProperty("mod", kind.mod);
         request.addProperty("act", kind.act);
         JsonArray data = new JsonArray();
-        for (Row row : rows) data.add(row.data.deepCopy());
+        for (Row row : rows) {
+            JsonObject payload = row.data.deepCopy();
+            if (kind == Kind.WP) {
+                // Persisted/replayed payloads must not carry the legacy conduct command either.
+                payload.remove("status_set");
+                payload.remove("set_status");
+            }
+            data.add(payload);
+        }
         request.add(kind == Kind.PLANOGRAM ? "list" : "data", data);
         return request;
     }

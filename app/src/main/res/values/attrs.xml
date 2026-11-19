@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <declare-styleable name="CounterBadgeView">
+        <attr name="counterBadgeColor" format="color" />
+        <attr name="counterBadgeBorderColor" format="color" />
+        <attr name="counterBadgeSize" format="dimension" />
+        <attr name="android:textColor" />
+    </declare-styleable>
     <declare-styleable name="CustomRecyclerView">
         <attr name="adapter" format="reference" />
     </declare-styleable>

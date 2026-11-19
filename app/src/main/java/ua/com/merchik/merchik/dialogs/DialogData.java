@@ -741,6 +741,23 @@ public class DialogData {
         }
     }
 
+    public void setVideoLessonById(Context context, int lessonId) {
+        imgBtnVideoLesson.setVisibility(View.VISIBLE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            imgBtnVideoLesson.getBackground().setTint(Color.RED);
+        } else {
+            imgBtnVideoLesson.setBackgroundColor(Color.RED);
+        }
+        imgBtnVideoLesson.setColorFilter(Color.WHITE);
+        imgBtnVideoLesson.setOnClickListener(v -> {
+            if (RealmManager.getVideoLesson(lessonId) == null) {
+                Toast.makeText(context, "Відеоурок ще не завантажено. Виконайте обмін даними.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            VideoLessonsLauncher.openByLessonIds(context, Collections.singletonList(lessonId));
+        });
+    }
+
     public void setImgBtnCall(Context context) {
 
         Log.e("setImgBtnCall", "i`m here");

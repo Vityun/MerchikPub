@@ -1847,9 +1847,7 @@ public class RealmManager {
                 if (WpWorkTimes.valid(l) && (l.getVisit_start_dt() > 0 || l.getVisit_end_dt() > 0)) {
                     wpDataList.add(new WpDataUploadToServ(String.valueOf(l.getId()), String.valueOf(l.getCode_dad2()), String.valueOf(l.getUser_id()), String.valueOf(l.getClient_id()), String.valueOf(l.getIsp()),
 
-                            String.valueOf(l.getVisit_start_dt()), String.valueOf(l.getVisit_end_dt()), String.valueOf(l.getClient_start_dt()), String.valueOf(l.getClient_end_dt()),
-
-                            String.valueOf(l.getSetStatus())));
+                            String.valueOf(l.getVisit_start_dt()), String.valueOf(l.getVisit_end_dt()), String.valueOf(l.getClient_start_dt()), String.valueOf(l.getClient_end_dt())));
                 }
             }
         } else {
@@ -1876,7 +1874,7 @@ public class RealmManager {
         if (list != null && !list.isEmpty()) {
             for (WpDataDB l : list) {
                 if (!WpWorkTimes.valid(l)) continue;
-                if (l.startUpdate || l.getSetStatus() > 0) {
+                if (l.startUpdate) {
                     id++;
                     StartEndData item = new StartEndData();
                     item.temp_id = id;
@@ -1893,7 +1891,6 @@ public class RealmManager {
                         item.client_start_dt = String.valueOf(l.getClient_start_dt());
                         item.client_end_dt = String.valueOf(l.getClient_end_dt());
                         item.client_work_duration = String.valueOf(l.client_work_duration);
-                        item.status_set = String.valueOf(l.getSetStatus());
 
                         item.user_comment = l.user_comment;
                         item.user_comment_author_id = l.user_comment_author_id;

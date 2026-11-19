@@ -32,6 +32,8 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 
+private val completedItemBackground = Color(0xFFA9FFD5)
+
 object LogDBOverride {
     fun getHidedFieldsOnUI(): String =
         "id, tp, author"
@@ -254,6 +256,40 @@ object OrderDataSDBOverride {
 }
 
 object AchievementsSDBOverride {
+    const val BONUS_STATUS_KEY = "bonus_status"
+
+    fun getFallbackTitle(key: String): String? = when (key) {
+        BONUS_STATUS_KEY -> "Статус премії"
+        else -> null
+    }
+
+    fun prepareUiFields(jsonObject: JSONObject) {
+        // UI-only field: keep the server amount and the Room schema unchanged.
+        jsonObject.put(BONUS_STATUS_KEY, bonusStatus(jsonObject.optString("prem_amount")))
+    }
+
+    internal fun bonusStatus(rawAmount: String?): String {
+        val amount = accruedBonus(rawAmount)
+        return if (amount != null) {
+            val formatted = amount.setScale(2, RoundingMode.HALF_UP)
+                .stripTrailingZeros().toPlainString().replace('.', ',')
+            "Нараховано премію: $formatted грн"
+        } else {
+            "Премія ще не нарахована"
+        }
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier? =
+        bonusBackground(jsonObject.optString("prem_amount"))?.let { MerchModifier(background = it) }
+
+    internal fun bonusBackground(rawAmount: String?): Color? =
+        completedItemBackground.takeIf { accruedBonus(rawAmount) != null }
+
+    private fun accruedBonus(value: String?): BigDecimal? = value?.trim()
+        ?.replace(',', '.')
+        ?.toBigDecimalOrNull()
+        ?.takeIf { it.signum() > 0 }
+
     fun getTranslateId(key: String): Long? = when (key) {
         "id" -> 5909
         "dt", "dt_ut" -> 1100
@@ -1023,7 +1059,7 @@ object StackPhotoDBOverride {
 
             val uploadTime = jsonObject.optLong("upload_to_server", 0)
             return if (uploadTime > 0)
-                MerchModifier(background = Color(android.graphics.Color.parseColor("#A9FFD5")))
+                MerchModifier(background = completedItemBackground)
             else
                 MerchModifier(background = Color(android.graphics.Color.parseColor("#FFC4C4"))) //FAF7BB
 

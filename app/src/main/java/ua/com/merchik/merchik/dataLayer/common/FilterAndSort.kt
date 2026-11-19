@@ -58,7 +58,9 @@ fun filterAndSortDataItems(
     var isActiveFiltered = false
     if (searchTerms.isNotEmpty()) isActiveFiltered = true
     if (filters?.items?.any { it.rightValuesRaw.isNotEmpty() } == true) isActiveFiltered = true
-    if (filters?.rangeDataByKey != null && (rangeStart != null || rangeEnd != null)) {
+    val activeDateRange = filters?.rangeDataByKey
+        ?.takeIf { rangeStart != null || rangeEnd != null }
+    if (activeDateRange != null) {
         isActiveFiltered = true
     }
 
@@ -81,7 +83,7 @@ fun filterAndSortDataItems(
     val filtered = items.filter { dataItemUI ->
 
         // 1) Фильтр по диапазону дат (если задан ключ)
-        filters?.rangeDataByKey?.let { rangeKey ->
+        activeDateRange?.let { rangeKey ->
             val tsOk = dataItemUI.fields.all { fv ->
                 if (!fv.key.equals(rangeKey.key, ignoreCase = true)) return@all true
 

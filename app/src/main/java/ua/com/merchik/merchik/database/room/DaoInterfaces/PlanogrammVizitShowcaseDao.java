@@ -21,6 +21,9 @@ public interface PlanogrammVizitShowcaseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PlanogrammVizitShowcaseSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<PlanogrammVizitShowcaseSDB> data);
+
     @Query("SELECT * FROM planogram_vizit_showcase")
     List<PlanogrammVizitShowcaseSDB> getAll();
 

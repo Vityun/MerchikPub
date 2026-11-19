@@ -3718,9 +3718,7 @@ id_exclude - иди товаров которые есть в приложени
                         String.valueOf(l.getVisit_start_dt()),
                         String.valueOf(l.getVisit_end_dt()),
                         String.valueOf(l.getClient_start_dt()),
-                        String.valueOf(l.getClient_end_dt()),
-
-                        String.valueOf(l.getSetStatus())
+                        String.valueOf(l.getClient_end_dt())
                 ));
             }
         } else {

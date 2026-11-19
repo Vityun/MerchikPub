@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -27,6 +29,12 @@ public final class PhotoReportMinimum {
 
     public static int requiredCount(Object document, long dad2, OptionsDB option,
                                     Integer exactRequiredCount, boolean failOnError) {
+        return requiredCount(document, dad2, option, exactRequiredCount, failOnError, null);
+    }
+
+    static int requiredCount(Object document, long dad2, OptionsDB option,
+                             Integer exactRequiredCount, boolean failOnError,
+                             List<StackPhotoDB> visitPhotos) {
         if (exactRequiredCount != null) return Math.max(0, exactRequiredCount);
         String rawMinimum = option.getAmountMin();
         if (rawMinimum == null || rawMinimum.trim().isEmpty()) rawMinimum = "0";
@@ -35,9 +43,6 @@ public final class PhotoReportMinimum {
         int minimum;
         if ("0".equals(rawMinimum)) {
             minimum = PhotoReportCountPolicy.defaultMinimum(optionId, option.getOptionControlId());
-            if ("141360".equals(optionId)
-                    && StackPhotoRealm.getPhotosByDAD2(dad2, 31).where()
-                    .equalTo("example_id", "78").count() > 0) minimum = 2;
             try {
                 if ("157277".equals(optionId)) {
                     List<ReportPrepareDB> report = RealmManager.INSTANCE.copyFromRealm(
@@ -72,7 +77,36 @@ public final class PhotoReportMinimum {
         } else {
             minimum = Integer.parseInt(rawMinimum);
         }
-        return PhotoReportCountPolicy.adjustedMinimum(optionId, minimum,
+        minimum = PhotoReportCountPolicy.adjustedMinimum(optionId, minimum,
                 visit != null ? visit.getSku() : null, null);
+        if (PhotoReportCountPolicy.isWarehouseOption(optionId, option.getOptionControlId())) {
+            List<StackPhotoDB> photos = visitPhotos != null
+                    ? visitPhotos : StackPhotoRealm.getPhotosByDAD2(dad2, 31);
+            int emptyWarehousePhotos = emptyWarehousePhotoCount(photos);
+            return PhotoReportCountPolicy.warehouseMinimum(minimum, emptyWarehousePhotos);
+        }
+        return minimum;
+    }
+
+    public static int emptyWarehousePhotoCount(Iterable<StackPhotoDB> photos) {
+        int count = 0;
+        for (StackPhotoDB photo : photos) {
+            if (photo != null && Integer.valueOf(31).equals(photo.getPhoto_type())
+                    && PhotoReportCountPolicy.isEmptyWarehouseSample(photo.getExample_id())
+                    && PhotoEvidencePolicy.isReadyPhoto(photo.getPhotoServerId(), photo.getPhoto_num())) count++;
+        }
+        return count;
+    }
+
+    public static int completedCount(OptionsDB option, Iterable<StackPhotoDB> photos) {
+        if (PhotoReportCountPolicy.isWarehouseOption(option.getOptionId(), option.getOptionControlId())) {
+            int emptyWarehousePhotos = emptyWarehousePhotoCount(photos);
+            if (emptyWarehousePhotos > 0) return emptyWarehousePhotos;
+        }
+        int count = 0;
+        for (StackPhotoDB photo : photos) {
+            if (photo != null && PhotoEvidencePolicy.isReadyPhoto(photo.getPhotoServerId(), photo.getPhoto_num())) count++;
+        }
+        return count;
     }
 }

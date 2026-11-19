@@ -1,14 +1,7 @@
 package ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork;
 
 
-/**
- * Правки 09.04.2021.
- * Изначально обьект планировался для выгрузки только Начала и конца работ (в Плане Работ)
- * Теперь буду почучуть добавлять другие данные. Сейчас будет добавнен `status_set` - в принципе
- * новое поле в Плане работ - когда я создаю команду на проведение документа
- *
- * 18.02.2025 добавил комментарий и мнение
- * */
+/** Work times and visit metadata only. Conduct is sent separately via document_complete. */
 public class StartEndData {
     public int temp_id;
     public String element_id;
@@ -34,7 +27,5 @@ public class StartEndData {
     public String user_opinion_id;         // ID мнения
     public String user_opinion_author_id; // ID автора мнения
     public long user_opinion_dt_update;
-
-    public String status_set;   //  Команда на проведение документа
 
 }

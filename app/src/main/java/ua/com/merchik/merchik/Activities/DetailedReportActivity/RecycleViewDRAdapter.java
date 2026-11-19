@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.Options.Controls.ShelfLengthEntry;
 import ua.com.merchik.merchik.Options.Controls.OptionControlShelfLength;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.features.main.options.OptionTextColors;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -225,6 +226,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
 
         public void bind(OptionsDB optionsButtons, SiteObjectsSDB siteObjectsSDB) {
+            int signalTint = OptionTextColors.DEFAULT_TEXT;
             try {
                 final int POS = getAdapterPosition();
                 boolean describedOption = true;
@@ -260,14 +262,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 Log.e("bindRPA", "optionsButtons.getAmountMin(): " + optionsButtons.getAmountMin());
                 Log.e("bindRPA", "optionsButtons.getAmountMax(): " + optionsButtons.getAmountMax());
 
-                // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
-                if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
-                    Log.e("bindRPA", "RED");
-                    textTitle.setText(Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + buttText + "</font>")); // Должно гореть красным
-                } else {
-                    Log.e("bindRPA", "NORM");
-                    textTitle.setText("" + buttText);
-                }
+                textTitle.setText(buttText);
 
                 int optionId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
 
@@ -441,35 +436,36 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
                 // Определения цвета которым будет гореть СИГНАЛ
-                setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
+                signalTint = setCheck.getContext().getResources().getColor(R.color.shadow);
                 if (describedOption) {
                     setCheck.setVisibility(View.VISIBLE);
                     if (optionsButtons.getIsSignal().equals("1")) {
                         setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
-                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.red_error));
+                        signalTint = setCheck.getContext().getResources().getColor(R.color.red_error);
                     } else if (optionsButtons.getIsSignal().equals("2")) {
                         setCheck.setImageResource(R.drawable.ic_check);
-                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.green_default));
+                        signalTint = setCheck.getContext().getResources().getColor(R.color.green_default);
                     } else if (OptionUnlockPolicy.SIGNAL_UNLOCKED.equals(optionsButtons.getIsSignal())) {
                         setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
-                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorInetYellow));
+                        signalTint = setCheck.getContext().getResources().getColor(R.color.colorInetYellow);
                     } else {
                         if (optionsButtons.getOptionControlId().equals("0")) {
 //                            setCheck.setVisibility(View.INVISIBLE);
                             setCheck.setImageResource(R.drawable.ic_round);
-                            setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
+                            signalTint = setCheck.getContext().getResources().getColor(R.color.shadow);
                         } else {
                             setCheck.setImageResource(R.drawable.ic_round);
-                            setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
+                            signalTint = setCheck.getContext().getResources().getColor(R.color.shadow);
                         }
                     }
                 } else {
                     setCheck.setVisibility(View.INVISIBLE);
                     setCheck.setImageResource(R.drawable.ic_round);
-                    setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorUnselectedTab));
+                    signalTint = setCheck.getContext().getResources().getColor(R.color.colorUnselectedTab);
                 }
+                setCheck.setColorFilter(signalTint);
                 if (optionId == OptionButtonPauseWork.OPTION_BUTTON_PAUSE_WORK_ID && describedOption) {
-                    applyPauseWorkSignalIcon(setCheck);
+                    signalTint = applyPauseWorkSignalIcon(setCheck);
                 }
 
                 WpDataDB wp = (WpDataDB) dataDB;
@@ -1447,17 +1443,24 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception e: " + e);
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception exception: " + Arrays.toString(e.getStackTrace()));
             }
+            int counterColor = OptionTextColors.counterColor(setCheck.getVisibility() == View.VISIBLE, signalTint,
+                    mContext.getResources().getColor(R.color.green_default), mContext.getResources().getColor(R.color.red_error));
+            textTitle.setText(OptionTextColors.withColor(textTitle.getText(), OptionTextColors.DEFAULT_TEXT));
+            textInteger.setText(OptionTextColors.withColor(textInteger.getText(), counterColor));
+            textInteger2.setText(OptionTextColors.withColor(textInteger2.getText(), counterColor));
         }
     }
 
-    private void applyPauseWorkSignalIcon(ImageView setCheck) {
+    private int applyPauseWorkSignalIcon(ImageView setCheck) {
         boolean pauseActive = isPauseWorkActiveForCurrentVisit();
 
         setCheck.setVisibility(View.VISIBLE);
         setCheck.setImageResource(pauseActive ? R.drawable.ic_play_circle_solid : R.drawable.ic_pause_work_toolbar);
-        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(
+        int tint = setCheck.getContext().getResources().getColor(
                 pauseActive ? R.color.green_default : R.color.shadow
-        ));
+        );
+        setCheck.setColorFilter(tint);
+        return tint;
     }
 
     private boolean isPauseWorkActiveForCurrentVisit() {
@@ -2315,10 +2318,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         Log.e("setPhotoCountsMakeAndM", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
         Log.e("setPhotoCountsMakeAndM", "isSignal: " + option.getIsSignal());
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId()
-                + " | code_dad2: " + option.getCodeDad2());
-        // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
+                + " | code_dad2: " + option.getCodeDad2() + " | amountMin: " + option.getAmountMin());
         int maxPhotos = ua.com.merchik.merchik.features.main.options.PhotoReportMinimum
                 .requiredCount(dataDB, dad2, option, exactRequiredCount);
+        if (ua.com.merchik.merchik.features.main.options.PhotoReportCountPolicy
+                .isWarehouseOption(option.getOptionId(), option.getOptionControlId())) {
+            dataBaseCount = ua.com.merchik.merchik.features.main.options.PhotoReportMinimum
+                    .completedCount(option, StackPhotoRealm.getPhotosByDAD2(dad2, 31));
+        }
 
 
         data = "" + dataBaseCount + "/" + maxPhotos;

@@ -131,6 +131,44 @@
             app:layout_constraintStart_toStartOf="@id/photo"
             app:layout_constraintTop_toTopOf="@id/photo" />
 
+        <LinearLayout
+            android:id="@+id/photoLoadStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:elevation="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/photoTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ProgressBar
+                android:id="@+id/photoLoadProgress"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/photoLoadMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:accessibilityLiveRegion="polite"
+                android:textColor="@color/colorDescription"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/photoLoadRetry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/photo_original_retry"
+                android:visibility="gone" />
+        </LinearLayout>
+
         <ImageButton
             android:id="@+id/camera"
             android:layout_width="50dp"

@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.io.InputStream;
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -964,27 +965,43 @@ public class PhotoDownload {
         call.enqueue(new retrofit2.Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful() && response.body() != null) {
-
-                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "response.body(): " + response.body());
-
-                    Log.e("downloadPhoto", "response.body(): " + response.body().byteStream());
-
-                    Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
-                    String path = Globals.savePhotoToPhoneMemory(folderName, dbRow.getPhotoServerId() + "_" + size, bmp);
-
-                    Log.e("TESTING", "4_SAVE PHOTO");
-                    Log.e("TESTING", "4_SAVE PHOTO/path: " + path);
-
-
-                    RealmManager.INSTANCE.executeTransaction((realm -> {
-                        dbRow.setPhoto_num(path);
-                        dbRow.setPhoto_size(size);
-                    }));
-                    RealmManager.stackPhotoSavePhoto(dbRow);
-
-                    downloadPhotoInterface.onSuccess(dbRow);
+                if (!response.isSuccessful() || response.body() == null) {
+                    if (response.errorBody() != null) response.errorBody().close();
+                    if (response.body() != null) response.body().close();
+                    downloadPhotoInterface.onFailure("Photo HTTP " + response.code() + ": empty or unsuccessful response");
+                    return;
                 }
+                StackPhotoDB loaded;
+                try (ResponseBody body = response.body()) {
+                    Bitmap bmp = BitmapFactory.decodeStream(body.byteStream());
+                    if (bmp == null) throw new IllegalStateException("Response is not an image");
+                    String path;
+                    try {
+                        path = Globals.savePhotoToPhoneMemory(folderName, dbRow.getPhotoServerId() + "_" + size, bmp);
+                    } finally {
+                        if (!bmp.isRecycled()) bmp.recycle();
+                    }
+                    if (path == null || !new File(path).isFile() || new File(path).length() == 0) {
+                        throw new IllegalStateException("Cannot save downloaded photo");
+                    }
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        StackPhotoDB current = realm.where(StackPhotoDB.class).equalTo("id", dbRow.getId()).findFirst();
+                        if (!StackPhotoSyncPolicy.samePhoto(current, dbRow)) {
+                            throw new IllegalStateException("Photo changed during download");
+                        }
+                        // A late thumbnail must not replace an original or overwrite local edits.
+                        if (!photoSize && "Full".equals(current.getPhoto_size()) && current.getPhoto_num() != null
+                                && new File(current.getPhoto_num()).isFile()) return;
+                        current.setPhoto_num(path);
+                        current.setPhoto_size(size);
+                    });
+                    loaded = StackPhotoRealm.getById(dbRow.getId());
+                    if (loaded == null) throw new IllegalStateException("Photo is no longer available");
+                } catch (Exception | OutOfMemoryError error) {
+                    downloadPhotoInterface.onFailure(error.toString());
+                    return;
+                }
+                downloadPhotoInterface.onSuccess(loaded);
             }
 
             @Override

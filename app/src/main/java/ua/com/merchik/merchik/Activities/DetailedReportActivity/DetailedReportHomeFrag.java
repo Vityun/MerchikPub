@@ -51,6 +51,8 @@ import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
@@ -60,6 +62,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel;
 
 
@@ -212,7 +215,7 @@ public class DetailedReportHomeFrag extends Fragment {
                     LinearLayout ll = workPlan.getOptionLinearLayout(requireContext(), workPlan.getWpOpchetId(wpDataDB));
                     textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
                     textDRAddrV.setText(wpDataDB.getAddr_txt());
-                    textDRCustV.setText(wpDataDB.getClient_txt());
+                    textDRCustV.setText(getCustomerLabel(wpDataDB));
                     textDRMercV.setText(wpDataDB.getUser_txt());
 
                     option_signal_layout2.removeAllViews();
@@ -268,6 +271,32 @@ public class DetailedReportHomeFrag extends Fragment {
         }
 
         return v;
+    }
+
+    private String getCustomerLabel(WpDataDB data) {
+        String name = data.getClient_txt();
+        try {
+            if (RoomManager.SQL_DB != null && data.getClient_id() != null) {
+                CustomerSDB customer = RoomManager.SQL_DB.customerDao().getById(data.getClient_id());
+                if (customer != null && customer.mainTovGrp != null && customer.mainTovGrp > 0) {
+                    TovarGroupSDB group = RoomManager.SQL_DB.tovarGroupDao().getById(customer.mainTovGrp);
+                    return formatCustomerLabel(name, group == null ? null : group.nm);
+                }
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DetailedReportHomeFrag/getCustomerLabel", "Exception: " + e);
+        }
+        return formatCustomerLabel(name, null);
+    }
+
+    static String formatCustomerLabel(String name, String groupName) {
+        String customer = name == null ? "" : name.trim();
+        String group = groupName == null ? "" : groupName.trim();
+        if (customer.isEmpty() || group.isEmpty() || "0".equals(group) || "null".equalsIgnoreCase(group)) {
+            return customer;
+        }
+        String suffix = " (" + group + ")";
+        return customer.endsWith(suffix) ? customer : customer + suffix;
     }
 
     private void setTransleted() {

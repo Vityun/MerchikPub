@@ -340,6 +340,22 @@ public final class ReportConductManager {
         }
     }
 
+    /** Final network-boundary check; a direct legacy call cannot bypass the upload queue. */
+    public static boolean isDispatchAllowed(long dad2) {
+        if (Looper.myLooper() != Looper.getMainLooper()) return false;
+        int userId = Globals.getCurrentUserId();
+        if (userId <= 0 || dad2 <= 0 || !IN_FLIGHT.contains(key(userId, dad2))) return false;
+        ReportConductState state = get(userId, dad2);
+        if (state == null || state.userId != userId || state.dad2 != dad2
+                || state.stage != ReportConductState.Stage.READY) return false;
+        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
+        return WpWorkTimes.valid(wp)
+                && state.matchesWorkTimes(wp.getVisit_start_dt(), wp.getVisit_end_dt(),
+                        wp.getClient_start_dt(), wp.getClient_end_dt())
+                && !ReportConductRecovery.blocksConduct(wp)
+                && VisitUploadSync.ready(dad2);
+    }
+
     private static void finish(ReportConductState sent, boolean accepted, boolean retry, String message) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             MAIN.post(() -> finish(sent, accepted, retry, message));

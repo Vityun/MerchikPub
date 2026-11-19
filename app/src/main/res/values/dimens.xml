@@ -5,4 +5,13 @@
     <dimen name="nav_header_vertical_spacing">8dp</dimen>
     <dimen name="nav_header_height">176dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="section_header_height">38dp</dimen>
+    <dimen name="section_header_vertical_padding">4dp</dimen>
+    <dimen name="counter_badge_size">18dp</dimen>
+    <dimen name="counter_badge_text_size">10sp</dimen>
+    <dimen name="counter_badge_horizontal_padding">3dp</dimen>
+    <dimen name="counter_badge_vertical_padding">1dp</dimen>
+    <dimen name="counter_badge_border_width">1dp</dimen>
+    <dimen name="counter_badge_text_raise">4dp</dimen>
+    <dimen name="counter_badge_raised_offset">-4dp</dimen>
 </resources>

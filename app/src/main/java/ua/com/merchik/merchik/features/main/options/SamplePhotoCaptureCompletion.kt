@@ -27,9 +27,9 @@ internal object SamplePhotoCaptureCompletion {
         if (type < 0 || photo.code_dad2 != visit.code_dad2 || photo.photo_type != type) return false
 
         val saved = PhotoEvidencePolicy.isReadyPhoto(photo.photoServerId, photo.photo_num)
-        val minimum = PhotoReportMinimum.requiredCount(visit, visit.code_dad2, option, null, true)
         val photos = StackPhotoRealm.getPhotosByDAD2(visit.code_dad2, type)
-        val ready = photos.count { PhotoEvidencePolicy.isReadyPhoto(it.photoServerId, it.photo_num) }
+        val minimum = PhotoReportMinimum.requiredCount(visit, visit.code_dad2, option, null, true, photos)
+        val ready = PhotoReportMinimum.completedCount(option, photos)
         val close = PhotoReportCountPolicy.shouldClose(
             saved, visit.code_dad2, photo.code_dad2, type, photo.photo_type, ready, minimum
         )

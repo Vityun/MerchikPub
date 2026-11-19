@@ -380,6 +380,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         recyclerView.setAdapter(menuAdapter);
         SQL_DB.chatGrpDao().observeUnreadCount().observe(this, unreadCount ->
                 menuAdapter.setUnreadChatCount(unreadCount == null ? 0L : unreadCount));
+        long tarPeriodStart = Clock.getDateLong(-30).getTime() / 1000;
+        SQL_DB.tarDao().observeActiveCount(Globals.userId, 1, tarPeriodStart).observe(this, count ->
+                menuAdapter.setActiveTarCount(1, count == null ? 0L : count));
+        SQL_DB.tarDao().observeActiveCount(Globals.userId, 0, tarPeriodStart).observe(this, count ->
+                menuAdapter.setActiveTarCount(0, count == null ? 0L : count));
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {

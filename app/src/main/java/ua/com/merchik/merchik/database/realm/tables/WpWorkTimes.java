@@ -79,7 +79,6 @@ public final class WpWorkTimes {
                 && equal(db.getClient_start_dt(), sent.client_start_dt)
                 && equal(db.getClient_end_dt(), sent.client_end_dt)
                 && equal(String.valueOf(db.client_work_duration), sent.client_work_duration)
-                && equal(db.getSetStatus(), sent.status_set)
                 && equal(db.user_comment, sent.user_comment)
                 && equal(db.user_comment_author_id, sent.user_comment_author_id)
                 && equal(db.user_comment_dt_update, sent.user_comment_dt_update)

@@ -15,23 +15,27 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialogSingle
 
 private const val TAR_PHOTO_SOURCE_CAMERA = "camera"
 private const val TAR_PHOTO_SOURCE_GALLERY = "gallery"
+private const val TAR_PHOTO_SOURCE_JOURNAL = "journal"
 
 object TarPhotoSourceDialog {
     @JvmStatic
+    @JvmOverloads
     fun show(
         activity: Activity,
         onCamera: Runnable,
         onGallery: Runnable,
-        onDismiss: Runnable
+        onDismiss: Runnable,
+        onJournal: Runnable? = null
     ) {
-        Launcher(activity, onCamera, onGallery, onDismiss).show()
+        Launcher(activity, onCamera, onGallery, onDismiss, onJournal).show()
     }
 
     private class Launcher(
         private val activity: Activity,
         private val onCamera: Runnable,
         private val onGallery: Runnable,
-        private val onDismiss: Runnable
+        private val onDismiss: Runnable,
+        private val onJournal: Runnable?
     ) {
         private var composeView: ComposeView? = null
         private var dismissed = false
@@ -64,7 +68,11 @@ object TarPhotoSourceDialog {
                     val selectedChoice = remember { mutableStateOf<String?>(null) }
                     MessageDialog(
                         title = "Добавить фотографию",
-                        message = "Создайте новую фотографию или выберите уже готовую из галереи",
+                        message = if (onJournal == null) {
+                            "Создайте новую фотографию или выберите уже готовую из галереи"
+                        } else {
+                            "Создайте новую фотографию или выберите готовую из галереи или журнала фото"
+                        },
                         status = DialogStatus.NORMAL,
                         onDismiss = ::finish,
                         okButtonName = "ОК",
@@ -72,14 +80,18 @@ object TarPhotoSourceDialog {
                             pendingAction = when (selectedChoice.value) {
                                 TAR_PHOTO_SOURCE_CAMERA -> onCamera
                                 TAR_PHOTO_SOURCE_GALLERY -> onGallery
+                                TAR_PHOTO_SOURCE_JOURNAL -> onJournal
                                 else -> null
                             }
                         },
                         singleChoice = MessageDialogSingleChoice(
-                            options = listOf(
-                                MessageDialogChoice(TAR_PHOTO_SOURCE_CAMERA, "Сфотографировать"),
-                                MessageDialogChoice(TAR_PHOTO_SOURCE_GALLERY, "Выбрать из галереи")
-                            ),
+                            options = buildList {
+                                add(MessageDialogChoice(TAR_PHOTO_SOURCE_CAMERA, "Сфотографировать"))
+                                add(MessageDialogChoice(TAR_PHOTO_SOURCE_GALLERY, "Выбрать из галереи"))
+                                if (onJournal != null) {
+                                    add(MessageDialogChoice(TAR_PHOTO_SOURCE_JOURNAL, "Додати фото з журналу"))
+                                }
+                            },
                             selectedKey = selectedChoice.value,
                             onSelected = { selectedChoice.value = it }
                         )

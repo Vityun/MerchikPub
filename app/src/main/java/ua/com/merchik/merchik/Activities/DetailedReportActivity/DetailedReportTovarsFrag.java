@@ -74,6 +74,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 import ua.com.merchik.merchik.features.main.video.VideoLessonsLauncher;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
@@ -282,6 +283,19 @@ public class DetailedReportTovarsFrag extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (viewModel != null && tasksAndReclamationsSDB == null) {
+            viewModel.getReportDataUpdated().observe(getViewLifecycleOwner(), productsRepaired -> {
+                if (wpDataDB == null) return;
+                if (composeView != null && composeView.getVisibility() == View.VISIBLE) {
+                    TovarDBViewModel products = new ViewModelProvider(this).get(TovarDBViewModel.class);
+                    if (Boolean.TRUE.equals(productsRepaired)) products.refreshAfterVisitDataLoaded();
+                    else products.refreshReportPrepareOnTabResume();
+                } else {
+                    downloadData();
+                    addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+                }
+            });
+        }
         if (viewModel != null && tasksAndReclamationsSDB == null && viewModel.getWpDataDB() != null)
             viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
                 if (data != null) {

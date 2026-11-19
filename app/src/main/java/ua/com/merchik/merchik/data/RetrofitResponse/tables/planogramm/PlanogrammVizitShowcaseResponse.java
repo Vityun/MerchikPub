@@ -11,6 +11,9 @@ public class PlanogrammVizitShowcaseResponse {
     @SerializedName("state")
     public Boolean state;
 
+    @SerializedName("error")
+    public String error;
+
     @SerializedName("list")
     public List<PlanogrammVizitShowcaseSDB> list;
 

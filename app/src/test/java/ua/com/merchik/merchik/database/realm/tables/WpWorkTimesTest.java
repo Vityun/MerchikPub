@@ -38,7 +38,6 @@ public class WpWorkTimesTest {
         sent.visit_end_dt = String.valueOf(wp.getVisit_end_dt());
         sent.client_end_dt = String.valueOf(wp.getClient_end_dt());
         sent.client_work_duration = String.valueOf(wp.client_work_duration);
-        sent.status_set = String.valueOf(wp.getSetStatus());
         sent.user_comment = wp.user_comment;
         sent.user_comment_author_id = wp.user_comment_author_id;
         sent.user_comment_dt_update = wp.user_comment_dt_update;
@@ -51,6 +50,21 @@ public class WpWorkTimesTest {
     @Test public void unchangedSnapshotMayBeAcknowledged() {
         WpDataDB wp = row();
         assertTrue(WpWorkTimes.matchesSentSnapshot(wp, sent(wp)));
+    }
+
+    @Test public void legacyConductFlagDoesNotKeepConfirmedMetadataPending() {
+        WpDataDB wp = row();
+        wp.setSetStatus(1);
+        assertTrue(WpWorkTimes.matchesSentSnapshot(wp, sent(wp)));
+    }
+
+    @Test public void legacyConductFlagChangeIsNotAnEditOfUploadedMetadata() {
+        WpDataDB wp = row();
+        StartEndData sent = sent(wp);
+        wp.setSetStatus(1);
+        assertTrue(WpWorkTimes.matchesSentSnapshot(wp, sent));
+        wp.user_comment = "new comment";
+        assertFalse(WpWorkTimes.matchesSentSnapshot(wp, sent));
     }
 
     @Test public void optionalFieldsDoNotPreventAcknowledgement() {

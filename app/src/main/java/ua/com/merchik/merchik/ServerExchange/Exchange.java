@@ -1077,23 +1077,8 @@ public class Exchange {
                                 @Override
                                 public <T> void onSuccess(List<T> data) {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShowcaseExchange/onSuccess", "(data: " + data.size());
-                                    SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
-                                            .subscribeOn(Schedulers.io())
-                                            .observeOn(AndroidSchedulers.mainThread())
-                                            .compose(ExchangeWork.track())
-                                            .subscribe(new DisposableCompletableObserver() {
-                                                @Override
-                                                public void onComplete() {
-                                                    Log.e("ShowcaseExchange", "OK");
-                                                    if (!data.isEmpty())
-                                                        showcaseExchange.downloadShowcasePhoto((List<ShowcaseSDB>) data);
-                                                }
-
-                                                @Override
-                                                public void onError(@NonNull Throwable e) {
-                                                    Log.e("ShowcaseExchange", "Throwable e: " + e);
-                                                }
-                                            });
+                                    // Rows and the full-refresh receipt have already been committed together.
+                                    if (!data.isEmpty()) showcaseExchange.downloadShowcasePhoto((List<ShowcaseSDB>) data);
                                     Globals.writeToMLOG("INFO", "startExchange/ShowcaseExchange/downloadShowcaseTable/onSuccess", "data: " + data.size());
                                 }
 
@@ -3201,6 +3186,12 @@ public class Exchange {
     }
 
     public static void conductingOnServerWpData(long codeDad2, ConductCallback callback) {
+        if (!ReportConductManager.isDispatchAllowed(codeDad2)) {
+            Globals.writeToMLOG("WARNING", "conductingOnServerWpData",
+                    "Blocked document_complete: no active authorized dispatch or visit data not acknowledged; dad2=" + codeDad2);
+            callback.onRetry("Команда проведення очікує підтвердження вивантаження всіх даних відвідування.");
+            return;
+        }
         StandartData data = new StandartData();
         data.mod = "plan";
         data.act = "document_complete";

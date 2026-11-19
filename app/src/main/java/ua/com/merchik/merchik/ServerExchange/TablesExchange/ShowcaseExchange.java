@@ -7,200 +7,41 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.Utils.FileUtils;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
-import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
-import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowcaseExchange {
 
     public void downloadShowcaseTable(ExchangeInterface.ExchangeResponseInterface exchange) {
-        try {
-//            List<Integer> addr_id = new ArrayList<>();
-//            addr_id.add(27710);
-//            List<WpDataDB> wpDataDBList = getWorkPlanList();
-            List<WpDataDB> wpDataDBList = getAllWorkPlanWithOutRNO_LIST();
-            List<ShowcaseSDB> showcaseSDBSList = SQL_DB.showcaseDao().getAll();
-
-            // Используем Set для автоматического удаления дубликатов
-            Set<String> uniqueClientIds = new HashSet<>();
-            Set<String> uniqueAdressId = new HashSet<>();
-            Set<String> uniqueShowcaseId = new HashSet<>();
-            int missingMainOptionCount = countShowcasesWithoutMainOptionId(showcaseSDBSList);
-            boolean needsMainOptionBackfill = !showcaseSDBSList.isEmpty() && missingMainOptionCount > 0;
-
-            // Проходим по каждому элементу списка wpDataDBList
-            if (wpDataDBList.isEmpty())
-                return;
-
-            for (WpDataDB wpDataDB : wpDataDBList) {
-                // Добавляем client_id в Set (дубликаты игнорируются)
-                uniqueClientIds.add(wpDataDB.getClient_id());
-                uniqueAdressId.add(String.valueOf(wpDataDB.getAddr_id()));
+        CatalogDataExchange.showcases(getAllWorkPlanWithOutRNO_LIST(), new Clicks.clickObjectAndStatus() {
+            @Override public void onSuccess(Object data) {
+                if (exchange != null) exchange.onSuccess((List<ShowcaseSDB>) data);
             }
-
-            if (!showcaseSDBSList.isEmpty()) {
-                if (needsMainOptionBackfill) {
-                    Globals.writeToMLOG(
-                            "INFO",
-                            "downloadShowcaseTable/mainOptionBackfill",
-                            "showcaseCount: " + showcaseSDBSList.size()
-                                    + ", missingMainOptionCount: " + missingMainOptionCount
-                                    + ". Skip id_exclude to load main_option_id."
-                    );
-                } else {
-                    for (ShowcaseSDB sdb : showcaseSDBSList) {
-                        if (sdb != null && sdb.selectId != null && !sdb.selectId.trim().isEmpty()) {
-                            uniqueShowcaseId.add(sdb.selectId);
-                        }
-                    }
-                }
+            @Override public void onFailure(String error) {
+                if (exchange != null) exchange.onFailure(error);
             }
-            uniqueShowcaseId.remove("444");
-            uniqueShowcaseId.remove("1028");
-
-
-            StandartData data = new StandartData();
-            data.mod = "rack";
-            data.act = "list";
-            data.active_only = "1";
-            data.client_id = new ArrayList<>(uniqueClientIds);
-            data.addr_id = new ArrayList<>(uniqueAdressId);
-            if (!uniqueShowcaseId.isEmpty()) {
-                data.id_exclude = new ArrayList<>(uniqueShowcaseId);
-            }
-
-                    // #### TODO
-//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
-//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
-                    // добавить время отправки,что бы не передавать лишнее
-
-                    Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            Log.e("checkRequest", "checkRequest: " + convertedObject);
-
-//            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-//                    .subscribeOn(Schedulers.io())
-//                    .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe(jsonObject ->{
-//                        Log.e("RESULT", ">> " + jsonObject);
-//                    }, throwable -> {
-//                        Log.e("Error","error: " +throwable.getMessage());
-//                    });
-
-
-            retrofit2.Call<ShowcaseResponse> call = RetrofitBuilder.getRetrofitInterface().SHOWCASE_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<ShowcaseResponse>() {
-                @Override
-                public void onResponse(Call<ShowcaseResponse> call, Response<ShowcaseResponse> response) {
-                    Log.e("checkRequest", "response: " + response);
-                    Log.e("checkRequest", "response.body(): " + response.body());
-                    if (response.isSuccessful()) {
-                        Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "isSuccessful");
-                        if (response.body() != null && response.body().state != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
-                            Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "response.body().list.size(): " + response.body().list.size());
-                            List<ShowcaseSDB> serv = response.body().list;
-                            exchange.onSuccess(serv);
-
-//                            List<ShowcaseSDB> filteredServ = serv.stream()
-//                                    .filter(showcase -> wpDataDBList.stream()
-//                                            .anyMatch(wpData ->
-//                                                    Objects.equals(wpData.getClient_id(), showcase.clientId) &&
-//                                                            String.valueOf(wpData.getAddr_id()).equals(showcase.addrId)
-//                                            )
-//                                    )
-//                                    .collect(Collectors.toList());
-
-
-//                            List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();
-//
-//                            List<ShowcaseSDB> res = new ArrayList<>();
-//                            Set<Integer> dbIds = new HashSet<>();
-//
-//                            // Заполняем HashSet dbIds числовыми идентификаторами из списка db
-//                            for (ShowcaseSDB itemDB : db) {
-//                                dbIds.add(itemDB.id); // Здесь предполагается, что у класса есть метод getId()
-//                            }
-
-                            // 11.02.2025 были случае когда лезли 10к+ витрин, теперь фильтрую по клиентам и адресам из впдаты. Зачем нам левые фото витрины даже для менеджера? Для этого есть сайт
-//                            for (ShowcaseSDB itemServ : serv) {
-//                                if (!dbIds.contains(itemServ.id)) {
-//                                    res.add(itemServ);
-//                                }
-//                            }
-
-//                            if (!serv.isEmpty())
-//                                RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-//                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                                });
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ShowcaseResponse> call, Throwable t) {
-                    Log.e("checkRequest", "Throwable t: " + t);
-                    Globals.writeToMLOG("ERR", "downloadShowcaseTable/onFailure", "Throwable t: " + t);
-                }
-            });
-
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERR", "downloadShowcaseTable/catch", "Exception e: " + e);
-//            exchange.onFailure("Ошибка при обновлении Сотрудников. Передайте код ошибки Вашему руководителю. Код ошибки: " + e);
-        }
-    }
-
-    private int countShowcasesWithoutMainOptionId(List<ShowcaseSDB> showcaseList) {
-        if (showcaseList == null || showcaseList.isEmpty()) {
-            return 0;
-        }
-
-        int count = 0;
-        for (ShowcaseSDB showcase : showcaseList) {
-            if (showcase == null || showcase.mainOptionId == null) {
-                count++;
-            }
-        }
-        return count;
+        });
     }
 
     public void downloadShowcasePhoto(List<ShowcaseSDB> data) {
         PhotoDownload photoDownload = new PhotoDownload();
+        Set<Integer> queued = new HashSet<>();
         for (ShowcaseSDB item : data) {
-//            if (item.photoId == 51528478 ||
-//                    item.photoId == 52657208 ||
-//                    item.photoId == 52657201 ||
-//                    item.photoId == 52657328 ||
-//                    item.photoId == 52657480 ||
-//                    item.photoId == 52657384 ||
-//                    item.photoId == 52657669
-//            ) {
+            if (!hasPhotoSource(item) || !queued.add(item.photoId)) continue;
 
             StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(item.photoId));
             if (stackPhotoDB == null) {
@@ -253,7 +94,7 @@ public class ShowcaseExchange {
                         Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
                     }
                 });
-            } else if (stackPhotoDB.getPhoto_num() == null) {
+            } else if (!FileUtils.fileExistsAndNotEmpty(stackPhotoDB.getPhoto_num())) {
                 photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
                     @Override
                     public void onSuccess(Bitmap bitmap) {
@@ -292,13 +133,35 @@ public class ShowcaseExchange {
     }
 
     public List<ShowcaseSDB> getSamplePhotosToDownload() {
-        List<Integer> list = SQL_DB.showcaseDao().getAllPhotosIds();
-        List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(list);
-        for (StackPhotoDB item : stack) {
-            list.remove(item.getPhotoServerId());
+        List<ShowcaseSDB> showcases = SQL_DB.showcaseDao().getAll();
+        Set<Integer> photoIds = new HashSet<>();
+        for (ShowcaseSDB row : showcases) if (hasPhotoSource(row)) photoIds.add(row.photoId);
+        if (photoIds.isEmpty()) return new ArrayList<>();
+        return selectPhotosToDownload(showcases, StackPhotoRealm.getByServerIds(new ArrayList<>(photoIds)));
+    }
+
+    static List<ShowcaseSDB> selectPhotosToDownload(List<ShowcaseSDB> showcases, List<StackPhotoDB> cached) {
+        Set<Integer> downloaded = new HashSet<>();
+        for (StackPhotoDB photo : cached) {
+            if (photo == null || photo.getPhotoServerId() == null) continue;
+            try {
+                int id = Integer.parseInt(photo.getPhotoServerId().trim());
+                // Metadata alone must not suppress downloading a missing file.
+                if (id > 0 && FileUtils.fileExistsAndNotEmpty(photo.getPhoto_num())) downloaded.add(id);
+            } catch (NumberFormatException ignored) { }
         }
-        List<ShowcaseSDB> res = SQL_DB.showcaseDao().getAllByPhotosIds(list);
-        return res;
+        List<ShowcaseSDB> result = new ArrayList<>();
+        Set<Integer> queued = new HashSet<>();
+        for (ShowcaseSDB row : showcases) {
+            if (hasPhotoSource(row) && !downloaded.contains(row.photoId) && queued.add(row.photoId)) result.add(row);
+        }
+        return result;
+    }
+
+    private static boolean hasPhotoSource(ShowcaseSDB row) {
+        return row != null && row.photoId != null && row.photoId > 0
+                && row.photoBig != null && !row.photoBig.trim().isEmpty()
+                && !"0".equals(row.photoBig.trim()) && !"null".equalsIgnoreCase(row.photoBig.trim());
     }
 
     private List<WpDataDB> getWorkPlanList() {

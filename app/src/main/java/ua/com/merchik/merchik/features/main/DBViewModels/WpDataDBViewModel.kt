@@ -63,6 +63,7 @@ import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.domain.parseWpPoint
 import ua.com.merchik.merchik.trecker
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -99,7 +100,11 @@ class WpDataDBViewModel @Inject constructor(
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
-) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
+) : MainViewModel(
+    application, repository, nameUIRepository, savedStateHandle,
+    initialStartDate = LocalDate.now(),
+    initialEndDate = LocalDate.now().plusDays(4)
+) {
 
     private val reassignmentStore = VisitReassignmentStore.get()
     private val reassignmentListener = SharedPreferences.OnSharedPreferenceChangeListener { preferences, key ->

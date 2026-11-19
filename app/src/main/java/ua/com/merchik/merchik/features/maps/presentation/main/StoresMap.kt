@@ -4,10 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.util.TypedValue
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
@@ -24,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -40,6 +42,7 @@ import com.google.maps.android.compose.MapsComposeExperimentalApi
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
 import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
@@ -113,7 +116,7 @@ fun StoresMap(
     val getBadgePin = rememberBadgePinCache(
         pinRes = R.drawable.ic_3,
         pinHeightDp = 44f,
-        badgeDiameter = 22.dp,
+        badgeDiameter = dimensionResource(R.dimen.counter_badge_size),
         badgeYOffsetK = 0.40f,
         badgeBg = android.graphics.Color.LTGRAY,
         badgeBorder = android.graphics.Color.DKGRAY,
@@ -558,7 +561,7 @@ fun StoresMap(
 fun rememberBadgePinCache(
     @DrawableRes pinRes: Int,
     pinHeightDp: Float = 44f,
-    badgeDiameter: Dp = 22.dp,
+    badgeDiameter: Dp = dimensionResource(R.dimen.counter_badge_size),
     badgeYOffsetK: Float = 0.40f,
     badgeBg: Int = android.graphics.Color.RED,
     badgeBorder: Int = android.graphics.Color.WHITE,
@@ -567,7 +570,7 @@ fun rememberBadgePinCache(
     pinTint: Int? = null
 ): (Int) -> BitmapDescriptor {
     val ctx = LocalContext.current
-    val cache = remember { mutableMapOf<Int, BitmapDescriptor>() }
+    val density = LocalDensity.current
 
     return remember(
         pinRes,
@@ -578,9 +581,12 @@ fun rememberBadgePinCache(
         badgeBorder,
         badgeText,
         badgeIconRes,
-        pinTint
+        pinTint,
+        ctx,
+        density
     ) {
-        { n: Int ->
+        val cache = mutableMapOf<Int, BitmapDescriptor>()
+        val getBadge: (Int) -> BitmapDescriptor = { n: Int ->
             val key = n.coerceIn(1, 9)
             cache.getOrPut(key) {
                 if (badgeIconRes != null) {
@@ -609,15 +615,13 @@ fun rememberBadgePinCache(
                 }
             }
         }
+        getBadge
     }
 }
 
 
 private fun Context.dp(dp: Float): Int =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics).toInt()
-
-private fun Context.sp(sp: Float): Float =
-    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, resources.displayMetrics)
 
 private fun Context.renderVector(
     @DrawableRes resId: Int,
@@ -637,50 +641,21 @@ private fun Context.renderVector(
 
 private fun Context.drawCounterBadgeBitmap(
     count: Int,
-    diameter: Dp = 22.dp,
+    diameter: Dp,
     @ColorInt background: Int = android.graphics.Color.RED,
     @ColorInt borderColor: Int = android.graphics.Color.WHITE,
     @ColorInt textColor: Int = android.graphics.Color.WHITE,
-    fontSizeSp: Float = 11f
+    fontSizePx: Float = resources.getDimension(R.dimen.counter_badge_text_size)
 ): Bitmap {
-    val size = dp(diameter.value)
-    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bmp)
-
-    val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = background
-        style = Paint.Style.FILL
+    val badge = CounterBadgeView(this).apply {
+        setBadgeStyle(dp(diameter.value).toFloat(), fontSizePx, background, borderColor, textColor)
+        setCount(count.toLong(), 9)
     }
-    val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = borderColor
-        style = Paint.Style.STROKE
-        strokeWidth = dp(1f).toFloat()
-    }
-    val outerBorder = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.BLACK
-        style = Paint.Style.STROKE
-        strokeWidth = dp(2f).toFloat()
-    }
-    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = textColor
-        textAlign = Paint.Align.CENTER
-        textSize = sp(fontSizeSp)
-        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-    }
-
-    val cx = size / 2f
-    val cy = size / 2f
-    val radius = cx - outerBorder.strokeWidth / 2f
-
-    canvas.drawCircle(cx, cy, radius, fill)
-    canvas.drawCircle(cx, cy, radius, outerBorder)
-    canvas.drawCircle(cx, cy, radius - outerBorder.strokeWidth / 2f, border) // внутренняя рамка
-
-    val text = if (count > 9) "9+" else count.toString()
-    val fm = textPaint.fontMetrics
-    val baseline = cy - (fm.ascent + fm.descent) / 2f
-    canvas.drawText(text, cx, baseline, textPaint)
-
+    val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    badge.measure(unspecified, unspecified)
+    badge.layout(0, 0, badge.measuredWidth, badge.measuredHeight)
+    val bmp = Bitmap.createBitmap(badge.measuredWidth, badge.measuredHeight, Bitmap.Config.ARGB_8888)
+    badge.draw(Canvas(bmp))
     return bmp
 }
 
@@ -688,7 +663,7 @@ private fun Context.makePinWithBadge(
     count: Int,
     @DrawableRes pinRes: Int,
     pinHeightDp: Float = 44f,
-    badgeDiameter: Dp = 22.dp,
+    badgeDiameter: Dp,
     badgeYOffsetK: Float = 0.40f,
     @ColorInt badgeBg: Int = android.graphics.Color.RED,
     @ColorInt badgeBorder: Int = android.graphics.Color.WHITE,

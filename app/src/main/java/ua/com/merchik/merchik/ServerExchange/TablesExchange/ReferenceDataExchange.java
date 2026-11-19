@@ -23,9 +23,6 @@ import ua.com.merchik.merchik.Utils.TrustedTime;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsGroupsSDB;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammAddressSDB;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammGroupSDB;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammImagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SamplePhotoResponse;
@@ -38,9 +35,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerRespons
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.database.room.AppDatabase;
 import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -69,42 +63,15 @@ public final class ReferenceDataExchange {
     }
 
     public static void planogramAddresses(Clicks.clickObjectAndStatus callback) {
-        start(new Dataset<PlanogrammAddressSDB>(PLANOGRAM_ADDRESSES, false) {
-            List<PlanogrammAddressSDB> load(JsonObject request, SyncExchangeTrace trace) throws Exception {
-                PlanogrammAddressResponse body = body(RetrofitBuilder.getRetrofitInterface()
-                        .Planogramm_ADDRESS_RESPONSE(RetrofitBuilder.contentType, request));
-                trace.response(body.state, body.error, body.list);
-                return rows(body.state, body.error, body.list, row -> row.id);
-            }
-            long count(AppDatabase db, Realm realm) { return db.planogrammAddressDao().count(); }
-            void saveRoom(AppDatabase db, List<PlanogrammAddressSDB> rows) { db.planogrammAddressDao().upsertAll(rows); }
-        }, callback(callback));
+        CatalogDataExchange.addresses(callback);
     }
 
     public static void planogramGroups(Clicks.clickObjectAndStatus callback) {
-        start(new Dataset<PlanogrammGroupSDB>(PLANOGRAM_GROUPS, false) {
-            List<PlanogrammGroupSDB> load(JsonObject request, SyncExchangeTrace trace) throws Exception {
-                PlanogrammGroupResponse body = body(RetrofitBuilder.getRetrofitInterface()
-                        .Planogramm_GROUP_RESPONSE(RetrofitBuilder.contentType, request));
-                trace.response(body.state, body.error, body.list);
-                return rows(body.state, body.error, body.list, row -> row.id);
-            }
-            long count(AppDatabase db, Realm realm) { return db.planogrammGroupDao().count(); }
-            void saveRoom(AppDatabase db, List<PlanogrammGroupSDB> rows) { db.planogrammGroupDao().upsertAll(rows); }
-        }, callback(callback));
+        CatalogDataExchange.groups(callback);
     }
 
     public static void planogramImages(Clicks.clickObjectAndStatus callback) {
-        start(new Dataset<PlanogrammImagesSDB>(PLANOGRAM_IMAGES, false) {
-            List<PlanogrammImagesSDB> load(JsonObject request, SyncExchangeTrace trace) throws Exception {
-                PlanogrammImagesResponse body = body(RetrofitBuilder.getRetrofitInterface()
-                        .Planogramm_IMAGES_RESPONSE(RetrofitBuilder.contentType, request));
-                trace.response(body.state, body.error, body.list);
-                return rows(body.state, body.error, body.list, row -> row.id);
-            }
-            long count(AppDatabase db, Realm realm) { return db.planogrammImagesDao().count(); }
-            void saveRoom(AppDatabase db, List<PlanogrammImagesSDB> rows) { db.planogrammImagesDao().upsertAll(rows); }
-        }, callback(callback));
+        CatalogDataExchange.images(callback);
     }
 
     public static void standards(ExchangeInterface.ExchangeResponseInterface callback) {

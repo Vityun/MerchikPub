@@ -5,18 +5,17 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/counter_num"
-        android:layout_width="20dip"
-        android:layout_height="20dip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="top|center_horizontal"
-        android:background="@drawable/counter_background"
         android:clickable="false"
-        android:gravity="top|center_horizontal"
         android:text="99"
         android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:counterBadgeColor="@color/colorUnselectedTab" />
 </androidx.constraintlayout.widget.ConstraintLayout>

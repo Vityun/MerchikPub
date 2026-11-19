@@ -43,6 +43,8 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.features.main.options.OptionPhotoCorrection;
+import ua.com.merchik.merchik.features.main.options.PhotoReportCountPolicy;
+import ua.com.merchik.merchik.features.main.options.PhotoReportMinimum;
 
 public class OptionControlPhoto<T> extends OptionControl {
     public int OPTION_CONTROL_PHOTO_ID = 84932;
@@ -446,17 +448,16 @@ public class OptionControlPhoto<T> extends OptionControl {
             // для 141361 от 27.03.2025
             if (optionId.equals("141361")) {
                 List<StackPhotoDB> stackPhotoDB141361 = OptionPhotoFiles.ready(StackPhotoRealm.getPhotosByDAD2(dad2, 31));
-                long count = stackPhotoDB141361.stream()
-                        .filter(photo -> "78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id()))
-                        .count();
+                int count = PhotoReportMinimum.emptyWarehousePhotoCount(stackPhotoDB141361);
+                diagnosticContext += ", emptyWarehousePhotos=" + count;
                 if (count > 0) {
-                    m = 2;
+                    m = PhotoReportCountPolicy.warehouseMinimum(m, count);
                     spannableStringBuilder.clear();
                     SpannableStringBuilder baseEmptyComment = new SpannableStringBuilder("У свiтлин: ");
                     boolean hasPhotoWithoutComment = false;
                     List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
                     for (StackPhotoDB photo : stackPhotoDBList) {
-                        if ("78".equals(photo.getExample_id()) || "94".equals(photo.getExample_id())) {
+                        if (PhotoReportCountPolicy.isEmptyWarehouseSample(photo.getExample_id())) {
                             String comment = photo.getComment();
                             if (comment == null || comment.length() <= 10) {
                                 if (hasPhotoWithoutComment) baseEmptyComment.append(", ");

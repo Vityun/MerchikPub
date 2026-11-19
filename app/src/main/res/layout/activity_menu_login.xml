@@ -161,19 +161,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_login" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/badge_text_view_tar"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:alpha="0.8"
-        android:background="@drawable/badge_background"
-        android:gravity="center"
-        android:minWidth="18dp"
-        android:minHeight="18dp"
-        android:padding="2dp"
         android:text="0"
         android:textColor="#FFFFFF"
-        android:textSize="12sp"
         android:translationZ="8dp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@+id/fab3"

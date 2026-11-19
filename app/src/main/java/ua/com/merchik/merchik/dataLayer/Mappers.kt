@@ -12,12 +12,16 @@ import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem
+import ua.com.merchik.merchik.features.main.tar.TarListItem
+import ua.com.merchik.merchik.features.main.tar.TarCommentItem
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.dataLayer.model.*
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
+import ua.com.merchik.merchik.features.main.AchievementsSDBOverride
 import ua.com.merchik.merchik.features.main.OptionsDBOverride
 import ua.com.merchik.merchik.features.main.PlanogrammSDBOverride
 import ua.com.merchik.merchik.features.main.WPDataBDOverride
@@ -91,12 +95,15 @@ interface DataObjectUI {
 
 private fun DataObjectUI.fieldTitleSource(key: String): String =
     when (this) {
+        is AchievementsSDB -> AchievementsSDBOverride.getFallbackTitle(key) ?: key
         is ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB ->
             DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
 
         is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
         is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
         is ChatListItem -> fieldTitle(key)
+        is TarListItem -> fieldTitle(key)
+        is TarCommentItem -> fieldTitle(key)
         is ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB ->
             PlanogrammSDBOverride.getFallbackTitle(key) ?: key
 
@@ -133,6 +140,9 @@ fun DataObjectUI.toItemUI(
             "source object: $this"
         )
         JSONObject()
+    }
+    if (this is AchievementsSDB) {
+        AchievementsSDBOverride.prepareUiFields(jsonObject)
     }
 
     // ---- получение стабильного реального id ----
@@ -542,7 +552,10 @@ enum class ContextUI {
     SAMPLE_PHOTO_FOR_PRODUCT_GALLERY,
     STACK_PHOTO_FROM_OPTION_164351,     // Фото прикасової зони (45)
     TOVAR_FROM_OPTION_175121,
-    TOVAR_FROM_OPTION_1465
+    TOVAR_FROM_OPTION_1465,
+    TASKS_IN_CONTAINER,
+    RECLAMATIONS_IN_CONTAINER,
+    TAR_COMMENTS_IN_CONTAINER
 }
 
 

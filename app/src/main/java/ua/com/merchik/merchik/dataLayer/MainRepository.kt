@@ -22,6 +22,8 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem
+import ua.com.merchik.merchik.features.main.tar.TarListItem
+import ua.com.merchik.merchik.features.main.tar.TarCommentItem
 import ua.com.merchik.merchik.data.Database.Room.DynamicAchievementSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.OrderDataSDB
@@ -56,6 +58,7 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.DynamicAchievementSDBOverride
+import ua.com.merchik.merchik.features.main.AchievementsSDBOverride
 import ua.com.merchik.merchik.features.main.OptionsDBOverride
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import ua.com.merchik.merchik.features.main.Main.SortingField
@@ -83,10 +86,13 @@ class MainRepository(
 ) {
     private fun fieldTitleSource(obj: DataObjectUI, key: String): String =
         when (obj) {
+            is AchievementsSDB -> AchievementsSDBOverride.getFallbackTitle(key) ?: key
             is DynamicAchievementSDB -> DynamicAchievementSDBOverride.getFallbackTitle(key) ?: key
             is WpDataDB -> WPDataBDOverride.getFallbackTitle(key) ?: key
             is OptionsDB -> OptionsDBOverride.getFallbackTitle(key) ?: key
             is ChatListItem -> obj.fieldTitle(key)
+            is TarListItem -> obj.fieldTitle(key)
+            is TarCommentItem -> obj.fieldTitle(key)
             else -> key
         }
 
@@ -97,6 +103,8 @@ class MainRepository(
             ImagesTypeListDB::class -> ImagesTypeListRealm.getAll().firstOrNull() ?: ImagesTypeListDB()
             UsersDB::class -> UsersRealm.getAll().firstOrNull() ?: UsersDB()
             ChatListItem::class -> ChatListItem()
+            TarListItem::class -> TarListItem()
+            TarCommentItem::class -> TarCommentItem()
             else -> null
         }
 
@@ -174,6 +182,9 @@ class MainRepository(
 
         item?.let { obj ->
             val jsonObject = JSONObject(gson.toJson(obj))
+            if (obj is AchievementsSDB) {
+                AchievementsSDBOverride.prepareUiFields(jsonObject)
+            }
             val imageCommentKeys = obj.getCommentsForImageKeys()
             val settingsUI = getSettingsUI(obj::class.java, contextUI, settingsVisitId)
             val imageKeys = obj.getFieldsImageOnUI()
@@ -384,7 +395,8 @@ class MainRepository(
                     } ?: key,
                     order = if (key.equals("create_time", ignoreCase = true)
                         || (key.equals("dt", ignoreCase = true) &&
-                            (klass == QuestionAnswerDB::class || klass == ChatListItem::class))) -1 else 1
+                            (klass == QuestionAnswerDB::class || klass == ChatListItem::class ||
+                                    klass == TarListItem::class || klass == TarCommentItem::class))) -1 else 1
                 )
             }
 

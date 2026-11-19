@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/button_background"
+    android:paddingTop="@dimen/counter_badge_text_raise"
     android:elevation="5dp">
 
     <TextView
@@ -33,21 +34,17 @@
         app:layout_constraintEnd_toStartOf="@+id/cart_badge1"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
+    <ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
         android:id="@+id/cart_badge1"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="1dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="1dp"
-        android:background="@drawable/shape_notification"
-        android:gravity="center"
-        android:padding="3dp"
         android:textColor="@android:color/white"
-        android:textSize="10sp"
         app:layout_constrainedHeight="false"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/text_sub"
+        android:translationY="@dimen/counter_badge_raised_offset" />
 </androidx.constraintlayout.widget.ConstraintLayout>

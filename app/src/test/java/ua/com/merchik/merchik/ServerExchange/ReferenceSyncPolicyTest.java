@@ -37,11 +37,8 @@ public class ReferenceSyncPolicyTest {
     private static final long NOW = 1793263380L;
     private final Gson gson = new Gson();
 
-    @Test public void planogramImagesRequest() { request(Table.PLANOGRAM_IMAGES, "planogram", "img_list", true); }
     @Test public void standardsRequest() { request(Table.STANDART, "standart", "list", false); }
-    @Test public void planogramAddressesRequest() { request(Table.PLANOGRAM_ADDRESSES, "planogram", "addr_list", true); }
     @Test public void articlesRequest() { request(Table.ARTICLES, "data_list", "tovar_vendor_code_list", false); }
-    @Test public void planogramGroupsRequest() { request(Table.PLANOGRAM_GROUPS, "planogram", "group_list", true); }
     @Test public void lessonsRequest() { request(Table.LESSONS, "lesson", "list", false); }
     @Test public void questionsRequest() { request(Table.QUESTIONS, "quest_data", "list", false); }
     @Test public void locationsRequest() { request(Table.LOCATIONS, "location", "list", false); }
@@ -66,11 +63,8 @@ public class ReferenceSyncPolicyTest {
             JsonObject json = ReferenceSyncPolicy.request(table, NOW);
             Call<?> call;
             switch (table) {
-                case PLANOGRAM_IMAGES: call = api.Planogramm_IMAGES_RESPONSE("application/json", json); break;
                 case STANDART: call = api.GET_TABLE_STANDART("application/json", json); break;
-                case PLANOGRAM_ADDRESSES: call = api.Planogramm_ADDRESS_RESPONSE("application/json", json); break;
                 case ARTICLES: call = api.ARTICLE_DOWNLOAD("application/json", json); break;
-                case PLANOGRAM_GROUPS: call = api.Planogramm_GROUP_RESPONSE("application/json", json); break;
                 case LESSONS: call = api.DOWNLOAD_VIDEO_LESSONS("application/json", json); break;
                 case QUESTIONS: call = api.GET_QUESTION_LIST("application/json", json); break;
                 case LOCATIONS: call = api.LOCATION_RESPONSE_CALL("application/json", json); break;
@@ -89,7 +83,7 @@ public class ReferenceSyncPolicyTest {
     @Test public void eachEndpointHasIndependentCursorKey() {
         Set<String> resources = new HashSet<>();
         for (Table table : Table.values()) assertTrue(resources.add(table.resource()));
-        assertEquals(10, resources.size());
+        assertEquals(7, resources.size());
         assertTrue(resources.contains("quest_data/list"));
         assertFalse(resources.contains("question_answer")); // Upload stores a local ID, not seconds.
     }

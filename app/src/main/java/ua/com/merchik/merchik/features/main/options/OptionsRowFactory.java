@@ -195,11 +195,7 @@ public final class OptionsRowFactory<T> {
 
             buttText = buttText == null ? "" : buttText.replace("&quot;", "").replace("\"", "");
 
-            if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
-                textTitle.text = Html.fromHtml("<font color='" + CustomString.errorColorHtml(mContext) + "'>" + buttText + "</font>");
-            } else {
-                textTitle.text = "" + buttText;
-            }
+            textTitle.text = buttText;
 
             int optionId = Integer.parseInt(optionsButtons.getOptionId());
 
@@ -1284,6 +1280,8 @@ public final class OptionsRowFactory<T> {
             Globals.writeToMLOG("ERROR", "OptionsRowFactory/create", "Exception e: " + e);
             Globals.writeToMLOG("ERROR", "OptionsRowFactory/create", "Stack: " + Arrays.toString(e.getStackTrace()));
         }
+        OptionTextColors.apply(row, mContext.getResources().getColor(R.color.green_default),
+                mContext.getResources().getColor(R.color.red_error));
         return row;
     }
 
@@ -1650,9 +1648,12 @@ public final class OptionsRowFactory<T> {
         Log.e("setPhotoCountsMakeAndM", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
         Log.e("setPhotoCountsMakeAndM", "isSignal: " + option.getIsSignal());
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId()
-                + " | code_dad2: " + option.getCodeDad2());
+                + " | code_dad2: " + option.getCodeDad2() + " | amountMin: " + option.getAmountMin());
 
         int maxPhotos = PhotoReportMinimum.requiredCount(dataDB, dad2, option, exactRequiredCount);
+        if (PhotoReportCountPolicy.isWarehouseOption(option.getOptionId(), option.getOptionControlId())) {
+            dataBaseCount = PhotoReportMinimum.completedCount(option, StackPhotoRealm.getPhotosByDAD2(dad2, 31));
+        }
 
         data = "" + dataBaseCount + "/" + maxPhotos;
 

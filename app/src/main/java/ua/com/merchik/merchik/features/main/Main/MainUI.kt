@@ -183,6 +183,9 @@ import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalAddressS
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomAditionalOrderSelectionHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.OptionsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ChatSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.TarHomeViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.TarCommentsViewModel
+import ua.com.merchik.merchik.features.main.tar.TarAddCommentItem
 import ua.com.merchik.merchik.features.main.DBViewModels.OrderDataSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
@@ -418,7 +421,8 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
     // Каждый раз, когда обновляется контент (lastUpdate меняется) — прыгаем в начало
     LaunchedEffect(uiState.lastUpdate) {
         if (viewModel.contextUI != ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS && optionsViewModel == null &&
-            viewModel !is ChatSDBViewModel)
+            viewModel !is ChatSDBViewModel && viewModel !is TarHomeViewModel &&
+            viewModel !is TarCommentsViewModel)
             listState.scrollToItem(0)
     }
 
@@ -484,7 +488,7 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
     }
 
     // сколько элементов сверху не из основного списка (хедеры/stickyHeader и т.п.)
-    val headerCount = 0
+    val headerCount = if (viewModel is TarCommentsViewModel) 1 else 0
     // хотим зазор сверху после скролла
     val topOffsetPx = -with(LocalDensity.current) { 38.dp.roundToPx() }
 
@@ -1272,7 +1276,8 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
                                     shape = RoundedCornerShape(4.dp)
                                 )
                             } else {
-                                if (viewModel.contextUI != ContextUI.CHATS_IN_CONTAINER) ImageButton(
+                                if (viewModel.contextUI != ContextUI.CHATS_IN_CONTAINER && viewModel !is TarHomeViewModel &&
+                                    viewModel !is TarCommentsViewModel) ImageButton(
                                     id = R.drawable.ic_maps,
                                     shape = RoundedCornerShape(4.dp),
                                     sizeButton = 40.dp,
@@ -1384,6 +1389,11 @@ private fun MainUIContent(modifier: Modifier, viewModel: MainViewModel, context:
                         } else LazyColumn(
                             state = listState,
                         ) {
+                            if (viewModel is TarCommentsViewModel) {
+                                item(key = "tar_add_comment") {
+                                    TarAddCommentItem(viewModel::onClickAdditionalContent)
+                                }
+                            }
                             if (!isActiveGrouped || groups.isEmpty()) {
                                 val imageGridColumns = uiState.imageDisplayMode.columns
                                     ?.takeIf {

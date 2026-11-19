@@ -24,13 +24,27 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.AppDatabase;
 import ua.com.merchik.merchik.database.room.RoomManager;
 
-/** Refresh on open, not a periodic task. Failures leave the cached visit available. */
+/** Non-blocking refresh on open. Failures leave the cached visit available. */
 public final class VisitReportRefresh {
     private static final String RECEIPT = "visit_report_refresh/success";
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final Map<String, Refresh> IN_FLIGHT = new HashMap<>();
 
     private VisitReportRefresh() { }
+
+    public static final class Subscription {
+        private Runnable updated;
+
+        Subscription(Runnable updated) { this.updated = updated; }
+
+        public void cancel() { updated = null; }
+
+        void complete(boolean applied) {
+            Runnable listener = updated;
+            updated = null;
+            if (applied && listener != null) listener.run();
+        }
+    }
 
     public static boolean isDue(WpDataDB visit) {
         if (!notStarted(visit) || Globals.getCurrentUserId() <= 0) return false;
@@ -47,35 +61,38 @@ public final class VisitReportRefresh {
         }
     }
 
-    public static void refreshForVisit(long dad2, Runnable completed) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            MAIN.post(() -> refreshForVisit(dad2, completed));
-            return;
-        }
+    /** The caller can continue opening/editing immediately; only applied data triggers updated. */
+    public static Subscription refreshForVisit(long dad2, Runnable updated) {
+        Subscription subscription = new Subscription(updated);
+        MAIN.post(() -> start(dad2, subscription));
+        return subscription;
+    }
+
+    private static void start(long dad2, Subscription subscription) {
         Refresh refresh = null;
         try {
             WpDataDB visit = RealmManager.INSTANCE.where(WpDataDB.class).equalTo("code_dad2", dad2).findFirst();
             if (!isDue(visit)) {
                 log("skip", dad2, "started/completed or refreshed within one hour");
-                completed.run();
+                subscription.complete(false);
                 return;
             }
             Refresh candidate = new Refresh(visit);
             Refresh running = IN_FLIGHT.get(candidate.scope);
             if (running != null && running.sameContext(candidate)) {
-                running.listeners.add(completed);
+                running.listeners.add(subscription);
                 log("join", dad2, "user=" + candidate.user);
                 return;
             }
             refresh = candidate;
-            refresh.listeners.add(completed);
+            refresh.listeners.add(subscription);
             IN_FLIGHT.put(refresh.scope, refresh);
             refresh.start();
         } catch (RuntimeException e) {
             if (refresh != null) refresh.finish(e);
             else {
                 log("failed", dad2, e.toString());
-                completed.run();
+                subscription.complete(false);
             }
         }
     }
@@ -100,7 +117,7 @@ public final class VisitReportRefresh {
         final String hash;
         final LocalDate date;
         final String scope;
-        final List<Runnable> listeners = new ArrayList<>();
+        final List<Subscription> listeners = new ArrayList<>();
         boolean applied;
         boolean finished;
 
@@ -130,7 +147,7 @@ public final class VisitReportRefresh {
 
         void start() {
             requireCurrent();
-            log("request", dad2, "user=" + user + ", dt_change_from=0");
+            log("request", dad2, "user=" + user + ", dt_change_from=0, background=true");
             ReportPrepareSync.refreshUnstartedVisit(dad2, VisitReportRefreshPolicy.request(dad2, date),
                     new Callback<ReportPrepareServer>() {
                         @Override public void onResponse(Call<ReportPrepareServer> call,
@@ -169,10 +186,11 @@ public final class VisitReportRefresh {
             finished = true;
             IN_FLIGHT.remove(scope, this);
             if (error != null) log("failed", dad2, "refresh time unchanged, error=" + error);
-            for (Runnable listener : listeners) {
-                try { listener.run(); }
+            for (Subscription listener : listeners) {
+                try { listener.complete(error == null && applied); }
                 catch (RuntimeException e) { log("listenerFailed", dad2, e.toString()); }
             }
+            listeners.clear();
         }
     }
 }

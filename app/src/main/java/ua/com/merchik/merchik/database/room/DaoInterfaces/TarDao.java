@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.database.room.DaoInterfaces;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -44,6 +45,26 @@ public interface TarDao {
             "WHERE tp = :tp AND dt >:dt AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId)\n" +
             "ORDER BY dt DESC;")
     List<TasksAndReclamationsSDB> getAllByTp(int userId, int tp, long dt);
+
+    String HOME_QUERY = "SELECT tar.*, addr.nm AS addr_nm, cl.nm AS client_nm, sot.fio AS sotr_nm "
+            + "FROM tasks_and_reclamations tar "
+            + "LEFT JOIN address addr ON tar.addr = addr.id "
+            + "LEFT JOIN client cl ON tar.client = cl.id "
+            + "LEFT JOIN sotr sot ON tar.vinovnik = sot.id "
+            + "WHERE (:tarId > 0 AND tar.id = :tarId) OR "
+            + "(:tarId = 0 AND tar.tp = :tp AND tar.dt > :dt "
+            + "AND (tar.vinovnik = :userId OR tar.vinovnik2 = :userId OR tar.zamena_user_id = :userId)) "
+            + "ORDER BY tar.dt DESC";
+
+    @Query(HOME_QUERY)
+    Flowable<List<TasksAndReclamationsSDB>> observeHome(int userId, int tp, long dt, int tarId);
+
+    String ACTIVE_COUNT_QUERY = "SELECT COUNT(*) FROM tasks_and_reclamations "
+            + "WHERE tp = :tp AND state = 0 AND dt > :dt "
+            + "AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId)";
+
+    @Query(ACTIVE_COUNT_QUERY)
+    LiveData<Long> observeActiveCount(int userId, int tp, long dt);
 
     // Pika
     @Query("SELECT tar.*, addr.nm AS addr_nm, cl.nm AS client_nm, sot.fio AS sotr_nm FROM tasks_and_reclamations tar \n" +

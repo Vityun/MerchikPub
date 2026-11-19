@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.RangeDate
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import javax.inject.Inject
@@ -48,7 +49,11 @@ class JournalPhotoSDBViewModel @Inject constructor(
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
-) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
+) : MainViewModel(
+    application, repository, nameUIRepository, savedStateHandle,
+    initialStartDate = LocalDate.now(),
+    initialEndDate = LocalDate.now().plusDays(4)
+) {
 
 
     override val table: KClass<out DataObjectUI>
@@ -115,6 +120,16 @@ class JournalPhotoSDBViewModel @Inject constructor(
 
     override fun updateFilters() {
         try {
+            if (contextUI == ContextUI.JOURNAL_PHOTO_DEFAULT) {
+                val userId = Globals.getCurrentUserId()
+                val user = RoomManager.SQL_DB.usersDao().getUserById(userId)
+                filters = journalPhotoFilters(
+                    userId, user?.fio, rangeDataStart.value, rangeDataEnd.value,
+                    uiState.value.filters ?: filters
+                )
+                return
+            }
+
             val zirParams = getZirFilterParamsOrNull()
 
             val typePhoto = if (zirParams != null) {
@@ -354,5 +369,48 @@ class JournalPhotoSDBViewModel @Inject constructor(
         46,
         47,
         48
+    )
+}
+
+internal fun journalPhotoFilters(
+    userId: Int,
+    userName: String?,
+    start: LocalDate?,
+    end: LocalDate?,
+    previous: Filters? = null
+): Filters {
+    val defaults = listOf(
+        ItemFilter(
+            "Тип фото", ImagesTypeListDB::class, ImagesTypeListDBViewModel::class, ModeUI.MULTI_SELECT,
+            "Типи фото", "Оберіть типи фото для відображення", "photo_type", "id",
+            emptyList(), emptyList(), enabled = true
+        ),
+        ItemFilter(
+            "Клієнт", CustomerSDB::class, CustomerSDBViewModel::class, ModeUI.MULTI_SELECT,
+            "Клієнти", "Оберіть клієнтів", "client_id", "id",
+            emptyList(), emptyList(), enabled = true
+        ),
+        ItemFilter(
+            "Адреса", AddressSDB::class, AddressSDBViewModel::class, ModeUI.MULTI_SELECT,
+            "Адреси", "Оберіть адреси", "addr_id", "id",
+            emptyList(), emptyList(), enabled = true
+        ),
+        ItemFilter(
+            "Виконавець", UsersSDB::class, UsersSDBViewModel::class, ModeUI.MULTI_SELECT,
+            "Виконавці", "Оберіть виконавців", "user_id", "id",
+            listOf(userId.toString()), listOf(userName?.takeIf { it.isNotBlank() } ?: userId.toString()),
+            enabled = true
+        )
+    )
+    return (previous ?: Filters()).copy(
+        // The journal applies dates in its Realm query, not to rendered fields.
+        rangeDataByKey = RangeDate("----", start, end, enabled = true),
+        items = defaults.map { filter ->
+            val old = previous?.items?.firstOrNull { it.key == filter.key }
+            if (old == null) filter else filter.copy(
+                rightValuesRaw = old.rightValuesRaw, rightValuesUI = old.rightValuesUI,
+                excludeMode = old.excludeMode
+            )
+        }
     )
 }

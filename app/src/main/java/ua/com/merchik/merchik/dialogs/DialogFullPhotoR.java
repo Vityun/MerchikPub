@@ -25,9 +25,13 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ServerExchange.PhotoUrlUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 
 public class DialogFullPhotoR {
 
@@ -42,6 +46,7 @@ public class DialogFullPhotoR {
     // ------------------------
     private TouchImageView photo;
     private ImageButton camera;
+    private PhotoPreviewLoader<StackPhotoDB> photoLoader;
     private boolean cameraPulseEnabled;
     private YoYo.YoYoString cameraPulse;
     private final Runnable cameraPulseTask = new Runnable() {
@@ -112,7 +117,10 @@ public class DialogFullPhotoR {
                 stopCameraPulse();
             }
         });
-        dialog.setOnDismissListener(ignored -> stopCameraPulse());
+        dialog.setOnDismissListener(ignored -> {
+            stopCameraPulse();
+            if (photoLoader != null) photoLoader.close();
+        });
 
         // Pika
         comment1 = dialog.findViewById(R.id.buttonComment);
@@ -152,6 +160,7 @@ public class DialogFullPhotoR {
 
     public void dismiss() {
         stopCameraPulse();
+        if (photoLoader != null) photoLoader.close();
         if (dialog != null) dialog.dismiss();
     }
 
@@ -232,16 +241,112 @@ public class DialogFullPhotoR {
     }
 
     public void setPhoto(StackPhotoDB stackPhotoDB) {
+        renderPhoto(stackPhotoDB, true);
+    }
+
+    private void renderPhoto(StackPhotoDB stackPhotoDB, boolean showFragments) {
         try {
+            photoDB = stackPhotoDB;
+            // TouchImageView 3.1 requires a non-null user listener; false keeps its zoom gestures.
+            photo.setOnTouchListener((view, event) -> false);
+            // ImageView otherwise keeps the old bitmap when a file is replaced at the same URI.
+            photo.setImageDrawable(null);
             photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
+            if (!showFragments || stackPhotoDB.photoServerId == null || stackPhotoDB.photoServerId.isEmpty()) return;
             List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(stackPhotoDB.photoServerId));
             for (int i = 0; i < fragmentSDB.size(); i++) {
                 new PhotoFragments().setPhotoFragment(fragmentSDB.get(i), String.valueOf(i+1),photo, PhotoFragments.PhotoFragmentsSize.BIG);
             }
-            new PhotoFragments().setPhotoFragmentClick(fragmentSDB, stackPhotoDB, photo);
+            if (!fragmentSDB.isEmpty()) new PhotoFragments().setPhotoFragmentClick(fragmentSDB, stackPhotoDB, photo);
         } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DialogFullPhotoR/render",
+                    "photo=" + (stackPhotoDB == null ? null : stackPhotoDB.getPhotoServerId()) + ", error=" + e);
             e.printStackTrace();
         }
+    }
+
+    public void setPhotoWithDownload(StackPhotoDB preview, String serverId) {
+        if (photoLoader != null) photoLoader.close();
+        View status = dialog.findViewById(R.id.photoLoadStatus);
+        View progress = dialog.findViewById(R.id.photoLoadProgress);
+        TextView message = dialog.findViewById(R.id.photoLoadMessage);
+        Button retry = dialog.findViewById(R.id.photoLoadRetry);
+        photoLoader = new PhotoPreviewLoader<>(new PhotoPreviewLoader.Source<StackPhotoDB>() {
+            @Override public boolean isReady(StackPhotoDB value) { return hasOriginal(value); }
+
+            @Override public void download(StackPhotoDB value, PhotoPreviewLoader.Callback<StackPhotoDB> callback) {
+                if (value != null && PhotoUrlUtils.isSafeDownloadUrl(value.getPhotoServerURL())) {
+                    downloadOriginal(value, callback);
+                    return;
+                }
+                String id = value != null && value.getPhotoServerId() != null
+                        && !value.getPhotoServerId().isEmpty() && !"0".equals(value.getPhotoServerId())
+                        ? value.getPhotoServerId() : serverId;
+                if (id == null || !id.matches("[1-9][0-9]*")) {
+                    callback.onFailure("Photo has no server ID or URL");
+                    return;
+                }
+                PhotoTableRequest request = new PhotoTableRequest();
+                request.mod = "images_view";
+                request.act = "list_image";
+                request.nolimit = "1";
+                request.id_list = id;
+                new PhotoDownload().getPhotoInfoAndSaveItToDB(request, new Clicks.clickObjectAndStatus<StackPhotoDB>() {
+                    @Override public void onSuccess(StackPhotoDB loaded) { downloadOriginal(loaded, callback); }
+                    @Override public void onFailure(String error) { callback.onFailure(error); }
+                });
+            }
+        }, new PhotoPreviewLoader.Listener<StackPhotoDB>() {
+            @Override public void showPhoto(StackPhotoDB value) {
+                if (localFile(value) != null) renderPhoto(value, hasOriginal(value));
+                setComment(value.getComment());
+            }
+
+            @Override public void setLoading(boolean loading) {
+                status.setVisibility(loading ? View.VISIBLE : View.GONE);
+                progress.setVisibility(loading ? View.VISIBLE : View.GONE);
+                retry.setVisibility(View.GONE);
+                message.setText(R.string.photo_original_loading);
+            }
+
+            @Override public void showError(String error) {
+                status.setVisibility(View.VISIBLE);
+                progress.setVisibility(View.GONE);
+                retry.setVisibility(View.VISIBLE);
+                message.setText(R.string.photo_original_error);
+                Globals.writeToMLOG("ERROR", "DialogFullPhotoR/original", "photo=" + serverId + ", " + error);
+            }
+        });
+        retry.setOnClickListener(view -> photoLoader.retry());
+        photoLoader.open(preview);
+    }
+
+    private void downloadOriginal(StackPhotoDB value, PhotoPreviewLoader.Callback<StackPhotoDB> callback) {
+        if (hasOriginal(value)) {
+            callback.onSuccess(value);
+            return;
+        }
+        new PhotoDownload().downloadPhoto(true, value, "/TAR", new PhotoDownload.downloadPhotoInterface() {
+            @Override public void onSuccess(StackPhotoDB loaded) { callback.onSuccess(loaded); }
+            @Override public void onFailure(String error) { callback.onFailure(error); }
+        });
+    }
+
+    private static boolean hasOriginal(StackPhotoDB value) {
+        return localFile(value) != null && ("Full".equalsIgnoreCase(value.getPhoto_size())
+                || (!"Small".equalsIgnoreCase(value.getPhoto_size())
+                && (value.getPhotoServerId() == null || value.getPhotoServerId().isEmpty()
+                || "0".equals(value.getPhotoServerId()))
+                && !PhotoUrlUtils.isSafeDownloadUrl(value.getPhotoServerURL())));
+    }
+
+    private static File localFile(StackPhotoDB value) {
+        if (value == null || value.getPhoto_num() == null || value.getPhoto_num().isEmpty()) return null;
+        Uri uri = Uri.parse(value.getPhoto_num());
+        String path = uri.getPath();
+        if (path == null) return null;
+        File file = new File(path);
+        return file.isFile() && file.length() > 0 ? file : null;
     }
 
     // Pika

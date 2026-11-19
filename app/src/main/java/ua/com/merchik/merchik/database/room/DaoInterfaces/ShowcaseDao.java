@@ -36,6 +36,9 @@ public interface ShowcaseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<ShowcaseSDB> data);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertAll(List<ShowcaseSDB> data);
+
     // ----------------------------------------------------
     @Query("SELECT photo_id FROM showcase")
     List<Integer> getAllPhotosIds();

@@ -81,6 +81,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
@@ -350,23 +351,22 @@ fun FilteringDialog(
                     Button(
                         onClick = {
                             (FilteringDialogDataHolder.instance().filters ?: uiState.filters)?.let {
-                                val cleared = it.copy(
-                                    rangeDataByKey =
-                                        if (it.rangeDataByKey?.enabled == true)
-                                            it.rangeDataByKey.copy(
-                                                start = LocalDate.now(),
-                                                end = LocalDate.now()
-                                            )
-                                        else
-                                            it.rangeDataByKey,
-                                    searchText = "",
-                                    items = it.items.map {
-                                        if (it.enabled) it.clearValues() else it
-                                    }
+                                val isWorkPlan = viewModel is WpDataDBViewModel
+                                val cleared = it.clearEditableValues(
+                                    resetDate = if (isWorkPlan) LocalDate.now() else null
                                 )
+                                // Keep the work plan's existing reset behavior. Other lists must
+                                // clear the actual query bounds as well as the filter description.
+                                if (!isWorkPlan && it.rangeDataByKey?.enabled == true) {
+                                    viewModel.setStartDate(null)
+                                    viewModel.setEndDate(null)
+                                }
                                 FilteringDialogDataHolder.instance().filters = cleared
                                 viewModel.updateFilters(cleared)
                                 onChanged(cleared)
+                                if (!isWorkPlan && it.rangeDataByKey?.enabled == true) {
+                                    viewModel.updateContent()
+                                }
                             }
                         },
                         shape = RoundedCornerShape(8.dp),
@@ -402,6 +402,14 @@ fun FilteringDialog(
         )
     }
 }
+
+internal fun Filters.clearEditableValues(resetDate: LocalDate? = null): Filters = copy(
+    rangeDataByKey = rangeDataByKey?.let {
+        if (it.enabled) it.copy(start = resetDate, end = resetDate) else it
+    },
+    searchText = "",
+    items = items.map { if (it.enabled) it.clearValues() else it }
+)
 
 @Composable
 private fun ItemDateFilterUI(

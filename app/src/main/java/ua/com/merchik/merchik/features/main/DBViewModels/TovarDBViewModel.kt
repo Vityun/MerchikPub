@@ -3435,7 +3435,7 @@ class TovarDBViewModel @Inject constructor(
             RealmManager.getTovarReportPrepare(wpDataDB.code_dad2.toString(), tovarId)
                 ?: createNewRPRow(tovarId, wpDataDB)
         } else {
-            ReportPrepareRealm.getByIdCopy(rp.getID())
+            ReportPrepareRealm.getCurrentCopy(rp)
         }
         if (current == null) {
             Toast.makeText(context, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show()

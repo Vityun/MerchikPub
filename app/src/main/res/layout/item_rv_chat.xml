@@ -70,7 +70,8 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:translationY="@dimen/counter_badge_raised_offset"
+        app:layout_constraintTop_toTopOf="@id/chat_last_msg"
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

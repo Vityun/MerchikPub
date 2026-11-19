@@ -11,10 +11,8 @@ import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Globals;
@@ -93,6 +91,10 @@ public class TARFragmentHome extends Fragment {
                 secondFrag = (TARSecondFrag) existingFragment;
                 return;
             }
+            if (existingFragment instanceof TARHomeFrag) {
+                homeFrag = (TARHomeFrag) existingFragment;
+                return;
+            }
         }
 
         int initialTaskId = requireActivity().getIntent().getIntExtra(TARActivity.EXTRA_OPEN_TAR_ID, 0);
@@ -133,25 +135,17 @@ public class TARFragmentHome extends Fragment {
     }
 
     private Fragment setHomeFrag() {
-
-        homeFrag = new TARHomeFrag().newInstance(TARType, new Globals.TARInterface() {
-            @Override
-            public void onSuccess(TasksAndReclamationsSDB data) {
-                viewModel.setTasksAndReclamations(data);
-                secondFrag = TARSecondFrag.newInstance(data);
-
-                FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-                transaction.replace(R.id.frame_layout, secondFrag, "TARSecondFrag").commit();
-
-                secondFragId = secondFrag.getId();
-                secondFragTAG = secondFrag.getTag();
-            }
-
-            @Override
-            public void onFailure(String error) {
-            }
-        });
-
+        homeFrag = TARHomeFrag.newInstance(TARType, null);
         return homeFrag;
+    }
+
+    public void openTask(TasksAndReclamationsSDB data) {
+        if (!isAdded() || getChildFragmentManager().isStateSaved()) return;
+        viewModel.setTasksAndReclamations(data);
+        secondFrag = TARSecondFrag.newInstance(data);
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.frame_layout, secondFrag, "TARSecondFrag").commit();
+        secondFragId = secondFrag.getId();
+        secondFragTAG = secondFrag.getTag();
     }
 }

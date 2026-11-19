@@ -18,6 +18,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportVi
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
+import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -105,6 +106,9 @@ public class OptionControl<T> {
 
                         if (block && this instanceof OptionControlAdditionalRequirementsMark) {
                             dialog.setVideoLesson(context, true, new Integer[]{10407}, null, null);
+                        }
+                        if (block && this instanceof OptionControlEndAnotherWork) {
+                            dialog.setVideoLessonById(context, 87);
                         }
 
 //                        String optionTitle = "Опция: (" + optionDB.getOptionControlId() + ")\n" + optionDB.getOptionControlTxt();

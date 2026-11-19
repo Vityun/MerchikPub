@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -95,6 +96,8 @@ fun WpDataTabsScreen() {
     val tabBarBackground = Color(0xFFB1B1B1)
     val textSelectedColor = Color.DarkGray
     val textUnselectedColor = Color.Gray
+    val headerHeight = dimensionResource(R.dimen.section_header_height)
+    val headerVerticalPadding = dimensionResource(R.dimen.section_header_vertical_padding)
 
     var dataIsReady by remember { mutableStateOf(isDataReadyCompat()) }
     val startedOffline = remember {
@@ -290,7 +293,7 @@ fun WpDataTabsScreen() {
 
         TabRow(
             selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.fillMaxWidth().height(38.dp),
+            modifier = Modifier.fillMaxWidth().height(headerHeight),
             containerColor = tabBarBackground,
             indicator = {},
             divider = {}
@@ -300,7 +303,7 @@ fun WpDataTabsScreen() {
                     selected = selectedTabIndex == index,
                     onClick = { selectTab(index) },
                     modifier = Modifier
-                        .height(38.dp)
+                        .height(headerHeight)
                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                         .background(if (selectedTabIndex == index) selectedColor else Color.Transparent),
                     content = {
@@ -309,7 +312,7 @@ fun WpDataTabsScreen() {
                                 contentAlignment = Alignment.TopEnd,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(horizontal = 24.dp, vertical = 4.dp)
+                                    .padding(horizontal = 24.dp, vertical = headerVerticalPadding)
                             ) {
                                 Text(
                                     text = title,
