@@ -21,18 +21,20 @@ data class TarListItem(
     val amount: String = "",
     val comment: String = "",
     val photo: Int = 0,
-    val photoHash: String = ""
+    val photoHash: String = "",
+    val theme: String = ""
 ) : DataObjectUI {
     override fun getHidedFieldsOnUI() = "tp,addr,client,photo,photoHash"
     override fun getIdResImage() = R.mipmap.merchik
     override fun getFieldsImageOnUI() = "photo"
     override fun getPreferredFieldOrder() =
-        listOf("dt", "id1c", "id", "state", "address", "customer", "responsible", "amount", "comment")
+        listOf("dt", "id1c", "id", "theme", "state", "address", "customer", "responsible", "amount", "comment")
 
     fun fieldTitle(key: String): String = when (key) {
         "id" -> "ID"
         "dt" -> "Дата"
         "id1c" -> "Документ"
+        "theme" -> "Тема"
         "state" -> "Статус"
         "address" -> "Адреса"
         "customer" -> "Клієнт"
@@ -47,11 +49,12 @@ data class TarListItem(
         "dt" -> value.toString().toLongOrNull()?.takeIf { it > 0 }
             ?.let { Clock.getHumanTimeDDMMYYYY(it) }.orEmpty()
         "state" -> TasksAndReclamationsRealm.getStatusTxt(tp, state)
+        "amount" -> value.toString().takeIf { it.isNotBlank() }?.let { "$it (грн)" }.orEmpty()
         else -> value.toString()
     }
 
     companion object {
-        fun from(row: TasksAndReclamationsSDB) = TarListItem(
+        fun from(row: TasksAndReclamationsSDB, themeName: String? = null) = TarListItem(
             id = row.id ?: 0, dt = row.dt ?: 0, id1c = row.id1c.orEmpty(),
             state = row.state ?: 0, tp = row.tp ?: 0, addr = row.addr ?: 0,
             address = row.addrNm?.takeIf { it.isNotBlank() } ?: row.addr?.toString().orEmpty(),
@@ -59,7 +62,9 @@ data class TarListItem(
             customer = row.clientNm?.takeIf { it.isNotBlank() } ?: row.client.orEmpty(),
             responsible = row.sortNm?.takeIf { it.isNotBlank() } ?: row.vinovnik?.toString().orEmpty(),
             amount = amount(row), comment = row.comment.orEmpty(),
-            photo = row.photo ?: 0, photoHash = row.photoHash.orEmpty()
+            photo = row.photo ?: 0, photoHash = row.photoHash.orEmpty(),
+            theme = themeName?.trim()?.takeIf { it.isNotEmpty() }
+                ?: row.themeId?.takeIf { it > 0 }?.toString().orEmpty()
         )
 
         private fun amount(row: TasksAndReclamationsSDB): String {

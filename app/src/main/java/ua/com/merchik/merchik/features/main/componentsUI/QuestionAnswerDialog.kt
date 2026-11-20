@@ -1837,7 +1837,7 @@ internal data class QuestionAnswerPaymentSnapshot(
     val isServerDuration: Boolean = false
 ) {
     val isDurationBelowAverage: Boolean
-        get() = isOneTimeDurationBelowAverage(
+        get() = !isServerDuration && isOneTimeDurationBelowAverage(
             isOneTimePaymentIncrease,
             currentVisit.preciseDurationMinutes,
             calculatedData.avgWorkDurationMinutes

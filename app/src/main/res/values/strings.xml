@@ -2,9 +2,9 @@
     <string name="ui_date_unbounded">Не обмежено</string>
     <string name="tar_add_comment">Додати коментар</string>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">111800</string>
+    <string name="ver" translatable="false">112001</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-11-18</string>
+    <string name="debug_date" translatable="false">2026-11-20</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -327,6 +327,7 @@
     <string name="chats_retry">Повторити</string>
     <string name="chat_loading">Завантаження повідомлень…</string>
     <string name="chat_back">Назад до чатів</string>
+    <string name="tar_back_to_list">Назад до списку</string>
     <string name="chat_messages_empty">Повідомлень ще немає</string>
     <string name="chat_message_id">Повідомлення: %1$d</string>
     <string name="chat_message_read">Прочитано</string>

@@ -14,7 +14,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
 
-/** Standalone A/B check using two compiled adapter versions, never an Android/Realm test. */
+/** Standalone JDK A/B check using two compiled adapter versions. */
 public final class ReportPrepareJsonPairedBenchmark {
     private static final String ROOT = "ua.com.merchik.merchik.";
     private static final List<GarbageCollectorMXBean> COLLECTORS =

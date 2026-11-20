@@ -10,6 +10,10 @@ class QuestionAnswerPaymentEligibilityTest {
         assertTrue(snapshot(33.0, 40.0).isDurationBelowAverage)
     }
 
+    @Test fun validatedAutomaticOfferDoesNotApplyManualAverageCheck() {
+        assertFalse(snapshot(40.0, 50.0).copy(isServerDuration = true).isDurationBelowAverage)
+    }
+
     @Test fun equalDurationIsAllowed() {
         assertFalse(snapshot(40.0, 40.0).isDurationBelowAverage)
     }

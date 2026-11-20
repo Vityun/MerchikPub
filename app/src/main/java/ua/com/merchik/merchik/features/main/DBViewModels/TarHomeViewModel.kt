@@ -79,7 +79,7 @@ class TarHomeViewModel @Inject constructor(
         subscription = RoomManager.SQL_DB.tarDao()
             .observeHome(Globals.userId, type, Clock.getDateLong(-30).time / 1000, tarId)
             .subscribeOn(Schedulers.io())
-            .map { list -> list.map(TarListItem::from) }
+            .map { list -> list.map { TarListItem.from(it.record, it.themeName) } }
             .distinctUntilChanged()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ updated ->

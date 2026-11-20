@@ -18,18 +18,16 @@ public class OvertimeOfferPolicyTest {
         }
     }
 
-    @Test public void exactOneAndHalfIsNotOvertime() {
-        BigDecimal plan = OvertimeOfferPolicy.plannedSeconds("60");
-        assertFalse(OvertimeOfferPolicy.exceeds(5399, plan));
-        assertFalse(OvertimeOfferPolicy.exceeds(5400, plan));
-        assertTrue(OvertimeOfferPolicy.exceeds(5401, plan));
+    @Test public void overtimeCoefficientCanBeSupplied() {
+        BigDecimal plan = OvertimeOfferPolicy.plannedSeconds("40");
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(3000, plan, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
+        assertTrue(OvertimeOfferPolicy.exceedsPlan(3000, plan, 20));
     }
 
-    @Test public void serverDurationRemainsSecondsWithoutLocalCorrections() {
-        BigDecimal average = OvertimeOfferPolicy.averageSeconds(json("{\"state\":true,\"duration\":1759}"));
-        assertEquals(new BigDecimal("1759"), average);
-        assertFalse(OvertimeOfferPolicy.exceeds(2638, average));
-        assertTrue(OvertimeOfferPolicy.exceeds(2639, average));
+    @Test public void serverDurationInMinutesIsConvertedToSecondsWithoutRounding() {
+        assertEquals(new BigDecimal("1680"), OvertimeOfferPolicy.averageSeconds(json("{\"state\":true,\"duration\":28}")));
+        assertEquals(new BigDecimal("420"), OvertimeOfferPolicy.averageSeconds(json("{\"state\":true,\"duration\":7}")));
+        assertEquals(new BigDecimal("420.60"), OvertimeOfferPolicy.averageSeconds(json("{\"state\":true,\"duration\":7.01}")));
     }
 
     @Test public void unavailableServerMeanDoesNotOffer() {
@@ -40,10 +38,10 @@ public class OvertimeOfferPolicyTest {
                 "{\"state\":true,\"duration\":\"NaN\"}"}) {
             assertNull(body, OvertimeOfferPolicy.averageSeconds(json(body)));
         }
-        assertFalse(OvertimeOfferPolicy.exceeds(10000, null));
-        assertFalse(OvertimeOfferPolicy.exceeds(10000, BigDecimal.ZERO));
-        assertFalse(OvertimeOfferPolicy.exceeds(0, BigDecimal.ONE));
-        assertFalse(OvertimeOfferPolicy.exceeds(-1, BigDecimal.ONE));
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(10000, null, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(10000, BigDecimal.ZERO, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(0, BigDecimal.ONE, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(-1, BigDecimal.ONE, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
     }
 
     @Test public void requestExcludesExactLongDad2AndScopesTheAverage() {
@@ -58,14 +56,20 @@ public class OvertimeOfferPolicyTest {
         assertEquals("avg_time", decoded.get("act").getAsString());
     }
 
+    @Test public void diagnosticSendsRequiredThemeWithoutExcludingAVisit() {
+        JsonObject request = OvertimeOfferPolicy.averageRequest("46403", 28847, 998);
+        assertEquals(json("{\"mod\":\"plan\",\"act\":\"avg_time\",\"client_id\":\"46403\","
+                + "\"addr_id\":28847,\"theme_id\":998}"), request);
+    }
+
     @Test public void presentationRoundingDoesNotAffectComparison() {
         assertEquals("29", OvertimeOfferPolicy.minutes(new BigDecimal("1759")));
         assertEquals("60", OvertimeOfferPolicy.minutes(new BigDecimal("3600")));
         BigDecimal baseline = OvertimeOfferPolicy.plannedSeconds("60");
-        assertEquals("90", OvertimeOfferPolicy.minutes(new BigDecimal("5400")));
-        assertEquals("90", OvertimeOfferPolicy.minutes(new BigDecimal("5401")));
-        assertFalse(OvertimeOfferPolicy.exceeds(5400, baseline));
-        assertTrue(OvertimeOfferPolicy.exceeds(5401, baseline));
+        assertEquals("78", OvertimeOfferPolicy.minutes(new BigDecimal("4680")));
+        assertEquals("78", OvertimeOfferPolicy.minutes(new BigDecimal("4681")));
+        assertFalse(OvertimeOfferPolicy.exceedsPlan(4680, baseline, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
+        assertTrue(OvertimeOfferPolicy.exceedsPlan(4681, baseline, OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT));
     }
 
     @Test public void displayedMinutesRoundHalfUpWithoutIntermediateRounding() {

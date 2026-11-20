@@ -42,6 +42,7 @@ public final class OvertimeOfferManager {
         public int themeId;
         public long start;
         public long end;
+        public BigDecimal planSeconds;
         public BigDecimal baselineSeconds;
         public String status = "pending";
 
@@ -127,13 +128,28 @@ public final class OvertimeOfferManager {
             if (!matches(offer, visit)) { skip(offer, "visit_changed"); return; }
             if (offer.themeId == OvertimeOfferPolicy.SUPPR_THEME) { skip(offer, "suppr"); return; }
             if (hasAchievement(offer)) { skip(offer, "achievement_exists"); return; }
-            if ("ready".equals(offer.status)) { ReportConductUi.showOvertimeOffer(dad2); return; }
+            BigDecimal plan = eligiblePlan(offer, visit);
+            if (plan == null) return;
+            if ("ready".equals(offer.status) && matchesEvaluatedPlan(offer, plan)) {
+                if (OvertimeOfferPolicy.exceedsPlan(offer.end - offer.start, plan,
+                        overtimePercent(offer, offer.baselineSeconds))) {
+                    ReportConductUi.showOvertimeOffer(dad2);
+                } else skip(offer, "plan_threshold_not_exceeded");
+                return;
+            }
             if (offer.isPlanned()) {
-                evaluated(offer, OvertimeOfferPolicy.plannedSeconds(visit.getDuration_plan()));
+                evaluated(offer, plan, plan);
                 return;
             }
             if (offer.clientId == null || offer.clientId.isEmpty() || offer.addrId <= 0 || offer.themeId <= 0) {
                 skip(offer, "missing_request_parameters"); return;
+            }
+            if ("ready".equals(offer.status)) {
+                // A saved offer without a matching plan may still contain the old duration units.
+                offer.status = "pending";
+                offer.planSeconds = null;
+                offer.baselineSeconds = null;
+                save(offer);
             }
             String requestKey = key(offer.userId, dad2);
             if (!REQUESTS.add(requestKey)) return;
@@ -160,51 +176,92 @@ public final class OvertimeOfferManager {
         } catch (Exception e) { log(dad2, "evaluation failed: " + e); }
     }
 
-    private static void complete(Offer offer, BigDecimal baseline) {
+    private static BigDecimal eligiblePlan(Offer offer, WpDataDB visit) {
+        BigDecimal plan = OvertimeOfferPolicy.plannedSeconds(visit.getDuration_plan());
+        if (plan == null) {
+            skip(offer, "invalid_plan");
+            return null;
+        }
+        long actual = offer.end - offer.start;
+        // The server response selects the exact threshold; do not filter out a possible 10% case.
+        int precheckPercent = offer.isPlanned() ? OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT
+                : OvertimeOfferPolicy.MIN_OVERTIME_PERCENT;
+        log(offer.dad2, "actualSeconds=" + actual + ", planSeconds=" + plan + ", precheckPercent=" + precheckPercent);
+        if (!OvertimeOfferPolicy.exceedsPlan(actual, plan, precheckPercent)) {
+            skip(offer, "plan_threshold_not_exceeded");
+            return null;
+        }
+        return plan;
+    }
+
+    private static void complete(Offer offer, BigDecimal average) {
         try {
             // Login/visit changes while the request is in flight must not affect another visit.
             if (offer.userId != Globals.getCurrentUserId()) return;
             Offer current = load(offer.dad2);
             if (current == null || !"pending".equals(current.status)) return;
-            if (!matches(offer, RealmManager.getWorkPlanRowByCodeDad2(offer.dad2))) {
+            WpDataDB visit = RealmManager.getWorkPlanRowByCodeDad2(offer.dad2);
+            if (!matches(offer, visit)) {
                 skip(offer, "visit_changed_during_request"); return;
             }
             if (hasAchievement(offer)) { skip(offer, "achievement_exists"); return; }
-            evaluated(offer, baseline);
+            BigDecimal plan = eligiblePlan(offer, visit);
+            if (plan != null) evaluated(offer, plan, average);
         } catch (Exception e) { log(offer.dad2, "response failed: " + e); }
     }
 
-    private static void evaluated(Offer offer, BigDecimal baseline) {
-        if (baseline == null) { skip(offer, offer.isPlanned() ? "invalid_plan" : "average_unavailable"); return; }
-        offer.baselineSeconds = baseline;
+    private static void evaluated(Offer offer, BigDecimal plan, BigDecimal baseline) {
+        if (baseline == null) { skip(offer, "average_unavailable"); return; }
+        int overtimePercent = overtimePercent(offer, baseline);
         log(offer.dad2, "source=" + (offer.isPlanned() ? "plan" : "server_average")
-                + ", actualSeconds=" + (offer.end - offer.start) + ", baselineSeconds=" + baseline);
-        if (!OvertimeOfferPolicy.exceeds(offer.end - offer.start, baseline)) {
-            skip(offer, "threshold_not_exceeded"); return;
+                + ", planSeconds=" + plan + ", baselineSeconds=" + baseline + ", overtimePercent=" + overtimePercent);
+        if (!offer.isPlanned() && !OvertimeOfferPolicy.acceptsAverage(plan, baseline)) {
+            skip(offer, "average_too_short_for_plan"); return;
         }
+        if (!OvertimeOfferPolicy.exceedsPlan(offer.end - offer.start, plan, overtimePercent)) {
+            skip(offer, "plan_threshold_not_exceeded"); return;
+        }
+        offer.planSeconds = plan;
+        offer.baselineSeconds = baseline;
         offer.status = "ready";
         save(offer);
         ReportConductUi.showOvertimeOffer(offer.dad2);
+    }
+
+    private static int overtimePercent(Offer offer, BigDecimal baseline) {
+        return offer.isPlanned() ? OvertimeOfferPolicy.DEFAULT_OVERTIME_PERCENT
+                : OvertimeOfferPolicy.overtimePercentForAverage(baseline);
+    }
+
+    private static boolean matchesEvaluatedPlan(Offer offer, BigDecimal plan) {
+        return plan != null && offer.planSeconds != null && plan.compareTo(offer.planSeconds) == 0
+                && (offer.isPlanned() ? offer.baselineSeconds != null && plan.compareTo(offer.baselineSeconds) == 0
+                : OvertimeOfferPolicy.acceptsAverage(plan, offer.baselineSeconds));
+    }
+
+    public static boolean isApplicable(Offer offer, WpDataDB visit) {
+        if (!matches(offer, visit)) return false;
+        BigDecimal plan = OvertimeOfferPolicy.plannedSeconds(visit.getDuration_plan());
+        return matchesEvaluatedPlan(offer, plan) && OvertimeOfferPolicy.exceedsPlan(
+                offer.end - offer.start, plan, overtimePercent(offer, offer.baselineSeconds));
     }
 
     public static Offer ready(long dad2) {
         try {
             Offer offer = load(dad2);
             return offer != null && "ready".equals(offer.status)
-                    && matches(offer, RealmManager.getWorkPlanRowByCodeDad2(dad2))
+                    && isApplicable(offer, RealmManager.getWorkPlanRowByCodeDad2(dad2))
                     && !hasAchievement(offer) ? offer : null;
         } catch (Exception e) { log(dad2, "ready failed: " + e); return null; }
     }
 
     public static String message(Offer offer) {
         BigDecimal actualSeconds = BigDecimal.valueOf(offer.end - offer.start);
-        return "Фактическая продолжительность ТЕКУЩЕГО визита составила "
-                + OvertimeOfferPolicy.minutes(actualSeconds) + " мин."
-                + ", а средняя продолжительность предыдущих визитов по этому Адресу-Клиенту составляла приблизительно "
-                + offer.baselineText() + " мин./визит" +
-                "<br>Текущая работа заняла времени на "
-                + OvertimeOfferPolicy.minutes(actualSeconds.subtract(offer.baselineSeconds))
-                + " мин. больше среднего."
+        return "Фактическая продолжительность визита: " + OvertimeOfferPolicy.minutes(actualSeconds) + " мин."
+                + "<br>Плановая продолжительность: " + OvertimeOfferPolicy.minutes(offer.planSeconds) + " мин."
+                + (offer.isPlanned() ? "" : "<br>Средняя продолжительность предыдущих визитов: " + offer.baselineText() + " мин.")
+                + "<br>Текущая работа заняла на "
+                + OvertimeOfferPolicy.minutes(actualSeconds.subtract(offer.planSeconds)) + " мин. больше плана."
                 + "<br>У вас есть возможность получить дополнительную оплату от клиента за эту переработку. " +
                         "Для этого необходимо оформить заявку которая будет передана клиенту на рассмотрение."
                 + "<br>Бажаєте оформити заявку на разове підвищення оплати за перепрацювання?";
@@ -217,7 +274,8 @@ public final class OvertimeOfferManager {
 
     public static void open(Activity activity, Offer offer) {
         try {
-            if (ready(offer.dad2) == null) return;
+            Offer current = ready(offer.dad2);
+            if (current == null) return;
             Intent intent = new Intent(activity, FeaturesActivity.class);
             intent.putExtra("viewModel", AchievementsSDBViewModel.class.getCanonicalName());
             intent.putExtra("contextUI", "ACHIEVEMENT");
@@ -225,10 +283,10 @@ public final class OvertimeOfferManager {
             intent.putExtra("dataJson", GSON.toJson(offer.dad2));
             intent.putExtra("title", "Досягнення");
             intent.putExtra("one_time_payment_increase", true);
-            intent.putExtra(EXTRA_OFFER, GSON.toJson(offer));
+            intent.putExtra(EXTRA_OFFER, GSON.toJson(current));
             // Keep the visit activity underneath the achievement and its two dialogs.
             activity.startActivity(intent);
-            dismiss(offer);
+            dismiss(current);
         } catch (Exception e) { log(offer.dad2, "open failed: " + e); }
     }
 }

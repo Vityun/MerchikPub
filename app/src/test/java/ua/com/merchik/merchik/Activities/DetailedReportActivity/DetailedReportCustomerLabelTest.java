@@ -39,8 +39,9 @@ public class DetailedReportCustomerLabelTest {
     }
 
     @Test public void readsMainGroupFromCustomerWithoutChangingVisitOrEkl() throws Exception {
-        String source = Files.readString(Path.of("app/src/main/java/ua/com/merchik/merchik/Activities/"
-                + "DetailedReportActivity/DetailedReportHomeFrag.java"), StandardCharsets.UTF_8);
+        Path sourcePath = Path.of("app/src/main/java/ua/com/merchik/merchik/Activities/"
+                + "DetailedReportActivity/DetailedReportHomeFrag.java");
+        String source = new String(Files.readAllBytes(sourcePath), StandardCharsets.UTF_8);
         String method = source.substring(source.indexOf("private String getCustomerLabel("),
                 source.indexOf("private void setTransleted()"));
         assertTrue(source.contains("textDRCustV.setText(getCustomerLabel(wpDataDB));"));

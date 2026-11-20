@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 36
         //noinspection HighAppVersionCode
-        versionCode  2026111800
-        versionName "2026111800"
+        versionCode  2026112000
+        versionName "2026112000"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -66,6 +66,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.all {
+            // Source and resource checks resolve paths relative to the repository root.
+            workingDir rootProject.projectDir
+        }
+    }
+
     dataBinding {
         enabled = true
     }
@@ -100,7 +107,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     implementation 'androidx.compose.ui:ui:1.10.6'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
     testRuntimeOnly 'org.xerial:sqlite-jdbc:3.41.2.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
 

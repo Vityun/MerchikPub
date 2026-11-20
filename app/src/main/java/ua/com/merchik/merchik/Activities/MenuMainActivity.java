@@ -62,6 +62,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.Options.OvertimeOfferPolicy;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.Utils.TrustedTime;
@@ -255,8 +256,56 @@ public class MenuMainActivity extends toolbar_menus {
         photoDownloader.getPhotoInfoAndSaveItToDB(request, clickUpdatePhoto);
     }
 
+    private static final String AVG_TIME_TEST_TAG = "AVG_TIME_TEST";
+    private static final int AVG_TIME_TEST_THEME_ID = 998;
+    private static final int[][] AVG_TIME_TEST_PAIRS = {{46403, 28847}, {10426, 28847}, {84186, 39410}};
+    private boolean averageTimeTestInProgress;
+
     private void test() {
-        downloadAdditionalRequirementsJson();
+        if (averageTimeTestInProgress) return;
+        averageTimeTestInProgress = true;
+        requestAverageTimeForTest(0);
+    }
+
+    private void requestAverageTimeForTest(int index) {
+        if (index == AVG_TIME_TEST_PAIRS.length) {
+            averageTimeTestInProgress = false;
+            if (!isFinishing() && !isDestroyed()) {
+                Toast.makeText(this, "avg_time: результати в m_log", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+
+        int[] pair = AVG_TIME_TEST_PAIRS[index];
+        JsonObject request = OvertimeOfferPolicy.averageRequest(String.valueOf(pair[0]), pair[1], AVG_TIME_TEST_THEME_ID);
+        String label = "client_id=" + pair[0] + ", addr_id=" + pair[1];
+        logAverageTimeTest("REQUEST " + request);
+        try {
+            RetrofitBuilder.getSilentRetrofitInterface().GET_AVERAGE_WORK_TIME(request)
+                    .enqueue(new Callback<JsonObject>() {
+                        @Override
+                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                            // Keep the original duration, including zero, for comparison with the server.
+                            logAverageTimeTest(label + ", HTTP " + response.code()
+                                    + (response.isSuccessful() ? ": " + response.body() : ""));
+                            requestAverageTimeForTest(index + 1);
+                        }
+
+                        @Override
+                        public void onFailure(Call<JsonObject> call, Throwable error) {
+                            logAverageTimeTest(label + ", FAILURE: " + error);
+                            requestAverageTimeForTest(index + 1);
+                        }
+                    });
+        } catch (RuntimeException e) {
+            logAverageTimeTest(label + ", FAILURE: " + e);
+            requestAverageTimeForTest(index + 1);
+        }
+    }
+
+    private static void logAverageTimeTest(String message) {
+        Log.i(AVG_TIME_TEST_TAG, message);
+        Globals.writeToMLOG("INFO", AVG_TIME_TEST_TAG, message);
     }
 
     private static final String ADD_REQUIREMENTS_JSON_TAG = "ADD_REQUIREMENTS_JSON";

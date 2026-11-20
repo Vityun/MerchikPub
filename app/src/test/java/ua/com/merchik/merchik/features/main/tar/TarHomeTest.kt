@@ -91,6 +91,30 @@ class TarHomeTest {
         assertEquals("20", source.sumPremiya)
     }
 
+    @Test fun cardShowsThemeNameOrFallsBackToItsId() {
+        val source = TasksAndReclamationsSDB().apply { themeId = 998 }
+        val row = TarListItem.from(source, " Викладка товарів ")
+        assertEquals("Викладка товарів", row.theme)
+        assertEquals("Тема", row.fieldTitle("theme"))
+        assertTrue("theme" in row.getPreferredFieldOrder())
+        assertEquals("998", TarListItem.from(source, " ").theme)
+        assertEquals("998", TarListItem.from(source).theme)
+        assertEquals("", TarListItem.from(TasksAndReclamationsSDB()).theme)
+    }
+
+    @Test fun cardAppendsCurrencyOnlyToNonemptyDisplayedAmounts() {
+        val source = TasksAndReclamationsSDB().apply {
+            tp = 1; state = 0; sumPenalty = "20.00"; sumPremiya = "20.00"
+        }
+        val task = TarListItem.from(source)
+        assertEquals("20.00 / 20.00", task.amount)
+        assertEquals("20.00 / 20.00 (грн)", task.getValueUI("amount", task.amount))
+        source.tp = 0
+        val reclamation = TarListItem.from(source)
+        assertEquals("20.00 / -20.00 (грн)", reclamation.getValueUI("amount", reclamation.amount))
+        assertEquals("", reclamation.getValueUI("amount", ""))
+    }
+
     @Test fun reclamationAmountsKeepLegacyRules() {
         val source = TasksAndReclamationsSDB().apply { tp = 0; sumPenalty = "10"; state = 0 }
         assertEquals("10 / -10", TarListItem.from(source).amount)

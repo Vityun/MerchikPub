@@ -61,6 +61,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
     public static final String EXTRA_OPEN_TAR_ID = "tar_open_id";
 
+    static int getInitialTarId(Intent intent) {
+        int id = intent.getIntExtra(EXTRA_OPEN_TAR_ID, 0);
+        return id > 0 ? id : intent.getIntExtra("TAR_ID", 0);
+    }
+
     private Globals globals = new Globals();
 
 
@@ -79,6 +84,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     public static TextView activity_title;
 
     public static int TARType;
+    private int sectionType;
+
+    public int getSectionType() {
+        return sectionType;
+    }
 
     public static FloatingActionButton fab,fabViber;
 
@@ -195,66 +205,6 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 //        setHomeFrag();
     }
 
-    // =================================== --- onCreate --- ========================================
-    @Override
-    public void onBackPressed() {
-        fragmentManager = getSupportFragmentManager();
-        Log.e("TasksActivity_T", "onBackPressed. Количество фрагментов в момент нажатия назад: " + fragmentManager.getBackStackEntryCount());
-
-        if (fragmentManager.getBackStackEntryCount() >= 1) {
-
-            Log.e("TasksActivity_T", "Я Должен удалить предыдущий фрагмент и его контекст из памяти что б он не открылся по новой");
-
-            Log.e("TasksActivity_T", "1. Фрагментов не 0: " + fragmentManager.getBackStackEntryCount());
-            Log.e("TasksActivity_T", "1. fragmentManager.getFragments(): " + fragmentManager.getFragments());
-
-            Log.e("TasksActivity_T", "Скока Вас: " + fragmentManager.getFragments().size());
-            Log.e("TasksActivity_T", "Как ты выглядишь, демон?: " + fragmentManager.getFragments().get(0));
-
-            for (int i = 1; i < fragmentManager.getFragments().size(); i++) {
-                Log.e("TasksActivity_T", "УДОЛЯЮ: " + fragmentManager.getFragments().get(i));
-                fragmentManager.beginTransaction()
-                        .remove(fragmentManager.getFragments().get(i))
-                        .commit();
-                fragmentManager.popBackStack(fragmentManager.getFragments().get(i).getId(), 0);
-            }
-
-            fragmentManager.popBackStackImmediate();
-
-
-            if (TARType == 1) {
-                TARActivity.activity_title.setText("Задачи");
-                textLesson = 1179;
-                videoLesson = 1180;
-                videoLessons = null;
-                setFab(this, fab, ()->{});
-                Log.e("SET_TAR_FAB", "task");
-            } else if (TARType == 0) {
-                TARActivity.activity_title.setText("Рекламации");
-                textLesson = 1181;
-                videoLesson = 1182;
-                videoLessons = null;
-                setFab(this, fab, ()->{});
-                Log.e("SET_TAR_FAB", "report");
-            }
-
-
-            TARActivity.activity_title.setBackground(this.getResources().getDrawable(R.drawable.shadow_tab_item_active));
-
-            Log.e("TasksActivity_T", "Скока Вас 2: " + fragmentManager.getFragments().size());
-
-
-        } else {
-//            startActivity(getIntent());
-
-            Log.e("TasksActivity_T", "Ну вообще я тут должен просто назад вернуться. Например в предыдущую активность");
-
-            Log.e("TasksActivity_T", "2. Фрагментов нет: " + fragmentManager.getBackStackEntryCount());
-            Log.e("TasksActivity_T", "2. fragmentManager.getFragments(): " + fragmentManager.getFragments());
-            super.onBackPressed();
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -366,7 +316,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                     return;
                 }
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client, fragmentHome.secondFrag.data);
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(photoPath), addr, client);
                 if (stackPhotoDB == null) MakePhoto.deletePendingPhotoFileIfExists(this);
                 MakePhoto.clearPendingPhoto(this);
                 if (stackPhotoDB == null) return;
@@ -496,7 +446,17 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
 
     private void setHomeContent() {
-        TARType = getIntent().getIntExtra("TAR_type", 1);
+        sectionType = getIntent().getIntExtra("TAR_type", 1);
+        int initialId = getInitialTarId(getIntent());
+        if (initialId > 0 && !getIntent().hasExtra("TAR_type")) {
+            try {
+                TasksAndReclamationsSDB record = SQL_DB.tarDao().getById(initialId);
+                if (record != null && record.tp != null) sectionType = record.tp;
+            } catch (RuntimeException e) {
+                Globals.writeToMLOG("ERROR", "TARActivity/initialType", e.toString());
+            }
+        }
+        TARType = sectionType;
         fragmentManager = getSupportFragmentManager();
         if (fragmentManager.findFragmentById(R.id.tar_content_container) == null) {
             fragmentManager.beginTransaction()
@@ -554,7 +514,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         }
     }
 
-    private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client, TasksAndReclamationsSDB tar) {
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client) {
         try {
             String hash = validatedPhotoHash(photoFile);
             if (hash == null) return null;
@@ -572,12 +532,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setCustomerTxt(client.getNm());
 
             stackPhotoDB.setUser_id(Globals.getCurrentUserId());
-            if (tar.themeId == 150){
-                stackPhotoDB.setPhoto_type(18);
-                stackPhotoDB.tovar_id = String.valueOf(tar.refId);
-            }else {
-                stackPhotoDB.setPhoto_type(0);
-            }
+            stackPhotoDB.setPhoto_type(0);
 
             stackPhotoDB.setDvi(1);
 

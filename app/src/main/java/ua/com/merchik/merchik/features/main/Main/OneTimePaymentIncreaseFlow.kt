@@ -72,7 +72,7 @@ private fun prepareOneTimePaymentIncrease(
     val offerJson = activity?.intent?.getStringExtra(OvertimeOfferManager.EXTRA_OFFER)
         ?: return snapshot
     val offer = Gson().fromJson(offerJson, OvertimeOfferManager.Offer::class.java)
-    require(OvertimeOfferManager.matches(offer, visit) && offer.baselineSeconds?.signum() == 1) {
+    require(OvertimeOfferManager.isApplicable(offer, visit)) {
         "Дані відвідування змінилися. Відкрийте заявку повторно з відвідування."
     }
     return snapshot.copy(

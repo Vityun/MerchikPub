@@ -21,11 +21,13 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 
 public class TARFragmentHome extends Fragment {
 
+    private static final String LIST_TAG = "TARHomeFrag";
+    private static final String DETAIL_TAG = "TARSecondFrag";
+    private static final String DETAIL_BACK_STACK = "tar_detail";
+    private final FragmentManager.OnBackStackChangedListener backStackListener = this::updateCurrentChild;
+
     private OnFragmentInteractionListener mListener;
     Fragment oldFrag;
-
-    public static int secondFragId;
-    public static String secondFragTAG;
 
     private FragmentManager fragmentManager;
     public TARHomeFrag homeFrag;
@@ -85,32 +87,58 @@ public class TARFragmentHome extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        Fragment existingFragment = getChildFragmentManager().findFragmentById(R.id.frame_layout);
-        if (existingFragment != null) {
-            if (existingFragment instanceof TARSecondFrag) {
-                secondFrag = (TARSecondFrag) existingFragment;
-                return;
-            }
-            if (existingFragment instanceof TARHomeFrag) {
-                homeFrag = (TARHomeFrag) existingFragment;
-                return;
-            }
+        super.onViewCreated(view, savedInstanceState);
+        FragmentManager children = getChildFragmentManager();
+        children.addOnBackStackChangedListener(backStackListener);
+        if (children.findFragmentById(R.id.frame_layout) != null) {
+            updateCurrentChild();
+            return;
         }
 
-        int initialTaskId = requireActivity().getIntent().getIntExtra(TARActivity.EXTRA_OPEN_TAR_ID, 0);
-        Fragment childFragment;
-        if (initialTaskId > 0 && existingFragment == null) {
-            secondFrag = TARSecondFrag.newInstanceById(initialTaskId);
-            childFragment = secondFrag;
-        } else {
-            childFragment = setHomeFrag();
+        showList();
+        int initialTaskId = TARActivity.getInitialTarId(requireActivity().getIntent());
+        if (initialTaskId > 0) showDetail(TARSecondFrag.newInstanceById(initialTaskId));
+    }
+
+    @Override
+    public void onDestroyView() {
+        getChildFragmentManager().removeOnBackStackChangedListener(backStackListener);
+        super.onDestroyView();
+    }
+
+    private void updateCurrentChild() {
+        Fragment current = getChildFragmentManager().findFragmentById(R.id.frame_layout);
+        if (current instanceof TARSecondFrag) {
+            secondFrag = (TARSecondFrag) current;
+        } else if (current instanceof TARHomeFrag) {
+            homeFrag = (TARHomeFrag) current;
+            secondFrag = null;
+            viewModel.setTasksAndReclamations(null);
+            TARSecondFrag.TaRID = 0;
         }
-        getChildFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_layout, childFragment)
+    }
+
+    private void showList() {
+        int type = requireActivity() instanceof TARActivity
+                ? ((TARActivity) requireActivity()).getSectionType() : TARType;
+        homeFrag = TARHomeFrag.newInstance(type, null);
+        getChildFragmentManager().beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.frame_layout, homeFrag, LIST_TAG)
                 .commit();
     }
 
+    public void returnToList() {
+        FragmentManager children = getChildFragmentManager();
+        if (children.isStateSaved() || !(children.findFragmentById(R.id.frame_layout) instanceof TARSecondFrag)) return;
+        if (!children.popBackStackImmediate(DETAIL_BACK_STACK, FragmentManager.POP_BACK_STACK_INCLUSIVE)) {
+            // A detail restored from an older version might have no list in the back stack.
+            secondFrag = null;
+            viewModel.setTasksAndReclamations(null);
+            TARSecondFrag.TaRID = 0;
+            showList();
+        }
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -134,18 +162,18 @@ public class TARFragmentHome extends Fragment {
         void messageFromParentFragment(String msg);
     }
 
-    private Fragment setHomeFrag() {
-        homeFrag = TARHomeFrag.newInstance(TARType, null);
-        return homeFrag;
+    public void openTask(TasksAndReclamationsSDB data) {
+        if (!isAdded() || getChildFragmentManager().isStateSaved() || secondFrag != null
+                || data == null || data.id == null || data.id <= 0) return;
+        showDetail(TARSecondFrag.newInstance(data));
     }
 
-    public void openTask(TasksAndReclamationsSDB data) {
-        if (!isAdded() || getChildFragmentManager().isStateSaved()) return;
-        viewModel.setTasksAndReclamations(data);
-        secondFrag = TARSecondFrag.newInstance(data);
+    private void showDetail(TARSecondFrag detail) {
+        secondFrag = detail;
         getChildFragmentManager().beginTransaction()
-                .replace(R.id.frame_layout, secondFrag, "TARSecondFrag").commit();
-        secondFragId = secondFrag.getId();
-        secondFragTAG = secondFrag.getTag();
+                .setReorderingAllowed(true)
+                .replace(R.id.frame_layout, detail, DETAIL_TAG)
+                .addToBackStack(DETAIL_BACK_STACK)
+                .commit();
     }
 }

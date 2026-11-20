@@ -78,6 +78,6 @@ public class VisitReportBackgroundRefreshWiringTest {
     private static String source(String file) throws IOException {
         Path root = Path.of("app/src/main/java/ua/com/merchik/merchik");
         if (!Files.isDirectory(root)) root = Path.of("src/main/java/ua/com/merchik/merchik");
-        return Files.readString(root.resolve(file), StandardCharsets.UTF_8).replace("\r\n", "\n");
+        return new String(Files.readAllBytes(root.resolve(file)), StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 }

@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
 
-/** Standalone JVM benchmark, run in separate before/after processes with identical heap settings. */
+/** Standalone JDK benchmark, run in separate before/after processes with identical heap settings. */
 public final class ReportPrepareJsonBenchmark {
     private static volatile ReportPrepareServer retained;
     private static volatile long checksum;

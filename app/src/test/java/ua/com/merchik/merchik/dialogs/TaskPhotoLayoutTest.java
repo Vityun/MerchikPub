@@ -6,6 +6,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -80,7 +81,7 @@ public class TaskPhotoLayoutTest {
     @Test public void touchImageViewNeverReceivesNullTouchListener() throws Exception {
         Path source = Path.of("src/main/java/ua/com/merchik/merchik/dialogs/DialogFullPhotoR.java");
         if (!Files.exists(source)) source = Path.of("app").resolve(source);
-        String code = Files.readString(source);
+        String code = new String(Files.readAllBytes(source), StandardCharsets.UTF_8);
         // The Kotlin TouchImageView 3.1.0 override throws before displaying the cached bitmap.
         assertFalse(code.matches("(?s).*photo\\.setOnTouchListener\\(\\s*null\\s*\\).*"));
         assertTrue(code.contains("photo.setOnTouchListener((view, event) -> false)"));

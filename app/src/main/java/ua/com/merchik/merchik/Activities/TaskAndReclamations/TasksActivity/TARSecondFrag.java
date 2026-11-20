@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -20,6 +21,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -82,8 +85,8 @@ public class TARSecondFrag extends Fragment {
 
         if (data != null) {
             viewModel.setTasksAndReclamations(data);
-            TaRID = data.id != null ? data.id : 0;
         }
+        TaRID = data != null && data.id != null ? data.id : 0;
     }
 
     @Override
@@ -96,17 +99,19 @@ public class TARSecondFrag extends Fragment {
         return v;
     }
 
-    private void bindHeader(View view, TasksAndReclamationsSDB tar) {
+    private void bindHeader(View view, @Nullable TasksAndReclamationsSDB tar) {
         TextView title = view.findViewById(R.id.tar_header_title);
         TextView number = view.findViewById(R.id.tar_header_number);
-        title.setText(tar.tp != null && tar.tp == 1
-                ? R.string.title_task_single : R.string.title_reclamation_single);
+        boolean task = tar != null ? Integer.valueOf(1).equals(tar.tp)
+                : !(requireActivity() instanceof TARActivity) || ((TARActivity) requireActivity()).getSectionType() == 1;
+        title.setText(task ? R.string.title_task_single : R.string.title_reclamation_single);
 
         StringBuilder identifier = new StringBuilder();
-        if (tar.id != null) {
-            identifier.append(tar.id);
+        Integer id = tar != null ? tar.id : Integer.valueOf(requestedTarId());
+        if (id != null && id > 0) {
+            identifier.append(id);
         }
-        if (tar.id1c != null && !tar.id1c.trim().isEmpty()) {
+        if (tar != null && tar.id1c != null && !tar.id1c.trim().isEmpty()) {
             if (identifier.length() > 0) identifier.append(" / ");
             identifier.append(tar.id1c.trim());
         }
@@ -120,14 +125,15 @@ public class TARSecondFrag extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Tab1Fragment.secFrag = this;
+        bindBack(view);
 
         data = resolveTarData();
+        bindHeader(view, data);
         if (data != null) {
-            bindHeader(view, data);
             setTab(view.getContext());
         } else if (viewModel != null) {
             viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), tar -> {
-                if (tar != null && data == null) {
+                if (data == null && matchesRequestedId(requestedTarId(), tar)) {
                     data = tar;
                     bindHeader(view, data);
                     setTab(view.getContext());
@@ -137,6 +143,20 @@ public class TARSecondFrag extends Fragment {
 
         if (fragmentManager != null) {
             Log.e("TARSecondFrag_T", "fragmentManager.getFragments(): " + fragmentManager.getFragments());
+        }
+    }
+
+    private void bindBack(View view) {
+        View back = view.findViewById(R.id.tar_header_back);
+        if (getParentFragment() instanceof TARFragmentHome) {
+            TARFragmentHome parent = (TARFragmentHome) getParentFragment();
+            OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+                @Override public void handleOnBackPressed() { parent.returnToList(); }
+            };
+            requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
+            back.setOnClickListener(v -> parent.returnToList());
+        } else {
+            back.setOnClickListener(v -> requireActivity().onBackPressed());
         }
     }
 
@@ -189,27 +209,28 @@ public class TARSecondFrag extends Fragment {
     }
 
     private TasksAndReclamationsSDB resolveTarData() {
-        if (data != null) {
-            return data;
-        }
+        int tarId = requestedTarId();
+        if (matchesRequestedId(tarId, data)) return data;
 
-        try {
-            Bundle args = getArguments();
-            if (args != null && args.containsKey(ARG_TAR_ID)) {
-                int tarId = args.getInt(ARG_TAR_ID, 0);
-                if (tarId > 0) {
-                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(tarId);
-                    if (tar != null) {
-                        return tar;
-                    }
-                }
+        if (tarId > 0) {
+            try {
+                return SQL_DB.tarDao().getById(tarId);
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "TARSecondFrag/resolveTarData", "Exception e: " + e);
+                return null;
             }
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "TARSecondFrag/resolveTarData", "Exception e: " + e);
         }
 
         return viewModel != null ? viewModel.getTasksAndReclamations().getValue() : null;
     }
 
+    private int requestedTarId() {
+        Bundle args = getArguments();
+        return args != null ? args.getInt(ARG_TAR_ID, 0) : 0;
+    }
+
+    static boolean matchesRequestedId(int tarId, @Nullable TasksAndReclamationsSDB record) {
+        return record != null && (tarId <= 0 || Integer.valueOf(tarId).equals(record.id));
+    }
 
 }

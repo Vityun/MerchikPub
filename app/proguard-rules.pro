@@ -123,3 +123,7 @@
 # Для моделей уфмд
 -keep class ua.com.merchik.merchik.features.main.Main.** { *; }
 -keep class ua.com.merchik.merchik.dataLayer.** { *; }
+
+# MainUI reads DataObjectUI fields through Gson and uses class names as settings keys.
+# Protect the model contract regardless of its package (including TAR presentation models).
+-keep class ua.com.merchik.merchik.** implements ua.com.merchik.merchik.dataLayer.DataObjectUI { *; }

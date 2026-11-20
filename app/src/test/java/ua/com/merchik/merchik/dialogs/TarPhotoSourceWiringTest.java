@@ -75,6 +75,6 @@ public class TarPhotoSourceWiringTest {
     private static String source(String path) throws IOException {
         Path root = Path.of("app/src/main/java/ua/com/merchik/merchik");
         if (!Files.isDirectory(root)) root = Path.of("src/main/java/ua/com/merchik/merchik");
-        return Files.readString(root.resolve(path), StandardCharsets.UTF_8);
+        return new String(Files.readAllBytes(root.resolve(path)), StandardCharsets.UTF_8);
     }
 }

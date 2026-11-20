@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
@@ -41,6 +42,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ComposeView view = new ComposeView(requireContext());
+        view.setId(R.id.tar_home_list);
         view.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         return view;
@@ -50,7 +52,8 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         type = requireArguments().getInt("type");
-        int tarId = requireActivity().getIntent().getIntExtra("TAR_ID", 0);
+        int tarId = getParentFragment() instanceof TARFragmentHome
+                ? 0 : requireActivity().getIntent().getIntExtra("TAR_ID", 0);
         viewModel = new ViewModelProvider(requireActivity())
                 .get("tar_home_" + type + "_" + tarId, TarHomeViewModel.class);
         viewModel.configure(type, tarId);
