@@ -91,6 +91,7 @@ private fun visibleMessageIds(listState: LazyListState): List<Int> {
 @Composable
 private fun ChatConversationScreen(viewModel: ChatConversationViewModel, fontOffset: Float, onBack: () -> Unit) {
     val state by viewModel.state.collectAsState()
+    val title = remember(state.title) { NativeTextParser.parse(state.title).text }
     val listState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val windowInfo = LocalWindowInfo.current
@@ -113,7 +114,7 @@ private fun ChatConversationScreen(viewModel: ChatConversationViewModel, fontOff
             IconButton(onClick = onBack, modifier = Modifier.size(56.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.chat_back), tint = Color.Black)
             }
-            Text(state.title.ifBlank { stringResource(R.string.chat_toolbar_title) },
+            Text(title.ifBlank { stringResource(R.string.chat_toolbar_title) },
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
                 fontSize = (18 + fontOffset).sp, color = Color.Black,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)

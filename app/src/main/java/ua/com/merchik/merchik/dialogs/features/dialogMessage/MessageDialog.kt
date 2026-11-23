@@ -42,7 +42,6 @@ import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -122,7 +121,6 @@ fun MessageDialog(
 ) {
     Log.e("additionalEarningsDialogData", "MessageDialog ++")
     val scrollState = rememberScrollState()
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var isChecked by rememberSaveable { mutableStateOf(false) }
     val confirmAction = onConfirmAction?.takeIf { okButtonName.isNotBlank() }
@@ -204,13 +202,14 @@ fun MessageDialog(
         },
         properties = DialogProperties(
             dismissOnBackPress = dismissOnBackPress,
-            dismissOnClickOutside = dismissOnClickOutside
+            dismissOnClickOutside = dismissOnClickOutside,
+            usePlatformDefaultWidth = false
         )
     ) {
         Column(
             modifier = Modifier
                 .wrapContentHeight()
-                .width(screenWidth * 0.9f)
+                .fillMaxWidth(0.9f)
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {

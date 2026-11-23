@@ -73,6 +73,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
+import ua.com.merchik.merchik.Utils.MockLocationGuard;
 import ua.com.merchik.merchik.Utils.LocationFixPolicy;
 import ua.com.merchik.merchik.Utils.WifiScanAccess;
 import java.util.Map;
@@ -1548,6 +1549,11 @@ public class Globals {
 
     public static LocationCapture captureLocation(WpDataDB wp, Context context) {
         LocationCapture result = new LocationCapture();
+        if (MockLocationGuard.isActive(context)) {
+            result.coordinateResult = LocationFixPolicy.MOCK_LOCATION;
+            result.wifiResult = LocationFixPolicy.MOCK_LOCATION;
+            return result;
+        }
         long now = System.currentTimeMillis();
         if (context != null
                 && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -1637,7 +1643,9 @@ public class Globals {
             try {
                 WifiMatchResult match = buildWifiStatsMatch(context, wp.getAddr_id());
                 result.wifiResult = match.reason;
-                if (match.observed) {
+                if (MockLocationGuard.isActive(context)) {
+                    result.wifiResult = LocationFixPolicy.MOCK_LOCATION;
+                } else if (match.observed) {
                     LogMPDB wifi = WifiPresencePolicy.newObservation(RealmManager.logMPGetLastId() + 1,
                             wp.getCode_dad2(), wp.getAddr_id(), shop[0], shop[1], match.confirmed,
                             match.text, System.currentTimeMillis());
@@ -1679,6 +1687,7 @@ public class Globals {
     }
 
     private static WifiMatchResult buildWifiStatsMatch(Context context, int addrId) {
+        if (MockLocationGuard.isActive(context)) return new WifiMatchResult("", false, false, LocationFixPolicy.MOCK_LOCATION);
         WifiScanAccess access = new WifiScanAccess(context);
         Integer found = null, known = null, matched = null;
         Double percent = null;

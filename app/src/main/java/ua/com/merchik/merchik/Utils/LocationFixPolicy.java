@@ -4,12 +4,23 @@ import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 
 public final class LocationFixPolicy {
     public static final long MAX_AGE_MS = 10 * 60 * 1000L;
+    public static final String MOCK_LOCATION = "mock_location";
 
     private LocationFixPolicy() { }
 
+    static boolean latestProviderFixMock(long cachedAt, boolean cachedMock, long deliveredAt,
+                                         boolean deliveredMock, long nowNanos) {
+        // Never let the timestamp on an Android-reported mock make older genuine history count.
+        if (cachedAt >= 0) {
+            return cachedMock || (deliveredMock && deliveredAt >= cachedAt);
+        }
+        // Android may have cleared the provider; do not keep an obsolete listener value forever.
+        return deliveredAt >= 0 && nowNanos - deliveredAt <= MAX_AGE_MS * 1_000_000L && deliveredMock;
+    }
+
     public static String rejection(double lat, double lon, long measuredAt, long now, boolean mock) {
+        if (mock) return MOCK_LOCATION;
         if (!validCoordinates(lat, lon)) return "invalid_coordinates";
-        if (mock) return "mock_location";
         if (measuredAt <= 0) return "missing_time";
         if (measuredAt > now) return "future_time";
         if (now - measuredAt > MAX_AGE_MS) return "stale_time";
@@ -22,6 +33,7 @@ public final class LocationFixPolicy {
     }
 
     public static int preferredProvider(String gpsRejection, String netRejection) {
+        if (MOCK_LOCATION.equals(gpsRejection) || MOCK_LOCATION.equals(netRejection)) return 0;
         if (gpsRejection == null) return 1;
         return netRejection == null ? 2 : 0;
     }

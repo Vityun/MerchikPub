@@ -6,7 +6,8 @@ import java.util.regex.Pattern
 data class NativeTextAction(val kind: Kind, val value: String) {
     enum class Kind {
         COPY_UNLOCK_CODE, VISIT_BY_NUMBER, VISIT_BY_DAD2, PHOTO_BY_SERVER_ID,
-        TASK_BY_ID, RECLAMATION_BY_ID, TASK_BY_NUMBER, RECLAMATION_BY_NUMBER, DIAL
+        TASK_BY_ID, RECLAMATION_BY_ID, TASK_BY_NUMBER, RECLAMATION_BY_NUMBER, DIAL,
+        ACHIEVEMENT_BY_SERVER_ID
     }
 }
 
@@ -36,6 +37,8 @@ object NativeTextParser {
     private const val PHOTO = "\u0444\u043e\u0442\u043e"
     private const val TASK = "\u0437\u0430\u0434\u0430\u0447\u0430"
     private const val RECLAMATION = "\u0440\u0435\u043a\u043b\u0430\u043c\u0430\u0446\u0438\u044f"
+    private const val ACHIEVEMENT_UK = "\u0434\u043e\u0441\u044f\u0433\u043d\u0435\u043d\u043d\u044f"
+    private const val ACHIEVEMENT_RU = "\u0434\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u0435"
     private const val ONE_C = "_1\u0441"
     private const val PHONE = "\u0442\u0435\u043b\u0435\u0444\u043e\u043d"
     private const val BOLD = "\u0442\u0435\u043a\u0441\u0442_\u0436\u0438\u0440\u043d\u044b\u0439"
@@ -123,6 +126,7 @@ object NativeTextParser {
             RECLAMATION -> NativeTextAction.Kind.RECLAMATION_BY_ID
             TASK + ONE_C -> NativeTextAction.Kind.TASK_BY_NUMBER
             RECLAMATION + ONE_C -> NativeTextAction.Kind.RECLAMATION_BY_NUMBER
+            ACHIEVEMENT_UK, ACHIEVEMENT_RU -> NativeTextAction.Kind.ACHIEVEMENT_BY_SERVER_ID
             PHONE -> NativeTextAction.Kind.DIAL
             else -> return null
         }
@@ -131,7 +135,8 @@ object NativeTextParser {
             NativeTextAction.Kind.DIAL -> phone.matches(value) && value.any { it in '0'..'9' }
             NativeTextAction.Kind.TASK_BY_NUMBER, NativeTextAction.Kind.RECLAMATION_BY_NUMBER ->
                 documentNumber.matches(value)
-            NativeTextAction.Kind.TASK_BY_ID, NativeTextAction.Kind.RECLAMATION_BY_ID ->
+            NativeTextAction.Kind.TASK_BY_ID, NativeTextAction.Kind.RECLAMATION_BY_ID,
+            NativeTextAction.Kind.ACHIEVEMENT_BY_SERVER_ID ->
                 positiveId.matches(value) && (value.toIntOrNull() ?: 0) > 0
             else -> positiveId.matches(value) && (value.toLongOrNull() ?: 0L) > 0L
         }

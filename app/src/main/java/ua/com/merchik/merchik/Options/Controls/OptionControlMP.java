@@ -18,6 +18,9 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Utils.WifiPresencePolicy;
 import ua.com.merchik.merchik.Utils.LocationFixPolicy;
+import ua.com.merchik.merchik.Utils.MockLocationGuard;
+import ua.com.merchik.merchik.dialogs.MockLocationWarning;
+import io.realm.Realm;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -27,7 +30,6 @@ import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -50,17 +52,22 @@ public class OptionControlMP<T> extends OptionControl {
     private String period = "";
 
     public boolean signal = true;
+    private boolean rejectedMock;
     private LogMPDB latestMeasurementLog;
 
     public OptionControlMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
+        this.context = context != null ? context : MyApplication.getAppContext();
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
         this.unlockCodeResultListener = unlockCodeResultListener;
-        getDocumentVar();
-        executeOption();
+        rejectedMock = MockLocationGuard.isActive(this.context);
+        if (document instanceof WpDataDB) wpDataDB = (WpDataDB) document;
+        if (!rejectedMock) {
+            getDocumentVar();
+            executeOption();
+        }
     }
 
     private void getDocumentVar() {
@@ -160,12 +167,25 @@ public class OptionControlMP<T> extends OptionControl {
     }
 
     public void showMassage(boolean showMassage, Clicks.clickStatusMsg click) {
+        if (rejectedMock || MockLocationGuard.isActive(context)) {
+            rejectedMock = true;
+            signal = true;
+            setIsBlockOption(true);
+            stringBuilderMsg = new StringBuilder(MockLocationGuard.MESSAGE);
+            Globals.writeToMLOG("WARNING", "OptionControlMP/mock_location",
+                    "dad2=" + (wpDataDB == null ? null : wpDataDB.getCode_dad2()) + ": " + MockLocationGuard.MESSAGE);
+            MockLocationWarning.refresh(context);
+            try {
+                saveResult();
+            } catch (RuntimeException e) {
+                logOptionError("mockLocation/saveResult", e);
+            }
+            click.onFailure(MockLocationGuard.MESSAGE);
+            return;
+        }
         try {
             if (context == null)
                 context = MyApplication.getAppContext();
-
-            DialogData dialog = new DialogData(context);
-//            unlockCode();
 
             StringBuilder title = new StringBuilder();
 
@@ -264,6 +284,7 @@ public class OptionControlMP<T> extends OptionControl {
 
 
             if (showMassage && !okMP) {
+                DialogData dialog = new DialogData(context);
                 dialog.setImgBtnCall(context);
                 dialog.setTitle(title);
                 dialog.setText(stringBuilder);
@@ -274,25 +295,39 @@ public class OptionControlMP<T> extends OptionControl {
 
             stringBuilderMsg = stringBuilder;
 
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionDB != null) {
-                    if (signal) {
-                        double penalty = calculatePenalty(wpDataDB);
-                        optionDB.setIsSignal("1");
-                        optionDB.setSumPenalty(String.valueOf(penalty));
-                    } else {
-                        optionDB.setIsSignal("2");
-                        optionDB.setSumPenalty("0.00");
-                    }
-                    realm.insertOrUpdate(optionDB);
-                }
-            });
-
-
+            saveResult();
             setIsBlockOption(signal);
             checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlMP/showMassage", "Exception e: " + e);
+        }
+    }
+
+    @Override public void showOptionMassage(String msg) {
+        if (!rejectedMock) super.showOptionMassage(msg);
+    }
+
+    public boolean rejectedMockLocation() {
+        return rejectedMock;
+    }
+
+    private void saveResult() {
+        if (optionDB == null) return;
+        try (Realm db = Realm.getDefaultInstance()) {
+            db.executeTransaction(realm -> {
+                optionDB.setIsSignal(signal ? "1" : "2");
+                optionDB.setSumPenalty(signal ? String.valueOf(calculatePenalty(wpDataDB)) : "0.00");
+                String notes = optionDB.getNotes();
+                String suffix = "\n" + MockLocationGuard.MESSAGE;
+                if (rejectedMock && (notes == null || !notes.endsWith(MockLocationGuard.MESSAGE))) {
+                    optionDB.setNotes(notes == null || notes.isEmpty() ? MockLocationGuard.MESSAGE : notes + suffix);
+                } else if (!rejectedMock && MockLocationGuard.MESSAGE.equals(notes)) {
+                    optionDB.setNotes("");
+                } else if (!rejectedMock && notes != null && notes.endsWith(suffix)) {
+                    optionDB.setNotes(notes.substring(0, notes.length() - suffix.length()));
+                }
+                realm.insertOrUpdate(optionDB);
+            });
         }
     }
 

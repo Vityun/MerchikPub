@@ -40,6 +40,7 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionControlCheckingReasonOutOfStock", "Exception e: " + e);

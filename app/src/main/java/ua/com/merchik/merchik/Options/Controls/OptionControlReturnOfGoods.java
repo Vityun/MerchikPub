@@ -64,6 +64,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         } catch (Exception e) {
             Log.e("OCReturnOfGoods", "Exception e: " + e);

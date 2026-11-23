@@ -12,12 +12,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
 import ua.com.merchik.merchik.Utils.LocationUtils;
+import ua.com.merchik.merchik.Utils.MockLocationGuard;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
@@ -145,10 +145,12 @@ public class trecker implements LocationListener {
     private void showLocation(Location location) {
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
             imHereGPS = location;
+            isMockGPS = location.isFromMockProvider();
             Log.e("TEST.GPS_LOCATION", "GPS: " + imHereGPS + " GPStime: " + imHereGPS.getTime());
 
         } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
             imHereNET = location;
+            isMockNET = location.isFromMockProvider();
             Log.e("TEST.GPS_LOCATION", "NET: " + imHereNET + " NETtime: " + imHereNET.getTime());
         }
     }
@@ -166,15 +168,7 @@ public class trecker implements LocationListener {
     }
 
     public boolean isMockGPS(Context context) {
-        boolean mock = true;
-        if (android.os.Build.VERSION.SDK_INT >= 18) {
-            if (imHereGPS != null) {
-                mock = imHereGPS.isFromMockProvider();
-            }
-        } else {
-            mock = !Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-        }
-        return mock;
+        return MockLocationGuard.isActive(context);
     }
 
 

@@ -73,6 +73,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                enableCorrectionList(this::executeOption);
                 executeOption();
             }
         } catch (Exception e) {

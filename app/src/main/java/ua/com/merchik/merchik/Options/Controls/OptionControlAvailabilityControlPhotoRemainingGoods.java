@@ -75,7 +75,6 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
     private UsersSDB usersSDB;
 
-    private SpannableStringBuilder tovs = new SpannableStringBuilder();
 
     public OptionControlAvailabilityControlPhotoRemainingGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -87,6 +86,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                enableCorrectionList(this::executeOption);
                 executeOption();
             }
         } catch (Exception e) {
@@ -113,6 +113,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
+            SpannableStringBuilder tovs = new SpannableStringBuilder();
             LocalDate planDay = wpDataDB.getDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             //1.0

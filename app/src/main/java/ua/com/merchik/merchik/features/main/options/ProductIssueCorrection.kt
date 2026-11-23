@@ -3,8 +3,6 @@ package ua.com.merchik.merchik.features.main.options
 import android.content.Intent
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -18,7 +16,7 @@ object ProductIssueCorrection {
     @JvmStatic
     @JvmOverloads
     fun open(view: View, dad2: Long, clientId: String?, ids: List<String>, subtitle: String,
-             onReturn: Runnable, contextUI: ContextUI = ContextUI.TOVAR_FROM_OPTION_175121) {
+             contextUI: ContextUI = ContextUI.TOVAR_FROM_OPTION_175121) {
         val host = Globals.unwrap(view.context) as? ComponentActivity ?: return
         if (ids.isEmpty() || host.isFinishing || host.isDestroyed) return
         val intent = Intent(host, FeaturesActivity::class.java).apply {
@@ -30,14 +28,5 @@ object ProductIssueCorrection {
             putExtra("subTitle", subtitle)
         }
         host.startActivity(intent)
-        host.lifecycle.addObserver(object : DefaultLifecycleObserver {
-            private var left = false
-            override fun onPause(owner: LifecycleOwner) { left = true }
-            override fun onResume(owner: LifecycleOwner) {
-                if (!left) return
-                owner.lifecycle.removeObserver(this)
-                if (view.isAttachedToWindow) onReturn.run()
-            }
-        })
     }
 }

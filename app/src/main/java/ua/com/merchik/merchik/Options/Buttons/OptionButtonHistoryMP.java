@@ -148,6 +148,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
         });
         refreshContent();
 
+        if (control.rejectedMockLocation()) return;
         StringBuilder message = new StringBuilder();
         LogMPDB point = capture.coordinates;
         if (point != null) {
@@ -212,7 +213,9 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                 Options.NNKMode.MAKE, unlockCodeResultListener);
         control.showMassage(false, new Clicks.clickStatusMsg() {
             @Override public void onSuccess(String data) { showHistoryMessage(data, true, collectNetworks); }
-            @Override public void onFailure(String error) { showHistoryMessage(error, false, collectNetworks); }
+            @Override public void onFailure(String error) {
+                if (!control.rejectedMockLocation()) showHistoryMessage(error, false, collectNetworks);
+            }
         });
         refreshContent();
     }

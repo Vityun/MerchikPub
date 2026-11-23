@@ -12,6 +12,29 @@ public class LocationFixPolicyTest {
         return LocationFixPolicy.rejection(50.519516, 30.785419, measuredAt, NOW, false);
     }
 
+    @Test public void coldStartDetectsAndroidMockEvenWithoutTrackerCallback() {
+        assertTrue(LocationFixPolicy.latestProviderFixMock(100, true, -1, false, 200));
+    }
+
+    @Test public void newerMockCallbackOverridesGenuineCachedFixAndViceVersa() {
+        assertTrue(LocationFixPolicy.latestProviderFixMock(100, false, 200, true, 200));
+        assertFalse(LocationFixPolicy.latestProviderFixMock(200, false, 100, true, 200));
+        assertTrue(LocationFixPolicy.latestProviderFixMock(100, true, 200, false, 200));
+        assertTrue(LocationFixPolicy.latestProviderFixMock(200, false, 200, true, 200));
+    }
+
+    @Test public void unavailableProviderIsNotEvidenceOfSpoofing() {
+        long maxAge = LocationFixPolicy.MAX_AGE_MS * 1_000_000L;
+        assertFalse(LocationFixPolicy.latestProviderFixMock(-1, false, -1, false, maxAge));
+        assertTrue(LocationFixPolicy.latestProviderFixMock(-1, false, 100, true, maxAge + 100));
+        assertFalse(LocationFixPolicy.latestProviderFixMock(-1, false, 100, true, maxAge + 101));
+    }
+
+    @Test public void ageAloneCannotClearAnAndroidReportedMock() {
+        assertTrue(LocationFixPolicy.latestProviderFixMock(100, true, -1, false,
+                100 + LocationFixPolicy.MAX_AGE_MS * 1_000_000L + 1));
+    }
+
     @Test public void actualFutureGpsFromIncidentFallsBackToNetwork() {
         String gps = LocationFixPolicy.rejection(-12.030764180235565, -77.05237668938935,
                 1836273819000L, NOW, false);
@@ -29,10 +52,12 @@ public class LocationFixPolicyTest {
                 reason(NOW - LocationFixPolicy.MAX_AGE_MS - 1), reason(NOW - 1)));
     }
 
-    @Test public void mockGpsDoesNotBlockRealNetwork() {
+    @Test public void mixedMockAndGenuineProvidersDoNotConfirmLocation() {
         String gps = LocationFixPolicy.rejection(50.52, 30.78, NOW, NOW, true);
         assertEquals("mock_location", gps);
-        assertEquals(2, LocationFixPolicy.preferredProvider(gps, reason(NOW)));
+        assertEquals(0, LocationFixPolicy.preferredProvider(gps, reason(NOW)));
+        assertEquals(0, LocationFixPolicy.preferredProvider(reason(NOW), gps));
+        assertEquals(gps, LocationFixPolicy.rejection(0, 0, 0, NOW, true));
     }
 
     @Test public void validGpsKeepsExistingPriority() {

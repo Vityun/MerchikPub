@@ -30,7 +30,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -39,12 +38,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapEffect
 import com.google.maps.android.compose.MapsComposeExperimentalApi
-import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.Ui.CounterBadgeView
-import ua.com.merchik.merchik.dataLayer.MainViewModelImpl
-import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.componentsUI.InfoBalloonText
 import ua.com.merchik.merchik.features.maps.domain.PointUi
 import ua.com.merchik.merchik.features.maps.domain.formatSum
@@ -53,7 +49,6 @@ import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.domain.latLngToLaunchOrigin
 import ua.com.merchik.merchik.features.maps.presentation.MapIntent
 import ua.com.merchik.merchik.features.maps.presentation.viewModels.BaseMapViewModel
-import java.time.ZoneId
 
 data class MapSearchMarker(
     val position: LatLng,
@@ -70,13 +65,13 @@ fun StoresMap(
     searchMarker: MapSearchMarker? = null,
     onMapClick: ((LatLng) -> Unit)? = null,
     onSearchAreaClick: ((MapSearchMarker) -> Unit)? = null,
-    focusUserRadiusMeters: Float? = null
+    focusUserRadiusMeters: Float? = null,
+    markerPeriod: String = ""
 ) {
     val s by vm.state.collectAsState()
 
     val anchorView = LocalView.current
     var googleMapRef by remember { mutableStateOf<GoogleMap?>(null) }
-    val mainVm: MainViewModel = hiltViewModel<MainViewModelImpl>()
 
     val userLat = s.userLat
     val userLon = s.userLon
@@ -242,7 +237,7 @@ fun StoresMap(
     data class SelectedMarker(
         val key: String,
         val pos: LatLng,
-        val subtitle: String
+        val distance: String?
     )
 
     fun stableKey(pUi: PointUi): String {
@@ -260,21 +255,8 @@ fun StoresMap(
 
     fun buildSubtitle(pUi: PointUi, distance: String?): String = buildString {
         if (pUi.count > 0) {
-            append(
-                "${pUi.count} кпс за период с ${
-                    Clock.getHumanTime_dd_MMMM(
-                        mainVm.rangeDataStart.value?.atStartOfDay(ZoneId.systemDefault())  // или ZoneId.of("Europe/Kyiv")
-                            ?.toInstant()
-                            ?.toEpochMilli()
-                    )
-                } по ${
-                    Clock.getHumanTime_dd_MMMM(
-                        mainVm.rangeDataEnd.value?.atStartOfDay(ZoneId.systemDefault())  // или ZoneId.of("Europe/Kyiv")
-                            ?.toInstant()
-                            ?.toEpochMilli()
-                    )
-                }"
-            )
+            append("${pUi.count} кпс")
+            if (markerPeriod.isNotEmpty()) append(' ').append(markerPeriod)
             append("\nПремія: ${formatSum(pUi.sum)}")
         }
         if (!distance.isNullOrBlank()) {
@@ -284,7 +266,6 @@ fun StoresMap(
         }
     }
 
-    // Scenario 2 selection: держим сразу ГОТОВЫЙ subtitle
     var selected by remember { mutableStateOf<SelectedMarker?>(null) }
 
     // MarkerState cache (важно для стабильности)
@@ -303,7 +284,7 @@ fun StoresMap(
 
     // Чтобы принудительно обновить окно выбранного маркера (bitmap snapshot)
     // делаем один "жёсткий" refresh после установки selected.
-    LaunchedEffect(selected?.key, selected?.subtitle) {
+    LaunchedEffect(selected, markerPeriod) {
         val sel = selected ?: return@LaunchedEffect
         val st = markerStates[sel.key] ?: return@LaunchedEffect
         withFrameNanos { } // дать Compose пересобрать контент окна
@@ -457,16 +438,9 @@ fun StoresMap(
                     val markerState = stateFor(key, pos)
                     val isSelected = selected?.key == key
 
-                    // IMPORTANT: subtitle для выбранного маркера берём из selected (уже посчитан в onClick)
-                    val subtitle = remember(
-                        key,
-                        pUi.count,
-                        pUi.sum,
-                        isSelected,
-                        selected?.subtitle
-                    ) {
-                        if (isSelected) selected?.subtitle.orEmpty()
-                        else buildSubtitle(pUi, distance = null)
+                    val distance = if (isSelected) selected?.distance else null
+                    val subtitle = remember(pUi.count, pUi.sum, markerPeriod, distance) {
+                        buildSubtitle(pUi, distance)
                     }
 
                     com.google.maps.android.compose.MarkerInfoWindow(
@@ -485,7 +459,7 @@ fun StoresMap(
                             selected = SelectedMarker(
                                 key = key,
                                 pos = pos,
-                                subtitle = buildSubtitle(pUi, dist)
+                                distance = dist
                             )
 
                             // показываем сразу (а LaunchedEffect выше гарантированно переснимет bitmap)
@@ -512,7 +486,7 @@ fun StoresMap(
                     ) {
                         InfoBalloonText(
                             title = pUi.point.title ?: "Позиция",
-                            subtitle = selected?.subtitle ?: subtitle,
+                            subtitle = subtitle,
                             tailAlignment = 0.5f,
                             tailOnBottom = true
                         )
@@ -531,8 +505,6 @@ fun StoresMap(
                         color = Color(0xFF00ACC1)
                     )
 
-                    // текст на середине линии — используем уже готовую distance строку из selected.subtitle
-                    // (если хочешь отдельно — можно достать dist из selected.subtitle, но проще посчитать тут быстро)
                     val meters =
                         haversine(you.latitude, you.longitude, target.latitude, target.longitude)
                     val dist = formatDistanceKmM(meters)
@@ -556,6 +528,8 @@ fun StoresMap(
     }
 }
 
+
+private const val MARKER_COUNT_LIMIT = 9
 
 @Composable
 fun rememberBadgePinCache(
@@ -587,7 +561,7 @@ fun rememberBadgePinCache(
     ) {
         val cache = mutableMapOf<Int, BitmapDescriptor>()
         val getBadge: (Int) -> BitmapDescriptor = { n: Int ->
-            val key = n.coerceIn(1, 9)
+            val key = n.coerceIn(1, MARKER_COUNT_LIMIT + 1)
             cache.getOrPut(key) {
                 if (badgeIconRes != null) {
                     ctx.makePinWithBadgeIcon(
@@ -648,8 +622,10 @@ private fun Context.drawCounterBadgeBitmap(
     fontSizePx: Float = resources.getDimension(R.dimen.counter_badge_text_size)
 ): Bitmap {
     val badge = CounterBadgeView(this).apply {
+        // A detached single-line TextView cannot scroll its centered text into the bitmap.
+        setHorizontallyScrolling(false)
         setBadgeStyle(dp(diameter.value).toFloat(), fontSizePx, background, borderColor, textColor)
-        setCount(count.toLong(), 9)
+        setCount(count.toLong(), MARKER_COUNT_LIMIT)
     }
     val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
     badge.measure(unspecified, unspecified)

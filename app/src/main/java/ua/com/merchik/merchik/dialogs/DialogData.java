@@ -180,6 +180,7 @@ public class DialogData {
     // ---- UI end ----
 
     private boolean dismissOnlyByButtonsMode = false;
+    private boolean passiveDismissEnabled = true;
     private DialogClickListener closeClickListener;
     private Runnable onDismissAction;
     private File imageFile;
@@ -279,6 +280,15 @@ public class DialogData {
 
     public void setDismissOnOutsideTouch(boolean enabled) {
         dialog.setCanceledOnTouchOutside(enabled);
+    }
+
+    public void setPassiveDismissEnabled(boolean enabled) {
+        passiveDismissEnabled = enabled;
+        applyDismissMode();
+    }
+
+    public TextView getMessageView() {
+        return text;
     }
 
     public interface DialogClickListener {
@@ -533,8 +543,9 @@ public class DialogData {
     private void applyDismissMode() {
         if (dialog == null || imgBtnClose == null) return;
 
-        dialog.setCancelable(!dismissOnlyByButtonsMode);
-        dialog.setCanceledOnTouchOutside(!dismissOnlyByButtonsMode);
+        boolean allowPassiveDismiss = passiveDismissEnabled && !dismissOnlyByButtonsMode;
+        dialog.setCancelable(allowPassiveDismiss);
+        dialog.setCanceledOnTouchOutside(allowPassiveDismiss);
 
         if (dismissOnlyByButtonsMode) {
             imgBtnClose.setVisibility(View.GONE);
@@ -1688,6 +1699,11 @@ public class DialogData {
         cancel.setOnClickListener(v -> {
             if (clickListener != null) clickListener.clicked();
         });
+    }
+
+    public void hideCancel() {
+        cancel.setVisibility(View.GONE);
+        cancel.setOnClickListener(null);
     }
 
     public void setUnlockMode(DialogClickListener clickListener) {

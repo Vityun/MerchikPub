@@ -555,7 +555,11 @@ enum class ContextUI {
     TOVAR_FROM_OPTION_1465,
     TASKS_IN_CONTAINER,
     RECLAMATIONS_IN_CONTAINER,
-    TAR_COMMENTS_IN_CONTAINER
+    TAR_COMMENTS_IN_CONTAINER,
+    ACHIEVEMENT_FROM_CHAT;
+
+    internal val settingsContext: ContextUI
+        get() = if (this == ACHIEVEMENT_FROM_CHAT) ACHIEVEMENT else this
 }
 
 

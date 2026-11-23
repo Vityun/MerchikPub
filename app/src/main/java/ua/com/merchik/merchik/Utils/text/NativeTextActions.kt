@@ -15,15 +15,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.Utils.text.NativeTextAction.Kind
+import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementScreenArgs
+import ua.com.merchik.merchik.features.main.DBViewModels.AchievementsSDBViewModel
 
 /** Shared by text links and regular controls. Resolve records on tap, never while rendering text. */
 object NativeTextActions {
@@ -38,6 +43,7 @@ object NativeTextActions {
                 Kind.PHOTO_BY_SERVER_ID -> openPhoto(context, action.value)
                 Kind.TASK_BY_ID, Kind.RECLAMATION_BY_ID,
                 Kind.TASK_BY_NUMBER, Kind.RECLAMATION_BY_NUMBER -> openTask(context, action)
+                Kind.ACHIEVEMENT_BY_SERVER_ID -> openAchievement(context, action)
                 Kind.DIAL -> startActivity(context, Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", action.value, null)))
             }
         } catch (error: Exception) {
@@ -111,6 +117,37 @@ object NativeTextActions {
                 startActivity(context, Intent(context, TARActivity::class.java).apply {
                     putExtra("TAR_type", taskType)
                     putExtra(TARActivity.EXTRA_OPEN_TAR_ID, task.id.toInt())
+                })
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                showError(context, action, error)
+            }
+        }
+    }
+
+    private fun openAchievement(context: Context, action: NativeTextAction) {
+        val activity = requireNotNull(findActivity(context)) { "Achievement link requires an activity" }
+        val owner = activity as? LifecycleOwner ?: error("Achievement link requires a lifecycle owner")
+        val serverId = action.value.toInt()
+        val db = RoomManager.SQL_DB
+        owner.lifecycleScope.launch {
+            try {
+                val achievement = withContext(Dispatchers.IO) { db.achievementsDao().getByServerId(serverId) }
+                if (activity.isFinishing || activity.isDestroyed || db !== RoomManager.SQL_DB) return@launch
+                if (achievement == null) {
+                    missing(context, R.string.native_text_achievement_not_found, action.value)
+                    return@launch
+                }
+                startActivity(context, Intent(context, FeaturesActivity::class.java).apply {
+                    putExtra("viewModel", AchievementsSDBViewModel::class.java.canonicalName)
+                    putExtra("contextUI", ContextUI.ACHIEVEMENT_FROM_CHAT.name)
+                    putExtra("modeUI", ModeUI.DEFAULT.name)
+                    putExtra("title", context.getString(R.string.native_text_achievement_title))
+                    putExtra("dataJson", AchievementScreenArgs(
+                        visitDad2 = achievement.codeDad2,
+                        achievementServerId = serverId
+                    ).toJson())
                 })
             } catch (cancelled: CancellationException) {
                 throw cancelled

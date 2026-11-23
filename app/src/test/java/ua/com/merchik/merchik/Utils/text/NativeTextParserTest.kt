@@ -11,6 +11,8 @@ class NativeTextParserTest {
     private val photo = "\u0444\u043e\u0442\u043e"
     private val task = "\u0437\u0430\u0434\u0430\u0447\u0430"
     private val reclamation = "\u0440\u0435\u043a\u043b\u0430\u043c\u0430\u0446\u0438\u044f"
+    private val achievementUk = "\u0434\u043e\u0441\u044f\u0433\u043d\u0435\u043d\u043d\u044f"
+    private val achievementRu = "\u0434\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u0435"
     private val phone = "\u0442\u0435\u043b\u0435\u0444\u043e\u043d"
     private val unlock = "\u043a\u043e\u0434 \u0440\u0430\u0437\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u043a\u0438"
     private val report = "\u0410\u041e\u0438-03217103"
@@ -66,6 +68,18 @@ class NativeTextParserTest {
     }
 
     @Test
+    fun achievementsLinkTheServerIdAndRenderTheServerLabel() {
+        val id = "267632"
+        val parsed = NativeTextParser.parse("Open {$achievementUk|$id|$id} from chat.")
+        assertEquals("Open $id from chat.", parsed.text)
+        assertEquals(listOf(NativeTextLink(5, 11, NativeTextAction(Kind.ACHIEVEMENT_BY_SERVER_ID, id))), parsed.links)
+
+        val legacy = NativeTextParser.parse("{$achievementRu|$id|Achievement|4}")
+        assertEquals("Achievement", legacy.text)
+        assertEquals(NativeTextAction(Kind.ACHIEVEMENT_BY_SERVER_ID, id), legacy.links.single().action)
+    }
+
+    @Test
     fun tasksAndReclamationsKeepIdAndDocumentNumberSeparate() {
         val cases = listOf(
             Triple(task, "2667429", Kind.TASK_BY_ID),
@@ -105,6 +119,9 @@ class NativeTextParserTest {
         }
         assertLiteral("{$task|2147483648|Task}")
         assertLiteral("{$photo|-1|Photo}")
+        for (id in listOf("0", "-1", "2147483648", "id:267632")) {
+            assertLiteral("{$achievementUk|$id|Achievement}")
+        }
     }
 
     @Test

@@ -18,6 +18,9 @@ public interface AchievementsDao {
     @Query("SELECT * FROM achievements WHERE id = :id")
     AchievementsSDB getById(int id);
 
+    @Query("SELECT * FROM achievements WHERE serverId = :serverId")
+    AchievementsSDB getByServerId(int serverId);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<AchievementsSDB> data);
 

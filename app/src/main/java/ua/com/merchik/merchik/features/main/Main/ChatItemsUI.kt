@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +46,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.Utils.text.NativeTextParser
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatListItem
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
@@ -160,7 +162,8 @@ private fun ChatItemUI(
 //                contentDescription = stringResource(if (chat.kolUnread > 0) R.string.chat_unread else R.string.chat_read),
 //                modifier = Modifier.size(28.dp))
             if ("nm" in visibleKeys) {
-                Text(chat.nm, Modifier.weight(1f).padding(top = titleTopPadding), fontSize = (16 + fontOffset).sp,
+                val title = remember(chat.nm) { NativeTextParser.parse(chat.nm).text }
+                Text(title, Modifier.weight(1f).padding(top = titleTopPadding), fontSize = (16 + fontOffset).sp,
                     fontWeight = if (chat.kolUnread > 0) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
             } else {
@@ -189,7 +192,8 @@ private fun ChatItemUI(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (showMessage) {
-                    Text(chat.lastMsg, Modifier.weight(1f),
+                    val preview = remember(chat.lastMsg) { NativeTextParser.parse(chat.lastMsg).text }
+                    Text(preview, Modifier.weight(1f),
                         fontSize = (14 + fontOffset).sp, color = Color.DarkGray,
                         maxLines = 4, overflow = TextOverflow.Ellipsis)
                 } else {

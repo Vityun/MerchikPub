@@ -3,24 +3,27 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.Realm
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload
+import ua.com.merchik.merchik.Utils.TrustedTime
 import ua.com.merchik.merchik.ViewHolders.Clicks
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -35,12 +38,14 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.SelectedMode
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.rawAs
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.DialogData.DialogClickListener
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -50,6 +55,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -64,6 +70,9 @@ class AchievementsSDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = AchievementsSDB::class
+
+    private val screenArgs: AchievementScreenArgs get() = AchievementScreenArgs.fromJson(dataJson)
+    private var achievementNoticeJob: Job? = null
 
     private val scheduledAchievementPhotoIds = ConcurrentHashMap.newKeySet<String>()
     private val achievementPhotoDownloadsInProgress = ConcurrentHashMap.newKeySet<String>()
@@ -123,14 +132,33 @@ class AchievementsSDBViewModel @Inject constructor(
     override suspend fun getItems(): List<DataItemUI> {
         return when (contextUI) {
             ContextUI.ACHIEVEMENT -> getAchievementItems()
+            ContextUI.ACHIEVEMENT_FROM_CHAT -> {
+                val serverId = screenArgs.achievementServerId ?: return emptyList()
+                val achievement = withContext(Dispatchers.IO) {
+                    RoomManager.SQL_DB.achievementsDao().getByServerId(serverId)
+                }
+                toAchievementItems(listOfNotNull(achievement))
+            }
             else -> emptyList()
         }
     }
 
     override fun updateFilters() {
-        if (contextUI != ContextUI.ACHIEVEMENT) {
-            super.updateFilters()
-            return
+        when (contextUI) {
+            ContextUI.ACHIEVEMENT_FROM_CHAT -> {
+                val app = getApplication<Application>()
+                filters = screenArgs.achievementServerId?.let { serverId ->
+                    linkedAchievementFilters(
+                        serverId = serverId,
+                        title = app.getString(R.string.native_text_achievement_title),
+                        subTitle = app.getString(R.string.ui_filter_not_available_edit),
+                        searchText = uiState.value.filters?.searchText.orEmpty()
+                    )
+                } ?: Filters()
+                return
+            }
+            ContextUI.ACHIEVEMENT -> Unit
+            else -> return super.updateFilters()
         }
 
         val wpDataDB = getAchievementWpDataOrNull()
@@ -226,22 +254,30 @@ class AchievementsSDBViewModel @Inject constructor(
     }
 
     override fun onClickAdditionalContent() {
-        super.onClickAdditionalContent()
-        createAchievementDialog()?.let { dialogCreateAchievement ->
-            dialogCreateAchievement.show()
-
-            val dialogData = DialogData(context)
-            dialogData.setTitle("Створення досягнення")
-            dialogData.setText(
-                "У разі, якщо ви покращили розташування товару клієнта на вітрині, по зрівнянню з попереднім ДОСЯГНЕННЯМ, то введіть поточне Досягнення на підставі попереднього. " +
-                        "Для цього, закрийте це віконце та натисніть довгим кліком на ПОПЕРЕДНЬОМУ Досягненні.Це суттєво збільшить шанс на отримання додаткової премії."
-            )
-            dialogData.setClose { dialogData.dismiss() }
-            dialogData.show()
+        val owner = context ?: return
+        when (contextUI) {
+            ContextUI.ACHIEVEMENT_FROM_CHAT -> return showLinkedAchievementCreationNotice(owner)
+            ContextUI.ACHIEVEMENT -> Unit
+            else -> return super.onClickAdditionalContent()
         }
+        val dialog = createAchievementDialog() ?: run {
+            Toast.makeText(owner, R.string.achievement_creation_visit_not_found, Toast.LENGTH_LONG).show()
+            return
+        }
+        dialog.show()
+
+        val dialogData = DialogData(owner)
+        dialogData.setTitle("Створення досягнення")
+        dialogData.setText(
+            "У разі, якщо ви покращили розташування товару клієнта на вітрині, по зрівнянню з попереднім ДОСЯГНЕННЯМ, то введіть поточне Досягнення на підставі попереднього. " +
+                    "Для цього, закрийте це віконце та натисніть довгим кліком на ПОПЕРЕДНЬОМУ Досягненні.Це суттєво збільшить шанс на отримання додаткової премії."
+        )
+        dialogData.setClose { dialogData.dismiss() }
+        dialogData.show()
     }
 
     fun createAchievementDialog(themeId: Int? = null): DialogCreateAchievement? {
+        if (contextUI == ContextUI.ACHIEVEMENT_FROM_CHAT) return null
         val owner = context ?: return null
         val wpDataDB = getAchievementWpDataOrNull() ?: return null
         return DialogCreateAchievement(owner).apply {
@@ -282,7 +318,10 @@ class AchievementsSDBViewModel @Inject constructor(
             "AchievementsViewModel",
             "ACHIEVEMENT: dateFrom=$dateFrom, dateTo=$dateTo, clientId=$clientId, addressId=$addressId, data=${data.size}"
         )
+        return toAchievementItems(data)
+    }
 
+    private fun toAchievementItems(data: List<AchievementsSDB>): List<DataItemUI> {
         scheduleMissingAchievementPhotos(data)
 
         return repository.toItemUIList(
@@ -516,6 +555,10 @@ class AchievementsSDBViewModel @Inject constructor(
     }
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
+        if (contextUI == ContextUI.ACHIEVEMENT_FROM_CHAT) {
+            showLinkedAchievementCreationNotice(context)
+            return
+        }
         val data = getAchievementWpDataOrNull()
         val achievement = itemUI.rawObj.firstOrNull { it is AchievementsSDB } as? AchievementsSDB
         if (achievement != null) {
@@ -536,7 +579,71 @@ class AchievementsSDBViewModel @Inject constructor(
         }
     }
 
+    private fun showLinkedAchievementCreationNotice(context: Context) {
+        if (achievementNoticeJob?.isActive == true) return
+        val activity = Globals.unwrap(context)
+        val serverId = screenArgs.achievementServerId
+        val item = uiState.value.items.firstOrNull { it.rawAs<AchievementsSDB>()?.serverId == serverId }
+        val achievement = item?.rawAs<AchievementsSDB>()
+        val client = item?.achievementFieldText("client_id") ?: achievement?.spiskliNm?.takeIf { it.isNotBlank() }
+        val address = item?.achievementFieldText("addr_id") ?: achievement?.adresaAddr?.takeIf { it.isNotBlank() }
+        val message = if (client != null && address != null) {
+            context.getString(R.string.achievement_chat_creation_next_visit_details, client, address)
+        } else {
+            context.getString(R.string.achievement_chat_creation_next_visit)
+        }
+        val userId = Globals.getCurrentUserId()
+        achievementNoticeJob = viewModelScope.launch {
+            val nextVisit = try {
+                achievement?.let { withContext(Dispatchers.IO) { findNextVisit(it, userId) } }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Globals.writeToMLOG("ERROR", "AchievementsSDBViewModel/findNextVisit", error.toString())
+                null
+            }
+            if (activity.isFinishing || activity.isDestroyed || Globals.getCurrentUserId() != userId) return@launch
+
+            val dialog = MessageDialogBuilder(activity)
+                .setTitle(context.getString(R.string.native_text_achievement_title))
+                .setMessage(message)
+            if (nextVisit != null) {
+                dialog.setOnConfirmAction(context.getString(R.string.achievement_chat_open_next_visit)) {
+                    openDetailedReport(nextVisit.id, nextVisit.code_dad2)
+                }.setOnCancelAction { }
+            } else {
+                dialog.setOnConfirmAction("OK") { }
+            }
+            dialog.show()
+        }
+    }
+
+    private fun DataItemUI.achievementFieldText(key: String): String? =
+        rawFields.firstOrNull { it.key == key }?.value?.value?.takeIf { it.isNotBlank() }
+
+    private fun findNextVisit(achievement: AchievementsSDB, userId: Int): WpDataDB? {
+        val clientId = achievement.clientId?.takeIf { it.isNotBlank() } ?: return null
+        val addressId = achievement.addrId?.takeIf { it > 0 } ?: return null
+        if (userId <= 0) return null
+        val zone = ZoneId.systemDefault()
+        val today = Instant.ofEpochSecond(TrustedTime.nowServerSecOrLocalSec()).atZone(zone).toLocalDate()
+        return Realm.getDefaultInstance().use { realm ->
+            val origin = achievement.codeDad2?.takeIf { it > 0 }?.let { dad2 ->
+                realm.where(WpDataDB::class.java).equalTo("code_dad2", dad2).findFirst()
+            }
+            val visits = realm.where(WpDataDB::class.java)
+                .equalTo("user_id", userId)
+                .equalTo("client_id", clientId)
+                .equalTo("addr_id", addressId)
+                .greaterThanOrEqualTo("dt", Date.from(today.atStartOfDay(zone).toInstant()))
+                .findAll()
+            nextVisitForAchievement(visits, achievement, origin, userId, today, zone)
+                ?.let { realm.copyFromRealm(it) }
+        }
+    }
+
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
+        if (contextUI == ContextUI.ACHIEVEMENT_FROM_CHAT) return
         FilteringDialogDataHolder.instance().filters.apply {
             this?.let { filters ->
                 filters.items = filters.items.map { itemFilter ->
@@ -568,58 +675,15 @@ class AchievementsSDBViewModel @Inject constructor(
     }
 
     private fun getAchievementWpDataOrNull(): WpDataDB? {
-        val codeDad2 = getCodeDad2FromDataJson() ?: return null
+        val codeDad2 = screenArgs.visitDad2 ?: return null
         return runCatching {
-            RealmManager.INSTANCE.copyFromRealm(
-                RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-            )
+            RealmManager.getWorkPlanRowByCodeDad2(codeDad2)?.let { RealmManager.INSTANCE.copyFromRealm(it) }
         }.onFailure { error ->
             Globals.writeToMLOG(
                 "ERROR",
                 "AchievementsSDBViewModel/getAchievementWpDataOrNull",
                 "codeDad2=$codeDad2, error=$error"
             )
-        }.getOrNull()
-    }
-
-    private fun getCodeDad2FromDataJson(): Long? {
-        val raw = dataJson?.takeIf { it.isNotBlank() } ?: return null
-        return runCatching {
-            val element = JsonParser.parseString(raw)
-            when {
-                element.isJsonPrimitive -> element.asLongOrNull()
-                element.isJsonObject -> element.asJsonObject.codeDad2OrNull()
-                else -> null
-            }
-        }.getOrNull()?.takeIf { it > 0L }
-    }
-
-    private fun JsonObject.codeDad2OrNull(): Long? {
-        return longOrNull("wpDataDBId")
-            ?: longOrNull("codeDad2")
-            ?: longOrNull("code_dad2")
-            ?: get("nameValuePairs")
-                ?.takeIf { it.isJsonObject }
-                ?.asJsonObject
-                ?.let { nested ->
-                    nested.longOrNull("wpDataDBId")
-                        ?: nested.longOrNull("codeDad2")
-                        ?: nested.longOrNull("code_dad2")
-                }
-    }
-
-    private fun JsonObject.longOrNull(key: String): Long? {
-        return get(key)
-            ?.takeIf { !it.isJsonNull }
-            ?.asLongOrNull()
-    }
-
-    private fun JsonElement.asLongOrNull(): Long? {
-        return runCatching {
-            when {
-                isJsonPrimitive -> asString.toLongOrNull()
-                else -> null
-            }
         }.getOrNull()
     }
 
@@ -668,4 +732,29 @@ class AchievementsSDBViewModel @Inject constructor(
         private const val ACHIEVEMENT_PHOTO_PREFETCH_DELAY_MS = 350L
         private const val ACHIEVEMENT_PHOTO_PREFETCH_STEP_DELAY_MS = 80L
     }
+}
+
+internal fun linkedAchievementFilters(
+    serverId: Int,
+    title: String,
+    subTitle: String,
+    searchText: String
+): Filters {
+    val id = serverId.toString()
+    return Filters(
+        subTitle = subTitle,
+        searchText = searchText,
+        items = listOf(ItemFilter(
+            title = title,
+            clazz = AchievementsSDB::class,
+            modeUI = ModeUI.ONE_SELECT,
+            titleContext = title,
+            subTitleContext = subTitle,
+            leftField = "ID", // AchievementsSDB exposes its server ID under this JSON key.
+            rightField = "ID",
+            rightValuesRaw = listOf(id),
+            rightValuesUI = listOf(id),
+            enabled = false
+        ))
+    )
 }

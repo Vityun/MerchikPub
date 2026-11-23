@@ -142,6 +142,7 @@ import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.MockLocationWarning;
 import ua.com.merchik.merchik.dialogs.features.masterCode.MasterCodeDialogLauncher;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -682,6 +683,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 messageDialogBuilder.dismiss();
         }
         super.onResume();
+        MockLocationWarning.refresh(this);
         View versionView = findViewById(R.id.textView14);
         if (versionView != null) {
             if (masterCodeDialogLauncher == null) {

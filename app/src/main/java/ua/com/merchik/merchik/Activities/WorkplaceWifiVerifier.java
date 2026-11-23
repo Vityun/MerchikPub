@@ -8,6 +8,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 
 import androidx.annotation.RequiresPermission;
+import ua.com.merchik.merchik.Utils.MockLocationGuard;
 
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ public final class WorkplaceWifiVerifier {
 
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     public boolean isAtWorkplace(Context ctx, int minNearbyMatches) {
+        if (MockLocationGuard.isActive(ctx)) return false;
         WifiManager wifi = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (wifi == null) return false;
 

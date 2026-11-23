@@ -61,6 +61,7 @@ public final class OptionControlShelfLength extends OptionControl {
         this.wpDataDB = (WpDataDB) document;
         this.dad2 = wpDataDB.getCode_dad2();
         notCloseSpannableStringBuilderDialog = true;
+        enableCorrectionList(this::executeOption);
         executeOption();
     }
 
@@ -159,10 +160,7 @@ public final class OptionControlShelfLength extends OptionControl {
             details.setSpan(new ClickableSpan() {
                 @Override public void onClick(View view) {
                     ProductIssueCorrection.open(view, dad2, wpDataDB.getClient_id(),
-                            Collections.singletonList(entry.getKey()), issue, () -> {
-                                executeOption();
-                                refreshOpenSpannableOptionMessage();
-                            }, ContextUI.TOVAR_FROM_OPTION_1465);
+                            Collections.singletonList(entry.getKey()), issue, ContextUI.TOVAR_FROM_OPTION_1465);
                 }
             }, start, start + label.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }

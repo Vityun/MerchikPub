@@ -129,6 +129,9 @@ fun MapsDialog(
     isVisitHistory: Boolean = false
 ) {
     val uiState by mainViewModel.uiState.collectAsState()
+    val rangeStart by mainViewModel.rangeDataStart.collectAsState()
+    val rangeEnd by mainViewModel.rangeDataEnd.collectAsState()
+    val markerPeriod = remember(rangeStart, rangeEnd) { mapWorkPeriod(rangeStart, rangeEnd) }
     val context = LocalContext.current
     val contextUI = mainViewModel.contextUI
     val optionsViewModel = mainViewModel as? OptionsDBViewModel
@@ -286,7 +289,7 @@ fun MapsDialog(
     }
 
 
-    val periodEnd = mainViewModel.rangeDataEnd.value
+    val periodEnd = rangeEnd
         ?.format(formatterDDmmYYYY)
         ?: "не визначено"
 
@@ -613,8 +616,8 @@ fun MapsDialog(
         uiState.filters,
         uiState.sortingFields,
         uiState.groupingFields,
-        mainViewModel.rangeDataStart.value,
-        mainViewModel.rangeDataEnd.value,
+        rangeStart,
+        rangeEnd,
         uiState.filters?.searchText,
         Globals.CoordX,
         Globals.CoordY,
@@ -634,8 +637,8 @@ fun MapsDialog(
                 filters = uiState.filters,
                 sorting = uiState.sortingFields,
                 grouping = uiState.groupingFields,
-                rangeStartLocalDate = mainViewModel.rangeDataStart.value,
-                rangeEndLocalDate = mainViewModel.rangeDataEnd.value,
+                rangeStartLocalDate = rangeStart,
+                rangeEndLocalDate = rangeEnd,
                 search = uiState.filters?.searchText,
                 userLat = if (isAdditionalWorksMap) {
                     additionalWorksSearchOrigin?.latitude ?: Globals.CoordX
@@ -833,6 +836,7 @@ fun MapsDialog(
                         StoresMap(
                             cameraPositionState = cameraController,
                             vm = vm,
+                            markerPeriod = markerPeriod,
                             searchMarker = if (isAdditionalWorksMap) mapSearchMarker else null,
                             onMapClick = if (isAdditionalWorksMap) {
                                 { latLng ->

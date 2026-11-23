@@ -62,7 +62,6 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
     private int percentageDeviationTotalInventory;  // Відсоток відхилення загального товарного запасу
 
     //    private StringBuilder resMassage = new StringBuilder();
-    private SpannableStringBuilder tovs = new SpannableStringBuilder();
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDBDocument;
@@ -79,6 +78,7 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
 
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            enableCorrectionList(this::executeOption);
             executeOption();
         }
     }
@@ -104,6 +104,7 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
+            SpannableStringBuilder tovs = new SpannableStringBuilder();
             UsersSDB usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 
 // 3. Получим данные из отчета

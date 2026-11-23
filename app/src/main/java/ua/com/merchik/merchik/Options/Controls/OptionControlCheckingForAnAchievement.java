@@ -64,15 +64,9 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     public int OPTION_CONTROL_CheckingForAnAchievement4_ID = 165276;
 
     public boolean signal = true;
-    private SpannableStringBuilder resultMsg = new SpannableStringBuilder();
-
-    private List<Integer> tovListOSV;
-    private WpDataDB wpDataDB;
     private CustomerSDB customerSDBDocument;
     private UsersSDB usersSDBDocument;
     private AddressSDB addressSDBDocument;
-    private List<ReportPrepareDB> reportPrepareDB = new ArrayList<>();
-    private List<TovarDB> tovarResultList = new ArrayList<>();
 
     private int colMax = 0;
 
@@ -86,6 +80,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                enableCorrectionList(this::executeOption);
                 executeOption();
             }
         }catch (Exception e){
@@ -101,7 +96,6 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                 customerSDBDocument = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
                 usersSDBDocument = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                reportPrepareDB = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
 
 
                 if (optionDB.getAmountMax() != null && !optionDB.getAmountMax().equals("")){
@@ -118,6 +112,12 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
+            SpannableStringBuilder resultMsg = new SpannableStringBuilder();
+            List<Integer> tovListOSV = new ArrayList<>();
+            List<TovarDB> tovarResultList = new ArrayList<>();
+            List<ReportPrepareDB> reportPrepareDB = RealmManager.INSTANCE.copyFromRealm(
+                    ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
+
             //4.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
             if (optionDB.getOptionId().equals("164985") || optionDB.getOptionControlId().equals("164985")) {
                 Integer ttCategory = null;

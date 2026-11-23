@@ -119,7 +119,7 @@ class MainRepository(
                 dao.getTableByContext(clazz.simpleName, settingsVisitTag(contextUI, it))
             }
             val json = (visitSettings
-                ?: dao.getTableByContext(clazz.simpleName, contextUI?.name))?.settingsJson
+                ?: dao.getTableByContext(clazz.simpleName, contextUI?.settingsContext?.name))?.settingsJson
 
             Gson().fromJson(json, SettingsUI::class.java)
 
@@ -130,7 +130,7 @@ class MainRepository(
         }
 
     private fun settingsVisitPrefix(contextUI: ContextUI?): String =
-        "${contextUI?.name ?: ContextUI.DEFAULT.name}:visit:"
+        "${contextUI?.settingsContext?.name ?: ContextUI.DEFAULT.name}:visit:"
 
     private fun settingsVisitTag(contextUI: ContextUI?, visitId: Long): String =
         "${settingsVisitPrefix(contextUI)}$visitId"
@@ -302,7 +302,7 @@ class MainRepository(
             val contextTAG = if (settingsVisitId != null) {
                 settingsVisitTag(contextUI, settingsVisitId)
             } else {
-                contextUI?.name ?: ContextUI.DEFAULT.name
+                contextUI?.settingsContext?.name ?: ContextUI.DEFAULT.name
             }
             val dao = database.settingsUIDao()
             val settingsUISDB = dao.getTableByContext(klass.java.simpleName, contextTAG)

@@ -97,6 +97,10 @@ public final class WorkStartNetworkSnapshot {
             DistanceFn distanceFn,
             ResultCallback callback
     ) {
+        if (MockLocationGuard.isActive(context)) {
+            callback.onDone(new Result(0, 0, MockLocationGuard.MESSAGE));
+            return;
+        }
         double shopLat = parseDoubleSafe(wpDataDB.getAddr_location_xd());
         double shopLng = parseDoubleSafe(wpDataDB.getAddr_location_yd());
 
@@ -184,6 +188,7 @@ public final class WorkStartNetworkSnapshot {
         private boolean wifiDone = false;
         private boolean btDone = false;
         private boolean finished = false;
+        private boolean rejectedMock;
 
         private BroadcastReceiver wifiReceiver;
         private BluetoothLeScanner bleScanner;
@@ -220,6 +225,10 @@ public final class WorkStartNetworkSnapshot {
 
         @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION})
         void start() {
+            if (MockLocationGuard.isActive(app)) {
+                callback.onDone(new Result(0, 0, MockLocationGuard.MESSAGE));
+                return;
+            }
             startWifiOnce();
             startBleOnce();
             tryFinish();
@@ -245,13 +254,7 @@ public final class WorkStartNetworkSnapshot {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     try {
-                        wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
-                                WIFI_LIMIT,
-                                locationDevicesDao,
-                                addrId,
-                                snapX,
-                                snapY,
-                                snapTime));
+                        readWifiResults();
                     } finally {
                         safeUnregisterWifi();
                         wifiDone = true;
@@ -276,31 +279,26 @@ public final class WorkStartNetworkSnapshot {
 
             if (!started) {
                 // читаем кеш и завершаем
-                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
-                        WIFI_LIMIT,
-                        locationDevicesDao,
-                        addrId,
-                        snapX,
-                        snapY,
-                        snapTime));
+                readWifiResults();
                 safeUnregisterWifi();
                 wifiDone = true;
                 return;
             }
 
             wifiTimeout = () -> {
-                wifiLines.addAll(buildWifiLinesFromScanResults(wifiManager,
-                        WIFI_LIMIT,
-                        locationDevicesDao,
-                        addrId,
-                        snapX,
-                        snapY,
-                        snapTime));
+                readWifiResults();
                 safeUnregisterWifi();
                 wifiDone = true;
                 tryFinish();
             };
             main.postDelayed(wifiTimeout, WIFI_TIMEOUT_MS);
+        }
+
+        @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        private void readWifiResults() {
+            rejectedMock |= MockLocationGuard.isActive(app);
+            if (!rejectedMock) wifiLines.addAll(buildWifiLinesFromScanResults(
+                    wifiManager, WIFI_LIMIT, locationDevicesDao, addrId, snapX, snapY, snapTime));
         }
 
         private void safeUnregisterWifi() {
@@ -392,6 +390,10 @@ public final class WorkStartNetworkSnapshot {
         private void tryFinish() {
             if (!wifiDone || !btDone || finished) return;
             finished = true;
+            if (rejectedMock || MockLocationGuard.isActive(app)) {
+                callback.onDone(new Result(0, 0, MockLocationGuard.MESSAGE));
+                return;
+            }
 
             // Пишем ТОЛЬКО WiFi/Bluetooth строки
             int wifiAdded = 0;

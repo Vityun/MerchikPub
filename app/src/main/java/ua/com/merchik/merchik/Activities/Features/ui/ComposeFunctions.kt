@@ -15,6 +15,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionAndCommen
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.TovarTabs
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.JournalPhotoScreen
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.PlayUpdateReminder
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.WpDataTabsScreen
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 
@@ -37,7 +38,7 @@ fun setContentTabsWpData(
     ) {
     composeView.setContent {
         WpDataTabsScreen()
-
+        PlayUpdateReminder()
     }
 }
 

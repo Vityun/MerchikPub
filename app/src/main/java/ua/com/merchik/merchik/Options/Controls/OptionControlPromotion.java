@@ -77,6 +77,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPromotion", "Exception e: " + e);

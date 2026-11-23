@@ -21,8 +21,8 @@ android {
         minSdkVersion 26
         targetSdkVersion 36
         //noinspection HighAppVersionCode
-        versionCode  2026112000
-        versionName "2026112000"
+        versionCode  2026112300
+        versionName "2026112300"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -145,6 +145,7 @@ dependencies {
     implementation 'com.google.maps.android:maps-compose:2.11.4'
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
     implementation 'com.google.android.gms:play-services-location:18.0.0'
+    implementation 'com.google.android.play:app-update-ktx:2.1.0'
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.12.18'
 
     implementation "com.google.android.material:material:1.2.1"

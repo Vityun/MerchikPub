@@ -49,7 +49,6 @@ public class OptionControlFaceCount<T> extends OptionControl {
     private LocalDate date;
     private String clientId;
     private AddressSDB address;
-    private String messagePrefix = "";
 
     public OptionControlFaceCount(Context context, T document, OptionsDB optionDB,
                                   OptionMassageType msgType, Options.NNKMode nnkMode,
@@ -62,13 +61,8 @@ public class OptionControlFaceCount<T> extends OptionControl {
         this.unlockCodeResultListener = unlockCodeResultListener;
         notCloseSpannableStringBuilderDialog = true;
         getDocumentVar();
+        enableCorrectionList(this::executeOption);
         executeOption();
-    }
-
-    @Override
-    public void showOptionMassage(String msg) {
-        messagePrefix = msg;
-        super.showOptionMassage(msg);
     }
 
     //1.0. Определим переменные.
@@ -263,7 +257,6 @@ public class OptionControlFaceCount<T> extends OptionControl {
         ReportPrepareDB current = RealmManager.getTovarReportPrepare(String.valueOf(dad2), productId);
         if (current == null) {
             Toast.makeText(editorContext, "Запись товара не найдена. Обновите список товаров.", Toast.LENGTH_LONG).show();
-            refreshAfterProductEdit(optionMessage);
             return;
         }
         DialogData editor = productEditor(editorContext, productId, current,
@@ -275,15 +268,7 @@ public class OptionControlFaceCount<T> extends OptionControl {
             }
         });
         editor.setCancel("Пропустить", editor::dismiss);
-        editor.setOnDismissAction(() -> refreshAfterProductEdit(optionMessage));
         editor.show();
-    }
-
-    private void refreshAfterProductEdit(View optionMessage) {
-        if (!optionMessage.isAttachedToWindow()) return;
-        executeOption();
-        dismissOptionMessage();
-        showOptionMassage(isBlockOption() ? messagePrefix : "");
     }
 
     private void saveOptionResultInDB(OptionsDB calculated) {

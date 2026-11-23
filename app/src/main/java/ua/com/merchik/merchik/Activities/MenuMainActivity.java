@@ -61,6 +61,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.*;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.PlayUpdateReminderKt;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Options.OvertimeOfferPolicy;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
@@ -84,6 +85,7 @@ import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.features.main.componentsUI.PhotoListCallback;
 import ua.com.merchik.merchik.features.main.componentsUI.PhotoManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -261,7 +263,14 @@ public class MenuMainActivity extends toolbar_menus {
     private static final int[][] AVG_TIME_TEST_PAIRS = {{46403, 28847}, {10426, 28847}, {84186, 39410}};
     private boolean averageTimeTestInProgress;
 
+    private MessageDialogBuilder playUpdatePreview;
+
     private void test() {
+        if (playUpdatePreview != null && playUpdatePreview.isShowing()) return;
+        playUpdatePreview = PlayUpdateReminderKt.showPlayUpdateNoticePreview(this);
+    }
+
+    private void testAverageTime() {
         if (averageTimeTestInProgress) return;
         averageTimeTestInProgress = true;
         requestAverageTimeForTest(0);

@@ -99,6 +99,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         } catch (Exception e) {
             if (priceCheckTrace != null) {
@@ -711,9 +712,6 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
     }
 
     @Override
-    protected boolean allowOutsideDismiss() { return productIssues.isEmpty(); }
-
-    @Override
     protected CharSequence optionMessageHeading() {
         if (productIssues.isEmpty()) return "";
         List<String> ids = new ArrayList<>(productIssues);
@@ -724,15 +722,7 @@ public class OptionControlAvailabilityOfPrices<T> extends OptionControl {
     }
 
     private void openIssueProducts(View view, List<String> ids, String subtitle) {
-        ProductIssueCorrection.open(view, dad2, wpDataDB.getClient_id(), ids, subtitle, () -> {
-            try {
-                executeOption();
-                refreshOpenSpannableOptionMessage();
-            } catch (RuntimeException e) {
-                logOptionError("refreshAfterPriceEdit", e);
-                Toast.makeText(view.getContext(), "Не вдалося оновити список зауважень.", Toast.LENGTH_LONG).show();
-            }
-        });
+        ProductIssueCorrection.open(view, dad2, wpDataDB.getClient_id(), ids, subtitle);
     }
 
     private SpannableString link(String label, View.OnClickListener action) {

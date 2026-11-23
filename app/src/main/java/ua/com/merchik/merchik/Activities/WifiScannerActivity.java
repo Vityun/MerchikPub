@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
+import ua.com.merchik.merchik.Utils.MockLocationGuard;
+
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -155,6 +157,10 @@ public class WifiScannerActivity extends AppCompatActivity {
     // ---------------- WIFI ----------------
 
     private void startWifiScan() {
+        if (MockLocationGuard.isActive(this)) {
+            w(MockLocationGuard.MESSAGE);
+            return;
+        }
         w("----- WIFI: SCAN -----");
 
         if (wifiManager == null) {
@@ -183,6 +189,7 @@ public class WifiScannerActivity extends AppCompatActivity {
     }
 
     private void dumpWifiConnectedInfo() {
+        if (MockLocationGuard.isActive(this)) return;
         try {
             WifiInfo info = wifiManager != null ? wifiManager.getConnectionInfo() : null;
             if (info == null) {
@@ -207,6 +214,7 @@ public class WifiScannerActivity extends AppCompatActivity {
     }
 
     private void dumpWifiScanResults() {
+        if (MockLocationGuard.isActive(this)) return;
         try {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling

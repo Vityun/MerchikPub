@@ -69,6 +69,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         } catch (Exception e) {
             Log.e("OptionControlPhoto", "Exception e: " + e);

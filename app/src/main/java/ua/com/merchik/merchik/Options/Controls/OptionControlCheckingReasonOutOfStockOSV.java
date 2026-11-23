@@ -45,6 +45,7 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
+            enableCorrectionList(this::executeOption);
             executeOption();
         }catch (Exception e){
             Globals.writeToMLOG("ERR", "OptionControlCheckingReasonOutOfStockOSV/", "Exception e: " + e);

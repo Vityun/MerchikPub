@@ -2,6 +2,11 @@
     <string name="ui_date_unbounded">Не обмежено</string>
     <string name="tar_add_comment">Додати коментар</string>
     <string name="app_name" translatable="false">merchik</string>
+    <string name="play_update_title">Доступна нова версія %1$s</string>
+    <string name="play_update_message">У Google Play з’явилася нова версія %1$s. Для зручнішої роботи радимо оновити додаток перед початком роботи.</string>
+    <string name="play_update_action">Оновити</string>
+    <string name="play_update_later">Пізніше</string>
+    <string name="play_update_store_error">Не вдалося відкрити Google Play</string>
     <string name="ver" translatable="false">112001</string>
     <string name="debug_status" translatable="false">1</string>
     <string name="debug_date" translatable="false">2026-11-20</string>
@@ -342,6 +347,12 @@
     <string name="chat_unlock_code_copy_error">Не вдалося скопіювати код розблокування</string>
     <string name="native_text_visit_not_found">Відвідування %1$s відсутнє на цьому пристрої</string>
     <string name="native_text_photo_not_found">Світлина %1$s відсутня на цьому пристрої</string>
+    <string name="native_text_achievement_title">Досягнення</string>
+    <string name="native_text_achievement_not_found">Досягнення %1$s відсутнє на цьому пристрої</string>
+    <string name="achievement_creation_visit_not_found">Відвідування не знайдено на пристрої. Створити досягнення неможливо.</string>
+    <string name="achievement_chat_creation_next_visit">Тут не можна створити нове досягнення. Щоб покращити його, відкрийте наступне відвідування цього клієнта за цією адресою та оформіть покращення там.</string>
+    <string name="achievement_chat_creation_next_visit_details">Тут не можна створити нове досягнення. Щоб покращити його, відкрийте наступне відвідування та оформіть покращення там.\n\nКлієнт: %1$s\nАдреса: %2$s</string>
+    <string name="achievement_chat_open_next_visit">Перейти до відвідування</string>
     <string name="native_text_task_not_found">Завдання або рекламація %1$s відсутні на цьому пристрої</string>
     <string name="native_text_action_error">Не вдалося виконати дію за посиланням</string>
     <string name="photo_original_loading">Завантаження оригіналу...</string>
