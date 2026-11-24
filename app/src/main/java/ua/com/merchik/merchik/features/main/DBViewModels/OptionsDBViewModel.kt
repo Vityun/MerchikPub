@@ -63,6 +63,9 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 import ua.com.merchik.merchik.features.main.options.OptionItemState
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy
+import ua.com.merchik.merchik.features.main.options.VisitCorrectionInputs
+import ua.com.merchik.merchik.features.main.options.VisitCorrectionPlan
 import ua.com.merchik.merchik.features.main.options.OptionsRowFactory
 import ua.com.merchik.merchik.features.main.options.SamplePhotoCaptureResult
 
@@ -107,6 +110,8 @@ class OptionsDBViewModel @Inject constructor(
     private var optionsJob: Job? = null
     private var refreshPending = false
     private var recheckPending = false
+    private var correctionPending = false
+    private var correctionInputs: VisitCorrectionInputs? = null
     private var galleryClick: Clicks.click? = null
     private var onVisitReloaded: ((WpDataDB) -> Unit)? = null
     private var rowFactory: OptionsRowFactory<WpDataDB>? = null
@@ -234,28 +239,45 @@ class OptionsDBViewModel @Inject constructor(
         }
         // These controls use the main-thread Realm instance and may show dialogs.
         // Do not move them to Dispatchers.IO with managed Realm objects.
-        if (recheck || downloaded || pendingPhotoFeedback != null) {
+        val fullCheck = recheck || downloaded || pendingPhotoFeedback != null
+        if (fullCheck || correctionPending) {
+            correctionPending = false
+            val visitRows = OptionsRealm.getOptionsByDAD2(visitDad2.toString())
+            val plan = VisitCorrectionPlan(visitDad2.toString(), visitRows)
+            val related = visitRows.filter { it.optionGroup != OptionUnlockPolicy.BUTTON_GROUP && plan.includes(it) }
             val controls = Options()
-            for (button in buttons) {
-                val previousSignal = button.isSignal
+            val listener = object : OptionControl.UnlockCodeResultListener {
+                override fun onUnlockCodeSuccess() = Unit
+                override fun onUnlockCodeFailure() = Unit
+            }
+            fun check(row: OptionsDB, mode: Options.NNKMode) {
                 try {
-                    controls.optionControl(host, wp, button, null, Options.NNKMode.NULL,
-                        object : OptionControl.UnlockCodeResultListener {
-                            override fun onUnlockCodeSuccess() = Unit
-                            override fun onUnlockCodeFailure() = Unit
-                        })
+                    controls.optionControl(host, wp, row, null, mode, listener)
                 } catch (error: Exception) {
-                    // A failed control must not discard the entire options list.
-                    button.isSignal = previousSignal
                     Globals.writeToMLOG("ERROR", "OptionsDBViewModel/control",
-                        "dad2=$visitDad2, option=${button.optionId}, error=$error")
+                        "dad2=$visitDad2, option=${row.optionId}, error=$error")
                 }
+            }
+            for (row in RealmManager.INSTANCE.copyFromRealm(related)) check(row, Options.NNKMode.RECHECK_ROW)
+            for (button in buttons) {
+                if (plan.includes(button))
+                    check(button, Options.NNKMode.RECHECK_ROW)
+                else if (fullCheck) check(button, Options.NNKMode.NULL)
             }
         }
         wp = WpDataRealm.getWpDataRowByDad2Id(visitDad2) ?: return
         val allOptions = RealmManager.INSTANCE.copyFromRealm(
             OptionsRealm.getOptionsByDAD2(visitDad2.toString())
         )
+        if (allOptions.any { it.isSignal == OptionUnlockPolicy.SIGNAL_UNLOCKED }) {
+            if (correctionInputs == null) correctionInputs = VisitCorrectionInputs(wp) {
+                correctionPending = true
+                refreshOptions(false)
+            }
+        } else {
+            correctionInputs?.close()
+            correctionInputs = null
+        }
         // Match the legacy fragment: check every button in query order, then hide/sort for display.
         val visibleButtons = buttons.filter { it.optionId != "80976" }.sortedBy { it.so ?: 0 }
         val translations = RoomManager.SQL_DB.siteObjectsDao()
@@ -282,10 +304,9 @@ class OptionsDBViewModel @Inject constructor(
                 }
             if (row != null) {
                 val signalOnly = result.kind == SamplePhotoCaptureResult.Kind.CORRECTION
-                val resolved = row.signal.visibility == View.VISIBLE &&
-                    (row.signal.tint == ContextCompat.getColor(host, R.color.green_default) ||
-                        row.signal.tint == ContextCompat.getColor(host, R.color.colorInetYellow))
-                _photoFeedback.value = if (!signalOnly || resolved) {
+                val signal = if (row.signal.visibility == View.VISIBLE)
+                    visibleButtons.firstOrNull { it.getID() == row.id }?.isSignal else null
+                _photoFeedback.value = if (result.shouldShowFeedback(signal)) {
                     PhotoFeedbackRequest(row.id, ++photoFeedbackSequence, signalOnly)
                 } else null
             }
@@ -371,6 +392,9 @@ class OptionsDBViewModel @Inject constructor(
     }
 
     fun detachOptions() {
+        correctionInputs?.close()
+        correctionInputs = null
+        correctionPending = false
         hostGeneration++
         optionsJob?.cancel()
         optionsJob = null

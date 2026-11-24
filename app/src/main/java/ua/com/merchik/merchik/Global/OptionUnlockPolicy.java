@@ -7,10 +7,17 @@ public final class OptionUnlockPolicy {
     private OptionUnlockPolicy() {
     }
 
+    public static boolean hasRemark(String signal) {
+        return "1".equals(signal) || SIGNAL_UNLOCKED.equals(signal);
+    }
+
+    public static String signalWithStoredCode(String calculatedSignal) {
+        return hasRemark(calculatedSignal) ? SIGNAL_UNLOCKED : calculatedSignal;
+    }
+
     // Only call after accepting an unlock code. A normal success must stay green.
     public static String signalAfterUnlock(String sourceSignal, String relatedSignal) {
-        return "1".equals(sourceSignal) || SIGNAL_UNLOCKED.equals(sourceSignal)
-                || "1".equals(relatedSignal) || SIGNAL_UNLOCKED.equals(relatedSignal)
+        return hasRemark(sourceSignal) || hasRemark(relatedSignal)
                 ? SIGNAL_UNLOCKED : "2";
     }
 

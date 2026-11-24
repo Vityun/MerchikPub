@@ -31,6 +31,15 @@ public class OptionUnlockPolicyTest {
     }
 
     @Test
+    public void recheckingWithAStoredCodeUsesEachRowsOwnResult() {
+        assertEquals("3", OptionUnlockPolicy.signalWithStoredCode("1"));
+        assertEquals("2", OptionUnlockPolicy.signalWithStoredCode("2"));
+        assertEquals("3", OptionUnlockPolicy.signalWithStoredCode("3"));
+        assertEquals("0", OptionUnlockPolicy.signalWithStoredCode("0"));
+        assertNull(OptionUnlockPolicy.signalWithStoredCode(null));
+    }
+
+    @Test
     public void detachedControlWithoutStoredRowsStillTurnsYellow() {
         assertEquals("3", OptionUnlockPolicy.signalAfterUnlock("1", null));
     }

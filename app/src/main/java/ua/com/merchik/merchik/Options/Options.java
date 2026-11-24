@@ -133,6 +133,8 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfS
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
+import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFaceCount;
 import ua.com.merchik.merchik.Options.Controls.OptionControlShelfLength;
@@ -260,7 +262,9 @@ public class Options {
             Log.e("OPTION_CONTROL", "optionsDB/getOptionControlId: " + optionsDB.getOptionControlId());
             Log.e("OPTION_CONTROL", "optionsDB/getOptionControlTxt: " + optionsDB.getOptionControlTxt());
 
-            int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
+            int optionControlId = Integer.parseInt(mode == NNKMode.RECHECK_ROW
+                    ? OptionUnlockPolicy.controlId(optionsDB.getOptionId(), optionsDB.getOptionControlId(), optionsDB.getOptionGroup())
+                    : optionsDB.getOptionControlId());
             if (mode == NNKMode.NULL_AND_COLLUM_A_B && optionControlId == 0)
                 optionControlId = Integer.parseInt(optionsDB.getOptionId());
 
@@ -275,6 +279,22 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case 157241:
+                case 157242:
+                    new OptionControlCheckingReasonOutOfStock<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
+                    break;
+                case 157243:
+                    new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
+                    break;
+                case 156928:
+                    new OptionControlEndAnotherWork<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
+                    break;
+                case 1474:
+                    new OptionControlOverTimelinessOfReporting<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
+                    break;
+                case 166896:
+                    new OptionControlTwoWorkInOneDay<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
+                    break;
 
 //                case 157288:
 //                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -589,7 +609,7 @@ public class Options {
 //                    break;
 
                 case 587:
-                    optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, NNKMode.CHECK, unlockCodeResultListener);
+                    optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, mode == NNKMode.RECHECK_ROW ? mode : NNKMode.CHECK, unlockCodeResultListener);
                     break;
 
                 case 138341:
@@ -643,6 +663,13 @@ public class Options {
 //                }
                     break;
             }
+            // These legacy checks persist red/green themselves and do not call checkUnlockCode.
+            if (mode == NNKMode.RECHECK_ROW && "1".equals(optionsDB.getIsSignal())) {
+                switch (optionControlId) {
+                    case 141886, 138519, 138521, 141911, 141889, 587, 139577 ->
+                            new UnlockCode().applyStoredUnlockCode(optionsDB);
+                }
+            }
         } catch (Exception e) {
             OptionControl.logOptionError("Options/optionControl", optionsDB, mode, e);
         }
@@ -659,7 +686,8 @@ public class Options {
         MAKE,   // Выполнения функциональности кнопки
         NULL,    // Ничего не делаем
         NULL_AND_COLLUM_A_B,
-        BLOCK   // для блокирующих опций
+        BLOCK,   // для блокирующих опций
+        RECHECK_ROW // Re-evaluate this button or control without executing the action it blocks.
     }
 
     /**
@@ -3187,7 +3215,7 @@ public class Options {
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
-            globals.fixMP((WpDataDB) dataDB, null);
+            if (mode != NNKMode.RECHECK_ROW) globals.fixMP((WpDataDB) dataDB, null);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
@@ -4041,7 +4069,7 @@ public class Options {
                     }
                 });
 
-                new MessageDialogBuilder(unwrap(context))
+                if (mode != NNKMode.RECHECK_ROW) new MessageDialogBuilder(unwrap(context))
                         .setTitle("Версія додатку")
                         .setStatus(DialogStatus.ERROR)
                         .setMessage("У вас СТАРА версія додатку(" + currentVer + "), Вам потрібно оновитися до: " + minimalVer + "!")

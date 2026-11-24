@@ -27,8 +27,10 @@ public class CounterBadgeView extends TextView {
     public CounterBadgeView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setGravity(Gravity.CENTER);
+        setTextAlignment(TEXT_ALIGNMENT_CENTER);
         setIncludeFontPadding(false);
         setSingleLine(true);
+        setHorizontallyScrolling(false);
         setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
         int horizontal = getResources().getDimensionPixelSize(R.dimen.counter_badge_horizontal_padding);
         int vertical = getResources().getDimensionPixelSize(R.dimen.counter_badge_vertical_padding);
@@ -70,9 +72,11 @@ public class CounterBadgeView extends TextView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        // A single digit stays circular; longer numbers and scaled fonts can grow.
-        setMeasuredDimension(resolveSizeAndState(Math.max(getMeasuredWidth(), getMeasuredHeight()),
-                widthMeasureSpec, getMeasuredState()), getMeasuredHeight());
+        int badgeWidth = resolveSize(Math.max(getMeasuredWidth(), getMeasuredHeight()), widthMeasureSpec);
+        if (badgeWidth != getMeasuredWidth()) {
+            // Center the text layout in the final circle, not in the narrower first measurement.
+            super.onMeasure(MeasureSpec.makeMeasureSpec(badgeWidth, MeasureSpec.EXACTLY), heightMeasureSpec);
+        }
     }
 
     @Override

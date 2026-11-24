@@ -20,6 +20,7 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
@@ -100,7 +101,8 @@ public class OptionControlPhoto<T> extends OptionControl {
 
 
             String optionId;
-            if (nnkMode.equals(Options.NNKMode.BLOCK)) {
+            if (nnkMode.equals(Options.NNKMode.BLOCK) || (nnkMode == Options.NNKMode.RECHECK_ROW
+                    && !OptionUnlockPolicy.BUTTON_GROUP.equals(optionDB.getOptionGroup()))) {
                 optionId = optionDB.getOptionId();
             } else {
                 optionId = optionDB.getOptionControlId();

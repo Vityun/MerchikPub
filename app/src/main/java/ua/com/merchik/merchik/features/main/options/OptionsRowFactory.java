@@ -1041,6 +1041,7 @@ public final class OptionsRowFactory<T> {
                             bundle.putString("title", "Перелік фото звітів");
                             bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(31).getNm());
                             intent.putExtras(bundle);
+                            OptionPhotoCorrection.trackJournal(intent, wp.getId(), optionsButtons.getID());
                             ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                         };
 

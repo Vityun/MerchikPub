@@ -1637,11 +1637,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     public static StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, int photoType, String tovarId, Context context) {
         try {
-            file.exists();
-            int id = RealmManager.stackPhotoGetLastId();
-            id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
-            stackPhotoDB.setId(id);
             stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
             stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime() / 1000, "yyyy-MM-dd"));
 
@@ -1668,28 +1664,8 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            Globals globals1 = new Globals();
-//            String hash = globals.getHashMD5FromFileTEST(uri, context);
-
-//            String hash = Globals.FileHashCalculator.calculateHash(file.getPath());
-
-//            String hash = globals1.getHashMD5FromFile2(file, context);
-            String hash = "";
-            if (hash == null || hash.equals("")) hash = globals1.getHashMD5FromFile(file, context);
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
-
-            if (hash == null || hash.equals("")) {
-                hash = globals1.getHashMD5FromFile(file, context);
-            }
-
-            stackPhotoDB.setPhoto_hash(hash);
-            stackPhotoDB.setPhoto_num(file.getAbsolutePath());
-
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + JsonLogUtils.stackPhoto(stackPhotoDB));
-
-            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-            Toast.makeText(context, "Фото (" + id + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();
-            return stackPhotoDB;
+            String hash = new Globals().getHashMD5FromFilePath(file.getAbsolutePath(), null);
+            return PhotoPickerUtils.savePickedCopy(context, file, stackPhotoDB, hash);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             return null;

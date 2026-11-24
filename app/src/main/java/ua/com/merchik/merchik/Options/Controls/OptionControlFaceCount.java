@@ -128,13 +128,12 @@ public class OptionControlFaceCount<T> extends OptionControl {
         boolean unlocked = signal && result.blockPns && new UnlockCode().applyStoredUnlockCode(calculated);
         if (unlocked) {
             message += ", Але виконавцю виданий разовий код розблокування.";
-            result.blockPns = false;
-            calculated.setBlockPns("0");
         }
 
         //6.0. Если сигнал есть - блокируем проведение (если это определено настройками опции).
-        setIsBlockOption(signal && result.blockPns);
-        String conductMessage = FaceCountPolicy.conductMessage(signal, result.blockPns, wpDataDB.getStatus() == 1);
+        boolean blocked = result.blocksConduct(unlocked);
+        setIsBlockOption(blocked);
+        String conductMessage = FaceCountPolicy.conductMessage(signal, blocked, wpDataDB.getStatus() == 1);
         if (!conductMessage.isEmpty()) message += "\n\n" + conductMessage.trim();
 
         //7.0. Сообщение показывается общим showOptionMassage согласно режиму вызова.

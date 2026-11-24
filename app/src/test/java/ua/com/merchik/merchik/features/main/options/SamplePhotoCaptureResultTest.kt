@@ -1,10 +1,34 @@
 package ua.com.merchik.merchik.features.main.options
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SamplePhotoCaptureResultTest {
+    @Test
+    fun unlockedRemarkCanBeCorrectedButIsNotYetResolved() {
+        val correction = SamplePhotoCaptureResult.Result(101L, "fts", SamplePhotoCaptureResult.Kind.CORRECTION)
+        for (signal in listOf("1", "3")) {
+            assertTrue(SamplePhotoCaptureResult.hasOutstandingRemarks(signal))
+            assertFalse(correction.shouldShowFeedback(signal))
+        }
+        assertFalse(SamplePhotoCaptureResult.hasOutstandingRemarks("2"))
+        assertTrue(correction.shouldShowFeedback("2"))
+        for (signal in listOf("0", null)) {
+            assertFalse(SamplePhotoCaptureResult.hasOutstandingRemarks(signal))
+            assertFalse(correction.shouldShowFeedback(signal))
+        }
+    }
+
+    @Test
+    fun ordinaryCaptureStillGivesFeedbackEvenWithOutstandingRemarks() {
+        val capture = SamplePhotoCaptureResult.Result(101L, "fts")
+        assertTrue(capture.shouldShowFeedback("3"))
+        assertTrue(capture.shouldShowFeedback("1"))
+    }
+
     @Test
     fun correctionKeepsItsOwnFeedbackKind() {
         SamplePhotoCaptureResult.publishCorrection(101L, "option-row-1")

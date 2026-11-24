@@ -241,7 +241,7 @@ public class UnlockCode {
             dialog.show();
         } else {
             // Pika Если в логе есть за сегодня этот код разблокировки, то тут делаю вид, что успешно внесен правильный код разблокировки
-            applyUnlockSignals(option);
+            applyStoredSignalToRow(option);
             click.onSuccess("");
 
         }
@@ -286,8 +286,22 @@ public class UnlockCode {
         }
         if (matchedObjectId == null) return false;
 
-        applyUnlockSignals(source);
+        applyStoredSignalToRow(source);
         return true;
+    }
+
+    // A fresh calculation belongs to this row. A sibling may have a different minimum.
+    private void applyStoredSignalToRow(OptionsDB source) {
+        String signal = OptionUnlockPolicy.signalWithStoredCode(source.getIsSignal());
+        if (!OptionUnlockPolicy.SIGNAL_UNLOCKED.equals(signal)) return;
+        Realm.Transaction update = realm -> {
+            OptionsDB row = realm.where(OptionsDB.class).equalTo("codeDad2", source.getCodeDad2())
+                    .equalTo("iD", source.getID()).findFirst();
+            if (row != null) row.setIsSignal(signal);
+            source.setIsSignal(signal);
+        };
+        if (RealmManager.INSTANCE.isInTransaction()) update.execute(RealmManager.INSTANCE);
+        else RealmManager.INSTANCE.executeTransaction(update);
     }
 
     // Only update signals after a code is accepted; the LogDB key belongs to the original option.

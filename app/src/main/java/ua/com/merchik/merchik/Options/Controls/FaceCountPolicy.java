@@ -63,6 +63,10 @@ public final class FaceCountPolicy {
         public boolean signal;
         public boolean blockPns;
         public String message;
+
+        boolean blocksConduct(boolean unlocked) {
+            return signal && blockPns && !unlocked;
+        }
     }
 
     public static final class ProductLink {

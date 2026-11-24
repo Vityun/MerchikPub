@@ -13,8 +13,8 @@ build
 .externalNativeBuild
 keystore.properties
 /AGENTS.md
-/app/release/merchik.2026112300.apk
-/app/release/baselineProfiles/1/merchik.2026112300.dm
-/app/release/baselineProfiles/0/merchik.2026112300.dm
+/app/release/merchik.2026112400.apk
+/app/release/baselineProfiles/1/merchik.2026112400.dm
+/app/release/baselineProfiles/0/merchik.2026112400.dm
 /tmp
 tmp

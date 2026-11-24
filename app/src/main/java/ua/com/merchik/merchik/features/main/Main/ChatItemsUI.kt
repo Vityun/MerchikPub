@@ -127,8 +127,8 @@ fun ChatItemsUI(
 
 @Composable
 fun ChatToolbarTitle(viewModel: ChatSDBViewModel) {
-    val unreadCount by viewModel.unreadCount.collectAsState()
-    SectionToolbarTitle(stringResource(R.string.chat_toolbar_title), unreadCount)
+    val unreadChatCount by viewModel.unreadChatCount.collectAsState()
+    SectionToolbarTitle(stringResource(R.string.chat_toolbar_title), unreadChatCount)
 }
 
 @Composable

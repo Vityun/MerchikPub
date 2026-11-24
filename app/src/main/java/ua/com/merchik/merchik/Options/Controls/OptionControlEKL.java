@@ -34,6 +34,7 @@ import java.util.Set;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -126,6 +127,9 @@ public class OptionControlEKL<T> extends OptionControl {
     /*Тут в теории должен собираться ТЗН "с одной строки" для подальшей работы с ним. Пока сути для
     меня не вижу кроме как указать что ПТТшник может быть пустым настарте и мы его ПОТОМ переопределим*/
     private void createTZN() {
+        String controlId = nnkMode == Options.NNKMode.RECHECK_ROW
+                ? OptionUnlockPolicy.controlId(optionDB.getOptionId(), optionDB.getOptionControlId(), optionDB.getOptionGroup())
+                : optionDB.getOptionControlId();
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 1");
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
         StringBuilder optionMsg = new StringBuilder(); //
@@ -164,20 +168,20 @@ public class OptionControlEKL<T> extends OptionControl {
         if ((addressSDB.tpId == 434
 //                || addressSDB.tpId == 6767
         )
-                && !optionDB.getOptionControlId().equals("132629")
+                && !controlId.equals("132629")
                 && wpDataDB.getDt().before(limitDate)) { //  434 = АТБ или 676 = Акварель
             optionMsg.append("Не проверяем для АТБ до 01.06.2027");
             signal = false;
         } else {
             // Определем Группу Товаров
-            if (optionDB.getOptionControlId().equals("132629")) {
+            if (controlId.equals("132629")) {
                 //для 132629-Контроль ЭКЛ между ПРОВЕРЯЮЩИМ и ПРОВЕРЯЕМЫМ (электронный контрольный лист) НЕ имеет значения в каком он отделе
-            } else if (optionDB.getOptionControlId().equals("143968")) {
+            } else if (controlId.equals("143968")) {
                 //для 143968-Контроль ЭКЛ между исполнителем и сотрудником КЛИЕНТА (электронный контрольный лист) НЕ имеет значения в каком он отделе
-            } else if (optionDB.getOptionControlId().equals("151140") && (ptt.equals("") || ptt.equals("0"))) {
+            } else if (controlId.equals("151140") && (ptt.equals("") || ptt.equals("0"))) {
                 //для 151140-Контроль ЭКЛ между исполнителем и КОНКРЕТНЫМ ПТТ (ИНДИВИДУАЛЬНЫЙ электронный контрольный лист) НЕ имеет значения в каком отделе ПТТ. Отдел НЕ важен, если ПТТ для подписания ИЭКЛ определен, а если НЕТ то все-таки нужно определить отдел
                 //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
-            } else if (optionDB.getOptionControlId().equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
+            } else if (controlId.equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
 //                tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
 //
 //                if (tovarGroupClientSDB == null || tovarGroupClientSDB.size() == 0){
@@ -210,9 +214,9 @@ public class OptionControlEKL<T> extends OptionControl {
             }
 
             // Готовим часть Сообщения.
-            if (optionDB.getOptionControlId().equals("143968")) {
+            if (controlId.equals("143968")) {
                 controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым сотрудником КЛИЕНТА";
-            } else if (optionDB.getOptionControlId().equals("151140")) {
+            } else if (controlId.equals("151140")) {
                 controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и ПТТ " + ptt + " (Индивидуальный ЭКЛ)";
             } else {
                 controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + TG.getNmFromList(tovarGroupSDB);
@@ -398,11 +402,11 @@ public class OptionControlEKL<T> extends OptionControl {
                             "OptionControlEKL/createTZN",
                             "Skip single PTT validation because EKL was found for several users: " + cntBySotr.keySet()
                     );
-                } else if (isUserFired(usersSDBPTT) && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
-                } else if (isUserFired(usersSDBPTT) && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
+                } else if (isUserFired(usersSDBPTT) && controlId.equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
+                } else if (isUserFired(usersSDBPTT) && controlId.equals("133317") && controlId.equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
-                } else if (!Objects.equals(usersSDBPTT.workAddrId, wpDataDB.getAddr_id()) && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
+                } else if (!Objects.equals(usersSDBPTT.workAddrId, wpDataDB.getAddr_id()) && controlId.equals("133317") && controlId.equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
@@ -424,7 +428,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     TovarGroupSDB test = tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null);
                     Log.e("test", "test: " + test);
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
-                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
+                            && !controlId.equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser == null || documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")
@@ -435,7 +439,7 @@ public class OptionControlEKL<T> extends OptionControl {
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (№").append(TG.getIdFromList(tovarGroupSDB)).append(")").append(" (для магазина в котором более 5 касс и исполнитель провел 20-й отчет)");
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
-                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
+                            && !controlId.equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
                         if (documentUser == null || documentUser.reportDate40 == null || documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(otdelName).append(" (№").append(otdelId).append(")").append(" и не может подписывать ЭКЛ для: ")

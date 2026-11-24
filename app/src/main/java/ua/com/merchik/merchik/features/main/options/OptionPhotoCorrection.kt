@@ -31,12 +31,12 @@ object OptionPhotoCorrection {
         val before: String
     )
 
-    private data class PhotoState(val id: Int, val comment: String?, val exampleId: String?, val dvi: Int?)
+    private data class PhotoState(val id: Int, val comment: String?, val exampleId: String?, val dvi: Int?, val productId: String?)
 
     // Upload acknowledgements, server IDs and cached image paths are not user corrections.
     private fun snapshot(dad2: Long): String = Gson().toJson(
         StackPhotoRealm.getPhotosByDAD2(dad2, 31).sortedBy { it.id }.map {
-            PhotoState(it.id, it.comment, it.example_id, it.dvi)
+            PhotoState(it.id, it.comment, it.example_id, it.dvi, it.tovar_id)
         }
     )
 
@@ -44,7 +44,21 @@ object OptionPhotoCorrection {
         val wp = WpDataRealm.getWpDataRowById(visitId) ?: error("Visit not found: $visitId")
         val option = OptionsRealm.getOptionById(optionRowId) ?: error("Option not found: $optionRowId")
         check(option.codeDad2 == wp.code_dad2.toString())
-        return Session(visitId, optionRowId, wp.code_dad2, option.isSignal == "1", snapshot(wp.code_dad2))
+        return Session(visitId, optionRowId, wp.code_dad2,
+            SamplePhotoCaptureResult.hasOutstandingRemarks(option.isSignal), snapshot(wp.code_dad2))
+    }
+
+    private fun Session.attachTo(intent: Intent) {
+        intent.putExtra(EXTRA_SESSION, Gson().toJson(this))
+    }
+
+    @JvmStatic
+    fun trackJournal(intent: Intent, visitId: Long, optionRowId: String) {
+        try {
+            session(visitId, optionRowId).attachTo(intent)
+        } catch (error: Exception) {
+            Globals.writeToMLOG("ERROR", "OptionPhotoCorrection/trackJournal", "error=$error")
+        }
     }
 
     private fun optionsViewModel(context: Context): OptionsDBViewModel? =
@@ -95,7 +109,7 @@ object OptionPhotoCorrection {
                 putExtra("subTitle", "Фото товару на складі (ФТС)")
                 putExtra(FeaturesActivity.EXTRA_INITIAL_IMAGE_DISPLAY_MODE, ImageDisplayMode.TWO_COLUMNS.name)
                 // The original snapshot survives recreation of the journal activity.
-                putExtra(EXTRA_SESSION, Gson().toJson(source))
+                source.attachTo(this)
             }
             optionsViewModel(context)?.cancelPhotoFeedback()
             context.startActivity(intent)

@@ -604,12 +604,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
      * */
     private StackPhotoDB savePhoto(File file, TasksAndReclamationsSDB tasksAndReclamationsSDB, String tovarId, Context context) {
         try {
-            String hash = validatedPhotoHash(file);
-            if (hash == null) return null;
-            int id = RealmManager.stackPhotoGetLastId();
-            id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
-            stackPhotoDB.setId(id);
             stackPhotoDB.setDt(PhotoDateUtils.resolveSeconds(
                     tasksAndReclamationsSDB.dt, null));
             stackPhotoDB.setTime_event(PhotoDateUtils.uploadDate(
@@ -637,19 +632,10 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
-
-            stackPhotoDB.setPhoto_hash(hash);
-            stackPhotoDB.setPhoto_num(file.getAbsolutePath());
-
             getPhotoFlow().applyTo(stackPhotoDB, tasksAndReclamationsSDB);
-
-            String jo = new Gson().toJson(stackPhotoDB);
-            Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
-
-            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-            Toast.makeText(context, "Фото (" + id + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();
-            return stackPhotoDB;
+            String hash = PhotoPickerUtils.isReadableImageFile(file)
+                    ? globals.getHashMD5FromFilePath(file.getAbsolutePath(), null) : null;
+            return PhotoPickerUtils.savePickedCopy(context, file, stackPhotoDB, hash);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             return null;

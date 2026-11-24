@@ -28,6 +28,7 @@ import io.realm.RealmModel;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
 import ua.com.merchik.merchik.Global.UnlockCode;
+import ua.com.merchik.merchik.Global.OptionUnlockPolicy;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
@@ -101,6 +102,7 @@ public class OptionControl<T> {
     }
 
     public void showOptionMassage(String msg) {
+        if (nnkMode == Options.NNKMode.RECHECK_ROW) return;
         try {
             optionMessagePrefix = msg;
             dialog = new DialogData(context);
@@ -133,7 +135,7 @@ public class OptionControl<T> {
                         CharSequence heading = optionMessageHeading();
                         WpDataDB visit = document instanceof WpDataDB ? (WpDataDB) document : wpDataDB;
                         boolean correctionList = correctionCheck != null && visit != null
-                                && "1".equals(optionDB.getIsSignal())
+                                && OptionUnlockPolicy.hasRemark(optionDB.getIsSignal())
                                 && (firstAction(heading) != null || firstAction(spannableStringBuilder) != null);
                         if (!correctionList && stringBuilderMsg.toString().length() > 1 && heading.length() == 0) {
                             dialog.setTitle(optionTitle);

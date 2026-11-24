@@ -7,9 +7,9 @@
     <string name="play_update_action">Оновити</string>
     <string name="play_update_later">Пізніше</string>
     <string name="play_update_store_error">Не вдалося відкрити Google Play</string>
-    <string name="ver" translatable="false">112001</string>
+    <string name="ver" translatable="false">112401</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2026-11-20</string>
+    <string name="debug_date" translatable="false">2026-11-24</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -360,6 +360,7 @@
     <string name="photo_original_retry">Повторити</string>
     <string name="tar_photo_primary">Фото завдання або рекламації</string>
     <string name="tar_photo_secondary">Додаткове фото</string>
+    <string name="gallery_photo_already_added">Это фото уже добавлено</string>
 </resources>
 
     <!--

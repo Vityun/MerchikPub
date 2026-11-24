@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
@@ -21,8 +22,28 @@ import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class StackPhotoRealm {
+
+    public static boolean insertGalleryPhotoIfNew(StackPhotoDB photo) {
+        return insertGalleryPhotoIfNew(INSTANCE, photo);
+    }
+
+    static boolean insertGalleryPhotoIfNew(Realm db, StackPhotoDB photo) {
+        boolean[] inserted = {false};
+        db.executeTransaction(realm -> {
+            if (photo.code_dad2 != 0 && realm.where(StackPhotoDB.class)
+                    .equalTo("code_dad2", photo.code_dad2)
+                    .equalTo("photo_hash", photo.getPhoto_hash(), Case.INSENSITIVE)
+                    .findFirst() != null) return;
+
+            photo.setId(Math.toIntExact(RealmManager.stackPhotoGetLastId(realm) + 1));
+            realm.insert(photo);
+            inserted[0] = true;
+        });
+        return inserted[0];
+    }
 
     private interface PhotoUpdate {
         boolean apply(StackPhotoDB current);

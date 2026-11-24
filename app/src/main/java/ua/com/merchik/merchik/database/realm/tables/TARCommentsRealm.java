@@ -2,16 +2,14 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
-import android.util.Log;
-
-import com.google.gson.Gson;
-
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 
 public class TARCommentsRealm {
@@ -22,61 +20,32 @@ public class TARCommentsRealm {
         INSTANCE.commitTransaction();
     }
 
-    /**
-     * 23.03.2021
-     * Сохранение данных в таблицу "Комментарии к рекламациям" / "Переписка"
-     * <p>
-     * 21.12.2022
-     * Добавлен этот лютый костыль из-за:
-     * Если удалять и перезаписывать таблицу - выясняется что на стороне приложения ЕСТЬ фотография
-     * у комментария, а на стороне сервера ЕЩЁ нет. Таким образом сервер, при синхронизации затирал
-     * данные о фотографии в приложении и по итогу люди переставали видеть фото к комментам ЗИР.
-     * <p>
-     * Сделанное решение делает невозможным загрузку данных изменённых на сервере.
-     */
+    // Download is insert-only: a known ID may have a local photo or a reply pending upload.
     public static void setTARCommentsDB(List<TARCommentsDB> data) {
-        try {
-            if (data != null) {
-                Log.e("setTARCommentsDB", "Start data: " + new Gson().toJson(data));
-                String[] ids = new String[data.size()];
-                int i = 0;
-                for (TARCommentsDB item : data) {
-                    ids[i++] = item.getID();
-                }
+        if (data == null || data.isEmpty()) return;
+        INSTANCE.executeTransaction(realm -> {
+            List<TARCommentsDB> missing = missingComments(data,
+                    id -> realm.where(TARCommentsDB.class).equalTo("id", id).findFirst() != null);
+            if (!missing.isEmpty()) realm.insert(missing);
+        });
+    }
 
-                Log.e("setTARCommentsDB", "ids: " + Arrays.toString(ids));
-                List<TARCommentsDB> notSaveComments = INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentByIds(ids));
-                Log.e("setTARCommentsDB", "notSaveComments: " + new Gson().toJson(notSaveComments));
-                if (notSaveComments != null && notSaveComments.size() > 0) {
-                    for (TARCommentsDB servList : data) {
-                        for (TARCommentsDB currentList : notSaveComments) {
-                            if (servList.getID().equals(currentList.getID())) {
-                                data.remove(servList);
-                            }
-                        }
-                    }
-                }
-                Log.e("setTARCommentsDB", "End data: " + new Gson().toJson(data));
-
-                INSTANCE.beginTransaction();
-                INSTANCE.copyToRealm(data);
-                INSTANCE.commitTransaction();
+    static List<TARCommentsDB> missingComments(List<TARCommentsDB> downloaded, Predicate<String> stored) {
+        Set<String> seen = new HashSet<>();
+        List<TARCommentsDB> missing = new ArrayList<>();
+        for (TARCommentsDB row : downloaded) {
+            String id = row == null ? null : row.getID();
+            if (id != null && !id.trim().isEmpty() && seen.add(id) && !stored.test(id)) {
+                missing.add(row);
             }
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "setTARCommentsDB/Exception", "Exception e: " + e);
         }
+        return missing;
     }
 
     public static TARCommentsDB getTARCommentById(String id) {
         return INSTANCE.where(TARCommentsDB.class)
                 .equalTo("id", id)
                 .findFirst();
-    }
-
-    public static RealmResults<TARCommentsDB> getTARCommentByIds(String[] ids) {
-        return INSTANCE.where(TARCommentsDB.class)
-                .in("id", ids)
-                .findAll();
     }
 
 

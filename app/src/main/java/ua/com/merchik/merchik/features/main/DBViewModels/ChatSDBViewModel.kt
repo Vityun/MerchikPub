@@ -46,8 +46,8 @@ class ChatSDBViewModel @Inject constructor(
     val loading = _loading.asStateFlow()
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
-    private val _unreadCount = MutableStateFlow(0L)
-    val unreadCount = _unreadCount.asStateFlow()
+    private val _unreadChatCount = MutableStateFlow(0L)
+    val unreadChatCount = _unreadChatCount.asStateFlow()
 
     init {
         contextUI = ContextUI.CHATS_IN_CONTAINER
@@ -64,7 +64,7 @@ class ChatSDBViewModel @Inject constructor(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ updated ->
                 rows = updated
-                _unreadCount.value = rows.sumOf { it.kolUnread.toLong() }
+                _unreadChatCount.value = rows.count { it.kolUnread > 0 }.toLong()
                 _loading.value = false
                 super.updateContent()
             }, { failure ->

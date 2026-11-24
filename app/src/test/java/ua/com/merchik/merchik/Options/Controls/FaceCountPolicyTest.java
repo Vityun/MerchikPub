@@ -352,6 +352,20 @@ public class FaceCountPolicyTest {
         }
     }
 
+    @Test public void unlockDoesNotClearTheBlockFlagForTheNextCalculation() {
+        LocalDate date = LocalDate.of(2026, 12, 1);
+        FaceCountPolicy.Visit visit = uniform("5");
+        FaceCountPolicy.Network network = baseline("2", "10");
+        FaceCountPolicy.Result first = evaluate(visit, network, date, true);
+        assertTrue(first.blocksConduct(false));
+        assertFalse(first.blocksConduct(true));
+
+        FaceCountPolicy.Result next = evaluate(visit, network, date, first.blockPns);
+        assertTrue(next.blocksConduct(false));
+        assertFalse(next.blocksConduct(true));
+        assertFalse(evaluate(visit, network, date, false).blocksConduct(false));
+    }
+
     @Test public void temporaryExceptionClearsEverySignalBranchAfterEvaluation() {
         FaceCountPolicy.Network network = baseline("2", "10");
         for (FaceCountPolicy.Visit visit : Arrays.asList(uniform("0.5"), uniform("5"), uniform("11"),
@@ -366,6 +380,7 @@ public class FaceCountPolicyTest {
                     Instant.parse("2026-11-18T12:00:00Z").toEpochMilli());
             assertFalse(result.signal);
             assertEquals(originalBlock, result.blockPns);
+            assertFalse(result.blocksConduct(false));
             assertEquals(originalReason, result.message);
             assertEquals(originalFaces, visit.faces);
             assertTrue(message.text.startsWith(original.text + "\n\n"));

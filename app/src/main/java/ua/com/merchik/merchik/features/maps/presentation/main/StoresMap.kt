@@ -622,8 +622,6 @@ private fun Context.drawCounterBadgeBitmap(
     fontSizePx: Float = resources.getDimension(R.dimen.counter_badge_text_size)
 ): Bitmap {
     val badge = CounterBadgeView(this).apply {
-        // A detached single-line TextView cannot scroll its centered text into the bitmap.
-        setHorizontallyScrolling(false)
         setBadgeStyle(dp(diameter.value).toFloat(), fontSizePx, background, borderColor, textColor)
         setCount(count.toLong(), MARKER_COUNT_LIMIT)
     }

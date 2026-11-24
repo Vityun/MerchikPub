@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.webkit.MimeTypeMap;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -17,6 +18,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
 public final class PhotoPickerUtils {
 
@@ -125,6 +131,32 @@ public final class PhotoPickerUtils {
             throw new IOException("Picked image is empty: " + uri);
         }
         return photo;
+    }
+
+    /** Takes ownership of the private copy returned by copyPickedImageToFile, never the gallery original. */
+    public static StackPhotoDB savePickedCopy(Context context, File copy, StackPhotoDB photo, String hash) {
+        boolean saved = false;
+        try {
+            if (!PhotoEvidencePolicy.isUsableHash(hash)) {
+                Toast.makeText(context, "Не вдалося прочитати фото. Оберіть його ще раз.", Toast.LENGTH_LONG).show();
+                return null;
+            }
+            photo.setPhoto_hash(hash);
+            photo.setPhoto_num(copy.getAbsolutePath());
+            saved = StackPhotoRealm.insertGalleryPhotoIfNew(photo);
+            if (!saved) {
+                Globals.writeToMLOG("INFO", "GalleryPhoto", "Duplicate: dad2=" + photo.code_dad2 + ", hash=" + hash);
+                Toast.makeText(context, R.string.gallery_photo_already_added, Toast.LENGTH_LONG).show();
+                return null;
+            }
+            Globals.writeToMLOG("INFO", "GalleryPhoto", "Saved: " + JsonLogUtils.stackPhoto(photo));
+            Toast.makeText(context, "Фото (" + photo.getId() + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();
+            return photo;
+        } finally {
+            if (!saved && !copy.delete()) {
+                Globals.writeToMLOG("ERROR", "GalleryPhoto", "Could not remove rejected copy: " + copy.getName());
+            }
+        }
     }
 
     private static String resolveExtension(Context context, Uri uri) {
