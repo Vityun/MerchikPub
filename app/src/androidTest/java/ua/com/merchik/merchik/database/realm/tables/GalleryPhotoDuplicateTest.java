@@ -4,10 +4,14 @@ import androidx.test.InstrumentationRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.util.Locale;
 import java.util.UUID;
+import java.io.File;
+import java.io.FileOutputStream;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -18,6 +22,7 @@ import static org.junit.Assert.*;
 public class GalleryPhotoDuplicateTest {
     private static final String HASH = "ef87c334c49001cbd60f9fe3f00f78a0";
     private Realm db;
+    @Rule public TemporaryFolder files = new TemporaryFolder(InstrumentationRegistry.getTargetContext().getCacheDir());
 
     @Before public void open() {
         Realm.init(InstrumentationRegistry.getTargetContext());
@@ -29,9 +34,11 @@ public class GalleryPhotoDuplicateTest {
         db.close();
     }
 
-    @Test public void duplicateDoesNotCountOrReplaceTheOriginalBeforeOrAfterUpload() {
+    @Test public void duplicateDoesNotCountOrReplaceTheOriginalBeforeOrAfterUpload() throws Exception {
         StackPhotoDB original = photo(123, HASH);
-        original.setPhoto_num("first.jpg");
+        File file = files.newFile("first.jpg");
+        try (FileOutputStream out = new FileOutputStream(file)) { out.write(new byte[]{1, 2}); }
+        original.setPhoto_num(file.getAbsolutePath());
         original.setPhoto_type(4);
         assertTrue(StackPhotoRealm.insertGalleryPhotoIfNew(db, original));
 
@@ -44,7 +51,7 @@ public class GalleryPhotoDuplicateTest {
         assertFalse(StackPhotoRealm.insertGalleryPhotoIfNew(db, duplicate));
         assertEquals(1, db.where(StackPhotoDB.class).count());
         assertEquals(0, duplicate.getId());
-        assertEquals("first.jpg", stored.getPhoto_num());
+        assertEquals(file.getAbsolutePath(), stored.getPhoto_num());
         assertEquals("60200698", stored.getPhotoServerId());
     }
 

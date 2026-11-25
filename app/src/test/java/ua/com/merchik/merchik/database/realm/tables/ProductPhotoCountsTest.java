@@ -20,7 +20,7 @@ public class ProductPhotoCountsTest {
 
     @Test public void groupsReadyPhotosByProduct() throws Exception {
         File local = temporary.newFile("local.jpg");
-        Files.write(local.toPath(), new byte[]{1});
+        Files.write(local.toPath(), new byte[]{1, 2});
         Map<String, Integer> counts = StackPhotoRealm.countReadyProductPhotos(Arrays.asList(
                 photo("175194", null, local.getPath()),
                 photo("175194", "59663980", null),
@@ -43,7 +43,7 @@ public class ProductPhotoCountsTest {
         File local = temporary.newFile("camera.jpg");
         StackPhotoDB row = photo("175194", null, local.getPath());
         assertTrue(StackPhotoRealm.countReadyProductPhotos(Collections.singletonList(row)).isEmpty());
-        Files.write(local.toPath(), new byte[]{1});
+        Files.write(local.toPath(), new byte[]{1, 2});
         assertEquals(Integer.valueOf(1), StackPhotoRealm.countReadyProductPhotos(
                 Collections.singletonList(row)).get("175194"));
         assertEquals(Integer.valueOf(1), StackPhotoRealm.countReadyProductPhotos(

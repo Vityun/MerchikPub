@@ -76,7 +76,7 @@ public class PhotoReportMinimumTest {
         List<StackPhotoDB> photos = Collections.singletonList(photo);
         assertEquals(1, warehouseMinimum("1", photos, false));
         assertEquals(0, PhotoReportMinimum.completedCount(option("141360", "1"), photos));
-        Files.write(image.toPath(), new byte[]{1});
+        Files.write(image.toPath(), new byte[]{1, 2});
         assertEquals(2, warehouseMinimum("1", photos, false));
         assertEquals(1, PhotoReportMinimum.completedCount(option("141360", "1"), photos));
     }

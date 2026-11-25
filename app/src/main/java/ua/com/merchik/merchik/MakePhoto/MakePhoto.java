@@ -14,6 +14,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 import android.provider.MediaStore;
 import android.text.Html;
 import android.util.Log;
@@ -68,6 +71,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.trecker;
 
 public class MakePhoto {
+    private static final CameraTapGuard REPORT_CAMERA_TAPS = new CameraTapGuard();
 
     static Globals globals = new Globals();
     private static final int CAMERA_REQUEST = 1;
@@ -672,6 +676,10 @@ public class MakePhoto {
     }
 
     public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
+        boolean foreground = !(activity instanceof LifecycleOwner)
+                || ((LifecycleOwner) activity).getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED);
+        if (!REPORT_CAMERA_TAPS.begin(SystemClock.elapsedRealtime(), foreground)) return;
+        boolean dispatched = false;
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
@@ -703,24 +711,31 @@ public class MakePhoto {
             persistPendingPhoto(activity, photoNum);
 
             boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile, clickVoid);
+            if (!isSavePhoto) {
+                clearPendingPhoto(activity);
+                return;
+            }
 
             Globals.writeToMLOG("INFO", "makePhoto", "photoType: " + photoType);
             Globals.writeToMLOG("INFO", "makePhoto", "photoNum: " + photoNum);
             Globals.writeToMLOG("INFO", "makePhoto", "isSavePhoto: " + isSavePhoto);
 
             Log.e("!!!!!!", "tovarId: " + tovarId);
-            if (intent.resolveActivity(activity.getPackageManager()) != null) {
-                Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
-                activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
-            } else {
-                Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity = null: " + activity.getPackageManager());
-                activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
-            }
+            activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
+            dispatched = true;
         } catch (Exception e) {
             clearPendingPhoto(activity);
             Globals.writeToMLOG("ERROR", "makePhoto", "Error msg(Exception e): " + e);
             Toast.makeText(activity, "Ошибка при выполнении фото: " + e, Toast.LENGTH_LONG).show();
+        } finally {
+            // Start the debounce after slow file/Realm preparation, never wait indefinitely for a result.
+            if (dispatched) REPORT_CAMERA_TAPS.dispatched(SystemClock.elapsedRealtime());
+            else REPORT_CAMERA_TAPS.reset();
         }
+    }
+
+    public static void onReportCameraReturned() {
+        REPORT_CAMERA_TAPS.reset();
     }
 
     private File createPhotoFile(Activity activity) throws IOException {

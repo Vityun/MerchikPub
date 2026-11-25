@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.ReportConductManager;
 import ua.com.merchik.merchik.PhotoReports;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
@@ -40,7 +41,11 @@ public final class VisitUploadSync {
     private static boolean running;
     private static Run active;
     private static final java.util.concurrent.atomic.AtomicBoolean TASK_COMMENTS = new java.util.concurrent.atomic.AtomicBoolean();
+    private static final java.util.concurrent.atomic.AtomicBoolean ACHIEVEMENTS = new java.util.concurrent.atomic.AtomicBoolean();
     private VisitUploadSync() { }
+
+    static boolean acquireAchievements() { return ACHIEVEMENTS.compareAndSet(false, true); }
+    static void releaseAchievements() { ACHIEVEMENTS.set(false); }
 
     public static boolean acquireTaskComments() { return TASK_COMMENTS.compareAndSet(false, true); }
     public static void releaseTaskComments() { TASK_COMMENTS.set(false); }
@@ -54,6 +59,11 @@ public final class VisitUploadSync {
     private static VisitUploadBatch read(int user, long dad2) {
         String value = prefs().getString(key(user, dad2), null);
         return value == null ? null : JSON.fromJson(value, VisitUploadBatch.class);
+    }
+
+    static VisitUploadBatch achievementReceipts(int user, long dad2) {
+        // The visit journal commits the HTTP receipt before applying it to Room.
+        return read(user, dad2);
     }
 
     private static void save(VisitUploadBatch batch) {
@@ -175,6 +185,7 @@ public final class VisitUploadSync {
         boolean finished;
         boolean photosBlocked;
         boolean ownsTaskComments;
+        boolean ownsAchievements;
         final Set<VisitUploadBatch.Kind> deferred = new HashSet<>();
 
         Run(VisitUploadBatch batch) { this.batch = batch; }
@@ -259,6 +270,29 @@ public final class VisitUploadSync {
                     defer(kind, "task_server_identity_missing");
                     return;
                 }
+                if (kind == VisitUploadBatch.Kind.ACHIEVEMENT) {
+                    ownsAchievements = acquireAchievements();
+                    if (!ownsAchievements) { defer(kind, "another_uploader_running"); return; }
+                    // Check Room after acquiring ownership: the periodic uploader may just have committed.
+                    Map<String, Integer> storedIds = new HashMap<>();
+                    for (AchievementsSDB row : RoomManager.SQL_DB.achievementsDao().getByDad2(batch.dad2)) {
+                        storedIds.put(String.valueOf(row.id), row.serverId);
+                    }
+                    sent.clear();
+                    sent.addAll(batch.pendingAchievementCreates(storedIds));
+                    save(batch);
+                    if (sent.isEmpty()) {
+                        releaseAchievementLease();
+                        for (VisitUploadBatch.Row row : batch.rows.values()) {
+                            if (row.kind == kind && row.acknowledgement == null) {
+                                defer(kind, "missing_local_row element_id=" + row.id);
+                                return;
+                            }
+                        }
+                        MAIN.post(this::sendNext);
+                        return;
+                    }
+                }
                 Call<JsonObject> call;
                 if (kind == VisitUploadBatch.Kind.LOCATION) {
                     HashMap<String, String> map = new HashMap<>();
@@ -294,7 +328,12 @@ public final class VisitUploadSync {
                                 for (VisitUploadBatch.Row row : sent) {
                                     JsonObject ack = VisitUploadBatch.accepted(row, response.body());
                                     if (ack == null) continue;
-                                    if (batch.acknowledge(row, ack)) accepted++;
+                                    if (batch.acknowledge(row, ack)) {
+                                        accepted++;
+                                        if (kind == VisitUploadBatch.Kind.ACHIEVEMENT) {
+                                            log("ACK ACHIEVEMENT element_id=" + row.id + " id=" + VisitUploadBatch.string(ack, "id"));
+                                        }
+                                    }
                                 }
                             }
                             save(batch);
@@ -303,9 +342,11 @@ public final class VisitUploadSync {
                                 defer(kind, "http=" + response.code() + " accepted=" + accepted + "/" + sent.size());
                             } else MAIN.post(Run.this::sendNext);
                         } catch (Exception error) { fail(kind + " ack_" + error.getClass().getSimpleName()); }
+                        finally { releaseAchievementLease(); }
                     }
                     @Override public void onFailure(Call<JsonObject> call, Throwable error) {
                         releaseCommentLease();
+                        releaseAchievementLease();
                         defer(kind, "transport_" + error.getClass().getSimpleName());
                     }
                 });
@@ -355,6 +396,10 @@ public final class VisitUploadSync {
             end();
         }
 
+        void releaseAchievementLease() {
+            if (ownsAchievements) { ownsAchievements = false; releaseAchievements(); }
+        }
+
         void releaseCommentLease() {
             if (ownsTaskComments) { ownsTaskComments = false; releaseTaskComments(); }
         }
@@ -365,6 +410,7 @@ public final class VisitUploadSync {
             if (finished) return;
             finished = true;
             releaseCommentLease();
+            releaseAchievementLease();
             running = false;
             if (active == this) active = null;
             MAIN.post(WAKE);

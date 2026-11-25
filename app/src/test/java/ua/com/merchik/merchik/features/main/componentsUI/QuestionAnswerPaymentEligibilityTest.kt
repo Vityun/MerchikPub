@@ -6,6 +6,34 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class QuestionAnswerPaymentEligibilityTest {
+    @Test fun warningShowsCurrentAndAverageMinutes() {
+        assertEquals(
+            "Нельзя запрашивать РАЗОВОЕ повышение оплаты, если продолжительность работы (33 мин.) " +
+                    "по текущему визиту меньше среднего времени, которое вы обычно тратите на визит в этой ТТ (40 мин.).",
+            oneTimeShortDurationMessage(33.0, 40.0, planned = false)
+        )
+    }
+
+    @Test fun plannedWarningNamesThePlanAndKeepsCloseDurationsDistinct() {
+        val message = oneTimeShortDurationMessage(30.0, 30.002, planned = true)
+        assertTrue(message.contains("работы (30 мин.)"))
+        assertTrue(message.endsWith("меньше планового времени этого визита (30,002 мин.)."))
+    }
+
+    @Test fun oneTimeCommentNeedsTenLettersInTheExecutorsOwnText() {
+        assertFalse(hasEnoughOneTimeCommentLetters(""))
+        assertFalse(hasEnoughOneTimeCommentLetters("123 !? 🙂"))
+        assertFalse(hasEnoughOneTimeCommentLetters("АБВГҐ ДЕЄЖ'’ʼ 45!"))
+        assertTrue(hasEnoughOneTimeCommentLetters("АБВГҐ ДЕЄЖ'’ʼ 45!ї"))
+        assertTrue(hasEnoughOneTimeCommentLetters("abcdefghij"))
+    }
+
+    @Test fun supplementaryLettersCountOnceAndEmojiDoNotCount() {
+        val letter = String(Character.toChars(0x10400))
+        assertFalse(hasEnoughOneTimeCommentLetters(letter.repeat(9) + "🙂"))
+        assertTrue(hasEnoughOneTimeCommentLetters(letter.repeat(10)))
+    }
+
     @Test fun shorterOneTimeVisitBlocksSavingAndAchievementEntry() {
         assertTrue(snapshot(33.0, 40.0).isDurationBelowAverage)
     }

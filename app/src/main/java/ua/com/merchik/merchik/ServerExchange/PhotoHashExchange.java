@@ -14,6 +14,7 @@ import io.realm.Realm;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesView;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesViewList;
 import ua.com.merchik.merchik.database.room.AppDatabase;
@@ -63,7 +64,7 @@ public final class PhotoHashExchange {
         }
         TreeSet<String> hashes = new TreeSet<>();
         for (StackPhotoDB photo : snapshots) {
-            if (!photo.photo_hash.trim().isEmpty()) hashes.add(photo.photo_hash);
+            if (PhotoEvidencePolicy.isUsableHash(photo.photo_hash)) hashes.add(photo.photo_hash);
         }
         List<String> requested = new ArrayList<>(hashes);
         int[] resolved = {0};

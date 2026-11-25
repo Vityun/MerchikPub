@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -24,30 +26,30 @@ public class OptionPhotoFilesTest {
 
     private File finishedFile() throws Exception {
         File file = temporary.newFile();
-        Files.write(file.toPath(), new byte[]{1});
+        Files.write(file.toPath(), new byte[]{1, 2});
         return file;
     }
 
     @Test public void nullPhotoAndBlankPathsAreRejected() {
-        assertFalse(OptionPhotoFiles.isReady(null));
+        assertFalse(ReportPhotos.isReady(null));
         for (String path : new String[]{null, "", " ", "\t\n"}) {
-            assertFalse(OptionPhotoFiles.isReady(photo(path)));
+            assertFalse(ReportPhotos.isReady(photo(path)));
         }
     }
 
     @Test public void missingFileIsRejected() {
-        assertFalse(OptionPhotoFiles.isReady(photo(new File(temporary.getRoot(), "missing.jpg").getPath())));
+        assertFalse(ReportPhotos.isReady(photo(new File(temporary.getRoot(), "missing.jpg").getPath())));
     }
 
     @Test public void cameraPlaceholderFromIncidentIsRejected() throws Exception {
         StackPhotoDB placeholder = photo(temporary.newFile("camera.jpg").getPath());
         placeholder.setId(932);
         placeholder.setPhoto_type(31);
-        assertFalse(OptionPhotoFiles.isReady(placeholder));
+        assertFalse(ReportPhotos.isReady(placeholder));
     }
 
     @Test public void directoryIsNotAPhoto() {
-        assertFalse(OptionPhotoFiles.isReady(photo(temporary.getRoot().getPath())));
+        assertFalse(ReportPhotos.isReady(photo(temporary.getRoot().getPath())));
     }
 
     @Test public void localFileCountsWithoutUploadOrHash() throws Exception {
@@ -55,14 +57,14 @@ public class OptionPhotoFilesTest {
         local.setPhotoServerId("0");
         local.setPhoto_hash("");
         local.setUpload_to_server(0);
-        assertTrue(OptionPhotoFiles.isReady(local));
+        assertTrue(ReportPhotos.isReady(local));
     }
 
     @Test public void downloadedServerFileCounts() throws Exception {
         StackPhotoDB downloaded = photo(finishedFile().getPath());
         downloaded.setPhotoServerId("59904767");
         downloaded.setUpload_to_server(1);
-        assertTrue(OptionPhotoFiles.isReady(downloaded));
+        assertTrue(ReportPhotos.isReady(downloaded));
     }
 
     @Test public void serverPhotoCountsWithoutLocalFile() throws Exception {
@@ -71,7 +73,7 @@ public class OptionPhotoFilesTest {
             StackPhotoDB server = photo(path);
             server.setPhotoServerId("59904767");
             server.setUpload_to_server(0);
-            assertTrue(OptionPhotoFiles.isReady(server));
+            assertTrue(ReportPhotos.isReady(server));
         }
     }
 
@@ -81,9 +83,9 @@ public class OptionPhotoFilesTest {
                 "9999999999999999999999999999"}) {
             StackPhotoDB row = photo(null);
             row.setPhotoServerId(id);
-            assertFalse("serverId=" + id, OptionPhotoFiles.isReady(row));
+            assertFalse("serverId=" + id, ReportPhotos.isReady(row));
             row.setPhoto_num(readyPath);
-            assertTrue("serverId=" + id, OptionPhotoFiles.isReady(row));
+            assertTrue("serverId=" + id, ReportPhotos.isReady(row));
         }
     }
 
@@ -91,33 +93,33 @@ public class OptionPhotoFilesTest {
         for (String path : new String[]{null, temporary.newFile().getPath()}) {
             StackPhotoDB row = photo(path);
             row.setUpload_to_server(1);
-            assertFalse(OptionPhotoFiles.isReady(row));
+            assertFalse(ReportPhotos.isReady(row));
         }
     }
 
     @Test public void sameRowCountsAfterCameraWritesFile() throws Exception {
         File file = temporary.newFile("pending.jpg");
         StackPhotoDB pending = photo(file.getPath());
-        assertFalse(OptionPhotoFiles.isReady(pending));
-        Files.write(file.toPath(), new byte[]{1});
-        assertTrue(OptionPhotoFiles.isReady(pending));
+        assertFalse(ReportPhotos.isReady(pending));
+        Files.write(file.toPath(), new byte[]{1, 2});
+        assertTrue(ReportPhotos.isReady(pending));
     }
 
     @Test public void deletedFileDoesNotStayInCachedResults() throws Exception {
         File file = finishedFile();
         StackPhotoDB row = photo(file.getPath());
-        assertTrue(OptionPhotoFiles.isReady(row));
+        assertTrue(ReportPhotos.isReady(row));
         Files.delete(file.toPath());
-        assertFalse(OptionPhotoFiles.isReady(row));
+        assertFalse(ReportPhotos.isReady(row));
     }
 
     @Test public void serverPhotoStillCountsAfterLocalFileDeleted() throws Exception {
         File file = finishedFile();
         StackPhotoDB row = photo(file.getPath());
         row.setPhotoServerId("59904767");
-        assertTrue(OptionPhotoFiles.isReady(row));
+        assertTrue(ReportPhotos.isReady(row));
         Files.delete(file.toPath());
-        assertTrue(OptionPhotoFiles.isReady(row));
+        assertTrue(ReportPhotos.isReady(row));
     }
 
     @Test public void filtersWithoutMutatingInputOrPhotoMetadata() throws Exception {
@@ -128,7 +130,7 @@ public class OptionPhotoFilesTest {
         local.setExample_id("78");
         local.setComment("Warehouse is empty");
         List<StackPhotoDB> input = Arrays.asList(incomplete, local, null, server);
-        List<StackPhotoDB> ready = OptionPhotoFiles.ready(input);
+        List<StackPhotoDB> ready = ReportPhotos.ready(input);
         assertEquals(4, input.size());
         assertEquals(2, ready.size());
         assertSame(local, ready.get(0));
@@ -144,12 +146,24 @@ public class OptionPhotoFilesTest {
         placeholder94.setExample_id("94");
         StackPhotoDB ready78 = photo(finishedFile().getPath());
         ready78.setExample_id("78");
-        List<StackPhotoDB> ready = OptionPhotoFiles.ready(Arrays.asList(placeholder78, placeholder94, ready78));
+        List<StackPhotoDB> ready = ReportPhotos.ready(Arrays.asList(placeholder78, placeholder94, ready78));
         assertEquals(1, ready.size());
         assertSame(ready78, ready.get(0));
     }
 
     @Test public void nullListIsEmpty() {
-        assertTrue(OptionPhotoFiles.ready(null).isEmpty());
+        assertTrue(ReportPhotos.ready(null).isEmpty());
+    }
+
+    @Test public void journalAndVisitCounterIgnoreTheSameAbandonedCameraRow() throws Exception {
+        StackPhotoDB local = photo(finishedFile().getPath());
+        StackPhotoDB serverOnly = photo(null);
+        serverOnly.setPhotoServerId("60219602");
+        StackPhotoDB empty = photo(temporary.newFile().getPath());
+        empty.setPhotoServerId("0");
+        empty.setPhoto_hash("cached-hash");
+        List<StackPhotoDB> rows = Arrays.asList(local, serverOnly, empty);
+        assertEquals(Arrays.asList(local, serverOnly), ReportPhotos.ready(rows));
+        assertEquals(2, ReportPhotos.count(rows));
     }
 }

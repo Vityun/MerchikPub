@@ -46,6 +46,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
@@ -81,8 +82,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     // Добавил в конструктор 2 параметра photoTp,grpId, они нужны для получения данных по образцам фото
     public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, int photoTp, int grpId, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
         this.mContext = context;
-        this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
-        this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
+        updateData(photoLogData);
         this.mod = mod;
         this.click = click;
         this.mOnPhotoClickListener = mOnPhotoClickListener;
@@ -92,8 +92,8 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     }
 
     public void updateData(RealmResults<StackPhotoDB> photoLogData) {
-        this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
-        this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
+        this.photoLogData = RealmManager.INSTANCE.copyFromRealm(ReportPhotos.ready(photoLogData));
+        this.photoLogDataList = new java.util.ArrayList<>(this.photoLogData);
     }
 
     /**

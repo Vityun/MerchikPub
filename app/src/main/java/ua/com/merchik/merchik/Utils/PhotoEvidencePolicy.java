@@ -28,11 +28,14 @@ public final class PhotoEvidencePolicy {
     }
 
     public static boolean isReadyPhoto(String serverId, String path) {
-        if (hasServerPhotoId(serverId)) return true;
+        return hasServerPhotoId(serverId) || hasLocalPhoto(path);
+    }
+
+    public static boolean hasLocalPhoto(String path) {
         if (path == null || path.trim().isEmpty()) return false;
         try {
             File file = new File(path);
-            return file.isFile() && file.length() > 0;
+            return file.isFile() && file.canRead() && file.length() > 1;
         } catch (SecurityException ignored) {
             return false;
         }

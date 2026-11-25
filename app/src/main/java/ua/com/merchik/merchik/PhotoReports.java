@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.Utils.PhotoDateUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -451,8 +452,7 @@ public class PhotoReports {
                     Globals.writeToMLOG("INFO", "PhotoReports.getDataToUpload", "skip pending MakePhoto: " + filePath);
                     continue;
                 }
-                File file = new File(filePath);
-                if (file.exists() && file.length() > 1) {
+                if (PhotoEvidencePolicy.hasLocalPhoto(filePath)) {
                     Globals.writeToMLOG("INFO", "PhotoReports.getDataToUpload", "realmResults add: " + photo.getPhoto_num());
                     realmResults.add(photo);
                 } else

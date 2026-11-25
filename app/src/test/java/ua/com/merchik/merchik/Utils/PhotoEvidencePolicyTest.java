@@ -106,6 +106,8 @@ public class PhotoEvidencePolicyTest {
         assertFalse(PhotoEvidencePolicy.isReadyPhoto(null, null));
         assertTrue(PhotoEvidencePolicy.isReadyPhoto("59663980", null));
         Files.write(file.toPath(), new byte[]{1});
+        assertFalse(PhotoEvidencePolicy.isReadyPhoto(null, file.getPath()));
+        Files.write(file.toPath(), new byte[]{1, 2});
         assertTrue(PhotoEvidencePolicy.isReadyPhoto(null, file.getPath()));
     }
 

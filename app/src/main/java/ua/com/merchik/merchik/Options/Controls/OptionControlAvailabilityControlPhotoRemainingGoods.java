@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import ua.com.merchik.merchik.Utils.FaceValue;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -193,7 +195,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
 
             // Проверяем все ФОТ визита: дубль может быть привязан и к товару вне ОСВ.
-            List<StackPhotoDB> stackPhotoList = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, null));
+            List<StackPhotoDB> stackPhotoList = ReportPhotos.ready(StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, null));
             RemainingGoodsPhotoIndex photoIndex = createPhotoIndex(stackPhotoList);
 
             //5.2. заполним ее данными ОСВ

@@ -186,6 +186,7 @@ import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -4261,7 +4262,7 @@ public class Options {
             }
 
             RealmResults<StackPhotoDB> list = RealmManager.stackPhotoByDad2(dad2);
-            List<StackPhotoDB> res = list.where().equalTo("photo_type", Integer.parseInt(photoType)).findAll();
+            List<StackPhotoDB> res = ReportPhotos.ready(list.where().equalTo("photo_type", Integer.parseInt(photoType)).findAll());
 
             Log.e("OPTION_CONTROL", "checkPhoto id: " + optionsDB.getID() + " |Signal: " + optionsDB.getIsSignal());
 

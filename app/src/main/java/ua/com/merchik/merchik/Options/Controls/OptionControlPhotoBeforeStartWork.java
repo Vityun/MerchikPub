@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import android.content.Context;
 
 import java.util.List;
@@ -46,7 +48,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
 
     private void executeOption() {
         try {
-            List<StackPhotoDB> stackPhotoDB = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getCode_dad2(), 14));
+            List<StackPhotoDB> stackPhotoDB = ReportPhotos.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getCode_dad2(), 14));
             long dviSum = 0;
             for (StackPhotoDB photo : stackPhotoDB) {
                 if (photo.dvi != null) dviSum += photo.dvi;

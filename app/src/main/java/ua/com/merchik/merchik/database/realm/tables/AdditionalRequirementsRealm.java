@@ -6,8 +6,11 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.BaseBusinessData;
@@ -22,11 +25,18 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
  */
 public class AdditionalRequirementsRealm {
     //################################
-    public static void setDataToDB(List<AdditionalRequirementsDB> data) {
-        INSTANCE.beginTransaction();
-        INSTANCE.delete(AdditionalRequirementsDB.class);
-        INSTANCE.copyToRealmOrUpdate(data);
-        INSTANCE.commitTransaction();
+    public static void replaceDownloadedRows(Realm realm, List<AdditionalRequirementsDB> data, boolean full) {
+        if (data.isEmpty()) return;
+        if (full) {
+            realm.delete(AdditionalRequirementsDB.class);
+        } else {
+            // id is not a Realm primary key. Replace only IDs present in the daily snapshot.
+            Set<Integer> ids = new HashSet<>();
+            for (AdditionalRequirementsDB row : data) ids.add(row.getId());
+            realm.where(AdditionalRequirementsDB.class).in("id", ids.toArray(new Integer[0]))
+                    .findAll().deleteAllFromRealm();
+        }
+        realm.insert(data);
     }
 
     private static <T> BaseBusinessData getAdditionalRequirementsDocumentData(T document) {

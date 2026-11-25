@@ -10,6 +10,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.ReportConductManager;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformation;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
@@ -39,8 +40,11 @@ public final class PhotoCommentSync {
 
     public static boolean hasPendingVisit(long dad2) {
         // Include comments awaiting a server ID, not just rows eligible for set_comment.
-        return RealmManager.INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", dad2).equalTo("commentUpload", true).count() > 0;
+        for (StackPhotoDB photo : RealmManager.INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", dad2).equalTo("commentUpload", true).findAll()) {
+            if (ReportPhotos.isReady(photo)) return true;
+        }
+        return false;
     }
 
     private static void request(boolean force, boolean recheckConduct) {

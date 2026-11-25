@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import ua.com.merchik.merchik.Utils.FaceValue;
 
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_EXPIRATION_DATE;
@@ -147,7 +149,7 @@ public class OptionControlPhotoExpirationDate<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = selectReportPrepareByTovarAndExpire(reportPrepareRaw);
 
         // 5.0
-        List<StackPhotoDB> stackPhotoDBS = OptionPhotoFiles.ready(RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, PHOTO_EXPIRATION_DATE));
+        List<StackPhotoDB> stackPhotoDBS = ReportPhotos.ready(RealmManager.stackPhotoByDad2AndType(dad2ForGetStackPhotoDB, PHOTO_EXPIRATION_DATE));
         if (stackPhotoDBS == null) {
             stackPhotoDBS = new ArrayList<>();
         }

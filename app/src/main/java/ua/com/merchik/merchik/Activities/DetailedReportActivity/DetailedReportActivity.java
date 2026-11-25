@@ -1192,6 +1192,7 @@ public class DetailedReportActivity extends toolbar_menus {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CAMERA_REQUEST_TAKE_PHOTO_TEST) MakePhoto.onReportCameraReturned();
 
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);

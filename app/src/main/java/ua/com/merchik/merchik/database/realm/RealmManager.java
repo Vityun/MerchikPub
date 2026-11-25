@@ -59,6 +59,8 @@ import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TasksAndReclamationsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -1396,34 +1398,18 @@ public class RealmManager {
 
     //    "SELECT count(*) FROM stack_photo WHERE upload_to_server = '' AND get_on_server = '';"
     public static int stackPhotoNotUploadedPhotosCount() {
-        long count = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
-//                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").count();
-        if (count > Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE; // или кинь исключение, или логируй
-        }
-        return (int) count;
+        return getStackPhotoPhotoToUpload().size();
     }
 
     // Количество фото витрины
     // Зачем так криво? Надо будет отказаться от просто получения числа
     public static int stackPhotoShowcasePhotoCount(long codeDad2, int photoType) {
-        long count =  INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).count();
-//        return realmResults.size();
-        if (count > Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE; // или кинь исключение, или логируй
-        }
-        return (int) count;
+        return ReportPhotos.count(INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2)
+                .equalTo("photo_type", photoType).findAll());
     }
 
     public static int stackPhotoPhotoCount(long codeDad2) {
-        long count =  INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", codeDad2)
-                .count();
-        if (count > Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE;
-        }
-        return (int) count;
+        return ReportPhotos.count(INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).findAll());
     }
 
     public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
@@ -1431,9 +1417,9 @@ public class RealmManager {
                 .equalTo("code_dad2", codeDad2)
                 .equalTo("photo_type", photoType)
 //                .equalTo("dvi", 0)
-                .isNotNull("photo_hash").findAll();
+                .findAll();
         if (realmResults != null && !realmResults.isEmpty()) {
-            return INSTANCE.copyFromRealm(realmResults);
+            return INSTANCE.copyFromRealm(ReportPhotos.ready(realmResults));
         } else {
             return null;
         }
@@ -1454,8 +1440,7 @@ public class RealmManager {
 
     // Получене фотографий для выгрузки на сервер
     //"SELECT * FROM stack_photo WHERE upload_to_server = '';"
-    public static RealmResults<StackPhotoDB> getStackPhotoPhotoToUpload() {
-        Globals.writeToMLOG("INFO", "startExchange/SamplePhotoExchange", "OK");
+    public static List<StackPhotoDB> getStackPhotoPhotoToUpload() {
 
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0)
                 .equalTo("get_on_server", 0)
@@ -1466,15 +1451,11 @@ public class RealmManager {
                 .isNotNull("photo_hash")
                 .isNotNull("time_event")
                 .findAll();
-        Globals.writeToMLOG("INFO", "RealmResults.getStackPhotoPhotoToUpload", "size: " + realmResults.size());
-        if (!realmResults.isEmpty()) {
-            List<StackPhotoDB> list = INSTANCE.copyFromRealm(realmResults);
-            for (StackPhotoDB st : list) {
-                Globals.writeToMLOG("INFO", "RealmResults.getStackPhotoPhotoToUpload", "StackPhotoDB id: "
-                        + st.getId());
-            }
+        List<StackPhotoDB> eligible = new ArrayList<>();
+        for (StackPhotoDB photo : realmResults) {
+            if (PhotoEvidencePolicy.hasLocalPhoto(photo.getPhoto_num())) eligible.add(photo);
         }
-        return realmResults;
+        return eligible;
     }
 
 
@@ -1486,7 +1467,6 @@ public class RealmManager {
                 .notEqualTo("photo_type", 35)
                 .isNotNull("client_id")
                 .isNotNull("addr_id")
-                .isNotNull("photo_num")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -1499,7 +1479,6 @@ public class RealmManager {
                 .notEqualTo("photo_type", 35)
                 .isNotNull("client_id")
                 .isNotNull("addr_id")
-                .isNotNull("photo_num")
                 .findAll();
     }
 
@@ -1508,7 +1487,6 @@ public class RealmManager {
                 .equalTo("photo_type", 4)
                 .isNotNull("client_id")
                 .isNotNull("addr_id")
-                .isNotNull("photo_num")
                 .findAll();
     }
 
@@ -1686,7 +1664,7 @@ public class RealmManager {
     }
 
     public static List<StackPhotoDB> getStackPhotoByDad2(long dad2) {
-        return INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", dad2).findAll();
+        return ReportPhotos.ready(INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", dad2).findAll());
     }
 
 
@@ -1729,25 +1707,26 @@ public class RealmManager {
     }
 
     public static List<StackPhotoDB> stackPhotoDBListGetDVIToUpload() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("dviUpload", true).findAll());
+        return photoMetadataToUpload("dviUpload");
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetCommentToUpload() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .notEqualTo("photoServerId", "")
-                .equalTo("commentUpload", true)
-                .findAll());
+        return photoMetadataToUpload("commentUpload");
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetRatingToUpload() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .notEqualTo("photoServerId", "")
-                .equalTo("markUpload", true)
-                .findAll());
+        return photoMetadataToUpload("markUpload");
+    }
+
+    private static List<StackPhotoDB> photoMetadataToUpload(String dirtyField) {
+        List<StackPhotoDB> eligible = new ArrayList<>();
+        for (StackPhotoDB row : INSTANCE.where(StackPhotoDB.class).equalTo(dirtyField, true)
+                .isNotNull("photoServerId").notEqualTo("photoServerId", "").findAll()) {
+            if (PhotoEvidencePolicy.hasServerPhotoId(row.getPhotoServerId())) eligible.add(row);
+        }
+        return INSTANCE.copyFromRealm(eligible);
     }
 
     //==============================================================================================

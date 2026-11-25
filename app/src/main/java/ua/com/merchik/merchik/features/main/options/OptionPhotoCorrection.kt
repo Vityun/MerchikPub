@@ -69,11 +69,10 @@ object OptionPhotoCorrection {
         try {
             val source = session(visitId, optionRowId)
             val serverId = photoServerId?.trim()?.takeUnless { it.isEmpty() || it == "0" }
-            val query = StackPhotoRealm.getPhotosByDAD2(source.dad2, 31).where()
             // Local IDs are only for photos that had not yet been uploaded when the link was created.
-            if (serverId != null) query.equalTo("photoServerId", serverId)
-            else query.equalTo("id", localPhotoId)
-            val photo = query.findFirst()
+            val photo = StackPhotoRealm.getPhotosByDAD2(source.dad2, 31).firstOrNull {
+                if (serverId != null) it.photoServerId == serverId else it.id == localPhotoId
+            }
                 ?: error("Photo not found: serverId=$serverId, localId=$localPhotoId, dad2=${source.dad2}")
             // The query returns a managed object; detach it once for the photo dialog.
             val photos = listOf(RealmManager.INSTANCE.copyFromRealm(photo))

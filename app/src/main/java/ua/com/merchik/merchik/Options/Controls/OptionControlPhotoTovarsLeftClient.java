@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_TOV_LEFT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -94,7 +96,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         int userId = wpDataDB.getUser_id();
-        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, addrId, clientId, null, PHOTO_TOV_LEFT, null));
+        List<StackPhotoDB> stackPhoto = ReportPhotos.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, addrId, clientId, null, PHOTO_TOV_LEFT, null));
         Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeftClient", "stackPhoto size: " + stackPhoto.size() +
                 " | dad2: " + dad2 + " | userId: " + userId +
                 " | dateFrom: " + dateFrom + " | dateTo: " + dateTo + " | addrId and client: " + addrId + ", " + clientId + " | tpId: " + tpId);

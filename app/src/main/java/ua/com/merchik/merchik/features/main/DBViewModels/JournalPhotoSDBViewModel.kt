@@ -27,6 +27,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.Utils.ReportPhotos
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
@@ -265,9 +266,9 @@ class JournalPhotoSDBViewModel @Inject constructor(
         Log.e("%%%%%%%%%%%%%%%%%%", "start: $startMillis | end: $endMillis")
 
         val data = RealmManager.INSTANCE.copyFromRealm(
-            RealmManager.getStackPhotoWithDate(
+            ReportPhotos.ready(RealmManager.getStackPhotoWithDate(
                 startMillis / 1000, endMillis / 1000
-            )
+            ))
         )
         return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, null)
     }

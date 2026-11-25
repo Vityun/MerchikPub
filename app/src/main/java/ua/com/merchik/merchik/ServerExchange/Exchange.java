@@ -25,9 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
@@ -127,9 +129,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageRe
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponseList;
@@ -3251,124 +3251,64 @@ public class Exchange {
     }
 
 
-    private static boolean isAchievementsUploading = false;
-
     public void uploadAchievemnts() {
-        if (isAchievementsUploading) return;
-        isAchievementsUploading = true;
+        if (!VisitUploadSync.acquireAchievements()) return;
+        boolean enqueued = false;
         try {
-            prepareAndUploadAchievements();
-        } catch (Exception e) {
-            isAchievementsUploading = false;
-            Globals.writeToMLOG("ERROR", "uploadAchievemnts/prepare", "Upload remains pending: " + e);
-        }
-    }
-
-    private void prepareAndUploadAchievements() {
-        StandartData data = new StandartData();
-        data.mod = "images_achieve";
-        data.act = "add_row";
-
-        List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
-        if (list == null || list.isEmpty()) {
-            isAchievementsUploading = false;
-            return;
-        }
-
-        if (list != null && list.size() > 0) {
-            List<AchievementsUpload> dataList = new ArrayList<>();
-            List<AchievementsSDB> sentRows = new ArrayList<>();
-            for (AchievementsSDB item : list) {
+            AchievementsDao dao = SQL_DB.achievementsDao();
+            List<VisitUploadBatch.Row> sent = new ArrayList<>();
+            int user = Globals.getCurrentUserId();
+            Map<Long, VisitUploadBatch> visits = new HashMap<>();
+            for (AchievementsSDB item : dao.getAllToDownload()) {
                 if (item == null || item.id == null || item.dt_ut == null || item.addrId == null
                         || item.themeId == null || item.codeDad2 == null || item.dvi == null) {
-                    Globals.writeToMLOG("ERROR", "uploadAchievemnts/prepare", "Missing required fields; kept pending, id=" + (item == null ? null : item.id));
+                    Globals.writeToMLOG("ERROR", "uploadAchievemnts", "Missing required fields; kept pending, id=" + (item == null ? null : item.id));
                     continue;
                 }
-                AchievementsUpload uploadData = new AchievementsUpload();
-                uploadData.element_id = item.id;
-                uploadData.dt = item.dt_ut;
-                uploadData.client_id = item.clientId;
-                uploadData.addr_id = item.addrId;
-                uploadData.theme_id = item.themeId;
-                uploadData.code_dad2 = item.codeDad2;
-                uploadData.dvi = item.dvi;
-                uploadData.comment_dt = item.commentDt;
-                uploadData.comment_user_id = item.commentUser;
-                uploadData.comment_txt = item.commentTxt;
-                uploadData.img_before_hash = item.img_before_hash;
-                uploadData.img_after_hash = item.img_after_hash;
-                uploadData.add_requirement_id = item.addRequirementId;
-                uploadData.tovar_id = item.tovar_id;
-                uploadData.manufacturer = item.manufacturer;
-                uploadData.showcase_id = item.showcaseId;
-                uploadData.showcase_nm = item.showcaseNm;
-                dataList.add(uploadData);
-                sentRows.add(item);
+                if (!visits.containsKey(item.codeDad2)) {
+                    visits.put(item.codeDad2, VisitUploadSync.achievementReceipts(user, item.codeDad2));
+                }
+                VisitUploadBatch visit = visits.get(item.codeDad2);
+                int confirmed = visit == null ? 0 : visit.acknowledgedAchievementId(String.valueOf(item.id));
+                if (confirmed > 0) {
+                    dao.acknowledgeCreate(item.id, item.codeDad2, confirmed);
+                    continue;
+                }
+                sent.add(VisitUploadRows.achievementRow(item));
             }
-
-            if (dataList.isEmpty()) {
-                isAchievementsUploading = false;
-                return;
-            }
-            data.data = dataList;
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            Log.e("test", "convertedObject: " + convertedObject);
-
-            Globals.writeToMLOG("INFO", "uploadAchievemnts", "convertedObject: " + convertedObject);
-
-            Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<AchievementsUploadResponse>() {
-                @Override
-                public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
-                    try {
-                        try {
-                            Log.e("showcaseTp", "response: " + response);
-                            if (response.body() != null) {
-                                if (response.body().list != null && !response.body().list.isEmpty()) {
-                                    for (AchievementsUploadResponseList item : response.body().list) {
-                                        for (AchievementsSDB itemSDB : sentRows) {
-                                            if (itemSDB.id.equals(item.elementId)) {
-                                                itemSDB.serverId = item.id;
-                                                SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
-                                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");
-                                            }
-                                        }
+            if (sent.isEmpty()) return;
+            Globals.writeToMLOG("INFO", "uploadAchievemnts", "SEND rows=" + sent.size());
+            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, VisitUploadBatch.request(sent))
+                    .enqueue(new Callback<JsonObject>() {
+                        @Override public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                            try {
+                                int accepted = 0;
+                                if (response.isSuccessful()) {
+                                    for (VisitUploadBatch.Row row : sent) {
+                                        JsonObject ack = VisitUploadBatch.accepted(row, response.body());
+                                        if (ack == null) continue;
+                                        int serverId = ack.get("id").getAsInt();
+                                        dao.acknowledgeCreate(Integer.parseInt(row.id), row.data.get("code_dad2").getAsLong(), serverId);
+                                        Globals.writeToMLOG("INFO", "uploadAchievemnts", "ACK element_id=" + row.id + " id=" + serverId);
+                                        accepted++;
                                     }
                                 }
-                            }
-
-                            try {
-                                isAchievementsUploading = false;
-                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.code(): " + response.code());
-                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.body(): " + new Gson().toJson(response.body()));
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "Exception e: " + e);
-                                isAchievementsUploading = false;
-                            }
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
-                            isAchievementsUploading = false;
+                                Globals.writeToMLOG("INFO", "uploadAchievemnts", "http=" + response.code() + " accepted=" + accepted + "/" + sent.size());
+                            } catch (RuntimeException e) {
+                                Globals.writeToMLOG("ERROR", "uploadAchievemnts", "Cannot persist acknowledgement: " + e);
+                            } finally { VisitUploadSync.releaseAchievements(); }
                         }
-                    } finally {
-                        isAchievementsUploading = false;
-                    }
-                    isAchievementsUploading = false;
-                }
 
-                @Override
-                public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
-                    Log.e("showcaseTp", "Throwable t: " + t);
-                    Globals.writeToMLOG("ERROR", "uploadAchievemnts/onFailure", "Throwable t: " + Arrays.toString(t.getStackTrace()));
-                    isAchievementsUploading = false;
-                }
-            });
-        } else {
-            isAchievementsUploading = false;
-            return;
+                        @Override public void onFailure(Call<JsonObject> call, Throwable error) {
+                            try { Globals.writeToMLOG("ERROR", "uploadAchievemnts", "Upload remains pending: " + error.getClass().getSimpleName()); }
+                            finally { VisitUploadSync.releaseAchievements(); }
+                        }
+                    });
+            enqueued = true;
+        } catch (RuntimeException error) {
+            Globals.writeToMLOG("ERROR", "uploadAchievemnts", "Upload remains pending: " + error);
+        } finally {
+            if (!enqueued) VisitUploadSync.releaseAchievements();
         }
     }
 

@@ -21,6 +21,7 @@ import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -196,9 +197,6 @@ public class DialogData {
     public enum Operations {
         Text, TEXT, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner, DecimalNumber,
     }
-
-    private DialogClickListener listenerOK;
-
 
     public DialogData(Context context) {
         this.context = context;
@@ -955,6 +953,27 @@ public class DialogData {
         }
     }
 
+    private void submitWithKeyboard() {
+        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editText.setOnEditorActionListener((v, actionId, event) -> handleEditorSubmit(
+                actionId, event == null ? KeyEvent.KEYCODE_UNKNOWN : event.getKeyCode(),
+                event == null ? -1 : event.getAction(), event != null && event.isCanceled(),
+                ok.isShown() && ok.isEnabled(), ok::performClick));
+    }
+
+    static boolean handleEditorSubmit(int actionId, int keyCode, int keyAction, boolean canceled,
+                                      boolean buttonAvailable, Runnable click) {
+        if (keyAction == -1) {
+            if (actionId != EditorInfo.IME_ACTION_DONE) return false;
+        } else {
+            if (keyCode != KeyEvent.KEYCODE_ENTER && keyCode != KeyEvent.KEYCODE_NUMPAD_ENTER) return false;
+            // Consume both halves of Enter but submit only once, on release.
+            if (keyAction != KeyEvent.ACTION_UP || canceled) return true;
+        }
+        if (buttonAvailable) click.run();
+        return true;
+    }
+
     /*27.03.2022
      * Использование базового EditText как поля для внесения телефона
      * */
@@ -970,22 +989,14 @@ public class DialogData {
         editText.setSelectAllOnFocus(true);
         editText.selectAll();
 
-        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        submitWithKeyboard();
         editText.setRawInputType(InputType.TYPE_CLASS_PHONE);
 
         editText.addTextChangedListener(new TelephoneMask());
 
-        editText.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                click.click(v.getText().toString());
-                return true;
-            }
-            return false;
-        });
-
         ok.setVisibility(View.VISIBLE);
         ok.setText("Зарегистрироваться");
-        ok.setOnClickListener(v -> click.click(editText.getText().toString()));
+        ok.setOnClickListener(click == null ? null : v -> click.click(editText.getText().toString()));
     }
 
     /**
@@ -1003,7 +1014,6 @@ public class DialogData {
                 && (tovarOptions.getOptionControlName() == Globals.OptionControlName.PRICE
                 || tovarOptions.getOptionControlName() == Globals.OptionControlName.PRICE_BEFORE_PROMOTION);
         originalPriceInput = priceInput ? data : null;
-        listenerOK = listener;
         operationLayout.setVisibility(View.VISIBLE);
         ok.setVisibility(View.VISIBLE);
         ok.setText("Сохранить");
@@ -1013,6 +1023,7 @@ public class DialogData {
         switch (operation) {
             case TEXT:
                 ok.setVisibility(View.GONE);
+                editText.setOnEditorActionListener(null);
                 editText.setVisibility(View.VISIBLE);
                 if (data.equals("Введіть значення")) {
                     editText.setHint(data);
@@ -1050,20 +1061,7 @@ public class DialogData {
                 editText.setSelectAllOnFocus(true);
                 editText.selectAll();
 
-                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
-                editText.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        // Your action on done
-                        //todo hide keyborad
-                        result = v.getText().toString();
-                        listener.clicked();
-                        if (result != null && !result.equals("")) {
-                            dialog.dismiss();
-                        }
-                        return true;
-                    }
-                    return false;
-                });
+                submitWithKeyboard();
                 ok.setOnClickListener(v -> {
                     result = editText.getText().toString();
                     Log.e("setOperation", "Text.result: " + result);
@@ -1093,7 +1091,7 @@ public class DialogData {
                 editText.selectAll();
 
                 editText.setSingleLine(true);
-                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                submitWithKeyboard();
 
                 editText.setRawInputType(
                         InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL
@@ -1132,26 +1130,6 @@ public class DialogData {
                     }
                 });
 
-                editText.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        result = normalizeDecimalResult(v.getText().toString());
-
-                        if (isValidDecimalResult(result)) {
-                            submitNumberOperation(listener);
-                        } else {
-                            Toast.makeText(
-                                    dialog.getContext(),
-                                    "Внесіть коректне число",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        }
-
-                        return true;
-                    }
-
-                    return false;
-                });
-
                 ok.setOnClickListener(v -> {
                     result = normalizeDecimalResult(editText.getText().toString());
 
@@ -1178,20 +1156,10 @@ public class DialogData {
                 editText.setSelectAllOnFocus(true);
                 editText.selectAll();
 
-                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                submitWithKeyboard();
                 editText.setRawInputType(InputType.TYPE_CLASS_PHONE);
 
                 editText.addTextChangedListener(new TelephoneMask());
-
-                editText.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        result = v.getText().toString();
-                        listener.clicked();
-                        dialog.dismiss();
-                        return true;
-                    }
-                    return false;
-                });
 
                 ok.setOnClickListener(v -> {
                     result = editText.getText().toString();
@@ -1212,18 +1180,8 @@ public class DialogData {
                 editText.setSelectAllOnFocus(true);
                 editText.selectAll();
 
-                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                submitWithKeyboard();
                 editText.setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                editText.setOnEditorActionListener((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        // Your action on done
-                        //todo hide keyborad
-                        result = v.getText().toString();
-                        submitNumberOperation(listener);
-                        return true;
-                    }
-                    return false;
-                });
                 ok.setOnClickListener(v -> {
                     result = editText.getText().toString();
                     Log.e("setOperation", "Number.result: " + result);
@@ -1456,6 +1414,9 @@ public class DialogData {
                 break;
         }
 
+        // Some callers supply the actual confirmation action later via setOk or setOkNotClose.
+        if (listener == null && operation != Operations.TEXT) ok.setOnClickListener(null);
+
         // Очень важно: показываем клавиатуру ПОСЛЕ показа диалога
         dialog.setOnShowListener(d -> {
             if (editText.getVisibility() == View.VISIBLE) {
@@ -1639,10 +1600,14 @@ public class DialogData {
         });
     }
 
+    public void setOkText(CharSequence label) {
+        ok.setText(label);
+    }
+
     public void setOk(CharSequence setButtonText, DialogClickListener clickListener) {
         ok.setVisibility(View.VISIBLE);
         if (setButtonText != null) {
-            ok.setText(setButtonText);
+            setOkText(setButtonText);
         }
         ok.setOnClickListener(v -> {
             if (clickListener != null) clickListener.clicked();

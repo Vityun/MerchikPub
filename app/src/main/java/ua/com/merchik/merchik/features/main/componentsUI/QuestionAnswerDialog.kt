@@ -231,6 +231,9 @@ internal fun QuestionAnswerDialog(
     var validationShakeTrigger by remember { mutableIntStateOf(0) }
 
     val isOneTimePaymentIncrease = state.isOneTimePaymentIncrease
+    val commentTooShort = isOneTimePaymentIncrease && !hasEnoughOneTimeCommentLetters(comment)
+    val canSubmit = !durationBelowAverage && !commentTooShort &&
+            (!isOneTimePaymentIncrease || wantReceivePlan.isNotBlank())
     val statementTemplate = remember(viewModel, isOneTimePaymentIncrease,
         paymentSnapshot.isPlannedDuration, paymentSnapshot.isServerDuration) {
         questionAnswerStatementTemplate(isOneTimePaymentIncrease,
@@ -251,15 +254,11 @@ internal fun QuestionAnswerDialog(
         dialog.setOperation(
             DialogData.Operations.DecimalNumber,
             currentValue.ifBlank { hint },
-            null,
             null
-        )
-
-        dialog.setOk("Зберегти") {
-            val value = dialog.operationResult?.trim().orEmpty()
-            onValueChanged(value)
-            dialog.dismiss()
+        ) {
+            onValueChanged(dialog.operationResult)
         }
+        dialog.setOkText("Зберегти")
 
         dialog.setClose {
             dialog.dismiss()
@@ -484,9 +483,10 @@ internal fun QuestionAnswerDialog(
                                     visitsPerWeekFactTooltip = visitsPerWeekTooltip,
                                     desiredCash = wantReceivePlan,
                                     visitsPerWeek = visitsPerWeekPlan,
-                                    showValidationErrors = showValidationErrors,
+                                    showValidationErrors = showValidationErrors || isOneTimePaymentIncrease,
                                     validationShakeTrigger = validationShakeTrigger,
                                     comment = comment,
+                                    commentTooShort = commentTooShort,
                                     onDesiredCashClick = {
                                         openValueDialog(
                                             title = if (isOneTimePaymentIncrease) "Разова премія" else "Бажана оплата",
@@ -551,9 +551,9 @@ internal fun QuestionAnswerDialog(
                             }
 
                             Button(
-                                enabled = !durationBelowAverage,
+                                enabled = canSubmit,
                                 onClick = {
-                                    if (durationBelowAverage) return@Button
+                                    if (!canSubmit) return@Button
                                     val hasEmptyRequiredFields = questionAnswerHasEmptyRequiredFields(
                                         isOneTimePaymentIncrease, wantReceivePlan, visitsPerWeekPlan
                                     )
@@ -661,13 +661,15 @@ internal fun QuestionAnswerDialog(
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorResource(id = R.color.orange)
+                                    containerColor = colorResource(id = R.color.orange),
+                                    disabledContainerColor = colorResource(id = R.color.inActive),
+                                    disabledContentColor = colorResource(id = R.color.colorDescription)
                                 ),
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(top = 12.dp, start = 6.dp)
                             ) {
-                                Text("Сохранить")
+                                Text(if (isOneTimePaymentIncrease) "Оформити" else "Сохранить")
                             }
                         }
 
@@ -677,14 +679,15 @@ internal fun QuestionAnswerDialog(
         }
     }
 
-    if (showShortDurationMessage) {
+    val currentMinutes = currentVisit.preciseDurationMinutes
+    if (showShortDurationMessage && currentMinutes != null) {
         MessageDialog(
             title = "Повышение оплаты",
             subTitle = RoomManager.SQL_DB.themeDao().getById("1378").nm ?: "",
             status = DialogStatus.ALERT,
-            message = "Нельзя запрашивать РАЗОВОЕ повышение оплаты, если продолжительность работы " +
-                    if (paymentSnapshot.isPlannedDuration) "по текущему визиту меньше планового времени этого визита."
-                    else "по текущему визиту меньше среднего времени, которое вы обычно тратите на визит в этой ТТ.",
+            message = oneTimeShortDurationMessage(
+                currentMinutes, calculatedData.avgWorkDurationMinutes, planned = paymentSnapshot.isPlannedDuration
+            ),
             okButtonName = "ОК",
             onDismiss = { showShortDurationMessage = false },
             onConfirmAction = { showShortDurationMessage = false }
@@ -1159,6 +1162,7 @@ private fun QuestionAnswerStatementBlock(
     showValidationErrors: Boolean,
     validationShakeTrigger: Int,
     comment: String,
+    commentTooShort: Boolean,
     onDesiredCashClick: () -> Unit,
     onVisitsPerWeekClick: () -> Unit,
     onCommentChange: (String) -> Unit,
@@ -1249,9 +1253,17 @@ private fun QuestionAnswerStatementBlock(
             QuestionAnswerCommentInput(
                 value = comment,
                 onValueChange = onCommentChange,
+                invalid = commentTooShort || comment.isEmpty(),
                 modifier = commentModifier,
                 placeholder = commentPlaceholder
             )
+            if (commentTooShort) {
+                Text(
+                    text = "Введіть щонайменше $ONE_TIME_COMMENT_MIN_LETTERS літер. Цифри, пробіли та знаки не враховуються.",
+                    color = colorResource(id = R.color.colorDescription),
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }
@@ -1534,6 +1546,7 @@ private fun QuestionAnswerInlineReadOnlyChip(
 private fun QuestionAnswerCommentInput(
     value: String,
     onValueChange: (String) -> Unit,
+    invalid: Boolean,
     modifier: Modifier = Modifier,
     placeholder: String = "Зазначте усі фактори, котрі суттєво впливають на тривалість виконання робіт. " +
             "Складнощі з: (планограмами, персоналом, складом, фасуванням, і т.д.) та вкажіть свої побажання щодо збільшення кількості візитів, або вартості."
@@ -1553,8 +1566,7 @@ private fun QuestionAnswerCommentInput(
             .border(
                 BorderStroke(
                     1.dp,
-                    colorResource(id = if (value.isNotEmpty()) R.color.borderContextMenu else R.color.red_error)
-//                            colorResource(id = R.color.borderContextMenu)
+                    colorResource(id = if (invalid) R.color.red_error else R.color.borderContextMenu)
                 ),
                 RoundedCornerShape(QuestionAnswerCorner)
             )

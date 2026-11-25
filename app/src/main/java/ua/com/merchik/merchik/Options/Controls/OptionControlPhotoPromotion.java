@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import ua.com.merchik.merchik.Utils.FaceValue;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
@@ -192,7 +194,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // 5.0
 
         List<StackPhotoDB> stackPhotoDBS = new ArrayList<>();
-        stackPhotoDBS = OptionPhotoFiles.ready(RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), photoType));
+        stackPhotoDBS = ReportPhotos.ready(RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), photoType));
         int size = 0;
 
         // 6.0

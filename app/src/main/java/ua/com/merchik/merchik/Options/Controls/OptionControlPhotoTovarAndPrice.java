@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import ua.com.merchik.merchik.Utils.FaceValue;
 
 import android.app.Activity;
@@ -120,7 +122,7 @@ public class OptionControlPhotoTovarAndPrice<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = selectReportPrepareByTovar(reportPrepareRaw);
 
         //5.0. проверим наличие фото. Ступенями для того, чтобы ускорить проведение документа
-        List<StackPhotoDB> stackPhotoDBS = OptionPhotoFiles.ready(RealmManager.stackPhotoByDad2AndType(dad2, photoType));
+        List<StackPhotoDB> stackPhotoDBS = ReportPhotos.ready(RealmManager.stackPhotoByDad2AndType(dad2, photoType));
         if (stackPhotoDBS == null) {
             stackPhotoDBS = new ArrayList<>();
         }

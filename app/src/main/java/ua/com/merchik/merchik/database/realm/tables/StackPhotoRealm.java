@@ -18,6 +18,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
 import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
 import ua.com.merchik.merchik.ServerExchange.StackPhotoSyncPolicy;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -33,10 +34,10 @@ public class StackPhotoRealm {
     static boolean insertGalleryPhotoIfNew(Realm db, StackPhotoDB photo) {
         boolean[] inserted = {false};
         db.executeTransaction(realm -> {
-            if (photo.code_dad2 != 0 && realm.where(StackPhotoDB.class)
+            if (photo.code_dad2 != 0 && !ReportPhotos.ready(realm.where(StackPhotoDB.class)
                     .equalTo("code_dad2", photo.code_dad2)
                     .equalTo("photo_hash", photo.getPhoto_hash(), Case.INSENSITIVE)
-                    .findFirst() != null) return;
+                    .findAll()).isEmpty()) return;
 
             photo.setId(Math.toIntExact(RealmManager.stackPhotoGetLastId(realm) + 1));
             realm.insert(photo);
@@ -476,12 +477,12 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
-    public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2, int photoType) {
-        return INSTANCE.where(StackPhotoDB.class)
+    public static List<StackPhotoDB> getPhotosByDAD2(long dad2, int photoType) {
+        return ReportPhotos.ready(INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
                 .equalTo("photo_type", photoType)
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
-                .findAll();
+                .findAll());
     }
 
     public static RealmResults<StackPhotoDB> getPhotosByDAD2AllTypes(long dad2) {
@@ -633,7 +634,7 @@ public class StackPhotoRealm {
         }
 
         List<StackPhotoDB> result = new ArrayList<>();
-        if (res != null) result = INSTANCE.copyFromRealm(res);
+        if (res != null) result = INSTANCE.copyFromRealm(ReportPhotos.ready(res));
 
         return result;
     }
@@ -652,7 +653,7 @@ public class StackPhotoRealm {
 
         res = res.where().greaterThan("get_on_server", 1).findAll();
 
-        return INSTANCE.copyFromRealm(res);
+        return INSTANCE.copyFromRealm(ReportPhotos.ready(res));
     }
 
     /**
@@ -665,7 +666,7 @@ public class StackPhotoRealm {
                 .findAll();
 
         if (res != null) {
-            return INSTANCE.copyFromRealm(res);
+            return INSTANCE.copyFromRealm(ReportPhotos.ready(res));
         } else {
             return null;
         }
@@ -679,7 +680,7 @@ public class StackPhotoRealm {
                 .equalTo("photo_type", photoType)
                 .findAll();
 
-        return INSTANCE.copyFromRealm(res);
+        return INSTANCE.copyFromRealm(ReportPhotos.ready(res));
     }
 
     public static List<StackPhotoDB> getPlanogramm(int planogramm, long codeDad2, Integer photoType) {
@@ -689,6 +690,6 @@ public class StackPhotoRealm {
                 .equalTo("photo_type", photoType)
                 .findAll();
 
-        return INSTANCE.copyFromRealm(res);
+        return INSTANCE.copyFromRealm(ReportPhotos.ready(res));
     }
 }

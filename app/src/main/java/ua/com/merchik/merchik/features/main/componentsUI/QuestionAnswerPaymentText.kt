@@ -8,6 +8,20 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+internal fun oneTimeShortDurationMessage(currentMinutes: Double, referenceMinutes: Double, planned: Boolean): String {
+    val current = BigDecimal.valueOf(currentMinutes)
+    val reference = BigDecimal.valueOf(referenceMinutes)
+    var scale = 2
+    fun rounded(value: BigDecimal) = value.setScale(scale, RoundingMode.HALF_UP)
+    // A short visit and its reference must not look equal just because of display rounding.
+    while (currentMinutes < referenceMinutes && rounded(current) == rounded(reference)) scale++
+    fun minutes(value: BigDecimal) = rounded(value).stripTrailingZeros().toPlainString().replace('.', ',')
+    val comparison = if (planned) "планового времени этого визита"
+        else "среднего времени, которое вы обычно тратите на визит в этой ТТ"
+    return "Нельзя запрашивать РАЗОВОЕ повышение оплаты, если продолжительность работы " +
+            "(${minutes(current)} мин.) по текущему визиту меньше $comparison (${minutes(reference)} мин.)."
+}
+
 internal fun questionAnswerStatementTemplate(
     isOneTimePaymentIncrease: Boolean,
     isPlannedDuration: Boolean = false,

@@ -10,6 +10,17 @@ import static org.junit.Assert.*;
 import static ua.com.merchik.merchik.ServerExchange.VisitUploadBatch.Kind.*;
 
 public class VisitUploadBatchTest {
+    @Test public void emptyPhotoDoesNotLeaveAMetadataBlockerOrAffectAnotherVisitRow() {
+        VisitUploadBatch batch = new VisitUploadBatch();
+        batch.merge(Arrays.asList(row(PHOTO_COMMENT, "3213"), row(PHOTO_DVI, "3213"),
+                row(PHOTO_SCORE, "3213"), row(PHOTO_COMMENT, "3214"), row(TAR, "3213")));
+        batch.photoHttpReceipts.put("3213", "file:empty");
+        batch.discardUnavailablePhoto(3213);
+        assertEquals(2, batch.rows.size());
+        assertTrue(batch.tracks(TAR, "3213"));
+        assertTrue(batch.tracks(PHOTO_COMMENT, "3214"));
+        assertFalse(batch.photoHttpReceipts.containsKey("3213"));
+    }
     @Test public void everyVisitQueueMustBeAcknowledgedBeforeCompletion() {
         for (VisitUploadBatch.Kind pendingKind : VisitUploadBatch.Kind.values()) {
             VisitUploadBatch batch = new VisitUploadBatch();
@@ -172,6 +183,57 @@ public class VisitUploadBatchTest {
         assertNull(VisitUploadBatch.accepted(row(PLANOGRAM, "8"), body));
         assertNull(VisitUploadBatch.accepted(row(PLANOGRAM, "9"), body));
     }
+    @Test public void achievementReceiptFromIncidentConfirmsOnlyTheCreatedItem() {
+        JsonObject reply = json("{state:false,list:[{element_id:67,id:268891,state:true},{element_id:68,state:false}]}");
+        assertEquals(268891, VisitUploadBatch.accepted(row(ACHIEVEMENT, "67"), reply).get("id").getAsInt());
+        assertNull(VisitUploadBatch.accepted(row(ACHIEVEMENT, "68"), reply));
+        assertNull(VisitUploadBatch.accepted(row(ACHIEVEMENT, "69"), reply));
+        assertNull(VisitUploadBatch.accepted(row(TAR_CREATE, "67"), reply));
+        reply.addProperty("error", "denied");
+        assertNull(VisitUploadBatch.accepted(row(ACHIEVEMENT, "67"), reply));
+        for (String invalid : Arrays.asList("0", "-1", "1.5", "2147483648", "null")) {
+            assertNull(VisitUploadBatch.accepted(row(ACHIEVEMENT, "67"),
+                    json("{state:false,list:[{element_id:67,state:true,id:" + invalid + "}]}")));
+        }
+    }
+
+    @Test public void bothUploadersRespectPersistedServerIdsAfterRestart() {
+        VisitUploadBatch batch = new VisitUploadBatch();
+        batch.merge(Arrays.asList(row(ACHIEVEMENT, "67"), row(ACHIEVEMENT, "68"), row(ACHIEVEMENT, "69")));
+        VisitUploadBatch restored = new Gson().fromJson(new Gson().toJson(batch), VisitUploadBatch.class);
+        java.util.Map<String, Integer> storedIds = new java.util.HashMap<>();
+        storedIds.put("67", 268891); // Already created by the periodic upload.
+        storedIds.put("68", -1);
+        assertEquals(Collections.singletonList(restored.rows.get("ACHIEVEMENT:68")), restored.pendingAchievementCreates(storedIds));
+        assertTrue(restored.rows.get("ACHIEVEMENT:67").applied);
+        assertNull(restored.rows.get("ACHIEVEMENT:69").acknowledgement); // Missing local row needs reconciliation.
+        assertFalse(restored.allAcknowledged());
+        assertEquals(1, restored.pendingAchievementCreates(storedIds).size());
+    }
+
+    @Test public void savedReceiptSurvivesCrashBeforeRoomWrite() {
+        VisitUploadBatch batch = new VisitUploadBatch();
+        VisitUploadBatch.Row sent = row(ACHIEVEMENT, "67");
+        batch.merge(Collections.singletonList(sent));
+        JsonObject receipt = VisitUploadBatch.accepted(sent, json("{state:false,list:[{state:true,element_id:67,id:268891}]}"));
+        assertTrue(batch.acknowledge(sent, receipt));
+        VisitUploadBatch restored = new Gson().fromJson(new Gson().toJson(batch), VisitUploadBatch.class);
+        assertFalse(restored.rows.get("ACHIEVEMENT:67").applied);
+        assertEquals(268891, restored.acknowledgedAchievementId("67"));
+        assertEquals(0, restored.acknowledgedAchievementId("68"));
+        assertTrue(restored.next().isEmpty());
+    }
+
+    @Test public void editsDuringAndAfterAnAchievementCreateCannotReopenTheCreate() {
+        VisitUploadBatch batch = new VisitUploadBatch();
+        VisitUploadBatch.Row sent = row(ACHIEVEMENT, "67");
+        batch.merge(Collections.singletonList(sent));
+        batch.merge(Collections.singletonList(new VisitUploadBatch.Row(ACHIEVEMENT, "67", json("{element_id:67,value:2}"))));
+        assertTrue(batch.acknowledge(sent, json("{state:true,id:268891}")));
+        batch.merge(Collections.singletonList(sent));
+        assertTrue(batch.next().isEmpty());
+    }
+
     @Test public void returnedServerIdIsRequiredForCreates() {
         for (VisitUploadBatch.Kind kind : Arrays.asList(ACHIEVEMENT, PLAN_BUDGET, TAR_CREATE)) {
             String field = kind == PLAN_BUDGET ? "data" : "list";

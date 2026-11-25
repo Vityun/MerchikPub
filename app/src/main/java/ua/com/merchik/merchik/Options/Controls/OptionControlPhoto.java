@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -296,12 +298,12 @@ public class OptionControlPhoto<T> extends OptionControl {
                     + ", codeIza=" + Arrays.toString(codeIZAForGetStackPhotoDB)
                     + ", requiredBeforeExceptions=" + m;
 //        получаем данные из таблицы фото
-            RealmResults<StackPhotoDB> photoRows =
+            List<StackPhotoDB> photoRows =
                     dad2ForGetStackPhotoDB > 0 ?
                             StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
                             StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
-            List<StackPhotoDB> stackPhotoDB = OptionPhotoFiles.ready(photoRows);
+            List<StackPhotoDB> stackPhotoDB = ReportPhotos.ready(photoRows);
             diagnosticContext += ", photoRows=" + photoRows.size()
                     + ", ignoredIncompletePhotos=" + (photoRows.size() - stackPhotoDB.size())
                     + ", matchedPhotos=" + stackPhotoDB.size();
@@ -309,7 +311,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 diagnosticContext += ", matchedPhotoSample=" + describePhotosForDiagnostic(stackPhotoDB);
             }
             if (dad2ForGetStackPhotoDB == 0) {
-                List<StackPhotoDB> visitPhotos = OptionPhotoFiles.ready(StackPhotoRealm.getPhotosByDAD2(dad2, photoType));
+                List<StackPhotoDB> visitPhotos = ReportPhotos.ready(StackPhotoRealm.getPhotosByDAD2(dad2, photoType));
                 long missingCodeIza = visitPhotos.stream()
                         .filter(photo -> photo.getCode_iza() == null || photo.getCode_iza().isEmpty()).count();
                 diagnosticContext += ", currentVisitPhotos=" + visitPhotos.size()
@@ -420,7 +422,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
                 signal = true;
                 List<StackPhotoDB> stackPhotoFor132971 =
-                        OptionPhotoFiles.ready(StackPhotoRealm.getPhotosForTypeAndExamples(
+                        ReportPhotos.ready(StackPhotoRealm.getPhotosForTypeAndExamples(
                                 dad2,
                                 31,
                                 "78",
@@ -450,7 +452,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             // 3.3
             // для 141361 от 27.03.2025
             if (optionId.equals("141361")) {
-                List<StackPhotoDB> stackPhotoDB141361 = OptionPhotoFiles.ready(StackPhotoRealm.getPhotosByDAD2(dad2, 31));
+                List<StackPhotoDB> stackPhotoDB141361 = ReportPhotos.ready(StackPhotoRealm.getPhotosByDAD2(dad2, 31));
                 int count = PhotoReportMinimum.emptyWarehousePhotoCount(stackPhotoDB141361);
                 diagnosticContext += ", emptyWarehousePhotos=" + count;
                 if (count > 0) {

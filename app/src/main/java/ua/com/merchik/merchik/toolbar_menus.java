@@ -107,6 +107,7 @@ import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.AdditionalRequirementsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
@@ -683,6 +684,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 messageDialogBuilder.dismiss();
         }
         super.onResume();
+        if (NetworkUtil.isNetworkConnected(this)) AdditionalRequirementsExchange.refreshDaily();
         MockLocationWarning.refresh(this);
         View versionView = findViewById(R.id.textView14);
         if (versionView != null) {

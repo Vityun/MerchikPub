@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import ua.com.merchik.merchik.Utils.FaceValue;
 
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_CART_WITH_GOODS;
@@ -102,7 +104,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         }
 
         // Получаем Фото Товара с Тележки (4)
-        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(
+        List<StackPhotoDB> stackPhoto = ReportPhotos.ready(StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
                 Clock.getDatePeriodLong(documentDate, 3),   // 29.05.24. поправил с +1 на +3, что б в промежуток за пару дней попадали фотки.
                 null,
@@ -126,7 +128,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
-                stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(
+                stackPhoto = ReportPhotos.ready(StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -3),  // 18.04.23. Жаловались что не видит фото опция. Я так ещё подфиксил (1 на 3 изменил)
                         Clock.getDatePeriodLong(documentDate, 3),
                         null,

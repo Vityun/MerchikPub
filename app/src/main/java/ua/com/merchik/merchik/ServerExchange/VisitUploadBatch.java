@@ -88,6 +88,8 @@ public final class VisitUploadBatch {
                 if (removed) { complete = false; changed = true; }
             }
             Row previous = rows.get(row.key());
+            // add_row creates one server identity per local achievement, including edits made in flight.
+            if (row.kind == Kind.ACHIEVEMENT && previous != null && previous.acknowledgement != null) continue;
             if (previous == null || !previous.data.equals(row.data)) {
                 rows.put(row.key(), row);
                 complete = false;
@@ -98,6 +100,13 @@ public final class VisitUploadBatch {
     }
 
     public boolean tracks(Kind kind, Object id) { return rows.containsKey(kind + ":" + id); }
+
+    void discardUnavailablePhoto(int localId) {
+        for (Kind kind : new Kind[]{Kind.PHOTO_COMMENT, Kind.PHOTO_DVI, Kind.PHOTO_SCORE}) {
+            rows.remove(kind + ":" + localId);
+        }
+        if (photoHttpReceipts != null) photoHttpReceipts.remove(String.valueOf(localId));
+    }
 
     public List<Row> next() {
         return next(java.util.Collections.emptySet());
@@ -140,9 +149,39 @@ public final class VisitUploadBatch {
                 && !positiveId(row.data.get("id")) && photosWithoutServerId.contains(row.id);
     }
 
+    /** Reconcile persisted visit snapshots under the shared upload lock before issuing add_row. */
+    List<Row> pendingAchievementCreates(Map<String, Integer> localServerIds) {
+        List<Row> pending = new ArrayList<>();
+        for (Row row : rows.values()) {
+            if (row.kind != Kind.ACHIEVEMENT || row.acknowledgement != null) continue;
+            // A missing local ID can be an old snapshot whose Room key changed after a download.
+            if (!localServerIds.containsKey(row.id)) continue;
+            Integer serverId = localServerIds.get(row.id);
+            if (serverId != null && serverId > 0) {
+                JsonObject receipt = new JsonObject();
+                receipt.addProperty("element_id", row.id);
+                receipt.addProperty("id", serverId);
+                receipt.addProperty("state", true);
+                row.acknowledgement = receipt;
+                row.applied = true;
+            } else if (pending.size() < 100) {
+                pending.add(row);
+            }
+        }
+        return pending;
+    }
+
+    int acknowledgedAchievementId(String localId) {
+        Row row = rows.get(Kind.ACHIEVEMENT + ":" + localId);
+        if (row == null || row.acknowledgement == null) return 0;
+        String id = string(row.acknowledgement, "id");
+        try { return Math.max(0, Integer.parseInt(id)); }
+        catch (NumberFormatException invalidId) { return 0; }
+    }
+
     public boolean acknowledge(Row sent, JsonObject acknowledgement) {
         Row current = rows.get(sent.key());
-        if (current == null || !current.data.equals(sent.data)) return false;
+        if (current == null || (sent.kind != Kind.ACHIEVEMENT && !current.data.equals(sent.data))) return false;
         current.acknowledgement = acknowledgement.deepCopy();
         return true;
     }
@@ -229,7 +268,10 @@ public final class VisitUploadBatch {
         }
         if (body == null || error(body)) return null;
         boolean optionalState = sent.kind == Kind.AR && (!body.has("state") || body.get("state").isJsonNull());
-        if (!optionalState && !yes(body.get("state"))) return null;
+        // images_achieve/add_row returns state=false even when individual creates have committed.
+        String state = string(body, "state");
+        boolean achievementRows = sent.kind == Kind.ACHIEVEMENT && ("false".equalsIgnoreCase(state) || "0".equals(state));
+        if (!optionalState && !achievementRows && !yes(body.get("state"))) return null;
         String field = sent.kind == Kind.WP ? "plan"
                 : sent.kind == Kind.LOCATION ? "geo_result" : "list";
         if (sent.kind == Kind.RP || sent.kind == Kind.PLAN_BUDGET) field = "data";
@@ -260,7 +302,12 @@ public final class VisitUploadBatch {
                 if (error(row) || (row.has("state") && !yes(row.get("state")))) return null;
                 if (sent.kind != Kind.WP && sent.kind != Kind.ANSWER
                         && !yes(row.get("state"))) return null;
-                if ((sent.kind == Kind.ACHIEVEMENT || sent.kind == Kind.PLAN_BUDGET || sent.kind == Kind.TAR_CREATE)
+                if (sent.kind == Kind.ACHIEVEMENT) {
+                    try {
+                        if (Integer.parseInt(string(row, "id")) <= 0) return null;
+                    } catch (NumberFormatException invalidId) { return null; }
+                }
+                if ((sent.kind == Kind.PLAN_BUDGET || sent.kind == Kind.TAR_CREATE)
                         && !positiveId(row.get("id"))) return null;
                 if (sent.kind == Kind.TAR_COMMENT) {
                     JsonObject info = row.has("info") && row.get("info").isJsonObject() ? row.getAsJsonObject("info") : row;

@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -90,6 +91,10 @@ public class PhotoLog {
      * 06.05.2024
      */
     public void sendPhotoOnServer(Context context, StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
+        if (!PhotoEvidencePolicy.hasLocalPhoto(photoDB.getPhoto_num())) {
+            callback.onFailure(photoDB, "Немає локального файлу фото для відправлення.");
+            return;
+        }
         new MyCookieJar();
         Globals globals = new Globals();
 

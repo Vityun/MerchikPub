@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -162,8 +164,8 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             // 3.1
             // ШЕВА ПРОСИТ 45 ТИП СЮДА ДОБАВИТЬ
-            stackPhotoDBSList = OptionPhotoFiles.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0))); // 0 - Фото Витрины
-            List<StackPhotoDB> stackPhotoDBSList45 = OptionPhotoFiles.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45))); // 0 - Фото Витрины
+            stackPhotoDBSList = ReportPhotos.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0))); // 0 - Фото Витрины
+            List<StackPhotoDB> stackPhotoDBSList45 = ReportPhotos.ready(RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45))); // 0 - Фото Витрины
             stackPhotoDBSList.addAll(stackPhotoDBSList45);
             Globals.writeToMLOG("INFO", "OptionControlPhotoShowcase/input",
                     describeOption(optionDB) + ", mode=" + nnkMode

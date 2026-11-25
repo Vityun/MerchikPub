@@ -4,7 +4,9 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -24,8 +26,37 @@ public interface AchievementsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<AchievementsSDB> data);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertAllCompletable(List<AchievementsSDB> data);
+    @Query("UPDATE achievements SET serverId = :serverId WHERE id = :localId AND (serverId IS NULL OR serverId <= 0)")
+    void setCreatedId(int localId, int serverId);
+
+    @Transaction
+    default void acknowledgeCreate(int localId, long dad2, int serverId) {
+        AchievementsSDB local = getById(localId);
+        if (serverId <= 0 || local == null || local.codeDad2 == null || local.codeDad2 != dad2
+                || (local.serverId != null && local.serverId > 0)) return;
+        AchievementsSDB downloaded = getByServerId(serverId);
+        if (downloaded == null) {
+            setCreatedId(localId, serverId);
+        } else {
+            // A download may arrive before the create callback. Preserve its fields and the outbox key.
+            downloaded.id = localId;
+            insertAll(Collections.singletonList(downloaded));
+        }
+    }
+
+    @Transaction
+    default void mergeDownloaded(List<AchievementsSDB> rows) {
+        for (AchievementsSDB row : rows) {
+            if (row.serverId == null || row.serverId <= 0) throw new IllegalArgumentException("Invalid downloaded achievement ID");
+            AchievementsSDB existing = getByServerId(row.serverId);
+            row.id = existing == null ? null : existing.id;
+            insertAll(Collections.singletonList(row));
+        }
+    }
+
+    default Completable insertAllCompletable(List<AchievementsSDB> data) {
+        return Completable.fromAction(() -> mergeDownloaded(data));
+    }
 
     // ---------------------------------------------------------
 

@@ -285,6 +285,7 @@ class FeaturesActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST) MakePhoto.onReportCameraReturned()
 
         if (requestCode == DetailedReportActivity.NEED_UPDATE_UI_REQUEST && resultCode == RESULT_OK) {
             DialogCreateAchievement.onUpdateUI?.update()

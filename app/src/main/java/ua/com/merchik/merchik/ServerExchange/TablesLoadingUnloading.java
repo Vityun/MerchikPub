@@ -74,6 +74,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.helpers.Scroll
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.AdditionalRequirementsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReferenceDataExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationDevicesExchange;
@@ -134,7 +135,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupResponse;
-import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarksServerData;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -147,7 +147,6 @@ import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.data.synchronization.StartupPolicy;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
@@ -4622,90 +4621,8 @@ id_exclude - иди товаров которые есть в приложени
      * 12.04.2021
      * Скачивание Дополнительных Требований
      */
-    private static boolean isDownloadAdditionalRequirements = false;
-
     public void downloadAdditionalRequirements() {
-        if (isDownloadAdditionalRequirements) return;
-        isDownloadAdditionalRequirements = true;
-
-        try {
-            StandartData data = new StandartData();
-            data.mod = "additional_requirements";
-            data.act = "list";
-//            data.client_id = Можно передать список клиентов с которыми работает пользователь
-            data.date_from = Clock.getDatePeriod(-120);
-            data.date_to = Clock.tomorrow7;
-
-//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
-//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            // Pika Пример того как получать сырой объект JSON точнее response чтоб понять что возвращается в результате запроса к Володе
-            // также потом можно этот текст обработать на https://www.jsonschema2pojo.org/
-            // Еще есть возможность после авторизации выполнить https://merchik.com.ua/mobile_app.php?mod=additional_requirements&act=list
-            // то есть получить все данные которые должны прийти этому пользователю (сам запрос еще можно донастроить командной строкой - это как обычный GET)
-//            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//            callTest.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    Response<JsonObject> s = response;
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//
-//                }
-//            });
-
-            Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<AdditionalRequirementsServerData>() {
-                @Override
-                public void onResponse(Call<AdditionalRequirementsServerData> call, Response<AdditionalRequirementsServerData> response) {
-                    try {
-                        if (response.isSuccessful())
-                            if (response.body() != null && response.body().getList() != null
-                                    && !response.body().getList().isEmpty()) {
-
-                                AdditionalRequirementsRealm.setDataToDB(response.body().getList());
-
-//                                RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-//                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                                });
-                                Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
-
-                            }
-//                        Set<Integer> uniqueIds = new HashSet<>();
-//                        List<AdditionalRequirementsDB> uniqueData = new ArrayList<>();
-//                        for (AdditionalRequirementsDB item : response.body().getList()) {
-//                            if (!uniqueIds.contains(item.getId())) {
-//                                uniqueIds.add(item.getId());
-//                                uniqueData.add(item);
-//                            }
-//                        }
-//                        AdditionalRequirementsRealm.setDataToDB(uniqueData);
-
-                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response +");
-                        isDownloadAdditionalRequirements = false;
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
-                        isDownloadAdditionalRequirements = false;
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<AdditionalRequirementsServerData> call, Throwable t) {
-                    isDownloadAdditionalRequirements = false;
-                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
-                }
-            });
-        } catch (Exception e) {
-            isDownloadAdditionalRequirements = false;
-            Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
-        }
+        AdditionalRequirementsExchange.downloadFull();
     }
 
 

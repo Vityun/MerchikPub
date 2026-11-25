@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import ua.com.merchik.merchik.Utils.ReportPhotos;
+
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_TOV_LEFT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -103,7 +105,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
     private void executeOption() {
         // Любой адрес/клиент, но только исполнитель проверяемого визита.
         int userId = wpDataDB.getUser_id();
-        List<StackPhotoDB> stackPhoto = OptionPhotoFiles.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, null, null, null, PHOTO_TOV_LEFT, null));
+        List<StackPhotoDB> stackPhoto = ReportPhotos.ready(StackPhotoRealm.getPhoto(dateFrom, dateTo, userId, null, null, null, PHOTO_TOV_LEFT, null));
 
         Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft/query",
                 "dad2=" + dad2 + ", userId=" + userId + ", fromMs=" + dateFrom + ", toMs=" + dateTo);

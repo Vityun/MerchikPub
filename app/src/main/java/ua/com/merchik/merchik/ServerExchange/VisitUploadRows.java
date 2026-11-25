@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Utils.ReportPhotos;
 import ua.com.merchik.merchik.data.Database.Room.*;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.QuestionAnswerDB;
@@ -56,13 +57,13 @@ final class VisitUploadRows {
             JsonObject upload = object(ReportPrepareRealm.uploadSnapshot(row));
             add(result, RP, VisitUploadBatch.string(upload, "element_id"), upload);
         }
-        for (StackPhotoDB photo : photos(wp)) {
+        for (StackPhotoDB photo : photos(wp, batch)) {
             if (photo.isCommentUpload() || batch.tracks(PHOTO_COMMENT, photo.getId())) add(result, PHOTO_COMMENT, photo.getId(), photo(photo, PHOTO_COMMENT));
             if (photo.isDviUpload() || batch.tracks(PHOTO_DVI, photo.getId())) add(result, PHOTO_DVI, photo.getId(), photo(photo, PHOTO_DVI));
             if (photo.isMarkUpload() || batch.tracks(PHOTO_SCORE, photo.getId())) add(result, PHOTO_SCORE, photo.getId(), photo(photo, PHOTO_SCORE));
         }
         for (AchievementsSDB row : SQL_DB.achievementsDao().getByDad2(dad2)) {
-            if (row.serverId == null || row.serverId <= 0 || batch.tracks(ACHIEVEMENT, row.id)) add(result, ACHIEVEMENT, row.id, achievement(row));
+            if (row.serverId == null || row.serverId <= 0) result.add(achievementRow(row));
         }
         for (VoteSDB row : SQL_DB.votesDao().getAll()) {
             if (Objects.equals(row.codeDad2, dad2) && (Objects.equals(row.dtUpload, 0L) || batch.tracks(VOTE, row.id))) add(result, VOTE, row.id, vote(row));
@@ -155,6 +156,10 @@ final class VisitUploadRows {
     }
 
     static List<StackPhotoDB> photos(WpDataDB wp) {
+        return photos(wp, null);
+    }
+
+    private static List<StackPhotoDB> photos(WpDataDB wp, VisitUploadBatch batch) {
         Set<String> hashes = new HashSet<>();
         Set<Integer> localIds = new HashSet<>();
         Set<String> serverIds = new HashSet<>();
@@ -184,7 +189,8 @@ final class VisitUploadRows {
         for (StackPhotoDB photo : INSTANCE.where(StackPhotoDB.class).findAll()) {
             if (photo.getCode_dad2() == wp.getCode_dad2() || hashes.contains(photo.getPhoto_hash())
                     || localIds.contains(photo.getId()) || serverIds.contains(photo.getPhotoServerId())) {
-                result.add(INSTANCE.copyFromRealm(photo));
+                if (ReportPhotos.isReady(photo)) result.add(INSTANCE.copyFromRealm(photo));
+                else if (batch != null) batch.discardUnavailablePhoto(photo.getId());
             }
         }
         return result;
@@ -208,12 +214,13 @@ final class VisitUploadRows {
                 kind == PHOTO_COMMENT ? row.getComment() : kind == PHOTO_DVI ? String.valueOf(row.isDvi()) : row.getMark());
     }
 
-    private static JsonObject achievement(AchievementsSDB r) {
-        return data("element_id", r.id, "dt", r.dt_ut, "client_id", r.clientId, "addr_id", r.addrId,
+    static VisitUploadBatch.Row achievementRow(AchievementsSDB r) {
+        JsonObject payload = data("element_id", r.id, "dt", r.dt_ut, "client_id", r.clientId, "addr_id", r.addrId,
                 "theme_id", r.themeId, "code_dad2", r.codeDad2, "dvi", r.dvi, "comment_dt", r.commentDt,
                 "comment_user_id", r.commentUser, "comment_txt", r.commentTxt, "img_before_hash", r.img_before_hash,
                 "img_after_hash", r.img_after_hash, "add_requirement_id", r.addRequirementId, "tovar_id", r.tovar_id,
                 "manufacturer", r.manufacturer, "showcase_id", r.showcaseId, "showcase_nm", r.showcaseNm);
+        return new VisitUploadBatch.Row(ACHIEVEMENT, r.id, payload);
     }
 
     private static JsonObject vote(VoteSDB r) {
@@ -381,11 +388,8 @@ final class VisitUploadRows {
     private static void acknowledgeRoom(VisitUploadBatch.Row sent, JsonObject ack, long now) {
         switch (sent.kind) {
             case ACHIEVEMENT:
-                AchievementsSDB achievement = SQL_DB.achievementsDao().getById(Integer.parseInt(sent.id));
-                if (achievement != null && achievement(achievement).equals(sent.data)) {
-                    achievement.serverId = Integer.parseInt(VisitUploadBatch.string(ack, "id"));
-                    SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievement));
-                }
+                SQL_DB.achievementsDao().acknowledgeCreate(Integer.parseInt(sent.id),
+                        sent.data.get("code_dad2").getAsLong(), ack.get("id").getAsInt());
                 break;
             case VOTE:
                 for (VoteSDB row : SQL_DB.votesDao().getAllToUpload()) {
