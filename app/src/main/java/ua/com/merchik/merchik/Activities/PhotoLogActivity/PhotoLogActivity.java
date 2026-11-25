@@ -139,7 +139,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
 
     private PhotoLogAdapter recycleViewPLAdapter;
-    private RealmResults<StackPhotoDB> stackPhoto;
+    private List<StackPhotoDB> stackPhoto;
 
     // Pika вынес сюда чтоб иметь доступ потом ниже
     List<SamplePhotoSDB> samplePhotoSDBList;

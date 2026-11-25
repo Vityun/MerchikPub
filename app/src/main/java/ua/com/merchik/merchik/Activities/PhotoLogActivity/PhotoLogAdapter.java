@@ -34,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
 
-import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
@@ -80,7 +79,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
     // Pika
     // Добавил в конструктор 2 параметра photoTp,grpId, они нужны для получения данных по образцам фото
-    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, int photoTp, int grpId, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
+    public PhotoLogAdapter(Context context, List<StackPhotoDB> photoLogData, int photoTp, int grpId, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
         this.mContext = context;
         updateData(photoLogData);
         this.mod = mod;
@@ -91,7 +90,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         this.samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp, grpId);
     }
 
-    public void updateData(RealmResults<StackPhotoDB> photoLogData) {
+    public void updateData(List<StackPhotoDB> photoLogData) {
         this.photoLogData = RealmManager.INSTANCE.copyFromRealm(ReportPhotos.ready(photoLogData));
         this.photoLogDataList = new java.util.ArrayList<>(this.photoLogData);
     }
