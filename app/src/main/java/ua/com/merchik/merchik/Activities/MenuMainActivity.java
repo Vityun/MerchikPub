@@ -1,1099 +1,123 @@
 package ua.com.merchik.merchik.Activities;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.text.style.TypefaceSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.realm.DynamicRealm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import okio.Buffer;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.*;
-import ua.com.merchik.merchik.Activities.WorkPlanActivity.feature.PlayUpdateReminderKt;
-import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.Options.OvertimeOfferPolicy;
-import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
-import ua.com.merchik.merchik.Utils.CodeGenerator;
-import ua.com.merchik.merchik.Utils.TrustedTime;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.QuestionAnswerDB;
-import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.PPADB;
-import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.QuestionAnswerResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
-import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
-import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUpload;
-import ua.com.merchik.merchik.data.UploadToServ.QuestionAnswerUploadResponse;
-import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.RnoVisitDataExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
-import ua.com.merchik.merchik.features.main.componentsUI.PhotoListCallback;
-import ua.com.merchik.merchik.features.main.componentsUI.PhotoManager;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
+import ua.com.merchik.merchik.toolbar_menus;
 
 public class MenuMainActivity extends toolbar_menus {
-
-    CronchikViewModel cronchikViewModel;
+    private static final String TAG = "OPTIONS_BY_DAD2_TEST";
+    private static final String TEST_DAD2 = "1261126041569061574";
+    private Call<ResponseBody> activeRequest;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setActivityContent();
-
-        cronchikViewModel = new ViewModelProvider(this).get(CronchikViewModel.class);
+        setContentView(R.layout.toolbar_new);
+        setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        ((TextView) findViewById(R.id.activity_title)).setText(R.string.title_activity_menu_main);
+        new ViewModelProvider(this).get(CronchikViewModel.class);
 
         try {
-            findViewById(R.id.fab).setOnClickListener(v -> {
-                try {
-//                    Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                    test();
-                } catch (Exception e) {
-                    Log.e("MenuMainActivity", "Exception e: " + e);
-                }
-            });
-
-            findViewById(R.id.fab).setOnLongClickListener(v -> {
-//                Toast.makeText(this, "Отладочная информация!\nДолгий клик по подсказке.", Toast.LENGTH_SHORT).show();
-                testLong();
-                return true;
-            });
-
-            initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
-
-            NavigationView navigationView = findViewById(R.id.nav_view);
-            navigationView.setCheckedItem(R.id.nav_home);
+            findViewById(R.id.fab).setOnClickListener(this::requestVisitOptions);
+            NavigationView navigation = findViewById(R.id.nav_view);
+            initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), navigation);
+            navigation.setCheckedItem(R.id.nav_home);
         } catch (Exception e) {
             globals.alertDialogMsg(this, "ОшибкаMain: " + e);
         }
     }
 
-    private void testLong() {
-        AppUsersDB appUsersDB = AppUserRealm.getAppUser();
-        if (appUsersDB != null && appUsersDB.getUserId() != 172906) {
-            String res = CodeGenerator.getCode();
-            Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    public long getRealmSchemaVersion() {
-        RealmConfiguration config = new RealmConfiguration.Builder()
-                .name("myrealm.realm")
-                .allowWritesOnUiThread(true)
-                .allowQueriesOnUiThread(true)
-                .deleteRealmIfMigrationNeeded()
-                .build();
-
-        DynamicRealm realm = DynamicRealm.getInstance(config);
-        long schemaVersion = realm.getVersion();
-        realm.close();
-        return schemaVersion;
-    }
-
-    public static List<WpDataDB> getWorkPlanList() {
-        RealmResults<WpDataDB> realmResults = getAllWorkPlan(); // Получаем RealmResults
-        return realmResults != null ? new ArrayList<>(realmResults) : new ArrayList<>(); // Преобразуем в List
-    }
-
-    public static List<WpDataDB> getUniqueClientAndAddrId(List<WpDataDB> workPlanList) {
-        Set<String> uniqueClientAddrSet = new HashSet<>(); // Храним уникальные комбинации client_id и addr_id
-        List<WpDataDB> uniqueList = new ArrayList<>(); // Результирующий список
-        // Список для формирования строки для лога
-        List<String> logEntries = new ArrayList<>();
-
-        for (WpDataDB wpDataDB : workPlanList) {
-            String clientId = wpDataDB.getClient_id();
-            int addrId = wpDataDB.getAddr_id();
-            String uniqueKey = clientId + "_" + addrId; // Создаем уникальный ключ для пары (client_id, addr_id)
-
-            if (!uniqueClientAddrSet.contains(uniqueKey)) {  // Если такая пара еще не встречалась
-                uniqueClientAddrSet.add(uniqueKey);  // Добавляем в Set
-                uniqueList.add(wpDataDB);  // Добавляем элемент в результирующий список
-
-                // Добавляем запись для лога в формате "client_id-addr_id"
-                logEntries.add(clientId + "-" + addrId);
-            }
-        }
-
-        // Формируем строку для лога с уникальными клиентами и адресами через запятую
-        String logMessage = String.join(", ", logEntries);
-
-        // Выводим строку в лог
-        Log.d("UniqueClientAddrLog", "Unique clients and addresses: " + logMessage);
-
-        return uniqueList;
-    }
-
-    public static CharSequence getFormattedMessage() {
-        final String text = "Пояснения и нюансы" +
-                "\n" +
-                "Почему Dialog, а не WindowManager напрямую?\n" +
-                "Dialog проще подписывать под жизненный цикл Activity и не требует отдельных разрешений. Мы вручную меняем type на TYPE_APPLICATION_PANEL и «прибиваем» диалог к токену окна активити — так он оказывается выше любых внутренних окон приложения, включая стандартные Dialog/BottomSheet.\n" +
-                "\n" +
-                "Не перехватывает фокус: флаги FLAG_NOT_FOCUSABLE | FLAG_NOT_TOUCH_MODAL пропускают касания к нижним слоям, как у «настоящего» тоста.\n" +
-                "\n" +
-                "Откуда вызвать: через очередь MutableSharedFlow — можно вызывать из VM/репозитория/сервиса, лишь бы вы один раз сделали AppToast.init(application).\n" +
-                "\n" +
-                "Очередь и отмена: как у системного тоста — новый показ отменяет предыдущий.\n" +
-                "\n" +
-                "Compose не обязателен: при желании замените содержимое на обычный XML-layout — API не изменится.\n" +
-                "\n" +
-                "Ограничения: это «самый верх» в пределах вашего процесса/активити. Над окнами других приложений/системы подниматься не будет (и не должен). Если поверх вашего тоста моментально";
-
-        SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-        // 1) Заголовок (до первой новой строки)
-        int endTitle = text.indexOf("\n");
-        if (endTitle > 0) {
-            ssb.setSpan(new ForegroundColorSpan(Color.RED), 0, endTitle, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            ssb.setSpan(new StyleSpan(Typeface.BOLD), 0, endTitle, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        // 2) Английские слова другим шрифтом
-        Pattern engPattern = Pattern.compile("[A-Za-z]+");
-        Matcher engMatcher = engPattern.matcher(text);
-        while (engMatcher.find()) {
-            ssb.setSpan(new TypefaceSpan("monospace"),
-                    engMatcher.start(), engMatcher.end(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        // 3) Текст в кавычках (и «русские», и "английские")
-        // Текст в кавычках = синим + подчёркивание + кликабельность
-        Pattern quotePattern = Pattern.compile("[«\"](.*?)[»\"]");
-        Matcher quoteMatcher = quotePattern.matcher(text);
-        while (quoteMatcher.find()) {
-            final int start = quoteMatcher.start();
-            final int end = quoteMatcher.end();
-
-            ClickableSpan clickableSpan = new ClickableSpan() {
-                @Override
-                public void onClick(@NonNull View widget) {
-                    // открываем ссылку
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"));
-                    widget.getContext().startActivity(browserIntent);
-                }
-
-                @Override
-                public void updateDrawState(@NonNull TextPaint ds) {
-                    super.updateDrawState(ds);
-                    ds.setColor(Color.BLUE);   // цвет текста
-                    ds.setUnderlineText(true); // подчёркивание
-                }
-            };
-            ssb.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        return ssb;
-    }
-
-    private void downloadPhotoInfoById(String stackPhotoDBID, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
-        PhotoDownload photoDownloader = new PhotoDownload();
-
-        PhotoTableRequest request = new PhotoTableRequest();
-        request.mod = "images_view";
-        request.act = "list_image";
-        request.nolimit = "1";
-        request.id_list = stackPhotoDBID;
-
-        photoDownloader.getPhotoInfoAndSaveItToDB(request, clickUpdatePhoto);
-    }
-
-    private static final String AVG_TIME_TEST_TAG = "AVG_TIME_TEST";
-    private static final int AVG_TIME_TEST_THEME_ID = 998;
-    private static final int[][] AVG_TIME_TEST_PAIRS = {{46403, 28847}, {10426, 28847}, {84186, 39410}};
-    private boolean averageTimeTestInProgress;
-
-    private MessageDialogBuilder playUpdatePreview;
-
-    private void test() {
-        if (playUpdatePreview != null && playUpdatePreview.isShowing()) return;
-        playUpdatePreview = PlayUpdateReminderKt.showPlayUpdateNoticePreview(this);
-    }
-
-    private void testAverageTime() {
-        if (averageTimeTestInProgress) return;
-        averageTimeTestInProgress = true;
-        requestAverageTimeForTest(0);
-    }
-
-    private void requestAverageTimeForTest(int index) {
-        if (index == AVG_TIME_TEST_PAIRS.length) {
-            averageTimeTestInProgress = false;
-            if (!isFinishing() && !isDestroyed()) {
-                Toast.makeText(this, "avg_time: результати в m_log", Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
-
-        int[] pair = AVG_TIME_TEST_PAIRS[index];
-        JsonObject request = OvertimeOfferPolicy.averageRequest(String.valueOf(pair[0]), pair[1], AVG_TIME_TEST_THEME_ID);
-        String label = "client_id=" + pair[0] + ", addr_id=" + pair[1];
-        logAverageTimeTest("REQUEST " + request);
+    private void requestVisitOptions(View button) {
+        if (activeRequest != null) return;
+        button.setEnabled(false);
         try {
-            RetrofitBuilder.getSilentRetrofitInterface().GET_AVERAGE_WORK_TIME(request)
-                    .enqueue(new Callback<JsonObject>() {
-                        @Override
-                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                            // Keep the original duration, including zero, for comparison with the server.
-                            logAverageTimeTest(label + ", HTTP " + response.code()
-                                    + (response.isSuccessful() ? ": " + response.body() : ""));
-                            requestAverageTimeForTest(index + 1);
-                        }
-
-                        @Override
-                        public void onFailure(Call<JsonObject> call, Throwable error) {
-                            logAverageTimeTest(label + ", FAILURE: " + error);
-                            requestAverageTimeForTest(index + 1);
-                        }
-                    });
-        } catch (RuntimeException e) {
-            logAverageTimeTest(label + ", FAILURE: " + e);
-            requestAverageTimeForTest(index + 1);
-        }
-    }
-
-    private static void logAverageTimeTest(String message) {
-        Log.i(AVG_TIME_TEST_TAG, message);
-        Globals.writeToMLOG("INFO", AVG_TIME_TEST_TAG, message);
-    }
-
-    private static final String ADD_REQUIREMENTS_JSON_TAG = "ADD_REQUIREMENTS_JSON";
-    private boolean isAdditionalRequirementsJsonLoading = false;
-
-    private void downloadAdditionalRequirementsJson() {
-        if (isAdditionalRequirementsJsonLoading) return;
-
-        StandartData<Object> data = new StandartData<>();
-        data.mod = "additional_requirements";
-        data.act = "list";
-        data.date_from = Clock.getDatePeriod(-120);
-        data.date_to = Clock.getDatePeriod(7);
-        JsonObject request = new Gson().toJsonTree(data).getAsJsonObject();
-
-        // Keep unknown server fields (including the new promotion type) without saving to Realm.
-        Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                .TEST_JSON_UPLOAD(RetrofitBuilder.contentType, request);
-        logAdditionalRequirementsJson("REQUEST", logGson.toJson(request));
-        isAdditionalRequirementsJsonLoading = true;
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                try {
-                    logAdditionalRequirementsJson("HTTP", String.valueOf(response.code()));
-                    if (response.isSuccessful()) {
-                        logAdditionalRequirementsJson("RESPONSE", logGson.toJson(response.body()));
-                    } else {
-                        try (ResponseBody errorBody = response.errorBody()) {
-                            logAdditionalRequirementsJson("ERROR", errorBody == null
-                                    ? "<empty error body>" : errorBody.string());
-                        } catch (IOException e) {
-                            logAdditionalRequirementsJson("ERROR", "Failed to read error body: " + e);
-                        }
-                    }
-                } finally {
-                    isAdditionalRequirementsJsonLoading = false;
-                }
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                isAdditionalRequirementsJsonLoading = false;
-                logAdditionalRequirementsJson("FAILURE", Log.getStackTraceString(t));
-            }
-        });
-    }
-
-    private void logAdditionalRequirementsJson(String stage, String json) {
-        Globals.writeToMLOG("INFO", ADD_REQUIREMENTS_JSON_TAG + "/" + stage, json);
-        // Leave room for multibyte text and the prefix within Logcat's per-message limit.
-        final int chunkSize = 900;
-        final int partCount = Math.max(1, (json.length() + chunkSize - 1) / chunkSize);
-        for (int part = 0; part < partCount; part++) {
-            int start = part * chunkSize;
-            int end = Math.min(start + chunkSize, json.length());
-            Log.e(ADD_REQUIREMENTS_JSON_TAG, stage + " [" + (part + 1) + "/" + partCount + "] "
-                    + json.substring(start, end));
-        }
-    }
-
-    private void showEndWorkDialogTest() {
-        long startTime = LocalDateTime.of(2026, 10, 6, 15, 32)
-                .atZone(ZoneId.systemDefault())
-                .toEpochSecond();
-        new Options().showEndWorkDialog(this, startTime, endTime -> {
-            // Preview only: do not save work times or submit a report.
-        });
-
-//        downloadTest();
-//        downloadTest2();
-
-//        new Translate().uploadNewTranslate();
-
-
-
-
-    }
-
-
-
-
-    public static void logPpaUniqueStats() {
-
-        RealmResults<PPADB> items = INSTANCE.where(PPADB.class)
-                .findAll();
-
-        Set<String> clients = new HashSet<>();
-        Set<String> addresses = new HashSet<>();
-        Set<String> clientAddresses = new HashSet<>();
-
-        // Количество записей по каждой связке client + addrId
-        Map<String, Integer> clientAddressCount = new HashMap<>();
-
-        for (PPADB item : items) {
-
-            String client = item.getClient();
-            String addrId = item.getAddrId();
-
-            if (client != null) {
-                client = client.trim();
-            }
-
-            if (addrId != null) {
-                addrId = addrId.trim();
-            }
-
-            // Уникальные клиенты
-            if (client != null && !client.isEmpty()) {
-                clients.add(client);
-            }
-
-            // Уникальные адреса
-            if (addrId != null && !addrId.isEmpty()) {
-                addresses.add(addrId);
-            }
-
-            // Уникальные связки клиент + адрес
-            if (client != null
-                    && !client.isEmpty()
-                    && addrId != null
-                    && !addrId.isEmpty()) {
-
-                String key = client + "|" + addrId;
-
-                clientAddresses.add(key);
-
-                // Считаем количество записей этой связки
-                Integer currentCount = clientAddressCount.get(key);
-
-                if (currentCount == null) {
-                    clientAddressCount.put(key, 1);
-                } else {
-                    clientAddressCount.put(key, currentCount + 1);
-                }
-            }
-        }
-
-        Log.d("PPA_STATS", "======================================");
-        Log.d("PPA_STATS", "ВСЕГО ЗАПИСЕЙ: " + items.size());
-        Log.d("PPA_STATS", "УНИКАЛЬНЫХ КЛИЕНТОВ: " + clients.size());
-        Log.d("PPA_STATS", "УНИКАЛЬНЫХ АДРЕСОВ: " + addresses.size());
-        Log.d("PPA_STATS", "УНИКАЛЬНЫХ КЛИЕНТ-АДРЕС: " + clientAddresses.size());
-        Log.d("PPA_STATS", "======================================");
-
-
-        // ============================================================
-        // TOP-10 самых популярных связок CLIENT + ADDRESS
-        // ============================================================
-
-        List<Map.Entry<String, Integer>> sortedList =
-                new ArrayList<>(clientAddressCount.entrySet());
-
-        sortedList.sort((o1, o2) ->
-                Integer.compare(o2.getValue(), o1.getValue())
-        );
-
-        Log.d("PPA_STATS", "");
-        Log.d("PPA_STATS", "========== TOP 10 CLIENT + ADDRESS ==========");
-
-        int limit = Math.min(10, sortedList.size());
-
-        for (int i = 0; i < limit; i++) {
-
-            Map.Entry<String, Integer> entry = sortedList.get(i);
-
-            String[] parts = entry.getKey().split("\\|", -1);
-
-            String client = parts[0];
-            String addrId = parts.length > 1 ? parts[1] : "";
-
-            Log.d(
-                    "PPA_STATS",
-                    (i + 1)
-                            + ". CLIENT: " + client
-                            + " | ADDR_ID: " + addrId
-                            + " | RECORDS: " + entry.getValue()
-            );
-        }
-
-        Log.d("PPA_STATS", "=============================================");
-    }
-
-    private static class PpaStat {
-
-        final String value;
-        final long count;
-
-        PpaStat(String value, long count) {
-            this.value = value;
-            this.count = count;
-        }
-    }
-
-    private static class PpaClientAddressStat {
-
-        final String client;
-        final String addrId;
-        final long count;
-
-        PpaClientAddressStat(
-                String client,
-                String addrId,
-                long count
-        ) {
-            this.client = client;
-            this.addrId = addrId;
-            this.count = count;
-        }
-    }
-
-    public void swoeDialogSW() {
-        DialogShowcase dialog = new DialogShowcase(this);
-        dialog.setClose(dialog::dismiss);
-        dialog.show();
-    }
-
-    public void downloadWPData() {
-
-        String mod = "plan";
-        String act = "list";
-        String date_from = Clock.getDatePeriod(-21);
-//        String date_from = timeYesterday7;
-        String date_to =  Clock.getDatePeriod(5);
-        long vpi;
-
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else
-            vpi = 0;
-//        vpi = 1758173674;
-        vpi = 0;
-        try {
-            Log.e("TAG_TEST_WP", "RESPONSE_0 T");
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
-
-            Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
-            call.enqueue(new Callback<WpDataServer>() {
+            JsonObject request = OptionsExchange.createRequest(null, null, TEST_DAD2);
+            RnoVisitDataExchange.authorizeTargetedRequest(request);
+            logResult("REQUEST plan/options_list code_dad2=" + TEST_DAD2);
+            activeRequest = RetrofitBuilder.getRetrofitInterface()
+                    .rawMobileAppResponse(RetrofitBuilder.contentType, request);
+            activeRequest.enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onResponse(Call<WpDataServer> call, Response<WpDataServer> response) {
-                    try {
-                        if (response.isSuccessful() && response.body() != null) {
-
-//                            downloadWPDataWithCords();
-                            if (response.body().getState() && response.body().getList() != null
-                                    && !response.body().getList().isEmpty()) {
-                                List<WpDataDB> wpDataDBList = response.body().getList();
-                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
-//                            RealmManager.setWpDataAuto2(wpDataDBList);
-//                            RealmManager.setWpData(wpDataDBList);
-
-                                HashSet<String> clientName = new HashSet<>();
-                                for (WpDataDB wpDataDB: wpDataDBList){
-                                    if (wpDataDB.getClient_txt().contains("ОТС"))
-                                        Log.e("!!!!!!!!","+++");
-                                    clientName.add(wpDataDB.getClient_txt());
-
-                                }
-                                if (wpDataDBList.isEmpty()) {
-
-                                    return;
-                                }
-                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                                if (sTable != null) {
-                                    sTable.setVpi_app(TrustedTime.syncWatermarkSec(sTable.getVpi_app(), 60));
-                                    RealmManager.setToSynchronizationTimetableDB(sTable);
-                                }
-
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e("Exception","Error : " + e.getMessage());
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    String status = "HTTP " + response.code();
+                    try (ResponseBody body = response.isSuccessful() ? response.body() : response.errorBody()) {
+                        if (call.isCanceled()) return;
+                        String raw = body == null ? "" : body.string();
+                        Globals.writeToMLOG("INFO", TAG + "/RAW", raw);
+                        CoordOnMapProbe.logChunks(raw, (part, chunk) ->
+                                Log.i(TAG, "RAW[" + part + "] " + chunk));
+                        deliverResult(call, button, response.isSuccessful() && !raw.isEmpty(),
+                                status + (raw.isEmpty() ? "\nПорожня відповідь."
+                                        : "\nВідповідь записано в m_log і Logcat: " + TAG));
+                    } catch (IOException | RuntimeException error) {
+                        deliverResult(call, button, false, status + "\nНе вдалося обробити відповідь: "
+                                + error.getClass().getSimpleName());
                     }
                 }
 
                 @Override
-                public void onFailure(Call<WpDataServer> call, Throwable t) {
-                    Log.e("Exception","Error : " + t.getMessage());
-
+                public void onFailure(Call<ResponseBody> call, Throwable error) {
+                    deliverResult(call, button, false,
+                            "Не вдалося отримати відповідь: " + error.getClass().getSimpleName());
                 }
             });
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/downloadWPData", "Exception: " + e.getMessage());
-
-        }
-
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
-
-    }
-
-    // =================================== --- onCreate --- ========================================
-
-    private void setActivityContent() {
-        setContentView(R.layout.toolbar_new);
-        setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
-        TextView activity_title = (TextView) findViewById(R.id.activity_title);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        activity_title.setText(getString(R.string.title_activity_menu_main));
-    }
-
-
-    private void downloadTest() {
-        try {
-            StandartData data = new StandartData();
-            data.mod = "images_achieve";
-            data.act = "dynamic";
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(jsonObject ->{
-                        Log.e("RESULT", "dynamic >> " + jsonObject);
-                    }, throwable -> {
-                        Log.e("Error","dynamic error: " +throwable.getMessage());
-                    });
-
-
-        } catch (Exception e) {
-            Log.e("MenuMainTest", "Exception e.t:" + e);
+        } catch (RuntimeException error) {
+            finishProbe(button, false, "Не вдалося виконати запит: " + error.getClass().getSimpleName());
         }
     }
 
-    private void downloadTest2() {
-        try {
-            StandartData data = new StandartData();
-            data.mod = "images_achieve";
-            data.act = "dynamic_photo";
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD_RX(RetrofitBuilder.contentType, convertedObject)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(jsonObject ->{
-                        Log.e("RESULT", "dynamic_photo >> " + jsonObject);
-                    }, throwable -> {
-                        Log.e("Error","dynamic_photo error: " +throwable.getMessage());
-                    });
-
-
-        } catch (Exception e) {
-            Log.e("MenuMainTest", "Exception e.t:" + e);
-        }
-    }
-
-    private boolean isQuestionAnswersUploading = false;
-
-    private static final long TEST_MIN_QUESTION_ANSWER_ID = 1781248749450L;
-
-    public void uploadQuestionAnswersTest() {
-        if (isQuestionAnswersUploading) return;
-
-        isQuestionAnswersUploading = true;
-
-        try {
-            StandartData data = new StandartData();
-            data.mod = "quest_data";
-            data.act = "add_row";
-
-            List<QuestionAnswerDB> list =
-                    SQL_DB.questionAnswerDao().getAllForUploadTest(TEST_MIN_QUESTION_ANSWER_ID);
-
-            if (list == null || list.isEmpty()) {
-                Log.e("QuestionAnswerUpload", "Нет данных для выгрузки");
-                isQuestionAnswersUploading = false;
-                return;
-            }
-
-            List<QuestionAnswerUpload> dataList = new ArrayList<>();
-
-            for (QuestionAnswerDB item : list) {
-                dataList.add(QuestionAnswerUpload.fromDb(item));
-            }
-
-            data.data = dataList;
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = gson.fromJson(json, JsonObject.class);
-
-            Log.e("QuestionAnswerUpload", "request: " + convertedObject);
-
-            Globals.writeToMLOG(
-                    "INFO",
-                    "uploadQuestionAnswersTest",
-                    "request: " + convertedObject
-            );
-
-            Call<QuestionAnswerUploadResponse> call =
-                    RetrofitBuilder.getRetrofitInterface()
-                            .QUESTION_ANSWER_UPLOAD(
-                                    RetrofitBuilder.contentType,
-                                    convertedObject
-                            );
-
-            call.enqueue(new Callback<QuestionAnswerUploadResponse>() {
-                @Override
-                public void onResponse(
-                        Call<QuestionAnswerUploadResponse> call,
-                        Response<QuestionAnswerUploadResponse> response
-                ) {
-                    try {
-                        Log.e("QuestionAnswerUpload", "response.code(): " + response.code());
-
-                        QuestionAnswerUploadResponse body = response.body();
-
-                        Log.e("QuestionAnswerUpload", "response.body(): " + new Gson().toJson(body));
-
-                        Globals.writeToMLOG(
-                                "INFO",
-                                "uploadQuestionAnswersTest/onResponse",
-                                "response.code(): " + response.code()
-                        );
-
-                        Globals.writeToMLOG(
-                                "INFO",
-                                "uploadQuestionAnswersTest/onResponse",
-                                "response.body(): " + new Gson().toJson(body)
-                        );
-
-                        if (response.isSuccessful()
-                                && body != null
-                                && Boolean.TRUE.equals(body.state)) {
-
-                            Log.e("QuestionAnswerUpload", "Выгрузка успешна. Кол-во: " + list.size());
-
-                            Globals.writeToMLOG(
-                                    "INFO",
-                                    "uploadQuestionAnswersTest/onResponse",
-                                    "successful, count: " + list.size()
-                            );
-
-                            // Пока для теста ничего локально не обновляем.
-                            // Когда поймём точный ответ сервера, тут можно будет
-                            // сохранить mnenie_id / server id в локальную БД.
-
-                        } else {
-                            String error = body != null ? body.error : "body is null";
-
-                            Log.e("QuestionAnswerUpload", "Ошибка выгрузки: " + error);
-
-                            Globals.writeToMLOG(
-                                    "ERROR",
-                                    "uploadQuestionAnswersTest/onResponse",
-                                    "upload error: " + error
-                            );
-                        }
-
-                    } catch (Exception e) {
-                        Log.e("QuestionAnswerUpload", "Exception: " + e);
-
-                        Globals.writeToMLOG(
-                                "ERROR",
-                                "uploadQuestionAnswersTest/onResponse/catch",
-                                "Exception: " + e
-                        );
-
-                    } finally {
-                        isQuestionAnswersUploading = false;
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<QuestionAnswerUploadResponse> call, Throwable t) {
-                    Log.e("QuestionAnswerUpload", "Throwable: " + t);
-
-                    Globals.writeToMLOG(
-                            "ERROR",
-                            "uploadQuestionAnswersTest/onFailure",
-                            "Throwable: " + t
-                    );
-
-                    isQuestionAnswersUploading = false;
-                }
-            });
-
-        } catch (Exception e) {
-            Log.e("QuestionAnswerUpload", "Exception: " + e);
-
-            Globals.writeToMLOG(
-                    "ERROR",
-                    "uploadQuestionAnswersTest/catch",
-                    "Exception: " + e
-            );
-
-            isQuestionAnswersUploading = false;
-        }
-    }
-
-
-    private static final String HTTP_LOG_TAG = "TRADE_MARKS_HTTP";
-    private static final int LOG_CHUNK_SIZE = 3500;
-
-    private final Gson logGson = new GsonBuilder()
-            .setPrettyPrinting()
-            .serializeNulls()
-            .create();
-
-    public void downloadTradeMarksTable() {
-        Log.e(
-                "SERVER_REALM_DB_UPDATE",
-                "downloadTradeMarksTable START"
-        );
-
-        String mod = "data_list";
-        String act = "tovar_manufacturer_list";
-
-        String[] ids = {
-                "3573",
-                "319",
-                "320",
-                "18"
-        };
-
-        Call<TradeMarkResponse> call =
-                RetrofitBuilder
-                        .getRetrofitInterface()
-                        .GET_TRADE_MARKS_T(mod, act, ids);
-
-        Log.e(
-                "TRADE_MARKS_HTTP",
-                "REQUEST: " + call.request().method()
-                        + " " + call.request().url()
-        );
-
-        call.enqueue(new Callback<TradeMarkResponse>() {
-            @Override
-            public void onResponse(
-                    Call<TradeMarkResponse> call,
-                    Response<TradeMarkResponse> response
-            ) {
-                Log.e(
-                        "TRADE_MARKS_HTTP",
-                        "RESPONSE CODE: " + response.code()
-                );
-
-                Log.e(
-                        "TRADE_MARKS_HTTP",
-                        "RESPONSE URL: " + call.request().url()
-                );
-
-                TradeMarkResponse body = response.body();
-
-                if (response.isSuccessful() && body != null) {
-                    Log.e(
-                            "TRADE_MARKS_HTTP",
-                            "RESPONSE BODY: " + new Gson().toJson(body)
-                    );
-
-                    if (body.getState()) {
-                        if (body.getList() != null) {
-                            Log.e(
-                                    "SERVER_REALM_DB_UPDATE",
-                                    "TradeMarksTable.SIZE: "
-                                            + body.getList().size()
-                            );
-
-                            RealmManager.setTradeMarks(body.getList());
-                        } else {
-                            Log.e(
-                                    "SERVER_REALM_DB_UPDATE",
-                                    "TradeMarksTable list is NULL"
-                            );
-                        }
-                    } else {
-                        Log.e(
-                                "SERVER_REALM_DB_UPDATE",
-                                "Server returned state=false"
-                        );
-                    }
-
-//                    readyTradeMarksTable = true;
-                } else {
-//                    readyTradeMarksTable = false;
-
-                    try {
-                        String error = response.errorBody() != null
-                                ? response.errorBody().string()
-                                : "<empty error body>";
-
-                        Log.e(
-                                "TRADE_MARKS_HTTP",
-                                "ERROR BODY: " + error
-                        );
-                    } catch (Exception exception) {
-                        Log.e(
-                                "TRADE_MARKS_HTTP",
-                                "Failed to read error body",
-                                exception
-                        );
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(
-                    Call<TradeMarkResponse> call,
-                    Throwable throwable
-            ) {
-//                readyTradeMarksTable = false;
-//                syncInternetError = true;
-
-                Log.e(
-                        "TRADE_MARKS_HTTP",
-                        "REQUEST FAILED: " + call.request().url(),
-                        throwable
-                );
-            }
+    private void deliverResult(Call<ResponseBody> call, View button, boolean ok, String message) {
+        runOnUiThread(() -> {
+            if (call == activeRequest) finishProbe(button, ok, message);
         });
     }
 
-    private void logHttpRequest(Request request) {
-        StringBuilder logBuilder = new StringBuilder();
-
-        logBuilder.append("\n");
-        logBuilder.append("================ HTTP REQUEST ================\n");
-        logBuilder.append("Method: ").append(request.method()).append("\n");
-        logBuilder.append("URL: ").append(request.url()).append("\n");
-
-        logBuilder.append("\nHeaders:\n");
-        appendHeaders(logBuilder, request.headers());
-
-        logBuilder.append("\nBody:\n");
-
-        RequestBody requestBody = request.body();
-
-        if (requestBody == null) {
-            logBuilder.append("<empty>");
-        } else {
-            try {
-                Buffer buffer = new Buffer();
-                requestBody.writeTo(buffer);
-
-                Charset charset = StandardCharsets.UTF_8;
-                MediaType contentType = requestBody.contentType();
-
-                if (contentType != null) {
-                    Charset detectedCharset =
-                            contentType.charset(StandardCharsets.UTF_8);
-
-                    if (detectedCharset != null) {
-                        charset = detectedCharset;
-                    }
-                }
-
-                logBuilder.append(buffer.readString(charset));
-
-            } catch (Exception exception) {
-                logBuilder
-                        .append("<failed to read request body: ")
-                        .append(exception)
-                        .append(">");
-            }
-        }
-
-        logBuilder.append("\n================================================");
-
-        logLongText(HTTP_LOG_TAG, logBuilder.toString());
+    private void finishProbe(View button, boolean ok, String message) {
+        activeRequest = null;
+        logResult(message);
+        if (isFinishing() || isDestroyed()) return;
+        button.setEnabled(true);
+        new MessageDialogBuilder(this)
+                .setTitle("plan / options_list")
+                .setStatus(ok ? DialogStatus.INFO : DialogStatus.ERROR)
+                .setMessage(message)
+                .show();
     }
 
-    private void logHttpResponse(
-            Request request,
-            Response<?> response
-    ) {
-        StringBuilder logBuilder = new StringBuilder();
-
-        logBuilder.append("\n");
-        logBuilder.append("================ HTTP RESPONSE ================\n");
-        logBuilder.append("Request URL: ").append(request.url()).append("\n");
-        logBuilder.append("Request method: ").append(request.method()).append("\n");
-        logBuilder.append("HTTP code: ").append(response.code()).append("\n");
-        logBuilder.append("Message: ").append(response.message()).append("\n");
-        logBuilder.append("Successful: ").append(response.isSuccessful()).append("\n");
-
-        if (response.raw() != null) {
-            logBuilder
-                    .append("Protocol: ")
-                    .append(response.raw().protocol())
-                    .append("\n");
-        }
-
-        logBuilder.append("\nHeaders:\n");
-        appendHeaders(logBuilder, response.headers());
-
-        logBuilder.append("\nBody:\n");
-
-        if (response.isSuccessful()) {
-            Object responseBody = response.body();
-
-            if (responseBody == null) {
-                logBuilder.append("<null>");
-            } else {
-                try {
-                    logBuilder.append(logGson.toJson(responseBody));
-                } catch (Exception exception) {
-                    logBuilder
-                            .append("<failed to serialize response body>\n")
-                            .append("Body.toString(): ")
-                            .append(responseBody)
-                            .append("\n")
-                            .append("Error: ")
-                            .append(exception);
-                }
-            }
-        } else {
-            ResponseBody errorBody = response.errorBody();
-
-            if (errorBody == null) {
-                logBuilder.append("<empty error body>");
-            } else {
-                try {
-                    /*
-                     * string() читает errorBody только один раз.
-                     * Если он нужен ниже по коду, сохрани строку
-                     * в отдельную переменную и используй её повторно.
-                     */
-                    logBuilder.append(errorBody.string());
-                } catch (IOException exception) {
-                    logBuilder
-                            .append("<failed to read error body: ")
-                            .append(exception)
-                            .append(">");
-                }
-            }
-        }
-
-        logBuilder.append("\n=================================================");
-
-        logLongText(HTTP_LOG_TAG, logBuilder.toString());
+    private static void logResult(String message) {
+        for (String line : message.split("\n")) Log.i(TAG, line);
+        Globals.writeToMLOG("INFO", TAG, message);
     }
 
-    private void appendHeaders(
-            StringBuilder logBuilder,
-            Headers headers
-    ) {
-        if (headers == null || headers.size() == 0) {
-            logBuilder.append("<empty>\n");
-            return;
+    @Override
+    protected void onDestroy() {
+        if (activeRequest != null) {
+            activeRequest.cancel();
+            activeRequest = null;
         }
-
-        for (int index = 0; index < headers.size(); index++) {
-            String headerName = headers.name(index);
-            String headerValue = headers.value(index);
-
-            logBuilder
-                    .append(headerName)
-                    .append(": ")
-                    .append(headerValue)
-                    .append("\n");
-        }
-    }
-
-    private void logLongText(
-            String tag,
-            String text
-    ) {
-        if (text == null) {
-            Log.e(tag, "<null>");
-            return;
-        }
-
-        int textLength = text.length();
-
-        for (int start = 0; start < textLength; start += LOG_CHUNK_SIZE) {
-            int end = Math.min(start + LOG_CHUNK_SIZE, textLength);
-
-            Log.e(
-                    tag,
-                    text.substring(start, end)
-            );
-        }
+        super.onDestroy();
     }
 }

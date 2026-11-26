@@ -13,6 +13,17 @@ public class PremiumVisitRequestsTest {
     private static final String DATE = "2026-11-12";
 
     @Test
+    public void optionsForSingleVisitDoNotRequireDateFilters() {
+        JsonObject request = OptionsExchange.createRequest(null, null, "1261126041569061574");
+        assertEquals("plan", request.get("mod").getAsString());
+        assertEquals("options_list", request.get("act").getAsString());
+        assertTrue(request.get("code_dad2").getAsJsonPrimitive().isString());
+        assertEquals("1261126041569061574", request.get("code_dad2").getAsString());
+        assertFalse(request.has("date_from"));
+        assertFalse(request.has("date_to"));
+    }
+
+    @Test
     public void optionsKeepExactVisitIdAndDate() {
         JsonObject request = OptionsExchange.createRequest(DATE, DATE, DAD2);
 

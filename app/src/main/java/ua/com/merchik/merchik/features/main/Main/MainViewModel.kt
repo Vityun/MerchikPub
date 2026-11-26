@@ -300,7 +300,8 @@ data class ProductCodeEditorRowUi(
     val value: String = "",
     val value2: String = "",
     val choices: List<InlineChoiceUi> = emptyList(),
-    val choices2: List<InlineChoiceUi> = emptyList()
+    val choices2: List<InlineChoiceUi> = emptyList(),
+    val faceInputLimit: Int = FaceValue.MAX_INPUT
 )
 
 enum class ProductCodeEditorMode {
@@ -884,7 +885,7 @@ abstract class MainViewModel(
     fun updateProductCodeValue(itemId: Long, rowId: String, newValue: String) {
         val row = findEditorRow(itemId, rowId) ?: return
         if (row.option.getOptionControlName() == Globals.OptionControlName.FACE
-            && !FaceSaveGuard.checkInputLimit(context, newValue)) return
+            && !FaceSaveGuard.checkInputLimit(context, newValue, row.faceInputLimit)) return
 
         val prepared = when (row.kind) {
             InlineEditorKind.NUMBER -> runCatching {

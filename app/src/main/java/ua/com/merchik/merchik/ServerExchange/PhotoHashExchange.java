@@ -44,7 +44,11 @@ public final class PhotoHashExchange {
         Single.fromCallable(() -> refreshSync(context, scope)).subscribeOn(Schedulers.io())
                 .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
                 .doFinally(() -> { synchronized (RUNNING) { RUNNING.remove(context); } })
-                .subscribe(count -> success.run(), error -> failure.run());
+                .subscribe(count -> {
+                    try { context.check(); }
+                    catch (IllegalStateException changed) { failure.run(); return; }
+                    success.run();
+                }, error -> failure.run());
     }
 
     private static int refreshSync(Context context) throws Exception {
@@ -56,11 +60,44 @@ public final class PhotoHashExchange {
         List<StackPhotoDB> snapshots;
         try (Realm realm = Realm.getDefaultInstance()) {
             io.realm.RealmQuery<StackPhotoDB> query = realm.where(StackPhotoDB.class);
-            if (scope == null) query.equalTo("get_on_server", 0);
+            if (scope == null) query.equalTo("get_on_server", 0)
+                    .isNotNull("time_event").isNotNull("client_id").isNotNull("addr_id")
+                    .beginGroup().isNotNull("photo_hash").or().equalTo("photo_type", 31)
+                    .in("example_id", new String[]{"78", "94"}).equalTo("commentUpload", true).endGroup();
             else query.in("id", scope.toArray(new Integer[0]));
-            snapshots = realm.copyFromRealm(query
-                    .isNotNull("photo_hash").isNotNull("time_event")
-                    .isNotNull("client_id").isNotNull("addr_id").findAll());
+            snapshots = realm.copyFromRealm(query.findAll());
+            for (StackPhotoDB snapshot : snapshots) {
+                if (!PhotoEvidencePolicy.isUsableHash(snapshot.getPhoto_hash())
+                        && VisitPhotoUploadPolicy.requiresWarehouseComment(snapshot)
+                        && !VisitPhotoUploadPolicy.hasServerId(snapshot)
+                        && (scope != null || (snapshot.isCommentUpload() && VisitPhotoUploadPolicy.alreadyUploaded(snapshot)))) {
+                    String hash;
+                    try {
+                        hash = PhotoEvidencePolicy.fileMd5(snapshot.getPhoto_num());
+                    } catch (java.io.IOException | SecurityException unreadable) {
+                        hash = null;
+                    }
+                    if (!PhotoEvidencePolicy.isUsableHash(hash)) {
+                        log("WARN", "FTS hash unavailable localId=" + snapshot.getId());
+                        continue;
+                    }
+                    final String recovered = hash;
+                    realm.executeTransaction(tx -> {
+                        context.check();
+                        StackPhotoDB current = tx.where(StackPhotoDB.class).equalTo("id", snapshot.getId()).findFirst();
+                        if (current != null && current.getCode_dad2() == snapshot.getCode_dad2()
+                                && current.getCreate_time() == snapshot.getCreate_time()
+                                && Objects.equals(current.getPhoto_num(), snapshot.getPhoto_num())
+                                && VisitPhotoUploadPolicy.requiresWarehouseComment(current)
+                                && !VisitPhotoUploadPolicy.hasServerId(current)
+                                && !PhotoEvidencePolicy.isUsableHash(current.getPhoto_hash())) {
+                            current.setPhoto_hash(recovered);
+                            snapshot.setPhoto_hash(recovered);
+                            log("INFO", "FTS hash restored localId=" + snapshot.getId());
+                        }
+                    });
+                }
+            }
         }
         TreeSet<String> hashes = new TreeSet<>();
         for (StackPhotoDB photo : snapshots) {
@@ -94,6 +131,20 @@ public final class PhotoHashExchange {
                             continue;
                         }
                         StackPhotoDB snapshot = matches.get(0);
+                        if (scope != null) {
+                            boolean ambiguous = false;
+                            for (StackPhotoDB other : transaction.where(StackPhotoDB.class)
+                                    .equalTo("photo_hash", row.imgHash).findAll()) {
+                                if (other.getId() != snapshot.getId() && PhotoMetadataPolicy.matchesHashResponse(other, row)) {
+                                    ambiguous = true;
+                                    break;
+                                }
+                            }
+                            if (ambiguous) {
+                                log("WARN", "FTS ambiguous hash match localId=" + snapshot.getId());
+                                continue;
+                            }
+                        }
                         int serverMatches = 0;
                         for (ModImagesViewList candidate : rows) {
                             if (PhotoMetadataPolicy.matchesHashResponse(snapshot, candidate)) serverMatches++;

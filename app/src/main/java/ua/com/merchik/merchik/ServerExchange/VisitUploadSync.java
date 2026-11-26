@@ -133,13 +133,14 @@ public final class VisitUploadSync {
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2);
         if (wp == null) return false;
         List<StackPhotoDB> photos = VisitUploadRows.photos(wp);
-        if (batch.merge(VisitUploadRows.collect(wp, batch)) || !VisitPhotoUploadPolicy.allReady(batch, photos)) {
+        if (batch.merge(VisitUploadRows.collect(wp, batch)) || !VisitPhotoUploadPolicy.allReady(batch, photos)
+                || !batch.allAcknowledged(VisitPhotoUploadPolicy.pendingServerIds(batch, photos))) {
             batch.complete = false;
             save(batch);
             MAIN.post(WAKE);
             return false;
         }
-        return batch.allAcknowledged(VisitPhotoUploadPolicy.pendingServerIds(batch, photos));
+        return true;
     }
 
     public static void resume() {
@@ -186,6 +187,7 @@ public final class VisitUploadSync {
         boolean photosBlocked;
         boolean ownsTaskComments;
         boolean ownsAchievements;
+        final Set<Integer> attemptedPhotoLookups = new HashSet<>();
         final Set<VisitUploadBatch.Kind> deferred = new HashSet<>();
 
         Run(VisitUploadBatch batch) { this.batch = batch; }
@@ -250,7 +252,25 @@ public final class VisitUploadSync {
                 if (!photosBlocked && !VisitPhotoUploadPolicy.allReady(batch, photos)) { MAIN.post(this::start); return; }
                 List<VisitUploadBatch.Row> sent = new ArrayList<>(batch.next(deferred, pendingPhotoIds));
                 if (sent.isEmpty()) {
+                    Set<Integer> lookup = new HashSet<>();
+                    for (StackPhotoDB photo : photos) {
+                        if (photo.getCode_dad2() == batch.dad2 && VisitPhotoUploadPolicy.requiresWarehouseComment(photo)
+                                && pendingPhotoIds.contains(String.valueOf(photo.getId()))
+                                && attemptedPhotoLookups.add(photo.getId())) lookup.add(photo.getId());
+                    }
+                    if (!lookup.isEmpty()) {
+                        log("RESOLVE FTS photo IDs local=" + lookup);
+                        PhotoHashExchange.refreshVisit(lookup, () -> guarded(() -> MAIN.post(this::sendNext)),
+                                () -> guarded(() -> fail("fts_photo_id_lookup_failed local=" + lookup)));
+                        return;
+                    }
                     if (!batch.allAcknowledged(pendingPhotoIds) || !VisitPhotoUploadPolicy.allReady(batch, photos)) {
+                        for (VisitUploadBatch.Row row : batch.rows.values()) {
+                            if (row.requiredWarehouseComment && (row.acknowledgement == null || !row.applied)) {
+                                log("WAIT FTS comment local=" + row.id + ", reason="
+                                        + (row.missingCommentField() == null ? "set_comment_unconfirmed" : row.missingCommentField()));
+                            }
+                        }
                         fail("unconfirmed_queues=" + deferred + ", photos=" + photosBlocked);
                         return;
                     }

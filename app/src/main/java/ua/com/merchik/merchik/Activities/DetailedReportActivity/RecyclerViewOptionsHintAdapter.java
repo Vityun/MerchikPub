@@ -57,7 +57,8 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
                 boolean saved;
                 switch (dataType){
                     case ("face") :
-                        if (!FaceSaveGuard.checkInputLimit(mContext, recentItem.getValue())) return;
+                        if (!FaceSaveGuard.checkInputLimit(mContext, recentItem.getValue(),
+                                FaceSaveGuard.inputLimitForRow(reportPrepareTovar))) return;
                         String face;
                         try {
                             face = FaceValue.input(recentItem.getValue());

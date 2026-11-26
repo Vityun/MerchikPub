@@ -1,6 +1,10 @@
 package ua.com.merchik.merchik.Utils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.function.BooleanSupplier;
 
 public final class PhotoEvidencePolicy {
@@ -25,6 +29,19 @@ public final class PhotoEvidencePolicy {
 
     public static boolean isReadableNonEmptyFile(File file) {
         return file != null && file.isFile() && file.canRead() && file.length() > 0;
+    }
+
+    public static String fileMd5(String path) throws IOException {
+        if (!hasLocalPhoto(path)) return null;
+        try (FileInputStream input = new FileInputStream(path)) {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) md5.update(buffer, 0, read);
+            return String.format(java.util.Locale.ROOT, "%032x", new java.math.BigInteger(1, md5.digest()));
+        } catch (NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException(impossible);
+        }
     }
 
     public static boolean isReadyPhoto(String serverId, String path) {

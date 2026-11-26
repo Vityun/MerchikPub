@@ -10,10 +10,14 @@ public final class FaceValue {
 
     /** Input-only bound, checked before rounding. Format validation remains in CountValue. */
     public static boolean exceedsInputLimit(String value) {
+        return exceedsInputLimit(value, MAX_INPUT);
+    }
+
+    public static boolean exceedsInputLimit(String value, int limit) {
         if (value == null || value.trim().isEmpty()) return false;
         try {
             return new BigDecimal(value.trim().replace(',', '.'))
-                    .compareTo(BigDecimal.valueOf(MAX_INPUT)) > 0;
+                    .compareTo(BigDecimal.valueOf(limit)) > 0;
         } catch (NumberFormatException e) {
             return false;
         }

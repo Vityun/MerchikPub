@@ -3733,7 +3733,8 @@ class TovarDBViewModel @Inject constructor(
                     value = currentValue,
                     value2 = value2,
                     choices = choices,
-                    choices2 = secondChoices
+                    choices2 = secondChoices,
+                    faceInputLimit = FaceSaveGuard.inputLimitForProduct(tovar)
                 )
 
             }

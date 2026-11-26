@@ -133,8 +133,9 @@ public final class ShelfLengthEntry {
         });
         editor.setOperation(DialogData.Operations.Number, face ? current.getFace() : String.valueOf(current.getAmount()),
                 Collections.emptyMap(), () -> {
-                    if (face && FaceValue.exceedsInputLimit(editor.getOperationResult())) {
-                        editor.rejectNumberInput(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
+                    int faceLimit = FaceSaveGuard.inputLimitForProduct(product);
+                    if (face && FaceValue.exceedsInputLimit(editor.getOperationResult(), faceLimit)) {
+                        editor.rejectNumberInput(FaceSaveGuard.inputLimitMessage(faceLimit));
                         return;
                     }
                     int value;

@@ -58,7 +58,8 @@ import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import ua.com.merchik.merchik.features.main.Main.RangeDate
 import ua.com.merchik.merchik.features.maps.data.mappers.WpSelectionDataHolder
 import ua.com.merchik.merchik.features.maps.domain.distanceMeters
-import ua.com.merchik.merchik.features.maps.domain.filterByDistance
+import ua.com.merchik.merchik.features.maps.domain.GeoPoint
+import ua.com.merchik.merchik.features.maps.domain.additionalWorksInRadius
 import ua.com.merchik.merchik.features.maps.domain.isValidLatLon
 import ua.com.merchik.merchik.features.maps.domain.parseWpPoint
 import ua.com.merchik.merchik.trecker
@@ -572,46 +573,14 @@ class WpDataDBViewModel @Inject constructor(
     }
 
     override suspend fun getItems(): List<DataItemUI> = withContext(Dispatchers.Default) {
-        val (currentLocation, currentLocationSource) = resolveCurrentLocation()
+        val additionalWorks = contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER ||
+                contextUI == ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT
+        val mapPoint = if (additionalWorks) AdditionalWorksMapSearchLocationHolder.get() else null
+        val (deviceLocation, locationSource) = if (mapPoint == null) resolveCurrentLocation() else null to "map_search"
 
-        val raw: List<WpDataDB> = when (contextUI) {
-
-
+        val rows: List<WpDataDB> = when (contextUI) {
             ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER,
-            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> {
-                val data = RealmManager.getAllWorkPlanForRNO_LIST()
-
-
-                Globals.writeToMLOG(
-                    "INFO",
-                    "WpDataDBViewModel.getItems",
-                    "contextUI=${contextUI.name}, source=RNO"
-                )
-
-                val selectedMapPoint = AdditionalWorksMapSearchLocationHolder.get()
-                val location = selectedMapPoint?.let { point ->
-                    Location("additional_works_map_search").apply {
-                        latitude = point.latitude
-                        longitude = point.longitude
-                    }
-                } ?: currentLocation
-                val locationSource = if (selectedMapPoint != null) "map_search" else currentLocationSource
-
-                val filtered = if (location != null) {
-                    filterByDistance(location, data, offsetDistanceMeters.value)
-                } else {
-                    data
-                }
-
-                Globals.writeToMLOG(
-                    "INFO",
-                    "WpDataDBViewModel.getItems/filterByDistance",
-                    "contextUI=${contextUI.name}, source=$locationSource, lat=${location?.latitude}, lon=${location?.longitude}, radius=${offsetDistanceMeters.value}, before=${data.size}, after=${filtered.size}"
-                )
-
-                filtered
-
-            }
+            ContextUI.WP_DATA_ADDITIONAL_IN_CONTAINER_MULT -> RealmManager.getAllWorkPlanForRNO_LIST()
 
             ContextUI.WP_DATA -> {
                 val root = Gson().fromJson(dataJson, JsonObject::class.java)
@@ -669,12 +638,22 @@ class WpDataDBViewModel @Inject constructor(
             }
         }
 
-        raw.forEach { wpDataDB ->
-            wpDataDB.distanceForTT = currentLocation?.let { from ->
+        val raw = if (additionalWorks) {
+            val origin = mapPoint?.let { GeoPoint(it.latitude, it.longitude) }
+                ?: deviceLocation?.let { GeoPoint(it.latitude, it.longitude) }
+            val radius = offsetDistanceMeters.value
+            additionalWorksInRadius(origin, rows, radius).also { filtered ->
+                Globals.writeToMLOG("INFO", "WpDataDBViewModel.getItems/filterByDistance",
+                    "contextUI=${contextUI.name}, source=$locationSource, radius=$radius, before=${rows.size}, after=${filtered.size}")
+            }
+        } else rows.onEach { wpDataDB ->
+            wpDataDB.distanceForTT = deviceLocation?.let { from ->
                 parseWpPoint(wpDataDB)
                     ?.takeIf { isValidLatLon(it.lat, it.lon) }
                     ?.let { distanceMeters(from, it).toDouble() }
             }
+        }
+        raw.forEach { wpDataDB ->
             // Определяем статус статуса
             val statusComment = try {
                 if (wpDataDB.status == 1) {

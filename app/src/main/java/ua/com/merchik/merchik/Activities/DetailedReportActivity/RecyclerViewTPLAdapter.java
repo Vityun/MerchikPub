@@ -207,6 +207,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             boolean price = item.getOptionControlName() == Globals.OptionControlName.PRICE
                     || item.getOptionControlName() == PRICE_BEFORE_PROMOTION;
             boolean face = item.getOptionControlName() == Globals.OptionControlName.FACE;
+            int faceLimit = face ? FaceSaveGuard.inputLimitForRow(dataRp) : FaceValue.MAX_INPUT;
             rawPriceValue = getDataFromReportPrepare(item, dataRp);
             textView.setText(TovarRequisites.optionTitleForVisit(item, dataRp.getCodeDad2()) + ": ");
             editText.setText(price && !editText.hasFocus() ? PriceDisplay.format(rawPriceValue) : rawPriceValue);
@@ -225,7 +226,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 @Override
                 public void afterTextChanged(Editable editable) {
                     if (updatingDisplay) return;
-                    if (face && FaceValue.exceedsInputLimit(editable.toString())) {
+                    if (face && FaceValue.exceedsInputLimit(editable.toString(), faceLimit)) {
                         updatingDisplay = true;
                         try {
                             editText.setText(rawPriceValue);
@@ -233,7 +234,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                         } finally {
                             updatingDisplay = false;
                         }
-                        editText.setError(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
+                        editText.setError(FaceSaveGuard.inputLimitMessage(faceLimit));
                         return;
                     }
                     rawPriceValue = editable.toString();

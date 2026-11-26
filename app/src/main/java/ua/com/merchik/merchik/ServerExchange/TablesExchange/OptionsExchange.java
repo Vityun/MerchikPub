@@ -61,7 +61,7 @@ public class OptionsExchange {
         });
     }
 
-    static JsonObject createRequest(String dateFrom, String dateTo, String dad2) {
+    public static JsonObject createRequest(String dateFrom, String dateTo, String dad2) {
         StandartData data = new StandartData();
         data.mod = "plan";
         data.act = "options_list";

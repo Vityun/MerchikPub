@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.features.main.options.PhotoReportCountPolicy;
 
 /** Only the conduct barrier; this policy never acknowledges normal photo uploads or metadata. */
 public final class VisitPhotoUploadPolicy {
@@ -31,9 +32,22 @@ public final class VisitPhotoUploadPolicy {
         return !error.isEmpty() && !"0".equals(error) && !"false".equalsIgnoreCase(error);
     }
 
+    public static boolean requiresWarehouseComment(StackPhotoDB photo) {
+        return Integer.valueOf(31).equals(photo.getPhoto_type())
+                && PhotoReportCountPolicy.isEmptyWarehouseSample(photo.getExample_id());
+    }
+
+    public static boolean alreadyUploaded(StackPhotoDB photo) {
+        return hasServerId(photo) || photo.getUpload_to_server() > 0 || photo.getGet_on_server() > 0;
+    }
+
     private static String identity(StackPhotoDB photo) {
         String hash = photo.getPhoto_hash();
         if (hash != null && !hash.isEmpty()) return "hash:" + hash;
+        return fileIdentity(photo);
+    }
+
+    private static String fileIdentity(StackPhotoDB photo) {
         String path = photo.getPhoto_num();
         return path == null || path.isEmpty() ? null : "file:" + photo.getCreate_time() + ":" + path;
     }
@@ -41,6 +55,15 @@ public final class VisitPhotoUploadPolicy {
     public static boolean record(VisitUploadBatch batch, StackPhotoDB sent, boolean successful, JsonObject body) {
         String identity = identity(sent);
         if (identity == null || !acceptsResponse(successful, body)) return false;
+        if (sent.getCode_dad2() == batch.dad2 && requiresWarehouseComment(sent)) {
+            // A rejected file cannot acquire the server ID needed to address its comment.
+            JsonElement list = body == null ? null : body.get("list");
+            if (list == null || !list.isJsonArray() || list.getAsJsonArray().size() != 1
+                    || !list.getAsJsonArray().get(0).isJsonObject()) return false;
+            JsonObject row = list.getAsJsonArray().get(0).getAsJsonObject();
+            if (!VisitUploadBatch.yes(row.get("state"))
+                    && !"photo_already_exist".equals(VisitUploadBatch.string(row, "error_type"))) return false;
+        }
         if (batch.photoHttpReceipts == null) batch.photoHttpReceipts = new java.util.LinkedHashMap<>();
         batch.photoHttpReceipts.put(String.valueOf(sent.getId()), identity);
         return true;
@@ -53,10 +76,12 @@ public final class VisitPhotoUploadPolicy {
 
     public static boolean ready(VisitUploadBatch batch, StackPhotoDB photo) {
         // Existing successful uploads do not need another request just to obtain a server ID.
-        if (hasServerId(photo) || photo.getUpload_to_server() > 0 || photo.getGet_on_server() > 0) return true;
+        if (alreadyUploaded(photo)) return true;
         String identity = identity(photo);
-        return identity != null && batch.photoHttpReceipts != null
-                && Objects.equals(identity, batch.photoHttpReceipts.get(String.valueOf(photo.getId())));
+        String receipt = batch.photoHttpReceipts == null ? null : batch.photoHttpReceipts.get(String.valueOf(photo.getId()));
+        // A receipt obtained before hash recovery still identifies the same capture.
+        return receipt != null && (Objects.equals(identity, receipt)
+                || (photo.getCode_dad2() == batch.dad2 && requiresWarehouseComment(photo) && receipt.equals(fileIdentity(photo))));
     }
 
     public static boolean allReady(VisitUploadBatch batch, List<StackPhotoDB> photos) {

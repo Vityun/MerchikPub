@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers;
 
 import ua.com.merchik.merchik.Utils.FaceValue;
+import ua.com.merchik.merchik.Options.Controls.ShelfLengthPolicy;
 
 import static ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods.EXCEPTION_BEFORE_DATE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -39,8 +40,21 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 
 public final class FaceSaveGuard {
 
-    public static final String INPUT_LIMIT_MESSAGE = "Кількість фейсів не може перевищувати "
-            + FaceValue.MAX_INPUT + ". Вкажіть значення від 0 до " + FaceValue.MAX_INPUT + ".";
+    public static int inputLimitForProduct(TovarDB product) {
+        return product != null && ShelfLengthPolicy.isMeasurementManufacturer(product.getManufacturerId())
+                ? 9999 : FaceValue.MAX_INPUT;
+    }
+
+    public static int inputLimitForRow(ReportPrepareDB row) {
+        if (row == null) return FaceValue.MAX_INPUT;
+        TovarDB product = row.tovarDB;
+        if (product == null && row.getTovarId() != null) product = TovarRealm.getById(row.getTovarId());
+        return inputLimitForProduct(product);
+    }
+
+    public static String inputLimitMessage(int limit) {
+        return "Кількість фейсів не може перевищувати " + limit + ". Вкажіть значення від 0 до " + limit + ".";
+    }
 
     private static final String CHECK_FACE_OPTION_ID = "159707";
     private static final int CHECK_FACE_OPTION_ID_INT = 159707;
@@ -50,8 +64,12 @@ public final class FaceSaveGuard {
     }
 
     public static boolean checkInputLimit(Context context, String value) {
-        if (!FaceValue.exceedsInputLimit(value)) return true;
-        showSimpleErrorDialog(context, "Зміни не збережені", INPUT_LIMIT_MESSAGE);
+        return checkInputLimit(context, value, FaceValue.MAX_INPUT);
+    }
+
+    public static boolean checkInputLimit(Context context, String value, int limit) {
+        if (!FaceValue.exceedsInputLimit(value, limit)) return true;
+        showSimpleErrorDialog(context, "Зміни не збережені", inputLimitMessage(limit));
         return false;
     }
 
@@ -62,7 +80,8 @@ public final class FaceSaveGuard {
             String newFaceRaw
     ) {
         try {
-            if (!checkInputLimit(context, newFaceRaw)) return FaceSaveCheckResult.error();
+            if (FaceValue.exceedsInputLimit(newFaceRaw)
+                    && !checkInputLimit(context, newFaceRaw, inputLimitForRow(rp))) return FaceSaveCheckResult.error();
 
             if (wpDataDB == null) {
                 showSimpleErrorDialog(

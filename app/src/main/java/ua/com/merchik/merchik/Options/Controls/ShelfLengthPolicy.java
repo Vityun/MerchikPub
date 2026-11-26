@@ -8,7 +8,7 @@ import java.time.ZoneId;
 import java.util.Collection;
 
 /** 1465: ПровДлинПП for an executor's visit. */
-final class ShelfLengthPolicy {
+public final class ShelfLengthPolicy {
     static final String MEASUREMENT_MANUFACTURER = "5491";
     static final String UNCATALOGUED_MEASUREMENT_PRODUCT = "175194";
     static final String UNKNOWN_GROUP = "Не визначено";
@@ -19,9 +19,13 @@ final class ShelfLengthPolicy {
 
     private ShelfLengthPolicy() {}
 
+    public static boolean isMeasurementManufacturer(String manufacturer) {
+        return MEASUREMENT_MANUFACTURER.equals(manufacturer);
+    }
+
     static boolean eligible(String visitClient, String rowClient, String cardClient, String manufacturer) {
         String owner = rowClient == null || rowClient.isEmpty() ? cardClient : rowClient;
-        return MEASUREMENT_MANUFACTURER.equals(manufacturer) && visitClient != null
+        return isMeasurementManufacturer(manufacturer) && visitClient != null
                 && !visitClient.isEmpty() && !"0".equals(visitClient) && visitClient.equals(owner);
     }
 

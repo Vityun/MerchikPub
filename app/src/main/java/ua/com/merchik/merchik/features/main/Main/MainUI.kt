@@ -3815,7 +3815,8 @@ fun ProductCodeInlineEditor(
                                 onMinus = { onMinus(row.rowId) },
                                 onPlus = { onPlus(row.rowId) },
                                 onValueChange = { onValueChange(row.rowId, it) },
-                                roundFace = row.option.getOptionControlName() == Globals.OptionControlName.FACE
+                                roundFace = row.option.getOptionControlName() == Globals.OptionControlName.FACE,
+                                faceInputLimit = row.faceInputLimit
                             )
                         }
 

@@ -127,10 +127,12 @@ public class DialogData {
     }
 
     private void submitNumberOperation(DialogClickListener listener) {
-        if (tovarOptions != null && tovarOptions.getOptionControlName() == Globals.OptionControlName.FACE
-                && FaceValue.exceedsInputLimit(result)) {
-            rejectNumberInput(FaceSaveGuard.INPUT_LIMIT_MESSAGE);
-            return;
+        if (tovarOptions != null && tovarOptions.getOptionControlName() == Globals.OptionControlName.FACE) {
+            int limit = FaceSaveGuard.inputLimitForRow(reportPrepareDB);
+            if (FaceValue.exceedsInputLimit(result, limit)) {
+                rejectNumberInput(FaceSaveGuard.inputLimitMessage(limit));
+                return;
+            }
         }
         if (priceInput) result = PriceDisplay.editorResult(result, originalPriceInput);
         runPriceOperation(result, () -> {

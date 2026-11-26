@@ -24,11 +24,15 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoUploadCall;
+import ua.com.merchik.merchik.ServerExchange.PhotoHashExchange;
+import ua.com.merchik.merchik.ServerExchange.PhotoCommentSync;
+import ua.com.merchik.merchik.ServerExchange.VisitPhotoUploadPolicy;
 import ua.com.merchik.merchik.Utils.JsonLogUtils;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.Utils.PhotoEvidencePolicy;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -91,6 +95,25 @@ public class PhotoLog {
      * 06.05.2024
      */
     public void sendPhotoOnServer(Context context, StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
+        if (VisitPhotoUploadPolicy.requiresWarehouseComment(photoDB)) {
+            StackPhotoDB stored = StackPhotoRealm.getById(photoDB.getId());
+            if (stored != null && stored.getCode_dad2() == photoDB.getCode_dad2()
+                    && VisitPhotoUploadPolicy.requiresWarehouseComment(stored) && VisitPhotoUploadPolicy.alreadyUploaded(stored)) {
+                Runnable sendComment = () -> {
+                    StackPhotoDB latest = StackPhotoRealm.getById(stored.getId());
+                    if (latest == null || !VisitPhotoUploadPolicy.hasServerId(latest)) {
+                        callback.onFailure(stored, "Фото вже вивантажено. Очікуємо ID для надсилання коментаря.");
+                        return;
+                    }
+                    if (latest.isCommentUpload()) PhotoCommentSync.flushPhoto(latest.getId());
+                    callback.onSuccess(latest, "Фото вже вивантажено.");
+                };
+                if (VisitPhotoUploadPolicy.hasServerId(stored)) sendComment.run();
+                else PhotoHashExchange.refreshVisit(java.util.Collections.singleton(stored.getId()), sendComment,
+                        () -> callback.onFailure(stored, "Не вдалося отримати ID вивантаженого фото."));
+                return;
+            }
+        }
         if (!PhotoEvidencePolicy.hasLocalPhoto(photoDB.getPhoto_num())) {
             callback.onFailure(photoDB, "Немає локального файлу фото для відправлення.");
             return;

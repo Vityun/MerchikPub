@@ -26,17 +26,20 @@ fun distanceMeters(from: Location, to: GeoPoint): Float {
     return results[0]
 }
 
-fun filterByDistance(
-    current: Location,
+internal fun additionalWorksInRadius(
+    origin: GeoPoint?,
     items: List<WpDataDB>,
     maxDistanceMeters: Float
 ): List<WpDataDB> {
-    return items
-        .mapNotNull { wp ->
-            val p = parseWpPoint(wp) ?: return@mapNotNull null
-            val d = distanceMeters(current, p)
-            if (d <= maxDistanceMeters) wp else null
+    return items.filter { wp ->
+        val meters = origin?.let { from ->
+            parseWpPoint(wp)?.takeIf { isValidLatLon(it.lat, it.lon) }?.let { to ->
+                haversine(from.lat, from.lon, to.lat, to.lon)
+            }
         }
+        wp.distanceForTT = meters
+        origin == null || (meters != null && meters <= maxDistanceMeters)
+    }
 }
 
 

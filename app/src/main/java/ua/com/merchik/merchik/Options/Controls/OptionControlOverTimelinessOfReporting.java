@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -10,15 +12,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
+import ua.com.merchik.merchik.data.Database.Room.CoordOnMapSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.CoordOnMapDao;
 
 public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
     public int OPTION_CONTROL_OverTimelinessOfReporting_ID = 1474; // "Контроль своевременности внесения отчетности"
@@ -137,8 +144,14 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         }
 
         // ===== 5.0. исключение по дате (как в 1С) =====
-        if (signal && planDay.isBefore(EXCEPTION_BEFORE_DATE)) {
+        boolean dateException = signal && planDay.isBefore(EXCEPTION_BEFORE_DATE);
+        boolean replacementException = signal && !dateException && hasReplacementException(optionDB,
+                SQL_DB == null ? null : SQL_DB.coordOnMapDao(), wpDataDB.getAddr_id(), Globals.userId);
+        if (dateException) {
             massageToUser = massageToUser + " Але, до '29.12.2025' надане виключення.";
+            signal = false;
+        } else if (replacementException) {
+            massageToUser += " Для вас діє виняток у зв’язку з аварійною заміною.";
             signal = false;
         } else if (wpDataDB.getUser_id() == 143565 || wpDataDB.getUser_id() == 243997) {
             massageToUser = massageToUser + " Але, для спiвробiтника " + wpDataDB.getUser_txt() + " зроблено виключення";
@@ -154,6 +167,7 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
         // ===== 6.0. фиксация сигнала в опции =====
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
+                if (replacementException) optionDB.setIndulgence(1);
                 if (signal) {
                     double penalty = calculatePenalty(wpDataDB);
                     optionDB.setIsSignal("1");
@@ -173,6 +187,17 @@ public class OptionControlOverTimelinessOfReporting<T> extends OptionControl {
 
         Log.d("test", "massageToUser: " + massageToUser);
         Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
+    }
+
+    static boolean hasReplacementException(OptionsDB option, CoordOnMapDao addresses, int addressId, int userId) {
+        return (option != null && option.getIndulgence() == 1)
+                || (addresses != null && isAddressOperator(addresses, addressId, userId));
+    }
+
+    static boolean isAddressOperator(CoordOnMapDao addresses, int addressId, int userId) {
+        if (addressId <= 0 || userId <= 0) return false;
+        CoordOnMapSDB address = addresses.getById(addressId);
+        return address != null && address.operatorId == userId;
     }
 
     // ======== твой рабочий метод, только заполняем startWorkDocSec ========

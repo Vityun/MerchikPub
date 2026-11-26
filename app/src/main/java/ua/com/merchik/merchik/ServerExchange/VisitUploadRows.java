@@ -58,7 +58,12 @@ final class VisitUploadRows {
             add(result, RP, VisitUploadBatch.string(upload, "element_id"), upload);
         }
         for (StackPhotoDB photo : photos(wp, batch)) {
-            if (photo.isCommentUpload() || batch.tracks(PHOTO_COMMENT, photo.getId())) add(result, PHOTO_COMMENT, photo.getId(), photo(photo, PHOTO_COMMENT));
+            boolean required = photo.getCode_dad2() == dad2 && VisitPhotoUploadPolicy.requiresWarehouseComment(photo);
+            if (required || photo.isCommentUpload() || batch.tracks(PHOTO_COMMENT, photo.getId())) {
+                VisitUploadBatch.Row comment = new VisitUploadBatch.Row(PHOTO_COMMENT, photo.getId(), photo(photo, PHOTO_COMMENT));
+                comment.requiredWarehouseComment = required;
+                result.add(comment);
+            }
             if (photo.isDviUpload() || batch.tracks(PHOTO_DVI, photo.getId())) add(result, PHOTO_DVI, photo.getId(), photo(photo, PHOTO_DVI));
             if (photo.isMarkUpload() || batch.tracks(PHOTO_SCORE, photo.getId())) add(result, PHOTO_SCORE, photo.getId(), photo(photo, PHOTO_SCORE));
         }
@@ -189,7 +194,9 @@ final class VisitUploadRows {
         for (StackPhotoDB photo : INSTANCE.where(StackPhotoDB.class).findAll()) {
             if (photo.getCode_dad2() == wp.getCode_dad2() || hashes.contains(photo.getPhoto_hash())
                     || localIds.contains(photo.getId()) || serverIds.contains(photo.getPhotoServerId())) {
-                if (ReportPhotos.isReady(photo)) result.add(INSTANCE.copyFromRealm(photo));
+                if (ReportPhotos.isReady(photo) || (photo.getCode_dad2() == wp.getCode_dad2()
+                        && VisitPhotoUploadPolicy.requiresWarehouseComment(photo)
+                        && VisitPhotoUploadPolicy.alreadyUploaded(photo))) result.add(INSTANCE.copyFromRealm(photo));
                 else if (batch != null) batch.discardUnavailablePhoto(photo.getId());
             }
         }

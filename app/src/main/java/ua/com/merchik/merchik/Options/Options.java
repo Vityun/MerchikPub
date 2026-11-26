@@ -118,6 +118,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlNewClientPriority;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
@@ -280,6 +281,10 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case OptionControlNewClientPriority.ID:
+                    new OptionControlNewClientPriority<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener)
+                            .showOptionMassage("");
+                    break;
                 case 157241:
                 case 157242:
                     new OptionControlCheckingReasonOutOfStock<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener).showOptionMassage("");
@@ -1887,6 +1892,13 @@ public class Options {
 
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
+            case OptionControlNewClientPriority.ID:
+                OptionControlNewClientPriority<?> priority = new OptionControlNewClientPriority<>(
+                        context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode == NNKMode.MAKE || ((mode == NNKMode.CHECK || mode == NNKMode.BLOCK) && priority.isBlockOption())) {
+                    priority.showOptionMassage(block);
+                }
+                return (unlockCodeResultListener == null ? priority.isBlockOption() : priority.isBlockOption2()) ? 1 : 0;
 
 //            case 156882:
 //                if (optionCurrent.getOptionControlId().equals("80977")) {

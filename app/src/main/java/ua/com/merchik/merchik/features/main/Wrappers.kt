@@ -1558,7 +1558,7 @@ object OptionsDBOverride {
                 "option_control_id, option_block_1, option_block_2, " +
                 "priznak, proveden, deleted, lesson_id, so, is_signal, notes, " +
                 "author_id, dt_change, sum_premiya, amount, amount_min, " +
-                "amount_max, price, percent, block_pns, key_option, " +
+                "amount_max, price, percent, block_pns, key_option, indulgence, " +
                 "option_descr, option_control_txt, option_control_descr, " +
                 "option_group, option_group_txt, timeColor"
 

@@ -90,7 +90,7 @@ public class RealmManager {
         Realm.init(context);
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
-                .schemaVersion(34)
+                .schemaVersion(35)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();

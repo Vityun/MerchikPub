@@ -60,7 +60,7 @@ public class RoomManager {
                         MIGRATION_83_84,
                         MIGRATION_84_85,
                         MIGRATION_85_86,
-                        MIGRATION_86_87, MIGRATION_87_88
+                        MIGRATION_86_87, MIGRATION_87_88, MIGRATION_88_89
                 )
                 .build();
 
@@ -1108,6 +1108,17 @@ public class RoomManager {
                             "WHERE tableName = 'achievements'"
             );
             achievementsSchemaMigrated = true;
+        }
+    };
+
+    public static final Migration MIGRATION_88_89 = new Migration(88, 89) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS coord_on_map ("
+                    + "ID INTEGER NOT NULL PRIMARY KEY, nm TEXT NOT NULL, "
+                    + "parent_id INTEGER NOT NULL DEFAULT 0, supervisor_id INTEGER NOT NULL DEFAULT 0, "
+                    + "city_id INTEGER NOT NULL DEFAULT 0, operator_id INTEGER NOT NULL DEFAULT 0, "
+                    + "author_id INTEGER NOT NULL DEFAULT 0, dt_update INTEGER NOT NULL DEFAULT 0)");
         }
     };
 

@@ -27,6 +27,75 @@ public class VisitPhotoUploadPolicyTest {
         return photo;
     }
 
+    private VisitUploadBatch.Row warehouseComment(String local, String server, String text) {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("element_id", local);
+        payload.addProperty("id", server);
+        payload.addProperty("text", text);
+        VisitUploadBatch.Row row = new VisitUploadBatch.Row(PHOTO_COMMENT, local, payload);
+        row.requiredWarehouseComment = true;
+        return row;
+    }
+
+    @Test public void onlyWarehouseTypeAndEmptyWarehouseSamplesRequireConfirmation() {
+        StackPhotoDB photo = photo(3907);
+        photo.setPhoto_type(31);
+        for (String sample : Arrays.asList("78", "94", "79", "", null)) {
+            photo.setExample_id(sample);
+            assertEquals("78".equals(sample) || "94".equals(sample), VisitPhotoUploadPolicy.requiresWarehouseComment(photo));
+        }
+        photo.setExample_id("78");
+        photo.setPhoto_type(39);
+        assertFalse(VisitPhotoUploadPolicy.requiresWarehouseComment(photo));
+    }
+
+    @Test public void bothCurrentCommentsNeedTheirOwnServerReceipt() {
+        VisitUploadBatch batch = new VisitUploadBatch();
+        String text = "Товару замовника на складі не знайшла";
+        VisitUploadBatch.Row first = warehouseComment("3908", "60222135", text);
+        VisitUploadBatch.Row missing = warehouseComment("3907", "", text);
+        batch.merge(Arrays.asList(first, missing));
+        Set<String> pending = Collections.singleton("3907");
+        assertEquals(Collections.singletonList(first), batch.next(Collections.emptySet(), pending));
+        JsonObject firstAck = json("{state:true,list:[{element_id:3908,state:true}]}");
+        assertTrue(batch.acknowledge(first, VisitUploadBatch.accepted(first, firstAck)));
+        first.applied = true;
+        assertFalse(batch.allAcknowledged(pending));
+
+        VisitUploadBatch.Row found = warehouseComment("3907", "60222141", text);
+        batch.merge(Collections.singletonList(found));
+        assertEquals(Collections.singletonList(found), batch.next());
+        assertNull(VisitUploadBatch.accepted(found, firstAck));
+        assertNull(VisitUploadBatch.accepted(found, json("{state:true,list:[{element_id:3907,state:false}]}")));
+        JsonObject ack = VisitUploadBatch.accepted(found, json("{state:true,list:[{element_id:3907,state:true}]}"));
+        assertNotNull(ack);
+        VisitUploadBatch.Row edited = warehouseComment("3907", "60222141", "Виправлений коментар");
+        batch.merge(Collections.singletonList(edited));
+        assertFalse(batch.acknowledge(found, ack));
+        assertFalse(batch.allAcknowledged());
+        assertTrue(batch.acknowledge(edited, ack));
+        edited.applied = true;
+        assertTrue(batch.allAcknowledged());
+        batch.merge(Collections.singletonList(warehouseComment("3907", "60222141", "1234567890")));
+        assertTrue(batch.next().isEmpty());
+        assertFalse(batch.allAcknowledged());
+    }
+
+    @Test public void recoveredHashDoesNotResendPreviouslyUploadedWarehouseFile() {
+        StackPhotoDB photo = photo(3907);
+        photo.setPhoto_type(31);
+        photo.setExample_id("94");
+        photo.setPhoto_hash("");
+        VisitUploadBatch batch = new VisitUploadBatch();
+        batch.merge(Collections.singletonList(warehouseComment("3907", "", "Valid warehouse comment")));
+        assertFalse(VisitPhotoUploadPolicy.record(batch, photo, true, json("{state:false,list:[{state:false,error_type:'missing_geo_coord'}]}")));
+        assertTrue(VisitPhotoUploadPolicy.record(batch, photo, true, json("{state:false,list:[{state:false,error_type:'photo_already_exist'}]}")));
+        photo.setPhoto_hash("restored");
+        assertTrue(batch.retryAfterConductFailure(1));
+        assertTrue(VisitPhotoUploadPolicy.ready(batch, photo));
+        assertFalse(batch.allAcknowledged(Collections.singleton("3907")));
+    }
+
     @Test public void httpSuccessNeedsNeitherServerIdNorPerPhotoAcceptance() {
         VisitUploadBatch batch = new VisitUploadBatch();
         StackPhotoDB photo = photo(1);

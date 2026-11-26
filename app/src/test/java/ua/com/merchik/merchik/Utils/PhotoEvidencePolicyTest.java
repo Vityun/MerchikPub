@@ -13,6 +13,7 @@ import java.util.function.BooleanSupplier;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PhotoEvidencePolicyTest {
@@ -98,6 +99,13 @@ public class PhotoEvidencePolicyTest {
 
     @Test public void cameraPlaceholderIsRejected() throws Exception {
         assertFalse(PhotoEvidencePolicy.isReadableNonEmptyFile(temporary.newFile("camera.jpg")));
+    }
+
+    @Test public void recoveryHashesActualFileBytesButNotCameraPlaceholder() throws Exception {
+        File file = temporary.newFile("camera-original.jpg");
+        assertNull(PhotoEvidencePolicy.fileMd5(file.getPath()));
+        Files.write(file.toPath(), new byte[]{97, 98, 99});
+        assertEquals("900150983cd24fb0d6963f7d28e17f72", PhotoEvidencePolicy.fileMd5(file.getPath()));
     }
 
     @Test public void onlyCapturedOrServerConfirmedPhotosBelongInTheProductJournal() throws Exception {

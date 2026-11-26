@@ -22,6 +22,7 @@ public final class PhotoCommentSync {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final PhotoCommentUploadPolicy POLICY = new PhotoCommentUploadPolicy();
     private static boolean forced;
+    private static final java.util.Set<String> forcedPhotoIds = new java.util.HashSet<>();
     private static long nextTickAt = Long.MAX_VALUE;
     private static final Runnable TIMER = () -> {
         nextTickAt = Long.MAX_VALUE;
@@ -36,6 +37,16 @@ public final class PhotoCommentSync {
 
     public static void flush() {
         request(true, false);
+    }
+
+    public static void flushPhoto(int localId) {
+        int user = Globals.getCurrentUserId();
+        MAIN.post(() -> {
+            if (user <= 0 || user != Globals.getCurrentUserId()) return;
+            ensureUser();
+            forcedPhotoIds.add(String.valueOf(localId));
+            schedule();
+        });
     }
 
     public static boolean hasPendingVisit(long dad2) {
@@ -63,11 +74,12 @@ public final class PhotoCommentSync {
             MAIN.removeCallbacks(TIMER);
             nextTickAt = Long.MAX_VALUE;
             forced = false;
+            forcedPhotoIds.clear();
         }
     }
 
     private static void schedule() {
-        if ((!forced && !Globals.autoSend) || POLICY.isRunning()) return;
+        if ((!forced && !Globals.autoSend && forcedPhotoIds.isEmpty()) || POLICY.isRunning()) return;
         long delay = POLICY.remaining(SystemClock.elapsedRealtime());
         long at = SystemClock.elapsedRealtime() + delay;
         if (at >= nextTickAt) return;
@@ -78,16 +90,20 @@ public final class PhotoCommentSync {
 
     private static void send() {
         ensureUser();
-        if (!forced && !Globals.autoSend) return;
+        if (!forced && !Globals.autoSend && forcedPhotoIds.isEmpty()) return;
         int user = Globals.getCurrentUserId();
         long token = POLICY.start(SystemClock.elapsedRealtime());
         if (token == 0) return;
         try {
             Exchange exchange = new Exchange();
             final PhotoInformation request = exchange.getPhotoInfoToUpload(Exchange.UploadPhotoInfo.COMMENT);
+            if (!forced && !Globals.autoSend && request != null && request.data != null) {
+                request.data.removeIf(photo -> !forcedPhotoIds.contains(photo.element_id));
+            }
             if (request == null || request.data == null || request.data.isEmpty()) {
                 POLICY.finish(token, true, SystemClock.elapsedRealtime());
                 forced = false;
+                forcedPhotoIds.clear();
                 return;
             }
             exchange.sendPhotoInformation(request, new ExchangeInterface.ExchangeResponseInterface() {

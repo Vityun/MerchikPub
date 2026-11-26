@@ -732,6 +732,12 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+    @retrofit2.SkipCallbackExecutor
+    @POST("mobile_app.php?")
+    Call<ResponseBody> rawMobileAppResponse(
+            @Header("ContentType") String content,
+            @Body JsonObject request);
+
     @POST("mobile_app.php?")
     Single<JsonObject> TEST_JSON_UPLOAD_RX(
             @Header("ContentType") String content,

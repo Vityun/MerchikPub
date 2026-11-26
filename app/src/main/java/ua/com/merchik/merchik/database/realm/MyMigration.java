@@ -394,6 +394,13 @@ public class MyMigration implements RealmMigration {
             }
         }
 
+        if (newVersion >= 35) {
+            RealmObjectSchema options = schema.get("OptionsDB");
+            if (options != null && !options.hasField("indulgence")) {
+                options.addField("indulgence", int.class);
+            }
+        }
+
     }
 }
 

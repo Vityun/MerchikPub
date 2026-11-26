@@ -118,6 +118,9 @@ public class OptionsDB extends RealmObject implements DataObjectUI {
     @SerializedName("key_option")
     @Expose
     private String keyOption;
+    @SerializedName("indulgence")
+    @Expose
+    private int indulgence;
     @SerializedName("option_txt")
     @Expose
     private String optionTxt;
@@ -418,6 +421,14 @@ public class OptionsDB extends RealmObject implements DataObjectUI {
 
     public void setKeyOption(String keyOption) {
         this.keyOption = keyOption;
+    }
+
+    public int getIndulgence() {
+        return indulgence;
+    }
+
+    public void setIndulgence(int indulgence) {
+        this.indulgence = indulgence;
     }
 
     public String getOptionTxt() {

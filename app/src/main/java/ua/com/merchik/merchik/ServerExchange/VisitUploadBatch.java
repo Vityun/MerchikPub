@@ -36,6 +36,14 @@ public final class VisitUploadBatch {
         public JsonObject data;
         public JsonObject acknowledgement;
         public boolean applied;
+        public boolean requiredWarehouseComment;
+
+        String missingCommentField() {
+            if (!requiredWarehouseComment) return null;
+            if (string(data, "text").length() <= 10) return "comment_too_short";
+            if (!positiveId(data.get("id"))) return "missing_photo_id";
+            return null;
+        }
 
         public Row(Kind kind, Object id, JsonObject data) {
             this.kind = kind;
@@ -59,7 +67,10 @@ public final class VisitUploadBatch {
         if (messageId <= 0) throw new IllegalArgumentException("Missing failure message ID");
         if (!recoveryMessages.add(messageId)) return false;
         // A new conduct failure requests a fresh attempt, not reuse of a rejected photo's HTTP receipt.
-        if (photoHttpReceipts != null) photoHttpReceipts.clear();
+        if (photoHttpReceipts != null) photoHttpReceipts.keySet().removeIf(id -> {
+            Row comment = rows.get(Kind.PHOTO_COMMENT + ":" + id);
+            return comment == null || !comment.requiredWarehouseComment;
+        });
         for (Row row : rows.values()) {
             // Replay updates only. Replaying acknowledged creates would duplicate server records.
             switch (row.kind) {
@@ -90,7 +101,8 @@ public final class VisitUploadBatch {
             Row previous = rows.get(row.key());
             // add_row creates one server identity per local achievement, including edits made in flight.
             if (row.kind == Kind.ACHIEVEMENT && previous != null && previous.acknowledgement != null) continue;
-            if (previous == null || !previous.data.equals(row.data)) {
+            if (previous == null || !previous.data.equals(row.data)
+                    || previous.requiredWarehouseComment != row.requiredWarehouseComment) {
                 rows.put(row.key(), row);
                 complete = false;
                 changed = true;
@@ -118,6 +130,7 @@ public final class VisitUploadBatch {
 
     public boolean allAcknowledged(java.util.Set<String> photosWithoutServerId) {
         for (Row row : rows.values()) {
+            if (row.missingCommentField() != null) return false;
             if (waitsForPhotoId(row, photosWithoutServerId)) continue;
             if (row.acknowledgement == null || !row.applied) return false;
         }
@@ -132,6 +145,7 @@ public final class VisitUploadBatch {
         List<Row> result = new ArrayList<>();
         for (Row row : rows.values()) {
             if (row.acknowledgement != null || deferred.contains(row.kind)) continue;
+            if (row.missingCommentField() != null) continue;
             if (waitsForPhotoId(row, photosWithoutServerId)) continue;
             if (!result.isEmpty() && result.get(0).kind != row.kind) continue;
             if (!result.isEmpty() && row.kind == Kind.AR

@@ -810,7 +810,8 @@ private fun rememberInlineInputValue(value: String, numeric: Boolean = false, ro
 fun NumberInput(
     value: String,
     onValueChange: (String) -> Unit,
-    roundFace: Boolean = false
+    roundFace: Boolean = false,
+    faceInputLimit: Int = FaceValue.MAX_INPUT
 ) {
     val context = LocalContext.current
     var inputState by remember { mutableStateOf(InlineNumberInputState()) }
@@ -819,7 +820,7 @@ fun NumberInput(
     BasicTextField(
         value = inputState.displayedValue(localValue),
         onValueChange = { input ->
-            if (roundFace && !FaceSaveGuard.checkInputLimit(context, input)) return@BasicTextField
+            if (roundFace && !FaceSaveGuard.checkInputLimit(context, input, faceInputLimit)) return@BasicTextField
             val prepared = runCatching { ua.com.merchik.merchik.Utils.CountValue.draft(input) }
                 .getOrNull() ?: return@BasicTextField
             inputState = inputState.onInput(prepared)
@@ -1048,7 +1049,8 @@ fun NumberEditorRow(
     onMinus: () -> Unit,
     onPlus: () -> Unit,
     onValueChange: (String) -> Unit,
-    roundFace: Boolean = false
+    roundFace: Boolean = false,
+    faceInputLimit: Int = FaceValue.MAX_INPUT
 ) {
     Row(
         modifier = Modifier
@@ -1067,7 +1069,8 @@ fun NumberEditorRow(
         NumberInput(
             value = value,
             onValueChange = onValueChange,
-            roundFace = roundFace
+            roundFace = roundFace,
+            faceInputLimit = faceInputLimit
         )
         StepperButton(text = "+", onClick = onPlus)
     }
