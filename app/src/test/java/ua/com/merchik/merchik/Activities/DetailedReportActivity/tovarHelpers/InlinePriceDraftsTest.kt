@@ -4,6 +4,39 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class InlinePriceDraftsTest {
+    @Test fun linkedDraftShowsBothPricesAndRefusalPreservesBothOriginals() {
+        for (field in listOf(current, before)) {
+            val original = InlinePriceValues("80", "100", "Product", priceMax = "110", averageSalary = 1000, linked = true)
+            val fixture = Fixture().apply { prices = original }
+            val controller = fixture.controller()
+            controller.change(field, "1")
+            controller.change(field, "200")
+            val preview = controller.drafts.value.getValue(field).prices
+            assertEquals(listOf("200", "200", "200"), listOf(preview.price, preview.priceMin, preview.priceMax))
+            controller.finish(field)
+            val warning = controller.nextError()!!
+            assertFalse(warning.draft.invalidPrice)
+            controller.refuseDiscount(warning)
+            assertEquals(original, fixture.prices)
+            assertEquals(0, fixture.writes)
+            assertTrue(controller.drafts.value.isEmpty())
+        }
+    }
+
+    @Test fun aNewLinkedEditSupersedesTheOtherFieldsDeferredWarning() {
+        val fixture = Fixture().apply { prices = InlinePriceValues("10", "10", "Product", averageSalary = 1000, linked = true) }
+        val controller = fixture.controller()
+        controller.change(current, "200")
+        controller.finish(current)
+        val stale = controller.nextError()!!
+        controller.change(before, "20")
+        controller.approveDiscount(stale)
+        controller.finish(before)
+        assertEquals(1, fixture.writes)
+        assertNull(controller.nextError())
+        assertTrue(controller.drafts.value.isEmpty())
+    }
+
     @Test
     fun clearingProductsDiscardsOnlyTheirDraftsAndDeferredWarnings() {
         val other = before.copy(itemId = 2, tovarId = "20")
@@ -94,6 +127,49 @@ class InlinePriceDraftsTest {
 
     private val current = InlinePriceField(1, "price", "10", false)
     private val before = InlinePriceField(1, "price_before_promotion", "10", true)
+
+    @Test fun refusingHighPriceLeavesOriginalPriceAndNoSavedPrefixes() {
+        for (field in listOf(current, before)) {
+            val f = Fixture().apply { prices = InlinePriceValues("40", "0", "Product", averageSalary = 15700) }
+            val editor = f.controller()
+            listOf("7", "78", "786").forEach { editor.change(field, it) }
+            assertNull(editor.nextError())
+            editor.finish(field)
+            val warning = editor.nextError()!!
+            assertEquals("785", warning.draft.exceededLimit!!.toPlainString())
+            editor.refuseDiscount(warning)
+            assertEquals(0, f.writes)
+            assertEquals("40", f.prices.price)
+            assertEquals("0", f.prices.priceMin)
+        }
+    }
+
+    @Test fun salaryApprovalUsesTheLimitShownAndSavesCurrentValueOnlyOnce() {
+        val f = Fixture().apply { prices = InlinePriceValues("40", "0", "Product", averageSalary = 15700) }
+        val editor = f.controller()
+        editor.change(current, "900")
+        editor.finish(current)
+        val old = editor.nextError()!!
+        f.prices = f.prices.copy(averageSalary = 16000)
+        editor.approveDiscount(old)
+        assertEquals(0, f.writes)
+        val fresh = editor.nextError()!!
+        assertEquals("800", fresh.draft.exceededLimit!!.toPlainString())
+        editor.approveDiscount(fresh)
+        editor.finishAll()
+        assertEquals(1, f.writes)
+        assertEquals("900", f.prices.price)
+        assertNull(editor.nextError())
+    }
+
+    @Test fun currentPriceAtLimitDoesNotWarnAboutAnUneditedHighBeforePrice() {
+        val f = Fixture().apply { prices = InlinePriceValues("40", "900", "Product", averageSalary = 15700) }
+        val editor = f.controller()
+        editor.change(current, "785")
+        editor.finish(current)
+        assertNull(editor.nextError())
+        assertEquals("785", f.prices.price)
+    }
 
     private class Fixture {
         var prices = InlinePriceValues("1234", "1235", "Product")

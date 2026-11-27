@@ -10,19 +10,23 @@ data class InlinePriceField(
     val beforePromotion: Boolean
 )
 
-data class InlinePriceValues(
+data class InlinePriceValues @JvmOverloads constructor(
     val price: String,
     val priceMin: String,
     val product: String,
     val discountPercent: Int = 0,
     val promotionName: String = "",
-    val priceMax: String = priceMin
+    val priceMax: String = priceMin,
+    val averageSalary: Int = 0,
+    val linked: Boolean = false
 ) {
     fun discountCheck() = PromotionPriceCheck(price, priceMax, discountPercent, promotionName)
     val invalidBefore: String? get() = PriceSaveGuard.invalidBeforePrice(price, priceMin, priceMax)
 }
 
 data class InlinePriceDraft(val value: String, val prices: InlinePriceValues) {
+    val exceededLimit get() = PriceSaveGuard.exceededSalaryLimit(value, prices.averageSalary)
+    val needsConfirmation get() = !invalidPrice && (exceededLimit != null || invalidDiscount)
     val invalidPrice: Boolean
         get() = prices.invalidBefore != null
     val invalidDiscount: Boolean
@@ -55,17 +59,22 @@ class InlinePriceDrafts(
     private fun draft(field: InlinePriceField, value: String): InlinePriceDraft {
         val entered = value.ifBlank { "0" }
         val current = readPrices(field)
-        val prices = if (field.beforePromotion) current.copy(priceMin = entered, priceMax = entered)
-        else current.copy(price = entered)
-        return InlinePriceDraft(entered, prices)
+        val edit = PriceSaveGuard.PriceEdit(current.price, current.priceMin, current.priceMax, entered,
+            field.beforePromotion, current.linked)
+        return InlinePriceDraft(entered, current.copy(price = edit.price, priceMin = edit.min, priceMax = edit.max))
     }
 
     fun change(field: InlinePriceField, value: String) {
+        val edit = draft(field, value)
+        if (edit.prices.linked && _drafts.value.keys.any { it.tovarId == field.tovarId && it != field }) {
+            // Both inputs now edit the same price. A deferred edit from the other input must not overwrite it.
+            discardProducts(setOf(field.tovarId))
+        }
         edited.add(field)
         finished.remove(field)
         reported.remove(field)
         pending.remove(field)
-        _drafts.value = _drafts.value + (field to draft(field, value))
+        _drafts.value = _drafts.value + (field to edit)
         persistDrafts()
         // Valid input still saves automatically; invalid prefixes never open a dialog.
         trySave(field)
@@ -76,7 +85,9 @@ class InlinePriceDrafts(
         val value = _drafts.value[field]?.value ?: return
         val current = draft(field, value)
         _drafts.value = _drafts.value + (field to current)
-        if (current.invalidPrice || current.invalidDiscount || value.isBlank() || value.endsWith(".")) return
+        // Don't commit prefixes of a price the user may ultimately refuse.
+        if ((current.prices.averageSalary > 0 || current.prices.linked) && field !in finished) return
+        if (current.invalidPrice || current.needsConfirmation || value.isBlank() || value.endsWith(".")) return
         if (!savePrice(field, value)) {
             // The transaction may reject a price changed by another editor/synchronization.
             _drafts.value = _drafts.value + (field to draft(field, value))

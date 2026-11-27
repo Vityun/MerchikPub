@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +58,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -98,6 +101,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -871,17 +875,35 @@ fun DecimalNumberInput(
     onFocusChange: (Boolean) -> Unit = {},
     onDone: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    formatAsPrice: Boolean = false
+    formatAsPrice: Boolean = false,
+    selectAllOnTap: (() -> Boolean)? = null
 ) {
     var localValue by rememberInlineInputValue(value, numeric = true)
     var inputState by remember { mutableStateOf(InlineNumberInputState()) }
     val currentValue = if (controlled) value else localValue
+    val displayed = inputState.displayedValue(currentValue, formatAsPrice)
+    var editor by remember { mutableStateOf(TextFieldValue(displayed)) }
+    val interactions = remember { MutableInteractionSource() }
+    val shouldSelect by rememberUpdatedState(selectAllOnTap)
+    val latestValue by rememberUpdatedState(currentValue)
+    if (selectAllOnTap != null) LaunchedEffect(interactions) {
+        interactions.interactions.collect {
+            if (it is PressInteraction.Release && inputState.focused && shouldSelect?.invoke() == true) {
+                val text = inputState.displayedValue(latestValue, formatAsPrice)
+                editor = TextFieldValue(text, TextRange(0, text.length))
+            }
+        }
+    }
 
     ValidationTooltip(errorMessage, inputState.focused && tooltipEnabled) {
         BasicTextField(
-            value = inputState.displayedValue(currentValue, formatAsPrice),
+            value = editor.copy(text = displayed),
+            interactionSource = interactions,
             onValueChange = { input ->
-                val prepared = normalizeDecimalNumberInput(input)
+                editor = input
+                if (input.text == displayed) return@BasicTextField
+                val prepared = normalizeDecimalNumberInput(input.text)
+                if (prepared != input.text) editor = input.copy(text = prepared)
                 inputState = inputState.onInput(prepared)
                 localValue = prepared.ifBlank { "0" }
 

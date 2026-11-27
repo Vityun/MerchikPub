@@ -90,8 +90,10 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
                     }
                     val builder = if (error.draft.invalidPrice) {
                         PriceSaveGuard.priceErrorDialog(activity, prices.product, prices.price, prices.invalidBefore)
-                    } else if (error.draft.invalidDiscount) {
-                        PriceSaveGuard.discountDialog(activity, prices.product, prices.discountCheck(),
+                    } else if (error.draft.needsConfirmation) {
+                        PriceSaveGuard.priceWarningDialog(activity, prices.product,
+                            prices.discountCheck().takeIf { error.draft.invalidDiscount }, error.draft.value,
+                            error.field.beforePromotion, error.draft.exceededLimit,
                             { drafts.approveDiscount(error) }, { drafts.refuseDiscount(error) }, onDismiss)
                     } else {
                         MessageDialogBuilder(activity)
@@ -104,7 +106,7 @@ internal fun InlinePriceEditorHost(viewModel: MainViewModel, context: Context, c
                     drafts.markShown(error)
                     dialog = builder
                     dialogVisible = true
-                    if (!error.draft.invalidDiscount) builder.setOnDismissListener(onDismiss)
+                    if (!error.draft.needsConfirmation) builder.setOnDismissListener(onDismiss)
                     builder.show()
                 }
             }
@@ -159,6 +161,9 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
     }
     val drafts by binding.drafts.drafts.collectAsState()
     val draft = drafts[field]
+    val linkedDraft = drafts.entries.firstOrNull { (other, edit) ->
+        other.tovarId == field.tovarId && other.beforePromotion != field.beforePromotion && edit.prices.linked
+    }?.value
     val focusRequest by binding.drafts.focusRequest.collectAsState()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -177,13 +182,14 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(row.title, Modifier.weight(1f), maxLines = 3)
         DecimalNumberInput(
-            value = draft?.value ?: row.value,
+            value = draft?.value ?: linkedDraft?.value ?: row.value,
             onValueChange = {
                 binding.viewModel.onInlinePriceInput(field)
                 binding.drafts.change(field, it)
             },
             controlled = true,
             formatAsPrice = true,
+            selectAllOnTap = { binding.viewModel.hasPromotion(field) },
             modifier = Modifier.focusRequester(focusRequester),
             errorMessage = if (draft?.invalidPrice == true) {
                 if (field.beforePromotion) {
@@ -191,6 +197,8 @@ internal fun ProductPriceEditorRow(itemId: Long, row: ProductCodeEditorRowUi, on
                 } else {
                     "АКЦИОННАЯ цена не может быть выше чем цена ДО начала акции (${PriceDisplay.format(draft.prices.invalidBefore)} грн)"
                 }
+            } else if (draft?.exceededLimit != null) {
+                "Введённая цена превышает предполагаемую возможную цену."
             } else if (draft?.invalidDiscount == true) {
                 "Проверьте цену ДО начала акции и текущую"
             } else null,

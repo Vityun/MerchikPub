@@ -33,7 +33,6 @@ import ua.com.merchik.merchik.MakePhoto.ProductPhotoCapture
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar.ViewHolder.getArticle
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.FaceSaveGuard
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PriceSaveGuard
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionPriceCheck
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.PromotionRequisite
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceDrafts
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.tovarHelpers.InlinePriceField
@@ -155,6 +154,7 @@ class TovarDBViewModel @Inject constructor(
         val optionsList2: MutableList<OptionsDB>?,
         val allTovarOptions: List<TovarOptions>,
         val displayPolicy: ProductCodeDisplayPolicy,
+        var linkedPriceProducts: Set<String>? = null,
         val reportPrepareByTovarId: MutableMap<String, ReportPrepareDB?> = mutableMapOf(),
         val rowsByItemAndMode: MutableMap<Pair<Long, ProductCodeEditorMode>, List<ProductCodeEditorRowUi>> = mutableMapOf(),
         var reportPrepareSnapshot: Map<String, TovarReportPrepareSnapshot>? = null
@@ -176,6 +176,15 @@ class TovarDBViewModel @Inject constructor(
     private var openedDefaultProductCodeRows = false
 
     private var inlinePriceSession: Pair<String, InlinePriceDrafts>? = null
+
+    private fun linkedPriceProducts(): Set<String> {
+        val cache = getOrCreateProductCodeSessionCache()
+        return cache.linkedPriceProducts ?: PriceSaveGuard.loadLinkedPriceProducts(cache.codeDad2)
+            .also { cache.linkedPriceProducts = it }
+    }
+
+    fun hasPromotion(field: InlinePriceField): Boolean =
+        RealmManager.getTovarReportPrepare(getCodeDad2String(), field.tovarId)?.akciya == "1"
 
     fun onInlinePriceInput(field: InlinePriceField) {
         val rp = RealmManager.getTovarReportPrepare(getCodeDad2String(), field.tovarId)
@@ -216,10 +225,11 @@ class TovarDBViewModel @Inject constructor(
                 val name = PriceSaveGuard.productLabel(field.tovarId, TovarRealm.getById(field.tovarId))
                 val promotion = PriceSaveGuard.getPromotionPriceCheck(rp, rp?.price, rp?.priceMax)
                 InlinePriceValues(rp?.price.orEmpty(), rp?.priceMin.orEmpty(), name,
-                    promotion.discountPercent, promotion.promotionName, rp?.priceMax.orEmpty())
+                    promotion.discountPercent, promotion.promotionName, rp?.priceMax.orEmpty(), Globals.getAverageSalary(),
+                    PriceSaveGuard.linksPrices(rp, linkedPriceProducts()))
             },
             savePrice = { field, value -> saveInlinePrice(dad2, field, value) },
-            saveConfirmedPrice = { field, value, prices -> saveInlinePrice(dad2, field, value, prices.discountCheck()) },
+            saveConfirmedPrice = { field, value, prices -> saveInlinePrice(dad2, field, value, prices) },
             onInputFinished = { field -> finishInlinePrice(dad2, field) },
             store = { drafts ->
                 val entries = JSONArray()
@@ -236,13 +246,14 @@ class TovarDBViewModel @Inject constructor(
         return session
     }
 
-    private fun saveInlinePrice(dad2: String, field: InlinePriceField, value: String, approval: PromotionPriceCheck? = null): Boolean {
+    private fun saveInlinePrice(dad2: String, field: InlinePriceField, value: String, approval: InlinePriceValues? = null): Boolean {
         if (dad2 != getCodeDad2String()) return false
         return try {
             val wp = RealmManager.getWorkPlanRowByCodeDad2(dad2.toLong()) ?: return false
             val rp = RealmManager.getTovarReportPrepare(dad2, field.tovarId) ?: createNewRPRow(field.tovarId, wp)
             // The guard validates against the current row inside the Realm transaction.
-            if (!PriceSaveGuard.saveInlinePrice(context, rp, value, field.beforePromotion, approval)) return false
+            if (!PriceSaveGuard.saveInlinePrice(context, rp, value, field.beforePromotion,
+                    approval?.discountCheck(), approval?.averageSalary ?: 0, linkedPriceProducts())) return false
             invalidateProductCodeItemCache(field.itemId, field.tovarId)
             onInlineRowPersisted(field.itemId, field.rowId)
             true
@@ -393,6 +404,7 @@ class TovarDBViewModel @Inject constructor(
         val rowControl = row.getOptionControlName()
         return (changedControl == OptionControlName.PRICE &&
                 rowControl == OptionControlName.PRICE_BEFORE_PROMOTION) ||
+                (changedControl == OptionControlName.PRICE_BEFORE_PROMOTION && rowControl == OptionControlName.PRICE) ||
                 ((changedControl == OptionControlName.PRICE ||
                 changedControl == OptionControlName.PRICE_BEFORE_PROMOTION) &&
                 (rowControl == OptionControlName.AKCIYA_ID || rowControl == OptionControlName.AKCIYA)) ||
@@ -832,6 +844,7 @@ class TovarDBViewModel @Inject constructor(
                 )
 
 
+                cache.linkedPriceProducts = PriceSaveGuard.linkedPriceProducts(cache.optionsList2, additionalRequirementsDBList)
                 if (additionalRequirementsDBList != null && additionalRequirementsDBList.isNotEmpty()) {
 //                    Log.e("DEL_TIME_NOTE", "additionalRequirementsDBList size: ${additionalRequirementsDBList.size}")
                     tovarList.map { item ->

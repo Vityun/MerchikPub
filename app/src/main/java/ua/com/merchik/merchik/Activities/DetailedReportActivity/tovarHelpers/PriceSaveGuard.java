@@ -9,7 +9,10 @@ import android.widget.Toast;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -18,6 +21,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ImagesTypeList;
 import ua.com.merchik.merchik.data.Database.Room.ImagesTypeListSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -43,17 +47,83 @@ public final class PriceSaveGuard {
 
     public static boolean savePrice(Context context, ReportPrepareDB snapshot, String value,
                                     boolean beforePromotion, boolean showError) {
-        return savePrice(context, snapshot, value, beforePromotion, showError, false, null);
+        return savePrice(context, snapshot, value, beforePromotion, showError, false, null, 0, null);
     }
 
     public static boolean saveInlinePrice(Context context, ReportPrepareDB snapshot, String value,
-                                          boolean beforePromotion, PromotionPriceCheck approval) {
-        return savePrice(context, snapshot, value, beforePromotion, false, true, approval);
+                                          boolean beforePromotion, PromotionPriceCheck approval, int approvedSalary,
+                                          Set<String> linkedProducts) {
+        return savePrice(context, snapshot, value, beforePromotion, false, true, approval, approvedSalary, linkedProducts);
+    }
+
+    public static boolean hasPrePromotionPriceOption(List<OptionsDB> options) {
+        if (options != null) for (OptionsDB option : options) {
+            if (!"1".equals(option.getDeleted()) && ("175121".equals(option.getOptionId())
+                    || "175121".equals(option.getOptionControlId()))) return true;
+        }
+        return false;
+    }
+
+    public static Set<String> linkedPriceProducts(List<OptionsDB> options, List<AdditionalRequirementsDB> requirements) {
+        if (!hasPrePromotionPriceOption(options) || requirements == null) return Collections.emptySet();
+        Set<String> ids = new HashSet<>();
+        for (AdditionalRequirementsDB requirement : requirements) {
+            String id = requirement.getTovarId();
+            if (id != null && !id.isEmpty() && !"0".equals(id)) ids.add(id);
+        }
+        return ids;
+    }
+
+    public static Set<String> loadLinkedPriceProducts(String dad2) {
+        long id;
+        try { id = Long.parseLong(dad2); }
+        catch (NumberFormatException ignored) { return Collections.emptySet(); }
+        List<OptionsDB> options = RealmManager.getTovarOptionInReportPrepare(dad2, null);
+        if (!hasPrePromotionPriceOption(options)) return Collections.emptySet();
+        WpDataDB visit = RealmManager.getWorkPlanRowByCodeDad2(id);
+        if (visit == null || visit.getDt() == null || AddressRealm.getAddressById(visit.getAddr_id()) == null)
+            return Collections.emptySet();
+        return linkedPriceProducts(options, AdditionalRequirementsRealm.getData3(visit,
+                AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT, null, null, 0));
+    }
+
+    public static boolean linksPrices(ReportPrepareDB row, Set<String> eligibleProducts) {
+        return row != null && isPromotionExplicitlyAbsent(row.getAkciya())
+                && eligibleProducts.contains(row.getTovarId());
+    }
+
+    /** The editor, confirmation dialog and transaction must validate the same resulting prices. */
+    public static final class PriceEdit {
+        public final String price, min, max;
+        private final boolean writeCurrent, writeBefore;
+
+        public PriceEdit(String price, String min, String max, String entered, boolean before, boolean link) {
+            writeCurrent = !before || link;
+            writeBefore = before || link;
+            this.price = writeCurrent ? entered : price;
+            this.min = writeBefore ? entered : min;
+            this.max = writeBefore ? entered : max;
+        }
+
+        void apply(ReportPrepareDB row) {
+            if (writeCurrent) row.setPrice(price);
+            if (writeBefore) {
+                row.setPriceMin(min);
+                row.setPriceMax(max);
+            }
+        }
+    }
+
+    private static PriceEdit edit(ReportPrepareDB row, String entered, boolean before, Set<String> products) {
+        boolean link = isPromotionExplicitlyAbsent(row.getAkciya()) && linksPrices(row,
+                products != null ? products : loadLinkedPriceProducts(row.getCodeDad2()));
+        return new PriceEdit(row.getPrice(), row.getPriceMin(), row.getPriceMax(), entered, before, link);
     }
 
     private static boolean savePrice(Context context, ReportPrepareDB snapshot, String value,
                                      boolean beforePromotion, boolean showError,
-                                     boolean checkDiscount, PromotionPriceCheck approval) {
+                                     boolean checkDiscount, PromotionPriceCheck approval, int approvedSalary,
+                                     Set<String> linkedProducts) {
         if (context == null) {
             Globals.writeToMLOG("ERROR", "PriceSaveGuard", "No editor context; price not saved");
             return false;
@@ -67,42 +137,39 @@ public final class PriceSaveGuard {
         String[] missingBeforePrice = {null};
         boolean[] markPromotionPresent = {false};
         String[] promotionTypeToSave = {null};
+        PriceEdit[] accepted = {null};
         long changedAt = System.currentTimeMillis() / 1000;
         boolean saved = ReportPrepareRealm.updateFields(snapshot, current -> {
-            String price = beforePromotion ? current.getPrice() : value;
-            String priceMin = beforePromotion ? value : current.getPriceMin();
-            String priceMax = beforePromotion ? value : current.getPriceMax();
-            String invalidBefore = invalidBeforePrice(price, priceMin, priceMax);
+            PriceEdit edit = edit(current, value, beforePromotion, linkedProducts);
+            String invalidBefore = invalidBeforePrice(edit.price, edit.min, edit.max);
             if (invalidBefore != null) {
-                invalidPrices[0] = price;
+                invalidPrices[0] = edit.price;
                 invalidPrices[1] = invalidBefore;
                 return false;
             }
             if (checkDiscount) {
-                PromotionPriceCheck check = getPromotionPriceCheck(current, price, priceMax);
+                int salary = Globals.getAverageSalary();
+                if (exceededSalaryLimit(value, salary) != null && salary != approvedSalary) return false;
+                PromotionPriceCheck check = getPromotionPriceCheck(current, edit.price, edit.max);
                 if (check.outsideRange() && !check.matches(approval)) return false;
             }
             // Inline input saves prefixes; fill its missing prices only when editing finishes.
-            if (!beforePromotion && !checkDiscount) {
+            if (!edit.writeBefore && !checkDiscount) {
                 missingBeforePrice[0] = missingPricesForNoPromotion(current.getAkciya(), value,
                         current.getPriceMin(), current.getPriceMax());
             }
             // Decide from the current DB row, not from the possibly stale editor snapshot.
-            markPromotionPresent[0] = shouldAutoMarkPromotion(price, priceMin, current.getAkciya());
+            markPromotionPresent[0] = shouldAutoMarkPromotion(edit.price, edit.min, current.getAkciya());
             if (markPromotionPresent[0] && isPromotionTypeMissing(current.getAkciyaId())) {
                 promotionTypeToSave[0] = resolvePromotionTypeId(current);
             }
+            accepted[0] = edit;
             return true;
         }, current -> {
-            if (beforePromotion) {
-                current.setPriceMin(value);
-                current.setPriceMax(value);
-            } else {
-                current.setPrice(value);
-                if (missingBeforePrice[0] != null) {
-                    current.setPriceMin(missingBeforePrice[0]);
-                    current.setPriceMax(missingBeforePrice[0]);
-                }
+            accepted[0].apply(current);
+            if (missingBeforePrice[0] != null) {
+                current.setPriceMin(missingBeforePrice[0]);
+                current.setPriceMax(missingBeforePrice[0]);
             }
             if (markPromotionPresent[0]) {
                 current.setAkciya("1");
@@ -223,31 +290,39 @@ public final class PriceSaveGuard {
         return result.toString();
     }
 
-    public static MessageDialogBuilder discountDialog(Activity activity, String product,
-                                                       PromotionPriceCheck check,
-                                                       Runnable save, Runnable refuse) {
-        return discountDialog(activity, product, check, save, refuse, () -> {});
+    public static BigDecimal exceededSalaryLimit(String value, int salary) {
+        BigDecimal price = positivePrice(value);
+        if (salary <= 0 || price == null) return null;
+        BigDecimal limit = BigDecimal.valueOf(salary).divide(BigDecimal.valueOf(20));
+        return price.compareTo(limit) > 0 ? limit : null;
     }
 
-    public static MessageDialogBuilder discountDialog(Activity activity, String product,
-                                                       PromotionPriceCheck check,
-                                                       Runnable save, Runnable refuse, Runnable dismissed) {
+    public static MessageDialogBuilder priceWarningDialog(Activity activity, String product,
+            PromotionPriceCheck check, String entered, boolean beforePromotion, BigDecimal exceededLimit,
+            Runnable save, Runnable refuse, Runnable dismissed) {
         boolean[] answered = {false};
-        String promotion = check.promotionName.isEmpty() ? "текущей акции"
+        String message = "";
+        if (exceededLimit != null) {
+            message = "Вы внесли " + (beforePromotion ? "цену ДО начала акции" : "текущую цену")
+                    + " " + TextUtils.htmlEncode(entered) + " грн. Это превышает предполагаемую возможную цену.";
+        }
+        if (check != null) {
+            String promotion = check.promotionName.isEmpty() ? "текущей акции"
                 : "акции «" + TextUtils.htmlEncode(check.promotionName) + "»";
-        ImagesTypeListSDB item = RoomManager.SQL_DB.imagesTypeListDao().getById(28);
+            ImagesTypeListSDB item = RoomManager.SQL_DB.imagesTypeListDao().getById(28);
+            if (!message.isEmpty()) message += "<br><br>";
+            message += "Вы указали цену ДО начала акции " + TextUtils.htmlEncode(PriceDisplay.format(check.priceBefore))
+                    + " грн и текущую АКЦИОННУЮ цену " + TextUtils.htmlEncode(PriceDisplay.format(check.price))
+                    + " грн. При этом скидка по " + promotion + " составляет " + check.discountPercent
+                    + "%. Предполагаемая сумма скидки должна быть: " + check.expectedDiscountText()
+                    + " грн, а у вас она составляет " + check.actualDiscountText() + " грн. Перепроверьте цены."
+                    + (item == null ? "" : " Если цены указаны правильно, сделайте " + TextUtils.htmlEncode(item.nm) + ".");
+        }
         return new MessageDialogBuilder(activity)
                 .setTitle("Товари")
                 .setSubTitle(product)
                 .setStatus(DialogStatus.ALERT)
-                .setMessage("Вы указали цену ДО начала акции " + TextUtils.htmlEncode(PriceDisplay.format(check.priceBefore))
-                        + " грн и текущую АКЦИОННУЮ цену " + TextUtils.htmlEncode(PriceDisplay.format(check.price))
-                        + " грн. При этом скидка по " + promotion + " составляет " + check.discountPercent
-                        + "%. Предполагаемая сумма скидки должна быть: " + check.expectedDiscountText()
-                        + " грн, а у вас она составляет " + check.actualDiscountText() + " грн" +
-                        ". Возможно вы указали цену не правильно? Перепроверьте это. " +
-                        "В случае если цены указаны правильно сделайте " + item.nm +
-                        "<br><br>ОТКАЗАТЬСЯ от сохранения цены?")
+                .setMessage(message + "<br><br>ОТКАЗАТЬСЯ от сохранения цены?")
                 .setOnConfirmAction("Да", () -> { answered[0] = true; refuse.run(); return Unit.INSTANCE; })
                 .setOnCancelAction("Нет", () -> { answered[0] = true; save.run(); return Unit.INSTANCE; })
                 .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
@@ -262,16 +337,17 @@ public final class PriceSaveGuard {
                                         boolean beforePromotion, Runnable save, Runnable refuse) {
         List<ReportPrepareDB> snapshots = new ArrayList<>();
         for (ReportPrepareDB row : rows) if (row != null) snapshots.add(row);
-        confirmPriceSave(activity, snapshots, value, beforePromotion, new HashMap<>(), save, refuse);
+        confirmPriceSave(activity, snapshots, value, beforePromotion, new HashMap<>(), 0, save, refuse);
     }
 
     private static void confirmPriceSave(Activity activity, List<ReportPrepareDB> snapshots, String value,
                                          boolean beforePromotion, Map<Long, PromotionPriceCheck> approvals,
-                                         Runnable save, Runnable refuse) {
+                                         int approvedSalary, Runnable save, Runnable refuse) {
         if (activity.isFinishing() || activity.isDestroyed()) return;
         // Re-read all rows after each answer; a background exchange must not invalidate an approval silently.
         Map<Long, PromotionPriceCheck> checks = new LinkedHashMap<>();
         Map<Long, String> products = new HashMap<>();
+        Map<String, Set<String>> linkedByVisit = new HashMap<>();
         for (ReportPrepareDB snapshot : snapshots) {
             ReportPrepareDB current = ReportPrepareRealm.getCurrentCopy(snapshot);
             if (current == null) {
@@ -279,34 +355,44 @@ public final class PriceSaveGuard {
                 refuse.run();
                 return;
             }
-            String price = beforePromotion ? current.getPrice() : value;
-            String before = beforePromotion ? value : current.getPriceMin();
+            Set<String> productsForVisit = isPromotionExplicitlyAbsent(current.getAkciya())
+                    ? linkedByVisit.computeIfAbsent(current.getCodeDad2(), PriceSaveGuard::loadLinkedPriceProducts)
+                    : Collections.emptySet();
+            PriceEdit edit = edit(current, value, beforePromotion, productsForVisit);
             TovarDB tovar = TovarRealm.getById(current.getTovarId());
             String product = productLabel(current.getTovarId(), tovar);
-            String priceMax = beforePromotion ? value : current.getPriceMax();
-            String invalidBefore = invalidBeforePrice(price, before, priceMax);
+            String invalidBefore = invalidBeforePrice(edit.price, edit.min, edit.max);
             if (invalidBefore != null) {
-                priceErrorDialog(activity, product, price, invalidBefore)
+                priceErrorDialog(activity, product, edit.price, invalidBefore)
                         .setOnDismissListener((kotlin.jvm.functions.Function0<Unit>) () -> {
                             refuse.run(); return Unit.INSTANCE;
                         }).show();
                 return;
             }
             Long id = current.getID();
-            checks.put(id, getPromotionPriceCheck(current, price, priceMax));
+            checks.put(id, getPromotionPriceCheck(current, edit.price, edit.max));
             products.put(id, product);
         }
-        // In a bulk editor, hard errors in any product take precedence over discount warnings.
+        // One entered price/limit per bulk operation; discounts are approved per product.
+        int salary = Globals.getAverageSalary();
+        BigDecimal limit = approvedSalary == salary ? null : exceededSalaryLimit(value, salary);
         for (Map.Entry<Long, PromotionPriceCheck> entry : checks.entrySet()) {
             Long id = entry.getKey();
             PromotionPriceCheck check = entry.getValue();
             if (check.outsideRange() && !check.matches(approvals.get(id))) {
-                discountDialog(activity, products.get(id), check, () -> {
+                priceWarningDialog(activity, products.get(id), check, value, beforePromotion, limit, () -> {
                     approvals.put(id, check);
-                    confirmPriceSave(activity, snapshots, value, beforePromotion, approvals, save, refuse);
-                }, refuse).show();
+                    confirmPriceSave(activity, snapshots, value, beforePromotion, approvals, salary, save, refuse);
+                }, refuse, () -> {}).show();
                 return;
             }
+        }
+        if (limit != null) {
+            String label = products.size() == 1 ? products.values().iterator().next() : "Выбрано товаров: " + products.size();
+            priceWarningDialog(activity, label, null, value, beforePromotion, limit,
+                    () -> confirmPriceSave(activity, snapshots, value, beforePromotion, approvals, salary, save, refuse),
+                    refuse, () -> {}).show();
+            return;
         }
         save.run();
     }

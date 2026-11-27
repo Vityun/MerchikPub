@@ -103,7 +103,7 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
 
         int salary = Globals.getAverageSalary();
         if (salary == 0)
-            salary = 15700;
+            salary = 23500;
         String res;
 
 //        double requestSend = salary * 0.0005;

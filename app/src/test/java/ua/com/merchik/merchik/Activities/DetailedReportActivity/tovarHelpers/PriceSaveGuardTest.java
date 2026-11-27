@@ -4,8 +4,10 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
 
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 
@@ -15,6 +17,52 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PriceSaveGuardTest {
+    @Test public void onlyAnActiveVisitOptionAndAnOsvProductLinkExplicitlyAbsentPromotionPrices() {
+        OptionsDB option = new OptionsDB();
+        option.setOptionControlId("175121");
+        AdditionalRequirementsDB requirement = new AdditionalRequirementsDB();
+        requirement.setTovarId("123");
+        Set<String> eligible = PriceSaveGuard.linkedPriceProducts(Collections.singletonList(option),
+                Collections.singletonList(requirement));
+        ReportPrepareDB row = new ReportPrepareDB();
+        row.setTovarId("123");
+        for (String status : new String[]{null, "", "0", "1"}) {
+            row.setAkciya(status);
+            assertFalse(PriceSaveGuard.linksPrices(row, eligible));
+        }
+        row.setAkciya("2");
+        assertTrue(PriceSaveGuard.linksPrices(row, eligible));
+        row.setTovarId("999");
+        assertFalse(PriceSaveGuard.linksPrices(row, eligible));
+        option.setOptionControlId("174974");
+        assertFalse(PriceSaveGuard.hasPrePromotionPriceOption(Collections.singletonList(option)));
+        option.setOptionId("175121");
+        assertTrue(PriceSaveGuard.hasPrePromotionPriceOption(Collections.singletonList(option)));
+        option.setDeleted("1");
+        assertFalse(PriceSaveGuard.hasPrePromotionPriceOption(Collections.singletonList(option)));
+    }
+
+    @Test public void linkedEditWritesAllPricesInEitherDirectionWithoutUsingTheOldOppositePrice() {
+        for (boolean before : new boolean[]{false, true}) {
+            String entered = before ? "15.25" : "80.55";
+            PriceSaveGuard.PriceEdit edit = new PriceSaveGuard.PriceEdit("40", "50", "55", entered, before, true);
+            assertNull(PriceSaveGuard.invalidBeforePrice(edit.price, edit.min, edit.max));
+            ReportPrepareDB row = new ReportPrepareDB();
+            edit.apply(row);
+            assertEquals(entered, row.getPrice());
+            assertEquals(entered, row.getPriceMin());
+            assertEquals(entered, row.getPriceMax());
+        }
+    }
+
+    @Test public void salaryLimitIsStrictAndDoesNotTruncateFractionalHryvnias() {
+        assertNull(PriceSaveGuard.exceededSalaryLimit("785,05", 15701));
+        assertEquals("785.05", PriceSaveGuard.exceededSalaryLimit("785,06", 15701).toPlainString());
+        assertNull(PriceSaveGuard.exceededSalaryLimit("9999", 0));
+        assertNull(PriceSaveGuard.exceededSalaryLimit("9999", -1));
+        assertNull(PriceSaveGuard.exceededSalaryLimit("", 15701));
+    }
+
     @Test
     public void inlineOrderChecksBothPricesButCorridorUsesMax() {
         assertEquals("60", PriceSaveGuard.invalidBeforePrice("70", "60", "100"));
